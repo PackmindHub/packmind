@@ -483,6 +483,7 @@ export function SpaceContextSurface() {
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
               selectedPackageId={selectedPackage?.id ?? null}
+              attention={attention}
               showingInventory={showingInventory}
               inventoryCount={inventoryCount}
               orphanCount={orphanCount}

@@ -7,6 +7,7 @@ import {
   PMIcon,
   PMInput,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -24,6 +25,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import type { PackageAttention } from './buildPackageAttention';
 import { searchPackages, type PackageSearchRow } from './searchPackages';
 
 /** Past this, one package's matches would out-scroll the list they sit in. */
@@ -40,6 +42,12 @@ const MAX_SHOWN_MATCHES = 3;
  * name of a component is no longer a place you can go, so the rail has to be
  * able to find one — and it answers with the package that carries it, which is
  * the arrangement teaching itself.
+ *
+ * The one thing it says about a package beyond what it holds is whether what it
+ * holds has actually reached where it was sent. That is a distribution fact on
+ * an index of content, and it is here rather than only on the Distribution
+ * surface because the package you have to fix is the one you were not looking
+ * at: the surface you are on has to be able to tell you.
  */
 export function ContextPackageRail({
   packages,
@@ -47,6 +55,7 @@ export function ContextPackageRail({
   orgSlug,
   spaceSlug,
   selectedPackageId,
+  attention,
   showingInventory,
   inventoryCount,
   orphanCount,
@@ -62,6 +71,12 @@ export function ContextPackageRail({
   orgSlug: string;
   spaceSlug: string;
   selectedPackageId: PackageId | null;
+  /**
+   * The packages that need a hand, by id. Absent from the map is the common
+   * case and means nothing to do, so a row without a mark is a package whose
+   * copies are where they are supposed to be.
+   */
+  attention: ReadonlyMap<PackageId, PackageAttention>;
   /** The space-wide inventory is open, so no package row is the selected one. */
   showingInventory: boolean;
   /** Components in the space, which is not the sum over the packages. */
@@ -223,6 +238,7 @@ export function ContextPackageRail({
               key={row.pkg.id}
               row={row}
               needle={needle}
+              attention={attention.get(row.pkg.id)}
               isActive={!showingInventory && row.pkg.id === selectedPackageId}
               onClick={() => onSelect(row.pkg.id)}
             />
@@ -443,11 +459,14 @@ function InventoryRow({
 function PackageRow({
   row,
   needle,
+  attention,
   isActive,
   onClick,
 }: Readonly<{
   row: PackageSearchRow;
   needle: string;
+  /** What this package needs a hand with, or undefined when it needs none. */
+  attention: PackageAttention | undefined;
   isActive: boolean;
   onClick: () => void;
 }>) {
@@ -495,15 +514,26 @@ function PackageRow({
           <LuPackage />
         </RowIcon>
         <PMBox flex={1} minW={0}>
-          <PMBox
-            as="div"
-            fontSize="sm"
-            fontWeight={isActive ? 'semibold' : 'medium'}
-            color={isActive ? 'text.primary' : 'text.secondary'}
-            truncate
-          >
-            {highlight(pkg.name, needle)}
-          </PMBox>
+          {/*
+            The mark shares the name's line rather than taking one of its own:
+            the eye runs down the left edge for names and down the right edge
+            for state, which is the arrangement the Distribution rail already
+            has. The name keeps `minW={0}` so it is the half that truncates.
+          */}
+          <PMHStack gap={2} align="center" minW={0}>
+            <PMBox
+              as="div"
+              flex={1}
+              minW={0}
+              fontSize="sm"
+              fontWeight={isActive ? 'semibold' : 'medium'}
+              color={isActive ? 'text.primary' : 'text.secondary'}
+              truncate
+            >
+              {highlight(pkg.name, needle)}
+            </PMBox>
+            {attention && <AttentionMark attention={attention} />}
+          </PMHStack>
           {/*
             One text node rather than a row of boxes, so the line ends in an
             ellipsis instead of being cut mid-word by the rail.
@@ -542,6 +572,52 @@ function PackageRow({
         </PMVStack>
       )}
     </PMBox>
+  );
+}
+
+/**
+ * The mark a package wears when something it was sent to needs a hand.
+ *
+ * Only the exception is marked. That is the deliberate asymmetry with the
+ * Distribution rail, where every row carries a dot because state is what that
+ * rail indexes: here it is a note in the margin of an index of content, and a
+ * column of green dots would turn the library into a health dashboard and teach
+ * the eye to skip the one row that is orange.
+ *
+ * The dot carries the colour and the number carries the quantity, in the
+ * neutral ramp. Colouring both would say one thing twice, and a count is not a
+ * state. The tooltip is what makes the mark readable without colour, and it is
+ * the label a screen reader gets, because "2" on its own is not a sentence.
+ */
+function AttentionMark({
+  attention,
+}: Readonly<{ attention: PackageAttention }>) {
+  return (
+    <PMTooltip label={attention.tooltip} showArrow>
+      <PMBox
+        display="flex"
+        alignItems="center"
+        gap={1.5}
+        flexShrink={0}
+        role="img"
+        aria-label={attention.tooltip}
+      >
+        <PMBox
+          width="8px"
+          height="8px"
+          borderRadius="full"
+          bg={attention.tone === 'error' ? 'red.500' : 'orange.500'}
+          aria-hidden
+        />
+        <PMText
+          fontSize="11px"
+          color="secondary"
+          fontVariantNumeric="tabular-nums"
+        >
+          {attention.count}
+        </PMText>
+      </PMBox>
+    </PMTooltip>
   );
 }
 
