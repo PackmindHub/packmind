@@ -1,7 +1,4 @@
-import {
-  Switch as ChakraSwitch,
-  type SwitchCheckedChangeDetails,
-} from '@chakra-ui/react';
+import { Switch as ChakraSwitch } from '@chakra-ui/react';
 import * as React from 'react';
 
 export interface PMSwitchProps extends Omit<

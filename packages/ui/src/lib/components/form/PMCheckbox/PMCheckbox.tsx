@@ -1,5 +1,4 @@
 import { Checkbox as ChakraCheckbox } from '@chakra-ui/react';
-import type { CheckedChangeDetails } from '@zag-js/checkbox';
 import * as React from 'react';
 
 export interface PMCheckboxProps extends Omit<
