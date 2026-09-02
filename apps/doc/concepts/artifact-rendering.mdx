@@ -31,6 +31,7 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 | AGENTS.md      | `AGENTS.md` file (in repository root) |
 | OpenCode       | `AGENTS.md` file (in repository root) |
 | Codex          | `AGENTS.md` file (in repository root) |
+| Kiro           | `.kiro/steering/` folder              |
 
 <Tip>
   Standards work automatically—you don't need to do anything special to activate
@@ -56,9 +57,16 @@ If the markers don't exist yet (for example, in a brand-new file), Packmind appe
 
 When you define a standard, you can specify a **scope** using glob patterns (like `**/*.spec.ts` for test files or `src/components/**/*.tsx` for React components).
 
-For AI assistants that support native integration (**Claude Code**, **Cursor**, **GitHub Copilot**, and **Continue**), these glob patterns are included in the rendered files. The AI assistant will automatically apply the standard only to files matching the specified patterns.
+For AI assistants that support native integration (**Claude Code**, **Cursor**, **GitHub Copilot**, **Continue**, and **Kiro**), these glob patterns are included in the rendered files. The AI assistant will automatically apply the standard only to files matching the specified patterns.
 
 For other AI assistants (GitLab Duo, Junie, AGENTS.md), standards are included in a single file without scope filtering—the AI applies them based on context.
+
+<Warning>
+  For **Kiro**, the scope is rendered as `inclusion: fileMatch` with a
+  `fileMatchPattern` list. The Kiro IDE honours it and applies the standard only
+  to matching files. The Kiro **CLI** ignores steering inclusion modes and loads
+  every file in `.kiro/steering/`, so scoped standards are not narrowed there.
+</Warning>
 
 ## Where Commands Appear and How to Use Them
 
@@ -75,6 +83,7 @@ Commands are placed in specific locations, but unlike standards, you need to inv
 | AGENTS.md      | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
 | OpenCode       | `.opencode/commands/` folder | Type `/command-name` in chat                |
 | Codex          | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
+| Kiro           | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
 
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot, Continue)
 
@@ -86,9 +95,9 @@ For AI assistants with native slash command support (**Claude Code**, **Cursor**
 
 The AI assistant will recognize the command and execute the instructions defined in it.
 
-### Direct Source File Invocation (GitLab Duo, Junie, AGENTS.md)
+### Direct Source File Invocation (GitLab Duo, Junie, AGENTS.md, Codex, Kiro)
 
-For AI assistants without native command rendering (**GitLab Duo**, **Junie**, **AGENTS.md**, and **Codex**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
+For AI assistants without native command rendering (**GitLab Duo**, **Junie**, **AGENTS.md**, **Codex**, and **Kiro**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
 
 ```
 Execute @.packmind/commands/create-new-use-case.md
@@ -113,12 +122,14 @@ Skills are folders of instructions, scripts, and resources that AI agents can di
 | GitLab Duo     | `.gitlab/duo/skills/{skill-slug}/SKILL.md` |
 | OpenCode       | `.opencode/skills/{skill-slug}/SKILL.md`   |
 | Codex          | `.agents/skills/{skill-slug}/SKILL.md`     |
+| Kiro           | `.kiro/skills/{skill-slug}/SKILL.md`       |
 
 Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
 
 <Note>
   Skills are currently available for GitHub Copilot, Claude Code, Cursor, GitLab
-  Duo, OpenCode, and Codex. Other AI assistants do not support skill rendering.
+  Duo, OpenCode, Codex, and Kiro. Other AI assistants do not support skill
+  rendering.
 </Note>
 
 ## The Source Files
@@ -152,7 +163,7 @@ These source files are the single source of truth. The files in AI assistant-spe
 1. Ensure you've distributed the package containing the commands
 2. Check the `.packmind/commands/` folder for the source files
 3. For Claude Code, Cursor, or GitHub Copilot: Verify the AI assistant-specific folder exists (e.g., `.cursor/commands/`)
-4. For GitLab Duo, Junie, or AGENTS.md: Commands are not rendered separately—use the files directly from `.packmind/commands/`
+4. For GitLab Duo, Junie, AGENTS.md, Codex, or Kiro: Commands are not rendered separately—use the files directly from `.packmind/commands/`
 
 ### The AI assistant isn't following my standards
 
@@ -166,12 +177,13 @@ These source files are the single source of truth. The files in AI assistant-spe
 
 **Solution**:
 
-1. Skills are only rendered for GitHub Copilot, Claude Code, Cursor, GitLab Duo, OpenCode, and Codex
+1. Skills are only rendered for GitHub Copilot, Claude Code, Cursor, GitLab Duo, OpenCode, Codex, and Kiro
 2. Check the `.packmind/skills/` folder for the source files
 3. For GitHub Copilot: Check `.github/skills/{skill-slug}/SKILL.md`
 4. For Claude Code: Check `.claude/skills/{skill-slug}/SKILL.md`
 5. For Cursor: Check `.cursor/skills/{skill-slug}/SKILL.md`
 6. For GitLab Duo: Check `.gitlab/duo/skills/{skill-slug}/SKILL.md`
+7. For Kiro: Check `.kiro/skills/{skill-slug}/SKILL.md`
 
 ## Related Documentation
 
