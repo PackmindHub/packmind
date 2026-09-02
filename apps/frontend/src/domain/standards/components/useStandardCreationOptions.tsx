@@ -11,17 +11,14 @@ import {
   PMPortal,
   PMText,
   PMVStack,
-  pmToaster,
 } from '@packmind/ui';
 import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
-import type { PackageId, Standard } from '@packmind/types';
+import type { PackageId } from '@packmind/types';
 import { GETTING_STARTED_CREATE_STANDARD_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { routes } from '../../../shared/utils/routes';
-import {
-  useAttachToPackage,
-  withPackageParam,
-} from '../../deployments/hooks/useCreateIntoPackage';
+import { withPackageParam } from '../../deployments/hooks/useCreateIntoPackage';
+import { useSamplesIntoPackage } from './useSamplesIntoPackage';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 /**
@@ -52,26 +49,7 @@ export function useStandardCreationOptions({
   const [isSamplesModalOpen, setIsSamplesModalOpen] = useState(false);
   const [isFromCodeDialogOpen, setIsFromCodeDialogOpen] = useState(false);
   const analytics = useAnalytics();
-  const attachToPackage = useAttachToPackage(packageId ?? null);
-
-  /*
-   * Samples create their standards here and now and hand them back, so they can
-   * join the package like the manual form's does. The two agent-driven paths
-   * cannot: nothing exists yet when their dialog closes.
-   */
-  const putInPackage = (created: Standard[]) => {
-    void attachToPackage({
-      standardIds: created.map((standard) => standard.id),
-    }).then((outcome) => {
-      if (outcome === 'failed') {
-        pmToaster.error({
-          title: 'Standards created, but not added to the package',
-          description:
-            'They are in the space. Add them to a package to distribute them.',
-        });
-      }
-    });
-  };
+  const putInPackage = useSamplesIntoPackage(packageId);
 
   const items = (
     <>

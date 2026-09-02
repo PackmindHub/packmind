@@ -7,6 +7,7 @@ import {
   PMIcon,
   PMInput,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -24,6 +25,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import type { PackageAttention } from './buildPackageAttention';
 import { searchPackages, type PackageSearchRow } from './searchPackages';
 
 /** Past this, one package's matches would out-scroll the list they sit in. */
@@ -40,6 +42,12 @@ const MAX_SHOWN_MATCHES = 3;
  * name of a component is no longer a place you can go, so the rail has to be
  * able to find one — and it answers with the package that carries it, which is
  * the arrangement teaching itself.
+ *
+ * The one thing it says about a package beyond what it holds is whether what it
+ * holds has actually reached where it was sent. That is a distribution fact on
+ * an index of content, and it is here rather than only on the Distribution
+ * surface because the package you have to fix is the one you were not looking
+ * at: the surface you are on has to be able to tell you.
  */
 export function ContextPackageRail({
   packages,
@@ -47,6 +55,8 @@ export function ContextPackageRail({
   orgSlug,
   spaceSlug,
   selectedPackageId,
+  attention,
+  isAttentionUnavailable,
   showingInventory,
   inventoryCount,
   orphanCount,
@@ -62,6 +72,17 @@ export function ContextPackageRail({
   orgSlug: string;
   spaceSlug: string;
   selectedPackageId: PackageId | null;
+  /**
+   * The distribution state could not be read, so no row can be marked and the
+   * rail must not imply that nothing needs doing.
+   */
+  isAttentionUnavailable: boolean;
+  /**
+   * The packages that need a hand, by id. Absent from the map is the common
+   * case and means nothing to do, so a row without a mark is a package whose
+   * copies are where they are supposed to be.
+   */
+  attention: ReadonlyMap<PackageId, PackageAttention>;
   /** The space-wide inventory is open, so no package row is the selected one. */
   showingInventory: boolean;
   /** Components in the space, which is not the sum over the packages. */
@@ -86,6 +107,12 @@ export function ContextPackageRail({
    * these params.
    */
   const [query, setQuery] = useState('');
+  /*
+   * Local for the same reason, and one step weaker: unlike the query, this is a
+   * lens somebody turned on for a minute and the line above the list says so
+   * while it is on. Nothing about it is worth carrying into a link.
+   */
+  const [onlyDrifted, setOnlyDrifted] = useState(false);
 
   /*
    * A space can reach this rail with no package and still have something to
@@ -104,6 +131,43 @@ export function ContextPackageRail({
       ),
     [packages, catalogue, orgSlug, spaceSlug, query, selectedPackageId],
   );
+
+  /*
+   * Counted off the rail's own list rather than off the map, so the number on
+   * the line and the number of rows under it are the same number: the map is
+   * keyed by what has landed somewhere, which can outlive a package the space
+   * no longer has.
+   */
+  const drifted = useMemo(
+    () =>
+      packages
+        .map((pkg) => attention.get(pkg.id))
+        .filter((one): one is PackageAttention => one !== undefined),
+    [packages, attention],
+  );
+  const driftedCount = drifted.length;
+  /*
+   * The lens switches itself off when there is nothing left to look at, rather
+   * than leaving an empty list behind the moment the last package is put right.
+   */
+  const filtering = onlyDrifted && driftedCount > 0;
+  /*
+   * The open package survives the filter, whether or not it drifts, for the
+   * reason `hoistSelected` gives about the search: a rail that drops the row
+   * the pane is showing leaves the reader looking at a package the list says
+   * does not exist, with nothing to click to get back to it. It costs one row,
+   * and the row says why it is there.
+   */
+  const pinnedId = showingInventory ? null : selectedPackageId;
+  const shownRows = filtering
+    ? rows.filter((row) => attention.has(row.pkg.id) || row.pkg.id === pinnedId)
+    : rows;
+  /** Nothing the query reached is drifting, which the list alone cannot say. */
+  const noDriftedMatch =
+    filtering &&
+    needle !== '' &&
+    matchCount > 0 &&
+    shownRows.every((row) => !attention.has(row.pkg.id));
 
   return (
     <PMBox
@@ -124,11 +188,18 @@ export function ContextPackageRail({
         Distribution rail, so the two rails of this app have one anatomy: search
         on top, the list in the middle, the action pinned under it.
 
+        The drift filter is in here rather than above the rows it narrows,
+        because the field beside it narrows the same rows and a rail with its two
+        filters in two places is a rail that hides one of them. It costs this
+        band one line more than the other rail's, which is a smaller difference
+        than the one it removes.
+
         Gone entirely with no package, rather than shown over an empty list. The
         search walks the packages to find a component, so with none of them it
-        can never answer anything. A field that cannot succeed is worse than no
-        field: it invites the one gesture that will not work on the one screen
-        where there is only one thing to do.
+        can never answer anything, and the drift filter it shares the band with
+        counts copies of packages that do not exist. A field that cannot succeed
+        is worse than no field: it invites the one gesture that will not work on
+        the one screen where there is only one thing to do.
       */}
       {hasPackages && (
         <PMBox
@@ -174,6 +245,30 @@ export function ContextPackageRail({
               onChange={(event) => setQuery(event.target.value)}
             />
           </PMBox>
+
+          {isAttentionUnavailable ? (
+            <AttentionUnavailableRow />
+          ) : (
+            driftedCount > 0 && (
+              <DriftedFilterRow
+                count={driftedCount}
+                /*
+                The worst state among the packages it counts, not a fixed
+                colour. An orange dot heading rows wearing a red one would be
+                the same 8px mark meaning two things a few lines apart, and it
+                would hide the half of the count that a redistribution may not
+                put right on its own.
+              */
+                tone={
+                  drifted.some((one) => one.tone === 'error')
+                    ? 'error'
+                    : 'warning'
+                }
+                isActive={filtering}
+                onToggle={() => setOnlyDrifted((previous) => !previous)}
+              />
+            )
+          )}
         </PMBox>
       )}
 
@@ -218,11 +313,13 @@ export function ContextPackageRail({
         {!hasPackages && <NoPackages />}
 
         <PMVStack gap={0} align="stretch">
-          {rows.map((row) => (
+          {shownRows.map((row) => (
             <PackageRow
               key={row.pkg.id}
               row={row}
               needle={needle}
+              attention={attention.get(row.pkg.id)}
+              isDriftPinned={filtering && !attention.has(row.pkg.id)}
               isActive={!showingInventory && row.pkg.id === selectedPackageId}
               onClick={() => onSelect(row.pkg.id)}
             />
@@ -230,6 +327,9 @@ export function ContextPackageRail({
         </PMVStack>
 
         {needle !== '' && matchCount === 0 && <NoMatches query={query} />}
+        {noDriftedMatch && (
+          <NoDriftedMatches query={query} matchCount={matchCount} />
+        )}
       </PMBox>
 
       {/*
@@ -303,6 +403,171 @@ function NoMatches({ query }: Readonly<{ query: string }>) {
         component in no package is in All components, above.
       </PMText>
     </PMVStack>
+  );
+}
+
+/**
+ * What the rail says when the query did reach something and the filter is what
+ * is hiding it.
+ *
+ * A different sentence from the one above, because it is a different answer:
+ * the spelling is right, and the thing being looked for is up to date. Without
+ * it the rail shows a list of one open package and reads as a search that
+ * failed, which would send the reader hunting for a typo.
+ */
+function NoDriftedMatches({
+  query,
+  matchCount,
+}: Readonly<{ query: string; matchCount: number }>) {
+  return (
+    <PMVStack gap={1} align="start" padding={4}>
+      <PMText as="div" fontSize="sm" color="secondary">
+        Nothing matching “{query}” is drifted.
+      </PMText>
+      <PMText as="div" fontSize="xs" color="faded">
+        Show all above to see the {matchCount} package
+        {matchCount === 1 ? '' : 's'} the search found.
+      </PMText>
+    </PMVStack>
+  );
+}
+
+/**
+ * How much of this space is not where it was sent, and a way to see only that.
+ *
+ * A pill under the search rather than a fourth entry in the sidebar, for the
+ * reason the inventory row gives about itself: this is a way of reading
+ * Context, not another place to be. Under the search because that is the other
+ * control that narrows this list, and because the band it sits in does not
+ * scroll: the one thing on screen saying rows are missing must not be
+ * scrollable out of sight, and put here it needs no stickiness to manage it.
+ *
+ * The same shape as the pill under the inventory row, deliberately. The rail
+ * now has two quiet toggles that each narrow what is shown to the part of it
+ * that is a piece of work, and each is attached to the thing it narrows: that
+ * one to the inventory, this one to the list the field above it searches.
+ *
+ * The words change with the state, because the label of a toggle should say
+ * what clicking it does next.
+ *
+ * Absent when nothing drifts, which is the point of it. A rail without this
+ * pill is a space whose copies are all where they are supposed to be, and that
+ * is worth being able to read in one glance.
+ */
+function DriftedFilterRow({
+  count,
+  tone,
+  isActive,
+  onToggle,
+}: Readonly<{
+  count: number;
+  tone: PackageAttention['tone'];
+  isActive: boolean;
+  onToggle: () => void;
+}>) {
+  return (
+    <PMBox
+      as="button"
+      display="flex"
+      alignItems="center"
+      gap={2}
+      width="full"
+      maxWidth="100%"
+      overflow="hidden"
+      textAlign="left"
+      marginTop={2}
+      /*
+        10px, which puts the mark's box on the magnifier's exactly: the band's
+        own 12px is already in front of both. Paired with the gap below it, the
+        label then starts where the placeholder above it does, so the two
+        controls of this band share one mark axis and one text axis instead of
+        staggering by a few pixels each.
+      */
+      paddingLeft="10px"
+      paddingRight={2}
+      paddingY="4px"
+      borderRadius="sm"
+      cursor="pointer"
+      /*
+        One tonal step under the field above, not level with it. Filled to the
+        field's own step this pill matched its background, its radius, its width
+        and its left edge, and a control that differs from a text input by eight
+        pixels of height is a control that reads as a second, broken text input.
+      */
+      bg={isActive ? 'background.secondary' : 'transparent'}
+      _hover={isActive ? undefined : { bg: 'background.secondary' }}
+      transition="background-color 150ms ease-out"
+      onClick={onToggle}
+      aria-pressed={isActive}
+    >
+      {/*
+        The same dot the rows carry, so the pill and the marks it counts read as
+        one thing. In a box the width of the magnifier's em rather than bare: a
+        dot is 8px and an icon is 14, and the slot is what lets them sit on one
+        axis without the dot growing into a disc.
+      */}
+      <PMBox
+        width="14px"
+        flexShrink={0}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        aria-hidden
+      >
+        <PMBox
+          width="8px"
+          height="8px"
+          borderRadius="full"
+          bg={tone === 'error' ? 'red.500' : 'orange.500'}
+        />
+      </PMBox>
+      {/*
+        The accent carries "on", which is what the design system reserves it for
+        on an active navigation item, and it is also what stops a filled pill
+        from being read as a field: no input in this app has periwinkle text in
+        it. The dot keeps its own tone throughout — it says what state the
+        packages are in, not whether the filter is running.
+      */}
+      <PMBox
+        as="span"
+        flex={1}
+        minW={0}
+        truncate
+        fontSize="xs"
+        fontWeight={isActive ? 'medium' : 'normal'}
+        color={isActive ? 'branding.primary' : 'text.secondary'}
+      >
+        {count} drifted package{count === 1 ? '' : 's'}
+      </PMBox>
+      {isActive && (
+        /*
+          `tertiary` and not `faded`: the faded step falls under 4:1 on the
+          surface the active state paints, and stops being readable as the words
+          of a control.
+        */
+        <PMText fontSize="11px" color="tertiary" whiteSpace="nowrap">
+          Show all
+        </PMText>
+      )}
+    </PMBox>
+  );
+}
+
+/**
+ * What the same slot says when the distribution state could not be read.
+ *
+ * One line rather than nothing: an unmarked list of packages is a list that
+ * claims every copy is where it should be, and that claim is exactly what this
+ * rail has just failed to check.
+ */
+function AttentionUnavailableRow() {
+  return (
+    /* 32px, the field's own, so this sits under the placeholder it replaces. */
+    <PMBox marginTop={2} paddingLeft="32px" paddingRight={2} paddingY="4px">
+      <PMText as="div" fontSize="xs" color="tertiary" truncate>
+        Distribution state unavailable
+      </PMText>
+    </PMBox>
   );
 }
 
@@ -443,11 +708,20 @@ function InventoryRow({
 function PackageRow({
   row,
   needle,
+  attention,
+  isDriftPinned,
   isActive,
   onClick,
 }: Readonly<{
   row: PackageSearchRow;
   needle: string;
+  /** What this package needs a hand with, or undefined when it needs none. */
+  attention: PackageAttention | undefined;
+  /**
+   * The drift filter is on and this row survived it only because the pane is
+   * showing it. The counterpart of `row.isPinned`, which the search sets.
+   */
+  isDriftPinned: boolean;
   isActive: boolean;
   onClick: () => void;
 }>) {
@@ -495,15 +769,26 @@ function PackageRow({
           <LuPackage />
         </RowIcon>
         <PMBox flex={1} minW={0}>
-          <PMBox
-            as="div"
-            fontSize="sm"
-            fontWeight={isActive ? 'semibold' : 'medium'}
-            color={isActive ? 'text.primary' : 'text.secondary'}
-            truncate
-          >
-            {highlight(pkg.name, needle)}
-          </PMBox>
+          {/*
+            The mark shares the name's line rather than taking one of its own:
+            the eye runs down the left edge for names and down the right edge
+            for state, which is the arrangement the Distribution rail already
+            has. The name keeps `minW={0}` so it is the half that truncates.
+          */}
+          <PMHStack gap={2} align="center" minW={0}>
+            <PMBox
+              as="div"
+              flex={1}
+              minW={0}
+              fontSize="sm"
+              fontWeight={isActive ? 'semibold' : 'medium'}
+              color={isActive ? 'text.primary' : 'text.secondary'}
+              truncate
+            >
+              {highlight(pkg.name, needle)}
+            </PMBox>
+            {attention && <AttentionMark attention={attention} />}
+          </PMHStack>
           {/*
             One text node rather than a row of boxes, so the line ends in an
             ellipsis instead of being cut mid-word by the rail.
@@ -520,7 +805,7 @@ function PackageRow({
             truncate
           >
             {count} component{count === 1 ? '' : 's'}
-            {isPinned && ' · open, not a match'}
+            {pinnedNote(isPinned, isDriftPinned)}
           </PMBox>
         </PMBox>
       </PMBox>
@@ -542,6 +827,69 @@ function PackageRow({
         </PMVStack>
       )}
     </PMBox>
+  );
+}
+
+/**
+ * Why a row the list would otherwise have dropped is still here.
+ *
+ * The two reasons are not the same sentence: under a search the row is the one
+ * the query did not reach, and under the drift filter it is the one that is up
+ * to date. Saying "not a match" about a package nobody searched for would be a
+ * lie about the only row of the list that needs explaining.
+ *
+ * The query wins when both are on, because it is the more specific reason and
+ * one row takes one note.
+ */
+function pinnedNote(isPinned: boolean, isDriftPinned: boolean): string {
+  if (isPinned) return ' · open, not a match';
+  if (isDriftPinned) return ' · open, not drifted';
+  return '';
+}
+
+/**
+ * The mark a package wears when something it was sent to needs a hand.
+ *
+ * Only the exception is marked. That is the deliberate asymmetry with the
+ * Distribution rail, where every row carries a dot because state is what that
+ * rail indexes: here it is a note in the margin of an index of content, and a
+ * column of green dots would turn the library into a health dashboard and teach
+ * the eye to skip the one row that is orange.
+ *
+ * The dot carries the colour and the number carries the quantity, in the
+ * neutral ramp. Colouring both would say one thing twice, and a count is not a
+ * state. The tooltip is what makes the mark readable without colour, and it is
+ * the label a screen reader gets, because "2" on its own is not a sentence.
+ */
+function AttentionMark({
+  attention,
+}: Readonly<{ attention: PackageAttention }>) {
+  return (
+    <PMTooltip label={attention.tooltip} showArrow>
+      <PMBox
+        display="flex"
+        alignItems="center"
+        gap={1.5}
+        flexShrink={0}
+        role="img"
+        aria-label={attention.tooltip}
+      >
+        <PMBox
+          width="8px"
+          height="8px"
+          borderRadius="full"
+          bg={attention.tone === 'error' ? 'red.500' : 'orange.500'}
+          aria-hidden
+        />
+        <PMText
+          fontSize="11px"
+          color="secondary"
+          fontVariantNumeric="tabular-nums"
+        >
+          {attention.count}
+        </PMText>
+      </PMBox>
+    </PMTooltip>
   );
 }
 

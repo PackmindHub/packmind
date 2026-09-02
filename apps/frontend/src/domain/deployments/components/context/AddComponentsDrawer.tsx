@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react';
-import { LuSearch, LuTriangleAlert } from 'react-icons/lu';
+import {
+  LuPackage,
+  LuPackageX,
+  LuSearch,
+  LuTriangleAlert,
+} from 'react-icons/lu';
 import {
   PMBox,
   PMButton,
@@ -23,16 +28,22 @@ import {
   filterAddableComponents,
   groupedComponentCount,
 } from './buildAddableComponents';
+import {
+  filterInventoryGroups,
+  type InventoryCoverage,
+  type InventoryEntry,
+  type InventoryGroup,
+} from './buildSpaceInventory';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
   componentSelectionKey,
   componentSetKind,
   componentSetSubject,
   type ContextComponent,
-  type ContextGroup,
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import { ContextChip } from './ContextChip';
 
 /** Above this many candidates the list gets a filter rather than a scroll. */
 const SEARCHABLE_FROM = 7;
@@ -56,6 +67,16 @@ const SEARCHABLE_FROM = 7;
  * holds: ticking one would be a no-op the server would accept, and a list that
  * accepts no-ops stops saying what it is for.
  *
+ * It opens on the components no package carries, and not on every candidate.
+ * The two populations read the same on a row and cost very different things: a
+ * component in no package is being distributed for the first time, while one
+ * already shipping elsewhere starts shipping twice, from two packages that will
+ * drift apart. A flat list of both makes the second outcome a mis-tick away, and
+ * the first is what the picker is opened for — a component created a moment ago
+ * and not yet placed. The rest is one chip away, the same chip the space
+ * inventory filters by, and there the rows say what already carries them, so
+ * shipping something twice stays possible and stops being accidental.
+ *
  * One call for the whole selection, not one per component: the mutation takes a
  * bag of ids grouped by type, so a mixed pick joins the package in a single
  * request and cannot half-join it.
@@ -64,6 +85,7 @@ export function AddComponentsDrawer({
   open,
   onOpenChange,
   pkg,
+  packages,
   catalogue,
   spaceId,
   organizationId,
@@ -74,6 +96,12 @@ export function AddComponentsDrawer({
   onOpenChange: (open: boolean) => void;
   /** The package being filled, membership ids included. */
   pkg: PackageResponse;
+  /**
+   * The space's packages, for the one thing this drawer asks of them: which of
+   * them already carries each candidate. Read from the same list the rail and
+   * the inventory read, so the three cannot disagree about where a component is.
+   */
+  packages: readonly PackageResponse[];
   /** What the space owns, so the candidates need no query of their own. */
   catalogue: SpaceCatalogue;
   spaceId: SpaceId;
@@ -97,21 +125,57 @@ export function AddComponentsDrawer({
     usePackageDeploymentStatus(spaceId, organizationId);
 
   const addable = useMemo(
-    () => buildAddableComponents(pkg, catalogue, { orgSlug, spaceSlug }),
-    [pkg, catalogue, orgSlug, spaceSlug],
+    () =>
+      buildAddableComponents(pkg, packages, catalogue, { orgSlug, spaceSlug }),
+    [pkg, packages, catalogue, orgSlug, spaceSlug],
   );
+
+  /*
+   * Held here and not in the address, unlike the inventory's copy of the same
+   * filter: that one describes a page worth sending to someone, this one is a
+   * step inside a gesture that ends when the drawer closes.
+   *
+   * Lazily initialised, so a package whose every candidate already ships
+   * somewhere opens on the whole list instead of on an empty one behind a filter
+   * hiding everything. The drawer is mounted only while open, so this runs once
+   * per opening and reads the count of that moment.
+   */
+  const [coverage, setCoverage] = useState<InventoryCoverage>(() =>
+    addable.freeTotal > 0 ? 'none' : 'all',
+  );
+  const showingFree = coverage === 'none';
+
+  /*
+   * Coverage first, then the query, the order the inventory composes the same
+   * two filters in: the query narrows what the coverage filter left.
+   */
+  const covered = useMemo(
+    () => filterInventoryGroups(addable.groups, coverage),
+    [addable.groups, coverage],
+  );
+  const coveredCount = groupedComponentCount(covered);
   const shown = useMemo(
-    () => filterAddableComponents(addable.groups, query),
-    [addable.groups, query],
+    () => filterAddableComponents(covered, query),
+    [covered, query],
   );
+
+  /*
+   * Resolved against what the coverage filter left rather than against every
+   * candidate, so flipping back to the safe list also drops the picks made
+   * outside it — visibly, in the count on the button. Deliberately not against
+   * the query as well, unlike the inventory's selection: typing is a way of
+   * reaching a row rather than a decision about the list, and a pick that
+   * vanished as the next search was typed would be a pick silently unmade.
+   */
   const picked = useMemo(
     () =>
-      addable.groups
-        .flatMap((group) => group.components)
+      covered
+        .flatMap((group) => group.entries)
+        .map((entry) => entry.component)
         .filter((component) =>
           pickedKeys.has(componentSelectionKey(component)),
         ),
-    [addable.groups, pickedKeys],
+    [covered, pickedKeys],
   );
 
   /*
@@ -134,6 +198,16 @@ export function AddComponentsDrawer({
       if (!next.delete(key)) next.add(key);
       return next;
     });
+  };
+
+  /*
+   * The query goes with the list it was typed against. Kept across the flip, it
+   * would hand the wider list a needle chosen for the narrower one and answer
+   * "show me the rest" with a filtered fragment of it.
+   */
+  const handleCoverageChange = (next: InventoryCoverage) => {
+    setCoverage(next);
+    setQuery('');
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -204,13 +278,27 @@ export function AddComponentsDrawer({
                   />
                 ) : (
                   <>
+                    {/*
+                      Two lines and not one with a clause: which components are
+                      listed, then what ticking one does. The second half
+                      changes with the filter, because under it nothing picked
+                      is anywhere yet and there is no other package to keep it.
+                    */}
                     <PMText variant="body" color="secondary">
-                      What you pick joins{' '}
-                      <PMText as="span" fontWeight={500} color="primary">
-                        {pkg.name}
-                      </PMText>{' '}
-                      and stays in every other package already carrying it. Only
-                      what this package does not hold yet is listed.
+                      {showingFree ? (
+                        <>
+                          The components no package carries yet, newest first.
+                          Nothing distributes them until they are in one. What
+                          you pick joins <PackageName>{pkg.name}</PackageName>.
+                        </>
+                      ) : (
+                        <>
+                          Everything <PackageName>{pkg.name}</PackageName> does
+                          not hold yet. What you pick joins it without leaving
+                          the packages already carrying it, so the same
+                          component then ships from each of them.
+                        </>
+                      )}
                     </PMText>
 
                     {places ? (
@@ -234,7 +322,37 @@ export function AddComponentsDrawer({
                       </PMHStack>
                     ) : null}
 
-                    {addable.total >= SEARCHABLE_FROM && (
+                    {/*
+                      Absent when the two populations are not both there: with
+                      nothing to hide it would filter to the list it is already
+                      showing, and with nothing free it would empty the list —
+                      which is why the drawer did not open on it in that case.
+                      The chip and the count are the inventory's, so the same
+                      question about the same components is asked in the same
+                      words wherever it is asked.
+                    */}
+                    {addable.freeTotal > 0 &&
+                      addable.freeTotal < addable.total && (
+                        <PMHStack gap={1} wrap="wrap">
+                          <ContextChip
+                            label="In no package"
+                            count={addable.freeTotal}
+                            icon={<LuPackageX />}
+                            isActive={showingFree}
+                            onClick={() =>
+                              handleCoverageChange(showingFree ? 'all' : 'none')
+                            }
+                          />
+                        </PMHStack>
+                      )}
+
+                    {/*
+                      Counted on what the coverage filter left, not on every
+                      candidate: a search box over four rows is a control with
+                      nothing to do, and it appears on the flip that gives it
+                      something.
+                    */}
+                    {coveredCount >= SEARCHABLE_FROM && (
                       <PMBox position="relative">
                         <PMBox
                           position="absolute"
@@ -269,6 +387,7 @@ export function AddComponentsDrawer({
                           <CandidateGroup
                             key={group.type}
                             group={group}
+                            showPackages={!showingFree}
                             pickedKeys={pickedKeys}
                             onToggle={toggle}
                             disabled={isPending}
@@ -307,17 +426,28 @@ export function AddComponentsDrawer({
   );
 }
 
+/** The package being filled, named inside a sentence about it. */
+function PackageName({ children }: Readonly<{ children: string }>) {
+  return (
+    <PMText as="span" fontWeight={500} color="primary">
+      {children}
+    </PMText>
+  );
+}
+
 /**
  * One type's candidates, headed the way the pane heads the same type. The count
  * is the group's own, so a filtered list says how much of itself it is showing.
  */
 function CandidateGroup({
   group,
+  showPackages,
   pickedKeys,
   onToggle,
   disabled,
 }: Readonly<{
-  group: ContextGroup;
+  group: InventoryGroup;
+  showPackages: boolean;
   pickedKeys: ReadonlySet<string>;
   onToggle: (component: ContextComponent) => void;
   disabled: boolean;
@@ -335,7 +465,7 @@ function CandidateGroup({
           {group.label}
         </PMText>
         <PMText fontSize="10px" color="faded" fontVariantNumeric="tabular-nums">
-          {group.components.length}
+          {group.entries.length}
         </PMText>
       </PMHStack>
       <PMBox
@@ -345,12 +475,13 @@ function CandidateGroup({
         borderRadius="sm"
         overflow="hidden"
       >
-        {group.components.map((component, index) => (
+        {group.entries.map((entry, index) => (
           <CandidateRow
-            key={componentSelectionKey(component)}
-            component={component}
+            key={componentSelectionKey(entry.component)}
+            entry={entry}
             isFirst={index === 0}
-            isPicked={pickedKeys.has(componentSelectionKey(component))}
+            showPackages={showPackages}
+            isPicked={pickedKeys.has(componentSelectionKey(entry.component))}
             onToggle={onToggle}
             disabled={disabled}
           />
@@ -370,18 +501,22 @@ function CandidateGroup({
  * picks made so far.
  */
 function CandidateRow({
-  component,
+  entry,
   isFirst,
+  showPackages,
   isPicked,
   onToggle,
   disabled,
 }: Readonly<{
-  component: ContextComponent;
+  entry: InventoryEntry;
   isFirst: boolean;
+  showPackages: boolean;
   isPicked: boolean;
   onToggle: (component: ContextComponent) => void;
   disabled: boolean;
 }>) {
+  const { component, packageNames } = entry;
+
   return (
     <PMCheckbox
       size="sm"
@@ -422,6 +557,7 @@ function CandidateRow({
               {component.summary}
             </PMText>
           )}
+          {showPackages && <CurrentPackages names={packageNames} />}
         </PMBox>
         <PMText
           fontSize="xs"
@@ -435,6 +571,51 @@ function CandidateRow({
         </PMText>
       </PMBox>
     </PMCheckbox>
+  );
+}
+
+/**
+ * Where the candidate already ships, on the row that would add one more place.
+ *
+ * Under the row's own text rather than in a column of its own, unlike the
+ * inventory's list: this row is narrow, and the fact belongs to the decision the
+ * tick makes rather than being a field to scan down.
+ *
+ * The empty case is said in words, in the same wording the inventory uses, and
+ * it is the one the eye is looking for here: with the filter off it is what
+ * separates the rows that cost nothing from the rows that start a second copy.
+ * Only rendered where the filter is off — under it every row would read the
+ * same, which is what the filter already said.
+ */
+function CurrentPackages({ names }: Readonly<{ names: readonly string[] }>) {
+  const isFree = names.length === 0;
+  const label = isFree
+    ? 'No package'
+    : names.length === 1
+      ? `In ${names[0]}`
+      : `In ${names.length} packages`;
+
+  return (
+    <PMHStack
+      gap="6px"
+      paddingTop="2px"
+      color={isFree ? 'text.secondary' : 'text.faded'}
+    >
+      <PMIcon fontSize="xs" flexShrink={0}>
+        {isFree ? <LuPackageX /> : <LuPackage />}
+      </PMIcon>
+      <PMBox
+        as="span"
+        fontSize="xs"
+        truncate
+        // The whole list on hover: "3 packages" is the scannable form, but which
+        // three is a fair question to ask without leaving the row.
+        title={names.length > 1 ? names.join(', ') : undefined}
+        fontStyle={isFree ? 'italic' : undefined}
+      >
+        {label}
+      </PMBox>
+    </PMHStack>
   );
 }
 
@@ -456,7 +637,7 @@ function NothingToAdd({
       </PMText>
       <PMText variant="small" color="faded">
         {spaceIsEmpty
-          ? 'Create one from the Create button on this package, and it joins the package as it is created.'
+          ? 'Create one from this package, and it joins the package as it is created.'
           : 'Anything created from now on can be added here.'}
       </PMText>
     </PMVStack>

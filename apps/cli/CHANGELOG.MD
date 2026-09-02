@@ -4,14 +4,27 @@
 
 ## Changed
 
+## Fixed
+
+## Removed
+
+# [0.35.0] - 2026-09-02
+
+## Added
+
+- Kiro is now a selectable coding agent. `packmind config agents` offers it, a repository holding a `.kiro` directory is detected as a Kiro workspace, and `install` renders standards as steering files under `.kiro/steering/` and skills under `.kiro/skills/`. Commands are not rendered — Kiro has no command directory — and cleanup only ever removes the `packmind-standard-*` files Packmind created
+
+## Changed
+
 - The command is now `packmind`. The installer and `packmind update` maintain a single real executable under that name, and the older `packmind-cli` becomes a symlink to it — the two swapped roles, so `packmind-cli` keeps working and keeps receiving updates instead of silently freezing at the version it was installed at. Running it now prints a deprecation warning: it will be removed in a later release, so scripts and CI jobs calling `packmind-cli` should be moved over
 - Messages now name the executable you actually invoked instead of hardcoding `packmind-cli`. The log prefix, `--help` usage output, `--version` and every suggested command follow the name you typed, so a suggestion can always be copied and run as-is. Previously the CLI could greet you as `packmind-cli` and then tell you to run `packmind init`
+- The default skills ship a `0.35.0` instruction set using the `packmind` command. Rendered skills name the executable the target installation actually has, so an install older than 0.24.0 keeps being told to run `packmind-cli`
 
 ## Fixed
 
 - A failed `packmind update` on Windows no longer suggests `sudo packmind update`. The Windows shells have no `sudo`, and the usual cause there is not permissions at all — the running executable cannot be replaced, which elevation does not fix. Windows now gets its own advice: close any other running `packmind` process, then re-run from an Administrator terminal. The underlying error is now kept in the message on every platform, and the `sudo` suggestion is unchanged on macOS and Linux
-
-## Removed
+- A scope holding a brace group (`**/*.{ts,tsx}`) is no longer split in two. `playbook add` and `playbook diff` read it as `**/*.{ts` plus `tsx}` whenever the agent rendered the scope as a YAML array, and reported a scope change that was not one
+- `plugins render` no longer calls every plugin a Claude one. A render from `.claude-plugin/plugin.json` now tells Packmind which vendor to target, the success line names the manifest it actually updated, and the skipped-standards notice and `--help` stop assuming Claude
 
 # [0.34.1] - 2026-08-25
 
@@ -479,7 +492,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...HEAD
+[0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0
 [0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1
 [0.33.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...release-cli/0.33.0
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0

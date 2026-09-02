@@ -1,3 +1,4 @@
+import { stringify } from 'yaml';
 import { CAMEL_TO_YAML_KEY, SkillVersion, camelToKebab } from '@packmind/types';
 import { sortAdditionalPropertiesKeys } from '@packmind/node-utils';
 import { escapeSingleQuotes } from './FileUtils';
@@ -62,6 +63,56 @@ ${frontmatterFields.join('\n')}
 ---`;
 
   return `${frontmatter}
+
+${skillVersion.prompt}`;
+}
+
+export function generateSkillMdContentWithYamlFrontmatter(
+  skillVersion: SkillVersion,
+): string {
+  const frontmatter: Record<string, unknown> = {};
+
+  if (skillVersion.name) {
+    frontmatter['name'] = skillVersion.name;
+  }
+
+  if (skillVersion.description) {
+    frontmatter['description'] = skillVersion.description;
+  }
+
+  if (skillVersion.license) {
+    frontmatter['license'] = skillVersion.license;
+  }
+
+  if (skillVersion.compatibility) {
+    frontmatter['compatibility'] = skillVersion.compatibility;
+  }
+
+  if (skillVersion.allowedTools) {
+    frontmatter['allowed-tools'] = skillVersion.allowedTools;
+  }
+
+  if (skillVersion.metadata && Object.keys(skillVersion.metadata).length > 0) {
+    frontmatter['metadata'] = skillVersion.metadata;
+  }
+
+  if (
+    skillVersion.additionalProperties &&
+    Object.keys(skillVersion.additionalProperties).length > 0
+  ) {
+    for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+      skillVersion.additionalProperties,
+    )) {
+      const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+      frontmatter[yamlKey] = value;
+    }
+  }
+
+  const yamlBlock = stringify(frontmatter, { lineWidth: 0 }).trimEnd();
+
+  return `---
+${yamlBlock}
+---
 
 ${skillVersion.prompt}`;
 }

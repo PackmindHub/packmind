@@ -2,6 +2,7 @@ import { KiroDeployer } from './KiroDeployer';
 import {
   CommandVersion,
   DeleteItemType,
+  FileModification,
   GitRepo,
   IStandardsPort,
   Rule,
@@ -195,8 +196,14 @@ describe('KiroDeployer', () => {
 
   describe('deploySkills', () => {
     describe('when deploying a skill', () => {
-      it('writes the skill under its own directory', async () => {
-        const skillVersion = skillVersionFactory({ slug: 'my-skill' });
+      let skillFile: FileModification;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({
+          name: 'My skill',
+          slug: 'my-skill',
+          description: 'Does the thing',
+        });
 
         const result = await deployer.deploySkills(
           [skillVersion],
@@ -204,9 +211,19 @@ describe('KiroDeployer', () => {
           mockTarget,
         );
 
-        expect(result.createOrUpdate[0].path).toBe(
-          `${SKILLS_DIR}my-skill/SKILL.md`,
-        );
+        skillFile = result.createOrUpdate[0];
+      });
+
+      it('writes the skill under its own directory', () => {
+        expect(skillFile.path).toBe(`${SKILLS_DIR}my-skill/SKILL.md`);
+      });
+
+      it('emits the name without quotes', () => {
+        expect(skillFile.content).toContain('name: My skill');
+      });
+
+      it('emits the description without quotes', () => {
+        expect(skillFile.content).toContain('description: Does the thing');
       });
     });
 
