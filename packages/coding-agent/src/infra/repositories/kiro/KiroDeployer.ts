@@ -22,25 +22,13 @@ import {
   getTargetPrefixedPath,
   splitScopeGlobs,
 } from '../utils/FileUtils';
-import { generateSkillMdContent } from '../utils/SkillMdContentBuilder';
+import { generateSkillMdContentWithYamlFrontmatter } from '../utils/SkillMdContentBuilder';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'KiroDeployer';
 
 const EMPTY_UPDATES = (): FileUpdates => ({ createOrUpdate: [], delete: [] });
 
-/**
- * Renders Packmind artifacts into Kiro's layout.
- *
- * Standards become one steering file each, skills become one directory each.
- * Kiro has no command directory, so commands are not rendered — they stay
- * reachable through `.packmind/commands/`. Kiro also owns no single config
- * file, so nothing is written outside `.kiro/`.
- *
- * `.kiro/steering/` is shared with Kiro's own steering files and anything the
- * user wrote there, so removal and cleanup only ever delete the
- * `packmind-standard-*` files this deployer created — never the directory.
- */
 export class KiroDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.kiro;
   private static readonly STANDARD_FILE_PREFIX = 'packmind-standard-';
@@ -231,8 +219,6 @@ export class KiroDeployer implements ICodingAgentDeployer {
 
     const fileUpdates = EMPTY_UPDATES();
 
-    // `.kiro/steering/` also holds Kiro's own steering files, so only the
-    // files Packmind named are deleted — never the directory itself.
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: this.steeringFilePath(standardVersion.slug),
@@ -269,7 +255,6 @@ export class KiroDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       deleteItems.push({
         path: `${KiroDeployer.ARTEFACT_PATHS.skill}${slug}`,
@@ -277,7 +262,6 @@ export class KiroDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // User package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       deleteItems.push({
         path: `${KiroDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -299,13 +283,6 @@ export class KiroDeployer implements ICodingAgentDeployer {
     return `${KiroDeployer.ARTEFACT_PATHS.standard}${KiroDeployer.STANDARD_FILE_PREFIX}${slug}.md`;
   }
 
-  /**
-   * Generate the Kiro steering file for a specific standard.
-   *
-   * A scoped standard is included on file match, an unscoped one always.
-   * Note the Kiro CLI ignores `inclusion` and loads every steering file; only
-   * the Kiro IDE narrows on `fileMatchPattern`.
-   */
   private async generateSteeringFile(
     standardVersion: StandardVersion,
   ): Promise<{
@@ -349,10 +326,6 @@ ${instructionContent}`,
     };
   }
 
-  /**
-   * Kiro's `fileMatchPattern` is always emitted as a YAML flow list, so a scope
-   * holding several globs keeps matching all of them.
-   */
   private formatFileMatchPattern(scope: string): string {
     const globs = splitScopeGlobs(scope).map(
       (glob) => `'${escapeSingleQuotes(glob)}'`,
@@ -368,12 +341,11 @@ ${instructionContent}`,
     const files: SkillFileOutput[] = [
       {
         path: `${skillDir}/SKILL.md`,
-        content: generateSkillMdContent(skillVersion),
+        content: generateSkillMdContentWithYamlFrontmatter(skillVersion),
       },
     ];
 
     for (const file of skillVersion.files ?? []) {
-      // SKILL.md is already generated from the prompt
       if (file.path.toUpperCase() === 'SKILL.MD') {
         continue;
       }
