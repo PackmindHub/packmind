@@ -1,12 +1,19 @@
 import type { MarketplaceDrift } from '../../../../../../deployments/components/redesign/types';
 
 /**
- * OSS stub — marketplaces are a proprietary-edition concept, so no marketplace
- * ever reaches this. Kept as a function rather than a constant because its
- * callers read it as "how many plugins of this one need republishing", and a
- * marketplace that cannot exist has none. The proprietary build swaps in the
- * real selector through the `@packmind/proprietary/frontend` alias.
+ * OSS stand-in for the marketplace drift selectors, carrying the one the
+ * distribution surface reads — and carrying its real answer, not zero.
+ *
+ * Counting the plugins of a shape does not depend on the edition that can hold
+ * one: the type is shared, and this is arithmetic over it. Stubbing it to zero
+ * would have made the surface's selector disagree with its own spec here, which
+ * is a divergence invented rather than inherited. What this edition does not
+ * have is a marketplace to hand it, and that is said where it is true, in
+ * `useSpaceMarketplaces`.
+ *
+ * The other two exports of the proprietary module build the overview and total
+ * it across marketplaces; nothing here reads them, so they are not restated.
  */
-export function marketplacePluginCount(_group: MarketplaceDrift): number {
-  return 0;
+export function marketplacePluginCount(group: MarketplaceDrift): number {
+  return group.plugins.length;
 }
