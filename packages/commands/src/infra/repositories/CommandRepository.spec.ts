@@ -6,11 +6,13 @@ import {
   createTestDatasourceFixture,
   itHandlesSoftDelete,
   stubLogger,
+  TestUserSchema,
 } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createCommandId,
   createSpaceId,
+  createUserId,
   Command,
   WithSoftDelete,
 } from '@packmind/types';
@@ -23,12 +25,16 @@ import { CommandVersionSchema } from '../schemas/CommandVersionSchema';
 import { CommandRepository } from './CommandRepository';
 
 describe('RecipeRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    CommandSchema,
-    CommandVersionSchema,
-    GitCommitSchema,
-    SpaceSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [
+      CommandSchema,
+      CommandVersionSchema,
+      GitCommitSchema,
+      SpaceSchema,
+      TestUserSchema,
+    ],
+    { recordQueries: true },
+  );
 
   let commandRepository: ICommandRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -200,6 +206,90 @@ describe('RecipeRepository', () => {
       const counts = await commandRepository.countBySpaceIds([unknownSpaceId]);
 
       expect(counts.has(unknownSpaceId)).toBe(false);
+    });
+  });
+
+  describe('findBySpaceId', () => {
+    describe('when the space holds 40 recipes written by 2 authors', () => {
+      const spaceId = createSpaceId(uuidv4());
+      const authorIds = [createUserId(uuidv4()), createUserId(uuidv4())];
+      let foundCommands: Command[];
+
+      beforeEach(async () => {
+        await fixture.datasource.getRepository(TestUserSchema).save(
+          authorIds.map((userId, index) => ({
+            id: userId,
+            email: `author-${index}@packmind.com`,
+            displayName: `Author ${index}`,
+          })),
+        );
+
+        for (let index = 0; index < 40; index++) {
+          await commandRepository.add(
+            commandFactory({
+              spaceId,
+              userId: authorIds[index % authorIds.length],
+            }),
+          );
+        }
+
+        fixture.queries.reset();
+        foundCommands = await commandRepository.findBySpaceId(spaceId);
+      });
+
+      it('returns every recipe of the space', () => {
+        expect(foundCommands).toHaveLength(40);
+      });
+
+      it('resolves the authors with a single user query', () => {
+        expect(fixture.queries.countMatching(/from "users"/i)).toBe(1);
+      });
+
+      it('resolves the author of every recipe', () => {
+        expect(
+          foundCommands.map((command) => command.createdBy?.displayName),
+        ).toEqual(
+          foundCommands.map(
+            (command) => `Author ${authorIds.indexOf(command.userId)}`,
+          ),
+        );
+      });
+    });
+
+    describe('when an author cannot be resolved', () => {
+      const spaceId = createSpaceId(uuidv4());
+      const knownAuthorId = createUserId(uuidv4());
+      const unknownAuthorId = createUserId(uuidv4());
+      let foundCommands: Command[];
+
+      beforeEach(async () => {
+        await fixture.datasource.getRepository(TestUserSchema).save({
+          id: knownAuthorId,
+          email: 'alice@packmind.com',
+          displayName: 'Alice',
+        });
+        await commandRepository.add(
+          commandFactory({ spaceId, name: 'Known', userId: knownAuthorId }),
+        );
+        await commandRepository.add(
+          commandFactory({ spaceId, name: 'Unknown', userId: unknownAuthorId }),
+        );
+
+        foundCommands = await commandRepository.findBySpaceId(spaceId);
+      });
+
+      it('leaves that recipe without an author', () => {
+        expect(
+          foundCommands.find((command) => command.name === 'Unknown')
+            ?.createdBy,
+        ).toBeUndefined();
+      });
+
+      it('still resolves the other authors', () => {
+        expect(
+          foundCommands.find((command) => command.name === 'Known')?.createdBy,
+        ).toEqual({ userId: knownAuthorId, displayName: 'Alice' });
+      });
     });
   });
 

@@ -1,7 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';
-import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
+import {
+  createTestDatasourceFixture,
+  stubLogger,
+  TestUserSchema,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -16,11 +20,10 @@ import { SkillVersionSchema } from '../schemas/SkillVersionSchema';
 import { SkillRepository } from './SkillRepository';
 
 describe('SkillRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    SkillSchema,
-    SkillVersionSchema,
-    SpaceSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [SkillSchema, SkillVersionSchema, SpaceSchema, TestUserSchema],
+    { recordQueries: true },
+  );
 
   let skillRepository: SkillRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -142,6 +145,83 @@ describe('SkillRepository', () => {
       const foundSkills = await skillRepository.findBySpaceId(spaceId1);
 
       expect(foundSkills.map((s) => s.id)).toEqual([skill1.id]);
+    });
+
+    describe('when the space holds 40 skills written by 2 authors', () => {
+      const spaceId = createSpaceId(uuidv4());
+      const authorIds = [createUserId(uuidv4()), createUserId(uuidv4())];
+      let foundSkills: Skill[];
+
+      beforeEach(async () => {
+        await fixture.datasource.getRepository(TestUserSchema).save(
+          authorIds.map((userId, index) => ({
+            id: userId,
+            email: `author-${index}@packmind.com`,
+            displayName: `Author ${index}`,
+          })),
+        );
+
+        for (let index = 0; index < 40; index++) {
+          await skillRepository.add(
+            skillFactory({
+              spaceId,
+              userId: authorIds[index % authorIds.length],
+            }),
+          );
+        }
+
+        fixture.queries.reset();
+        foundSkills = await skillRepository.findBySpaceId(spaceId);
+      });
+
+      it('resolves the authors with a single user query', () => {
+        expect(fixture.queries.countMatching(/from "users"/i)).toBe(1);
+      });
+
+      it('resolves the author of every skill', () => {
+        expect(
+          foundSkills.map((skill) => skill.createdBy?.displayName),
+        ).toEqual(
+          foundSkills.map(
+            (skill) => `Author ${authorIds.indexOf(skill.userId)}`,
+          ),
+        );
+      });
+    });
+
+    describe('when an author cannot be resolved', () => {
+      const spaceId = createSpaceId(uuidv4());
+      const knownAuthorId = createUserId(uuidv4());
+      const unknownAuthorId = createUserId(uuidv4());
+      let foundSkills: Skill[];
+
+      beforeEach(async () => {
+        await fixture.datasource.getRepository(TestUserSchema).save({
+          id: knownAuthorId,
+          email: 'alice@packmind.com',
+          displayName: 'Alice',
+        });
+        await skillRepository.add(
+          skillFactory({ spaceId, name: 'Known', userId: knownAuthorId }),
+        );
+        await skillRepository.add(
+          skillFactory({ spaceId, name: 'Unknown', userId: unknownAuthorId }),
+        );
+
+        foundSkills = await skillRepository.findBySpaceId(spaceId);
+      });
+
+      it('leaves that skill without an author', () => {
+        expect(
+          foundSkills.find((skill) => skill.name === 'Unknown')?.createdBy,
+        ).toBeUndefined();
+      });
+
+      it('still resolves the other authors', () => {
+        expect(
+          foundSkills.find((skill) => skill.name === 'Known')?.createdBy,
+        ).toEqual({ userId: knownAuthorId, displayName: 'Alice' });
+      });
     });
   });
 
