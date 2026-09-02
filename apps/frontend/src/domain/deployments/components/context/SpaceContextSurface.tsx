@@ -14,9 +14,12 @@ import {
   SKILL_MD_FILENAME,
 } from '../../../skills/utils/skillMdUtils';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useSpaceOutdatedPlugins } from '@packmind/proprietary/frontend/domain/spaces/components/overview/useSpaceOutdatedPlugins';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
+import { buildPackageAttentionIndex } from './buildPackageAttention';
+import { useSpaceDrift } from './usePackageDrift';
 import {
   countComponentsInNoPackage,
   type InventoryCoverage,
@@ -104,6 +107,27 @@ export function SpaceContextSurface() {
     useGetCommandsQuery();
   const { data: skillsResponse, isLoading: isLoadingSkills } =
     useGetSkillsQuery();
+
+  /*
+   * The two channels a package can be stale in, read here rather than in the
+   * rail and the pane separately: they show the same number about the same
+   * package, one as a mark on a row and one as a badge on a tab, and a number
+   * computed twice is a number that can disagree with itself.
+   *
+   * Neither query costs this surface anything. The sidebar asks for both on
+   * every page of a space in this navigation, because the Distribution entry
+   * wears a badge built from them, so both are already in the cache by the time
+   * this renders.
+   */
+  const { packages: driftPackages } = useSpaceDrift();
+  const { outdatedPlugins } = useSpaceOutdatedPlugins();
+  /*
+   * Plain computation rather than `useMemo`, for the reason
+   * `useSpaceOutdatedPlugins` gives about its own: its result is a fresh array
+   * each render, which cannot be expressed as a stable dependency. Twenty
+   * packages and a handful of plugins is not worth a memo that never hits.
+   */
+  const attention = buildPackageAttentionIndex(driftPackages, outdatedPlugins);
 
   const packages = useMemo(
     () =>
@@ -507,6 +531,7 @@ export function SpaceContextSurface() {
                   organizationId={organization.id}
                   orgSlug={orgSlug}
                   spaceSlug={spaceSlug}
+                  attention={attention.get(selectedPackage.id)}
                   onCreatePackage={createAndStay}
                   onDeleted={forgetPackage}
                 />

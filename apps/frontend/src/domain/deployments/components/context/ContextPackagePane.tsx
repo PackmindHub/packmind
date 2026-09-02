@@ -43,7 +43,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { countAddableComponents } from './buildAddableComponents';
-import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import type { PackageAttention } from './buildPackageAttention';
 import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
@@ -123,10 +123,17 @@ export function ContextPackagePane({
   organizationId,
   orgSlug,
   spaceSlug,
+  attention,
   onCreatePackage,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
+  /**
+   * What this package needs a hand with, or undefined when it needs none. Built
+   * by the surface rather than here, so the number on the Distribution tab and
+   * the mark the rail puts on this package's row are the same number.
+   */
+  attention: PackageAttention | undefined;
   /** The whole space, so a component can be moved without a second query. */
   packages: readonly PackageResponse[];
   /**
@@ -444,7 +451,6 @@ export function ContextPackagePane({
     isLoading,
     isError,
   } = usePackageDrift(pkg.id);
-  const distributionBadge = buildDistributionTabBadge(drift);
 
   /*
    * Read here for the header's own push. React Query answers this and the
@@ -884,10 +890,13 @@ export function ContextPackagePane({
             </PMTabsCompound.Trigger>
             <PMTabsCompound.Trigger value={DISTRIBUTION_TAB}>
               Distribution
-              {distributionBadge && (
-                <PMTooltip label={distributionBadge.tooltip} showArrow>
-                  <PMBadge colorPalette="orange" size="sm">
-                    {distributionBadge.text}
+              {attention && (
+                <PMTooltip label={attention.tooltip} showArrow>
+                  <PMBadge
+                    colorPalette={attention.tone === 'error' ? 'red' : 'orange'}
+                    size="sm"
+                  >
+                    {attention.count}
                   </PMBadge>
                 </PMTooltip>
               )}
