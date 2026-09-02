@@ -2,6 +2,8 @@
 
 ## Added
 
+- The Distribution page of a space is now indexed by destination rather than by three tabs. A rail lists every repository this space's packages land in, each row carrying the branch, the packages that land there and a mark when something is behind or when the last distribution failed; selecting one opens it beside the rail. The search reaches a destination by its name, its branch or the name of a package that lands there, and under the field a pill per state counts what is not aligned and shows only those when clicked. Selecting several destinations turns them into one distribution rather than one per row, and the receipt that follows now names auto-update, which makes the same commit on a schedule. The page runs full width, as Context does: the surface is a rail beside a pane, and the heading it used to carry named what the sidebar already has highlighted
+
 ## Changed
 
 - The Context rail now says which packages are not where they were sent. A package row carries a dot and a count when one of its destinations needs a hand: a repository whose copy is behind, or one whose last distribution failed. Hovering names those two separately, since a redistribution does not put right a push that broke. The dot is red when a distribution failed and orange when something is merely late, and packages that are up to date carry no mark at all. Under the search field, beside it because it narrows the same list, a toggle counts the drifted packages and shows only those when clicked; the package you have open stays listed and says why. The count is the one the package's Distribution tab shows once it is open, since both read the same selector
