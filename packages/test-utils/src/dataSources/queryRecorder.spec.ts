@@ -31,6 +31,15 @@ describe('createQueryRecorder', () => {
 
       expect(recorder.countMatching(/users/g)).toBe(2);
     });
+
+    it('does not skip matches when the regex is sticky', () => {
+      const recorder = createQueryRecorder();
+
+      recorder.logger.logQuery('SELECT * FROM "users"');
+      recorder.logger.logQuery('SELECT * FROM "users"');
+
+      expect(recorder.countMatching(/users/y)).toBe(2);
+    });
   });
 
   describe('reset', () => {

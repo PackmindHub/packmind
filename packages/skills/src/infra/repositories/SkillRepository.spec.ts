@@ -161,14 +161,16 @@ describe('SkillRepository', () => {
           })),
         );
 
-        for (let index = 0; index < 40; index++) {
-          await skillRepository.add(
+        // Seeded in bulk rather than one round trip per row: 40 sequential
+        // inserts dominated this file's runtime.
+        await skillRepository.addMany(
+          Array.from({ length: 40 }, (_, index) =>
             skillFactory({
               spaceId,
               userId: authorIds[index % authorIds.length],
             }),
-          );
-        }
+          ),
+        );
 
         fixture.queries.reset();
         foundSkills = await skillRepository.findBySpaceId(spaceId);

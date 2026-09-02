@@ -195,9 +195,12 @@ export abstract class AbstractRepository<
    * distinct authors — and the parallel fan-out drained the connection pool on
    * top of that. This queries the distinct ids once and returns a lookup map.
    *
-   * Degrades like the per-entity version it replaced: a failure is logged and
-   * swallowed, and unresolved ids are simply absent from the map, so callers
-   * yield `createdBy: undefined` for those items instead of failing the list.
+   * A failure is still logged and swallowed rather than failing the list:
+   * unresolved ids are simply absent from the map, so callers yield
+   * `createdBy: undefined` for those items and the list renders. What did
+   * change is the blast radius — the single query covers the whole page, so a
+   * failure now costs every author on it, where the per-entity call it
+   * replaced only blanked the item whose own lookup failed.
    */
   protected async getCreatedByMany(
     userIds: string[],
@@ -230,6 +233,7 @@ export abstract class AbstractRepository<
     } catch (error) {
       this.logger.warn('Failed to fetch user info', {
         userCount: distinctUserIds.length,
+        userIds: distinctUserIds,
         error: error instanceof Error ? error.message : String(error),
       });
     }

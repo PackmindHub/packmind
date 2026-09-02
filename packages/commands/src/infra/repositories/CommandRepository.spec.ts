@@ -224,14 +224,16 @@ describe('RecipeRepository', () => {
           })),
         );
 
-        for (let index = 0; index < 40; index++) {
-          await commandRepository.add(
+        // Seeded in bulk rather than one round trip per row: 40 sequential
+        // inserts dominated this file's runtime.
+        await commandRepository.addMany(
+          Array.from({ length: 40 }, (_, index) =>
             commandFactory({
               spaceId,
               userId: authorIds[index % authorIds.length],
             }),
-          );
-        }
+          ),
+        );
 
         fixture.queries.reset();
         foundCommands = await commandRepository.findBySpaceId(spaceId);

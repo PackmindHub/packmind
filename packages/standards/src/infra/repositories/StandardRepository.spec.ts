@@ -207,33 +207,32 @@ describe('StandardRepository', () => {
         })),
       );
 
-      const versionRepo = fixture.datasource.getRepository(
-        StandardVersionSchema,
+      const standards = Array.from({ length: 40 }, (_, index) =>
+        standardFactory({
+          spaceId,
+          slug: `slug-${index}`,
+          scope: 'standard-scope',
+          userId: authorIds[index % authorIds.length],
+        }),
       );
-      for (let index = 0; index < 40; index++) {
-        const standard = await standardRepository.add(
-          standardFactory({
-            spaceId,
-            slug: `slug-${index}`,
-            scope: 'standard-scope',
-            userId: authorIds[index % authorIds.length],
-          }),
-        );
-        await versionRepo.save(
+      await standardRepository.addMany(standards);
+
+      // Seeded in bulk rather than one round trip per row: 40 standards and
+      // their 80 versions inserted one by one dominated this file's runtime.
+      await fixture.datasource.getRepository(StandardVersionSchema).save(
+        standards.flatMap((standard) => [
           standardVersionFactory({
             standardId: standard.id,
             version: 1,
             scope: 'version-1-scope',
           }),
-        );
-        await versionRepo.save(
           standardVersionFactory({
             standardId: standard.id,
             version: 2,
             scope: 'version-2-scope',
           }),
-        );
-      }
+        ]),
+      );
 
       fixture.queries.reset();
       foundStandards = await standardRepository.findBySpaceId(spaceId);

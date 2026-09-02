@@ -45,11 +45,11 @@ export function createQueryRecorder(): QueryRecorder {
       if (typeof pattern === 'string') {
         return queries.filter((query) => query.includes(pattern)).length;
       }
-      // A `g`-flagged regex would carry `lastIndex` from one test() to the
-      // next and start skipping matches, so match without it.
+      // A `g`- or `y`-flagged regex would carry `lastIndex` from one test() to
+      // the next and start skipping matches, so match without either flag.
       const stateless = new RegExp(
         pattern.source,
-        pattern.flags.replace('g', ''),
+        pattern.flags.replace(/[gy]/g, ''),
       );
       return queries.filter((query) => stateless.test(query)).length;
     },

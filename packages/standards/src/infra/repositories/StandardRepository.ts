@@ -137,6 +137,7 @@ export class StandardRepository
         .find({
           where: { standardId: In(standards.map((standard) => standard.id)) },
           order: { version: 'DESC' },
+          select: ['standardId', 'version', 'scope'],
         });
 
       const latestScopeByStandardId = new Map<StandardId, string | null>();
