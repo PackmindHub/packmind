@@ -1,3 +1,5 @@
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+
 /**
  * Postgres connection-pool settings for the API.
  *
@@ -12,32 +14,135 @@
  * the bootstrap warm-up has to open exactly `min` connections. A second `8`
  * written next to the warm-up loop would drift from this one without anything
  * failing — the pool would just quietly go back to being cold.
+ *
+ * The sizes are read from the environment rather than from
+ * `Configuration.getConfig`: they are tuning knobs, not secrets, and
+ * `TypeOrmModule.forRoot` is a synchronous factory that already reads
+ * `DATABASE_URL` off `process.env` the same way.
  */
+const logger = new PackmindLogger('DatabasePoolConfig', LogLevel.INFO);
+
 export const DATABASE_APPLICATION_NAME = 'packmind-api';
 
-export const DATABASE_POOL_OPTIONS = {
-  /**
-   * Floor the reaper is not allowed to drain past: pg-pool only collects an
-   * idle client while `_clients.length > min`.
-   *
-   * pg-pool never *opens* a connection to reach this floor, so `min` on its
-   * own does not warm anything — it only stops connections that already exist
-   * from being thrown away. Opening them is `warmUpDatabasePool`'s job.
-   */
-  min: 8,
-  max: 20,
-  keepAlive: true,
-  /**
-   * `keepAlive: true` on its own is close to decorative here. pg forwards
-   * `keepAliveInitialDelayMillis ?? 0` to `socket.setKeepAlive`, and 0 means
-   * "leave the OS default", which on Linux is `tcp_keepalive_time` — 2 hours.
-   * The load balancers and NAT gateways between the pod and Postgres drop an
-   * idle socket long before that.
-   *
-   * That only became our problem once `min` started holding 8 connections open
-   * through the night: without probes on a timescale shorter than those idle
-   * timeouts, the pool would hand out sockets that died hours ago. This is
-   * what makes holding idle connections safe rather than merely faster.
-   */
-  keepAliveInitialDelayMillis: 10_000,
-} as const;
+/**
+ * Sized for the deployment we run today: a handful of API pods against a
+ * single Postgres, where `max` per pod times the pod count has to stay well
+ * under `max_connections`. Any other topology wants other numbers, hence the
+ * overrides.
+ */
+export const DEFAULT_DATABASE_POOL_MIN = 8;
+export const DEFAULT_DATABASE_POOL_MAX = 20;
+
+/**
+ * Ceiling on how long a caller waits for a connection before giving up.
+ *
+ * pg-pool's own default is no timeout at all: a client that cannot be
+ * established leaves the acquisition pending forever, which turns a database
+ * blip into requests — and, before this bound existed, a bootstrap — that hang
+ * rather than fail. Anything past 30 s is already past every caller's own
+ * patience, so failing there loses nothing and frees the slot.
+ */
+export const DEFAULT_DATABASE_POOL_CONNECTION_TIMEOUT_MS = 30_000;
+
+export type DatabasePoolOptions = {
+  min: number;
+  max: number;
+  connectionTimeoutMillis: number;
+  keepAlive: boolean;
+  keepAliveInitialDelayMillis: number;
+};
+
+type Environment = Record<string, string | undefined>;
+
+/**
+ * Read a pool setting from the environment, falling back to the default on
+ * anything that is not a positive integer.
+ *
+ * A typo'd override must not take the pool down with it: `min: NaN` makes
+ * pg-pool's reaper comparison always false, so it would reap every idle
+ * client and hand us back the cold pool this module exists to prevent.
+ */
+function readPoolSetting(
+  env: Environment,
+  variable: string,
+  fallback: number,
+): number {
+  const raw = env[variable];
+
+  if (raw === undefined || raw.trim() === '') {
+    return fallback;
+  }
+
+  const parsed = Number(raw);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    logger.warn('Ignoring invalid database pool setting', {
+      variable,
+      value: raw,
+      fallback,
+    });
+    return fallback;
+  }
+
+  return parsed;
+}
+
+export function resolveDatabasePoolOptions(
+  env: Environment = process.env,
+): DatabasePoolOptions {
+  const min = readPoolSetting(
+    env,
+    'DATABASE_POOL_MIN',
+    DEFAULT_DATABASE_POOL_MIN,
+  );
+  const max = readPoolSetting(
+    env,
+    'DATABASE_POOL_MAX',
+    DEFAULT_DATABASE_POOL_MAX,
+  );
+
+  // pg-pool does not validate this pair. With `min > max` it opens `max`
+  // clients and the warm-up then waits forever for a `min`th that the pool
+  // will never create, so the mistake has to be corrected here.
+  if (min > max) {
+    logger.warn('Database pool minimum exceeds its maximum, capping it', {
+      min,
+      max,
+    });
+  }
+
+  return {
+    /**
+     * Floor the reaper is not allowed to drain past: pg-pool only collects an
+     * idle client while `_clients.length > min`.
+     *
+     * pg-pool never *opens* a connection to reach this floor, so `min` on its
+     * own does not warm anything — it only stops connections that already
+     * exist from being thrown away. Opening them is `warmUpDatabasePool`'s
+     * job.
+     */
+    min: Math.min(min, max),
+    max,
+    connectionTimeoutMillis: readPoolSetting(
+      env,
+      'DATABASE_POOL_CONNECTION_TIMEOUT_MS',
+      DEFAULT_DATABASE_POOL_CONNECTION_TIMEOUT_MS,
+    ),
+    keepAlive: true,
+    /**
+     * `keepAlive: true` on its own is close to decorative here. pg forwards
+     * `keepAliveInitialDelayMillis ?? 0` to `socket.setKeepAlive`, and 0 means
+     * "leave the OS default", which on Linux is `tcp_keepalive_time` — 2
+     * hours. The load balancers and NAT gateways between the pod and Postgres
+     * drop an idle socket long before that.
+     *
+     * That only became our problem once `min` started holding connections open
+     * through the night: without probes on a timescale shorter than those idle
+     * timeouts, the pool would hand out sockets that died hours ago. This is
+     * what makes holding idle connections safe rather than merely faster.
+     */
+    keepAliveInitialDelayMillis: 10_000,
+  };
+}
+
+export const DATABASE_POOL_OPTIONS = resolveDatabasePoolOptions();
