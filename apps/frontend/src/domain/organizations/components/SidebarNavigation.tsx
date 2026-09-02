@@ -44,6 +44,7 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
 import { useSidebarCollapse } from './SidebarCollapseContext';
+import { SpaceNavModeSwitch } from './SpaceNavModeSwitch';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
 import { BrowseSpaces } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpaces';
@@ -383,6 +384,7 @@ export const SidebarNavigation: React.FunctionComponent<
                       data-testid={SidebarNavigationDataTestId.IntegrationsLink}
                     />,
                     <SidebarHelpMenu key="help" />,
+                    <SpaceNavModeSwitch key="nav-mode" />,
                     <PMBox
                       key="logout"
                       as="button"
