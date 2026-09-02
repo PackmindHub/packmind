@@ -66,7 +66,7 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
       case 'codex':
         return new CodexDeployer(this.standardsPort, this.gitPort);
       case 'kiro':
-        return new KiroDeployer(this.standardsPort, this.gitPort);
+        return new KiroDeployer(this.standardsPort);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }

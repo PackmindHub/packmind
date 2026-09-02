@@ -5,7 +5,6 @@ import {
   DeleteItemType,
   FileUpdates,
   GitRepo,
-  IGitPort,
   IStandardsPort,
   CommandVersion,
   SkillFileOutput,
@@ -48,7 +47,6 @@ export class KiroDeployer implements ICodingAgentDeployer {
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
-    private readonly gitPort?: IGitPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
