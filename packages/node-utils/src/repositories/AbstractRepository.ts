@@ -9,6 +9,7 @@ import {
 import {
   EntitySchema,
   FindOptionsWhere,
+  In,
   Repository,
   UpdateResult,
 } from 'typeorm';
@@ -186,34 +187,54 @@ export abstract class AbstractRepository<
 
   protected abstract loggableEntity(entity: Entity): Partial<Entity>;
 
-  protected async getCreatedBy(userId: string): Promise<CreatedBy | undefined> {
+  /**
+   * Resolves the authors of a whole list in a single query.
+   *
+   * Callers used to ask one `User.findOne` per entity while mapping a list, so
+   * a 40-item page cost 40 round trips for what is usually a handful of
+   * distinct authors — and the parallel fan-out drained the connection pool on
+   * top of that. This queries the distinct ids once and returns a lookup map.
+   *
+   * Degrades like the per-entity version it replaced: a failure is logged and
+   * swallowed, and unresolved ids are simply absent from the map, so callers
+   * yield `createdBy: undefined` for those items instead of failing the list.
+   */
+  protected async getCreatedByMany(
+    userIds: string[],
+  ): Promise<Map<UserId, CreatedBy>> {
+    const createdByUserId = new Map<UserId, CreatedBy>();
+    const distinctUserIds = [...new Set(userIds.filter(Boolean))];
+
+    if (distinctUserIds.length === 0) {
+      return createdByUserId;
+    }
+
     try {
-      const user = (await this.repository.manager
-        .getRepository('User')
-        .findOne({
-          where: { id: userId },
-          select: ['id', 'email', 'displayName'],
-        })) as {
+      const users = (await this.repository.manager.getRepository('User').find({
+        where: { id: In(distinctUserIds) },
+        select: ['id', 'email', 'displayName'],
+      })) as {
         id: string;
         email: string;
         displayName: string | null;
-      } | null;
+      }[];
 
-      if (user) {
+      for (const user of users) {
         const displayName =
           user.displayName ?? user.email.split('@')[0] ?? 'Unknown';
-        return {
+        createdByUserId.set(user.id as UserId, {
           userId: user.id as UserId,
           displayName,
-        };
+        });
       }
     } catch (error) {
       this.logger.warn('Failed to fetch user info', {
-        userId,
+        userCount: distinctUserIds.length,
         error: error instanceof Error ? error.message : String(error),
       });
     }
-    return undefined;
+
+    return createdByUserId;
   }
 
   protected makeDuplicationErrorMessage(entity: Entity): string {
