@@ -47,14 +47,16 @@ describe('AbstractRepository', () => {
       expect(mockUserRepository.find).toHaveBeenCalledTimes(1);
     });
 
-    it('issues a single query when the same author repeats', async () => {
-      await repository.exposedGetCreatedByMany(
-        Array.from({ length: 40 }, (_, index) =>
-          index % 2 === 0 ? 'user-1' : 'user-2',
-        ),
-      );
+    describe('when the same author repeats', () => {
+      it('issues a single query', async () => {
+        await repository.exposedGetCreatedByMany(
+          Array.from({ length: 40 }, (_, index) =>
+            index % 2 === 0 ? 'user-1' : 'user-2',
+          ),
+        );
 
-      expect(mockUserRepository.find).toHaveBeenCalledTimes(1);
+        expect(mockUserRepository.find).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('queries the distinct user ids only', async () => {
@@ -91,14 +93,16 @@ describe('AbstractRepository', () => {
       });
     });
 
-    it('falls back to the email local part when the display name is null', async () => {
-      mockUserRepository.find.mockResolvedValue([
-        { id: 'user-1', email: 'alice@packmind.com', displayName: null },
-      ]);
+    describe('when the display name is null', () => {
+      it('falls back to the email local part', async () => {
+        mockUserRepository.find.mockResolvedValue([
+          { id: 'user-1', email: 'alice@packmind.com', displayName: null },
+        ]);
 
-      const createdBy = await repository.exposedGetCreatedByMany(['user-1']);
+        const createdBy = await repository.exposedGetCreatedByMany(['user-1']);
 
-      expect(createdBy.get('user-1' as UserId)?.displayName).toBe('alice');
+        expect(createdBy.get('user-1' as UserId)?.displayName).toBe('alice');
+      });
     });
 
     describe('when no user id is given', () => {
