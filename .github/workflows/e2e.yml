@@ -206,10 +206,19 @@ jobs:
       # reason, which a sequential probe cannot see. Do not re-derive the -14%
       # and ship it. A per-worker cache dir (keyed on JEST_WORKER_ID) is the
       # untried variant, and needs a `runCli` change plus a fresh A/B.
+      # CLI_E2E_TIMING is diagnostic, for the hook-timeout failures on `main`:
+      # every failure is a `beforeEach` exceeding the 30s `testTimeout`, never
+      # an assertion, and the API container logs show it idle but for its 30s
+      # healthcheck while that happens — so the time is being spent on the test
+      # side, where nothing currently measures it. Emits per-test brackets,
+      # per-`runCli` breakdowns and machine-load samples to stderr, behind the
+      # `@@TIMING@@` marker. Remove once the cause is identified.
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+          CLI_E2E_TIMING: '1'
+          CLI_E2E_MAX_WORKERS: ${{ vars.CLI_E2E_MAX_WORKERS }}
         run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
