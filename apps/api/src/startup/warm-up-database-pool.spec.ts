@@ -72,12 +72,19 @@ function makeHarness(
 }
 
 describe('warmUpDatabasePool', () => {
-  it('opens as many connections as the pool refuses to reap', async () => {
+  it('asks the pool for as many connections as it refuses to reap', async () => {
     const { dataSource, runners } = makeHarness();
 
     await warmUpDatabasePool(dataSource);
 
     expect(runners).toHaveLength(DATABASE_POOL_OPTIONS.min);
+  });
+
+  it('opens every connection it asked for', async () => {
+    const { dataSource, runners } = makeHarness();
+
+    await warmUpDatabasePool(dataSource);
+
     expect(runners.every((runner) => runner.connected)).toBe(true);
   });
 
@@ -89,12 +96,19 @@ describe('warmUpDatabasePool', () => {
     expect(state.peakHeld).toBe(DATABASE_POOL_OPTIONS.min);
   });
 
-  it('returns every connection to the pool as idle', async () => {
-    const { dataSource, runners, state } = makeHarness();
+  it('releases every connection it opened', async () => {
+    const { dataSource, runners } = makeHarness();
 
     await warmUpDatabasePool(dataSource);
 
     expect(runners.every((runner) => runner.released)).toBe(true);
+  });
+
+  it('leaves nothing checked out of the pool', async () => {
+    const { dataSource, state } = makeHarness();
+
+    await warmUpDatabasePool(dataSource);
+
     expect(state.heldNow).toBe(0);
   });
 
@@ -113,13 +127,20 @@ describe('warmUpDatabasePool', () => {
     });
 
     it('releases the connections that did open', async () => {
-      const { dataSource, runners, state } = makeHarness(failingRunner);
+      const { dataSource, runners } = makeHarness(failingRunner);
+
+      await warmUpDatabasePool(dataSource);
+
+      expect(runners.every((runner) => runner.released)).toBe(true);
+    });
+
+    it('leaves nothing checked out of the pool', async () => {
+      const { dataSource, state } = makeHarness(failingRunner);
 
       await warmUpDatabasePool(dataSource);
 
       // Anything still checked out here is gone for the life of the process,
       // costing the pool that much of its `max`.
-      expect(runners.every((runner) => runner.released)).toBe(true);
       expect(state.heldNow).toBe(0);
     });
   });
