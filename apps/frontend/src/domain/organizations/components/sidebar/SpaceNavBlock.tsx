@@ -12,7 +12,9 @@ import {
   LuBookCheck,
   LuEye,
   LuHouse,
+  LuLayers,
   LuPackage,
+  LuShare2,
   LuSlidersHorizontal,
   LuTerminal,
   LuWandSparkles,
@@ -25,6 +27,7 @@ import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
 import { SpaceNavSections } from './SpaceNavSections';
+import { useSpaceNavMode } from '../SpaceNavModeContext';
 
 interface SpaceNavBlockProps {
   space: UserSpaceWithRole;
@@ -98,6 +101,12 @@ export function SpaceNavBlock({
   );
 }
 
+/**
+ * The same entries as {@link SpaceNavSections}, as icons. It branches on the
+ * mode for the same reason: a rail still listing Standards and Packages while
+ * the reader is in the plugin-first architecture would offer destinations that
+ * architecture does not have.
+ */
 function CollapsedSpaceNavItems({
   space,
   orgSlug,
@@ -105,6 +114,25 @@ function CollapsedSpaceNavItems({
   space: UserSpaceWithRole;
   orgSlug: string;
 }>): React.ReactElement {
+  const { mode } = useSpaceNavMode();
+
+  if (mode === 'plugin-first') {
+    return (
+      <>
+        <SidebarNavigationLink
+          url={routes.space.toContext(orgSlug, space.slug)}
+          label="Context"
+          icon={<LuLayers />}
+        />
+        <SidebarNavigationLink
+          url={routes.space.toDistribution(orgSlug, space.slug)}
+          label="Distribution"
+          icon={<LuShare2 />}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <SidebarNavigationLink
