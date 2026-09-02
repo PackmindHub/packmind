@@ -2,6 +2,7 @@ import type {
   DistributionStatus,
   GitProviderId,
   GitRepoId,
+  MarketplaceId,
   PackageId,
   CommandId,
   SkillId,
@@ -91,4 +92,40 @@ export type RepositoryDrift = {
   repo: RepoRef;
   branch: string;
   targets: TargetDrift[];
+};
+
+/**
+ * One outdated plugin inside a marketplace drift group: a plugin published from
+ * a space-owned package whose source has changed since publish, so the
+ * marketplace copy needs republishing.
+ */
+export type MarketplacePluginDrift = {
+  pluginSlug: string;
+  packageId: PackageId;
+  packageName: string;
+};
+
+/**
+ * Marketplace-centric pivot of the overview: one entry per marketplace the
+ * current space publishes to, with its outdated plugins grouped underneath.
+ * Peer to `PackageDrift` / `RepositoryDrift`.
+ *
+ * `plugins` empty means the marketplace is up to date, not that it is empty.
+ * The list of destinations includes those; the drift-only producer that feeds
+ * the sidebar badge does not emit them, because it never sees them.
+ */
+export type MarketplaceDrift = {
+  id: MarketplaceId;
+  name: string;
+  plugins: MarketplacePluginDrift[];
+  /**
+   * Packages of the reading space this marketplace holds, outdated or not, for
+   * the rail's search.
+   *
+   * `buildMarketplaceDriftOverview` can only fill this with the drifted ones,
+   * which is all its input contains; its consumers are a badge and a stub and
+   * neither searches. `selectSpaceMarketplaces` fills it from every plugin the
+   * space has here, which is what the rail reads.
+   */
+  publishedPackageNames: string[];
 };
