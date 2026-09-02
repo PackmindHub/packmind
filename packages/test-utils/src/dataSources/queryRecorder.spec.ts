@@ -23,22 +23,26 @@ describe('createQueryRecorder', () => {
       expect(recorder.countMatching('"skills"')).toBe(1);
     });
 
-    it('does not skip matches when the regex is global', () => {
-      const recorder = createQueryRecorder();
+    describe('when the regex is global', () => {
+      it('does not skip matches', () => {
+        const recorder = createQueryRecorder();
 
-      recorder.logger.logQuery('SELECT * FROM "users"');
-      recorder.logger.logQuery('SELECT * FROM "users"');
+        recorder.logger.logQuery('SELECT * FROM "users"');
+        recorder.logger.logQuery('SELECT * FROM "users"');
 
-      expect(recorder.countMatching(/users/g)).toBe(2);
+        expect(recorder.countMatching(/users/g)).toBe(2);
+      });
     });
 
-    it('does not skip matches when the regex is sticky', () => {
-      const recorder = createQueryRecorder();
+    describe('when the regex is sticky', () => {
+      it('does not skip matches', () => {
+        const recorder = createQueryRecorder();
 
-      recorder.logger.logQuery('SELECT * FROM "users"');
-      recorder.logger.logQuery('SELECT * FROM "users"');
+        recorder.logger.logQuery('SELECT * FROM "users"');
+        recorder.logger.logQuery('SELECT * FROM "users"');
 
-      expect(recorder.countMatching(/users/y)).toBe(2);
+        expect(recorder.countMatching(/users/y)).toBe(2);
+      });
     });
   });
 
@@ -84,9 +88,11 @@ describe('createTestDatasourceFixture without recordQueries', () => {
   beforeAll(() => fixture.initialize());
   afterAll(() => fixture.destroy());
 
-  it('explains that recording is off when queries are read', () => {
-    expect(() => fixture.queries).toThrow(
-      'Pass { recordQueries: true } to createTestDatasourceFixture',
-    );
+  describe('when queries are read', () => {
+    it('explains that recording is off', () => {
+      expect(() => fixture.queries).toThrow(
+        'Pass { recordQueries: true } to createTestDatasourceFixture',
+      );
+    });
   });
 });
