@@ -35,6 +35,7 @@ import {
   LuX,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
+import { Link } from 'react-router';
 import type { GitProviderId, PackageId, TargetId } from '@packmind/types';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import {
@@ -107,6 +108,20 @@ type SyncSurfaceProps = {
   isProvidersLoading: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  /**
+   * Where to set up scheduled updates, offered once the redistribution has
+   * succeeded.
+   *
+   * Here rather than on the surface that started the flow, because this is the
+   * moment the offer means something: the reader has just done by hand the work
+   * the scheduler would have done, so the sentence describes what they did
+   * rather than advertising a feature. On a listing screen the same link is
+   * chrome that competes with the list.
+   *
+   * Optional, so the callers that have no organization slug to build it from,
+   * or no reason to make the offer, pass nothing and lose nothing.
+   */
+  autoUpdateHref?: string | null;
 };
 
 export function SyncSurface({
@@ -116,6 +131,7 @@ export function SyncSurface({
   isProvidersLoading,
   onCancel,
   onConfirm,
+  autoUpdateHref = null,
 }: Readonly<SyncSurfaceProps>) {
   const blocks = useMemo<PackageBlock[]>(
     () => buildPackageBlocks(packages, scope),
@@ -317,7 +333,13 @@ export function SyncSurface({
   }, [onCancel, handleConfirm, stats.installCount, step]);
 
   if (step === 'success') {
-    return <SuccessSurface stats={stats} onClose={onCancel} />;
+    return (
+      <SuccessSurface
+        stats={stats}
+        onClose={onCancel}
+        autoUpdateHref={autoUpdateHref}
+      />
+    );
   }
 
   const isSyncing = step === 'syncing';
@@ -1268,6 +1290,7 @@ function NothingToSync() {
 function SuccessSurface({
   stats,
   onClose,
+  autoUpdateHref,
 }: Readonly<{
   stats: {
     installCount: number;
@@ -1275,6 +1298,7 @@ function SuccessSurface({
     artifactUpdateCount: number;
   };
   onClose: () => void;
+  autoUpdateHref: string | null;
 }>) {
   return (
     <PMBox
@@ -1302,10 +1326,40 @@ function SuccessSurface({
           bringing the bundled artifacts to their Packmind version. Those
           distributions are now back in line.
         </PMText>
+        {/*
+          The offer, made here and nowhere else on the way in.
+
+          It reads as a description of what just happened rather than as a
+          pitch, which is the whole reason it waits for this screen: the reader
+          has done the scheduler's job by hand and the sentence names it. Above,
+          on the listing that started the flow, the same link was a control in
+          the header competing with the list it sat on.
+
+          Second sentence, not a heading and not an alert. Nothing has gone
+          wrong, so nothing here raises its voice.
+        */}
+        {autoUpdateHref && (
+          <PMText fontSize="sm" color="tertiary">
+            Auto-update makes this same commit on a schedule, so the next
+            version lands without anyone opening this screen.
+          </PMText>
+        )}
         <PMHStack gap={2} paddingTop={2}>
+          {/*
+            "Done", not "Back to overview". This surface is mounted from four
+            places and none of them is an overview any more: two are tabs of a
+            package, which is where it returns to, and the space-level one is
+            Distribution. A control should name what it does rather than the
+            screen it happens to land on, and here it dismisses the receipt.
+          */}
           <PMButton variant="primary" size="sm" onClick={onClose}>
-            Back to overview
+            Done
           </PMButton>
+          {autoUpdateHref && (
+            <PMButton variant="secondary" size="sm" asChild>
+              <Link to={autoUpdateHref}>Set up Auto-update</Link>
+            </PMButton>
+          )}
         </PMHStack>
       </PMVStack>
     </PMBox>
