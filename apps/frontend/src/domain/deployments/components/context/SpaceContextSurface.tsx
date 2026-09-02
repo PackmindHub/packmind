@@ -32,8 +32,8 @@ import {
   selectSkillFile,
   sortFilesByPath,
 } from './buildComponentDetail';
-import { ContextBlankState } from './ContextBlankState';
 import { resolveContextView } from './resolveContextView';
+import { ContextBlankState } from './ContextBlankState';
 import { CreatePackageDrawer } from './CreatePackageDrawer';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextSkillFileRail } from './ContextSkillFileRail';
@@ -119,7 +119,7 @@ export function SpaceContextSurface() {
    * wears a badge built from them, so both are already in the cache by the time
    * this renders.
    */
-  const { packages: driftPackages } = useSpaceDrift();
+  const { packages: driftPackages, isError: isDriftError } = useSpaceDrift();
   const { outdatedPlugins } = useSpaceOutdatedPlugins();
   /*
    * Plain computation rather than `useMemo`, for the reason
@@ -484,6 +484,7 @@ export function SpaceContextSurface() {
               spaceSlug={spaceSlug}
               selectedPackageId={selectedPackage?.id ?? null}
               attention={attention}
+              isAttentionUnavailable={isDriftError}
               showingInventory={showingInventory}
               inventoryCount={inventoryCount}
               orphanCount={orphanCount}
