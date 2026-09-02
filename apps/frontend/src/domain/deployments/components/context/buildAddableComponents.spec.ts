@@ -1,31 +1,45 @@
 import {
   createCommandId,
+  createPackageId,
   createSkillId,
   createStandardId,
   type Command,
+  type PackageResponse,
   type Skill,
   type Standard,
 } from '@packmind/types';
 import {
   buildAddableComponents,
+  countAddableComponents,
   filterAddableComponents,
   groupedComponentCount,
 } from './buildAddableComponents';
 import type {
-  ContextGroup,
   PackageComponentIds,
   SpaceCatalogue,
 } from './buildPackageContext';
+import {
+  filterInventoryGroups,
+  type InventoryGroup,
+} from './buildSpaceInventory';
 
 const TARGET = { orgSlug: 'acme', spaceSlug: 'platform' };
 
-const standard = (id: string, name: string, description = ''): Standard =>
+const standard = (
+  id: string,
+  name: string,
+  description = '',
+  createdAt?: string,
+): Standard =>
   ({
     id: createStandardId(id),
     name,
     slug: name.toLowerCase(),
     description,
     version: 3,
+    // Absent from the declared type and present in the payload, see
+    // `creationDateOf` in buildPackageContext.
+    ...(createdAt ? { createdAt } : {}),
   }) as Standard;
 
 const command = (id: string, name: string): Command =>
@@ -61,16 +75,44 @@ const holds = (parts: Partial<PackageComponentIds> = {}): PackageComponentIds =>
     ...parts,
   }) as PackageComponentIds;
 
-const namesOf = (groups: readonly ContextGroup[]) =>
+const pack = (
+  id: string,
+  name: string,
+  carries: Partial<
+    Pick<PackageResponse, 'standards' | 'commands' | 'skills'>
+  > = {},
+): PackageResponse =>
+  ({
+    id: createPackageId(id),
+    name,
+    standards: [],
+    commands: [],
+    skills: [],
+    ...carries,
+  }) as PackageResponse;
+
+/** No other package in the space, so every candidate is in none. */
+const ALONE: readonly PackageResponse[] = [];
+
+const namesOf = (groups: readonly InventoryGroup[]) =>
   groups.map((group) => [
     group.type,
-    group.components.map((component) => component.name),
+    group.entries.map((entry) => entry.component.name),
   ]);
+
+const ownersOf = (groups: readonly InventoryGroup[]) =>
+  groups.flatMap((group) =>
+    group.entries.map(
+      (entry) =>
+        [entry.component.name, entry.packageNames] as [string, string[]],
+    ),
+  );
 
 describe('buildAddableComponents', () => {
   it('offers a component the package does not hold', () => {
     const result = buildAddableComponents(
       holds(),
+      ALONE,
       catalogue({ standards: [standard('s1', 'Naming')] }),
       TARGET,
     );
@@ -81,6 +123,7 @@ describe('buildAddableComponents', () => {
   it('leaves out a component the package already holds', () => {
     const result = buildAddableComponents(
       holds({ standards: [createStandardId('s1')] }),
+      ALONE,
       catalogue({
         standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
       }),
@@ -93,6 +136,7 @@ describe('buildAddableComponents', () => {
   it('leaves out a command the package already holds', () => {
     const result = buildAddableComponents(
       holds({ commands: [createCommandId('c1')] }),
+      ALONE,
       catalogue({
         commands: [command('c1', 'Release'), command('c2', 'Review')],
       }),
@@ -105,6 +149,7 @@ describe('buildAddableComponents', () => {
   it('leaves out a skill the package already holds', () => {
     const result = buildAddableComponents(
       holds({ skills: [createSkillId('k1')] }),
+      ALONE,
       catalogue({ skills: [skill('k1', 'Onboard'), skill('k2', 'Migrate')] }),
       TARGET,
     );
@@ -115,6 +160,7 @@ describe('buildAddableComponents', () => {
   it('does not confuse two types that share an id', () => {
     const result = buildAddableComponents(
       holds({ standards: [createStandardId('shared')] }),
+      ALONE,
       catalogue({
         standards: [standard('shared', 'Naming')],
         commands: [command('shared', 'Release')],
@@ -128,6 +174,7 @@ describe('buildAddableComponents', () => {
   it('survives a package whose membership arrays are absent', () => {
     const result = buildAddableComponents(
       {} as PackageComponentIds,
+      ALONE,
       catalogue({ standards: [standard('s1', 'Naming')] }),
       TARGET,
     );
@@ -139,6 +186,7 @@ describe('buildAddableComponents', () => {
     it('drops its group rather than showing it empty', () => {
       const result = buildAddableComponents(
         holds({ standards: [createStandardId('s1')] }),
+        ALONE,
         catalogue({
           standards: [standard('s1', 'Naming')],
           commands: [command('c1', 'Release')],
@@ -154,6 +202,7 @@ describe('buildAddableComponents', () => {
     const result = () =>
       buildAddableComponents(
         holds(),
+        ALONE,
         catalogue({
           skills: [skill('k1', 'Onboard')],
           commands: [command('c1', 'Release')],
@@ -182,6 +231,7 @@ describe('buildAddableComponents', () => {
   it('orders a group alphabetically rather than by catalogue order', () => {
     const result = buildAddableComponents(
       holds(),
+      ALONE,
       catalogue({
         standards: [
           standard('s1', 'Testing'),
@@ -200,7 +250,7 @@ describe('buildAddableComponents', () => {
   it('does not reorder the catalogue it was handed', () => {
     const standards = [standard('s1', 'Testing'), standard('s2', 'Naming')];
 
-    buildAddableComponents(holds(), catalogue({ standards }), TARGET);
+    buildAddableComponents(holds(), ALONE, catalogue({ standards }), TARGET);
 
     expect(standards.map((entity) => entity.name)).toEqual([
       'Testing',
@@ -211,13 +261,14 @@ describe('buildAddableComponents', () => {
   it('builds the same row the pane renders', () => {
     const result = buildAddableComponents(
       holds(),
+      ALONE,
       catalogue({
         standards: [standard('s1', 'Naming', 'How things are named')],
       }),
       TARGET,
     );
 
-    expect(result.groups[0].components[0]).toEqual({
+    expect(result.groups[0].entries[0].component).toEqual({
       key: createStandardId('s1'),
       type: 'standard',
       name: 'Naming',
@@ -228,10 +279,65 @@ describe('buildAddableComponents', () => {
     });
   });
 
+  describe('what already carries a candidate', () => {
+    const packages = [
+      pack('p1', 'Backend', { standards: [createStandardId('s1')] }),
+      pack('p2', 'Frontend', { standards: [createStandardId('s1')] }),
+      pack('p3', 'Mobile', { commands: [createCommandId('c1')] }),
+    ];
+    const space = catalogue({
+      standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+      commands: [command('c1', 'Release')],
+    });
+
+    const result = () =>
+      buildAddableComponents(holds(), packages, space, TARGET);
+
+    it('names every package holding it, sorted', () => {
+      expect(ownersOf(result().groups)).toEqual([
+        ['Naming', ['Backend', 'Frontend']],
+        ['Testing', []],
+        ['Release', ['Mobile']],
+      ]);
+    });
+
+    it('leaves a candidate no package carries with none', () => {
+      const testing = result().groups[0].entries.find(
+        (entry) => entry.component.name === 'Testing',
+      );
+
+      expect(testing?.packageNames).toEqual([]);
+    });
+
+    /*
+     * The package being filled is not in the list it was built from, so its own
+     * name could never appear here. Pinned because the candidates are exactly
+     * the components it does not hold: a candidate labelled with the package
+     * that is about to receive it would be a contradiction on the row.
+     */
+    it('never names the package being filled', () => {
+      const filling = pack('p4', 'Platform', {
+        standards: [createStandardId('s2')],
+      });
+
+      const owners = ownersOf(
+        buildAddableComponents(
+          holds({ standards: [createStandardId('s2')] }),
+          [...packages, filling],
+          space,
+          TARGET,
+        ).groups,
+      );
+
+      expect(owners.flatMap(([, names]) => names)).not.toContain('Platform');
+    });
+  });
+
   describe('counts', () => {
     it('totals what is addable across the groups', () => {
       const result = buildAddableComponents(
         holds({ standards: [createStandardId('s1')] }),
+        ALONE,
         catalogue({
           standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
           commands: [command('c1', 'Release')],
@@ -245,6 +351,7 @@ describe('buildAddableComponents', () => {
     it('counts the whole space apart from what is addable', () => {
       const result = buildAddableComponents(
         holds({ standards: [createStandardId('s1')] }),
+        ALONE,
         catalogue({
           standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
           commands: [command('c1', 'Release')],
@@ -255,10 +362,55 @@ describe('buildAddableComponents', () => {
       expect(result.catalogueTotal).toBe(3);
     });
 
+    describe('freeTotal', () => {
+      const space = catalogue({
+        standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+        commands: [command('c1', 'Release')],
+      });
+
+      it('counts only the candidates no package carries', () => {
+        const result = buildAddableComponents(
+          holds(),
+          [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+          space,
+          TARGET,
+        );
+
+        expect(result.freeTotal).toBe(2);
+      });
+
+      describe('when no package carries anything', () => {
+        it('equals the total', () => {
+          const result = buildAddableComponents(holds(), ALONE, space, TARGET);
+
+          expect(result.freeTotal).toBe(result.total);
+        });
+      });
+
+      describe('when every candidate already ships somewhere', () => {
+        it('counts none, while the candidates remain', () => {
+          const result = buildAddableComponents(
+            holds(),
+            [
+              pack('p1', 'Backend', {
+                standards: [createStandardId('s1'), createStandardId('s2')],
+                commands: [createCommandId('c1')],
+              }),
+            ],
+            space,
+            TARGET,
+          );
+
+          expect(result).toMatchObject({ total: 3, freeTotal: 0 });
+        });
+      });
+    });
+
     describe('when the package already holds everything', () => {
       const result = () =>
         buildAddableComponents(
           holds({ standards: [createStandardId('s1')] }),
+          ALONE,
           catalogue({ standards: [standard('s1', 'Naming')] }),
           TARGET,
         );
@@ -275,12 +427,51 @@ describe('buildAddableComponents', () => {
 
     describe('when the space owns nothing', () => {
       it('has nothing to offer and nothing to count', () => {
-        expect(buildAddableComponents(holds(), catalogue(), TARGET)).toEqual({
+        expect(
+          buildAddableComponents(holds(), ALONE, catalogue(), TARGET),
+        ).toEqual({
           groups: [],
           total: 0,
+          freeTotal: 0,
           catalogueTotal: 0,
         });
       });
+    });
+  });
+});
+
+/*
+ * The coverage filter the picker opens on is the inventory's own, applied to
+ * these groups. Pinned here rather than only beside the inventory, because it
+ * is what the drawer's default shows: the two surfaces have to agree on which
+ * components count as unplaced, and on the order they are read in.
+ */
+describe('filtering the candidates to those in no package', () => {
+  const groups = () =>
+    buildAddableComponents(
+      holds(),
+      [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+      catalogue({
+        standards: [
+          standard('s1', 'Naming', '', '2026-01-01T00:00:00.000Z'),
+          standard('s2', 'Testing', '', '2026-02-01T00:00:00.000Z'),
+          standard('s3', 'Reviewing', '', '2026-03-01T00:00:00.000Z'),
+        ],
+      }),
+      TARGET,
+    ).groups;
+
+  it('drops the candidates a package already carries', () => {
+    expect(namesOf(filterInventoryGroups(groups(), 'none'))).toEqual([
+      ['standard', ['Reviewing', 'Testing']],
+    ]);
+  });
+
+  describe('when the filter is off', () => {
+    it('keeps every candidate', () => {
+      expect(namesOf(filterInventoryGroups(groups(), 'all'))).toEqual([
+        ['standard', ['Naming', 'Reviewing', 'Testing']],
+      ]);
     });
   });
 });
@@ -289,6 +480,7 @@ describe('groupedComponentCount', () => {
   it('sums the components of every group', () => {
     const { groups } = buildAddableComponents(
       holds(),
+      ALONE,
       catalogue({
         standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
         skills: [skill('k1', 'Onboard')],
@@ -308,6 +500,7 @@ describe('filterAddableComponents', () => {
   const groups = () =>
     buildAddableComponents(
       holds(),
+      [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
       catalogue({
         standards: [
           standard('s1', 'Naming', 'How things are named'),
@@ -342,6 +535,10 @@ describe('filterAddableComponents', () => {
     ).toEqual(['command']);
   });
 
+  it('does not match on the package already carrying a component', () => {
+    expect(filterAddableComponents(groups(), 'Backend')).toEqual([]);
+  });
+
   describe('when the query matches nothing', () => {
     it('keeps nothing', () => {
       expect(filterAddableComponents(groups(), 'nowhere')).toEqual([]);
@@ -365,5 +562,92 @@ describe('filterAddableComponents', () => {
       ['standard', ['Naming', 'Testing']],
       ['command', ['Release']],
     ]);
+  });
+});
+
+describe('countAddableComponents', () => {
+  it('counts what the catalogue holds across the three types', () => {
+    expect(
+      countAddableComponents(
+        holds(),
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+          commands: [command('c1', 'Release')],
+          skills: [skill('k1', 'Review')],
+        }),
+      ),
+    ).toBe(4);
+  });
+
+  it('leaves out what the package already holds', () => {
+    expect(
+      countAddableComponents(
+        holds({ standards: [createStandardId('s1')] }),
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+        }),
+      ),
+    ).toBe(1);
+  });
+
+  describe('when the package references an artefact the space no longer owns', () => {
+    it('does not count it, the way subtracting the two totals would', () => {
+      expect(
+        countAddableComponents(
+          holds({
+            standards: [createStandardId('s1'), createStandardId('gone')],
+          }),
+          catalogue({
+            standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+          }),
+        ),
+      ).toBe(1);
+    });
+  });
+
+  describe('when the space owns nothing', () => {
+    it('counts nothing', () => {
+      expect(countAddableComponents(holds(), catalogue())).toBe(0);
+    });
+  });
+
+  describe('when the package holds everything the space owns', () => {
+    it('counts nothing', () => {
+      expect(
+        countAddableComponents(
+          holds({
+            standards: [createStandardId('s1')],
+            commands: [createCommandId('c1')],
+            skills: [createSkillId('k1')],
+          }),
+          catalogue({
+            standards: [standard('s1', 'Naming')],
+            commands: [command('c1', 'Release')],
+            skills: [skill('k1', 'Review')],
+          }),
+        ),
+      ).toBe(0);
+    });
+  });
+
+  /*
+   * The reason the header is allowed to ask the cheap question: the two answers
+   * are the same answer, so the control's shape and the list it opens cannot
+   * disagree about whether there is anything to pick.
+   */
+  it('agrees with the total the picker itself reports', () => {
+    const pkg = holds({
+      standards: [createStandardId('s1')],
+      skills: [createSkillId('k1')],
+    });
+    const space = catalogue({
+      standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+      commands: [command('c1', 'Release')],
+      skills: [skill('k1', 'Review'), skill('k2', 'Refactor')],
+    });
+
+    expect(countAddableComponents(pkg, space)).toBe(
+      buildAddableComponents(pkg, ALONE, space, TARGET).total,
+    );
   });
 });
