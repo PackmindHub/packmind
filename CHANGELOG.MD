@@ -1,4 +1,4 @@
-# [Unreleased]
+# [1.17.0] - 2026-09-02
 
 ## Added
 
@@ -28,8 +28,6 @@
 - `packmind plugins render` on a package that holds only standards now states why it cannot render, instead of failing with an opaque server error. The reason — a plugin needs at least one skill or command — was already carried by the error but never reached the CLI, which reported "Internal server error" and left nothing to act on. The marketplace publish path already explained itself; the CLI is the one route with no gate in front of it (#799)
 - Editing a standard no longer marks the plugins published from its package as outdated. Drift is now measured over the artifacts a plugin actually carries — commands and skills — so a standard edit no longer raises "Changes to publish" nor opens a pull request that changes no file. For the same reason, the plugin "Changes" tab lists command and skill changes only.
 - A Git connection can no longer be created or re-authenticated with a token its provider rejects. Both paths only checked that the credential fields were coherent, so a dead or scope-poor token was stored and reported as accepted while the connection could not list a single repository — and the re-authentication panel announced that the token had been "validated against" the host as it did so. The token is now checked against the provider before it replaces the stored one, and a token nobody can check is refused rather than reported as validated. Re-authenticating with a personal access token also works again at all: the drawer sent a body with the token stripped out of it, so repairing a connection ended in "Git provider update data is required" and a 500, and the provider edit form discarded a rotated token the same way. Renames, GitHub App rebinds and the tokenless providers the CLI creates are untouched — they neither pay for the check nor gain a new way to fail it
-
-## Removed
 
 # [1.16.2] - 2026-08-12
 
@@ -378,7 +376,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...HEAD
+[1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
 [1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
 [1.16.1]: https://github.com/PackmindHub/packmind/compare/release/1.16.0...release/1.16.1
 [1.16.0]: https://github.com/PackmindHub/packmind/compare/release/1.15.1...release/1.16.0
