@@ -122,7 +122,6 @@ export class CommandRepository
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // Resolve every author in one query, not one per recipe
       const createdByUserId = await this.getCreatedByMany(
         recipes.map((recipe) => recipe.userId),
       );

@@ -188,19 +188,11 @@ export abstract class AbstractRepository<
   protected abstract loggableEntity(entity: Entity): Partial<Entity>;
 
   /**
-   * Resolves the authors of a whole list in a single query.
+   * Resolves a whole list's authors in one query.
    *
-   * Callers used to ask one `User.findOne` per entity while mapping a list, so
-   * a 40-item page cost 40 round trips for what is usually a handful of
-   * distinct authors — and the parallel fan-out drained the connection pool on
-   * top of that. This queries the distinct ids once and returns a lookup map.
-   *
-   * A failure is still logged and swallowed rather than failing the list:
-   * unresolved ids are simply absent from the map, so callers yield
-   * `createdBy: undefined` for those items and the list renders. What did
-   * change is the blast radius — the single query covers the whole page, so a
-   * failure now costs every author on it, where the per-entity call it
-   * replaced only blanked the item whose own lookup failed.
+   * Failures are logged and swallowed and unresolved ids are absent from the
+   * map, so callers yield `createdBy: undefined` rather than failing the list
+   * — but one failed query costs the whole page's authors, not one item's.
    */
   protected async getCreatedByMany(
     userIds: string[],

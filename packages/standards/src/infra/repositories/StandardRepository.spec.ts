@@ -217,8 +217,6 @@ describe('StandardRepository', () => {
       );
       await standardRepository.addMany(standards);
 
-      // Seeded in bulk rather than one round trip per row: 40 standards and
-      // their 80 versions inserted one by one dominated this file's runtime.
       await fixture.datasource.getRepository(StandardVersionSchema).save(
         standards.flatMap((standard) => [
           standardVersionFactory({

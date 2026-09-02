@@ -8,20 +8,11 @@ export type TestUser = {
 };
 
 /**
- * A stand-in for the real `UserSchema` for specs that need author hydration to
- * resolve.
- *
- * `AbstractRepository.getCreatedByMany` looks its authors up by entity *name*
- * (`getRepository('User')`), so any datasource whose entity list omits a `User`
- * entity makes that lookup throw — which the method swallows, silently
- * yielding `createdBy: undefined` for every item. Register this alongside the
- * entities under test to exercise the resolved path instead.
- *
- * It is deliberately a local copy rather than an import of
- * `@packmind/accounts`: `standards` and `commands` do not depend on that
- * package, and this file only has to carry the columns the lookup reads. The
- * soft-delete columns are kept because the real schema has them, and their
- * absence would change the SQL the lookup generates.
+ * Stands in for the real `UserSchema` in specs that need author hydration to
+ * resolve: `getCreatedByMany` looks authors up by entity name, so a datasource
+ * with no `User` entity silently yields `createdBy: undefined` for every item.
+ * A local copy because `standards` and `commands` do not depend on
+ * `@packmind/accounts`.
  */
 export const TestUserSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<TestUser>>

@@ -3,10 +3,7 @@ import { IBackup, IMemoryDb, newDb } from 'pg-mem';
 import { createQueryRecorder, QueryRecorder } from './queryRecorder';
 
 export type TestDatabaseOptions = {
-  /**
-   * Records every statement the datasource issues, exposed as `queries`.
-   * Off by default: it is only needed by specs asserting on round-trip counts.
-   */
+  /** Records every statement issued, exposed as `queries`. */
   recordQueries?: boolean;
 };
 
@@ -18,7 +15,6 @@ export type TestDatabase = {
    */
   db: IMemoryDb;
   datasource: DataSource;
-  /** Present only when `recordQueries` was set. */
   queries?: QueryRecorder;
 };
 
@@ -98,18 +94,9 @@ export async function makeTestDatasource(
  * afterEach(() => fixture.cleanup()); // back to the seeded state
  * ```
  *
- * Pass `{ recordQueries: true }` to assert on how many statements a repository
- * issues, then read them through `fixture.queries`. `cleanup()`'s `TRUNCATE`s
- * and `initialize()`'s schema build are recorded too, so call
- * `fixture.queries.reset()` immediately before the act:
- *
- * ```typescript
- * const fixture = createTestDatasourceFixture([SkillSchema], { recordQueries: true });
- *
- * fixture.queries.reset();
- * await repository.findBySpaceId(spaceId);
- * expect(fixture.queries.countMatching(/from "users"/i)).toBe(1);
- * ```
+ * Pass `{ recordQueries: true }` to read the issued SQL through
+ * `fixture.queries`. `initialize()` and `cleanup()` are recorded too, so call
+ * `fixture.queries.reset()` immediately before the act.
  */
 export function createTestDatasourceFixture(
   entities: EntitySchema[],

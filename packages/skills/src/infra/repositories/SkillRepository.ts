@@ -92,7 +92,6 @@ export class SkillRepository
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // Resolve every author in one query, not one per skill
       const createdByUserId = await this.getCreatedByMany(
         skills.map((skill) => skill.userId),
       );

@@ -129,9 +129,7 @@ export class StandardRepository
         return [];
       }
 
-      // The scope of every standard's latest version, in one query rather than
-      // one per standard: rows come back newest first, so the first one seen
-      // for a given standard is its latest version.
+      // Newest first, so the first row seen for a standard is its latest.
       const versions = await this.repository.manager
         .getRepository<StandardVersion>(StandardVersionSchema)
         .find({
@@ -147,7 +145,6 @@ export class StandardRepository
         }
       }
 
-      // Resolve every author in one query, not one per standard
       const createdByUserId = await this.getCreatedByMany(
         standards.map((standard) => standard.userId),
       );

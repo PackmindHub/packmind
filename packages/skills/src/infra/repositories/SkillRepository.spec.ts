@@ -161,8 +161,6 @@ describe('SkillRepository', () => {
           })),
         );
 
-        // Seeded in bulk rather than one round trip per row: 40 sequential
-        // inserts dominated this file's runtime.
         await skillRepository.addMany(
           Array.from({ length: 40 }, (_, index) =>
             skillFactory({
