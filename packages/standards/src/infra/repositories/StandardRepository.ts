@@ -1,7 +1,7 @@
 import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
 import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import {
@@ -121,26 +121,41 @@ export class StandardRepository
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // For each standard, get the latest version to retrieve scope and enrich with user data
-      const standardsWithScope = await Promise.all(
-        standards.map(async (standard) => {
-          // Get the latest version for this standard
-          const latestVersion = await this.repository.manager
-            .getRepository<StandardVersion>(StandardVersionSchema)
-            .findOne({
-              where: { standardId: standard.id },
-              order: { version: 'DESC' },
-            });
+      if (standards.length === 0) {
+        this.logger.info('Standards with scope found by space ID', {
+          spaceId,
+          count: 0,
+        });
+        return [];
+      }
 
-          const createdBy = await this.getCreatedBy(standard.userId);
+      // The scope of every standard's latest version, in one query rather than
+      // one per standard: rows come back newest first, so the first one seen
+      // for a given standard is its latest version.
+      const versions = await this.repository.manager
+        .getRepository<StandardVersion>(StandardVersionSchema)
+        .find({
+          where: { standardId: In(standards.map((standard) => standard.id)) },
+          order: { version: 'DESC' },
+        });
 
-          return {
-            ...standard,
-            scope: latestVersion?.scope ?? standard.scope,
-            createdBy,
-          };
-        }),
+      const latestScopeByStandardId = new Map<StandardId, string | null>();
+      for (const version of versions) {
+        if (!latestScopeByStandardId.has(version.standardId)) {
+          latestScopeByStandardId.set(version.standardId, version.scope);
+        }
+      }
+
+      // Resolve every author in one query, not one per standard
+      const createdByUserId = await this.getCreatedByMany(
+        standards.map((standard) => standard.userId),
       );
+
+      const standardsWithScope = standards.map((standard) => ({
+        ...standard,
+        scope: latestScopeByStandardId.get(standard.id) ?? standard.scope,
+        createdBy: createdByUserId.get(standard.userId),
+      }));
 
       this.logger.info('Standards with scope found by space ID', {
         spaceId,

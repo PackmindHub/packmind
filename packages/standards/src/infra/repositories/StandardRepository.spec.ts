@@ -7,6 +7,7 @@ import {
   createTestDatasourceFixture,
   itHandlesSoftDelete,
   stubLogger,
+  TestUserSchema,
 } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -27,13 +28,17 @@ import { StandardRepository } from './StandardRepository';
 describe('StandardRepository', () => {
   // Use fixture pattern for faster test execution
   // Schema is synchronized once per file, tables truncated between tests
-  const fixture = createTestDatasourceFixture([
-    StandardSchema,
-    StandardVersionSchema,
-    RuleSchema,
-    GitCommitSchema,
-    SpaceSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [
+      StandardSchema,
+      StandardVersionSchema,
+      RuleSchema,
+      GitCommitSchema,
+      SpaceSchema,
+      TestUserSchema,
+    ],
+    { recordQueries: true },
+  );
 
   let standardRepository: StandardRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -185,6 +190,143 @@ describe('StandardRepository', () => {
     it('includes the third standard', () => {
       const foundIds = foundStandards.map((s) => s.id);
       expect(foundIds).toContain(standard3.id);
+    });
+  });
+
+  describe('when the space holds 40 standards written by 2 authors', () => {
+    const spaceId = createSpaceId(uuidv4());
+    const authorIds = [createUserId(uuidv4()), createUserId(uuidv4())];
+    let foundStandards: Standard[];
+
+    beforeEach(async () => {
+      await fixture.datasource.getRepository(TestUserSchema).save(
+        authorIds.map((userId, index) => ({
+          id: userId,
+          email: `author-${index}@packmind.com`,
+          displayName: `Author ${index}`,
+        })),
+      );
+
+      const versionRepo = fixture.datasource.getRepository(
+        StandardVersionSchema,
+      );
+      for (let index = 0; index < 40; index++) {
+        const standard = await standardRepository.add(
+          standardFactory({
+            spaceId,
+            slug: `slug-${index}`,
+            scope: 'standard-scope',
+            userId: authorIds[index % authorIds.length],
+          }),
+        );
+        await versionRepo.save(
+          standardVersionFactory({
+            standardId: standard.id,
+            version: 1,
+            scope: 'version-1-scope',
+          }),
+        );
+        await versionRepo.save(
+          standardVersionFactory({
+            standardId: standard.id,
+            version: 2,
+            scope: 'version-2-scope',
+          }),
+        );
+      }
+
+      fixture.queries.reset();
+      foundStandards = await standardRepository.findBySpaceId(spaceId);
+    });
+
+    it('returns every standard of the space', () => {
+      expect(foundStandards).toHaveLength(40);
+    });
+
+    it('resolves the authors with a single user query', () => {
+      expect(fixture.queries.countMatching(/from "users"/i)).toBe(1);
+    });
+
+    it('reads the latest versions with a single query', () => {
+      expect(fixture.queries.countMatching(/from "standard_versions"/i)).toBe(
+        1,
+      );
+    });
+
+    it('takes the scope of every standard from its latest version', () => {
+      expect(foundStandards.map((standard) => standard.scope)).toEqual(
+        Array(40).fill('version-2-scope'),
+      );
+    });
+
+    it('resolves the author of every standard', () => {
+      expect(
+        foundStandards.map((standard) => standard.createdBy?.displayName),
+      ).toEqual(
+        foundStandards.map(
+          (standard) => `Author ${authorIds.indexOf(standard.userId)}`,
+        ),
+      );
+    });
+  });
+
+  describe('when a standard author cannot be resolved', () => {
+    const spaceId = createSpaceId(uuidv4());
+    const knownAuthorId = createUserId(uuidv4());
+    const unknownAuthorId = createUserId(uuidv4());
+    let foundStandards: Standard[];
+
+    beforeEach(async () => {
+      await fixture.datasource.getRepository(TestUserSchema).save({
+        id: knownAuthorId,
+        email: 'alice@packmind.com',
+        displayName: 'Alice',
+      });
+      await standardRepository.add(
+        standardFactory({ spaceId, slug: 'known', userId: knownAuthorId }),
+      );
+      await standardRepository.add(
+        standardFactory({ spaceId, slug: 'unknown', userId: unknownAuthorId }),
+      );
+
+      foundStandards = await standardRepository.findBySpaceId(spaceId);
+    });
+
+    it('leaves that standard without an author', () => {
+      expect(
+        foundStandards.find((standard) => standard.slug === 'unknown')
+          ?.createdBy,
+      ).toBeUndefined();
+    });
+
+    it('still resolves the other authors', () => {
+      expect(
+        foundStandards.find((standard) => standard.slug === 'known')?.createdBy,
+      ).toEqual({ userId: knownAuthorId, displayName: 'Alice' });
+    });
+  });
+
+  describe('when a standard has no version', () => {
+    it('falls back to the scope on the standard itself', async () => {
+      const spaceId = createSpaceId(uuidv4());
+      await standardRepository.add(
+        standardFactory({ spaceId, scope: 'standard-scope' }),
+      );
+
+      const foundStandards = await standardRepository.findBySpaceId(spaceId);
+
+      expect(foundStandards[0].scope).toBe('standard-scope');
+    });
+  });
+
+  describe('when the space is empty', () => {
+    it('does not look any author up', async () => {
+      const spaceId = createSpaceId(uuidv4());
+
+      fixture.queries.reset();
+      await standardRepository.findBySpaceId(spaceId);
+
+      expect(fixture.queries.countMatching(/from "users"/i)).toBe(0);
     });
   });
 
