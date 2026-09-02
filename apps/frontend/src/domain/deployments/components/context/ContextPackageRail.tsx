@@ -87,6 +87,13 @@ export function ContextPackageRail({
    */
   const [query, setQuery] = useState('');
 
+  /*
+   * A space can reach this rail with no package and still have something to
+   * show, because the inventory row above the list is not a package. Several
+   * things in here are about the list and have to know that.
+   */
+  const hasPackages = packages.length > 0;
+
   const { rows, needle, matchCount } = useMemo(
     () =>
       searchPackages(
@@ -116,51 +123,59 @@ export function ContextPackageRail({
         Same band, same offsets and same field size as the search of the
         Distribution rail, so the two rails of this app have one anatomy: search
         on top, the list in the middle, the action pinned under it.
+
+        Gone entirely with no package, rather than shown over an empty list. The
+        search walks the packages to find a component, so with none of them it
+        can never answer anything. A field that cannot succeed is worse than no
+        field: it invites the one gesture that will not work on the one screen
+        where there is only one thing to do.
       */}
-      <PMBox
-        paddingX={3}
-        paddingY={3}
-        borderBottomWidth="1px"
-        borderColor="border.tertiary"
-        flexShrink={0}
-      >
-        <PMBox position="relative" minW={0}>
-          <PMBox
-            position="absolute"
-            left="10px"
-            top="50%"
-            transform="translateY(-50%)"
-            // The step the placeholder beside it now uses. Left at
-            // `text.faded` the magnifier read as dimmer than the words it
-            // labels, and the two stopped looking like one control.
-            color="text.tertiary"
-            pointerEvents="none"
-            display="flex"
-            alignItems="center"
-            // PMInput is itself positioned and opaque, and it comes after this
-            // box in the DOM, so without a layer of its own the magnifier is
-            // painted over and the field looks like it lost its icon.
-            zIndex={1}
-          >
-            <PMIcon fontSize="sm">
-              <LuSearch />
-            </PMIcon>
+      {hasPackages && (
+        <PMBox
+          paddingX={3}
+          paddingY={3}
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
+          flexShrink={0}
+        >
+          <PMBox position="relative" minW={0}>
+            <PMBox
+              position="absolute"
+              left="10px"
+              top="50%"
+              transform="translateY(-50%)"
+              // The step the placeholder beside it now uses. Left at
+              // `text.faded` the magnifier read as dimmer than the words it
+              // labels, and the two stopped looking like one control.
+              color="text.tertiary"
+              pointerEvents="none"
+              display="flex"
+              alignItems="center"
+              // PMInput is itself positioned and opaque, and it comes after this
+              // box in the DOM, so without a layer of its own the magnifier is
+              // painted over and the field looks like it lost its icon.
+              zIndex={1}
+            >
+              <PMIcon fontSize="sm">
+                <LuSearch />
+              </PMIcon>
+            </PMBox>
+            <PMInput
+              size="sm"
+              paddingLeft="32px"
+              /*
+               * Not "Search 12 packages". The count answers a question nobody
+               * asks and leaves the real one open: does this look inside a
+               * package? It does, so the placeholder names both levels.
+               */
+              placeholder="Search packages and components"
+              aria-label="Search packages and components"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
           </PMBox>
-          <PMInput
-            size="sm"
-            paddingLeft="32px"
-            /*
-             * Not "Search 12 packages". The count answers a question nobody
-             * asks and leaves the real one open: does this look inside a
-             * package? It does, so the placeholder names both levels.
-             */
-            placeholder="Search packages and components"
-            aria-label="Search packages and components"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
         </PMBox>
-      </PMBox>
+      )}
 
       <PMBox flex={1} minH={0} overflowY="auto">
         {/*
@@ -189,10 +204,18 @@ export function ContextPackageRail({
           count={inventoryCount}
           isActive={showingInventory}
           onClick={onShowInventory}
-          orphanCount={orphanCount}
+          /*
+            Suppressed with no package, where every component is in none of them
+            and the pill would repeat the row it hangs under while filtering
+            nothing out of it. Zero is the value that hides it, which is the
+            contract the row already documents.
+          */
+          orphanCount={hasPackages ? orphanCount : 0}
           showingOrphans={showingOrphans}
           onShowOrphans={onShowOrphans}
         />
+
+        {!hasPackages && <NoPackages />}
 
         <PMVStack gap={0} align="stretch">
           {rows.map((row) => (
@@ -237,6 +260,30 @@ export function ContextPackageRail({
         </PMButton>
       </PMBox>
     </PMBox>
+  );
+}
+
+/**
+ * A rail whose list has no rows because the space has no package, which is not
+ * the same thing as a space with nothing in it: the row above this one is
+ * counting components, and it is the only reason this rail is on screen.
+ *
+ * It says so where the rows would be rather than leaving the gap under the
+ * inventory row unexplained, and it says what is missing in terms of what that
+ * costs: the button pinned below is the sentence's other half, so it names the
+ * consequence and lets the control name the action.
+ */
+function NoPackages() {
+  return (
+    <PMVStack gap={1} align="start" padding={4}>
+      <PMText as="div" fontSize="sm" color="secondary">
+        No package in this space yet.
+      </PMText>
+      <PMText as="div" fontSize="xs" color="faded">
+        A package is what reaches a repository. Nothing this space owns is
+        distributed until one carries it.
+      </PMText>
+    </PMVStack>
   );
 }
 

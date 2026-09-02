@@ -30,6 +30,7 @@ import {
   sortFilesByPath,
 } from './buildComponentDetail';
 import { ContextBlankState } from './ContextBlankState';
+import { resolveContextView } from './resolveContextView';
 import { CreatePackageDrawer } from './CreatePackageDrawer';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextSkillFileRail } from './ContextSkillFileRail';
@@ -97,9 +98,12 @@ export function SpaceContextSurface() {
     isError,
   } = useListPackagesBySpaceQuery(spaceId, organization?.id);
 
-  const { data: standardsResponse } = useGetStandardsQuery();
-  const { data: commandsResponse } = useGetCommandsQuery();
-  const { data: skillsResponse } = useGetSkillsQuery();
+  const { data: standardsResponse, isLoading: isLoadingStandards } =
+    useGetStandardsQuery();
+  const { data: commandsResponse, isLoading: isLoadingCommands } =
+    useGetCommandsQuery();
+  const { data: skillsResponse, isLoading: isLoadingSkills } =
+    useGetSkillsQuery();
 
   const packages = useMemo(
     () =>
@@ -119,12 +123,28 @@ export function SpaceContextSurface() {
   );
 
   /*
+   * Counted here rather than beside the rail that shows the number, because the
+   * branch below needs it: whether this space is empty is not a question about
+   * its packages. Both the rail and the pane recount their own rows from the
+   * same catalogue, so nothing can disagree with it.
+   */
+  const inventoryCount =
+    catalogue.standards.length +
+    catalogue.commands.length +
+    catalogue.skills.length;
+
+  /*
    * Falling back to the first package rather than to an empty pane: arriving on
    * Context with nothing open would make the surface look like it failed, and
    * landing on a package is what says the package is the unit here.
    */
   const requestedId = searchParams.get(PACKAGE_PARAM);
-  const showingInventory = requestedId === INVENTORY_VALUE;
+  const view = resolveContextView({
+    packageCount: packages.length,
+    componentCount: inventoryCount,
+    requestsInventory: requestedId === INVENTORY_VALUE,
+  });
+  const showingInventory = view === 'inventory';
 
   /*
    * Anything other than the one value it takes reads as unfiltered, rather than
@@ -313,10 +333,6 @@ export function SpaceContextSurface() {
     [show],
   );
 
-  const inventoryCount =
-    catalogue.standards.length +
-    catalogue.commands.length +
-    catalogue.skills.length;
   /*
    * Counted for the rail, which needs the number and not the rows. The pane
    * counts it again from the same memberships when it is on screen, so the two
@@ -327,9 +343,31 @@ export function SpaceContextSurface() {
     [packages, catalogue],
   );
 
-  if (isLoadingSpace || isLoadingPackages) {
+  /*
+   * The three catalogues are in the gate beside the packages, and not only the
+   * packages, because what the surface shows now depends on both: a space whose
+   * packages have arrived and whose components have not looks like a space with
+   * nothing in it, and would show the blank state for as long as that lasts
+   * before replacing it with the inventory. They are all requested together, so
+   * the wait is the slowest of the four rather than their sum, and it also
+   * spares the rail the count that used to tick from zero to its real number.
+   */
+  if (
+    isLoadingSpace ||
+    isLoadingPackages ||
+    isLoadingStandards ||
+    isLoadingCommands ||
+    isLoadingSkills
+  ) {
     return (
-      <PMVStack padding={10} align="center">
+      /*
+       * Centred in the surface it is standing in for, rather than dropped at
+       * the top of it. Full bleed means there is no page padding to sit inside,
+       * so a spinner in the flow lands in the top-left corner of the window and
+       * reads as a fragment of a screen that failed rather than as a screen on
+       * its way in.
+       */
+      <PMVStack flex="1" minH={0} justify="center" align="center">
         <PMSpinner />
       </PMVStack>
     );
@@ -368,7 +406,13 @@ export function SpaceContextSurface() {
     />
   );
 
-  if (packages.length === 0) {
+  /*
+   * Only for a space with nothing in it. A space with no package but with
+   * components is not empty, and `resolveContextView` says why it opens on the
+   * inventory instead: those components are the work, and this branch used to
+   * hide the only list that shows them.
+   */
+  if (view === 'blank') {
     return (
       <>
         <ContextBlankState onCreate={createAndOpen} />

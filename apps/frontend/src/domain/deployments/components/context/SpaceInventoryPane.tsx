@@ -161,7 +161,20 @@ export function SpaceInventoryPane({
         alphabetical there and an order nobody asked for reads as a bug.
       */}
       <PMText as="div" color="secondary" paddingTop={1}>
-        {showingOrphans ? (
+        {packages.length === 0 ? (
+          /*
+            Ahead of the coverage branch, and not a case of it. With no package
+            this pane is the whole surface: the rail beside it has no row to
+            select, so the reader did not choose the inventory, they landed on
+            it. The line has to say why they are looking at a flat list, and the
+            branch below would have told them "across its 0 packages" while the
+            filter that produces the other one cannot be reached from here.
+          */
+          <>
+            Everything this space owns. No package carries any of it yet, so
+            none of it is distributed.
+          </>
+        ) : showingOrphans ? (
           <>
             The {inventory.orphanCount} component
             {inventory.orphanCount === 1 ? '' : 's'} no package carries, newest
@@ -205,8 +218,12 @@ export function SpaceInventoryPane({
           Absent when the space has none, rather than shown reading zero: a
           control whose only message is that it has nothing to show is a claim
           the line above already makes.
+
+          Absent too when the space has no package, where it would read the same
+          count as the All chip beside it and narrow the list to itself. The line
+          above already said that nothing carries any of this.
         */}
-        {inventory.orphanCount > 0 && (
+        {inventory.orphanCount > 0 && packages.length > 0 && (
           <PMHStack gap={1} wrap="wrap" paddingTop={1}>
             <ContextChip
               label="In no package"
@@ -274,8 +291,13 @@ export function SpaceInventoryPane({
                       Dropped under the filter: every row of it would read "No
                       package", which is what the filter already said, and the
                       column it sits in is 180px the descriptions can use.
+
+                      Dropped for the same reason in a space with no package,
+                      where the filter is not on because there is nothing to
+                      filter and the line under the heading has already said
+                      that nothing carries any of this.
                     */
-                    showPackages={!showingOrphans}
+                    showPackages={!showingOrphans && packages.length > 0}
                     selectedKeys={selectedKeys}
                     onToggleSelect={toggleSelect}
                   />
