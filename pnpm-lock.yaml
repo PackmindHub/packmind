@@ -699,6 +699,9 @@ importers:
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
+      yaml:
+        specifier: ^2.8.3
+        version: 2.9.0
     devDependencies:
       '@types/archiver':
         specifier: ^6.0.3

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   PMAlertDialog,
@@ -42,6 +42,7 @@ import {
   type ContextGroup,
   type SpaceCatalogue,
 } from './buildPackageContext';
+import { countAddableComponents } from './buildAddableComponents';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
@@ -253,12 +254,27 @@ export function ContextPackagePane({
   );
 
   /*
-   * Nothing in the package, which is what decides where the header's primary
-   * sits: on filling it while it is empty, on distributing it once it is not.
-   * Read from the groups rather than from `total`, so it agrees with the body
-   * below, which is showing its empty state off the same condition.
+   * Nothing in the package, which is what decides whether the header offers to
+   * send it anywhere: there is nothing to send, and the distribute control is
+   * absent rather than disabled. Read from the groups rather than from `total`,
+   * so it agrees with the body below, which is showing its empty state off the
+   * same condition.
    */
   const isEmpty = groups.length === 0;
+
+  /*
+   * How much of the space this package could still be given. The header reads
+   * it as a yes or no: with something to pick, adding is the control's default
+   * act and creating is the alternative behind its chevron; with nothing, there
+   * is no list to open and creating is the only act there is.
+   *
+   * Counted rather than taken from the picker, which builds every candidate row
+   * to reach the same number and only exists once the drawer is open.
+   */
+  const addableCount = useMemo(
+    () => countAddableComponents(pkg, catalogue),
+    [pkg, catalogue],
+  );
 
   const toggleSelect = useCallback((component: ContextComponent) => {
     setSelectedKeys((previous) => {
@@ -647,44 +663,81 @@ export function ContextPackagePane({
               tab asks. Distribute stays on both, because it acts on the package
               and not on the list being shown.
             */}
-            {tab === CONTENT_TAB && (
-              <>
-                {/*
-                  Adding what exists, beside creating what does not. Two
-                  controls and not one menu: the question "which of these do I
-                  want" and the question "what kind of thing am I writing" are
-                  answered from opposite ends, one by a list of the space and
-                  one by a list of types, and folding them together would hide
-                  whichever one the reader came for behind the other.
-                */}
-                <PMButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setAddingComponents(true)}
-                >
-                  <PMIcon fontSize="xs">
-                    <LuPlus />
-                  </PMIcon>
-                  Add components
-                </PMButton>
-                {/*
-                  Creating sits here, on the pane, and not in the rail below the
-                  list of packages: the rail creates containers, this creates
-                  what goes in them, and side by side the two would read as the
-                  same gesture.
+            {/*
+              One control for filling this package, whatever the way. It used to
+              be two buttons, `Add components` and `Create`, and they asked the
+              reader to sort their own intention before they could act on it: the
+              intention is one, "get this into the package", and the two doors
+              divided it by a fact about the space the reader does not hold. Is
+              there already a standard about naming conventions in here? That is
+              only knowable after opening the picker and searching it, which is
+              behind one of the two doors.
 
-                  It carries the primary only while the package is empty, which
-                  is the one state where filling it is the thing to do next. As
-                  soon as there is something in it, getting it out is.
-                */}
+              The labels made it worse by sitting on different axes, a noun
+              phrase beside a bare verb, so they read as two subjects rather than
+              two ways of doing one thing. And the line they drew was not even
+              the real one: two of the four creation methods bring in something
+              that already exists, from the samples library or from disk. What
+              actually separates the halves is narrower, whether the component is
+              already in this space.
+
+              So they join, in the shape this header already uses for
+              distributing. Picking from the space takes the wide half, since it
+              is the act with a list behind it and the one a package being filled
+              performs over and over, and the four ways of making something new
+              keep the chevron. The seam is a pixel of the page showing between
+              two halves of one colour.
+
+              Creating sits here, on the pane, and not in the rail below the list
+              of packages: the rail creates containers, this creates what goes in
+              them, and side by side the two would read as the same gesture.
+
+              Secondary in every state, both halves of it. The control used to go
+              primary while the package was empty, on the grounds that filling it
+              is the thing to do next, but the body below is already saying that
+              in a sentence with its own primary button under it. Two loud
+              controls asking for the same act, and once the space has nothing
+              left to offer and this collapses to creating, they were the same
+              control twice. So the invitation stays where the explanation is,
+              and up here Distribute owns the one primary the header has.
+            */}
+            {tab === CONTENT_TAB &&
+              (addableCount > 0 ? (
+                <PMHStack gap="1px">
+                  <PMButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setAddingComponents(true)}
+                    borderEndRadius={0}
+                  >
+                    <PMIcon fontSize="xs">
+                      <LuPlus />
+                    </PMIcon>
+                    Add components
+                  </PMButton>
+                  <ContextCreateMenu
+                    orgSlug={orgSlug}
+                    spaceSlug={spaceSlug}
+                    packageId={pkg.id}
+                    variant="secondary"
+                    trigger="split"
+                  />
+                </PMHStack>
+              ) : (
+                /*
+                  Nothing left in the space to pick, so the wide half has no
+                  list to open and the control collapses to the one act that
+                  remains. A greyed half saying "there is nothing here" would be
+                  a sentence written as a button, and the drawer it refuses to
+                  open is the only place that could explain itself.
+                */
                 <ContextCreateMenu
                   orgSlug={orgSlug}
                   spaceSlug={spaceSlug}
                   packageId={pkg.id}
-                  variant={isEmpty ? 'primary' : 'secondary'}
+                  variant="secondary"
                 />
-              </>
-            )}
+              ))}
             {/*
               One send control, whatever the state. Catching up where the
               package already is and reaching somewhere new are two questions,
@@ -852,7 +905,17 @@ export function ContextPackagePane({
         paddingY={5}
       >
         {groups.length === 0 ? (
-          <EmptyPackageBody onAdd={() => setAddingComponents(true)} />
+          <EmptyPackageBody
+            canAdd={addableCount > 0}
+            onAdd={() => setAddingComponents(true)}
+            create={
+              <ContextCreateMenu
+                orgSlug={orgSlug}
+                spaceSlug={spaceSlug}
+                packageId={pkg.id}
+              />
+            }
+          />
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
@@ -957,6 +1020,7 @@ export function ContextPackagePane({
       {addingComponents && (
         <AddComponentsDrawer
           pkg={pkg}
+          packages={packages}
           catalogue={catalogue}
           spaceId={spaceId}
           organizationId={organizationId}
@@ -1020,8 +1084,22 @@ export function ContextPackagePane({
  * A package with nothing in it. It names what that costs rather than inviting
  * the user to admire an empty frame: an empty package gives an agent nothing to
  * read and distributes nothing.
+ *
+ * Two versions of that, because there were two situations and only one of them
+ * was being answered. This told every reader to pick what the space already
+ * owns, including the reader whose space owns nothing, and the picker it sent
+ * them to then said the space was empty and pointed back here. A closed loop on
+ * the first package of a new space, which is the first thing anyone sees.
+ *
+ * `canAdd` rather than a catalogue to look at, decided by the header off the
+ * same count that chose its own shape: on an empty package the two questions are
+ * one question, since a space with anything in it has everything in it to offer.
  */
-function EmptyPackageBody({ onAdd }: Readonly<{ onAdd: () => void }>) {
+function EmptyPackageBody({
+  canAdd,
+  onAdd,
+  create,
+}: Readonly<{ canAdd: boolean; onAdd: () => void; create: ReactNode }>) {
   return (
     <PMBox
       borderWidth="1px"
@@ -1035,13 +1113,19 @@ function EmptyPackageBody({ onAdd }: Readonly<{ onAdd: () => void }>) {
       </PMText>
       <PMText as="div" color="secondary" paddingTop={1}>
         A package with no component gives an agent nothing to read and
-        distributes nothing. Pick standards, commands or skills the space
-        already owns, and it is distributable as soon as you add them.
+        distributes nothing.{' '}
+        {canAdd
+          ? 'Pick standards, commands or skills the space already owns, and it is distributable as soon as you add them.'
+          : 'This space owns no standard, command or skill yet, so there is nothing to pick from: write the first one and it joins this package as it is created.'}
       </PMText>
       <PMBox paddingTop={4}>
-        <PMButton variant="primary" size="sm" onClick={onAdd}>
-          Add components
-        </PMButton>
+        {canAdd ? (
+          <PMButton variant="primary" size="sm" onClick={onAdd}>
+            Add components
+          </PMButton>
+        ) : (
+          create
+        )}
       </PMBox>
     </PMBox>
   );

@@ -194,8 +194,12 @@ function byNewestFirst(a: InventoryEntry, b: InventoryEntry): number {
  * Component id to the names of the packages referencing it. Built once for the
  * whole space rather than searched per component, so the inventory stays linear
  * in the number of components instead of multiplying by the packages.
+ *
+ * Exported for the add-components picker, which asks the same question of the
+ * same packages: a candidate has to be able to say whether anything already
+ * carries it. Two indexes would have been two ways of reading one membership.
  */
-function buildOwnerIndex(
+export function buildOwnerIndex(
   packages: readonly PackageResponse[],
 ): Map<string, string[]> {
   const owners = new Map<string, string[]>();

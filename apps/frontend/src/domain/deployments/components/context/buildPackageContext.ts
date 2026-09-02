@@ -1,4 +1,5 @@
 import type {
+  ArtifactType,
   Command,
   CommandId,
   PackageResponse,
@@ -13,8 +14,16 @@ import { routes } from '../../../../shared/utils/routes';
  * The kinds of thing a package carries. One entry per type, and the grouping,
  * the headings and the order of the pane are all derived from it: adding a type
  * means adding a member here, never adding a navigation entry.
+ *
+ * An alias rather than its own union. The list was written out here and again in
+ * `@packmind/types` as `ArtifactType`, which is the one the API and the
+ * distribution layer speak. Two identical unions in two files is a drift
+ * waiting for the fourth type: whichever one is edited first, the other keeps
+ * compiling and the pane and the payload disagree about what exists. Tying them
+ * means `'mcp'` is added once, and every exhaustive record downstream, here and
+ * in the creation registry, stops compiling until it is answered.
  */
-export type ContextComponentType = 'standard' | 'command' | 'skill';
+export type ContextComponentType = ArtifactType;
 
 /**
  * A row of the Context pane. Flattened on purpose — the pane must not have to

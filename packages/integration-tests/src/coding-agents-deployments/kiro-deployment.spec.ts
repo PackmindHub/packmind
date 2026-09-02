@@ -281,6 +281,16 @@ describe('Kiro Deployment Integration', () => {
     it('carries the skill prompt', () => {
       expect(skillFile?.content).toContain('Do the skill thing');
     });
+
+    it('emits the name without quotes', () => {
+      expect(skillFile?.content).toContain('name: My Kiro Skill');
+    });
+
+    it('emits the description without quotes', () => {
+      expect(skillFile?.content).toContain(
+        'description: A skill for testing Kiro deployment',
+      );
+    });
   });
 
   describe('when deploying a command', () => {
