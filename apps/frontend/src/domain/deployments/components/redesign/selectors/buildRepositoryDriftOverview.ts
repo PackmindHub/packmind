@@ -12,14 +12,13 @@ import {
   packageHasDrift,
   packageHasFailedDistribution,
 } from './buildPackageDriftOverview';
+import { isRootTargetPath } from './installDriftEntries';
 import type {
   PackageDrift,
   RepoRef,
   RepositoryDrift,
   TargetDrift,
 } from '../types';
-
-const ROOT_PATHS = new Set(['', '/', '.', './']);
 
 type RepoAccumulator = {
   id: GitRepoId;
@@ -67,7 +66,7 @@ export function buildRepositoryDriftOverview(
       target: {
         id: entry.target.id,
         name: entry.target.name,
-        isDefault: ROOT_PATHS.has(entry.target.path),
+        isDefault: isRootTargetPath(entry.target.path),
       },
       packages,
     });

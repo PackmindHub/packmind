@@ -528,7 +528,7 @@ export function PackageDetailPane({
               selectedDriftedCount > 0
                 ? [
                     {
-                      label: `Distribute to ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
+                      label: `Distribute to ${selectedDriftedCount} distribution${selectedDriftedCount === 1 ? '' : 's'}`,
                       icon: <LuRotateCw />,
                       onAct: () => onSyncPackage(pkg.id, selectedDriftedKeys),
                     },
@@ -1175,7 +1175,7 @@ function InstallFilterControl({
              * Spelled out, because the label and the count are two text nodes
              * side by side and a screen reader ran them together as "Drift6".
              */
-            aria-label={`${item.label}, ${count} destination${count === 1 ? '' : 's'}`}
+            aria-label={`${item.label}, ${count} distribution${count === 1 ? '' : 's'}`}
             aria-selected={active}
             aria-disabled={disabled}
             onClick={() => {

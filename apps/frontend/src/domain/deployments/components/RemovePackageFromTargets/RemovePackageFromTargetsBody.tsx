@@ -8,12 +8,60 @@ import {
   PMBox,
   PMHStack,
   PMBadge,
-  PMHeading,
   PMAlert,
 } from '@packmind/ui';
-import { TargetId } from '@packmind/types';
+import { Distribution, TargetId } from '@packmind/types';
 import { useRemovePackageFromTargetsContext } from './RemovePackageFromTargets';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
+import {
+  isRootTargetPath,
+  multiLandingRepoIds,
+  targetLabel,
+} from '../redesign/selectors/installDriftEntries';
+
+/**
+ * One row per distribution, which is what this dialog acts on: a package can be
+ * taken out of one place in a repository without leaving the repository.
+ *
+ * Named by repository rather than by target, with the target added only where
+ * the repository holds more than one. It read the other way round before, a
+ * repository heading over rows named `default` carrying a `Path: /` badge, so a
+ * single-place repository said the same thing three times.
+ */
+type RemovableDistribution = {
+  targetId: TargetId;
+  repoId: string;
+  /** `owner/repo`, or the target's own name when the repo did not come back. */
+  title: string;
+  branch: string | null;
+  targetName: string;
+};
+
+function removableDistributions(
+  distributions: Distribution[],
+): RemovableDistribution[] {
+  const byTarget = new Map<TargetId, RemovableDistribution>();
+
+  for (const distribution of distributions) {
+    const { target } = distribution;
+    if (byTarget.has(target.id)) continue;
+
+    const gitRepo = target.gitRepo;
+    byTarget.set(target.id, {
+      targetId: target.id,
+      repoId: gitRepo?.id ?? target.gitRepoId,
+      title: gitRepo ? `${gitRepo.owner}/${gitRepo.repo}` : target.name,
+      branch: gitRepo?.branch ?? null,
+      targetName: targetLabel({
+        id: target.id,
+        name: target.name,
+        isDefault: isRootTargetPath(target.path),
+      }),
+    });
+  }
+
+  return Array.from(byTarget.values());
+}
 
 export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
   const {
@@ -24,33 +72,21 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
     selectedPackage,
   } = useRemovePackageFromTargetsContext();
 
-  // Extract unique targets from distributions
-  const targets = useMemo(() => {
-    const targetMap = new Map(
-      distributions.map((d) => [d.target.id, d.target]),
-    );
-    return Array.from(targetMap.values());
-  }, [distributions]);
+  const rows = useMemo(
+    () => removableDistributions(distributions),
+    [distributions],
+  );
 
-  // Group targets by repository
-  const groupedTargets = useMemo(() => {
-    return targets.reduce(
-      (acc, target) => {
-        // Use targetId to get gitRepo info from the distribution
-        const distribution = distributions.find(
-          (d) => d.target.id === target.id,
-        );
-        const repoKey = distribution
-          ? `${(distribution.target as { gitRepo?: { owner: string; repo: string } }).gitRepo?.owner ?? 'unknown'}/${(distribution.target as { gitRepo?: { owner: string; repo: string } }).gitRepo?.repo ?? 'unknown'}`
-          : 'unknown';
-
-        if (!acc[repoKey]) acc[repoKey] = [];
-        acc[repoKey].push(target);
-        return acc;
-      },
-      {} as Record<string, typeof targets>,
-    );
-  }, [targets, distributions]);
+  const multiLandingRepos = useMemo(
+    () =>
+      multiLandingRepoIds(
+        rows.map((row) => ({
+          repo: { id: row.repoId },
+          target: { id: row.targetId },
+        })),
+      ),
+    [rows],
+  );
 
   const handleCheckboxChange = (targetId: TargetId, checked: boolean) => {
     if (checked) {
@@ -61,7 +97,7 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    setSelectedTargetIds(targets.map((t) => t.id));
+    setSelectedTargetIds(rows.map((row) => row.targetId));
   };
 
   const handleClearSelection = () => {
@@ -81,8 +117,9 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
           </PMAlert.Title>
         </PMAlert.Root>
         <PMText fontSize="sm" color="tertiary">
-          This will remove the package files from the selected targets. The
-          package will still be available in Packmind for future distributions.
+          This will remove the package files from the selected distributions.
+          The package will still be available in Packmind for future
+          distributions.
         </PMText>
       </PMVStack>
     );
@@ -104,60 +141,48 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
         </PMButtonGroup>
       </PMHStack>
       <PMBox maxHeight="lg" overflow="auto">
-        {Object.entries(groupedTargets).map(([repoKey, repoTargets]) => (
-          <PMVStack key={repoKey} align="stretch" gap={1} mb={4}>
-            <PMHeading level="h6" mb={1}>
-              {repoKey}
-            </PMHeading>
-            <PMVStack mb={2}>
-              {repoTargets.map((target) => {
-                const distribution = distributions.find(
-                  (d) => d.target.id === target.id,
-                );
-                const gitRepo = (
-                  distribution?.target as {
-                    gitRepo?: { branch: string };
-                  }
-                )?.gitRepo;
+        <PMVStack align="stretch" gap={1}>
+          {rows.map((row) => {
+            const showTarget = multiLandingRepos.has(row.repoId);
 
-                return (
-                  <PMCheckbox
-                    key={target.id}
-                    value={target.id}
-                    checked={selectedTargetIds.includes(target.id)}
-                    controlProps={{ borderColor: 'border.checkbox' }}
-                    padding={2}
-                    gap={4}
-                    size="sm"
-                    border="solid 1px"
-                    borderColor="border.tertiary"
-                    width="full"
-                    onChange={(event) => {
-                      // PMCheckbox spreads onChange onto Chakra's Root <label>, so the
-                      // event is typed against the label while it actually bubbles up
-                      // from the hidden <input> inside it.
-                      const input = event.target as unknown as HTMLInputElement;
-                      handleCheckboxChange(target.id, input.checked);
-                    }}
-                    _checked={{ bg: 'blue.900', borderColor: 'blue.500' }}
-                  >
-                    <PMVStack align="flex-start" gap={2}>
-                      <PMText fontWeight="medium" fontSize="sm">
-                        {target.name}
-                      </PMText>
-                      <PMHStack>
-                        {gitRepo?.branch && (
-                          <PMBadge size="sm">Branch: {gitRepo.branch}</PMBadge>
-                        )}
-                        <PMBadge size="sm">Path: {target.path}</PMBadge>
-                      </PMHStack>
-                    </PMVStack>
-                  </PMCheckbox>
-                );
-              })}
-            </PMVStack>
-          </PMVStack>
-        ))}
+            return (
+              <PMCheckbox
+                key={row.targetId}
+                value={row.targetId}
+                checked={selectedTargetIds.includes(row.targetId)}
+                controlProps={{ borderColor: 'border.checkbox' }}
+                padding={2}
+                gap={4}
+                size="sm"
+                border="solid 1px"
+                borderColor="border.tertiary"
+                width="full"
+                onChange={(event) => {
+                  // PMCheckbox spreads onChange onto Chakra's Root <label>, so the
+                  // event is typed against the label while it actually bubbles up
+                  // from the hidden <input> inside it.
+                  const input = event.target as unknown as HTMLInputElement;
+                  handleCheckboxChange(row.targetId, input.checked);
+                }}
+                _checked={{ bg: 'blue.900', borderColor: 'blue.500' }}
+              >
+                <PMVStack align="flex-start" gap={2}>
+                  <PMText fontWeight="medium" fontSize="sm">
+                    {row.title}
+                  </PMText>
+                  <PMHStack>
+                    {row.branch && (
+                      <PMBadge size="sm">Branch: {row.branch}</PMBadge>
+                    )}
+                    {showTarget && (
+                      <PMBadge size="sm">{row.targetName}</PMBadge>
+                    )}
+                  </PMHStack>
+                </PMVStack>
+              </PMCheckbox>
+            );
+          })}
+        </PMVStack>
       </PMBox>
     </PMVStack>
   );

@@ -119,8 +119,12 @@ function marketplacesToRepublishByPackage(
 
 /**
  * The three parts are stated separately rather than added up: the first two
- * overlap, since a destination whose last push failed is usually also drifted,
- * and the third is not repaired by the same gesture as either.
+ * overlap, since a distribution whose last attempt failed is usually also
+ * drifted, and the third is not repaired by the same gesture as either.
+ *
+ * Counted in distributions and not in destinations, because a repository with
+ * two targets holds two of them and the number would otherwise say two
+ * destinations where the rail shows one row.
  */
 function describe(
   behind: number,
@@ -130,10 +134,10 @@ function describe(
   const parts: string[] = [];
 
   if (behind > 0) {
-    parts.push(`${behind} destination${behind === 1 ? '' : 's'} drifted`);
+    parts.push(`${behind} distribution${behind === 1 ? '' : 's'} drifted`);
   }
   if (failed > 0) {
-    const noun = behind > 0 ? '' : `destination${failed === 1 ? '' : 's'} `;
+    const noun = behind > 0 ? '' : `distribution${failed === 1 ? '' : 's'} `;
     parts.push(`${failed} ${noun}with a failed distribution`);
   }
   /*

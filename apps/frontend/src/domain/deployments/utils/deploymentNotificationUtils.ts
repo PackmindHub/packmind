@@ -484,7 +484,7 @@ export function createPackageRemovalNotifications(
     notifications.push({
       type: 'success',
       title: 'Removal completed',
-      description: `"${packageName}" removed from ${successfulRemovals.length} target(s).`,
+      description: `"${packageName}" removed from ${successfulRemovals.length} distribution${successfulRemovals.length === 1 ? '' : 's'}.`,
     });
   }
 
@@ -492,7 +492,7 @@ export function createPackageRemovalNotifications(
     notifications.push({
       type: 'error',
       title: 'Some removals failed',
-      description: `Failed to remove from ${failedRemovals.length} target(s).`,
+      description: `Failed to remove from ${failedRemovals.length} distribution${failedRemovals.length === 1 ? '' : 's'}.`,
     });
   }
 

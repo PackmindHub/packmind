@@ -45,7 +45,7 @@ export type PackageHeaderActions = {
  *
  * Nothing is promoted then, and no count is stated. A header that reads
  * `Distribute` in the brand colour and then turns into `Distribute to 3
- * destinations`
+ * distributions`
  * is a wrong answer followed by a right one, which is the same reason the chips
  * on the tab below show no count until they have one.
  */
@@ -73,7 +73,7 @@ export function buildPackageHeaderActions({
       distributeVariant: 'primary',
       update: {
         count: behindCount,
-        label: `Distribute to ${behindCount} destination${behindCount === 1 ? '' : 's'}`,
+        label: `Distribute to ${behindCount} distribution${behindCount === 1 ? '' : 's'}`,
         lockTooltip: LOCK_TOOLTIP[lockProfile],
       },
     };

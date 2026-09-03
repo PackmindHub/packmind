@@ -230,7 +230,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 distribution/ }),
       ).toBeInTheDocument();
     });
   });
@@ -254,7 +254,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 distribution/ }),
       ).toBeInTheDocument();
     });
   });
@@ -267,12 +267,12 @@ describe('PackageDetailPane', () => {
       expect(screen.getByText('1 selected')).toBeInTheDocument();
     });
 
-    it('names the destination it would push in the singular', async () => {
+    it('names the one distribution it would send in the singular', async () => {
       renderPane();
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 distribution/ }),
       ).toBeInTheDocument();
     });
 
@@ -281,7 +281,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       fireEvent.click(
-        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 distribution/ }),
       );
 
       expect(onSyncPackage).toHaveBeenCalledWith(packageId, [
@@ -310,7 +310,7 @@ describe('PackageDetailPane', () => {
       );
 
       expect(
-        screen.getByRole('button', { name: /Distribute to 2 destinations/ }),
+        screen.getByRole('button', { name: /Distribute to 2 distributions/ }),
       ).toBeInTheDocument();
     });
   });
@@ -395,7 +395,7 @@ describe('PackageDetailPane', () => {
       renderFailed();
 
       expect(
-        screen.getByRole('tab', { name: 'Failed, 1 destination' }),
+        screen.getByRole('tab', { name: 'Failed, 1 distribution' }),
       ).toBeInTheDocument();
     });
   });
@@ -407,7 +407,7 @@ describe('PackageDetailPane', () => {
       expect(screen.getByText('Artifacts')).toBeInTheDocument();
     });
 
-    it('counts the destinations it reaches', () => {
+    it('counts the distributions it has', () => {
       renderPane();
 
       expect(screen.getByText('Distributions')).toBeInTheDocument();
@@ -423,7 +423,7 @@ describe('PackageDetailPane', () => {
       expect(screen.queryByText('Artifacts')).not.toBeInTheDocument();
     });
 
-    it('keeps the destination count it did not claim', () => {
+    it('keeps the distribution count it did not claim', () => {
       renderOwned();
 
       expect(screen.getByText('Distributions')).toBeInTheDocument();
@@ -441,7 +441,7 @@ describe('PackageDetailPane', () => {
       renderPane({ surfaceOwnsStats: ['artifacts', 'distributions'] });
 
       expect(
-        screen.getByRole('tab', { name: 'Drift, 3 destinations' }),
+        screen.getByRole('tab', { name: 'Drift, 3 distributions' }),
       ).toBeInTheDocument();
     });
   });

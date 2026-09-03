@@ -71,7 +71,9 @@ describe('buildPackageAttention', () => {
     });
 
     it('names what is wrong in the singular', () => {
-      expect(buildPackageAttention(pkg)?.tooltip).toBe('1 destination drifted');
+      expect(buildPackageAttention(pkg)?.tooltip).toBe(
+        '1 distribution drifted',
+      );
     });
 
     it('marks it as late rather than as broken', () => {
@@ -91,12 +93,12 @@ describe('buildPackageAttention', () => {
 
     it('names them in the plural', () => {
       expect(buildPackageAttention(pkg)?.tooltip).toBe(
-        '2 destinations drifted',
+        '2 distributions drifted',
       );
     });
   });
 
-  it('counts a destination once however many of its artifacts drift', () => {
+  it('counts a distribution once however many of its artifacts drift', () => {
     const pkg = drift([
       { repo: 'r1', target: 't1', driftReason: 'behind' },
       { repo: 'r1', target: 't1', driftReason: 'needs-removal' },
@@ -126,7 +128,7 @@ describe('buildPackageAttention', () => {
 
     it('names the failure rather than a lag', () => {
       expect(buildPackageAttention(pkg)?.tooltip).toBe(
-        '1 destination with a failed distribution',
+        '1 distribution with a failed distribution',
       );
     });
 
@@ -141,13 +143,13 @@ describe('buildPackageAttention', () => {
       [{ repo: 'r1', target: 't1', status: DistributionStatus.failure }],
     );
 
-    it('counts one destination rather than adding the two reasons up', () => {
+    it('counts one distribution rather than adding the two reasons up', () => {
       expect(buildPackageAttention(pkg)?.count).toBe(1);
     });
 
     it('still states both reasons', () => {
       expect(buildPackageAttention(pkg)?.tooltip).toBe(
-        '1 destination drifted, 1 with a failed distribution',
+        '1 distribution drifted, 1 with a failed distribution',
       );
     });
   });
@@ -195,7 +197,7 @@ describe('buildPackageAttention', () => {
       const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
       expect(buildPackageAttention(pkg, 1)?.tooltip).toBe(
-        '1 destination drifted, 1 marketplace drifted',
+        '1 distribution drifted, 1 marketplace drifted',
       );
     });
   });

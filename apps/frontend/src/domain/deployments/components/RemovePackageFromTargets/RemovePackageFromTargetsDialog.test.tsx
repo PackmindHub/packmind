@@ -4,6 +4,7 @@ import { UIProvider } from '@packmind/ui';
 import {
   createDistributedPackageId,
   createDistributionId,
+  createGitProviderId,
   createGitRepoId,
   createOrganizationId,
   createPackageId,
@@ -12,6 +13,7 @@ import {
   createUserId,
   Distribution,
   DistributionStatus,
+  GitRepo,
   Package,
 } from '@packmind/types';
 import type { MockedFunction } from 'vitest';
@@ -42,12 +44,27 @@ const selectedPackage: Package = {
   skills: [],
 };
 
-const distribution: Distribution = {
-  id: createDistributionId('dist-1'),
+const gitRepo = (name: string): GitRepo => ({
+  id: createGitRepoId(`git-repo-${name}`),
+  owner: 'acme',
+  repo: name,
+  branch: 'main',
+  providerId: createGitProviderId('provider-1'),
+  type: 'standard',
+  isTracked: true,
+  trackingRemovedAt: null,
+});
+
+/** One distribution of the package, on one target of one repository. */
+const distributionTo = (
+  repo: GitRepo,
+  target: { id: string; name: string; path: string },
+): Distribution => ({
+  id: createDistributionId(`dist-${target.id}`),
   distributedPackages: [
     {
-      id: createDistributedPackageId('dp-1'),
-      distributionId: createDistributionId('dist-1'),
+      id: createDistributedPackageId(`dp-${target.id}`),
+      distributionId: createDistributionId(`dist-${target.id}`),
       packageId,
       recipeVersions: [],
       standardVersions: [],
@@ -59,25 +76,46 @@ const distribution: Distribution = {
   authorId: createUserId('user-1'),
   organizationId: createOrganizationId('org-1'),
   target: {
-    id: createTargetId('target-1'),
-    name: 'default',
-    path: '/',
-    gitRepoId: createGitRepoId('git-repo-1'),
+    id: createTargetId(target.id),
+    name: target.name,
+    path: target.path,
+    gitRepoId: repo.id,
+    gitRepo: repo,
   },
   status: DistributionStatus.success,
   renderModes: [],
   source: 'cli',
-};
+});
+
+const WEBAPP = gitRepo('webapp');
+const MONOREPO = gitRepo('monorepo');
+
+const AT_WEBAPP_ROOT = distributionTo(WEBAPP, {
+  id: 'target-webapp-root',
+  name: 'default',
+  path: '/',
+});
+const AT_MONOREPO_ROOT = distributionTo(MONOREPO, {
+  id: 'target-monorepo-root',
+  name: 'default',
+  path: '/',
+});
+const AT_MONOREPO_WEB = distributionTo(MONOREPO, {
+  id: 'target-monorepo-web',
+  name: 'apps/web',
+  path: 'apps/web/',
+});
 
 const renderDialog = (props?: {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  distributions?: Distribution[];
 }) =>
   render(
     <UIProvider>
       <RemovePackageFromTargetsDialog
         selectedPackage={selectedPackage}
-        distributions={[distribution]}
+        distributions={props?.distributions ?? [AT_WEBAPP_ROOT]}
         open={props?.open ?? true}
         onOpenChange={props?.onOpenChange ?? vi.fn()}
       />
@@ -92,10 +130,79 @@ describe('RemovePackageFromTargetsDialog', () => {
     } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
   });
 
-  it('shows the targets the package is distributed to', () => {
+  it('names the destinations it takes the package out of', () => {
     renderDialog();
 
-    expect(screen.getByText('Remove from targets')).toBeInTheDocument();
+    expect(screen.getByText('Remove from destinations')).toBeInTheDocument();
+  });
+
+  describe('what a row is named after', () => {
+    it('names it by its repository', () => {
+      renderDialog();
+
+      expect(screen.getByText('acme/webapp')).toBeInTheDocument();
+    });
+
+    /*
+     * The one place the package lands in that repository, so there is nothing to
+     * tell it apart from: the target used to be the row's title, with the row
+     * reading `default` under an `acme/webapp` heading and a `Path: /` badge.
+     */
+    it('leaves the target out when the repository holds one landing', () => {
+      renderDialog();
+
+      expect(screen.queryByText('Repository root')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a repository holds two landings', () => {
+    const renderTwo = () =>
+      renderDialog({
+        distributions: [AT_MONOREPO_ROOT, AT_MONOREPO_WEB],
+      });
+
+    it('names the root landing', () => {
+      renderTwo();
+
+      expect(screen.getByText('Repository root')).toBeInTheDocument();
+    });
+
+    it('names the other one', () => {
+      renderTwo();
+
+      expect(screen.getByText('apps/web')).toBeInTheDocument();
+    });
+
+    it('offers one row per landing', () => {
+      renderTwo();
+
+      expect(screen.getAllByText('acme/monorepo')).toHaveLength(2);
+    });
+  });
+
+  describe('when two repositories hold one landing each', () => {
+    it('names neither target', () => {
+      renderDialog({ distributions: [AT_WEBAPP_ROOT, AT_MONOREPO_ROOT] });
+
+      expect(screen.queryByText('Repository root')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('what the confirmation step counts', () => {
+    it('counts the pick in distributions', async () => {
+      renderDialog();
+
+      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('button', { name: /^Remove \(/ }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'Are you sure you want to remove "Backend guidelines" from 1 distribution?',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
   });
 
   /*

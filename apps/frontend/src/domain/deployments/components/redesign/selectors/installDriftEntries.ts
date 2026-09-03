@@ -182,6 +182,19 @@ export function multiLandingRepoIds(
 /** What a target is called when its repository has more than one. */
 export const ROOT_TARGET_LABEL = 'Repository root';
 
+const ROOT_PATHS = new Set(['', '/', '.', './']);
+
+/**
+ * Whether a target points at the repository root, from its path alone.
+ *
+ * The stored target has a path and no flag, so the four spellings of "the root"
+ * that reach us are decided here rather than in each caller: two selectors and
+ * the removal dialog were each carrying their own copy of this set.
+ */
+export function isRootTargetPath(path: string): boolean {
+  return ROOT_PATHS.has(path);
+}
+
 export function targetLabel(target: TargetRef): string {
   return target.isDefault ? ROOT_TARGET_LABEL : target.name;
 }

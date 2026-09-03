@@ -28,12 +28,13 @@ export const PACKAGE_MESSAGES = {
       `Are you sure you want to delete ${count} package(s)? This action cannot be undone.`,
   },
   removal: {
-    dialogTitle: 'Remove from targets',
-    selectTargetsPrompt: 'Select the targets to remove this package from:',
+    dialogTitle: 'Remove from destinations',
+    selectTargetsPrompt:
+      'Select the distributions to remove this package from:',
     confirmMessage: (packageName: string, count: number) =>
-      `Are you sure you want to remove "${packageName}" from ${count} target(s)?`,
-    noDistributions: 'This package is not distributed to any targets',
-    buttonLabel: 'Remove from target',
+      `Are you sure you want to remove "${packageName}" from ${count} distribution${count === 1 ? '' : 's'}?`,
+    noDistributions: 'This package is not distributed anywhere',
+    buttonLabel: 'Remove from destinations',
     confirmButtonLabel: 'Remove',
     cancelButtonLabel: 'Cancel',
     backButtonLabel: 'Back',

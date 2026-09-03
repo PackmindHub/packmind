@@ -13,6 +13,7 @@ import {
   type Target,
 } from '@packmind/types';
 
+import { isRootTargetPath } from './installDriftEntries';
 import type {
   ArtifactDrift,
   ArtifactId,
@@ -42,8 +43,6 @@ type PackageAccumulator = {
   installLocations: InstallLocation[];
 };
 
-const ROOT_PATHS = new Set(['', '/', '.', './']);
-
 function toRepoRef(gitRepo: GitRepo): RepoRef {
   return {
     id: gitRepo.id,
@@ -57,7 +56,7 @@ function toTargetRef(target: Target): TargetRef {
   return {
     id: target.id,
     name: target.name,
-    isDefault: ROOT_PATHS.has(target.path),
+    isDefault: isRootTargetPath(target.path),
   };
 }
 
