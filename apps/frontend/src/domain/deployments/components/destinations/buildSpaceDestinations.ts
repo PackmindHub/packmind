@@ -36,9 +36,9 @@ export type MarketplaceDestination = {
   /** Plugins published from this space whose source has moved on. */
   behind: number;
   /**
-   * Always zero: the marketplace data records what is outdated, not what a
-   * publish attempt did. Kept on the type so the summary can add the two kinds
-   * without asking which one it is holding.
+   * Always zero: the marketplace data records what is drifted, not what a
+   * distribution attempt did. Kept on the type so the summary can add the two
+   * kinds without asking which one it is holding.
    */
   failed: number;
   packageNames: string[];
@@ -97,9 +97,10 @@ export type ReachSummary = {
  * publishes to.
  *
  * Repositories first and marketplaces second rather than interleaved by how bad
- * things are. The two kinds are repaired differently — a repository is
- * redistributed to, a marketplace is republished to — so a list that mixed them
- * would offer one action over rows that do not all take it.
+ * things are. Not because one of them cannot be acted on — the batch takes
+ * both — but because what reaching them costs differs: a repository takes a
+ * commit on its branch, a marketplace takes a pull request someone has to
+ * merge. Grouped, the reader can see how much of a pick is which.
  *
  * Inside each kind the order is what needs work first, which is the difference
  * with the Context rail: that one is entered with a name in mind and keeps a
@@ -199,13 +200,15 @@ export function destinationReachSummary(
 /**
  * Whether this destination can be picked for the rail's batch repair.
  *
- * Repositories only. Republishing a marketplace is a different call on a
- * different endpoint, offered by the marketplace pane over its own plugins, and
- * a checkbox that quietly did nothing for half the rows would be worse than no
- * checkbox on those rows.
+ * Both kinds, now that one verb covers both. It was repositories only, back
+ * when the marketplace half of a pick had nowhere to go: the batch handed its
+ * work to a confirmation surface that only knew how to write a package into a
+ * repository, so a checkbox on a catalog would have done nothing. That surface
+ * takes catalogs too, and it states the two mechanisms apart, which is the part
+ * that made the difference worth keeping.
  */
 export function isBatchDistributable(destination: Destination): boolean {
-  return destination.kind === 'repository' && destination.behind > 0;
+  return destination.behind > 0;
 }
 
 export type DestinationMatch = {

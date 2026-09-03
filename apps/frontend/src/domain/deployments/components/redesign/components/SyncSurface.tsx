@@ -29,6 +29,7 @@ import {
   LuClock,
   LuGitBranch,
   LuRotateCw,
+  LuStore,
   LuTerminal,
   LuTriangleAlert,
   LuWandSparkles,
@@ -50,12 +51,42 @@ import {
   installLockReason,
   type InstallLockReason,
 } from '../selectors/installLock';
-import type { ArtifactKind, PackageDrift } from '../types';
+import type {
+  ArtifactKind,
+  MarketplaceDrift,
+  MarketplacePluginDrift,
+  PackageDrift,
+} from '../types';
 
 const KIND_ICON: Record<ArtifactKind, IconType> = {
   standard: LuBookOpen,
   command: LuTerminal,
   skill: LuWandSparkles,
+};
+
+/**
+ * One marketplace of a batch, with the plugins that would go out to it.
+ *
+ * Carried on the scope rather than derived here: a marketplace's drift is not
+ * a fact about a `PackageDrift`, which is what this surface is given, and the
+ * rail that made the pick is the only thing that knows which catalogs were
+ * ticked.
+ */
+export type MarketplaceSyncTarget = {
+  marketplace: MarketplaceDrift;
+  plugins: MarketplacePluginDrift[];
+};
+
+/**
+ * What a marketplace batch came to.
+ *
+ * Two numbers rather than a throw, because a plugin the marketplace refused
+ * does not undo the commits the repositories of the same batch already
+ * received: the receipt has to be able to state both halves.
+ */
+export type MarketplaceDistributionResult = {
+  accepted: number;
+  failed: number;
 };
 
 export type SyncScope =
@@ -69,6 +100,11 @@ export type SyncScope =
        * other repos' installs of the same package.
        */
       installKeyFilter?: Set<string>;
+      /**
+       * The marketplace half of the same pick. Absent or empty means the batch
+       * is repositories only, which is every caller but the Distribution rail.
+       */
+      marketplaces?: MarketplaceSyncTarget[];
     }
   | {
       kind: 'package';
@@ -92,6 +128,29 @@ function installSelectionKey(
   targetId: TargetId,
 ): string {
   return `${pkgId}::${repoId}::${targetId}`;
+}
+
+/** A plugin is one package on one marketplace, and its slug says which. */
+function pluginSelectionKey(marketplaceId: string, pluginSlug: string): string {
+  return `${marketplaceId}::${pluginSlug}`;
+}
+
+/*
+ * Everything ticked, unlike the install side which drops what a lock holds.
+ * A marketplace has no locks: the pull request it opens is rolling, so a
+ * plugin whose previous one is still unmerged takes the same update rather
+ * than a second request.
+ */
+function initialPluginSelection(
+  targets: readonly MarketplaceSyncTarget[],
+): Set<string> {
+  const next = new Set<string>();
+  for (const target of targets) {
+    for (const plugin of target.plugins) {
+      next.add(pluginSelectionKey(target.marketplace.id, plugin.pluginSlug));
+    }
+  }
+  return next;
 }
 
 function localInstallKey(repoId: string, targetId: TargetId): string {
@@ -124,6 +183,19 @@ type SyncSurfaceProps = {
    * or no reason to make the offer, pass nothing and lose nothing.
    */
   autoUpdateHref?: string | null;
+  /**
+   * Sends the marketplace half of the batch.
+   *
+   * A callback rather than a mutation called from here, because marketplaces
+   * are an edition of their own: this surface is compiled into both, and the
+   * caller that has a marketplace lane to offer is the one that can already
+   * reach it. Must not reject — it reports what was accepted and what was
+   * refused instead, since a refused plugin leaves the repositories of the
+   * same batch distributed all the same.
+   */
+  onDistributeMarketplaces?: (
+    picks: MarketplaceSyncTarget[],
+  ) => Promise<MarketplaceDistributionResult>;
 };
 
 export function SyncSurface({
@@ -134,11 +206,24 @@ export function SyncSurface({
   onCancel,
   onConfirm,
   autoUpdateHref = null,
+  onDistributeMarketplaces,
 }: Readonly<SyncSurfaceProps>) {
   const blocks = useMemo<PackageBlock[]>(
     () => buildPackageBlocks(packages, scope),
     [packages, scope],
   );
+
+  /*
+   * Only the marketplaces that have something to send. A catalog ticked on the
+   * rail while every plugin of it matches its package would otherwise arrive
+   * here as a block with no rows in it.
+   */
+  const marketplaceTargets = useMemo<MarketplaceSyncTarget[]>(() => {
+    if (scope.kind !== 'bulk' || !onDistributeMarketplaces) return [];
+    return (scope.marketplaces ?? []).filter(
+      (target) => target.plugins.length > 0,
+    );
+  }, [scope, onDistributeMarketplaces]);
 
   const { actionableBlocks, cliBlocks } = useMemo(() => {
     const actionable: PackageBlock[] = [];
@@ -201,16 +286,81 @@ export function SyncSurface({
     return { inProgress, selectable };
   }, [actionableBlocks, providersWithToken, isProvidersLoading]);
 
+  const hasMarketplaces = marketplaceTargets.length > 0;
+
+  /*
+   * The three states below describe the repository side, and each of them used
+   * to speak for the whole screen. A batch whose repositories are all locked,
+   * or all CLI-only, still has a marketplace half that can go out, so none of
+   * them may claim the screen while that half is there.
+   */
   const actionableAllLocked =
-    actionableBlocks.length > 0 && lockCounts.selectable === 0;
-  const hasNothing = actionableBlocks.length === 0 && cliBlocks.length === 0;
-  const cliOnly = actionableBlocks.length === 0 && cliBlocks.length > 0;
+    !hasMarketplaces &&
+    actionableBlocks.length > 0 &&
+    lockCounts.selectable === 0;
+  const hasNothing =
+    !hasMarketplaces && actionableBlocks.length === 0 && cliBlocks.length === 0;
+  const cliOnly =
+    !hasMarketplaces && actionableBlocks.length === 0 && cliBlocks.length > 0;
 
   const [selected, setSelected] = useState<Set<string>>(initialSelection);
+  /*
+   * Kept apart from the install selection rather than folded into one set of
+   * keys: every count on this screen walks the package blocks, and a plugin
+   * key living in the same set would have to be excluded from each of them.
+   */
+  const [selectedPlugins, setSelectedPlugins] = useState<Set<string>>(() =>
+    initialPluginSelection(marketplaceTargets),
+  );
   const [step, setStep] = useState<SyncStep>('review');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [marketplaceOutcome, setMarketplaceOutcome] =
+    useState<MarketplaceDistributionResult | null>(null);
 
   const deployPackages = useDeployPackagesMutation();
+
+  const togglePlugin = useCallback((key: string) => {
+    setSelectedPlugins((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const toggleMarketplace = useCallback(
+    (target: MarketplaceSyncTarget, on: boolean) => {
+      setSelectedPlugins((prev) => {
+        const next = new Set(prev);
+        for (const plugin of target.plugins) {
+          const k = pluginSelectionKey(
+            target.marketplace.id,
+            plugin.pluginSlug,
+          );
+          if (on) next.add(k);
+          else next.delete(k);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
+  /** The picks, narrowed to what is still ticked, in the callback's shape. */
+  const pickedMarketplaces = useMemo<MarketplaceSyncTarget[]>(
+    () =>
+      marketplaceTargets
+        .map((target) => ({
+          marketplace: target.marketplace,
+          plugins: target.plugins.filter((plugin) =>
+            selectedPlugins.has(
+              pluginSelectionKey(target.marketplace.id, plugin.pluginSlug),
+            ),
+          ),
+        }))
+        .filter((target) => target.plugins.length > 0),
+    [marketplaceTargets, selectedPlugins],
+  );
 
   const toggleInstall = useCallback((key: string) => {
     setSelected((prev) => {
@@ -267,6 +417,18 @@ export function SyncSurface({
     };
   }, [actionableBlocks, selected]);
 
+  const marketplaceStats = useMemo(() => {
+    let plugins = 0;
+    for (const target of pickedMarketplaces) plugins += target.plugins.length;
+    return {
+      pluginCount: plugins,
+      marketplaceCount: pickedMarketplaces.length,
+    };
+  }, [pickedMarketplaces]);
+
+  /** Anything at all ticked, on either side. */
+  const hasPick = stats.installCount > 0 || marketplaceStats.pluginCount > 0;
+
   const selectionByPackage = useMemo(() => {
     const map = new Map<PackageId, TargetId[]>();
     for (const block of actionableBlocks) {
@@ -285,7 +447,7 @@ export function SyncSurface({
   }, [actionableBlocks, selected]);
 
   const handleConfirm = useCallback(async () => {
-    if (stats.installCount === 0) return;
+    if (!hasPick) return;
     setStep('syncing');
     setErrorMessage(null);
     try {
@@ -297,8 +459,6 @@ export function SyncSurface({
           }),
         ),
       );
-      setStep('success');
-      onConfirm();
     } catch (error) {
       const message =
         error instanceof Error
@@ -311,8 +471,28 @@ export function SyncSurface({
         title: 'Distribution failed',
         description: message,
       });
+      /*
+       * The marketplace half is not attempted after this. Half a batch out the
+       * door is a state the reader would have to reconstruct from two screens,
+       * and the button they land back on offers the whole thing again.
+       */
+      return;
     }
-  }, [deployPackages, onConfirm, selectionByPackage, stats.installCount]);
+
+    if (pickedMarketplaces.length > 0 && onDistributeMarketplaces) {
+      setMarketplaceOutcome(await onDistributeMarketplaces(pickedMarketplaces));
+    }
+
+    setStep('success');
+    onConfirm();
+  }, [
+    deployPackages,
+    hasPick,
+    onConfirm,
+    onDistributeMarketplaces,
+    pickedMarketplaces,
+    selectionByPackage,
+  ]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -324,7 +504,7 @@ export function SyncSurface({
         (e.metaKey || e.ctrlKey) &&
         e.key === 'Enter' &&
         step === 'review' &&
-        stats.installCount > 0
+        hasPick
       ) {
         e.preventDefault();
         void handleConfirm();
@@ -332,12 +512,14 @@ export function SyncSurface({
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onCancel, handleConfirm, stats.installCount, step]);
+  }, [onCancel, handleConfirm, hasPick, step]);
 
   if (step === 'success') {
     return (
       <SuccessSurface
         stats={stats}
+        marketplaceStats={marketplaceStats}
+        marketplaceOutcome={marketplaceOutcome}
         onClose={onCancel}
         autoUpdateHref={autoUpdateHref}
       />
@@ -365,7 +547,9 @@ export function SyncSurface({
       >
         <PMHStack justify="space-between" align="flex-start" gap={4}>
           <PMVStack align="flex-start" gap={1}>
-            <PMHeading level="h3">{titleForScope(scope, blocks)}</PMHeading>
+            <PMHeading level="h3">
+              {titleForScope(scope, blocks, marketplaceTargets)}
+            </PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
               Selected distributions receive a direct commit on their configured
               branch bringing every bundled component to its Packmind version.
@@ -376,6 +560,19 @@ export function SyncSurface({
               </PMText>
               .
             </PMText>
+            {/*
+              Said here and not on the marketplace section alone, because it is
+              the sentence above that would otherwise describe the whole screen:
+              a reader who has ticked a catalog would be told their plugins land
+              as a commit on a branch, which is not what happens to them.
+            */}
+            {hasMarketplaces && (
+              <PMText fontSize="sm" color="secondary" maxW="68ch">
+                A marketplace is distributed to differently: each selected
+                plugin opens a pull request on the marketplace repository, and
+                it lands when someone merges it.
+              </PMText>
+            )}
           </PMVStack>
           <PMBox
             as="button"
@@ -443,10 +640,18 @@ export function SyncSurface({
               <AllInProgressState count={lockCounts.inProgress} />
             ) : (
               <>
-                <LockSummary
-                  ready={lockCounts.selectable}
-                  inProgress={lockCounts.inProgress}
-                />
+                {/*
+                  Both belong to the repository side. A marketplace-only batch
+                  reaches this branch with nothing on that side, and the
+                  summary would have opened the screen with "0 ready to
+                  distribute" over a list of catalogs that are ready.
+                */}
+                {actionableBlocks.length > 0 && (
+                  <LockSummary
+                    ready={lockCounts.selectable}
+                    inProgress={lockCounts.inProgress}
+                  />
+                )}
                 {actionableBlocks.map((block) => (
                   <PackageSyncBlock
                     key={block.pkg.id}
@@ -463,6 +668,15 @@ export function SyncSurface({
             {cliBlocks.length > 0 && (
               <CliInstallSection cliBlocks={cliBlocks} />
             )}
+            {marketplaceTargets.map((target) => (
+              <MarketplaceSyncBlock
+                key={target.marketplace.id}
+                target={target}
+                selectedPlugins={selectedPlugins}
+                onTogglePlugin={togglePlugin}
+                onToggleMarketplace={(on) => toggleMarketplace(target, on)}
+              />
+            ))}
           </PMVStack>
         )}
       </PMBox>
@@ -481,8 +695,7 @@ export function SyncSurface({
             <PMHStack gap={3} align="center">
               <PMSpinner size="sm" />
               <PMText fontSize="sm" color="secondary">
-                Pushing to {stats.installCount} distribution
-                {stats.installCount === 1 ? '' : 's'}…
+                {syncingLine(stats.installCount, marketplaceStats.pluginCount)}
               </PMText>
             </PMHStack>
           ) : (
@@ -503,7 +716,7 @@ export function SyncSurface({
               variant="primary"
               size="sm"
               onClick={() => void handleConfirm()}
-              disabled={stats.installCount === 0 || isSyncing}
+              disabled={!hasPick || isSyncing}
             >
               <PMIcon fontSize="sm">
                 <LuRotateCw />
@@ -514,13 +727,9 @@ export function SyncSurface({
                   ? 'Nothing to distribute from the app'
                   : actionableAllLocked
                     ? 'Waiting on in-progress distributions'
-                    : stats.installCount === 0
+                    : !hasPick
                       ? 'Select at least one distribution'
-                      : `Distribute ${stats.packageCount} package${
-                          stats.packageCount === 1 ? '' : 's'
-                        } to ${stats.installCount} distribution${
-                          stats.installCount === 1 ? '' : 's'
-                        }`}
+                      : confirmLabel(stats, marketplaceStats)}
             </PMButton>
           </PMHStack>
         </PMHStack>
@@ -529,10 +738,66 @@ export function SyncSurface({
   );
 }
 
-function titleForScope(scope: SyncScope, blocks: PackageBlock[]): string {
+/** What the footer says while both halves are in flight. */
+function syncingLine(installCount: number, pluginCount: number): string {
+  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
+  if (installCount === 0) return `Distributing ${plugins}…`;
+  if (pluginCount === 0) return `Distributing to ${distributions}…`;
+  return `Distributing to ${distributions}, and ${plugins}…`;
+}
+
+/**
+ * The confirm button names what it is about to send.
+ *
+ * The mixed case drops the package count rather than stating four numbers in
+ * one button: what the reader needs before clicking is how far this goes, and
+ * the two destinations counts carry that.
+ */
+function confirmLabel(
+  stats: Readonly<{ installCount: number; packageCount: number }>,
+  marketplaceStats: Readonly<{
+    pluginCount: number;
+    marketplaceCount: number;
+  }>,
+): string {
+  const { installCount, packageCount } = stats;
+  const { pluginCount, marketplaceCount } = marketplaceStats;
+  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
+
+  if (pluginCount === 0) {
+    return `Distribute ${packageCount} package${
+      packageCount === 1 ? '' : 's'
+    } to ${distributions}`;
+  }
+  if (installCount === 0) {
+    return `Distribute ${plugins} to ${marketplaceCount} marketplace${
+      marketplaceCount === 1 ? '' : 's'
+    }`;
+  }
+  return `Distribute to ${distributions} and ${plugins}`;
+}
+
+function titleForScope(
+  scope: SyncScope,
+  blocks: PackageBlock[],
+  marketplaceTargets: readonly MarketplaceSyncTarget[],
+): string {
   if (scope.kind === 'bulk') {
     const n = blocks.length;
-    return `Distribute ${n} package${n === 1 ? '' : 's'}`;
+    const m = marketplaceTargets.length;
+    const packages = `${n} package${n === 1 ? '' : 's'}`;
+    const catalogs = `${m} marketplace${m === 1 ? '' : 's'}`;
+    /*
+     * The packages counted here are the ones with a drifted landing, and a
+     * marketplace's plugins are not among them: a batch of catalogs alone would
+     * have been titled "Distribute 0 packages", and a mixed one would have
+     * announced half of what the button below it offers to send.
+     */
+    if (m === 0) return `Distribute ${packages}`;
+    if (n === 0) return `Distribute to ${catalogs}`;
+    return `Distribute ${packages} and ${catalogs}`;
   }
   const pkg = blocks[0]?.pkg;
   return pkg ? `Distribute ${pkg.name}` : 'Distribute package';
@@ -725,6 +990,194 @@ function PackageSyncBlock({
                   onToggleInstall(key);
                 }}
               />
+            );
+          })}
+        </PMVStack>
+      )}
+    </PMBox>
+  );
+}
+
+type MarketplaceSyncBlockProps = {
+  target: MarketplaceSyncTarget;
+  selectedPlugins: Set<string>;
+  onTogglePlugin: (key: string) => void;
+  onToggleMarketplace: (on: boolean) => void;
+};
+
+/**
+ * One catalog of the batch, and the plugins of it that would go out.
+ *
+ * Deliberately the same shell as `PackageSyncBlock` — a header that ticks
+ * everything under it and rows that tick one thing — because the two sections
+ * are read one after the other and a second way of picking would be a second
+ * thing to learn. What differs is what a row is: there a place a package
+ * lands, here a package as this catalog carries it.
+ *
+ * Open on arrival, where a package block starts closed. A package can hold
+ * twenty landings and this holds what a space published to one catalog; more to
+ * the point, this section is the only place the marketplace half of the batch
+ * is stated at all, and a closed box states nothing.
+ */
+function MarketplaceSyncBlock({
+  target,
+  selectedPlugins,
+  onTogglePlugin,
+  onToggleMarketplace,
+}: Readonly<MarketplaceSyncBlockProps>) {
+  const [expanded, setExpanded] = useState(true);
+  const { marketplace, plugins } = target;
+  const total = plugins.length;
+  const selectedCount = plugins.reduce(
+    (acc, plugin) =>
+      acc +
+      (selectedPlugins.has(
+        pluginSelectionKey(marketplace.id, plugin.pluginSlug),
+      )
+        ? 1
+        : 0),
+    0,
+  );
+  const allSelected = total > 0 && selectedCount === total;
+  const noneSelected = selectedCount === 0;
+
+  return (
+    <PMBox
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      overflow="hidden"
+      bg="background.secondary"
+    >
+      <PMBox
+        paddingX={4}
+        paddingY={3}
+        bg="background.primary"
+        borderBottomWidth={expanded ? '1px' : 0}
+        borderColor="border.tertiary"
+        cursor="pointer"
+        onClick={() => onToggleMarketplace(!allSelected)}
+        _hover={{ bg: 'background.tertiary' }}
+        transition="background-color 120ms ease-out"
+      >
+        <PMHStack gap={3} align="center" justify="space-between">
+          <PMHStack gap={2} align="center" minW={0} flex={1}>
+            <PMBox
+              as="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding="2px"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              color="text.secondary"
+              _hover={{ color: 'text.primary' }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'branding.primary',
+                outlineOffset: '2px',
+                borderRadius: 'sm',
+              }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${marketplace.name}`}
+            >
+              <PMIcon fontSize="sm">
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            </PMBox>
+            <PMBox
+              onClick={(e) => e.stopPropagation()}
+              display="inline-flex"
+              alignItems="center"
+            >
+              <PMCheckbox
+                size="sm"
+                checked={
+                  allSelected ? true : noneSelected ? false : 'indeterminate'
+                }
+                onCheckedChange={(details) =>
+                  onToggleMarketplace(details.checked === true)
+                }
+                aria-label={`Select all plugins for ${marketplace.name}`}
+              />
+            </PMBox>
+            <PMIcon fontSize="sm" color="text.secondary" aria-hidden>
+              <LuStore />
+            </PMIcon>
+            <PMText
+              fontSize="sm"
+              fontWeight="semibold"
+              color="primary"
+              truncate
+            >
+              {marketplace.name}
+            </PMText>
+          </PMHStack>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            flexShrink={0}
+            fontVariantNumeric="tabular-nums"
+          >
+            {selectedCount} of {total} selected
+          </PMText>
+        </PMHStack>
+      </PMBox>
+
+      {expanded && (
+        <PMVStack gap={0} align="stretch">
+          {plugins.map((plugin) => {
+            const key = pluginSelectionKey(marketplace.id, plugin.pluginSlug);
+            const selected = selectedPlugins.has(key);
+            return (
+              <PMHStack
+                key={key}
+                gap={2}
+                align="center"
+                paddingX={4}
+                paddingY={2.5}
+                cursor="pointer"
+                onClick={() => onTogglePlugin(key)}
+                bg={selected ? 'background.secondary' : 'background.primary'}
+                borderBottomWidth="1px"
+                borderColor="border.tertiary"
+                _last={{ borderBottom: 'none' }}
+                transition="background-color 120ms ease-out"
+              >
+                <PMBox
+                  onClick={(e) => e.stopPropagation()}
+                  display="inline-flex"
+                  alignItems="center"
+                >
+                  <PMCheckbox
+                    size="sm"
+                    checked={selected}
+                    onCheckedChange={() => onTogglePlugin(key)}
+                    aria-label={`Select ${plugin.packageName} on ${marketplace.name}`}
+                  />
+                </PMBox>
+                <PMText fontSize="sm" color="primary" truncate>
+                  {plugin.packageName}
+                </PMText>
+                <PMText
+                  fontSize="11px"
+                  fontFamily="mono"
+                  color="faded"
+                  lineHeight="1.4"
+                  truncate
+                >
+                  {plugin.pluginSlug}
+                </PMText>
+                <PMBox flex={1} />
+                <PMBadge size="sm" colorPalette="orange" flexShrink={0}>
+                  Drift
+                </PMBadge>
+              </PMHStack>
             );
           })}
         </PMVStack>
@@ -1307,6 +1760,8 @@ function NothingToDistribute() {
 
 function SuccessSurface({
   stats,
+  marketplaceStats,
+  marketplaceOutcome,
   onClose,
   autoUpdateHref,
 }: Readonly<{
@@ -1315,9 +1770,15 @@ function SuccessSurface({
     packageCount: number;
     artifactUpdateCount: number;
   };
+  marketplaceStats: { pluginCount: number; marketplaceCount: number };
+  marketplaceOutcome: MarketplaceDistributionResult | null;
   onClose: () => void;
   autoUpdateHref: string | null;
 }>) {
+  const started = marketplaceOutcome?.accepted ?? 0;
+  const refused = marketplaceOutcome?.failed ?? 0;
+  const hadMarketplaces = marketplaceStats.pluginCount > 0;
+  const hadRepositories = stats.installCount > 0;
   return (
     <PMBox
       bg="background.primary"
@@ -1333,17 +1794,51 @@ function SuccessSurface({
           <PMIcon fontSize="xl" color="success">
             <LuCheck />
           </PMIcon>
-          <PMHeading level="h3">Distributions updated</PMHeading>
+          {/*
+            "Updated" is a claim about the end state, and it only holds for the
+            repository half: a plugin's pull request has to be merged by someone
+            before anything on the catalog changes. So the heading steps back to
+            what is true of both as soon as a catalog is in the batch.
+          */}
+          <PMHeading level="h3">
+            {hadMarketplaces ? 'Distribution started' : 'Distributions updated'}
+          </PMHeading>
         </PMHStack>
-        <PMText fontSize="sm" color="secondary">
-          {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-          distributed on {stats.installCount} distribution
-          {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
-          component update{stats.artifactUpdateCount === 1 ? '' : 's'} in
-          total). Each distribution received a direct commit on its configured
-          branch bringing the bundled components to their Packmind version.
-          Those distributions are now aligned.
-        </PMText>
+        {hadRepositories && (
+          <PMText fontSize="sm" color="secondary">
+            {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
+            distributed on {stats.installCount} distribution
+            {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
+            component update{stats.artifactUpdateCount === 1 ? '' : 's'} in
+            total). Each distribution received a direct commit on its configured
+            branch bringing the bundled components to their Packmind version.
+            Those distributions are now aligned.
+          </PMText>
+        )}
+        {/*
+          Stated apart from the sentence above, and in the present continuous,
+          because this half is not finished: the reader who reads "now aligned"
+          and then looks at the catalog would find the old version there until
+          the pull request lands. The rail goes on reporting these plugins as
+          drifted until it does, which is the honest reading and not a bug.
+        */}
+        {hadMarketplaces && started > 0 && (
+          <PMText fontSize="sm" color="secondary">
+            {started} plugin{started === 1 ? '' : 's'} on{' '}
+            {marketplaceStats.marketplaceCount} marketplace
+            {marketplaceStats.marketplaceCount === 1 ? '' : 's'}{' '}
+            {started === 1 ? 'is' : 'are'} being distributed. Each opens a pull
+            request on the marketplace repository, and stays drifted until
+            someone merges it.
+          </PMText>
+        )}
+        {refused > 0 && (
+          <PMText fontSize="sm" color="error">
+            {refused} plugin{refused === 1 ? '' : 's'} could not be sent. The
+            marketplace refused {refused === 1 ? 'it' : 'them'}, and the reason
+            was reported when it happened.
+          </PMText>
+        )}
         {/*
           The offer, made here and nowhere else on the way in.
 
@@ -1356,7 +1851,7 @@ function SuccessSurface({
           Second sentence, not a heading and not an alert. Nothing has gone
           wrong, so nothing here raises its voice.
         */}
-        {autoUpdateHref && (
+        {autoUpdateHref && hadRepositories && (
           <PMText fontSize="sm" color="tertiary">
             Auto-update makes this same commit on a schedule, so the next
             version lands without anyone opening this screen.
@@ -1373,7 +1868,12 @@ function SuccessSurface({
           <PMButton variant="primary" size="sm" onClick={onClose}>
             Done
           </PMButton>
-          {autoUpdateHref && (
+          {/*
+            Offered against the commit it just described. A batch of catalogs
+            alone made no commit, so the sentence above has nothing to point at
+            and the offer would be a feature pitch on a receipt.
+          */}
+          {autoUpdateHref && hadRepositories && (
             <PMButton variant="secondary" size="sm" asChild>
               <Link to={autoUpdateHref}>Set up Auto-update</Link>
             </PMButton>

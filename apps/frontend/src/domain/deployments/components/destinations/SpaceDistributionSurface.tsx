@@ -22,6 +22,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useSpaceMarketplaces } from '@packmind/proprietary/frontend/domain/spaces/components/overview/useSpaceMarketplaces';
+import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { MarketplaceDetailPane } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/MarketplaceDetailPane';
 import { routes } from '../../../../shared/utils/routes';
 import { getEnvVar } from '../../../../shared/utils/getEnvVar';
@@ -199,6 +200,10 @@ export function SpaceDistributionSurface() {
     [distribute],
   );
 
+  const distributeMarketplaces = useMarketplaceBatchDistribution(
+    organization?.id ?? null,
+  );
+
   if (!isStubMode && (!isReady || isLoading)) {
     return <SurfaceSpinner />;
   }
@@ -266,6 +271,15 @@ export function SpaceDistributionSurface() {
             organization
               ? routes.org.toSetupAutoUpdate(organization.slug)
               : null
+          }
+          /*
+           * Withheld rather than passed with a null organization: the surface
+           * hides its whole marketplace lane when the callback is absent, which
+           * is the honest answer to "we cannot distribute on anyone's behalf" —
+           * better than checkboxes that would come back refused.
+           */
+          onDistributeMarketplaces={
+            organization ? distributeMarketplaces : undefined
           }
         />
       </PMBox>

@@ -358,8 +358,23 @@ describe('isBatchDistributable', () => {
     expect(isBatchDistributable(aligned)).toBe(false);
   });
 
-  it('leaves out a marketplace, which is distributed by another call', () => {
-    expect(isBatchDistributable(market)).toBe(false);
+  /*
+   * It used to be left out, back when the confirmation surface could only write
+   * a package into a repository and a checkbox here would have done nothing.
+   */
+  it('takes a marketplace with drift', () => {
+    expect(isBatchDistributable(market)).toBe(true);
+  });
+
+  describe('when a marketplace has nothing drifted', () => {
+    it('leaves it out, like an aligned repository', () => {
+      const [quiet] = buildSpaceDestinations(
+        [],
+        [marketplace('mkt-2', 'Quiet catalog', [])],
+      );
+
+      expect(isBatchDistributable(quiet)).toBe(false);
+    });
   });
 });
 

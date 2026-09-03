@@ -5,6 +5,7 @@ import { UIProvider } from '@packmind/ui';
 import {
   createGitProviderId,
   createGitRepoId,
+  createMarketplaceId,
   createPackageId,
   createTargetId,
   DistributionStatus,
@@ -15,7 +16,11 @@ import {
   buildSpaceDestinations,
   destinationReachSummary,
 } from './buildSpaceDestinations';
-import type { PackageDrift, RepositoryDrift } from '../redesign/types';
+import type {
+  MarketplaceDrift,
+  PackageDrift,
+  RepositoryDrift,
+} from '../redesign/types';
 
 const providerId = createGitProviderId('provider-1');
 
@@ -97,6 +102,17 @@ const twoTargets = (
     })),
   }) as unknown as RepositoryDrift;
 
+/** A catalog holding two plugins whose packages have moved on. */
+const CATALOG = {
+  id: createMarketplaceId('mkt-1'),
+  name: 'Public catalog',
+  plugins: [
+    { pluginSlug: 'backend', packageName: 'Backend' },
+    { pluginSlug: 'frontend', packageName: 'Frontend' },
+  ],
+  publishedPackageNames: ['Backend', 'Frontend'],
+} as unknown as MarketplaceDrift;
+
 const BEHIND = repository('repo-behind', 'webapp', 'behind');
 const FAILED = repository('repo-failed', 'api', 'failed');
 const ALIGNED = repository('repo-aligned', 'docs', 'aligned');
@@ -104,8 +120,15 @@ const ALIGNED = repository('repo-aligned', 'docs', 'aligned');
 function renderRail(
   repositories: RepositoryDrift[] = [BEHIND, FAILED, ALIGNED],
   selectedDestinationId: string | null = null,
+  options: {
+    marketplaces?: MarketplaceDrift[];
+    bulkSelected?: Set<string>;
+  } = {},
 ) {
-  const destinations = buildSpaceDestinations(repositories, []);
+  const destinations = buildSpaceDestinations(
+    repositories,
+    options.marketplaces ?? [],
+  );
   const onSelect = vi.fn();
   render(
     <UIProvider>
@@ -113,7 +136,7 @@ function renderRail(
         destinations={destinations}
         summary={destinationReachSummary(destinations)}
         selectedDestinationId={selectedDestinationId}
-        bulkSelected={new Set()}
+        bulkSelected={options.bulkSelected ?? new Set()}
         providersWithToken={new Set([providerId])}
         isProvidersLoading={false}
         onSelect={onSelect}
@@ -303,6 +326,58 @@ describe('DestinationRail', () => {
       expect(
         screen.queryByRole('button', { name: /^Show only/ }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('what the batch accepts', () => {
+    /*
+     * It accepted repositories only, back when the confirmation screen could
+     * not send a plugin. Hovered, because the checkbox column stays empty until
+     * the row is reached or a batch is under way.
+     */
+    it('offers a checkbox on a drifted marketplace', async () => {
+      renderRail([BEHIND], null, { marketplaces: [CATALOG] });
+
+      await userEvent.hover(
+        screen.getByRole('button', { name: /^Marketplace Public catalog/ }),
+      );
+
+      expect(
+        screen.getByRole('checkbox', {
+          name: /Public catalog/,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('counts a picked catalog in plugins', () => {
+      renderRail([BEHIND], null, {
+        marketplaces: [CATALOG],
+        bulkSelected: new Set(['m:mkt-1']),
+      });
+
+      expect(screen.getByText('1 selected · 2 plugins')).toBeInTheDocument();
+    });
+
+    /* Two units, because `behind` counts landings on one and plugins on the other. */
+    it('counts a mixed pick in both', () => {
+      renderRail([BEHIND], null, {
+        marketplaces: [CATALOG],
+        bulkSelected: new Set(['m:mkt-1', 'r:repo-behind']),
+      });
+
+      expect(
+        screen.getByText('2 selected · 1 distribution, 2 plugins'),
+      ).toBeInTheDocument();
+    });
+
+    it('keeps saying distributions when only repositories are picked', () => {
+      renderRail([BEHIND], null, {
+        bulkSelected: new Set(['r:repo-behind']),
+      });
+
+      expect(
+        screen.getByText('1 selected · 1 distribution'),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -140,13 +140,28 @@ describe('buildDestinationSyncScope', () => {
   });
 
   describe('with a marketplace picked', () => {
-    it('sends nothing, since a marketplace is distributed by another call', () => {
+    it('sends its drifted plugins', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
         new Set(['m:mkt-1']),
       );
 
-      expect(scope).toBeNull();
+      expect(scope?.kind === 'bulk' && scope.marketplaces).toEqual([
+        { marketplace: CATALOG, plugins: CATALOG.plugins },
+      ]);
+    });
+
+    /*
+     * A plugin is not written by the call that writes a package into a
+     * repository, so it must not arrive in the package list on the way past.
+     */
+    it('names no package for it', () => {
+      const scope = buildDestinationSyncScope(
+        DESTINATIONS,
+        new Set(['m:mkt-1']),
+      );
+
+      expect(scope?.kind === 'bulk' && scope.packageIds).toEqual([]);
     });
 
     it('leaves the repositories picked beside it untouched', () => {
@@ -158,6 +173,33 @@ describe('buildDestinationSyncScope', () => {
       expect(scope?.kind === 'bulk' && scope.packageIds).toEqual([
         createPackageId('Backend'),
       ]);
+    });
+
+    it('carries both halves of a mixed pick', () => {
+      const scope = buildDestinationSyncScope(
+        DESTINATIONS,
+        new Set(['m:mkt-1', 'r:repo-web']),
+      );
+
+      expect(scope?.kind === 'bulk' && scope.marketplaces).toHaveLength(1);
+    });
+  });
+
+  describe('with a marketplace picked that is aligned', () => {
+    const ALIGNED_CATALOG = {
+      id: createMarketplaceId('mkt-2'),
+      name: 'Quiet catalog',
+      plugins: [],
+      publishedPackageNames: [],
+    } as unknown as MarketplaceDrift;
+
+    it('sends nothing', () => {
+      const scope = buildDestinationSyncScope(
+        buildSpaceDestinations([], [ALIGNED_CATALOG]),
+        new Set(['m:mkt-2']),
+      );
+
+      expect(scope).toBeNull();
     });
   });
 

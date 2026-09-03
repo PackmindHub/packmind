@@ -170,13 +170,23 @@ export function DestinationRail({
     [shownRows],
   );
   const pickedCount = bulkSelected.size;
-  const pickedLandings = useMemo(
-    () =>
-      destinations
-        .filter((destination) => bulkSelected.has(destination.id))
-        .reduce((total, destination) => total + destination.behind, 0),
-    [destinations, bulkSelected],
-  );
+  /*
+   * Split by kind, because `behind` counts a different thing on each: landings
+   * on a repository, drifted plugins on a marketplace. Added up under one word
+   * the bar would have offered "5 distributions" over a pick of three landings
+   * and two plugins.
+   */
+  const picked = useMemo(() => {
+    let distributions = 0;
+    let plugins = 0;
+    for (const destination of destinations) {
+      if (!bulkSelected.has(destination.id)) continue;
+      if (destination.kind === 'repository')
+        distributions += destination.behind;
+      else plugins += destination.behind;
+    }
+    return { distributions, plugins };
+  }, [destinations, bulkSelected]);
   const actionableSelectedCount = actionable.filter((destination) =>
     bulkSelected.has(destination.id),
   ).length;
@@ -327,7 +337,8 @@ export function DestinationRail({
         actionableCount={actionable.length}
         actionableSelectedCount={actionableSelectedCount}
         pickedCount={pickedCount}
-        pickedLandings={pickedLandings}
+        pickedDistributions={picked.distributions}
+        pickedPlugins={picked.plugins}
         onSelectAllVisible={selectAllVisible}
         onClearVisible={clearVisible}
         onClearAll={() => onSetBulkSelection(new Set())}
@@ -1069,11 +1080,26 @@ function destinationState(
  * actually touched. The pane beside this stays the precise instrument, one
  * destination at a time.
  */
+/** What a pick amounts to, in the unit each kind of destination counts in. */
+function pickedReach(distributions: number, plugins: number): string {
+  const parts: string[] = [];
+  if (distributions > 0 || plugins === 0) {
+    parts.push(
+      `${distributions} distribution${distributions === 1 ? '' : 's'}`,
+    );
+  }
+  if (plugins > 0) {
+    parts.push(`${plugins} plugin${plugins === 1 ? '' : 's'}`);
+  }
+  return parts.join(', ');
+}
+
 function RailActionBar({
   actionableCount,
   actionableSelectedCount,
   pickedCount,
-  pickedLandings,
+  pickedDistributions,
+  pickedPlugins,
   onSelectAllVisible,
   onClearVisible,
   onClearAll,
@@ -1083,7 +1109,8 @@ function RailActionBar({
   actionableCount: number;
   actionableSelectedCount: number;
   pickedCount: number;
-  pickedLandings: number;
+  pickedDistributions: number;
+  pickedPlugins: number;
   onSelectAllVisible: () => void;
   onClearVisible: () => void;
   onClearAll: () => void;
@@ -1176,8 +1203,8 @@ function RailActionBar({
             flex={1}
             minW={0}
           >
-            {pickedCount} selected · {pickedLandings} distribution
-            {pickedLandings === 1 ? '' : 's'}
+            {pickedCount} selected ·{' '}
+            {pickedReach(pickedDistributions, pickedPlugins)}
           </PMText>
         </PMHStack>
         <PMHStack gap={2} justify="space-between" align="center">
