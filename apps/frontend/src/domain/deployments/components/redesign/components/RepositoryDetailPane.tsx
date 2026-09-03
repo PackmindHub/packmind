@@ -413,7 +413,7 @@ export function RepositoryDetailPane({
           <PMHStack gap={3} align="center" justify="space-between">
             <PMText fontSize="xs" color="secondary">
               {selectedDriftedCount === 0
-                ? 'Select packages to redistribute.'
+                ? 'Select packages to distribute.'
                 : `${selectedDriftedCount} of ${driftedRowKeys.length} drifted selected.`}
             </PMText>
             <PMButton
@@ -435,7 +435,7 @@ export function RepositoryDetailPane({
               <PMIcon fontSize="sm">
                 <LuRotateCw />
               </PMIcon>
-              Redistribute selected
+              Distribute selected
             </PMButton>
           </PMHStack>
         </PMBox>
@@ -540,7 +540,7 @@ type PackageOnTargetRowProps = {
 };
 
 const LOCK_TOOLTIP: Record<string, string> = {
-  'in-progress': 'Distribution in progress for this package on this target.',
+  'in-progress': 'Distributing this package to this target.',
   'no-app-token': 'Use `packmind install` to update this distribution.',
 };
 
@@ -599,7 +599,7 @@ function PackageOnTargetRow({
                   checked={selected}
                   disabled={checkboxDisabled}
                   onCheckedChange={onToggle}
-                  aria-label={`Select ${pkg.name} for redistribution`}
+                  aria-label={`Select ${pkg.name} for distribution`}
                 />
               </PMBox>
             </PMTooltip>
@@ -872,7 +872,7 @@ function DriftReasonIndicator({
   if (entry.reason === 'needs-removal') {
     return (
       <PMTooltip
-        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after redistribution.`}
+        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after the next distribution.`}
         placement="top"
       >
         <PMHStack gap={1.5} align="center" cursor="help">
@@ -889,7 +889,7 @@ function DriftReasonIndicator({
   if (entry.reason === 'not-distributed') {
     return (
       <PMTooltip
-        label="Added to the package — will be pushed on next distribution."
+        label="Added to the package — included in the next distribution."
         placement="top"
       >
         <PMBadge colorPalette="red" size="sm">

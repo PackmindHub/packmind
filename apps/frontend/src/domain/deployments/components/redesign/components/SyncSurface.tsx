@@ -109,7 +109,7 @@ type SyncSurfaceProps = {
   onCancel: () => void;
   onConfirm: () => void;
   /**
-   * Where to set up scheduled updates, offered once the redistribution has
+   * Where to set up scheduled updates, offered once the distribution has
    * succeeded.
    *
    * Here rather than on the surface that started the flow, because this is the
@@ -301,12 +301,12 @@ export function SyncSurface({
       const message =
         error instanceof Error
           ? error.message
-          : 'Unknown error while redistributing packages.';
+          : 'Unknown error while distributing packages.';
       setErrorMessage(message);
       setStep('error');
       pmToaster.create({
         type: 'error',
-        title: 'Redistribution failed',
+        title: 'Distribution failed',
         description: message,
       });
     }
@@ -366,7 +366,7 @@ export function SyncSurface({
             <PMHeading level="h3">{titleForScope(scope, blocks)}</PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
               Selected distributions receive a direct commit on their configured
-              branch bringing every bundled artifact to its Packmind version.
+              branch bringing every bundled component to its Packmind version.
               Distributions without a connected provider are listed separately
               and must be updated via{' '}
               <PMText as="span" fontFamily="mono" fontSize="xs">
@@ -396,7 +396,7 @@ export function SyncSurface({
                 ? undefined
                 : { color: 'text.primary', bg: 'background.tertiary' }
             }
-            aria-label="Cancel sync"
+            aria-label="Cancel"
           >
             <PMIcon fontSize="sm">
               <LuX />
@@ -432,7 +432,7 @@ export function SyncSurface({
         padding={6}
       >
         {hasNothing ? (
-          <NothingToSync />
+          <NothingToDistribute />
         ) : (
           <PMVStack gap={4} align="stretch">
             {cliOnly ? (
@@ -507,14 +507,14 @@ export function SyncSurface({
                 <LuRotateCw />
               </PMIcon>
               {isSyncing
-                ? 'Redistributing…'
+                ? 'Distributing…'
                 : cliOnly
-                  ? 'Nothing to redistribute from the app'
+                  ? 'Nothing to distribute from the app'
                   : actionableAllLocked
                     ? 'Waiting on in-progress distributions'
                     : stats.installCount === 0
                       ? 'Select at least one distribution'
-                      : `Redistribute ${stats.packageCount} package${
+                      : `Distribute ${stats.packageCount} package${
                           stats.packageCount === 1 ? '' : 's'
                         } to ${stats.installCount} distribution${
                           stats.installCount === 1 ? '' : 's'
@@ -724,8 +724,7 @@ function PackageSyncBlock({
 }
 
 const LOCK_ROW_TOOLTIP: Record<LockReason, string> = {
-  'in-progress':
-    'Distribution currently in progress — wait for it to finish before redistributing.',
+  'in-progress': 'Distributing — wait for it to finish.',
   'no-app-token':
     'This provider has no token — use `packmind install` to update this distribution.',
 };
@@ -734,7 +733,7 @@ const LOCK_ROW_BADGE: Record<
   LockReason,
   { label: string; colorPalette: 'blue' | 'orange' }
 > = {
-  'in-progress': { label: 'In progress', colorPalette: 'blue' },
+  'in-progress': { label: 'Distributing', colorPalette: 'blue' },
   'no-app-token': { label: 'CLI only', colorPalette: 'orange' },
 };
 
@@ -832,7 +831,7 @@ function InstallSyncRow({
                 borderRadius: 'sm',
               }}
               aria-expanded={expanded}
-              aria-label={`${expanded ? 'Collapse' : 'Expand'} artifacts to update`}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} components to update`}
             >
               <PMIcon fontSize="sm">
                 {expanded ? <LuChevronDown /> : <LuChevronRight />}
@@ -889,7 +888,7 @@ function InstallSyncRow({
             </PMBadge>
           )}
           <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            {entry.behindArtifacts.length} artifact
+            {entry.behindArtifacts.length} component
             {entry.behindArtifacts.length === 1 ? '' : 's'} to update
           </PMText>
           {entry.mostRecentDeployedAt && (
@@ -1016,7 +1015,7 @@ function LockSummary({
           >
             {inProgress}
           </PMText>
-          {` in progress`}
+          {` distributing`}
         </>
       ),
     });
@@ -1062,12 +1061,12 @@ function AllInProgressState({ count }: Readonly<{ count: number }>) {
         <LuClock />
       </PMIcon>
       <PMText fontSize="sm" color="primary" fontWeight="medium">
-        Nothing to redistribute from the app right now.
+        Nothing to distribute from the app right now.
       </PMText>
       <PMText fontSize="xs" color="secondary" textAlign="center" maxW="56ch">
         {count === 1
-          ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to redistribute.'
-          : `All ${count} drifted distributions are currently in progress. Wait for them to finish, then come back to redistribute.`}
+          ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to distribute.'
+          : `All ${count} drifted distributions are currently in progress. Wait for them to finish, then come back to distribute.`}
       </PMText>
     </PMVStack>
   );
@@ -1084,8 +1083,8 @@ function NoActionableNote() {
       bg="background.secondary"
     >
       <PMText fontSize="sm" color="secondary">
-        Nothing to push from the app — every drifted distribution lives on a
-        provider without a connected token. Use the CLI section below.
+        Nothing to distribute from the app — every drifted distribution lives on
+        a provider without a connected token. Use the CLI section below.
       </PMText>
     </PMBox>
   );
@@ -1196,8 +1195,8 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               </PMButton>
             </PMHStack>
             <PMText fontSize="xs" color="secondary">
-              Run the command from each repo below — it syncs every Packmind
-              package configured on that repo at once.
+              Run the command from each repo below — it distributes every
+              Packmind package configured on that repo at once.
             </PMText>
             <PMVStack gap={3} align="stretch">
               {cliBlocks.map((block) => (
@@ -1255,8 +1254,9 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
                           fontVariantNumeric="tabular-nums"
                           marginLeft="auto"
                         >
-                          {entry.behindArtifacts.length} artifact
-                          {entry.behindArtifacts.length === 1 ? '' : 's'} behind
+                          {entry.behindArtifacts.length} component
+                          {entry.behindArtifacts.length === 1 ? '' : 's'} to
+                          update
                         </PMText>
                       </PMHStack>
                     ))}
@@ -1271,7 +1271,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
   );
 }
 
-function NothingToSync() {
+function NothingToDistribute() {
   return (
     <PMVStack gap={2} align="center" paddingY={10}>
       <PMIcon fontSize="2xl" color="success">
@@ -1281,7 +1281,7 @@ function NothingToSync() {
         Nothing to distribute.
       </PMText>
       <PMText fontSize="xs" color="secondary">
-        Every artifact is on its latest version on every distribution.
+        Every component is on its latest version on every distribution.
       </PMText>
     </PMVStack>
   );
@@ -1319,12 +1319,12 @@ function SuccessSurface({
         </PMHStack>
         <PMText fontSize="sm" color="secondary">
           {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-          redistributed on {stats.installCount} distribution
+          distributed on {stats.installCount} distribution
           {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
-          artifact update{stats.artifactUpdateCount === 1 ? '' : 's'} in total).
-          Each distribution received a direct commit on its configured branch
-          bringing the bundled artifacts to their Packmind version. Those
-          distributions are now back in line.
+          component update{stats.artifactUpdateCount === 1 ? '' : 's'} in
+          total). Each distribution received a direct commit on its configured
+          branch bringing the bundled components to their Packmind version.
+          Those distributions are now aligned.
         </PMText>
         {/*
           The offer, made here and nowhere else on the way in.

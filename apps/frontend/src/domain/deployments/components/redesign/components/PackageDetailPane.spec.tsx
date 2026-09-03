@@ -157,7 +157,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Update 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
       ).toBeInTheDocument();
     });
   });
@@ -181,7 +181,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Update 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
       ).toBeInTheDocument();
     });
   });
@@ -199,7 +199,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Update 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
       ).toBeInTheDocument();
     });
 
@@ -208,7 +208,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
 
       fireEvent.click(
-        screen.getByRole('button', { name: /Update 1 destination/ }),
+        screen.getByRole('button', { name: /Distribute to 1 destination/ }),
       );
 
       expect(onSyncPackage).toHaveBeenCalledWith(packageId, [
@@ -237,7 +237,7 @@ describe('PackageDetailPane', () => {
       );
 
       expect(
-        screen.getByRole('button', { name: /Update 2 destinations/ }),
+        screen.getByRole('button', { name: /Distribute to 2 destinations/ }),
       ).toBeInTheDocument();
     });
   });

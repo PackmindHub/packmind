@@ -83,7 +83,7 @@ import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
 import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
-const CONTENT_TAB = 'content';
+const COMPONENTS_TAB = 'components';
 const DISTRIBUTION_TAB = 'distribution';
 
 /**
@@ -426,14 +426,14 @@ export function ContextPackagePane({
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
       ? DISTRIBUTION_TAB
-      : CONTENT_TAB;
+      : COMPONENTS_TAB;
 
   const showTab = (value: string) => {
     // Mutating the params we were handed, so the selected package survives the
-    // tab change. Content is the default, so it leaves the URL clean.
+    // tab change. Components is the default, so it leaves the URL clean.
     setSearchParams(
       (previous) => {
-        if (value === CONTENT_TAB) previous.delete(TAB_PARAM);
+        if (value === COMPONENTS_TAB) previous.delete(TAB_PARAM);
         else previous.set(TAB_PARAM, value);
         return previous;
       },
@@ -707,7 +707,7 @@ export function ContextPackagePane({
               control twice. So the invitation stays where the explanation is,
               and up here Distribute owns the one primary the header has.
             */}
-            {tab === CONTENT_TAB &&
+            {tab === COMPONENTS_TAB &&
               (addableCount > 0 ? (
                 <PMHStack gap="1px">
                   <PMButton
@@ -874,8 +874,8 @@ export function ContextPackagePane({
 
         <PMBox paddingTop={5}>
           <PMTabsCompound.List>
-            <PMTabsCompound.Trigger value={CONTENT_TAB}>
-              Content
+            <PMTabsCompound.Trigger value={COMPONENTS_TAB}>
+              Components
               {/*
                 The count travels on the tab rather than under the package name:
                 it is what tells the size of the half you are not looking at.
@@ -906,7 +906,7 @@ export function ContextPackagePane({
       </PMBox>
 
       <PMTabsCompound.Content
-        value={CONTENT_TAB}
+        value={COMPONENTS_TAB}
         flex="1"
         minH={0}
         overflowY="auto"
@@ -1124,7 +1124,7 @@ function EmptyPackageBody({
         A package with no component gives an agent nothing to read and
         distributes nothing.{' '}
         {canAdd
-          ? 'Pick standards, commands or skills the space already owns, and it is distributable as soon as you add them.'
+          ? 'Pick standards, commands and skills the space already owns, and it is distributable as soon as you add them.'
           : 'This space owns no standard, command or skill yet, so there is nothing to pick from: write the first one and it joins this package as it is created.'}
       </PMText>
       <PMBox paddingTop={4}>

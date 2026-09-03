@@ -63,7 +63,7 @@ describe('buildPackageAttention', () => {
     expect(buildPackageAttention(pkg)).toBeUndefined();
   });
 
-  describe('when one destination is behind', () => {
+  describe('when one destination is drifted', () => {
     const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
     it('counts it', () => {
@@ -71,7 +71,7 @@ describe('buildPackageAttention', () => {
     });
 
     it('names what is wrong in the singular', () => {
-      expect(buildPackageAttention(pkg)?.tooltip).toBe('1 destination behind');
+      expect(buildPackageAttention(pkg)?.tooltip).toBe('1 destination drifted');
     });
 
     it('marks it as late rather than as broken', () => {
@@ -79,7 +79,7 @@ describe('buildPackageAttention', () => {
     });
   });
 
-  describe('when two destinations of the same package are behind', () => {
+  describe('when two destinations of the same package are drifted', () => {
     const pkg = drift([
       { repo: 'r1', target: 't1', driftReason: 'behind' },
       { repo: 'r2', target: 't1', driftReason: 'not-distributed' },
@@ -90,7 +90,9 @@ describe('buildPackageAttention', () => {
     });
 
     it('names them in the plural', () => {
-      expect(buildPackageAttention(pkg)?.tooltip).toBe('2 destinations behind');
+      expect(buildPackageAttention(pkg)?.tooltip).toBe(
+        '2 destinations drifted',
+      );
     });
   });
 
@@ -133,7 +135,7 @@ describe('buildPackageAttention', () => {
     });
   });
 
-  describe('when the destination that failed is also behind', () => {
+  describe('when the destination that failed is also drifted', () => {
     const pkg = drift(
       [{ repo: 'r1', target: 't1', driftReason: 'behind' }],
       [{ repo: 'r1', target: 't1', status: DistributionStatus.failure }],
@@ -145,12 +147,12 @@ describe('buildPackageAttention', () => {
 
     it('still states both reasons', () => {
       expect(buildPackageAttention(pkg)?.tooltip).toBe(
-        '1 destination behind, 1 with a failed distribution',
+        '1 destination drifted, 1 with a failed distribution',
       );
     });
   });
 
-  it('adds a failed destination to the behind ones', () => {
+  it('adds a failed destination to the drifted ones', () => {
     const pkg = drift(
       [{ repo: 'r1', target: 't1', driftReason: 'behind' }],
       [{ repo: 'r2', target: 't1', status: DistributionStatus.failure }],
@@ -168,14 +170,14 @@ describe('buildPackageAttention', () => {
     expect(buildPackageAttention(pkg)).toBeUndefined();
   });
 
-  describe('when a marketplace has to be republished to', () => {
+  describe('when a marketplace has drifted', () => {
     it('counts it on a package that lands nowhere else', () => {
       expect(buildPackageAttention(null, 1)?.count).toBe(1);
     });
 
-    it('gives it its own verb', () => {
+    it('counts it apart from the repositories', () => {
       expect(buildPackageAttention(null, 2)?.tooltip).toBe(
-        '2 marketplaces to republish',
+        '2 marketplaces drifted',
       );
     });
 
@@ -183,7 +185,7 @@ describe('buildPackageAttention', () => {
       expect(buildPackageAttention(null, 1)?.tone).toBe('warning');
     });
 
-    it('adds it to the destinations that are behind', () => {
+    it('adds it to the destinations that are drifted', () => {
       const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
       expect(buildPackageAttention(pkg, 1)?.count).toBe(2);
@@ -193,7 +195,7 @@ describe('buildPackageAttention', () => {
       const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
       expect(buildPackageAttention(pkg, 1)?.tooltip).toBe(
-        '1 destination behind, 1 marketplace to republish',
+        '1 destination drifted, 1 marketplace drifted',
       );
     });
   });
@@ -227,7 +229,7 @@ describe('buildPackageAttentionIndex', () => {
     );
 
     expect(index.get('pkg-published' as PackageId)?.tooltip).toBe(
-      '1 marketplace to republish',
+      '1 marketplace drifted',
     );
   });
 

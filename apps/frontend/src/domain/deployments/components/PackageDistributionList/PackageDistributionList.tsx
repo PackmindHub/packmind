@@ -64,7 +64,7 @@ export const PackageDistributionList: React.FC<
         borderRadius={'md'}
         width={'2xl'}
         mx={'auto'}
-        title={'No distributions yet'}
+        title={'Nothing distributed yet'}
         description="This package has not been distributed."
       />
     );

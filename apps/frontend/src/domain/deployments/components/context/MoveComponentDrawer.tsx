@@ -298,7 +298,7 @@ export function MoveComponentDrawer({
                         {unplaced > 0 &&
                           ` ${unplaced} of them ${
                             unplaced === 1 ? 'is' : 'are'
-                          } in no package today.`}
+                          } in no package.`}
                       </>
                     )}
                   </PMText>

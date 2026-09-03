@@ -107,12 +107,12 @@ const rowNames = () =>
     .map((row) => row.getAttribute('aria-label')?.split(',')[0]);
 
 describe('DestinationRail', () => {
-  describe('when destinations are behind and others have failed', () => {
+  describe('when destinations are drifted and others have failed', () => {
     it('offers one filter per state, counted in destinations', () => {
       renderRail();
 
       expect(
-        pill(/^Show only the 1 destination with something behind/),
+        pill(/^Show only the 1 destination with something drifted/),
       ).toBeInTheDocument();
       expect(
         pill(/^Show only the 1 destination whose last distribution failed/),
@@ -140,11 +140,11 @@ describe('DestinationRail', () => {
       expect(rowNames()).toEqual(['Repository acme/api']);
     });
 
-    it('narrows to what is behind alone, leaving the failure out', async () => {
+    it('narrows to what is drifted alone, leaving the failure out', async () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something behind/),
+        pill(/^Show only the 1 destination with something drifted/),
       );
 
       expect(rowNames()).toEqual(['Repository acme/webapp']);
@@ -158,7 +158,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something behind/),
+        pill(/^Show only the 1 destination with something drifted/),
       );
       await userEvent.click(
         pill(/^Show only the 1 destination whose last distribution failed/),
@@ -174,7 +174,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something behind/),
+        pill(/^Show only the 1 destination with something drifted/),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Show all' }));
 

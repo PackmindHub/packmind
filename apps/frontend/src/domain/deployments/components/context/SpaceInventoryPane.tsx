@@ -177,7 +177,7 @@ export function SpaceInventoryPane({
         ) : showingOrphans ? (
           <>
             The {inventory.orphanCount} component
-            {inventory.orphanCount === 1 ? '' : 's'} no package carries, newest
+            {inventory.orphanCount === 1 ? '' : 's'} not in any package, newest
             first. Nothing distributes{' '}
             {inventory.orphanCount === 1 ? 'it' : 'them'}.
           </>

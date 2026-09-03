@@ -478,7 +478,7 @@ function NothingDistributed({
         paddingTop={5}
         textWrap="balance"
       >
-        Nothing has been distributed yet
+        Nothing distributed yet
       </PMHeading>
 
       {/*

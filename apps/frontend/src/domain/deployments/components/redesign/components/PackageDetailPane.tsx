@@ -202,7 +202,7 @@ export function PackageDetailPane({
     driftedKeys.length > 0 && driftedLockCounts.locked === driftedKeys.length;
   /*
    * The package-wide push in the header, which only exists to be the one
-   * redistribute on a surface that offers none of its own.
+   * distribute on a surface that offers none of its own.
    */
   const showHeaderDistribute = hasDrift && !surfaceOwnsDistribute;
   const headerLockTooltip = (() => {
@@ -454,7 +454,7 @@ export function PackageDetailPane({
               />
             )}
             <SummaryStat
-              label="Latest push"
+              label="Last distributed"
               value={mostRecentPush?.label ?? 'Never'}
               tone={
                 mostRecentPush && mostRecentPush.days >= STALE_DAYS_THRESHOLD
@@ -516,7 +516,7 @@ export function PackageDetailPane({
               selectedDriftedCount > 0
                 ? [
                     {
-                      label: `Update ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
+                      label: `Distribute to ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
                       icon: <LuRotateCw />,
                       onAct: () => onSyncPackage(pkg.id, selectedDriftedKeys),
                     },
@@ -636,7 +636,7 @@ type InstallRowProps = {
 };
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
-  'in-progress': 'Distribution in progress for this target.',
+  'in-progress': 'Distributing to this target.',
   'no-app-token':
     'This provider has no token — use `packmind install` to update this distribution.',
 };
@@ -813,7 +813,7 @@ function DriftReasonIndicator({
   if (entry.reason === 'needs-removal') {
     return (
       <PMTooltip
-        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after redistribution.`}
+        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after the next distribution.`}
         placement="top"
       >
         <PMHStack gap={1.5} align="center" cursor="help">
@@ -830,7 +830,7 @@ function DriftReasonIndicator({
   if (entry.reason === 'not-distributed') {
     return (
       <PMTooltip
-        label="Added to the package — will be pushed on next distribution."
+        label="Added to the package — included in the next distribution."
         placement="top"
       >
         <PMBadge colorPalette="red" size="sm">
@@ -970,7 +970,7 @@ function RowStateLine({
           aria-hidden
         />
         <PMText fontSize="xs" color="faded">
-          Never distributed
+          Not distributed
         </PMText>
       </PMHStack>
     );
@@ -1003,7 +1003,7 @@ function DistributionEventLine({
   if (!anchorIso) return null;
   const verb = entry.lastDistributionStatus
     ? DISTRIBUTION_VERB[entry.lastDistributionStatus]
-    : 'Pushed';
+    : 'Distributed';
   const failed = entry.lastDistributionStatus === DistributionStatus.failure;
   const stale =
     !failed &&
@@ -1224,7 +1224,7 @@ const MODE_META: Record<
     title: 'CLI install',
     description: (
       <>
-        Update by running{' '}
+        Distributed by running{' '}
         <PMText
           as="span"
           fontFamily="mono"

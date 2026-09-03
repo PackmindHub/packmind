@@ -246,7 +246,7 @@ function NeverDistributed() {
       maxWidth="68ch"
     >
       <PMVStack align="start" gap={1}>
-        <PMText fontWeight="medium">This package is nowhere yet.</PMText>
+        <PMText fontWeight="medium">Nothing distributed yet.</PMText>
         <PMText color="secondary">
           It has never been distributed, so nothing reads it outside Packmind.
           Distributing it writes its components into a repository, where the

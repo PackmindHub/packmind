@@ -82,7 +82,7 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
         </PMAlert.Root>
         <PMText fontSize="sm" color="tertiary">
           This will remove the package files from the selected targets. The
-          package will still be available in Packmind for future deployments.
+          package will still be available in Packmind for future distributions.
         </PMText>
       </PMVStack>
     );

@@ -305,7 +305,7 @@ function ComponentRow({
 function PackageColumn({ names }: Readonly<{ names: string[] }>) {
   const label =
     names.length === 0
-      ? 'No package'
+      ? 'In no package'
       : names.length === 1
         ? names[0]
         : `${names.length} packages`;

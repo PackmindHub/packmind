@@ -42,7 +42,7 @@ const SECTIONS: ReadonlyArray<{
   {
     kind: 'marketplace',
     title: 'Marketplaces',
-    description: 'Catalogs this space publishes to.',
+    description: 'Catalogs this space distributes to.',
   },
 ];
 
@@ -487,8 +487,8 @@ function ReachRow({
  * dots, are lifted from `PackageFilterControl`: the pane beside this rail
  * filters its own rows by the same three states, and two controls a quarter of a
  * screen apart calling one state two different words is worse than either word
- * is good. `Drift` is also the rail's own word once you read down: its rows say
- * "2 targets drifted", not "2 targets behind".
+ * is good. `Drift` is now the only word for it anywhere: rows, tooltips and
+ * badges say drifted, whatever the destination is and whatever repairs it.
  */
 const STATUS_PILL: Readonly<
   Record<
@@ -500,7 +500,7 @@ const STATUS_PILL: Readonly<
     label: 'Drift',
     dot: 'orange.500',
     sentence: 'drifted',
-    reading: 'with something behind and nothing failed',
+    reading: 'with something drifted and nothing failed',
   },
   failed: {
     label: 'Failed',
@@ -884,7 +884,7 @@ function DestinationRow({
                 </PMText>
                 {isPinnedOpen && (
                   /*
-                    Not "not behind", which this used to say: filtered to
+                    Not "not drifted", which this used to say: filtered to
                     failures, a row that is merely behind is behind, and the
                     note has to contradict the filter rather than the state
                     printed right beside it.
@@ -982,26 +982,26 @@ function destinationState(
     /*
      * Zero reads like a repository that is aligned, not like a marketplace with
      * a count of nothing. These rows only started appearing once the rail listed
-     * the marketplaces a space publishes to rather than the ones reporting
-     * drift, and "0 plugins to republish" in orange was the row saying something
+     * the marketplaces a space distributes to rather than the ones reporting
+     * drift, and "0 plugins drifted" in orange was the row saying something
      * is wrong when the answer is that nothing is.
      */
     if (count === 0) {
       const published = destination.packageNames.length;
       const publishedWord = published === 1 ? 'package' : 'packages';
       return {
-        line: `${published} ${publishedWord} published`,
+        line: `${published} ${publishedWord} distributed`,
         tone: 'secondary',
         dot: 'green.500',
-        tooltip: `${published} ${publishedWord} published here, all matching their source`,
+        tooltip: `${published} ${publishedWord} distributed here, all matching their source`,
       };
     }
 
     return {
-      line: `${count} plugin${plural} to republish`,
+      line: `${count} plugin${plural} drifted`,
       tone: 'warning',
       dot: 'orange.500',
-      tooltip: `${count} published plugin${plural} whose package has changed since`,
+      tooltip: `${count} distributed plugin${plural} whose package has changed since`,
     };
   }
 
@@ -1047,7 +1047,7 @@ function destinationState(
         ? `${behind} drifted, all via packmind install`
         : lock === 'all-in-progress'
           ? `${behind} distribution${behind === 1 ? '' : 's'} in progress`
-          : `${behind} of ${targets} ${targetWord} need redistribution`,
+          : `${drifted} of ${targets} ${targetWord} drifted`,
   };
 }
 

@@ -44,7 +44,8 @@ export type PackageHeaderActions = {
  * `isResolved` is false while the drift query is out or has failed.
  *
  * Nothing is promoted then, and no count is stated. A header that reads
- * `Distribute` in the brand colour and then turns into `Update 3 destinations`
+ * `Distribute` in the brand colour and then turns into `Distribute to 3
+ * destinations`
  * is a wrong answer followed by a right one, which is the same reason the chips
  * on the tab below show no count until they have one.
  */
@@ -63,7 +64,7 @@ export function buildPackageHeaderActions({
   if (behindCount > 0) {
     /*
      * Loud, where the same branch used to answer `secondary`. Back then the
-     * menu was a button of its own beside a primary `Update`, and only one of
+     * menu was a button of its own beside a primary `Distribute`, and only one of
      * the two could carry the weight. It is now the chevron half of that same
      * button, so the weight is the whole control's and there is nothing left to
      * take it away from.
@@ -72,7 +73,7 @@ export function buildPackageHeaderActions({
       distributeVariant: 'primary',
       update: {
         count: behindCount,
-        label: `Update ${behindCount} destination${behindCount === 1 ? '' : 's'}`,
+        label: `Distribute to ${behindCount} destination${behindCount === 1 ? '' : 's'}`,
         lockTooltip: LOCK_TOOLTIP[lockProfile],
       },
     };
@@ -99,7 +100,7 @@ export function buildPackageHeaderActions({
 const LOCK_TOOLTIP: Record<PackageLockProfile, string | null> = {
   none: null,
   'all-in-progress':
-    'A distribution is already in progress for every destination that is behind.',
+    'Packmind is already distributing to every drifted destination.',
   'all-no-app-token':
-    'Every destination that is behind is on a provider without a token. Update those with `packmind install`.',
+    'Every drifted destination is on a provider without a token. Update those with `packmind install`.',
 };

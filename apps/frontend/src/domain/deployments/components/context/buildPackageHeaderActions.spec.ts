@@ -50,7 +50,7 @@ describe('buildPackageHeaderActions', () => {
       );
     });
 
-    describe('when it already holds a drift that is behind', () => {
+    describe('when it already holds a drift', () => {
       it('stays quiet all the same', () => {
         const pkg = drift([
           { repo: 'r1', target: 't1', driftReason: 'behind' },
@@ -89,11 +89,11 @@ describe('buildPackageHeaderActions', () => {
     });
   });
 
-  describe('when one destination is behind', () => {
+  describe('when one destination is drifted', () => {
     const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
     it('names it in the singular', () => {
-      expect(build(pkg).update?.label).toBe('Update 1 destination');
+      expect(build(pkg).update?.label).toBe('Distribute to 1 destination');
     });
 
     it('carries the count for the caller to scope the push with', () => {
@@ -105,7 +105,7 @@ describe('buildPackageHeaderActions', () => {
     });
   });
 
-  describe('when several destinations are behind', () => {
+  describe('when several destinations are drifted', () => {
     const pkg = drift([
       { repo: 'r1', target: 't1', driftReason: 'behind' },
       { repo: 'r2', target: 't2', driftReason: 'behind' },
@@ -113,7 +113,7 @@ describe('buildPackageHeaderActions', () => {
     ]);
 
     it('counts destinations rather than artifacts', () => {
-      expect(build(pkg).update?.label).toBe('Update 3 destinations');
+      expect(build(pkg).update?.label).toBe('Distribute to 3 destinations');
     });
   });
 
@@ -131,7 +131,7 @@ describe('buildPackageHeaderActions', () => {
         expect(
           build(pkg, { lockProfile: 'all-in-progress' }).update?.lockTooltip,
         ).toBe(
-          'A distribution is already in progress for every destination that is behind.',
+          'Packmind is already distributing to every drifted destination.',
         );
       });
     });
@@ -141,7 +141,7 @@ describe('buildPackageHeaderActions', () => {
         expect(
           build(pkg, { lockProfile: 'all-no-app-token' }).update?.lockTooltip,
         ).toBe(
-          'Every destination that is behind is on a provider without a token. Update those with `packmind install`.',
+          'Every drifted destination is on a provider without a token. Update those with `packmind install`.',
         );
       });
     });

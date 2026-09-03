@@ -119,7 +119,7 @@ function marketplacesToRepublishByPackage(
 
 /**
  * The three parts are stated separately rather than added up: the first two
- * overlap, since a destination whose last push failed is usually also behind,
+ * overlap, since a destination whose last push failed is usually also drifted,
  * and the third is not repaired by the same gesture as either.
  */
 function describe(
@@ -130,20 +130,20 @@ function describe(
   const parts: string[] = [];
 
   if (behind > 0) {
-    parts.push(`${behind} destination${behind === 1 ? '' : 's'} behind`);
+    parts.push(`${behind} destination${behind === 1 ? '' : 's'} drifted`);
   }
   if (failed > 0) {
     const noun = behind > 0 ? '' : `destination${failed === 1 ? '' : 's'} `;
     parts.push(`${failed} ${noun}with a failed distribution`);
   }
   /*
-   * "To republish" rather than "behind", the wording the navigation badge
-   * already uses: calling both of them behind would promise that whatever fixes
-   * the repositories covers these too. It does not.
+   * Counted apart from the repositories, though both now read as drift: what
+   * repairs a repository is a commit and what repairs a marketplace is a pull
+   * request, so the two numbers are not interchangeable to whoever acts on them.
    */
   if (marketplaces > 0) {
     parts.push(
-      `${marketplaces} marketplace${marketplaces === 1 ? '' : 's'} to republish`,
+      `${marketplaces} marketplace${marketplaces === 1 ? '' : 's'} drifted`,
     );
   }
 

@@ -41,10 +41,10 @@ const renderWithProviders = (component: React.ReactElement) => {
 const scope = { kind: 'package' as const, packageId: STUB_PACKAGES[0].id };
 
 /** Drives the review step through to the receipt. */
-async function redistribute() {
+async function distribute() {
   const user = userEvent.setup();
   const confirm = await screen.findByRole('button', {
-    name: /^Redistribute/,
+    name: /^Distribute/,
   });
   expect(confirm).toBeEnabled();
   await user.click(confirm);
@@ -58,7 +58,7 @@ describe('SyncSurface', () => {
     } as unknown as ReturnType<typeof useDeployPackagesMutation>);
   });
 
-  describe('when the redistribution has succeeded', () => {
+  describe('when the distribution has succeeded', () => {
     it('ends with a control that names what it does', async () => {
       renderWithProviders(
         <SyncSurface
@@ -71,7 +71,7 @@ describe('SyncSurface', () => {
         />,
       );
 
-      await redistribute();
+      await distribute();
 
       expect(
         await screen.findByRole('button', { name: 'Done' }),
@@ -98,7 +98,7 @@ describe('SyncSurface', () => {
         />,
       );
 
-      await redistribute();
+      await distribute();
       await userEvent.click(
         await screen.findByRole('button', { name: 'Done' }),
       );
@@ -121,7 +121,7 @@ describe('SyncSurface', () => {
         />,
       );
 
-      await redistribute();
+      await distribute();
 
       expect(
         await screen.findByRole('link', { name: 'Set up Auto-update' }),
@@ -148,7 +148,7 @@ describe('SyncSurface', () => {
         />,
       );
 
-      await redistribute();
+      await distribute();
       await screen.findByRole('button', { name: 'Done' });
 
       expect(

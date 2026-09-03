@@ -287,7 +287,7 @@ export function AddComponentsDrawer({
                     <PMText variant="body" color="secondary">
                       {showingFree ? (
                         <>
-                          The components no package carries yet, newest first.
+                          The components not in any package yet, newest first.
                           Nothing distributes them until they are in one. What
                           you pick joins <PackageName>{pkg.name}</PackageName>.
                         </>
@@ -590,7 +590,7 @@ function CandidateRow({
 function CurrentPackages({ names }: Readonly<{ names: readonly string[] }>) {
   const isFree = names.length === 0;
   const label = isFree
-    ? 'No package'
+    ? 'In no package'
     : names.length === 1
       ? `In ${names[0]}`
       : `In ${names.length} packages`;
