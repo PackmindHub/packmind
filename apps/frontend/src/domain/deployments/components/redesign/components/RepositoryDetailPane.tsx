@@ -54,8 +54,8 @@ import {
   repositoryHasDrift,
   repositoryHasFailedDistribution,
   repositoryLockProfile,
-  targetBehindInstallCount,
-  targetFailedInstallCount,
+  targetDriftedPackageCount,
+  targetFailedPackageCount,
 } from '../selectors/buildRepositoryDriftOverview';
 import type {
   ArtifactKind,
@@ -476,9 +476,9 @@ function TargetSection({
   onSyncPackageOnTarget,
   packageHistoryHref,
 }: Readonly<TargetSectionProps>) {
-  const behind = targetBehindInstallCount(target);
-  const failed = targetFailedInstallCount(target);
-  const isAligned = behind === 0 && failed === 0;
+  const drifted = targetDriftedPackageCount(target);
+  const failed = targetFailedPackageCount(target);
+  const isAligned = drifted === 0 && failed === 0;
 
   return (
     <PMBox borderBottomWidth="1px" borderColor="border.tertiary">
@@ -511,15 +511,21 @@ function TargetSection({
           </PMHStack>
           <PMText
             fontSize="xs"
-            color={failed > 0 ? 'error' : behind > 0 ? 'warning' : 'secondary'}
+            color={failed > 0 ? 'error' : drifted > 0 ? 'warning' : 'secondary'}
             fontVariantNumeric="tabular-nums"
             flexShrink={0}
           >
+            {/*
+              One unit across the three, the package, because that is what the
+              list under this header holds. `aligned` counted packages while the
+              other two counted landings, and a landing of a package on another
+              target of the same repository counted here too.
+            */}
             {isAligned
               ? `${target.packages.length} aligned`
               : failed > 0
                 ? `${failed} failed`
-                : `${behind} drifted`}
+                : `${drifted} drifted`}
           </PMText>
         </PMHStack>
       )}
@@ -779,7 +785,8 @@ function PackageRowStateLine({
             color="warning"
             fontVariantNumeric="tabular-nums"
           >
-            {behindCount} of {totalArtifactsOnInstall} behind
+            {behindCount} of {totalArtifactsOnInstall} component
+            {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
           </PMText>
         )}
       </PMHStack>
@@ -797,7 +804,8 @@ function PackageRowStateLine({
           aria-hidden
         />
         <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
-          {behindCount} of {totalArtifactsOnInstall} behind
+          {behindCount} of {totalArtifactsOnInstall} component
+          {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
         </PMText>
       </PMHStack>
     );

@@ -4,6 +4,7 @@ import {
   type GitProviderId,
   type GitRepoId,
   type PackageId,
+  type TargetId,
 } from '@packmind/types';
 import {
   buildPackageDriftOverview,
@@ -96,16 +97,48 @@ function targetHasFailedDistribution(target: TargetDrift): boolean {
   return target.packages.some(packageHasFailedDistribution);
 }
 
-export function targetBehindInstallCount(target: TargetDrift): number {
+/**
+ * Packages of this target with something drifted on *this* target.
+ *
+ * Scoped both ways, which is the whole point. These two used to add up each
+ * package's `packageBehindInstallCount`, and that counts a package's drifted
+ * landings wherever they are: the same package drifted on the root and on
+ * `apps/web` made each of the two section headers report two, over a list of
+ * one package. The line beside them counts `packages.length`, so two adjacent
+ * words carried two different units.
+ */
+export function targetDriftedPackageCount(target: TargetDrift): number {
   let n = 0;
-  for (const p of target.packages) n += packageBehindInstallCount(p);
+  for (const pkg of target.packages) {
+    if (packageDriftsOnTarget(pkg, target.target.id)) n += 1;
+  }
   return n;
 }
 
-export function targetFailedInstallCount(target: TargetDrift): number {
+/** Packages of this target whose last distribution to it failed. */
+export function targetFailedPackageCount(target: TargetDrift): number {
   let n = 0;
-  for (const p of target.packages) n += packageFailedInstallCount(p);
+  for (const pkg of target.packages) {
+    if (packageFailedOnTarget(pkg, target.target.id)) n += 1;
+  }
   return n;
+}
+
+function packageDriftsOnTarget(pkg: PackageDrift, targetId: TargetId): boolean {
+  return pkg.artifacts.some((artifact) =>
+    artifact.installs.some(
+      (install) =>
+        install.target.id === targetId && install.driftReason !== 'aligned',
+    ),
+  );
+}
+
+function packageFailedOnTarget(pkg: PackageDrift, targetId: TargetId): boolean {
+  return pkg.installLocations.some(
+    (location) =>
+      location.target.id === targetId &&
+      location.lastDistributionStatus === DistributionStatus.failure,
+  );
 }
 
 export function repositoryHasDrift(repo: RepositoryDrift): boolean {
@@ -131,6 +164,18 @@ export function repositoryBehindInstallCount(repo: RepositoryDrift): number {
 export function repositoryFailedInstallCount(repo: RepositoryDrift): number {
   let n = 0;
   for (const t of repo.targets) n += targetFailedInstallCount(t);
+  return n;
+}
+
+function targetBehindInstallCount(target: TargetDrift): number {
+  let n = 0;
+  for (const p of target.packages) n += packageBehindInstallCount(p);
+  return n;
+}
+
+function targetFailedInstallCount(target: TargetDrift): number {
+  let n = 0;
+  for (const p of target.packages) n += packageFailedInstallCount(p);
   return n;
 }
 

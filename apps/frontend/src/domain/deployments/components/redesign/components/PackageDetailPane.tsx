@@ -954,7 +954,8 @@ function RowStateLine({
             color="warning"
             fontVariantNumeric="tabular-nums"
           >
-            {behindCount} of {totalArtifactsOnInstall} behind
+            {behindCount} of {totalArtifactsOnInstall} component
+            {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
           </PMText>
         )}
       </PMHStack>
@@ -972,7 +973,8 @@ function RowStateLine({
           aria-hidden
         />
         <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
-          {behindCount} of {totalArtifactsOnInstall} behind
+          {behindCount} of {totalArtifactsOnInstall} component
+          {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
         </PMText>
       </PMHStack>
     );

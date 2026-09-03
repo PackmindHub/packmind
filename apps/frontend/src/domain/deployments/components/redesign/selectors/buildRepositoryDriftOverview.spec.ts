@@ -16,7 +16,7 @@ import {
   Target,
 } from '@packmind/types';
 
-import type { RepositoryDrift } from '../types';
+import type { RepositoryDrift, TargetDrift } from '../types';
 import {
   buildRepositoryDriftOverview,
   flattenRepositoryTargetPackages,
@@ -29,7 +29,7 @@ import {
   repositoryLockProfile,
   repositoryPackageCount,
   sortRepositoriesByDriftFirst,
-  targetBehindInstallCount,
+  targetDriftedPackageCount,
   totalDriftedRepoCount,
 } from './buildRepositoryDriftOverview';
 
@@ -463,7 +463,7 @@ describe('drift detection on a repository', () => {
     expect(repositoryBehindInstallCount(r)).toBe(2);
   });
 
-  it('exposes the per-target behind install count', () => {
+  it('exposes the drifted package count of a target', () => {
     const repo = makeRepo();
     const [r] = buildRepositoryDriftOverview([
       makeByTargetEntry({
@@ -473,7 +473,7 @@ describe('drift detection on a repository', () => {
       }),
     ]);
 
-    expect(targetBehindInstallCount(r.targets[0])).toBe(1);
+    expect(targetDriftedPackageCount(r.targets[0])).toBe(1);
   });
 });
 
@@ -702,6 +702,57 @@ describe('repos with disconnected branches', () => {
       ]);
 
       expect(r.branch).toBe('main');
+    });
+  });
+});
+
+describe('targetDriftedPackageCount', () => {
+  /*
+   * The case the count this replaces got wrong: it added up each package's
+   * drifted landings wherever they were, so a package drifted on both targets
+   * of one repository made each section header report two over a list of one.
+   */
+  describe('when one package is drifted on two targets of the repository', () => {
+    let targets: TargetDrift[];
+
+    beforeEach(() => {
+      const repo = makeRepo();
+      const [r] = buildRepositoryDriftOverview([
+        makeByTargetEntry({
+          repo,
+          target: makeTarget({ name: 'root', path: '/' }),
+          deployedStandards: [makeStandardInfo({ latest: 3, deployed: 1 })],
+        }),
+        makeByTargetEntry({
+          repo,
+          target: makeTarget({ name: 'web', path: 'apps/web/' }),
+          deployedStandards: [makeStandardInfo({ latest: 3, deployed: 1 })],
+        }),
+      ]);
+      targets = r.targets;
+    });
+
+    it('counts one on the first target', () => {
+      expect(targetDriftedPackageCount(targets[0])).toBe(1);
+    });
+
+    it('counts one on the second', () => {
+      expect(targetDriftedPackageCount(targets[1])).toBe(1);
+    });
+  });
+
+  describe('when the target is aligned', () => {
+    it('counts none', () => {
+      const repo = makeRepo();
+      const [r] = buildRepositoryDriftOverview([
+        makeByTargetEntry({
+          repo,
+          target: makeTarget(),
+          deployedStandards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+        }),
+      ]);
+
+      expect(targetDriftedPackageCount(r.targets[0])).toBe(0);
     });
   });
 });
