@@ -91,6 +91,12 @@ async function releaseQuietly(queryRunner: QueryRunner): Promise<void> {
  * settled. Acquiring them one at a time would warm nothing: each release
  * returns a client to the idle list, and the next acquisition would be handed
  * that same client back rather than opening a second one.
+ *
+ * Since the pool is fixed-size — `min` and `max` are the same number — holding
+ * the batch means holding the whole pool. Nothing else can take a connection
+ * until this returns. That is safe because it runs before `app.listen`, and
+ * anything in-process that does ask (a background job, say) waits at most the
+ * pool's own `connectionTimeoutMillis`.
  */
 export async function warmUpDatabasePool(
   dataSource: DataSource,

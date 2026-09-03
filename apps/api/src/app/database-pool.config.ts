@@ -25,12 +25,34 @@ const logger = new PackmindLogger('DatabasePoolConfig', LogLevel.INFO);
 export const DATABASE_APPLICATION_NAME = 'packmind-api';
 
 /**
- * Sized for the deployment we run today: a handful of API pods against a
- * single Postgres, where `max` per pod times the pod count has to stay well
- * under `max_connections`. Any other topology wants other numbers, hence the
- * overrides.
+ * A fixed-size pool: the floor and the ceiling are deliberately the same
+ * number, so the pool opens its connections once and then only ever reuses
+ * them.
+ *
+ * The gap between a `min` and a larger `max` is not free headroom here. Any
+ * connection opened above `min` is opened cold, mid-request, and a cold
+ * connection costs ~800 ms against ~6 ms for a pooled one. Given that ratio,
+ * a pool that is allowed to grow will reliably choose the expensive option:
+ * pg-pool opens a new client whenever every existing one is busy, even though
+ * one is about to free up in single-digit milliseconds.
+ *
+ * Measured on a real page load: the frontend fires ~10 parallel requests, each
+ * running an auth-guard lookup plus its handler's queries — around 50 short
+ * queries inside 40 ms. Allowed to grow, the pool answered that by opening 50
+ * connections. Held at 20, the same 50 queries are served by reusing warm ones
+ * and cost ~10 ms of queueing instead of a handshake. The 800 ms leaves the
+ * request path entirely and is paid once, at boot, by `warmUpDatabasePool`.
+ *
+ * 20 fits the deployment we run today: production averages well under
+ * 0.1 req/s, so concurrent users are not what sizes this — one page's fan-out
+ * is. Each held connection costs ~1.4 MiB on the Postgres side, so a pod holds
+ * ~28 MB. What binds is `max_connections`: this number times the pod count has
+ * to stay under it with room for migrations and admin sessions. A deployment
+ * that cannot afford it should scale BOTH values down together rather than
+ * reopening the gap between them — a `max` above `min` buys latency at the
+ * worst possible exchange rate.
  */
-export const DEFAULT_DATABASE_POOL_MIN = 8;
+export const DEFAULT_DATABASE_POOL_MIN = 20;
 export const DEFAULT_DATABASE_POOL_MAX = 20;
 
 /**

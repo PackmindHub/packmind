@@ -38,9 +38,11 @@ Main backend API for Packmind, built with NestJS. Business logic follows hexagon
 - **Port**: 3000 (default)
 - **Database**: Configured via TypeORM config in app module. The connection pool is sized in
   `apps/api/src/app/database-pool.config.ts` and overridable per deployment with
-  `DATABASE_POOL_MIN` (default 8), `DATABASE_POOL_MAX` (default 20) and
-  `DATABASE_POOL_CONNECTION_TIMEOUT_MS` (default 30 000). `max` times the pod count has to stay
-  under Postgres' `max_connections`; anything unparseable falls back to the default. The `min`
-  connections are opened at boot by `warmUpDatabasePool`, which is why the floor lives in a module
-  of its own rather than inline in `app.module.ts`.
+  `DATABASE_POOL_MIN`, `DATABASE_POOL_MAX` (both default 20) and
+  `DATABASE_POOL_CONNECTION_TIMEOUT_MS` (default 30 000). The two sizes are equal on purpose — a
+  fixed-size pool, opened once at boot by `warmUpDatabasePool` and reused thereafter, because a
+  connection opened above `min` is opened cold mid-request at ~800 ms against ~6 ms pooled. Scale
+  both together rather than reopening the gap; the binding constraint is this number times the pod
+  count staying under Postgres' `max_connections`. Anything unparseable falls back to the default,
+  and a `min` above `max` is capped.
 - **Redis**: Configured for cache and BullMQ
