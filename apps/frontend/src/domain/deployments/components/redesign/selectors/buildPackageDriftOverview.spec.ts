@@ -30,6 +30,7 @@ import {
   packageFailedInstallCount,
   packageHasDrift,
   packageHasFailedDistribution,
+  packageRepositoryCount,
   sortPackagesByDriftFirst,
   totalBehindInstallCount,
   totalFailedInstallCount,
@@ -571,6 +572,85 @@ describe('buildPackageDriftOverview', () => {
       expect(pkg.installLocations[0].lastDistributedAt).toBe(
         '2026-05-01T10:00:00Z',
       );
+    });
+  });
+});
+
+describe('packageRepositoryCount', () => {
+  describe('when the package lands on two targets of one repository', () => {
+    let pkg: PackageDrift;
+
+    beforeEach(() => {
+      const repo = makeRepo({ id: createGitRepoId('repo-mono'), repo: 'mono' });
+      const [first] = buildPackageDriftOverview([
+        makeByTarget({
+          targetId: createTargetId('t-root'),
+          target: makeTarget({ id: createTargetId('t-root'), name: 'root' }),
+          gitRepo: repo,
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 4, deployed: 4 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          targetId: createTargetId('t-web'),
+          target: makeTarget({
+            id: createTargetId('t-web'),
+            name: 'web',
+            path: 'apps/web',
+          }),
+          gitRepo: repo,
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 4, deployed: 4 })],
+            }),
+          ],
+        }),
+      ]);
+      pkg = first;
+    });
+
+    it('records two install locations', () => {
+      expect(pkg.installLocations).toHaveLength(2);
+    });
+
+    it('counts one repository', () => {
+      expect(packageRepositoryCount(pkg)).toBe(1);
+    });
+  });
+
+  describe('when the package lands on two repositories', () => {
+    let pkg: PackageDrift;
+
+    beforeEach(() => {
+      const [first] = buildPackageDriftOverview([
+        makeByTarget({
+          targetId: createTargetId('t-a'),
+          target: makeTarget({ id: createTargetId('t-a'), name: 'root' }),
+          gitRepo: makeRepo({ id: createGitRepoId('repo-a'), repo: 'a' }),
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 4, deployed: 4 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          targetId: createTargetId('t-b'),
+          target: makeTarget({ id: createTargetId('t-b'), name: 'root' }),
+          gitRepo: makeRepo({ id: createGitRepoId('repo-b'), repo: 'b' }),
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 4, deployed: 4 })],
+            }),
+          ],
+        }),
+      ]);
+      pkg = first;
+    });
+
+    it('counts both', () => {
+      expect(packageRepositoryCount(pkg)).toBe(2);
     });
   });
 });

@@ -5,6 +5,7 @@ import { UIProvider } from '@packmind/ui';
 import {
   createGitProviderId,
   createGitRepoId,
+  createPackageId,
   createTargetId,
   DistributionStatus,
 } from '@packmind/types';
@@ -69,6 +70,31 @@ const repository = (
         packages: [landed('Backend', id, state)],
       },
     ],
+  }) as unknown as RepositoryDrift;
+
+/**
+ * The same package landed on two targets of one repository, which is the case
+ * the row's unit is about: two drifted landings, one package to distribute.
+ */
+const twoTargets = (
+  id: string,
+  name: string,
+  state: 'aligned' | 'behind' | 'failed',
+): RepositoryDrift =>
+  ({
+    id: createGitRepoId(id),
+    repo: { id: createGitRepoId(id), owner: 'acme', name, providerId },
+    branch: 'main',
+    targets: ['root', 'web'].map((suffix) => ({
+      id: createTargetId(`${id}-${suffix}`),
+      target: { id: createTargetId(`${id}-${suffix}`), name: suffix },
+      packages: [
+        {
+          ...landed('Backend', id, state),
+          id: createPackageId('pkg-backend'),
+        },
+      ],
+    })),
   }) as unknown as RepositoryDrift;
 
 const BEHIND = repository('repo-behind', 'webapp', 'behind');
@@ -212,6 +238,30 @@ describe('DestinationRail', () => {
       );
 
       expect(screen.queryByText('· open, not behind')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('what a repository row counts', () => {
+    it('counts one drifted package landed twice as one', () => {
+      renderRail([twoTargets('repo-two', 'monorepo', 'behind')]);
+
+      expect(screen.getByText('1 package drifted')).toBeInTheDocument();
+    });
+
+    it('says so in the row label as well as the line', () => {
+      renderRail([twoTargets('repo-two', 'monorepo', 'behind')]);
+
+      expect(
+        screen.getByRole('button', {
+          name: 'Repository acme/monorepo, 1 package drifted',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('counts the packages of an aligned repository, not its targets', () => {
+      renderRail([twoTargets('repo-two', 'monorepo', 'aligned')]);
+
+      expect(screen.getByText('1 package aligned')).toBeInTheDocument();
     });
   });
 

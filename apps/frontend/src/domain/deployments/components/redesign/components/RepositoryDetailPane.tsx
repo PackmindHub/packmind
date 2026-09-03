@@ -49,7 +49,7 @@ import {
 } from '../selectors/installDriftEntries';
 import {
   repositoryBehindInstallCount,
-  repositoryDriftedTargetCount,
+  repositoryDriftedPackageCount,
   repositoryFailedInstallCount,
   repositoryHasDrift,
   repositoryHasFailedDistribution,
@@ -135,7 +135,7 @@ export function RepositoryDetailPane({
   );
   const hasDrift = repositoryHasDrift(repo);
   const hasFailure = repositoryHasFailedDistribution(repo);
-  const driftedTargets = repositoryDriftedTargetCount(repo);
+  const driftedPackages = repositoryDriftedPackageCount(repo);
   const behindInstallCount = repositoryBehindInstallCount(repo);
   const failedInstallCount = repositoryFailedInstallCount(repo);
 
@@ -301,7 +301,7 @@ export function RepositoryDetailPane({
             {hasDrift ? (
               <SummaryStat
                 label="Drift"
-                value={`${driftedTargets} target${driftedTargets === 1 ? '' : 's'}, ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
+                value={`${driftedPackages} package${driftedPackages === 1 ? '' : 's'}, ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
                 tone="warn"
               />
             ) : (
@@ -386,6 +386,12 @@ export function RepositoryDetailPane({
               <TargetSection
                 key={t.id}
                 target={t}
+                /*
+                 * Read off the repository and not off `filteredTargets`: a
+                 * single target loses its header, and it must not gain one
+                 * back because a filter hid its sibling.
+                 */
+                showHeader={repo.targets.length > 1}
                 providersWithToken={providersWithToken}
                 isProvidersLoading={isProvidersLoading}
                 selectedKeys={selectedKeys}
@@ -446,6 +452,12 @@ export function RepositoryDetailPane({
 
 type TargetSectionProps = {
   target: TargetDrift;
+  /**
+   * The repository has more than one target, so its sections have to say which
+   * of them they are. With one target the header states the repository's own
+   * numbers a second time, under a name the reader did not need.
+   */
+  showHeader: boolean;
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   selectedKeys: Set<PackageRowKey>;
@@ -456,6 +468,7 @@ type TargetSectionProps = {
 
 function TargetSection({
   target,
+  showHeader,
   providersWithToken,
   isProvidersLoading,
   selectedKeys,
@@ -469,45 +482,47 @@ function TargetSection({
 
   return (
     <PMBox borderBottomWidth="1px" borderColor="border.tertiary">
-      <PMHStack
-        gap={2}
-        align="center"
-        paddingX={6}
-        paddingY={1.5}
-        bg="background.tertiary"
-        borderBottomWidth="1px"
-        borderColor="border.tertiary"
-      >
-        <PMHStack gap={2} align="center" flex={1} minW={0}>
-          {target.target.isDefault ? (
-            <PMText fontSize="xs" color="secondary" fontWeight="medium">
-              Repository root
-            </PMText>
-          ) : (
-            <PMText
-              fontSize="xs"
-              color="primary"
-              fontWeight="medium"
-              fontFamily="mono"
-              truncate
-            >
-              {target.target.name}
-            </PMText>
-          )}
-        </PMHStack>
-        <PMText
-          fontSize="xs"
-          color={failed > 0 ? 'error' : behind > 0 ? 'warning' : 'secondary'}
-          fontVariantNumeric="tabular-nums"
-          flexShrink={0}
+      {showHeader && (
+        <PMHStack
+          gap={2}
+          align="center"
+          paddingX={6}
+          paddingY={1.5}
+          bg="background.tertiary"
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
         >
-          {isAligned
-            ? `${target.packages.length} aligned`
-            : failed > 0
-              ? `${failed} failed`
-              : `${behind} drifted`}
-        </PMText>
-      </PMHStack>
+          <PMHStack gap={2} align="center" flex={1} minW={0}>
+            {target.target.isDefault ? (
+              <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                Repository root
+              </PMText>
+            ) : (
+              <PMText
+                fontSize="xs"
+                color="primary"
+                fontWeight="medium"
+                fontFamily="mono"
+                truncate
+              >
+                {target.target.name}
+              </PMText>
+            )}
+          </PMHStack>
+          <PMText
+            fontSize="xs"
+            color={failed > 0 ? 'error' : behind > 0 ? 'warning' : 'secondary'}
+            fontVariantNumeric="tabular-nums"
+            flexShrink={0}
+          >
+            {isAligned
+              ? `${target.packages.length} aligned`
+              : failed > 0
+                ? `${failed} failed`
+                : `${behind} drifted`}
+          </PMText>
+        </PMHStack>
+      )}
 
       <PMVStack gap={0} align="stretch">
         {target.packages.map((p) => (

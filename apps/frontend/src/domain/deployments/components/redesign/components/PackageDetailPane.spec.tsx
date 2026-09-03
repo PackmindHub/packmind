@@ -36,6 +36,16 @@ const behindInstall = (index: number): RepoInstall => ({
   driftReason: 'behind',
 });
 
+/**
+ * A landing of the same package elsewhere in the repository `behindInstall`
+ * already used: one repository, two places, which is the only case that has to
+ * name the target.
+ */
+const secondLandingOnRepoOne = (): RepoInstall => ({
+  ...behindInstall(1),
+  target: { id: createTargetId('target-web'), name: 'apps/web' },
+});
+
 /** A package behind on `installCount` distributions, none of them locked. */
 const driftedPackage = (installCount: number): PackageDrift => {
   const installs = Array.from({ length: installCount }, (_, i) =>
@@ -56,6 +66,27 @@ const driftedPackage = (installCount: number): PackageDrift => {
         installs,
       },
     ],
+    installLocations: installs.map((install) => ({
+      repo: install.repo,
+      target: install.target,
+      branch: install.branch,
+      lastDistributionStatus: DistributionStatus.success,
+      lastDistributedAt: install.lastDeployedAt,
+    })),
+  };
+};
+
+/** The same package, landed twice on one repository: root, then `apps/web`. */
+const packageOnTwoTargets = (): PackageDrift => {
+  const root: RepoInstall = {
+    ...behindInstall(1),
+    target: { ...behindInstall(1).target, isDefault: true },
+  };
+  const installs = [root, secondLandingOnRepoOne()];
+  const pkg = driftedPackage(1);
+  return {
+    ...pkg,
+    artifacts: pkg.artifacts.map((artifact) => ({ ...artifact, installs })),
     installLocations: installs.map((install) => ({
       repo: install.repo,
       target: install.target,
@@ -87,18 +118,20 @@ const renderPane = (props?: {
   distributionHistory?: DistributionHistoryTarget | null;
   hasFailure?: boolean;
   surfaceOwnsStats?: ReadonlyArray<'artifacts' | 'distributions'>;
+  pkg?: PackageDrift;
 }) => {
   const onSyncPackage = props?.onSyncPackage ?? vi.fn();
   const installCount = props?.installCount ?? 3;
+  const pkg =
+    props?.pkg ??
+    (props?.hasFailure
+      ? packageWithFailure(installCount)
+      : driftedPackage(installCount));
   render(
     <MemoryRouter>
       <UIProvider>
         <PackageDetailPane
-          pkg={
-            props?.hasFailure
-              ? packageWithFailure(installCount)
-              : driftedPackage(installCount)
-          }
+          pkg={pkg}
           providersWithToken={
             props?.providersWithToken ?? new Set([providerId])
           }
@@ -118,9 +151,49 @@ describe('PackageDetailPane', () => {
   const tickFirstInstall = () =>
     userEvent.click(
       screen.getByRole('checkbox', {
-        name: 'Select packmind/service-1 (default)',
+        name: 'Select packmind/service-1',
       }),
     );
+
+  describe('when the package lands once on each repository', () => {
+    it('names no target, since the repository says everything', () => {
+      renderPane();
+
+      expect(screen.queryByText('default')).not.toBeInTheDocument();
+    });
+
+    it('leaves the target out of the checkbox label too', () => {
+      renderPane();
+
+      expect(
+        screen.getByRole('checkbox', { name: 'Select packmind/service-1' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the package lands twice on one repository', () => {
+    it('names the root in words rather than leaving it blank', () => {
+      renderPane({ pkg: packageOnTwoTargets() });
+
+      expect(screen.getByText('Repository root')).toBeInTheDocument();
+    });
+
+    it('names the other landing as well', () => {
+      renderPane({ pkg: packageOnTwoTargets() });
+
+      expect(screen.getByText('apps/web')).toBeInTheDocument();
+    });
+
+    it('tells the two checkboxes apart', () => {
+      renderPane({ pkg: packageOnTwoTargets() });
+
+      expect(
+        screen.getByRole('checkbox', {
+          name: 'Select packmind/service-1 (apps/web)',
+        }),
+      ).toBeInTheDocument();
+    });
+  });
 
   it('offers no selection bar before anything is ticked', () => {
     renderPane();
@@ -232,7 +305,7 @@ describe('PackageDetailPane', () => {
       await tickFirstInstall();
       await userEvent.click(
         screen.getByRole('checkbox', {
-          name: 'Select packmind/service-2 (default)',
+          name: 'Select packmind/service-2',
         }),
       );
 
@@ -248,7 +321,7 @@ describe('PackageDetailPane', () => {
 
       expect(
         screen.getByRole('checkbox', {
-          name: 'Select packmind/service-1 (default)',
+          name: 'Select packmind/service-1',
         }),
       ).toBeDisabled();
     });

@@ -13,7 +13,8 @@ import {
 import { LuFolderGit2, LuRotateCw, LuSearch, LuStore } from 'react-icons/lu';
 import type { GitProviderId } from '@packmind/types';
 import {
-  repositoryDriftedTargetCount,
+  repositoryDriftedPackageCount,
+  repositoryPackageCount,
   repositoryLockProfile,
 } from '../redesign/selectors/buildRepositoryDriftOverview';
 import {
@@ -1006,8 +1007,14 @@ function destinationState(
   }
 
   const { behind, failed } = destination;
-  const targets = destination.repository.targets.length;
-  const targetWord = targets === 1 ? 'target' : 'targets';
+  /*
+   * The package, not the target. A row offers to distribute packages, and the
+   * same package behind on the root and on `apps/frontend` is one thing to
+   * fix; counting the pairs made the row promise two. The tooltip reads the
+   * same two numbers as the line, which is what it used not to do.
+   */
+  const packages = repositoryPackageCount(destination.repository);
+  const packageWord = packages === 1 ? 'package' : 'packages';
 
   if (failed > 0) {
     return {
@@ -1025,29 +1032,29 @@ function destinationState(
 
   if (behind === 0) {
     return {
-      line: `${targets} ${targetWord} aligned`,
+      line: `${packages} ${packageWord} aligned`,
       tone: 'secondary',
       dot: 'green.500',
-      tooltip: `${targets} ${targetWord} aligned`,
+      tooltip: `${packages} ${packageWord} aligned`,
     };
   }
 
-  const drifted = repositoryDriftedTargetCount(destination.repository);
+  const drifted = repositoryDriftedPackageCount(destination.repository);
   const lock = repositoryLockProfile(
     destination.repository,
     providersWithToken,
     isProvidersLoading,
   );
   return {
-    line: `${drifted} ${drifted === 1 ? 'target' : 'targets'} drifted`,
+    line: `${drifted} ${drifted === 1 ? 'package' : 'packages'} drifted`,
     tone: 'warning',
     dot: lock === 'all-in-progress' ? 'blue.300' : 'orange.500',
     tooltip:
       lock === 'all-no-app-token'
-        ? `${behind} drifted, all via packmind install`
+        ? `${behind} distribution${behind === 1 ? '' : 's'} drifted, all via packmind install`
         : lock === 'all-in-progress'
           ? `${behind} distribution${behind === 1 ? '' : 's'} in progress`
-          : `${drifted} of ${targets} ${targetWord} drifted`,
+          : `${drifted} of ${packages} ${packageWord} drifted`,
   };
 }
 

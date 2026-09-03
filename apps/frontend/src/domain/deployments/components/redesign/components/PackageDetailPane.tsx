@@ -40,6 +40,8 @@ import {
 import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
+  multiLandingRepoIds,
+  targetLabel,
   packageMostRecentPush,
   STALE_DAYS_THRESHOLD,
   formatRelativeDate,
@@ -167,6 +169,16 @@ export function PackageDetailPane({
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
+  /*
+   * Read off the whole list rather than the filtered one: whether a repository
+   * has a second landing is a fact about the package, not about what the
+   * filter left on screen, and a row must not lose its label because its
+   * sibling was filtered out.
+   */
+  const multiLandingRepos = useMemo(
+    () => multiLandingRepoIds(entries),
+    [entries],
+  );
   const lockByKey = useMemo(() => {
     const map = new Map<string, InstallLockReason | null>();
     for (const e of entries) {
@@ -550,6 +562,7 @@ export function PackageDetailPane({
                     <InstallRow
                       key={key}
                       entry={entry}
+                      showTarget={multiLandingRepos.has(entry.repo.id)}
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
@@ -571,6 +584,7 @@ export function PackageDetailPane({
                     <InstallRow
                       key={key}
                       entry={entry}
+                      showTarget={multiLandingRepos.has(entry.repo.id)}
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
@@ -629,6 +643,11 @@ function SummaryStat({
 
 type InstallRowProps = {
   entry: InstallDriftEntry;
+  /**
+   * The repository this row is on holds more than one landing of the package,
+   * so the row has to say which of them it is about.
+   */
+  showTarget: boolean;
   selected: boolean;
   lockReason: InstallLockReason | null;
   onToggle: () => void;
@@ -643,6 +662,7 @@ const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
 
 function InstallRow({
   entry,
+  showTarget,
   selected,
   lockReason,
   onToggle,
@@ -681,7 +701,7 @@ function InstallRow({
                   checked={selected}
                   disabled={checkboxDisabled}
                   onCheckedChange={() => onToggle()}
-                  aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
+                  aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${showTarget ? ` (${targetLabel(entry.target)})` : ''}`}
                 />
               </PMBox>
             </PMTooltip>
@@ -721,7 +741,7 @@ function InstallRow({
               {entry.repo.owner}/{entry.repo.name}
             </PMText>
             <BranchChip branch={entry.branch} />
-            {!entry.target.isDefault && <TargetChip name={entry.target.name} />}
+            {showTarget && <TargetChip name={targetLabel(entry.target)} />}
           </PMHStack>
         </PMBox>
 
@@ -1101,7 +1121,11 @@ function TargetChip({ name }: Readonly<{ name: string }>) {
       fontVariantNumeric="tabular-nums"
       lineHeight="1.4"
       flexShrink={0}
-      aria-label={`Target ${name}`}
+      /*
+       * No aria-label: the visible text is the label, and one would override
+       * it. "Target Repository root" is also not a phrase, now that the root
+       * is named in words rather than left blank.
+       */
     >
       {name}
     </PMBox>

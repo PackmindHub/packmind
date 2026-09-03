@@ -151,6 +151,41 @@ export function installDriftEntries(pkg: PackageDrift): InstallDriftEntry[] {
   return [...drifted, ...aligned];
 }
 
+/**
+ * Repositories where this package lands in more than one place.
+ *
+ * The target is a level below the destination and only worth naming when there
+ * is a choice to disambiguate: one repository, one landing, and the repository
+ * name says everything. Two landings and the reader has to be told which of
+ * them a row is about, root included — so both get a label rather than only
+ * the one that is not the root.
+ */
+export function multiLandingRepoIds(
+  landings: ReadonlyArray<{ repo: { id: string }; target: { id: string } }>,
+): Set<string> {
+  const targetsByRepo = new Map<string, Set<string>>();
+  for (const entry of landings) {
+    let targets = targetsByRepo.get(entry.repo.id);
+    if (!targets) {
+      targets = new Set<string>();
+      targetsByRepo.set(entry.repo.id, targets);
+    }
+    targets.add(entry.target.id);
+  }
+  const out = new Set<string>();
+  for (const [repoId, targets] of targetsByRepo) {
+    if (targets.size > 1) out.add(repoId);
+  }
+  return out;
+}
+
+/** What a target is called when its repository has more than one. */
+export const ROOT_TARGET_LABEL = 'Repository root';
+
+export function targetLabel(target: TargetRef): string {
+  return target.isDefault ? ROOT_TARGET_LABEL : target.name;
+}
+
 export function packageMostRecentPush(
   pkg: PackageDrift,
 ): { label: string; days: number } | null {

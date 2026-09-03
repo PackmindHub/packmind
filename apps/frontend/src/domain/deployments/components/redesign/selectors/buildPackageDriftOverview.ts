@@ -386,6 +386,20 @@ function destinationKey(repoId: string, targetId: string): string {
   return `${repoId}:${targetId}`;
 }
 
+/**
+ * Distinct repositories this package is distributed to, counted once however
+ * many targets of a repository it lands on.
+ *
+ * An `InstallLocation` is a (repo, target) pair, so its plain length is a
+ * number of distributions rather than of places: a package on the root and on
+ * `apps/frontend` of one repository reaches one repository.
+ */
+export function packageRepositoryCount(pkg: PackageDrift): number {
+  const repos = new Set<string>();
+  for (const loc of pkg.installLocations) repos.add(loc.repo.id);
+  return repos.size;
+}
+
 export function packageBehindInstallCount(pkg: PackageDrift): number {
   const behind = new Set<string>();
   for (const a of pkg.artifacts) {

@@ -40,6 +40,8 @@ import type { GitProviderId, PackageId, TargetId } from '@packmind/types';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import {
   installDriftEntries,
+  multiLandingRepoIds,
+  targetLabel,
   STALE_DAYS_THRESHOLD,
   formatRelativeDate,
   type InstallDriftEntry,
@@ -579,6 +581,13 @@ function PackageSyncBlock({
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
   const [expanded, setExpanded] = useState(false);
+  /*
+   * Read off every landing of the package, not just the drifted ones this
+   * block lists: whether a repository holds a second place is a fact about the
+   * package, and a row must not lose its label because its sibling happens to
+   * be aligned.
+   */
+  const multiLandingRepos = multiLandingRepoIds(block.pkg.installLocations);
   const entriesWithLock = block.driftedEntries.map((entry) => ({
     entry,
     lock: lockReasonFor(entry, providersWithToken, isProvidersLoading),
@@ -708,6 +717,7 @@ function PackageSyncBlock({
               <InstallSyncRow
                 key={key}
                 entry={entry}
+                showTarget={multiLandingRepos.has(entry.repo.id)}
                 selected={selected.has(key)}
                 lockReason={lock}
                 onToggle={() => {
@@ -739,6 +749,8 @@ const LOCK_ROW_BADGE: Record<
 
 type InstallSyncRowProps = {
   entry: InstallDriftEntry;
+  /** The repository holds more than one landing, so the row has to say which. */
+  showTarget: boolean;
   selected: boolean;
   lockReason: LockReason | null;
   onToggle: () => void;
@@ -746,6 +758,7 @@ type InstallSyncRowProps = {
 
 function InstallSyncRow({
   entry,
+  showTarget,
   selected,
   lockReason,
   onToggle,
@@ -762,7 +775,7 @@ function InstallSyncRow({
         onToggle();
       }}
       disabled={locked}
-      aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
+      aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${showTarget ? ` (${targetLabel(entry.target)})` : ''}`}
     />
   );
   return (
@@ -862,7 +875,7 @@ function InstallSyncRow({
               {entry.branch}
             </PMText>
           </PMHStack>
-          {!entry.target.isDefault && (
+          {showTarget && (
             <PMBox
               paddingX="6px"
               paddingY="1px"
@@ -873,7 +886,7 @@ function InstallSyncRow({
               fontSize="11px"
               flexShrink={0}
             >
-              {entry.target.name}
+              {targetLabel(entry.target)}
             </PMBox>
           )}
         </PMHStack>
@@ -1199,70 +1212,75 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               Packmind package configured on that repository at once.
             </PMText>
             <PMVStack gap={3} align="stretch">
-              {cliBlocks.map((block) => (
-                <PMVStack key={block.pkg.id} gap={1.5} align="stretch">
-                  <PMText fontSize="xs" fontWeight="semibold" color="primary">
-                    {block.pkg.name}
-                  </PMText>
-                  <PMVStack gap={1} align="stretch" paddingLeft={2}>
-                    {block.cliEntries.map((entry) => (
-                      <PMHStack
-                        key={`${entry.repo.id}::${entry.target.id}`}
-                        gap={2}
-                        align="center"
-                        wrap="wrap"
-                      >
-                        <PMText fontSize="xs" color="secondary">
-                          {entry.repo.owner}/{entry.repo.name}
-                        </PMText>
+              {cliBlocks.map((block) => {
+                const cliMultiLandingRepos = multiLandingRepoIds(
+                  block.pkg.installLocations,
+                );
+                return (
+                  <PMVStack key={block.pkg.id} gap={1.5} align="stretch">
+                    <PMText fontSize="xs" fontWeight="semibold" color="primary">
+                      {block.pkg.name}
+                    </PMText>
+                    <PMVStack gap={1} align="stretch" paddingLeft={2}>
+                      {block.cliEntries.map((entry) => (
                         <PMHStack
-                          gap="4px"
+                          key={`${entry.repo.id}::${entry.target.id}`}
+                          gap={2}
                           align="center"
-                          color={
-                            entry.branch === 'main'
-                              ? 'text.faded'
-                              : 'text.secondary'
-                          }
+                          wrap="wrap"
                         >
-                          <PMIcon fontSize="xs">
-                            <LuGitBranch />
-                          </PMIcon>
+                          <PMText fontSize="xs" color="secondary">
+                            {entry.repo.owner}/{entry.repo.name}
+                          </PMText>
+                          <PMHStack
+                            gap="4px"
+                            align="center"
+                            color={
+                              entry.branch === 'main'
+                                ? 'text.faded'
+                                : 'text.secondary'
+                            }
+                          >
+                            <PMIcon fontSize="xs">
+                              <LuGitBranch />
+                            </PMIcon>
+                            <PMText
+                              fontSize="11px"
+                              fontFamily="mono"
+                              fontVariantNumeric="tabular-nums"
+                            >
+                              {entry.branch}
+                            </PMText>
+                          </PMHStack>
+                          {cliMultiLandingRepos.has(entry.repo.id) && (
+                            <PMBox
+                              paddingX="6px"
+                              paddingY="1px"
+                              borderRadius="sm"
+                              bg="background.tertiary"
+                              color="text.secondary"
+                              fontFamily="mono"
+                              fontSize="11px"
+                            >
+                              {targetLabel(entry.target)}
+                            </PMBox>
+                          )}
                           <PMText
                             fontSize="11px"
-                            fontFamily="mono"
+                            color="faded"
                             fontVariantNumeric="tabular-nums"
+                            marginLeft="auto"
                           >
-                            {entry.branch}
+                            {entry.behindArtifacts.length} component
+                            {entry.behindArtifacts.length === 1 ? '' : 's'} to
+                            update
                           </PMText>
                         </PMHStack>
-                        {!entry.target.isDefault && (
-                          <PMBox
-                            paddingX="6px"
-                            paddingY="1px"
-                            borderRadius="sm"
-                            bg="background.tertiary"
-                            color="text.secondary"
-                            fontFamily="mono"
-                            fontSize="11px"
-                          >
-                            {entry.target.name}
-                          </PMBox>
-                        )}
-                        <PMText
-                          fontSize="11px"
-                          color="faded"
-                          fontVariantNumeric="tabular-nums"
-                          marginLeft="auto"
-                        >
-                          {entry.behindArtifacts.length} component
-                          {entry.behindArtifacts.length === 1 ? '' : 's'} to
-                          update
-                        </PMText>
-                      </PMHStack>
-                    ))}
+                      ))}
+                    </PMVStack>
                   </PMVStack>
-                </PMVStack>
-              ))}
+                );
+              })}
             </PMVStack>
           </PMVStack>
         </PMBox>

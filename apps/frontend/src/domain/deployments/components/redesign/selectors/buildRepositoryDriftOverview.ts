@@ -3,6 +3,7 @@ import {
   type ActiveDistributedPackagesByTarget,
   type GitProviderId,
   type GitRepoId,
+  type PackageId,
 } from '@packmind/types';
 import {
   buildPackageDriftOverview,
@@ -138,6 +139,42 @@ export function repositoryDriftedTargetCount(repo: RepositoryDrift): number {
   let n = 0;
   for (const t of repo.targets) if (targetHasDrift(t)) n++;
   return n;
+}
+
+/**
+ * Distinct packages on this repository, counted once however many of its
+ * targets they land on.
+ *
+ * The package is the unit a reader acts in: a repository row offers to
+ * distribute packages, not targets, and the same package on two targets of one
+ * repository is one thing to fix rather than two.
+ */
+export function repositoryPackageCount(repo: RepositoryDrift): number {
+  return collectPackageIds(repo, () => true).size;
+}
+
+/**
+ * Distinct packages with at least one install behind on this repository.
+ *
+ * Deliberately not the sum of the per-target counts: a package behind on both
+ * the root and `apps/frontend` is one package to distribute, and the row that
+ * offers the distribution says so.
+ */
+export function repositoryDriftedPackageCount(repo: RepositoryDrift): number {
+  return collectPackageIds(repo, (p) => packageBehindInstallCount(p) > 0).size;
+}
+
+function collectPackageIds(
+  repo: RepositoryDrift,
+  keep: (pkg: PackageDrift) => boolean,
+): Set<PackageId> {
+  const ids = new Set<PackageId>();
+  for (const t of repo.targets) {
+    for (const p of t.packages) {
+      if (keep(p)) ids.add(p.id);
+    }
+  }
+  return ids;
 }
 
 export function totalDriftedRepoCount(repos: RepositoryDrift[]): number {

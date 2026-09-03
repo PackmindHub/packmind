@@ -16,15 +16,18 @@ import {
   Target,
 } from '@packmind/types';
 
+import type { RepositoryDrift } from '../types';
 import {
   buildRepositoryDriftOverview,
   flattenRepositoryTargetPackages,
   repositoryBehindInstallCount,
+  repositoryDriftedPackageCount,
   repositoryDriftedTargetCount,
   repositoryHasDrift,
   repositoryHasFailedDistribution,
   repositoryLastActivityAt,
   repositoryLockProfile,
+  repositoryPackageCount,
   sortRepositoriesByDriftFirst,
   targetBehindInstallCount,
   totalDriftedRepoCount,
@@ -299,6 +302,134 @@ describe('drift detection on a repository', () => {
     ]);
 
     expect(repositoryDriftedTargetCount(r)).toBe(1);
+  });
+
+  describe('counting in packages rather than targets', () => {
+    const repo = makeRepo();
+    const root = makeTarget({
+      id: createTargetId('t-a'),
+      name: 'root',
+      path: '/',
+    });
+    const web = makeTarget({
+      id: createTargetId('t-b'),
+      name: 'web',
+      path: '/web',
+    });
+
+    const drifting = (latest: number, deployed: number) => [
+      makeStandardInfo({ latest, deployed }),
+    ];
+
+    describe('when one package drifts on two targets', () => {
+      let overview: RepositoryDrift;
+
+      beforeEach(() => {
+        [overview] = buildRepositoryDriftOverview([
+          makeByTargetEntry({
+            repo,
+            target: root,
+            deployedStandards: drifting(3, 1),
+          }),
+          makeByTargetEntry({
+            repo,
+            target: web,
+            deployedStandards: drifting(3, 1),
+          }),
+        ]);
+      });
+
+      it('counts two drifted landings', () => {
+        expect(repositoryBehindInstallCount(overview)).toBe(2);
+      });
+
+      it('counts one package to distribute', () => {
+        expect(repositoryDriftedPackageCount(overview)).toBe(1);
+      });
+    });
+
+    describe('when two packages drift, one per target', () => {
+      let overview: RepositoryDrift;
+
+      beforeEach(() => {
+        [overview] = buildRepositoryDriftOverview([
+          makeByTargetEntry({
+            repo,
+            target: root,
+            deployedStandards: drifting(3, 1),
+          }),
+          makeByTargetEntry({
+            repo,
+            target: web,
+            packageId: 'pkg-2',
+            deployedStandards: [
+              makeStandardInfo({ id: 'std-2', latest: 4, deployed: 1 }),
+            ],
+          }),
+        ]);
+      });
+
+      it('counts both', () => {
+        expect(repositoryDriftedPackageCount(overview)).toBe(2);
+      });
+    });
+
+    describe('when one package drifts beside an aligned one', () => {
+      let overview: RepositoryDrift;
+
+      beforeEach(() => {
+        [overview] = buildRepositoryDriftOverview([
+          makeByTargetEntry({
+            repo,
+            target: root,
+            deployedStandards: drifting(3, 1),
+          }),
+          makeByTargetEntry({
+            repo,
+            target: web,
+            packageId: 'pkg-2',
+            deployedStandards: [
+              makeStandardInfo({ id: 'std-2', latest: 2, deployed: 2 }),
+            ],
+          }),
+        ]);
+      });
+
+      it('counts both packages on the repository', () => {
+        expect(repositoryPackageCount(overview)).toBe(2);
+      });
+
+      it('leaves the aligned one out of the drifted count', () => {
+        expect(repositoryDriftedPackageCount(overview)).toBe(1);
+      });
+    });
+
+    describe('when the same package is aligned on both targets', () => {
+      let overview: RepositoryDrift;
+
+      beforeEach(() => {
+        [overview] = buildRepositoryDriftOverview([
+          makeByTargetEntry({
+            repo,
+            target: root,
+            deployedStandards: drifting(2, 2),
+          }),
+          makeByTargetEntry({
+            repo,
+            target: web,
+            deployedStandards: drifting(2, 2),
+          }),
+        ]);
+      });
+
+      it('counts it once', () => {
+        expect(repositoryPackageCount(overview)).toBe(1);
+      });
+
+      it('reports no drift', () => {
+        expect(repositoryDriftedPackageCount(overview)).toBe(0);
+      });
+    });
   });
 
   it('counts the drifted (target, package) pairs across targets', () => {

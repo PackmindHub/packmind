@@ -136,7 +136,7 @@ export function ContextPackageDistribution({
              */
             surfaceOwnsDistribute
             /*
-             * `Artifacts` is the count on the Content tab two rows up, and it
+             * `Artifacts` is the count on the Components tab two rows up, and it
              * is the size of the half you are not looking at.
              *
              * `Distributions` stays. There is no chip row in this edition, so
