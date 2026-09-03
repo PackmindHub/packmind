@@ -64,7 +64,7 @@ describe('buildPackageHeaderActions', () => {
     });
   });
 
-  describe('when the package is nowhere yet', () => {
+  describe('when the package is not distributed yet', () => {
     it('gives the distribute menu the weight', () => {
       expect(build(null).distributeVariant).toBe('primary');
     });

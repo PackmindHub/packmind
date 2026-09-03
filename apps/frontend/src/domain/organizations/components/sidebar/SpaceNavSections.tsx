@@ -73,8 +73,8 @@ function PluginFirstNavSections({
       {/*
         The same graph as Context, indexed by destination instead of by package.
         It earns an entry of its own because a repository holds several
-        packages: "what is behind in this repo" cannot be asked from a screen
-        scoped to one package, however that screen is arranged.
+        packages: "what has drifted in this repository" cannot be asked from a
+        screen scoped to one package, however that screen is arranged.
       */}
       <SpaceNavItemLink
         url={routes.space.toDistribution(orgSlug, spaceSlug)}

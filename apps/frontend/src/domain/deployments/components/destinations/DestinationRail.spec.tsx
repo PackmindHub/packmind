@@ -19,9 +19,9 @@ import type { PackageDrift, RepositoryDrift } from '../redesign/types';
 const providerId = createGitProviderId('provider-1');
 
 /**
- * A package landed on one (repo, target). `behind` is what a redistribution
+ * A package landed on one (repo, target). `behind` is what a distribution
  * would fix, `failed` is what the last attempt did, and a failed landing is
- * behind as well, which is the shape the real data has.
+ * drifted as well, which is the shape the real data has.
  */
 const landed = (
   name: string,
@@ -203,8 +203,8 @@ describe('DestinationRail', () => {
       expect(screen.getByText('· open, filtered out')).toBeInTheDocument();
     });
 
-    /* It is behind. Only the filter it fails, which is what the note must say. */
-    it('does not claim it is up to date', async () => {
+    /* It is drifted. Only the filter it fails, which is what the note must say. */
+    it('does not claim it is aligned', async () => {
       renderRail([BEHIND, FAILED, ALIGNED], 'r:repo-behind');
 
       await userEvent.click(

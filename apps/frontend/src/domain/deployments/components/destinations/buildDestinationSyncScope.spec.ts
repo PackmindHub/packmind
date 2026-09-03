@@ -82,7 +82,7 @@ const DESTINATIONS = buildSpaceDestinations([WEBAPP, API, ALIGNED], [CATALOG]);
 
 describe('buildDestinationSyncScope', () => {
   describe('with one repository picked', () => {
-    it('sends the packages behind in it', () => {
+    it('sends the drifted packages in it', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
         new Set(['r:repo-web']),
@@ -105,7 +105,7 @@ describe('buildDestinationSyncScope', () => {
     });
   });
 
-  describe('with the same package behind in two repositories', () => {
+  describe('with the same package drifted in two repositories', () => {
     it('names the package once', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
@@ -115,7 +115,7 @@ describe('buildDestinationSyncScope', () => {
       expect(scope?.kind === 'bulk' && scope.packageIds).toHaveLength(1);
     });
 
-    it('keeps both landings, so neither repository is left behind', () => {
+    it('keeps both landings, so neither repository keeps its drift', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
         new Set(['r:repo-web', 'r:repo-api']),
@@ -128,7 +128,7 @@ describe('buildDestinationSyncScope', () => {
     });
   });
 
-  describe('with a repository picked that is up to date', () => {
+  describe('with a repository picked that is aligned', () => {
     it('sends nothing', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
@@ -140,7 +140,7 @@ describe('buildDestinationSyncScope', () => {
   });
 
   describe('with a marketplace picked', () => {
-    it('sends nothing, since republishing is another call', () => {
+    it('sends nothing, since a marketplace is distributed by another call', () => {
       const scope = buildDestinationSyncScope(
         DESTINATIONS,
         new Set(['m:mkt-1']),

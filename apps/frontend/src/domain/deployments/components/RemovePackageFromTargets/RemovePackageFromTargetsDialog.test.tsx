@@ -92,7 +92,7 @@ describe('RemovePackageFromTargetsDialog', () => {
     } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
   });
 
-  it('shows the targets the package is deployed to', () => {
+  it('shows the targets the package is distributed to', () => {
     renderDialog();
 
     expect(screen.getByText('Remove from targets')).toBeInTheDocument();

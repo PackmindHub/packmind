@@ -20,7 +20,7 @@ import {
 
 /**
  * A package landed on one (repo, target): `drifting` installs are what a
- * redistribution would fix, `failed` is what the last attempt did.
+ * distribution would fix, `failed` is what the last attempt did.
  */
 const landed = (
   name: string,
@@ -152,18 +152,18 @@ describe('buildSpaceDestinations', () => {
   });
 
   describe('the order inside the marketplaces', () => {
-    it('puts the one with the most to republish first', () => {
+    it('puts the one with the most drifted first', () => {
       const destinations = buildSpaceDestinations(
         [],
         [
-          marketplace('mkt-one', 'One behind', ['A']),
-          marketplace('mkt-two', 'Two behind', ['A', 'B']),
+          marketplace('mkt-one', 'One drifted', ['A']),
+          marketplace('mkt-two', 'Two drifted', ['A', 'B']),
         ],
       );
 
       expect(destinations.map((destination) => destination.name)).toEqual([
-        'Two behind',
-        'One behind',
+        'Two drifted',
+        'One drifted',
       ]);
     });
 
@@ -184,7 +184,7 @@ describe('buildSpaceDestinations', () => {
   });
 
   describe('the counts of a repository', () => {
-    it('counts the landings a distribution would bring up to date', () => {
+    it('counts the landings a distribution would align', () => {
       const destinations = buildSpaceDestinations([DRIFTED_REPO], []);
 
       expect(destinations[0].behind).toBe(1);
@@ -322,20 +322,20 @@ describe('destinationDriftStatus', () => {
       [MARKETPLACE],
     );
 
-  it('calls a destination with nothing behind aligned', () => {
+  it('gives a destination with no drift the aligned status', () => {
     expect(destinationDriftStatus(aligned)).toBe('aligned');
   });
 
-  it('calls a destination with something behind behind', () => {
+  it('gives a drifted destination the behind status', () => {
     expect(destinationDriftStatus(drifted)).toBe('behind');
   });
 
   /*
-   * The failed fixture is behind as well, which is the normal case: a
-   * distribution that did not land leaves the landing out of date. The failure
-   * wins, because it is the part redistributing may not put right on its own.
+   * The failed fixture is drifted as well, which is the normal case: a
+   * distribution that did not land leaves the landing drifted. The failure
+   * wins, because it is the part distributing may not put right on its own.
    */
-  it('calls a destination that failed failed, behind or not', () => {
+  it('gives a destination that failed the failed status, drifted or not', () => {
     expect(destinationDriftStatus(failedOne)).toBe('failed');
   });
 
@@ -350,15 +350,15 @@ describe('isBatchDistributable', () => {
     [MARKETPLACE],
   );
 
-  it('takes a repository with something behind', () => {
+  it('takes a repository with drift', () => {
     expect(isBatchDistributable(drifted)).toBe(true);
   });
 
-  it('leaves out a repository with nothing behind', () => {
+  it('leaves out a repository with no drift', () => {
     expect(isBatchDistributable(aligned)).toBe(false);
   });
 
-  it('leaves out a marketplace, which is republished elsewhere', () => {
+  it('leaves out a marketplace, which is distributed by another call', () => {
     expect(isBatchDistributable(market)).toBe(false);
   });
 });
