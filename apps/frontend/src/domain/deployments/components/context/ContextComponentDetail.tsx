@@ -401,7 +401,7 @@ function RulesSection({
   if (isLoading) {
     return (
       <PMText fontSize="sm" color="faded">
-        Loading rules...
+        Loading rules…
       </PMText>
     );
   }

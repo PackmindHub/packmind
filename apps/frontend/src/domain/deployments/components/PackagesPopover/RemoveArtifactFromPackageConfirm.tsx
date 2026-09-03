@@ -13,14 +13,17 @@ import {
   PMVStack,
 } from '@packmind/ui';
 
-/** Pluralized fragments like `['2 repos', '1 marketplace']`, zero counts omitted. */
+/**
+ * Pluralized fragments like `['2 repositories', '1 marketplace']`, zero counts
+ * omitted.
+ */
 export function deployedPlaceParts(
   repos: number,
   marketplaces: number,
 ): string[] {
   const parts: string[] = [];
   if (repos > 0) {
-    parts.push(`${repos} ${repos === 1 ? 'repo' : 'repos'}`);
+    parts.push(`${repos} ${repos === 1 ? 'repository' : 'repositories'}`);
   }
   if (marketplaces > 0) {
     parts.push(
@@ -153,7 +156,7 @@ export const RemoveArtifactFromPackageConfirm = ({
                       </PMIcon>
                     </PMBox>
                     <PMText variant="small" color="secondary">
-                      {packageName} is deployed to {deployedPlaces}.
+                      {packageName} is distributed to {deployedPlaces}.
                     </PMText>
                   </PMHStack>
                 ) : null}

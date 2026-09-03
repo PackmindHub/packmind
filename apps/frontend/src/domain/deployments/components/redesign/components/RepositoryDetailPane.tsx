@@ -357,7 +357,7 @@ export function RepositoryDetailPane({
               </PMIcon>
             </PMBox>
             <PMInput
-              placeholder="Filter by package or target"
+              placeholder="Search packages"
               value={packageQuery}
               onChange={(e) => setPackageQuery(e.target.value)}
               size="sm"

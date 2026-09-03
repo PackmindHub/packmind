@@ -323,8 +323,9 @@ export function MoveComponentDrawer({
                       </PMIcon>
                     </PMBox>
                     <PMText variant="small" color="secondary">
-                      {source.name} is deployed to {sourcePlaces}, where the old
-                      content remains until the packages are distributed again.
+                      {source.name} is distributed to {sourcePlaces}, where the
+                      old content remains until the packages are distributed
+                      again.
                     </PMText>
                   </PMHStack>
                 ) : null}
@@ -486,8 +487,8 @@ function TargetRow({
         <PMText as="div" fontSize="xs" color="faded" truncate>
           {heldNote ||
             (deployedPlaces
-              ? `Deployed to ${deployedPlaces}`
-              : pkg.description || 'Not deployed anywhere')}
+              ? `Distributed to ${deployedPlaces}`
+              : pkg.description || 'Not distributed anywhere')}
         </PMText>
       </PMBox>
       <PMButton

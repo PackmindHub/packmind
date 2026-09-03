@@ -228,7 +228,7 @@ describe('MembershipChips', () => {
       await screen.findByText('Remove from frontend-rules?'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/frontend-rules is deployed to 1 marketplace/),
+      screen.getByText(/frontend-rules is distributed to 1 marketplace/),
     ).toBeInTheDocument();
     expect(mutateAsync).not.toHaveBeenCalled();
   });

@@ -96,10 +96,10 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
       <PMHStack>
         <PMButtonGroup size="xs">
           <PMButton variant="secondary" onClick={handleSelectAll}>
-            Select All
+            Select all
           </PMButton>
           <PMButton variant="secondary" onClick={handleClearSelection}>
-            Clear Selection
+            Clear selection
           </PMButton>
         </PMButtonGroup>
       </PMHStack>

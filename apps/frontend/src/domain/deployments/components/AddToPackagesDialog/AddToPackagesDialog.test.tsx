@@ -366,14 +366,16 @@ describe('AddToPackagesDialog', () => {
     });
   });
 
-  it('shows split repo and marketplace counts on a member row', () => {
+  it('shows split repository and marketplace counts on a member row', () => {
     setPackagesResponse([packageContainingArtifact, packageA]);
     setDeployedPackages([packageContainingArtifact.id], 2);
     setPublishedMarketplaces({ [packageContainingArtifact.id.toString()]: 1 });
 
     renderDialog();
 
-    expect(screen.getByText('2 repos · 1 marketplace')).toBeInTheDocument();
+    expect(
+      screen.getByText('2 repositories · 1 marketplace'),
+    ).toBeInTheDocument();
   });
 
   describe('remove from the members section', () => {
@@ -416,7 +418,7 @@ describe('AddToPackagesDialog', () => {
         await screen.findByText('Remove from already-here?'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/already-here is deployed to 2 repos/),
+        screen.getByText(/already-here is distributed to 2 repositories/),
       ).toBeInTheDocument();
       expect(mutateAsync).not.toHaveBeenCalled();
 
@@ -454,12 +456,12 @@ describe('AddToPackagesDialog', () => {
         await screen.findByText('Remove from already-here?'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/already-here is deployed to 1 marketplace/),
+        screen.getByText(/already-here is distributed to 1 marketplace/),
       ).toBeInTheDocument();
       expect(mutateAsync).not.toHaveBeenCalled();
     });
 
-    it('names both repos and marketplaces in the confirmation banner', async () => {
+    it('names both repositories and marketplaces in the confirmation banner', async () => {
       const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
@@ -476,7 +478,7 @@ describe('AddToPackagesDialog', () => {
 
       expect(
         await screen.findByText(
-          /already-here is deployed to 2 repos and 1 marketplace/,
+          /already-here is distributed to 2 repositories and 1 marketplace/,
         ),
       ).toBeInTheDocument();
       expect(mutateAsync).not.toHaveBeenCalled();

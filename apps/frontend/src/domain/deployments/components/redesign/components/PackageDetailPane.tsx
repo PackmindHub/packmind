@@ -418,7 +418,7 @@ export function PackageDetailPane({
               </PMIcon>
             </PMBox>
             <PMInput
-              placeholder="Filter by repo or target"
+              placeholder="Search repositories"
               value={repoQuery}
               onChange={(e) => setRepoQuery(e.target.value)}
               size="sm"
@@ -1237,7 +1237,7 @@ const MODE_META: Record<
         >
           packmind install
         </PMText>{' '}
-        from each repo.
+        from each repository.
       </>
     ),
   },

@@ -425,7 +425,7 @@ function NoDriftedMatches({
         Nothing matching “{query}” is drifted.
       </PMText>
       <PMText as="div" fontSize="xs" color="faded">
-        Show all above to see the {matchCount} package
+        Clear filters above to see the {matchCount} package
         {matchCount === 1 ? '' : 's'} the search found.
       </PMText>
     </PMVStack>
@@ -546,7 +546,7 @@ function DriftedFilterRow({
           of a control.
         */
         <PMText fontSize="11px" color="tertiary" whiteSpace="nowrap">
-          Show all
+          Clear filters
         </PMText>
       )}
     </PMBox>

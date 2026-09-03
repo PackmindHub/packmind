@@ -52,7 +52,7 @@ export const PackageDistributionList: React.FC<
         minH="200px"
       >
         <PMSpinner size="lg" mr={2} />
-        <PMText ml={2}>Loading distributions...</PMText>
+        <PMText ml={2}>Loading distributions…</PMText>
       </PMBox>
     );
   }

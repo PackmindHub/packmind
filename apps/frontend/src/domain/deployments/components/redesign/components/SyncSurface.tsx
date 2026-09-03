@@ -670,7 +670,7 @@ function PackageSyncBlock({
                   onTogglePackage(details.checked === true)
                 }
                 disabled={headerCheckboxDisabled}
-                aria-label={`Select all repos for ${block.pkg.name}`}
+                aria-label={`Select all repositories for ${block.pkg.name}`}
               />
             </PMBox>
             <PMText
@@ -1165,7 +1165,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
             </PMText>
           </PMHStack>
           <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            across {reposCount} repo{reposCount === 1 ? '' : 's'}
+            across {reposCount} repositor{reposCount === 1 ? 'y' : 'ies'}
           </PMText>
         </PMHStack>
       </PMBox>
@@ -1195,8 +1195,8 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               </PMButton>
             </PMHStack>
             <PMText fontSize="xs" color="secondary">
-              Run the command from each repo below — it distributes every
-              Packmind package configured on that repo at once.
+              Run the command from each repository below — it distributes every
+              Packmind package configured on that repository at once.
             </PMText>
             <PMVStack gap={3} align="stretch">
               {cliBlocks.map((block) => (

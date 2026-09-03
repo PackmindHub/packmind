@@ -473,7 +473,7 @@ function ReachRow({
           whiteSpace="nowrap"
           _hover={{ color: 'text.primary' }}
         >
-          Show all
+          Clear filters
         </PMBox>
       )}
     </PMHStack>
@@ -672,7 +672,7 @@ function NoStatusMatches({
         {named}.
       </PMText>
       <PMText as="div" fontSize="xs" color="faded">
-        Show all above to see them.
+        Clear filters above to see them.
       </PMText>
     </PMVStack>
   );
@@ -987,13 +987,13 @@ function destinationState(
      * is wrong when the answer is that nothing is.
      */
     if (count === 0) {
-      const published = destination.packageNames.length;
-      const publishedWord = published === 1 ? 'package' : 'packages';
+      const plugins = destination.packageNames.length;
+      const pluginWord = plugins === 1 ? 'plugin' : 'plugins';
       return {
-        line: `${published} ${publishedWord} distributed`,
+        line: `${plugins} ${pluginWord} distributed`,
         tone: 'secondary',
         dot: 'green.500',
-        tooltip: `${published} ${publishedWord} distributed here, all matching their source`,
+        tooltip: `${plugins} ${pluginWord} distributed here, all matching their source`,
       };
     }
 
@@ -1185,7 +1185,7 @@ function RailActionBar({
             padding={0}
             _hover={{ color: 'text.primary' }}
           >
-            Clear
+            Clear selection
           </PMBox>
           <PMButton variant="primary" size="sm" onClick={onDistribute}>
             <PMIcon fontSize="sm">

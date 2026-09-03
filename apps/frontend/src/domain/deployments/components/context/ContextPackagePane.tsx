@@ -576,7 +576,7 @@ export function ContextPackagePane({
       title={`Delete ${COMPONENT_TYPE_LABELS_SINGULAR[
         deletingComponent.type
       ].toLowerCase()}`}
-      message={`Delete "${deletingComponent.name}"? It leaves the space, not just this package, and every package that holds it. This cannot be undone.`}
+      message={`Delete “${deletingComponent.name}”? It leaves the space, not just this package, and every package that holds it. This cannot be undone.`}
       confirmText="Delete"
       cancelText="Cancel"
       onConfirm={() => void deleteThisComponent(deletingComponent)}

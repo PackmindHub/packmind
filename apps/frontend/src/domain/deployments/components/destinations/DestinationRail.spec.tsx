@@ -170,13 +170,15 @@ describe('DestinationRail', () => {
       ]);
     });
 
-    it('gives the whole list back through Show all', async () => {
+    it('gives the whole list back through Clear filters', async () => {
       renderRail();
 
       await userEvent.click(
         pill(/^Show only the 1 destination with something drifted/),
       );
-      await userEvent.click(screen.getByRole('button', { name: 'Show all' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Clear filters' }),
+      );
 
       expect(rowNames()).toHaveLength(3);
     });

@@ -315,7 +315,7 @@ export function AddComponentsDrawer({
                           </PMIcon>
                         </PMBox>
                         <PMText variant="small" color="secondary">
-                          {pkg.name} is deployed to {places}, where the old
+                          {pkg.name} is distributed to {places}, where the old
                           content remains until the package is distributed
                           again.
                         </PMText>

@@ -117,7 +117,7 @@ export function ContextPackageDistribution({
       {isLoading ? (
         <PMHStack flex="1" minH={0} justify="center" align="center" gap={2}>
           <PMSpinner />
-          <PMText color="secondary">Loading distributions...</PMText>
+          <PMText color="secondary">Loading distributions…</PMText>
         </PMHStack>
       ) : isError ? (
         <PMBox flex="1" minH={0} paddingX={6} paddingBottom={6}>

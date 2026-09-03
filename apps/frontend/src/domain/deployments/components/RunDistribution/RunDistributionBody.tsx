@@ -164,13 +164,13 @@ export const RunDistributionBodyImpl: React.FC = () => {
               setSelectedTargetIds(sortedTargets.map((target) => target.id))
             }
           >
-            Select All
+            Select all
           </PMButton>
           <PMButton
             variant="secondary"
             onClick={() => setSelectedTargetIds([])}
           >
-            Clear Selection
+            Clear selection
           </PMButton>
         </PMButtonGroup>
         <PMNativeSelect
