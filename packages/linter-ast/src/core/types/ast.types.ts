@@ -4,9 +4,3 @@ export interface ASTNode {
   line: number;
   children: ASTNode[];
 }
-
-export interface ParseResult {
-  ast: ASTNode;
-  language: string;
-  parseTimeMs: number;
-}

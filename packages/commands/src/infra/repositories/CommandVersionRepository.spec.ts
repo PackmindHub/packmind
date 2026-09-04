@@ -77,9 +77,9 @@ describe('RecipeVersionRepository', () => {
     const recipeVersion = commandVersionFactory({ recipeId: recipe.id });
     await commandVersionRepository.add(recipeVersion);
 
-    expect(await commandVersionRepository.list()).toStrictEqual([
-      { ...recipeVersion, gitCommit: null },
-    ]);
+    expect(
+      await commandVersionRepository.findByCommandId(recipe.id),
+    ).toStrictEqual([{ ...recipeVersion, gitCommit: null }]);
   });
 
   it('stores and retrieves multiple recipe versions', async () => {
@@ -101,7 +101,15 @@ describe('RecipeVersionRepository', () => {
       commandVersionFactory({ recipeId: command3.id }),
     );
 
-    expect(await commandVersionRepository.list()).toHaveLength(3);
+    const versionsPerCommand = await Promise.all(
+      [command1, command2, command3].map((command) =>
+        commandVersionRepository.findByCommandId(command.id),
+      ),
+    );
+
+    expect(versionsPerCommand.map((versions) => versions.length)).toEqual([
+      1, 1, 1,
+    ]);
   });
 
   it('finds recipe versions by recipeId', async () => {

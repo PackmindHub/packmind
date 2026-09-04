@@ -5,7 +5,7 @@ import * as path from 'path';
  * This supplements the null-byte detection for files where null bytes
  * may not appear in the first 8000 bytes.
  */
-export const BINARY_EXTENSIONS = new Set([
+const BINARY_EXTENSIONS = new Set([
   // Images
   '.png',
   '.jpg',

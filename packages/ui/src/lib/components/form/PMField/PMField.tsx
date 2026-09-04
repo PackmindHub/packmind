@@ -1,4 +1,3 @@
-import { Field, FieldRootProps } from '@chakra-ui/react';
+import { Field } from '@chakra-ui/react';
 
 export const PMField = Field;
-export type PMFieldProps = FieldRootProps;

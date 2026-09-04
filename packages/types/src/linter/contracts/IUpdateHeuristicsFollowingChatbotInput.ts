@@ -10,9 +10,3 @@ export type UpdateHeuristicsFollowingChatbotInputCommand = PackmindCommand & {
 export type UpdateHeuristicsFollowingChatbotInputResponse = {
   newHeuristic: string;
 };
-
-export interface IUpdateHeuristicsFollowingChatbotInput {
-  execute(
-    command: UpdateHeuristicsFollowingChatbotInputCommand,
-  ): Promise<UpdateHeuristicsFollowingChatbotInputResponse>;
-}

@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { SpaceId } from '../../spaces';
 import { ArtifactReference } from '../ArtifactReference';
 
@@ -9,8 +9,3 @@ export type MoveArtifactsToSpaceCommand = PackmindCommand & {
 };
 
 export type MoveArtifactsToSpaceResponse = { movedCount: number };
-
-export type IMoveArtifactsToSpaceUseCase = IUseCase<
-  MoveArtifactsToSpaceCommand,
-  MoveArtifactsToSpaceResponse
->;

@@ -1,13 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexaFactory } from './PackmindCliHexaFactory';
-import {
-  GetGitRemoteUrlUseCaseCommand,
-  GetGitRemoteUrlUseCaseResult,
-} from './application/useCases/GetGitRemoteUrlUseCase';
-import {
-  ListFilesInDirectoryUseCaseCommand,
-  ListFilesInDirectoryUseCaseResult,
-} from './application/useCases/ListFilesInDirectoryUseCase';
+
 import {
   LintFilesAgainstRuleCommand,
   LintFilesAgainstRuleResult,
@@ -16,10 +9,7 @@ import {
   LintFilesFromConfigCommand,
   LintFilesFromConfigResult,
 } from './domain/useCases/ILintFilesFromConfig';
-import {
-  IInstallPackagesCommand,
-  IInstallPackagesResult,
-} from './domain/useCases/IInstallPackagesUseCase';
+
 import {
   IInstallCommand,
   IInstallResult,
@@ -80,18 +70,13 @@ import {
   ITrackPluginDeletedUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
-import { logWarningConsole } from './infra/utils/consoleLogger';
 
-import {
-  UploadSkillCommand,
-  UploadSkillResult,
-} from './domain/useCases/IUploadSkillUseCase';
 import {
   ArtefactDiff,
   IDiffArtefactsCommand,
   IDiffArtefactsResult,
 } from './domain/useCases/IDiffArtefactsUseCase';
-import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
+
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
@@ -125,29 +110,8 @@ export class PackmindCliHexa {
     }
   }
 
-  /**
-   * Destroys the DeploymentsHexa and cleans up resources
-   */
-  public destroy(): void {
-    this.logger.info('Destroying PackmindCliHexa');
-    // Add any cleanup logic here if needed
-    this.logger.info('PackmindCliHexa destroyed');
-  }
-
   public get output(): IOutput {
     return this.hexa.repositories.output;
-  }
-
-  public async getGitRemoteUrl(
-    command: GetGitRemoteUrlUseCaseCommand,
-  ): Promise<GetGitRemoteUrlUseCaseResult> {
-    return this.hexa.useCases.getGitRemoteUrl.execute(command);
-  }
-
-  public async listFilesInDirectory(
-    command: ListFilesInDirectoryUseCaseCommand,
-  ): Promise<ListFilesInDirectoryUseCaseResult> {
-    return this.hexa.useCases.listFilesInDirectoryUseCase.execute(command);
   }
 
   public async lintFilesAgainstRule(
@@ -160,12 +124,6 @@ export class PackmindCliHexa {
     command: LintFilesFromConfigCommand,
   ): Promise<LintFilesFromConfigResult> {
     return this.hexa.useCases.lintFilesFromConfig.execute(command);
-  }
-
-  public async installPackages(
-    command: IInstallPackagesCommand,
-  ): Promise<IInstallPackagesResult> {
-    return this.hexa.useCases.installPackages.execute(command);
   }
 
   public async install(command: IInstallCommand): Promise<IInstallResult> {
@@ -182,13 +140,6 @@ export class PackmindCliHexa {
     command: IDiffArtefactsCommand,
   ): Promise<IDiffArtefactsResult> {
     return this.hexa.useCases.diffArtefacts.execute(command);
-  }
-
-  public async submitDiffs(
-    groupedDiffs: ArtefactDiff[][],
-    message: string,
-  ): Promise<SubmitDiffsResult> {
-    return this.hexa.useCases.submitDiffs.execute({ groupedDiffs, message });
   }
 
   public async checkDiffs(
@@ -233,27 +184,6 @@ export class PackmindCliHexa {
     );
   }
 
-  public async readConfig(baseDirectory: string): Promise<PackmindFileConfig> {
-    const config =
-      await this.hexa.repositories.configFileRepository.readConfig(
-        baseDirectory,
-      );
-    if (!config) return { packages: {} };
-
-    // Check for non-wildcard versions and warn the user
-    const hasNonWildcardVersions = Object.values(config.packages).some(
-      (version) => version !== '*',
-    );
-
-    if (hasNonWildcardVersions) {
-      logWarningConsole(
-        'Package versions are not supported yet, getting the latest version',
-      );
-    }
-
-    return config;
-  }
-
   /**
    * Reads the full packmind.json configuration including agents.
    * Returns null if no config file exists.
@@ -263,47 +193,6 @@ export class PackmindCliHexa {
   ): Promise<PackmindFileConfig | null> {
     return this.hexa.repositories.configFileRepository.readConfig(
       baseDirectory,
-    );
-  }
-
-  public async writeConfig(
-    baseDirectory: string,
-    packagesSlugs: string[],
-  ): Promise<void> {
-    const packages: { [slug: string]: string } = {};
-    packagesSlugs.forEach((slug) => {
-      packages[slug] = '*';
-    });
-
-    // Read existing config to preserve other fields (like agents)
-    const existingConfig =
-      await this.hexa.repositories.configFileRepository.readConfig(
-        baseDirectory,
-      );
-
-    await this.hexa.repositories.configFileRepository.writeConfig(
-      baseDirectory,
-      {
-        ...existingConfig,
-        packages,
-      },
-    );
-  }
-
-  /**
-   * Adds new packages to an existing packmind.json while preserving property order.
-   * If the file doesn't exist, creates a new one with default order (packages first).
-   *
-   * @param baseDirectory - The directory containing packmind.json
-   * @param newPackageSlugs - Array of package slugs to add
-   */
-  public async addPackagesToConfig(
-    baseDirectory: string,
-    newPackageSlugs: string[],
-  ): Promise<void> {
-    return this.hexa.repositories.configFileRepository.addPackagesToConfig(
-      baseDirectory,
-      newPackageSlugs,
     );
   }
 
@@ -330,12 +219,6 @@ export class PackmindCliHexa {
     return this.hexa.repositories.configFileRepository.findAllConfigsInTree(
       startDirectory,
       stopDirectory,
-    );
-  }
-
-  public async getGitRepositoryRoot(directory: string): Promise<string> {
-    return this.hexa.services.gitRemoteUrlService.getGitRepositoryRoot(
-      directory,
     );
   }
 
@@ -426,12 +309,6 @@ export class PackmindCliHexa {
     );
   };
 
-  public async uploadSkill(
-    command: UploadSkillCommand,
-  ): Promise<UploadSkillResult> {
-    return this.hexa.useCases.uploadSkill.execute(command);
-  }
-
   public async installDefaultSkills(
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
@@ -474,41 +351,6 @@ export class PackmindCliHexa {
 
   public async getSpaces(): Promise<Space[]> {
     return this.hexa.services.spaceService.getSpaces();
-  }
-
-  /**
-   * Normalizes package slugs to the `@space-slug/package-slug` format.
-   * Unprefixed slugs are resolved against the organization's default space.
-   * Already-prefixed slugs (`@space/pkg`) are returned as-is.
-   * Throws if there are multiple spaces and any slug is unprefixed.
-   */
-  public async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
-    if (slugs.length === 0) return [];
-
-    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
-    if (!hasUnprefixed) return slugs;
-
-    let spaces: Space[];
-    try {
-      spaces = await this.getSpaces();
-    } catch {
-      // Older versions of the Packmind app do not support spaces — return slugs as-is.
-      logWarningConsole(
-        'Your Packmind instance is outdated and needs to be updated. It will not be supported in the v1 release of the Packmind CLI.',
-      );
-      return slugs;
-    }
-
-    if (spaces.length > 1) {
-      throw new Error(
-        `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
-      );
-    }
-
-    const defaultSpace = await this.getDefaultSpace();
-    return slugs.map((slug) =>
-      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
-    );
   }
 
   public getSpaceService(): ISpaceService {

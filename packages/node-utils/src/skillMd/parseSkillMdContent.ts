@@ -1,6 +1,6 @@
 import { parse as parseYaml } from 'yaml';
 
-export { canonicalJsonStringify, deepSortKeys } from '@packmind/types';
+export { canonicalJsonStringify } from '@packmind/types';
 import { canonicalJsonStringify } from '@packmind/types';
 
 const FRONTMATTER_DELIMITER = '---';

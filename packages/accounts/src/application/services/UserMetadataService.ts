@@ -34,23 +34,6 @@ export class UserMetadataService {
     return metadata;
   }
 
-  async markOnboardingCompleted(userId: UserId): Promise<UserMetadata> {
-    let metadata = await this.userMetadataRepository.findByUserId(userId);
-
-    if (!metadata) {
-      metadata = {
-        id: createUserMetadataId(uuidv4()),
-        userId,
-        onboardingCompleted: true,
-        socialProviders: [],
-      };
-      return this.userMetadataRepository.add(metadata);
-    }
-
-    metadata.onboardingCompleted = true;
-    return this.userMetadataRepository.save(metadata);
-  }
-
   async addSocialProvider(
     userId: UserId,
     provider: SocialProvider,
@@ -77,10 +60,5 @@ export class UserMetadataService {
     metadata.socialProviders = [...metadata.socialProviders, provider];
     await this.userMetadataRepository.save(metadata);
     this.logger.info('Added social provider to user metadata', { userId });
-  }
-
-  async isOnboardingCompleted(userId: UserId): Promise<boolean> {
-    const metadata = await this.userMetadataRepository.findByUserId(userId);
-    return metadata?.onboardingCompleted ?? false;
   }
 }

@@ -4,7 +4,6 @@ export * from './application/useCases';
 export { AccountsRepositories } from './infra/repositories/AccountsRepositories';
 export { CliLoginCodeRepository } from './infra/repositories/CliLoginCodeRepository';
 export { InvitationRepository } from './infra/repositories/InvitationRepository';
-export { AccountsServices } from './application/services/AccountsServices';
 export { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 export { UserService } from './application/services/UserService';
 export { OrganizationService } from './application/services/OrganizationService';

@@ -5,7 +5,7 @@
  * - Arrays: each element is sorted recursively (order preserved).
  * - Primitives / nulls: returned as-is.
  */
-export function deepSortKeys(value: unknown): unknown {
+function deepSortKeys(value: unknown): unknown {
   if (value === null || value === undefined || typeof value !== 'object') {
     return value;
   }

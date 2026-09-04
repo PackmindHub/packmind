@@ -18,5 +18,4 @@ export {
   PMVerticalNavSection,
 } from './PMVerticalNav/PMVerticalNav';
 export { PMPortal } from './PMPortal/PMPortal';
-export type { PMPortalProps } from './PMPortal/PMPortal';
 export { PMSeparator } from './PMSeparator/PMSeparator';

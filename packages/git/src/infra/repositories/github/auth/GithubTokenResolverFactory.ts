@@ -244,17 +244,3 @@ export class GithubTokenResolverFactory {
     return slug ? 'shared' : 'on-prem';
   }
 }
-
-/**
- * Reads `GITHUB_APP_SLUG` from the given config port and maps presence to mode.
- * Exported for callers that want to share the same decision (e.g. the API layer
- * exposing the mode to the frontend).
- */
-export async function resolveGithubAppMode(
-  config: IConfigProvider = {
-    getConfig: (key) => Configuration.getConfig(key),
-  },
-): Promise<GithubAppMode> {
-  const slug = await config.getConfig('GITHUB_APP_SLUG');
-  return slug ? 'shared' : 'on-prem';
-}

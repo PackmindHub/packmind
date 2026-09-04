@@ -112,13 +112,6 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
   }
 
   /**
-   * Gets the coding agent deployer registry for direct access to deployers
-   */
-  public getCodingAgentDeployerRegistry() {
-    return this.codingAgentRepositories.getDeployerRegistry();
-  }
-
-  /**
    * Get the deployer service for direct access to deployment operations
    */
   public getDeployerService(): DeployerService {

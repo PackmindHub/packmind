@@ -1,6 +1,6 @@
 import { PackmindCommand } from '../../UseCase';
 import { SpaceId } from '../../spaces/SpaceId';
-import { Standard } from '../Standard';
+
 import { RuleWithExamples } from '../RuleWithExamples';
 import { StandardCreationMethod } from '../events/StandardCreatedEvent';
 
@@ -20,8 +20,4 @@ export type CreateStandardWithExamplesCommand = PackmindCommand & {
    */
   method?: StandardCreationMethod;
   directUpdate?: boolean;
-};
-
-export type CreateStandardWithExamplesResponse = {
-  standard: Standard;
 };

@@ -54,7 +54,7 @@ import { CreateRuleExampleUseCase } from '../useCases/createRuleExample/CreateRu
 import { CreateStandardUseCase } from '../useCases/createStandard/CreateStandardUseCase';
 import { CreateStandardSamplesUseCase } from '../useCases/createStandardSamples/CreateStandardSamplesUseCase';
 import { CreateStandardWithExamplesUseCase } from '../useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase';
-import { CreateStandardWithPackagesUseCase } from '../useCases/createStandardWithPackages/CreateStandardWithPackagesUseCase';
+
 import { DeleteRuleExampleUseCase } from '../useCases/deleteRuleExample/DeleteRuleExampleUseCase';
 import { DeleteStandardUseCase } from '../useCases/deleteStandard/DeleteStandardUseCase';
 import { DeleteStandardsBatchUseCase } from '../useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase';
@@ -86,7 +86,6 @@ export class StandardsAdapter
   private _createStandard!: CreateStandardUseCase;
   private _createStandardWithExamples!: CreateStandardWithExamplesUseCase;
   private _createStandardSamples!: CreateStandardSamplesUseCase;
-  private _createStandardWithPackages!: CreateStandardWithPackagesUseCase;
   private _updateStandard!: UpdateStandardUseCase;
   private _addRuleToStandard!: AddRuleToStandardUseCase;
   private _getStandardById!: GetStandardByIdUseCase;
@@ -257,12 +256,6 @@ export class StandardsAdapter
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
-    this._createStandardWithPackages = new CreateStandardWithPackagesUseCase(
-      this.spacesPort,
-      this.accountsPort,
-      this._createStandardWithExamples,
-      this.deploymentsPort,
-    );
 
     this._createRuleExample = new CreateRuleExampleUseCase(
       this.spacesPort,
@@ -463,26 +456,6 @@ export class StandardsAdapter
       ...params,
       spaceId: params.spaceId,
     });
-  }
-
-  async createStandardWithPackages(params: {
-    name: string;
-    description: string;
-    scope?: string | null;
-    rules: import('@packmind/types').RuleWithExamples[];
-    organizationId: OrganizationId;
-    userId: UserId;
-    spaceId: SpaceId;
-    packageSlugs?: string[];
-    source?: PackmindEventSource;
-    method?: StandardCreationMethod;
-  }): Promise<Standard> {
-    const result = await this._createStandardWithPackages.execute({
-      ...params,
-      userId: params.userId.toString(),
-      organizationId: params.organizationId.toString(),
-    });
-    return result.standard;
   }
 
   async addRuleToStandard(

@@ -117,26 +117,4 @@ describe('DiffService', () => {
       });
     });
   });
-
-  describe('hasConflict', () => {
-    it('returns false for non-conflicting changes', () => {
-      const result = diffService.hasConflict(
-        'hello world',
-        'hello universe',
-        'hello world',
-      );
-
-      expect(result).toBe(false);
-    });
-
-    it('returns true for conflicting changes', () => {
-      const oldValue = 'line1\nline2\nline3';
-      const newValue = 'line1\nchanged-by-proposal\nline3';
-      const currentValue = 'line1\nchanged-by-someone-else\nline3';
-
-      const result = diffService.hasConflict(oldValue, newValue, currentValue);
-
-      expect(result).toBe(true);
-    });
-  });
 });

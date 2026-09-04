@@ -85,10 +85,6 @@ export class GitRepoService {
     });
   }
 
-  async listGitRepos(organizationId?: OrganizationId): Promise<GitRepo[]> {
-    return this.gitRepoRepository.list(organizationId, { type: 'standard' });
-  }
-
   async deleteGitRepo(id: GitRepoId, userId: UserId): Promise<void> {
     return this.gitRepoRepository.deleteById(id, userId);
   }
@@ -164,36 +160,6 @@ export class GitRepoService {
    */
   async findGitRepoByIdIgnoringType(id: GitRepoId): Promise<GitRepo | null> {
     return this.gitRepoRepository.findById(id);
-  }
-
-  /**
-   * Find a marketplace-typed GitRepo by owner/repo within an organization.
-   *
-   * Excludes standard-typed repos.
-   */
-  async findMarketplaceGitRepo(
-    organizationId: OrganizationId,
-    owner: string,
-    repo: string,
-    opts?: Pick<QueryOption, 'includeDeleted'>,
-  ): Promise<GitRepo | null> {
-    return this.gitRepoRepository.findByOwnerAndRepoInOrganization(
-      owner,
-      repo,
-      organizationId,
-      { ...opts, type: 'marketplace' },
-    );
-  }
-
-  /**
-   * List all marketplace-typed GitRepos for an organization.
-   */
-  async findMarketplaceGitReposByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<GitRepo[]> {
-    return this.gitRepoRepository.findByOrganizationId(organizationId, {
-      type: 'marketplace',
-    });
   }
 
   /**

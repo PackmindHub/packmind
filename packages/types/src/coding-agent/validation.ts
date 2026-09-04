@@ -32,33 +32,6 @@ export function isValidCodingAgent(value: string): value is CodingAgent {
 }
 
 /**
- * Validates an unknown value as an array of CodingAgents.
- * Returns the valid agents array if the input is an array with at least some valid values,
- * or null if the input is not an array or undefined.
- * Invalid agent strings are filtered out silently.
- *
- * @param agents - The value to validate
- * @returns Array of valid CodingAgents, or null if input is undefined/not an array
- */
-export function validateAgents(agents: unknown): CodingAgent[] | null {
-  if (agents === undefined || agents === null) {
-    return null;
-  }
-
-  if (!Array.isArray(agents)) {
-    return null;
-  }
-
-  // Filter to only valid agents
-  const validAgents = agents.filter(
-    (agent): agent is CodingAgent =>
-      typeof agent === 'string' && isValidCodingAgent(agent),
-  );
-
-  return validAgents;
-}
-
-/**
  * Validates agents and returns info about invalid ones for warning purposes.
  *
  * @param agents - The value to validate

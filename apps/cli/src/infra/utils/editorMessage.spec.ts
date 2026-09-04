@@ -1,4 +1,4 @@
-import { validateMessage, openEditorForMessage } from './editorMessage';
+import { openEditorForMessage } from './editorMessage';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as resolveEditorModule from './resolveEditor';
@@ -7,55 +7,6 @@ import { EDITOR_NOT_FOUND_MESSAGE } from './resolveEditor';
 jest.mock('child_process');
 jest.mock('fs');
 jest.mock('./resolveEditor');
-
-describe('validateMessage', () => {
-  describe('when message is valid', () => {
-    it('returns valid with trimmed message', () => {
-      const result = validateMessage('  Hello world  ');
-
-      expect(result).toEqual({ valid: true, message: 'Hello world' });
-    });
-
-    it('accepts a message at exactly 1024 characters', () => {
-      const message = 'a'.repeat(1024);
-      const result = validateMessage(message);
-
-      expect(result).toEqual({ valid: true, message });
-    });
-  });
-
-  describe('when message is empty', () => {
-    it('returns invalid for empty string', () => {
-      const result = validateMessage('');
-
-      expect(result).toEqual({
-        valid: false,
-        error: 'Message cannot be empty.',
-      });
-    });
-
-    it('returns invalid for whitespace-only string', () => {
-      const result = validateMessage('   \n\t  ');
-
-      expect(result).toEqual({
-        valid: false,
-        error: 'Message cannot be empty.',
-      });
-    });
-  });
-
-  describe('when message exceeds max length', () => {
-    it('returns invalid with character count', () => {
-      const message = 'a'.repeat(1025);
-      const result = validateMessage(message);
-
-      expect(result).toEqual({
-        valid: false,
-        error: 'Message exceeds maximum length of 1024 characters (got 1025).',
-      });
-    });
-  });
-});
 
 describe('openEditorForMessage', () => {
   const mockedSpawnSync = childProcess.spawnSync as jest.Mock;

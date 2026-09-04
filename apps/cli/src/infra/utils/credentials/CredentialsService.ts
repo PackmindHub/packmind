@@ -56,13 +56,6 @@ export class CredentialsService {
     const credentials = this.loadCredentials();
     return credentials?.apiKey ?? '';
   }
-
-  /**
-   * Checks if any provider has credentials available
-   */
-  hasCredentials(): boolean {
-    return this.providers.some((provider) => provider.hasCredentials());
-  }
 }
 
 // Default singleton instance for convenience
@@ -78,13 +71,6 @@ const defaultCredentialsService = new CredentialsService();
  */
 export function loadApiKey(): string {
   return defaultCredentialsService.loadApiKey();
-}
-
-/**
- * Checks if credentials are available (either from env or file)
- */
-export function hasCredentials(): boolean {
-  return defaultCredentialsService.hasCredentials();
 }
 
 /**

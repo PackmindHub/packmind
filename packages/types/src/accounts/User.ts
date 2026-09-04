@@ -24,9 +24,3 @@ export type User = {
   memberships: UserOrganizationMembership[];
   createdAt?: Date;
 };
-
-export type SanitizedUser = Omit<User, 'passwordHash' | 'memberships'>;
-
-export type CreateUser = Omit<User, 'id' | 'memberships'> & {
-  memberships?: UserOrganizationMembership[];
-};

@@ -49,12 +49,6 @@ describe('WorkOsService', () => {
       mockConfiguration.getConfig.mockResolvedValue('');
     });
 
-    describe('isConfigured', () => {
-      it('returns false', async () => {
-        expect(await service.isConfigured()).toBe(false);
-      });
-    });
-
     describe('getAvailableProviders', () => {
       it('returns empty array', async () => {
         expect(await service.getAvailableProviders()).toEqual([]);
@@ -89,12 +83,6 @@ describe('WorkOsService', () => {
             'https://app.packmind.com/api/auth/social/callback',
         };
         return config[key] ?? '';
-      });
-    });
-
-    describe('isConfigured', () => {
-      it('returns true', async () => {
-        expect(await service.isConfigured()).toBe(true);
       });
     });
 

@@ -191,39 +191,6 @@ describe('CredentialsService', () => {
     });
   });
 
-  describe('hasCredentials', () => {
-    describe('when no providers have credentials', () => {
-      it('returns false', () => {
-        const provider1 = new MockCredentialsProvider('Provider 1', null);
-        const provider2 = new MockCredentialsProvider('Provider 2', null);
-        const service = new CredentialsService([provider1, provider2]);
-
-        const result = service.hasCredentials();
-
-        expect(result).toBe(false);
-      });
-    });
-
-    describe('when at least one provider has credentials', () => {
-      it('returns true', () => {
-        const credentials: DecodedCredentials = {
-          apiKey: 'api-key',
-          host: 'https://host.com',
-        };
-        const provider1 = new MockCredentialsProvider('Provider 1', null);
-        const provider2 = new MockCredentialsProvider(
-          'Provider 2',
-          credentials,
-        );
-        const service = new CredentialsService([provider1, provider2]);
-
-        const result = service.hasCredentials();
-
-        expect(result).toBe(true);
-      });
-    });
-  });
-
   describe('default providers', () => {
     describe('when none provided', () => {
       it('creates service with default providers', () => {

@@ -109,25 +109,6 @@ export class CommandService {
     return this.commandRepository.countBySpaceIds(spaceIds);
   }
 
-  async listCommandsByUser(userId: UserId): Promise<Command[]> {
-    this.logger.info('Listing recipes by user', { userId });
-
-    try {
-      const recipes = await this.commandRepository.findByUserId(userId);
-      this.logger.info('Recipes retrieved by user successfully', {
-        userId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to list recipes by user', {
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async getCommandById(id: CommandId): Promise<Command | null> {
     this.logger.info('Getting recipe by ID', { id });
 

@@ -17,14 +17,6 @@ export const createGitProviderId = brandedIdFactory<GitProviderId>();
 
 export type GitProviderAuthMethod = 'token' | 'app';
 
-export const GitProviderAuthMethods: Record<
-  GitProviderAuthMethod,
-  GitProviderAuthMethod
-> = {
-  token: 'token',
-  app: 'app',
-};
-
 export type GitProvider = {
   id: GitProviderId;
   source: GitProviderVendor;

@@ -69,37 +69,6 @@ export class PackmindEventEmitterService extends BaseService<BaseServiceOpts> {
   }
 
   /**
-   * Remove a listener for a specific event type.
-   *
-   * @param eventClass - The event class to stop listening for
-   * @param handler - The handler function to remove
-   * @returns this for chaining
-   */
-  off<T extends PackmindEvent>(
-    eventClass: PackmindEventClass<T>,
-    handler: (event: T) => void | Promise<void>,
-  ): this {
-    this.emitter.off(eventClass.eventName, handler);
-    return this;
-  }
-
-  /**
-   * Register a one-time listener for a specific event type.
-   * The listener will be automatically removed after being called once.
-   *
-   * @param eventClass - The event class to listen for
-   * @param handler - The handler function to call when the event is emitted
-   * @returns this for chaining
-   */
-  once<T extends PackmindEvent>(
-    eventClass: PackmindEventClass<T>,
-    handler: (event: T) => void | Promise<void>,
-  ): this {
-    this.emitter.once(eventClass.eventName, handler);
-    return this;
-  }
-
-  /**
    * Get the number of listeners for a specific event type.
    * Useful for testing and debugging.
    *

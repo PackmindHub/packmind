@@ -54,12 +54,4 @@ export class ParserRegistry {
     this.parsers.set(language, parser);
     return parser;
   }
-
-  getAvailableParsers(): string[] {
-    return Object.keys(this.parserClasses);
-  }
-
-  clearCache(): void {
-    this.parsers.clear();
-  }
 }

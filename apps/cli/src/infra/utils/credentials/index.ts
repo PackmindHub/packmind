@@ -12,7 +12,6 @@ export {
   CredentialsService,
   CredentialsResult,
   loadApiKey,
-  hasCredentials,
   loadCredentials,
 } from './CredentialsService';
 export { decodeApiKey, DecodedApiKeyResult } from './decodeApiKey';

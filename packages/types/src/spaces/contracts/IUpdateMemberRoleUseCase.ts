@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { UserId } from '../../accounts/User';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceRole } from '../UserSpaceMembership';
@@ -10,8 +10,3 @@ export type UpdateMemberRoleCommand = PackmindCommand & {
 };
 
 export type UpdateMemberRoleResponse = { updated: boolean };
-
-export type IUpdateMemberRoleUseCase = IUseCase<
-  UpdateMemberRoleCommand,
-  UpdateMemberRoleResponse
->;

@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { Space, SpaceType } from '../../spaces/Space';
 import { SpaceColor } from '../../spaces/SpaceColor';
 import { SpaceId } from '../../spaces/SpaceId';
@@ -17,8 +17,3 @@ export type BrowseSpacesResponse = {
   mySpaces: Space[];
   allSpaces: BrowsableSpace[];
 };
-
-export type IBrowseSpacesUseCase = IUseCase<
-  BrowseSpacesCommand,
-  BrowseSpacesResponse
->;

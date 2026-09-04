@@ -31,13 +31,4 @@ export class DiffService implements IChangeProposalMerger {
 
     return { success: true, value: result };
   }
-
-  hasConflict(
-    oldValue: string,
-    newValue: string,
-    currentValue: string,
-  ): boolean {
-    const { success } = this.applyLineDiff(oldValue, newValue, currentValue);
-    return !success;
-  }
 }

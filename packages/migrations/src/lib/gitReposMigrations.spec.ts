@@ -1,17 +1,10 @@
 import { DataSource, QueryRunner } from 'typeorm';
 import { newDb } from 'pg-mem';
 import { PackmindLogger } from '@packmind/logger';
-import { migrations } from './migrations';
 import { AddIsTrackedToGitRepos1813000000000 } from '../migrations/1813000000000-AddIsTrackedToGitRepos';
 import { AddTrackedBranchLookupIndexToGitRepos1817000000000 } from '../migrations/1817000000000-AddTrackedBranchLookupIndexToGitRepos';
 import { AddTrackingRemovedAtToGitRepos1818000000000 } from '../migrations/1818000000000-AddTrackingRemovedAtToGitRepos';
 import { AddArtefactStatusIndexToChangeProposals1819000000000 } from '../migrations/1819000000000-AddArtefactStatusIndexToChangeProposals';
-
-describe('migrations', () => {
-  it('works', () => {
-    expect(migrations()).toEqual('migrations');
-  });
-});
 
 const silentLogger = {
   info: jest.fn(),
