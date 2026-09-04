@@ -48,6 +48,17 @@ overrides:
   postcss: '>=8.5.25 <9.0.0'
   socket.io-parser: '>=4.2.7 <5.0.0'
   valibot: '>=1.4.2 <2.0.0'
+  browserslist: '>=4.28.7 <5.0.0'
+  dompurify: '>=3.4.13 <4.0.0'
+  qs: '>=6.16.0 <7.0.0'
+  # Two coexisting major lines (postcss wants ^3.x, @milkdown/utils wants ^5.x),
+  # and each line has its own advisory floor
+  nanoid@3: '>=3.3.18 <4.0.0'
+  nanoid@5: '>=5.1.16 <6.0.0'
+  # No override for image-size: its two DoS advisories claim a >=2.0.3 fix that
+  # upstream has not published (latest is 2.0.2). Only reachable through
+  # less>vite>@react-router/dev, which parses build-time assets, so it is not
+  # attacker-facing. Revisit once 2.0.3 ships.
 
 # Converted from package.json "pnpm".onlyBuiltDependencies (list) to the allowBuilds map form
 allowBuilds:
