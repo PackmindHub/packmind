@@ -21,6 +21,10 @@ import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { SkillsHexa, skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
+import {
+  DATABASE_APPLICATION_NAME,
+  DATABASE_POOL_OPTIONS,
+} from './database-pool.config';
 import { AppService } from './app.service';
 import { AmplitudeModule } from '@packmind/amplitude';
 import {
@@ -77,6 +81,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
+      applicationName: DATABASE_APPLICATION_NAME,
       entities: [
         ...commandsSchemas,
         ...gitSchemas,
@@ -92,6 +97,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       ],
       logging: false,
       synchronize: false,
+      extra: DATABASE_POOL_OPTIONS,
     }),
     JwtModule.registerAsync({
       global: true, // Make JWT module global so other modules don't need to re-register it

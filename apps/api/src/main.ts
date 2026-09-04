@@ -24,6 +24,8 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/editions';
 import { pingPackmindSetup } from './startup/ping-packmind-setup';
+import { warmUpDatabasePool } from './startup/warm-up-database-pool';
+import { DataSource } from 'typeorm';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
 
@@ -137,6 +139,10 @@ async function bootstrap() {
 
     // Initialize global cache before starting the server
     await initializeCache();
+
+    // Open the pool's minimum connections before we start accepting traffic,
+    // so the first requests after a deploy are not the ones paying for them.
+    await warmUpDatabasePool(app.get(DataSource));
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || 'localhost';
