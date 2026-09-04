@@ -28,6 +28,8 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
+import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
+import { parseCommandFrontmatter } from '../../../commands/utils/parseCommandFrontmatter';
 import {
   useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
@@ -247,8 +249,13 @@ function BodySectionLabel({ children }: Readonly<{ children: string }>) {
 }
 
 /**
- * A command is its instructions. One body section, no frontmatter and no file
- * list, because a command has neither.
+ * A command is what it declares and what it says to do, read in that order, the
+ * same as a skill. Unlike a skill, it carries both in one string: nothing on the
+ * command splits the frontmatter off, so the split happens here.
+ *
+ * It has to happen somewhere. A closing `---` under a `description:` line is a
+ * setext heading, so a command handed to the Markdown viewer whole came out with
+ * its frontmatter as the largest title on the page.
  *
  * Fetched by id rather than read from the space catalogue the pane already
  * holds: this is the same query the command's own page runs, so opening one
@@ -283,10 +290,24 @@ function CommandBody({ commandId }: Readonly<{ commandId: CommandId }>) {
     );
   }
 
+  const frontmatter = parseCommandFrontmatter(command.content);
+
   return (
-    <PMBox maxWidth="72ch">
-      <PMMarkdownViewer content={command.content} />
-    </PMBox>
+    <PMVStack gap={6} align="stretch" maxWidth="72ch">
+      <CommandFrontmatterInfo frontmatter={frontmatter} />
+
+      {frontmatter.body ? (
+        <PMBox>
+          <PMMarkdownViewer content={frontmatter.body} />
+        </PMBox>
+      ) : (
+        <PMText color="secondary">
+          This command declares itself and stops there. Its frontmatter tells a
+          coding agent when to reach for it, and nothing tells it what to do
+          once it has.
+        </PMText>
+      )}
+    </PMVStack>
   );
 }
 
