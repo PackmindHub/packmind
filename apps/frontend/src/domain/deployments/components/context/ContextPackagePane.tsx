@@ -9,7 +9,6 @@ import {
   PMHeading,
   PMIcon,
   PMIconButton,
-  PMMarkdownViewer,
   PMMenu,
   PMPortal,
   PMTabsCompound,
@@ -54,6 +53,7 @@ import {
   withPaneDetailHref,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
+import { ContextPackageDescription } from './ContextPackageDescription';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import {
   COMPONENT_ACTION_ICONS,
@@ -647,17 +647,10 @@ export function ContextPackagePane({
           <PMBox minW={0} maxWidth="68ch">
             <PMHeading level="h2">{pkg.name}</PMHeading>
             {pkg.description && (
-              <PMBox color="secondary" paddingTop={1}>
-                {/*
-                  Rendered, not printed. The description is markdown, which the
-                  package's own page has always shown as markdown while this
-                  header showed the asterisks. Nobody noticed while descriptions
-                  could only be written on a page; the dialog beside this heading
-                  makes writing one from here the normal way, so the two
-                  surfaces have to agree on what the field is.
-                */}
-                <PMMarkdownViewer content={pkg.description} />
-              </PMBox>
+              <ContextPackageDescription
+                packageName={pkg.name}
+                description={pkg.description}
+              />
             )}
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
