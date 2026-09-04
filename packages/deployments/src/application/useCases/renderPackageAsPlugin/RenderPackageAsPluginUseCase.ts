@@ -52,6 +52,12 @@ const origin = 'RenderPackageAsPluginUseCase';
 
 const PLUGIN_VERSION = '0.1.0';
 
+/**
+ * Where a plugin's hooks file lives, relative to the plugin root. Matches what
+ * the marketplace publish path emits alongside the rendered plugin.
+ */
+const PLUGIN_HOOKS_PATH = 'hooks/hooks.json';
+
 const DEFAULT_GIT_BRANCH = 'main';
 
 /**
@@ -126,24 +132,28 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     // in logs. A minimal synthetic repo keeps the contract honest.
     const gitRepo = { id: target.gitRepoId } as GitRepo;
 
-    // GitHub Copilot plugins have no manifest equivalent, and
-    // CopilotPluginDeployer has no deployPluginManifest method (it is not
-    // part of the shared ICodingAgentDeployer contract), so the manifest is
-    // only ever produced on the Claude branch.
-    let manifestUpdate: FileUpdates = { createOrUpdate: [], delete: [] };
+    // Both vendors get a manifest, at the path each one probes. Copilot needs
+    // the `hooks` key to find its install-tracking hook at all; Claude discovers
+    // `hooks/hooks.json` by convention and would ignore the key, so it is only
+    // emitted where it does something. `deployPluginManifest` is not part of the
+    // shared ICodingAgentDeployer contract, hence the branch.
+    let manifestUpdate: FileUpdates;
     let deployer: ClaudePluginDeployer | CopilotPluginDeployer;
+    const manifest = {
+      name: pluginName,
+      description: pkg.description || undefined,
+      version: PLUGIN_VERSION,
+    };
     if (targetVendor === 'github') {
-      deployer = new CopilotPluginDeployer();
-    } else {
-      const claudeDeployer = new ClaudePluginDeployer();
-      manifestUpdate = claudeDeployer.deployPluginManifest(
-        {
-          name: pluginName,
-          description: pkg.description || undefined,
-          version: PLUGIN_VERSION,
-        },
+      const copilotDeployer = new CopilotPluginDeployer();
+      manifestUpdate = copilotDeployer.deployPluginManifest(
+        { ...manifest, hooks: PLUGIN_HOOKS_PATH },
         target,
       );
+      deployer = copilotDeployer;
+    } else {
+      const claudeDeployer = new ClaudePluginDeployer();
+      manifestUpdate = claudeDeployer.deployPluginManifest(manifest, target);
       deployer = claudeDeployer;
     }
 

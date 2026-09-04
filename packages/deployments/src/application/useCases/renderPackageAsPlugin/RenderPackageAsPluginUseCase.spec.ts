@@ -434,6 +434,39 @@ describe('RenderPackageAsPluginUseCase', () => {
       skillsPort.getSkillFiles.mockResolvedValue([]);
     });
 
+    // Verified against Copilot CLI 1.0.82: a plugin manifest that declares the
+    // Agent Plugins v1 `$schema` has its hooks read *only* from
+    // `com.github.copilot/hooks/hooks.json`. The CLI then logs
+    //   "hooks/hooks.json at the plugin root is no longer read; move it there"
+    // and runs no hook at all. Packmind stays on the legacy contract — no
+    // `$schema`, hooks found through the manifest key — which 1.0.82 still
+    // honours. Adding `$schema` without also moving hooks.json would kill
+    // install tracking silently, so this pins the two together.
+    describe('the Copilot plugin manifest', () => {
+      let parsed: Record<string, unknown>;
+
+      beforeEach(async () => {
+        const result = await useCase.execute(
+          buildCommand({ targetVendor: 'github' }),
+        );
+        const manifest = result.files.find((f) =>
+          f.path.endsWith('.github/plugin/plugin.json'),
+        );
+        parsed = JSON.parse(manifest?.content ?? '{}') as Record<
+          string,
+          unknown
+        >;
+      });
+
+      it('omits the v1 $schema', () => {
+        expect(parsed).not.toHaveProperty('$schema');
+      });
+
+      it('points the hooks key at the path that schema-less plugins use', () => {
+        expect(parsed['hooks']).toBe('hooks/hooks.json');
+      });
+    });
+
     it('does not render a Claude plugin manifest file', async () => {
       const result = await useCase.execute(
         buildCommand({ targetVendor: 'github' }),

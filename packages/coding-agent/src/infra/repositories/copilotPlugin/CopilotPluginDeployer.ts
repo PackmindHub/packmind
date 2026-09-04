@@ -10,6 +10,10 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
+import {
+  buildPluginManifest,
+  PluginManifestInput,
+} from '../claudePlugin/buildPluginManifest';
 import { generateSkillMdContent } from '../utils/SkillMdContentBuilder';
 
 const origin = 'CopilotPluginDeployer';
@@ -35,6 +39,17 @@ export class CopilotPluginDeployer implements ICodingAgentDeployer {
    * clean up stale skill files.
    */
   private static readonly SKILLS_FOLDER_PATH = 'skills/';
+
+  /**
+   * Where Copilot CLI looks for a plugin manifest.
+   *
+   * Its loader probes `.plugin/`, `.github/plugin/` and `.claude-plugin/` — it
+   * implements the same agent-plugins.org schema Claude Code does, so the Claude
+   * path would work too. `.github/plugin/` is the sibling of the
+   * `.github/plugin/marketplace.json` descriptor Packmind already writes for
+   * this vendor, which makes the intent unambiguous to anyone reading the repo.
+   */
+  private static readonly MANIFEST_PATH = '.github/plugin/plugin.json';
 
   private lastSkippedStandardsCount = 0;
 
@@ -167,6 +182,32 @@ export class CopilotPluginDeployer implements ICodingAgentDeployer {
    */
   getLastSkippedStandardsCount(): number {
     return this.lastSkippedStandardsCount;
+  }
+
+  /**
+   * Emits the Copilot plugin manifest at `<plugin-root>/.github/plugin/plugin.json`.
+   *
+   * Copilot discovers a plugin's hooks through this file's `hooks` key, so
+   * without a manifest an install-tracking hook has nowhere to be declared and
+   * never runs. Like its Claude counterpart, this is specific to plugin
+   * rendering and sits outside the shared `ICodingAgentDeployer` contract.
+   */
+  deployPluginManifest(
+    input: PluginManifestInput,
+    target: Target,
+  ): FileUpdates {
+    const root = pluginRoot(target);
+    return {
+      createOrUpdate: [
+        {
+          path: `${root}${CopilotPluginDeployer.MANIFEST_PATH}`,
+          content: buildPluginManifest(input),
+          artifactName: input.name,
+          artifactId: input.name,
+        },
+      ],
+      delete: [],
+    };
   }
 
   async generateFileUpdatesForCommands(

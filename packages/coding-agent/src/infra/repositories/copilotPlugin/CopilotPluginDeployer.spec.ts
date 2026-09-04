@@ -394,4 +394,70 @@ describe('CopilotPluginDeployer', () => {
       expect(new CopilotPluginDeployer().getSkillsFolderPath()).toBe('skills/');
     });
   });
+
+  describe('deployPluginManifest', () => {
+    describe('when a plugin root is set', () => {
+      it('emits the manifest where Copilot probes for one', () => {
+        const deployer = new CopilotPluginDeployer();
+
+        const updates = deployer.deployPluginManifest(
+          { name: 'security', version: '0.1.0' },
+          makeTarget('plugins/security'),
+        );
+
+        expect(updates.createOrUpdate.map((f) => f.path)).toEqual([
+          'plugins/security/.github/plugin/plugin.json',
+        ]);
+      });
+    });
+
+    describe('when the plugin is at the repository root', () => {
+      it('emits the manifest without a prefix', () => {
+        const deployer = new CopilotPluginDeployer();
+
+        const updates = deployer.deployPluginManifest(
+          { name: 'security', version: '0.1.0' },
+          makeTarget('/'),
+        );
+
+        expect(updates.createOrUpdate[0].path).toBe(
+          '.github/plugin/plugin.json',
+        );
+      });
+    });
+
+    describe('when a hooks path is given', () => {
+      // Copilot discovers hooks through this key. Without it the bundled
+      // install-tracking hook is inert, however correct the hook file is.
+      it('points the manifest at the hooks file', () => {
+        const deployer = new CopilotPluginDeployer();
+
+        const updates = deployer.deployPluginManifest(
+          { name: 'security', version: '0.1.0', hooks: 'hooks/hooks.json' },
+          makeTarget('plugins/security'),
+        );
+
+        expect(JSON.parse(updates.createOrUpdate[0].content)).toEqual({
+          name: 'security',
+          version: '0.1.0',
+          hooks: 'hooks/hooks.json',
+        });
+      });
+    });
+
+    describe('when no hooks path is given', () => {
+      it('leaves the key out entirely', () => {
+        const deployer = new CopilotPluginDeployer();
+
+        const updates = deployer.deployPluginManifest(
+          { name: 'security', version: '0.1.0' },
+          makeTarget('plugins/security'),
+        );
+
+        expect(
+          Object.keys(JSON.parse(updates.createOrUpdate[0].content)),
+        ).not.toContain('hooks');
+      });
+    });
+  });
 });
