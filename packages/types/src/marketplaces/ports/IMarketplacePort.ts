@@ -220,7 +220,7 @@ export interface IMarketplacePort {
   ): Promise<GetMarketplaceDistributionChangesResponse>;
 
   /**
-   * Processes a SessionStart heartbeat from a published Packmind plugin.
+   * Processes a session-start heartbeat from a published Packmind plugin.
    *
    * Public path — the `trackingToken` in the command is the sole credential.
    * The API layer pre-resolves `verifiedUserId` before calling this method.

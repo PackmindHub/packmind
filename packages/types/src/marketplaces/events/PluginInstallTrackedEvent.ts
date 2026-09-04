@@ -1,7 +1,7 @@
 import { UserId } from '../../accounts/User';
 import { SystemEvent } from '../../events';
 import { MarketplaceId } from '../MarketplaceId';
-import { PluginInstallScope } from '../PluginInstallation';
+import { PluginInstallAgent, PluginInstallScope } from '../PluginInstallation';
 
 /**
  * Emitted by `TrackPluginInstallHeartbeatUseCase` on **first-seen** creation
@@ -18,9 +18,11 @@ export interface PluginInstallTrackedPayload {
   packageId?: string | null;
   pluginSlug: string;
   scope: PluginInstallScope;
+  /** Coding agent the session ran in — lets adoption be sliced per agent. */
+  agent: PluginInstallAgent;
   /** Verified Packmind user id (set only when API-key JWT was valid + org-matched). */
   userId?: UserId | null;
-  /** SHA-256 hash of the lowercased Claude account email (anonymous identity). */
+  /** SHA-256 hash of the lowercased identity email (anonymous identity). */
   anonymousIdHash?: string | null;
 }
 

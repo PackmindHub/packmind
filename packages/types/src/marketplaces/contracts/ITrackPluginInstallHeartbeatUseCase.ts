@@ -1,9 +1,13 @@
 import { IPublicUseCase, PublicPackmindCommand } from '../../UseCase';
 import { MarketplaceId } from '../MarketplaceId';
-import { PluginInstallScope } from '../PluginInstallation';
+import {
+  PluginInstallAgent,
+  PluginInstallIdentitySource,
+  PluginInstallScope,
+} from '../PluginInstallation';
 
 /**
- * Command issued by the public tracking endpoint when a SessionStart hook
+ * Command issued by the public tracking endpoint when a session-start hook
  * POSTs a heartbeat.
  *
  * The `trackingToken` header identifies the marketplace (not the caller).
@@ -22,8 +26,20 @@ export type TrackPluginInstallHeartbeatCommand = PublicPackmindCommand & {
   marketplaceName: string;
   scope: PluginInstallScope;
   /**
+   * Coding agent the session ran in. Omitted by plugins published before Copilot
+   * tracking shipped, which could only ever have been Claude Code — the API
+   * layer defaults it there rather than making every old install unattributable.
+   */
+  agent?: PluginInstallAgent | null;
+  /**
+   * Which local signal `anonymousIdHash` / `anonymousEmailMasked` were derived
+   * from. Claude reads the signed-in account email; Copilot exposes no account
+   * identity locally, so its hook falls back to `git config user.email`.
+   */
+  identitySource?: PluginInstallIdentitySource | null;
+  /**
    * Version reported as installed, read from the installed plugin manifest by
-   * the SessionStart hook. Omitted when the hook could not resolve a version.
+   * the session-start hook. Omitted when the hook could not resolve a version.
    */
   installedVersion?: string | null;
   /**
@@ -35,7 +51,7 @@ export type TrackPluginInstallHeartbeatCommand = PublicPackmindCommand & {
   installedRevision?: string | null;
   /** Raw git remote URL of the active project; omitted when no git remote. */
   repoRemoteUrl?: string | null;
-  /** SHA-256 hash of lowercased Claude account email. */
+  /** SHA-256 hash of the lowercased identity email; see `identitySource`. */
   anonymousIdHash?: string | null;
   /** Masked display email, e.g. `b**.s***@acme.com`. */
   anonymousEmailMasked?: string | null;

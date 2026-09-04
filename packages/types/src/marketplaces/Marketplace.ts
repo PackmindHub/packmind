@@ -40,7 +40,7 @@ export type Marketplace = WithSoftDelete<
     /**
      * Random opaque token used to identify this marketplace's tracking endpoint.
      * Generated at link time; backfilled by migration for existing rows.
-     * Baked into published plugin sidecars so the SessionStart hook can POST
+     * Baked into published plugin sidecars so the session-start hook can POST
      * heartbeats without needing user credentials.
      *
      * `null` only on rows created before the migration ran (backfill sets a

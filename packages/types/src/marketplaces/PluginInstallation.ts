@@ -6,19 +6,47 @@ import { PackageId } from '../deployments/Package';
 import { PluginInstallationId } from './PluginInstallationId';
 
 /**
- * Scope at which a Packmind plugin is enabled in Claude Code.
+ * Scope at which a Packmind plugin is enabled in the coding agent.
  *
- * - `user`    — enabled in the user's global `~/.claude/settings.json`
- * - `project` — enabled in the project's committed `.claude/settings.json`
- * - `local`   — enabled in the user's uncommitted `.claude/settings.local.json`
+ * Both agents expose the same three-rung ladder, so the values are shared:
+ *
+ * | Scope     | Claude Code                        | GitHub Copilot CLI                             |
+ * |-----------|------------------------------------|------------------------------------------------|
+ * | `local`   | `.claude/settings.local.json`      | `.github/copilot/settings.local.json`           |
+ * | `project` | `.claude/settings.json`            | `.github/copilot/settings.json`                 |
+ * | `user`    | `~/.claude/settings.json`          | `~/.copilot/settings.json`                      |
  */
 export type PluginInstallScope = 'user' | 'project' | 'local';
 
 /**
- * Heartbeat record: evidence that a plugin was active in a Claude Code session.
+ * Coding agent whose session produced the heartbeat.
  *
- * Each row represents a unique (marketplace, pluginSlug, scope, identityKey, repoKey)
- * combination. The UNIQUE index on those five columns collapses repeated heartbeats
+ * NOT NULL with `claude-code` as the default: every row written before Copilot
+ * tracking shipped came from a Claude Code session, and the heartbeat UNIQUE
+ * index includes this column — a nullable value would defeat the index, since
+ * Postgres treats NULLs as distinct.
+ */
+export type PluginInstallAgent = 'claude-code' | 'copilot-cli';
+
+/**
+ * Where the pseudonymous identity was derived from.
+ *
+ * - `claude-account` — the signed-in account email in `~/.claude.json`.
+ * - `git-config`     — `git config user.email`. Copilot CLI keeps its
+ *   credentials in the OS keychain and its `~/.copilot/config.json` carries no
+ *   account information, so the git commit identity is the only local signal.
+ *
+ * The two are different people-axes for the same human: the same person shows
+ * up under two hashes, hence two rows. Carrying the source keeps that visible
+ * in the UI instead of silently presenting one as the other.
+ */
+export type PluginInstallIdentitySource = 'claude-account' | 'git-config';
+
+/**
+ * Heartbeat record: evidence that a plugin was active in a coding-agent session.
+ *
+ * Each row represents a unique (marketplace, pluginSlug, scope, agent, identityKey,
+ * repoKey) combination. The UNIQUE index on those six columns collapses repeated heartbeats
  * into a single row. `createdAt` marks the first-seen time (preserved as the
  * earliest value on merge); `updatedAt` is bumped to the last-seen time on every
  * heartbeat.
@@ -60,11 +88,19 @@ export type PluginInstallation = WithSoftDelete<
      */
     installedRevision: string | null;
     scope: PluginInstallScope;
+    /** Coding agent that reported the heartbeat. Part of the heartbeat key. */
+    agent: PluginInstallAgent;
+    /**
+     * Which local signal `anonymousIdHash` / `anonymousEmailMasked` were derived
+     * from. `null` for rows created before this shipped, and for rows with no
+     * anonymous identity at all.
+     */
+    identitySource: PluginInstallIdentitySource | null;
     /** Set only when the API-key JWT was verified against the token's org. */
     userId: UserId | null;
-    /** SHA-256 hash of the lowercased Claude account email (pseudonymous dedup key). */
+    /** SHA-256 hash of the lowercased identity email (pseudonymous dedup key). */
     anonymousIdHash: string | null;
-    /** Masked display form of the Claude account email, e.g. `b**.s***@acme.com`. */
+    /** Masked display form of the identity email, e.g. `b**.s***@acme.com`. */
     anonymousEmailMasked: string | null;
     /**
      * Computed key, NOT NULL.
