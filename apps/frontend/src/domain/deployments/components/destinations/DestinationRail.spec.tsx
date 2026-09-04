@@ -9,6 +9,7 @@ import {
   createPackageId,
   createTargetId,
   DistributionStatus,
+  MarketplaceDistributionStatus,
 } from '@packmind/types';
 
 import { DestinationRail } from './DestinationRail';
@@ -112,6 +113,24 @@ const CATALOG = {
   ],
   publishedPackageNames: ['Backend', 'Frontend'],
 } as unknown as MarketplaceDrift;
+
+/**
+ * The same two plugins, with the state of each one's last publish attempt.
+ * `CATALOG` above leaves it unset, which is a plugin nobody has tried to
+ * publish and the plain drift case.
+ */
+function catalogWithStatuses(
+  ...statuses: Array<MarketplaceDistributionStatus | null>
+): MarketplaceDrift {
+  return {
+    ...CATALOG,
+    plugins: CATALOG.plugins.map((plugin, index) => ({
+      ...plugin,
+      lastStatus: statuses[index] ?? null,
+      prUrl: null,
+    })),
+  };
+}
 
 const BEHIND = repository('repo-behind', 'webapp', 'behind');
 const FAILED = repository('repo-failed', 'api', 'failed');
@@ -378,6 +397,67 @@ describe('DestinationRail', () => {
       expect(
         screen.getByText('1 selected · 1 distribution'),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when every drifted plugin is waiting on a merge', () => {
+    /*
+     * Drifted and already dealt with: the republish landed on the rolling sync
+     * branch and waits for someone to merge it. Orange would ask for a hand
+     * that nothing here needs.
+     */
+    beforeEach(() => {
+      renderRail([BEHIND], null, {
+        marketplaces: [
+          catalogWithStatuses(
+            MarketplaceDistributionStatus.pending_merge,
+            MarketplaceDistributionStatus.pending_merge,
+          ),
+        ],
+      });
+    });
+
+    it('keeps the line counting drifted plugins', () => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Marketplace Public catalog, 2 plugins drifted',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('says the merge is what they wait on', () => {
+      expect(
+        screen.getByRole('img', { name: '2 plugins awaiting merge' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when one drifted plugin last failed to publish', () => {
+    beforeEach(() => {
+      renderRail([BEHIND], null, {
+        marketplaces: [
+          catalogWithStatuses(MarketplaceDistributionStatus.failure, null),
+        ],
+      });
+    });
+
+    it('mentions the failure on the line', () => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Marketplace Public catalog, 2 plugins drifted, 1 failed',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * A mention and not a colour, so the band above gains no `failed` pill: a
+     * pill that filtered to a row nobody had painted red is the contradiction
+     * the two-pill band was split to avoid.
+     */
+    it('leaves the destination out of the failed pill', () => {
+      expect(
+        screen.queryByRole('button', { name: /destinations? failed/ }),
+      ).not.toBeInTheDocument();
     });
   });
 });

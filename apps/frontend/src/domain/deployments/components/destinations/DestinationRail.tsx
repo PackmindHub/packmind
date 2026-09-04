@@ -11,6 +11,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuFolderGit2, LuRotateCw, LuSearch, LuStore } from 'react-icons/lu';
+import { MarketplaceDistributionStatus } from '@packmind/types';
 import type { GitProviderId } from '@packmind/types';
 import {
   repositoryDriftedPackageCount,
@@ -1009,11 +1010,51 @@ function destinationState(
       };
     }
 
+    /*
+     * The state of the last attempt, which the row used not to have. A plugin
+     * at `pending_merge` is drifted and already dealt with: the republish
+     * landed on the rolling sync branch and waits for someone to merge it, so
+     * offering to publish it again is offering to do it twice.
+     */
+    const plugins = destination.marketplace.plugins;
+    const inFlight = plugins.filter(
+      (plugin) =>
+        plugin.lastStatus === MarketplaceDistributionStatus.pending_merge,
+    ).length;
+    const failedPlugins = plugins.filter(
+      (plugin) => plugin.lastStatus === MarketplaceDistributionStatus.failure,
+    ).length;
+
+    /*
+     * The whole destination is in flight, which is the marketplace peer of a
+     * repository whose every drifted install is mid-distribution: blue rather
+     * than orange, because orange asks for a hand that nothing here needs.
+     * A partial count stays orange, since the rest of it does.
+     */
+    if (inFlight === count) {
+      return {
+        line: `${count} plugin${plural} drifted`,
+        tone: 'warning',
+        dot: 'blue.300',
+        tooltip: `${count} plugin${plural} awaiting merge`,
+      };
+    }
+
+    /*
+     * A failure is a mention and not a colour. One failed publish among twenty
+     * plugins is worth reading, and it is not worth turning the row red over,
+     * which is the shape the badge already uses: one phrase, then the clause.
+     */
+    const failedClause = failedPlugins > 0 ? `, ${failedPlugins} failed` : '';
+
     return {
-      line: `${count} plugin${plural} drifted`,
+      line: `${count} plugin${plural} drifted${failedClause}`,
       tone: 'warning',
       dot: 'orange.500',
-      tooltip: `${count} distributed plugin${plural} whose package has changed since`,
+      tooltip:
+        failedPlugins > 0
+          ? `${count} distributed plugin${plural} whose package has changed since, ${failedPlugins} whose last publish failed`
+          : `${count} distributed plugin${plural} whose package has changed since`,
     };
   }
 

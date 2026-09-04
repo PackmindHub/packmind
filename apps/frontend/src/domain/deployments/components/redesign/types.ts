@@ -2,6 +2,7 @@ import type {
   DistributionStatus,
   GitProviderId,
   GitRepoId,
+  MarketplaceDistributionStatus,
   MarketplaceId,
   PackageId,
   CommandId,
@@ -103,6 +104,20 @@ export type MarketplacePluginDrift = {
   pluginSlug: string;
   packageId: PackageId;
   packageName: string;
+  /**
+   * Status of this plugin's most recent publish attempt, `null` when none is
+   * known.
+   *
+   * Drift and the state of the last attempt are two different facts, and a
+   * plugin can hold both: `pending_merge` means a republish already landed on
+   * the rolling sync branch and waits for someone to merge it, which leaves the
+   * marketplace copy outdated and the work already done. Without this the
+   * Distribution rail read that plugin as plain drift and offered to publish it
+   * a second time.
+   */
+  lastStatus: MarketplaceDistributionStatus | null;
+  /** The sync PR carrying that attempt, when one is open. */
+  prUrl: string | null;
 };
 
 /**

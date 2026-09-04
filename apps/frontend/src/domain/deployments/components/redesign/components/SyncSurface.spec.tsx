@@ -6,7 +6,10 @@ import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import type { MockedFunction } from 'vitest';
-import { createMarketplaceId } from '@packmind/types';
+import {
+  createMarketplaceId,
+  MarketplaceDistributionStatus,
+} from '@packmind/types';
 import { SyncSurface } from './SyncSurface';
 import type { MarketplaceSyncTarget } from './SyncSurface';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
@@ -51,11 +54,15 @@ const CATALOG: MarketplaceDrift = {
       pluginSlug: 'acme-backend',
       packageId: STUB_PACKAGES[0].id,
       packageName: 'Backend guidelines',
+      lastStatus: MarketplaceDistributionStatus.success,
+      prUrl: null,
     },
     {
       pluginSlug: 'acme-frontend',
       packageId: STUB_PACKAGES[1].id,
       packageName: 'Frontend guidelines',
+      lastStatus: MarketplaceDistributionStatus.success,
+      prUrl: null,
     },
   ],
   publishedPackageNames: ['Backend guidelines', 'Frontend guidelines'],

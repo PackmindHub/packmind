@@ -40,9 +40,19 @@ export type MarketplaceDestination = {
   /** Plugins published from this space whose source has moved on. */
   behind: number;
   /**
-   * Always zero: the marketplace data records what is drifted, not what a
-   * distribution attempt did. Kept on the type so the summary can add the two
-   * kinds without asking which one it is holding.
+   * Always zero, by decision rather than for want of the data.
+   *
+   * This field is what turns a destination red, what the `failed` pill counts
+   * and what reaches the nav badge's failed clause, and a marketplace with one
+   * failed publish among twenty plugins was decided not to be any of those. The
+   * failure is a mention on the row instead, read from
+   * `marketplace.plugins[].lastStatus`, which is where the state of each
+   * attempt lives.
+   *
+   * The note here used to say the marketplace data records what is drifted and
+   * not what an attempt did. That was wrong: the rail fetches every
+   * distribution of every marketplace, and those rows carry the status, the
+   * pull request and the failure reason.
    */
   failed: number;
   packageNames: string[];
