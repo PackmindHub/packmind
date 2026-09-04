@@ -187,14 +187,18 @@ describe('warmUpDatabasePool', () => {
     });
   });
 
-  it('does not fail the boot when a connection cannot be released', async () => {
-    const { dataSource } = makeHarness((runner, index) => {
+  describe('when a connection cannot be released', () => {
+    const brokenRelease = (runner: FakeQueryRunner, index: number) => {
       if (index === 0) {
         runner.release = jest.fn().mockRejectedValue(new Error('broken pipe'));
       }
-    });
+    };
 
-    await expect(warmUpDatabasePool(dataSource)).resolves.toBeUndefined();
+    it('does not fail the boot', async () => {
+      const { dataSource } = makeHarness(brokenRelease);
+
+      await expect(warmUpDatabasePool(dataSource)).resolves.toBeUndefined();
+    });
   });
 
   describe('when a connection is refused while its siblings are in flight', () => {
