@@ -20,7 +20,7 @@
     "@codemirror/legacy-modes": "^6.4.1",
     "@packmind/assets": "workspace:*",
     "@packmind/feature-flags": "workspace:*",
-    "@zag-js/checkbox": "^1.41.1"
+    "@zag-js/checkbox": "^1.43.3"
   },
   "devDependencies": {
     "@chakra-ui/cli": "^3.36.1"
