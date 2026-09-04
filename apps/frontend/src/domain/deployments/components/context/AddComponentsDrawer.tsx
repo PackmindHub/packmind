@@ -526,7 +526,14 @@ function CandidateRow({
       inputProps={{ 'aria-label': `Add ${component.name}` }}
       width="full"
       gap={3}
-      alignItems="center"
+      /*
+        The control on the name's line, not centred on the row, the rule the
+        type icon beside it follows and the one the pane's list follows since
+        the same report. Two lines of content put a centred control between the
+        name and the summary while the icon stayed on the name.
+      */
+      alignItems="flex-start"
+      controlProps={{ marginTop: '0.14em' }}
       paddingX={3}
       paddingY="10px"
       borderTopWidth={isFirst ? '0' : '1px'}

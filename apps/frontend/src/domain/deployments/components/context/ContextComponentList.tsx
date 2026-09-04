@@ -170,7 +170,22 @@ function ComponentRow({
           a control nested in an anchor is activated by the anchor, so ticking a
           row would open it.
         */
-        <PMBox display="flex" alignItems="center" paddingLeft={3}>
+        <PMBox
+          display="flex"
+          alignItems="flex-start"
+          paddingLeft={3}
+          /*
+            On the name's line, not centred on the row: the same rule the type
+            icon two elements to the right already follows, and the offsets are
+            the link's own vertical padding plus the nudge that puts a control
+            of this size on a line of that size.
+
+            Centred, it sat between the name and the summary while the icon sat
+            on the name, so the row opened with two marks on two baselines and
+            neither read as belonging to the title.
+          */
+          paddingTop="calc(10px + 0.14em)"
+        >
           <PMCheckbox
             size="sm"
             checked={isSelected}
