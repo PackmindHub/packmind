@@ -241,8 +241,27 @@ describe('buildPackageContext', () => {
       );
     });
 
-    it('is empty for a command, which has no description', () => {
-      expect(context.groups[1].components[0].summary).toBe('');
+    it('reads the summary of a command out of its file', () => {
+      expect(context.groups[1].components[0].summary).toBe('body');
+    });
+  });
+
+  describe('when a command declares a description in its frontmatter', () => {
+    it('uses it as the row summary', () => {
+      const context = buildPackageContext(
+        pkg({ commands: [createCommandId('c1')] }),
+        catalogue({
+          commands: [
+            {
+              ...command('c1', 'Release'),
+              content: '---\ndescription: Cut a release\n---\n\n# Release',
+            },
+          ],
+        }),
+        TARGET,
+      );
+
+      expect(context.groups[0].components[0].summary).toBe('Cut a release');
     });
   });
 

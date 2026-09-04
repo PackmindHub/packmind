@@ -9,6 +9,7 @@ import type {
   StandardId,
 } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
+import { commandSummary } from '../../../commands/utils/parseCommandFrontmatter';
 
 /**
  * The kinds of thing a package carries. One entry per type, and the grouping,
@@ -203,6 +204,17 @@ export function standardToComponent(
   };
 }
 
+/**
+ * The one of the three whose summary is not a column.
+ *
+ * A standard and a skill each carry a description the author filled in; a
+ * command carries a file, and whatever it says about itself it says inside it.
+ * Read out of the file it is the same sentence the coding agent reads to decide
+ * whether to run the command, which makes it the right one for the row.
+ *
+ * Without it the command rows were a line shorter than the ones above them and
+ * the grid of a package broke halfway down for no reason a reader could see.
+ */
 export function commandToComponent(
   command: Command,
   { orgSlug, spaceSlug }: ContextLinkTarget,
@@ -211,7 +223,7 @@ export function commandToComponent(
     key: command.id,
     type: 'command',
     name: command.name,
-    summary: '',
+    summary: commandSummary(command.content ?? ''),
     version: command.version,
     href: routes.space.toCommand(orgSlug, spaceSlug, command.id),
     createdAt: creationDateOf(command),
