@@ -761,7 +761,14 @@ function InventoryRow({
                 fontWeight={showingOrphans ? 'medium' : 'normal'}
                 color={showingOrphans ? 'text.primary' : 'text.secondary'}
               >
-                {orphanCount} in no package
+                {/*
+                  The noun, not a bare number. The other pill of this rail
+                  counts packages, so a count in this one with nothing after it
+                  reads as a count of packages too, which is the reading that
+                  was reported: the number here counts components.
+                */}
+                {orphanCount} component{orphanCount === 1 ? '' : 's'} in no
+                package
               </PMBox>
             </PMHStack>
           </PMBox>
