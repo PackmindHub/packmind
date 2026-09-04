@@ -122,17 +122,14 @@ export class CommandRepository
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // For each recipe, enrich with user data
-      const commandsWithScope = await Promise.all(
-        recipes.map(async (recipe) => {
-          const createdBy = await this.getCreatedBy(recipe.userId);
-
-          return {
-            ...recipe,
-            createdBy,
-          };
-        }),
+      const createdByUserId = await this.getCreatedByMany(
+        recipes.map((recipe) => recipe.userId),
       );
+
+      const commandsWithScope = recipes.map((recipe) => ({
+        ...recipe,
+        createdBy: createdByUserId.get(recipe.userId),
+      }));
 
       this.logger.info('Recipes with scope found by space ID', {
         spaceId,

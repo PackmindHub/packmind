@@ -1,5 +1,11 @@
 import { DataSource, EntitySchema } from 'typeorm';
 import { IBackup, IMemoryDb, newDb } from 'pg-mem';
+import { createQueryRecorder, QueryRecorder } from './queryRecorder';
+
+export type TestDatabaseOptions = {
+  /** Records every statement issued, exposed as `queries`. */
+  recordQueries?: boolean;
+};
 
 export type TestDatabase = {
   /**
@@ -9,10 +15,12 @@ export type TestDatabase = {
    */
   db: IMemoryDb;
   datasource: DataSource;
+  queries?: QueryRecorder;
 };
 
 export async function makeTestDatabase(
   entities: EntitySchema[],
+  opts?: TestDatabaseOptions,
 ): Promise<TestDatabase> {
   const db = newDb({
     autoCreateForeignKeyIndices: true,
@@ -30,18 +38,22 @@ export async function makeTestDatabase(
     name: 'version',
   });
 
+  const queries = opts?.recordQueries ? createQueryRecorder() : undefined;
+
   const datasource = db.adapters.createTypeormDataSource({
     type: 'postgres',
     entities,
+    ...(queries ? { logging: true, logger: queries.logger } : {}),
   }) as DataSource;
 
-  return { db, datasource };
+  return { db, datasource, queries };
 }
 
 export async function makeTestDatasource(
   entities: EntitySchema[],
+  opts?: TestDatabaseOptions,
 ): Promise<DataSource> {
-  const { datasource } = await makeTestDatabase(entities);
+  const { datasource } = await makeTestDatabase(entities, opts);
   return datasource;
 }
 
@@ -81,12 +93,20 @@ export async function makeTestDatasource(
  *
  * afterEach(() => fixture.cleanup()); // back to the seeded state
  * ```
+ *
+ * Pass `{ recordQueries: true }` to read the issued SQL through
+ * `fixture.queries`. `initialize()` and `cleanup()` are recorded too, so call
+ * `fixture.queries.reset()` immediately before the act.
  */
-export function createTestDatasourceFixture(entities: EntitySchema[]) {
+export function createTestDatasourceFixture(
+  entities: EntitySchema[],
+  opts?: TestDatabaseOptions,
+) {
   let db: IMemoryDb | null = null;
   let datasource: DataSource | null = null;
   let tableNames: string[] = [];
   let backup: IBackup | null = null;
+  let queries: QueryRecorder | undefined = undefined;
 
   return {
     get datasource(): DataSource {
@@ -98,10 +118,20 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
       return datasource;
     },
 
+    get queries(): QueryRecorder {
+      if (!queries) {
+        throw new Error(
+          'Query recording is off. Pass { recordQueries: true } to createTestDatasourceFixture.',
+        );
+      }
+      return queries;
+    },
+
     async initialize(): Promise<DataSource> {
-      const testDatabase = await makeTestDatabase(entities);
+      const testDatabase = await makeTestDatabase(entities, opts);
       db = testDatabase.db;
       datasource = testDatabase.datasource;
+      queries = testDatabase.queries;
       await datasource.initialize();
       await datasource.synchronize();
 
@@ -169,6 +199,7 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
       datasource = null;
       tableNames = [];
       backup = null;
+      queries = undefined;
     },
   };
 }

@@ -92,17 +92,14 @@ export class SkillRepository
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // For each skill, enrich with user data
-      const skillsWithScope = await Promise.all(
-        skills.map(async (skill) => {
-          const createdBy = await this.getCreatedBy(skill.userId);
-
-          return {
-            ...skill,
-            createdBy,
-          };
-        }),
+      const createdByUserId = await this.getCreatedByMany(
+        skills.map((skill) => skill.userId),
       );
+
+      const skillsWithScope = skills.map((skill) => ({
+        ...skill,
+        createdBy: createdByUserId.get(skill.userId),
+      }));
 
       this.logger.info('Skills with scope found by space ID', {
         spaceId,
