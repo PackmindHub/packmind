@@ -26,7 +26,9 @@ import { deployedPlaceParts } from '../PackagesPopover';
 import {
   buildAddableComponents,
   filterAddableComponents,
+  groupPickState,
   groupedComponentCount,
+  withGroupPicked,
 } from './buildAddableComponents';
 import {
   filterInventoryGroups,
@@ -198,6 +200,20 @@ export function AddComponentsDrawer({
       if (!next.delete(key)) next.add(key);
       return next;
     });
+  };
+
+  /*
+   * The whole of one group at once, which is the gesture a hundred candidates
+   * of one type made necessary: a package of every skill the space owns was a
+   * hundred clicks.
+   *
+   * It acts on the group it was handed, which is the group after both filters.
+   * Under a search that is what the reader can see, and a control that also
+   * picked the rows a query is hiding would be one click with an invisible
+   * reach.
+   */
+  const toggleGroup = (group: InventoryGroup, select: boolean) => {
+    setPickedKeys((previous) => withGroupPicked(previous, group, select));
   };
 
   /*
@@ -390,6 +406,7 @@ export function AddComponentsDrawer({
                             showPackages={!showingFree}
                             pickedKeys={pickedKeys}
                             onToggle={toggle}
+                            onToggleGroup={toggleGroup}
                             disabled={isPending}
                           />
                         ))}
@@ -444,17 +461,55 @@ function CandidateGroup({
   showPackages,
   pickedKeys,
   onToggle,
+  onToggleGroup,
   disabled,
 }: Readonly<{
   group: InventoryGroup;
   showPackages: boolean;
   pickedKeys: ReadonlySet<string>;
   onToggle: (component: ContextComponent) => void;
+  onToggleGroup: (group: InventoryGroup, select: boolean) => void;
   disabled: boolean;
 }>) {
+  const state = groupPickState(pickedKeys, group);
+
   return (
     <PMBox>
-      <PMHStack gap={2} align="baseline">
+      {/*
+        `center`, not `baseline`: a checkbox has no baseline of its own, so on
+        the text's it hung below the words it heads.
+
+        The left padding is the row's own, plus the border of the box below, so
+        the tick sits at the head of the column of ticks rather than a few
+        pixels left of it and reads as governing them.
+      */}
+      <PMHStack gap={2} align="center" paddingLeft="13px">
+        <PMCheckbox
+          size="sm"
+          checked={
+            state === 'all' ? true : state === 'some' ? 'indeterminate' : false
+          }
+          onCheckedChange={(details) =>
+            onToggleGroup(group, details.checked === true)
+          }
+          disabled={disabled || group.entries.length === 0}
+          /*
+            The count is in the words beside it, and it is the shown count, so
+            the label says the same thing the reader sees. Without it the
+            control is a tick with no subject, which is what a screen reader
+            would read out.
+          */
+          inputProps={{
+            /*
+              Built from the type, which is singular, rather than from the
+              group's label, which is not: a group of one read "the 1 commands
+              listed".
+            */
+            'aria-label': `Select the ${group.entries.length} ${group.type}${
+              group.entries.length === 1 ? '' : 's'
+            } listed`,
+          }}
+        />
         <PMText
           fontSize="10px"
           fontWeight="semibold"
@@ -469,7 +524,16 @@ function CandidateGroup({
         </PMText>
       </PMHStack>
       <PMBox
-        marginTop={1}
+        /*
+          8px, not the 4px this had when the heading was words alone. Those left
+          three pixels of their own under the glyphs; a checkbox fills its box to
+          the edge, so the same margin put a hard border four pixels under a hard
+          border and the heading read as the list's first row.
+
+          Still well inside the 20px between one group and the next, so the
+          heading stays bound to the rows it counts.
+        */
+        marginTop={2}
         borderWidth="1px"
         borderColor="border.tertiary"
         borderRadius="sm"

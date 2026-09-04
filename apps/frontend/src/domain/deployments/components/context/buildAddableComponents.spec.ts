@@ -12,11 +12,14 @@ import {
   buildAddableComponents,
   countAddableComponents,
   filterAddableComponents,
+  groupPickState,
   groupedComponentCount,
+  withGroupPicked,
 } from './buildAddableComponents';
-import type {
-  PackageComponentIds,
-  SpaceCatalogue,
+import {
+  componentSelectionKey,
+  type PackageComponentIds,
+  type SpaceCatalogue,
 } from './buildPackageContext';
 import {
   filterInventoryGroups,
@@ -649,5 +652,102 @@ describe('countAddableComponents', () => {
     expect(countAddableComponents(pkg, space)).toBe(
       buildAddableComponents(pkg, ALONE, space, TARGET).total,
     );
+  });
+});
+
+describe('the heading of a group', () => {
+  const skillGroup = (): InventoryGroup => {
+    const { groups } = buildAddableComponents(
+      holds(),
+      ALONE,
+      catalogue({
+        skills: [
+          skill('k1', 'Onboard'),
+          skill('k2', 'Release'),
+          skill('k3', 'Triage'),
+        ],
+      }),
+      TARGET,
+    );
+    return groups[0];
+  };
+
+  const keysOf = (group: InventoryGroup, names: readonly string[]) =>
+    new Set(
+      group.entries
+        .filter(({ component }) => names.includes(component.name))
+        .map(({ component }) => componentSelectionKey(component)),
+    );
+
+  describe('groupPickState', () => {
+    it('reads nothing picked as none', () => {
+      expect(groupPickState(new Set(), skillGroup())).toBe('none');
+    });
+
+    it('reads part of it as some', () => {
+      const group = skillGroup();
+
+      expect(groupPickState(keysOf(group, ['Release']), group)).toBe('some');
+    });
+
+    it('reads the whole of it as all', () => {
+      const group = skillGroup();
+
+      expect(
+        groupPickState(keysOf(group, ['Onboard', 'Release', 'Triage']), group),
+      ).toBe('all');
+    });
+
+    it('reads a group with no entry as none', () => {
+      const group = { ...skillGroup(), entries: [] };
+
+      expect(groupPickState(new Set(), group)).toBe('none');
+    });
+  });
+
+  describe('withGroupPicked', () => {
+    it('picks every entry of the group', () => {
+      const group = skillGroup();
+
+      expect(withGroupPicked(new Set(), group, true).size).toBe(3);
+    });
+
+    it('drops every entry of the group', () => {
+      const group = skillGroup();
+      const all = keysOf(group, ['Onboard', 'Release', 'Triage']);
+
+      expect(withGroupPicked(all, group, false).size).toBe(0);
+    });
+
+    it('leaves a pick made outside the group alone', () => {
+      const group = skillGroup();
+      const elsewhere = new Set(['standard:s9']);
+
+      expect([...withGroupPicked(elsewhere, group, true)]).toContain(
+        'standard:s9',
+      );
+    });
+
+    describe('when clearing', () => {
+      it('keeps a pick made outside the group', () => {
+        const group = skillGroup();
+        const mixed = new Set([
+          'standard:s9',
+          ...keysOf(group, ['Onboard', 'Release', 'Triage']),
+        ]);
+
+        expect([...withGroupPicked(mixed, group, false)]).toEqual([
+          'standard:s9',
+        ]);
+      });
+    });
+
+    it('does not change the set it was handed', () => {
+      const group = skillGroup();
+      const before = new Set<string>();
+      withGroupPicked(before, group, true);
+
+      expect(before.size).toBe(0);
+    });
   });
 });
