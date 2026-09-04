@@ -277,8 +277,8 @@ function CommandBody({ commandId }: Readonly<{ commandId: CommandId }>) {
   if (!command.content) {
     return (
       <PMText color="secondary">
-        This command has no instructions yet. An empty command tells an agent
-        nothing, and it is distributed all the same.
+        This command has no instructions yet. An empty command tells a coding
+        agent nothing, and it is distributed all the same.
       </PMText>
     );
   }
@@ -413,8 +413,8 @@ function RulesSection({
   if (rules.length === 0) {
     return (
       <PMText as="div" fontSize="sm" color="secondary">
-        No rule yet. The prose still reaches the agent, but nothing in this
-        standard can be checked against a change.
+        No rule yet. The prose still reaches the coding agent, but nothing in
+        this standard can be checked against a change.
       </PMText>
     );
   }
@@ -485,8 +485,9 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
         </PMBox>
       ) : (
         <PMText color="secondary">
-          This skill has no instructions yet. Its frontmatter tells an agent
-          when to reach for it, and nothing tells it what to do once it has.
+          This skill has no instructions yet. Its frontmatter tells a coding
+          agent when to reach for it, and nothing tells it what to do once it
+          has.
         </PMText>
       )}
 

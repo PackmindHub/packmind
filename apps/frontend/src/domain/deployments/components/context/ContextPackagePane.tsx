@@ -1121,7 +1121,7 @@ function EmptyPackageBody({
         This package is empty.
       </PMText>
       <PMText as="div" color="secondary" paddingTop={1}>
-        A package with no component gives an agent nothing to read and
+        A package with no component gives a coding agent nothing to read and
         distributes nothing.{' '}
         {canAdd
           ? 'Pick standards, commands and skills the space already owns, and it is distributable as soon as you add them.'

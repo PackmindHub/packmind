@@ -339,7 +339,7 @@ describe('drift detection on a repository', () => {
         ]);
       });
 
-      it('counts two drifted landings', () => {
+      it('counts two drifted distributions', () => {
         expect(repositoryBehindInstallCount(overview)).toBe(2);
       });
 

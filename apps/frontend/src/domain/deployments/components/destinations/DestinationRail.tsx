@@ -38,7 +38,7 @@ const SECTIONS: ReadonlyArray<{
   {
     kind: 'repository',
     title: 'Repositories',
-    description: 'Where the agents read from.',
+    description: 'Where the coding agents read from.',
   },
   {
     kind: 'marketplace',
@@ -171,10 +171,10 @@ export function DestinationRail({
   );
   const pickedCount = bulkSelected.size;
   /*
-   * Split by kind, because `behind` counts a different thing on each: landings
-   * on a repository, drifted plugins on a marketplace. Added up under one word
-   * the bar would have offered "5 distributions" over a pick of three landings
-   * and two plugins.
+   * Split by kind, because `behind` counts a different thing on each:
+   * distributions on a repository, drifted plugins on a marketplace. Added up
+   * under one word the bar would have offered "5 distributions" over a pick of
+   * three of them and two plugins.
    */
   const picked = useMemo(() => {
     let distributions = 0;
@@ -372,7 +372,7 @@ export function DestinationRail({
  *
  * Two pills rather than the one this used to be. That one read "3 destinations
  * behind, 1 failed" and filtered to all three, which put the two states in one
- * sentence, in two units — destinations, then landings — and gave the smaller
+ * sentence, in two units — destinations, then distributions — and gave the smaller
  * and worse pile no way to be reached on its own. They are separate now because
  * they are separate work: behind is a distribution nobody has run yet, failed is
  * one that ran and did not land, and only the first is what the button under

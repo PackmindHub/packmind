@@ -184,13 +184,13 @@ describe('buildSpaceDestinations', () => {
   });
 
   describe('the counts of a repository', () => {
-    it('counts the landings a distribution would align', () => {
+    it('counts the distributions behind', () => {
       const destinations = buildSpaceDestinations([DRIFTED_REPO], []);
 
       expect(destinations[0].behind).toBe(1);
     });
 
-    it('counts the landings whose last attempt failed', () => {
+    it('counts the distributions whose last run failed', () => {
       const destinations = buildSpaceDestinations([FAILED_REPO], []);
 
       expect(destinations[0].failed).toBe(1);
@@ -292,7 +292,7 @@ describe('destinationReachSummary', () => {
     );
   });
 
-  it('adds the landings behind across both kinds', () => {
+  it('adds what is behind across both kinds', () => {
     expect(destinationReachSummary(DESTINATIONS).behind).toBe(3);
   });
 

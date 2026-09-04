@@ -152,8 +152,12 @@ export function repositoryHasFailedDistribution(
 }
 
 /**
- * Distinct (target, package) pairs needing redistribution on this repo. The
- * number matches the count the rail surfaces in its summary line.
+ * Distributions this repository is behind on: one per (package, target) pair,
+ * so a package drifted on two of its targets counts twice.
+ *
+ * Not what the row's line shows, which counts targets. The two are different
+ * units on purpose, and the row names each of them rather than dividing one by
+ * the other, which is what it used to do.
  */
 export function repositoryBehindInstallCount(repo: RepositoryDrift): number {
   let n = 0;

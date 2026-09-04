@@ -518,8 +518,8 @@ function TargetSection({
             {/*
               One unit across the three, the package, because that is what the
               list under this header holds. `aligned` counted packages while the
-              other two counted landings, and a landing of a package on another
-              target of the same repository counted here too.
+              other two counted distributions, and a distribution of a package to
+              another target of the same repository counted here too.
             */}
             {isAligned
               ? `${target.packages.length} aligned`

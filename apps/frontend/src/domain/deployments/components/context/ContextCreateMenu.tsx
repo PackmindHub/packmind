@@ -133,8 +133,8 @@ export function ContextCreateMenu({
            * sat beside it.
            */
           iconColor="branding.primary"
-          title="With your agent"
-          description={`Your agent reads your repository and writes ${plural(methods.agent.types)}`}
+          title="With your coding agent"
+          description={`Reads your repository and writes ${plural(methods.agent.types)}`}
           onClick={() => setIsAgentDialogOpen(true)}
         />
       )}
@@ -330,7 +330,7 @@ export function ContextCreateMenu({
 
       {/* Outside the menu: the content unmounts when it closes. */}
       <MethodDialog
-        title="How to create with your agent"
+        title="How to create with your coding agent"
         isOpen={isAgentDialogOpen}
         onClose={() => setIsAgentDialogOpen(false)}
       >

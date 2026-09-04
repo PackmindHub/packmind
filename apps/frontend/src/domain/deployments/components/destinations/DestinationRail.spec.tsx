@@ -79,7 +79,7 @@ const repository = (
 
 /**
  * The same package landed on two targets of one repository, which is the case
- * the row's unit is about: two drifted landings, one package to distribute.
+ * the row's unit is about: two drifted distributions, one package to distribute.
  */
 const twoTargets = (
   id: string,
@@ -358,7 +358,7 @@ describe('DestinationRail', () => {
       expect(screen.getByText('1 selected · 2 plugins')).toBeInTheDocument();
     });
 
-    /* Two units, because `behind` counts landings on one and plugins on the other. */
+    /* Two units: `behind` counts distributions on one and plugins on the other. */
     it('counts a mixed pick in both', () => {
       renderRail([BEHIND], null, {
         marketplaces: [CATALOG],

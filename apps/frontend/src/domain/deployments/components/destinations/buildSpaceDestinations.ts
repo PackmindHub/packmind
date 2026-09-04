@@ -20,9 +20,13 @@ export type RepositoryDestination = {
   id: string;
   name: string;
   branch: string;
-  /** Landings one distribution would bring up to date. */
+  /**
+   * Distributions behind here: one per (package, target) pair, so a package
+   * drifted on two targets of this repository counts twice. The unit the batch
+   * bar and the confirmation screen both work in.
+   */
   behind: number;
-  /** Landings whose last distribution failed. Inside `behind`, not beside it. */
+  /** Distributions whose last run failed. Inside `behind`, not beside it. */
   failed: number;
   /** Packages that land here, for the search. Sorted, unique. */
   packageNames: string[];
@@ -87,7 +91,7 @@ export type ReachSummary = {
    */
   behindDestinations: number;
   failedDestinations: number;
-  /** Landings behind, not destinations: one repository can hold several. */
+  /** Distributions behind, not destinations: one repository holds several. */
   behind: number;
   failed: number;
 };

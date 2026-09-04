@@ -1162,7 +1162,7 @@ function InstallFilterControl({
       borderRadius="sm"
       overflow="hidden"
       role="tablist"
-      aria-label="Filter distributions"
+      aria-label="Filter distributions by drift state"
     >
       {INSTALL_FILTER_ITEMS.map((item, idx) => {
         const active = value === item.value;
