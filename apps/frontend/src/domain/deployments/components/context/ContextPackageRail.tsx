@@ -312,6 +312,25 @@ export function ContextPackageRail({
 
         {!hasPackages && <NoPackages />}
 
+        {/*
+          Where the list stops being a way of reading the space and starts
+          being its packages. The row above says "All components" and every row
+          below says a name, so without this band the first row reads as the
+          first entry of one homogeneous list and the reader has to infer the
+          boundary from an icon.
+
+          Suppressed when no row follows it: a heading over nothing is a
+          section that failed to load, and the two sentences that stand in for
+          the rows below already name what is missing.
+        */}
+        {shownRows.length > 0 && (
+          <SectionHeader
+            title="Packages"
+            count={shownRows.length}
+            description="What reaches a repository."
+          />
+        )}
+
         <PMVStack gap={0} align="stretch">
           {shownRows.map((row) => (
             <PackageRow
@@ -567,6 +586,53 @@ function AttentionUnavailableRow() {
       <PMText as="div" fontSize="xs" color="tertiary" truncate>
         Distribution state unavailable
       </PMText>
+    </PMBox>
+  );
+}
+
+/**
+ * The heading of the packages, in the shape the Distribution rail already uses
+ * for the heading of a kind: sticky, because the list is scrolled looking for
+ * a name and the band is what says which of the two levels of this rail the
+ * names belong to.
+ *
+ * Its own copy rather than an import of the other rail's: the two rails mirror
+ * each other by hand throughout, and this is a dozen lines of presentation
+ * with no behaviour to keep in step.
+ */
+function SectionHeader({
+  title,
+  description,
+  count,
+}: Readonly<{ title: string; description: string; count: number }>) {
+  return (
+    <PMBox
+      paddingX={3}
+      paddingY={2}
+      bg="background.secondary"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      position="sticky"
+      top={0}
+      zIndex={1}
+    >
+      <PMHStack gap={2} align="baseline">
+        <PMText
+          fontSize="10px"
+          fontWeight="semibold"
+          textTransform="uppercase"
+          letterSpacing="wider"
+          color="faded"
+        >
+          {title}
+        </PMText>
+        <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
+          {count}
+        </PMText>
+        <PMText fontSize="2xs" color="faded" truncate>
+          {description}
+        </PMText>
+      </PMHStack>
     </PMBox>
   );
 }
