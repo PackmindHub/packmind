@@ -4,6 +4,7 @@ import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import { gitBlobSha } from '@packmind/node-utils';
 import {
   PROVIDER_MAX_SOCKETS,
   providerHttpsAgent,
@@ -196,7 +197,6 @@ describe('GithubRepository', () => {
       let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
 
       beforeEach(async () => {
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
         result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
@@ -212,13 +212,14 @@ describe('GithubRepository', () => {
         );
       });
 
-      it('checks if each file exists on the repo', () => {
-        files.forEach((file) => {
-          expect(githubRepository.getFileOnRepo).toHaveBeenCalledWith(
-            file.path,
-            'main',
-          );
-        });
+      it('downloads no file to work out what changed', () => {
+        // The recursive tree already carries a SHA per path, so the diff is a
+        // local hash comparison. A `GET /contents` per file is the fan-out
+        // this replaced.
+        expect(mockAxiosInstance.get).not.toHaveBeenCalledWith(
+          expect.stringContaining('/contents/'),
+          expect.anything(),
+        );
       });
 
       it('creates the tree with file contents', () => {
@@ -271,17 +272,29 @@ describe('GithubRepository', () => {
       let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
 
       beforeEach(async () => {
-        jest
-          .spyOn(githubRepository, 'getFileOnRepo')
-          .mockImplementation((path) => {
-            if (path === files[0].path) {
-              return Promise.resolve({
-                sha: 'existing-file-sha',
-                content: 'existing content',
-              });
-            }
-            return Promise.resolve(null);
-          });
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/refs/heads/')) {
+            return Promise.resolve({ data: { object: { sha: refSha } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({
+              data: {
+                sha: baseTreeSha,
+                tree: [
+                  ...defaultTreeItems,
+                  {
+                    path: files[0].path,
+                    type: 'blob',
+                    sha: gitBlobSha('a different content'),
+                    mode: '100644',
+                  },
+                ],
+              },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
         result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
@@ -321,7 +334,6 @@ describe('GithubRepository', () => {
           stubbedLogger,
         );
 
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
         result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
@@ -331,13 +343,11 @@ describe('GithubRepository', () => {
         );
       });
 
-      it('checks if each file exists on the custom branch', () => {
-        files.forEach((file) => {
-          expect(githubRepository.getFileOnRepo).toHaveBeenCalledWith(
-            file.path,
-            customBranch,
-          );
-        });
+      it('downloads no file to work out what changed', () => {
+        expect(mockAxiosInstance.get).not.toHaveBeenCalledWith(
+          expect.stringContaining('/contents/'),
+          expect.anything(),
+        );
       });
 
       it('updates the custom branch reference', () => {
@@ -421,11 +431,6 @@ describe('GithubRepository', () => {
         { path: 'test/file-to-delete.txt' },
         { path: 'test/another-file-to-delete.txt' },
       ];
-
-      beforeEach(() => {
-        // Mock getFileOnRepo to return null for new files
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
-      });
 
       it('creates tree items with sha null for deleted files', async () => {
         await githubRepository.commitFiles(
@@ -537,11 +542,6 @@ describe('GithubRepository', () => {
     });
 
     describe('when filtering non-existent files during deletion', () => {
-      beforeEach(() => {
-        // Mock getFileOnRepo to return null for new files
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
-      });
-
       describe('when some files to delete do not exist in the repo', () => {
         const deleteFiles = [
           { path: 'test/file-to-delete.txt' }, // exists in defaultTreeItems
@@ -662,9 +662,28 @@ describe('GithubRepository', () => {
         const nonExistentDeleteFiles = [{ path: 'test/non-existent-file.txt' }];
 
         beforeEach(() => {
-          jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
-            sha: 'existing-sha',
-            content: Buffer.from(existingContent).toString('base64'),
+          mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+            if (url.includes('/git/refs/heads/')) {
+              return Promise.resolve({ data: { object: { sha: refSha } } });
+            } else if (url.includes('/git/commits/')) {
+              return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+            } else if (url.includes('/git/trees/')) {
+              return Promise.resolve({
+                data: {
+                  sha: baseTreeSha,
+                  tree: [
+                    ...defaultTreeItems,
+                    {
+                      path: filesWithIdenticalContent[0].path,
+                      type: 'blob',
+                      sha: gitBlobSha(existingContent),
+                      mode: '100644',
+                    },
+                  ],
+                },
+              });
+            }
+            return Promise.reject(new Error(`Unexpected GET: ${url}`));
           });
         });
 
@@ -695,14 +714,77 @@ describe('GithubRepository', () => {
             expect.anything(),
           );
         });
+
+        it('downloads no file to reach that verdict', async () => {
+          await githubRepository.commitFiles(
+            filesWithIdenticalContent,
+            'Update files',
+            nonExistentDeleteFiles,
+          );
+
+          expect(mockAxiosInstance.get).not.toHaveBeenCalledWith(
+            expect.stringContaining('/contents/'),
+            expect.anything(),
+          );
+        });
+      });
+    });
+
+    describe('when a file differs from the repository copy only by line endings', () => {
+      // The hash is taken over the exact bytes that would be written, with no
+      // normalisation, so CRLF and LF are two different files. That is also
+      // what the previous string comparison concluded, so this is the verdict
+      // being preserved rather than a new one.
+      const lfContent = 'line one\nline two\n';
+      const crlfContent = 'line one\r\nline two\r\n';
+
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/refs/heads/')) {
+            return Promise.resolve({ data: { object: { sha: refSha } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({
+              data: {
+                sha: baseTreeSha,
+                tree: [
+                  {
+                    path: 'docs/notes.md',
+                    type: 'blob',
+                    sha: gitBlobSha(lfContent),
+                    mode: '100644',
+                  },
+                ],
+              },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('treats it as changed', async () => {
+        const result = await githubRepository.commitFiles(
+          [{ path: 'docs/notes.md', content: crlfContent }],
+          'Rewrite line endings',
+        );
+
+        expect(result.sha).toBe(newCommitSha);
+      });
+
+      describe('when the line endings match the repository copy', () => {
+        it('treats it as unchanged', async () => {
+          const result = await githubRepository.commitFiles(
+            [{ path: 'docs/notes.md', content: lfContent }],
+            'No change',
+          );
+
+          expect(result.sha).toBe('no-changes');
+        });
       });
     });
 
     describe('when files have executable permissions', () => {
-      beforeEach(() => {
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
-      });
-
       it('uses 100755 mode for files with executable permissions', async () => {
         const executableFiles = [
           {
@@ -773,11 +855,6 @@ describe('GithubRepository', () => {
       const existingContent = 'existing script content';
 
       beforeEach(() => {
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
-          sha: 'existing-sha',
-          content: Buffer.from(existingContent).toString('base64'),
-        });
-
         // Override tree to include the file with 100644 mode
         mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
           if (url.includes('/git/refs/')) {
@@ -792,7 +869,7 @@ describe('GithubRepository', () => {
                   {
                     path: 'scripts/run.sh',
                     type: 'blob',
-                    sha: 'existing-sha',
+                    sha: gitBlobSha(existingContent),
                     mode: '100644',
                   },
                 ],
@@ -856,7 +933,7 @@ describe('GithubRepository', () => {
                     {
                       path: 'scripts/run.sh',
                       type: 'blob',
-                      sha: 'existing-sha',
+                      sha: gitBlobSha(existingContent),
                       mode: '100755',
                     },
                   ],
@@ -901,7 +978,7 @@ describe('GithubRepository', () => {
                     {
                       path: 'scripts/run.sh',
                       type: 'blob',
-                      sha: 'existing-sha',
+                      sha: gitBlobSha(existingContent),
                       mode: '100755',
                     },
                   ],
@@ -946,11 +1023,6 @@ describe('GithubRepository', () => {
       const newContent = 'new script content';
 
       beforeEach(() => {
-        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
-          sha: 'existing-sha',
-          content: Buffer.from(existingContent).toString('base64'),
-        });
-
         mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
           if (url.includes('/git/refs/')) {
             return Promise.resolve({ data: { object: { sha: refSha } } });
@@ -964,7 +1036,7 @@ describe('GithubRepository', () => {
                   {
                     path: 'scripts/run.sh',
                     type: 'blob',
-                    sha: 'existing-sha',
+                    sha: gitBlobSha(existingContent),
                     mode: '100755',
                   },
                 ],
