@@ -151,9 +151,37 @@ describe('RepositoryDetailPane', () => {
         screen.getByRole('button', { name: /Distribute repository/ }),
       ).toBeInTheDocument();
     });
+
+    /*
+     * The pane used to end in a strip pinned to its bottom edge, which on the
+     * full-bleed Distribution page is the bottom of the window, next to the
+     * rail's own action bar. Most of the time it held this sentence and a
+     * disabled button.
+     */
+    it('spends no room telling the reader to select something', () => {
+      renderPane();
+
+      expect(
+        screen.queryByText(/Select packages to distribute/),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('when a drifted row is selected', () => {
+    it('narrows the action slot to the selection', async () => {
+      renderPane();
+
+      await userEvent.click(rowCheckbox());
+
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Distribute selected/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Distribute repository/ }),
+      ).not.toBeInTheDocument();
+    });
+
     it('distributes that landing alone', async () => {
       const { onSyncPackageOnTarget } = renderPane();
 
@@ -168,6 +196,20 @@ describe('RepositoryDetailPane', () => {
         repoId,
         targetId,
       );
+    });
+
+    it('widens it back through Clear', async () => {
+      renderPane();
+
+      await userEvent.click(rowCheckbox());
+      await userEvent.click(
+        screen.getByRole('button', { name: /Clear the selection/ }),
+      );
+
+      expect(
+        screen.getByRole('button', { name: /Distribute repository/ }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
     });
   });
 
