@@ -698,7 +698,17 @@ function PackageOnTargetRow({
       bg={hasDrift && selected ? 'background.secondary' : 'background.primary'}
       transition="background-color 120ms ease-out"
     >
-      <PMHStack gap={3} align="center" paddingX={6} paddingY={3}>
+      {/*
+        44px, which is the height of the destination rows on a package's
+        Distribution tab. This row used to be 72: twelve pixels of padding
+        above and below, and a second line under the name for the package
+        description.
+
+        Six pixels of padding rather than that tab's eight, because the tallest
+        thing in this row is the distribute button and it carries its own
+        inset. The two rows come out the same height, which is the point.
+      */}
+      <PMHStack gap={3} align="center" paddingX={6} paddingY={1.5}>
         <PMBox flexShrink={0} display="flex" alignItems="center" width="20px">
           {hasDrift && (
             <PMTooltip
@@ -741,54 +751,61 @@ function PackageOnTargetRow({
           aria-expanded={expanded}
           aria-disabled={!hasDrift}
         >
-          <PMVStack gap={0.5} align="start">
-            <PMHStack gap={2} align="center" maxW="100%">
-              {/*
-                The slot is kept when there is nothing to expand. An aligned
-                package and a drifting one sit in the same list, and without it
-                the aligned ones started a chevron's width to the left, which
-                read as two lists rather than one.
-              */}
-              <PMBox
-                flexShrink={0}
-                width="14px"
-                display="flex"
-                alignItems="center"
-              >
-                {hasDrift && (
-                  <PMIcon fontSize="sm" color="text.secondary">
-                    {expanded ? <LuChevronDown /> : <LuChevronRight />}
-                  </PMIcon>
-                )}
-              </PMBox>
-              {/*
-                The crate, the mark this app keeps for the container, from the
-                sidebar to the Context rail. Named as the thing it is because
-                the row under it is a component and now says so: a package and
-                a component of it can carry the same name, and this pane had
-                one of each called Typescript with nothing to tell them apart.
-              */}
-              <PMIcon fontSize="sm" color="text.secondary" flexShrink={0}>
-                <LuPackage />
-              </PMIcon>
-              <PMText
-                fontSize="sm"
-                fontWeight="medium"
-                color="primary"
-                truncate
-              >
-                {pkg.name}
-              </PMText>
-            </PMHStack>
-            {pkg.description && (
-              <PMText fontSize="xs" color="faded" truncate maxW="60ch">
-                {pkg.description}
-              </PMText>
-            )}
-          </PMVStack>
+          {/*
+            The name alone. The description used to sit under it, which cost
+            the row its second line and repeated itself once per target the
+            package landed on: the same sentence three times down a repository
+            with three targets. It is inventory, and this pane is about state.
+            The package's own screen carries it, one row up from here.
+          */}
+          <PMHStack gap={2} align="center" maxW="100%">
+            {/*
+              The slot is kept when there is nothing to expand. An aligned
+              package and a drifting one sit in the same list, and without it
+              the aligned ones started a chevron's width to the left, which
+              read as two lists rather than one.
+            */}
+            <PMBox
+              flexShrink={0}
+              width="14px"
+              display="flex"
+              alignItems="center"
+            >
+              {hasDrift && (
+                <PMIcon fontSize="sm" color="text.secondary">
+                  {expanded ? <LuChevronDown /> : <LuChevronRight />}
+                </PMIcon>
+              )}
+            </PMBox>
+            {/*
+              The crate, the mark this app keeps for the container, from the
+              sidebar to the Context rail. Named as the thing it is because
+              the row under it is a component and now says so: a package and a
+              component of it can carry the same name, and this pane had one
+              of each called Typescript with nothing to tell them apart.
+            */}
+            <PMIcon fontSize="sm" color="text.secondary" flexShrink={0}>
+              <LuPackage />
+            </PMIcon>
+            <PMText fontSize="sm" fontWeight="medium" color="primary" truncate>
+              {pkg.name}
+            </PMText>
+          </PMHStack>
         </PMBox>
 
-        <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
+        {/*
+          Where it stands and when it last moved, across rather than stacked,
+          as they read on a package's Distribution tab. Wrapping, so a narrow
+          pane falls back to the stack instead of squeezing out the name.
+        */}
+        <PMHStack
+          gap={3}
+          align="center"
+          justify="flex-end"
+          rowGap={0.5}
+          wrap="wrap"
+          flexShrink={0}
+        >
           <PackageRowStateLine
             entry={entry}
             hasDrift={hasDrift}
@@ -804,24 +821,30 @@ function PackageOnTargetRow({
               historyHref={historyHref}
             />
           )}
-        </PMVStack>
+        </PMHStack>
 
         <PMTooltip
           label={lockReason ? LOCK_TOOLTIP[lockReason] : null}
           placement="top"
         >
           <PMBox display="inline-flex">
-            <PMButton
+            {/*
+              The per-row action at the size the Context component list gives
+              its own, which is what let this row reach 44px: a `sm` button is
+              36px tall, eight more than everything else in the row, so it set
+              the height on its own and no amount of padding could get under
+              it. Still a tile rather than a ghost icon, because this one
+              commits to a repository.
+            */}
+            <PMIconButton
               variant="tertiary"
-              size="sm"
+              size="xs"
               disabled={syncDisabled}
               onClick={onSync}
               aria-label={`Distribute ${pkg.name} on this target`}
             >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-            </PMButton>
+              <LuRotateCw />
+            </PMIconButton>
           </PMBox>
         </PMTooltip>
       </PMHStack>
