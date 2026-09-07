@@ -10,6 +10,30 @@ import type { IconType } from 'react-icons';
 import type { DriftArtifactEntry } from '../selectors/installDriftEntries';
 import type { ArtifactKind } from '../types';
 
+const KIND_ICON: Record<ArtifactKind, IconType> = {
+  standard: LuBookOpen,
+  command: LuTerminal,
+  skill: LuWandSparkles,
+};
+
+const KIND_NOUN: Record<ArtifactKind, string> = {
+  standard: 'standard',
+  command: 'command',
+  skill: 'skill',
+};
+
+/**
+ * The same noun with its first letter raised, for the row that prints it as a
+ * label rather than dropping it into a sentence.
+ *
+ * In the text and not in CSS, so the word a reader sees is the word this row
+ * can be asserted to say, and one map keeps both callers on one vocabulary.
+ */
+function kindLabel(kind: ArtifactKind): string {
+  const noun = KIND_NOUN[kind];
+  return noun.charAt(0).toUpperCase() + noun.slice(1);
+}
+
 /**
  * One component of a package, on one install, said to be out of step with what
  * Packmind holds.
@@ -24,18 +48,6 @@ import type { ArtifactKind } from '../types';
  * row: it is a list to read before committing, not a state to inspect, and it
  * is set smaller and without the borders and badges these two carry.
  */
-const KIND_ICON: Record<ArtifactKind, IconType> = {
-  standard: LuBookOpen,
-  command: LuTerminal,
-  skill: LuWandSparkles,
-};
-
-const KIND_NOUN: Record<ArtifactKind, string> = {
-  standard: 'standard',
-  command: 'command',
-  skill: 'skill',
-};
-
 export function DriftArtifactRow({
   entry,
 }: Readonly<{ entry: DriftArtifactEntry }>) {
@@ -53,16 +65,38 @@ export function DriftArtifactRow({
       <PMIcon fontSize="sm" color="text.faded">
         <Icon />
       </PMIcon>
-      <PMText
-        fontSize="sm"
-        color="secondary"
-        fontFamily={entry.artifact.kind === 'command' ? 'mono' : undefined}
-        flex={1}
-        minW={0}
-        truncate
-      >
-        {entry.artifact.name}
-      </PMText>
+      {/*
+        The name, and then what kind of thing carries it.
+
+        The icon said the kind on its own, and the reader who asked for this
+        had a package and a standard both named Typescript on screen at once:
+        three marks to learn before the rows mean anything, against one word
+        that means it on sight. Written rather than kept behind a hover, since
+        a hover has to be found before it can be read, one row at a time, and
+        a touch screen has no hover at all.
+
+        The two travel together on the left because that is where this pane
+        keeps identity: the eye runs down the left edge for what a row is and
+        down the right edge for where it stands. Put at the far end instead,
+        the word landed against `v1 -> v2` and read as part of the version.
+
+        The name is the half that truncates. A component with a long name is
+        exactly the one whose kind is worth keeping.
+      */}
+      <PMHStack gap={2} align="center" flex={1} minW={0}>
+        <PMText
+          fontSize="sm"
+          color="secondary"
+          fontFamily={entry.artifact.kind === 'command' ? 'mono' : undefined}
+          minW={0}
+          truncate
+        >
+          {entry.artifact.name}
+        </PMText>
+        <PMText fontSize="xs" color="faded" flexShrink={0}>
+          {kindLabel(entry.artifact.kind)}
+        </PMText>
+      </PMHStack>
       <DriftReasonIndicator entry={entry} />
     </PMHStack>
   );

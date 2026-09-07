@@ -21,6 +21,7 @@ import {
   LuChevronDown,
   LuChevronRight,
   LuGitBranch,
+  LuPackage,
   LuRotateCw,
   LuSearch,
   LuTriangleAlert,
@@ -629,11 +630,34 @@ function PackageOnTargetRow({
         >
           <PMVStack gap={0.5} align="start">
             <PMHStack gap={2} align="center" maxW="100%">
-              {hasDrift && (
-                <PMIcon fontSize="sm" color="text.secondary">
-                  {expanded ? <LuChevronDown /> : <LuChevronRight />}
-                </PMIcon>
-              )}
+              {/*
+                The slot is kept when there is nothing to expand. An aligned
+                package and a drifting one sit in the same list, and without it
+                the aligned ones started a chevron's width to the left, which
+                read as two lists rather than one.
+              */}
+              <PMBox
+                flexShrink={0}
+                width="14px"
+                display="flex"
+                alignItems="center"
+              >
+                {hasDrift && (
+                  <PMIcon fontSize="sm" color="text.secondary">
+                    {expanded ? <LuChevronDown /> : <LuChevronRight />}
+                  </PMIcon>
+                )}
+              </PMBox>
+              {/*
+                The crate, the mark this app keeps for the container, from the
+                sidebar to the Context rail. Named as the thing it is because
+                the row under it is a component and now says so: a package and
+                a component of it can carry the same name, and this pane had
+                one of each called Typescript with nothing to tell them apart.
+              */}
+              <PMIcon fontSize="sm" color="text.secondary" flexShrink={0}>
+                <LuPackage />
+              </PMIcon>
               <PMText
                 fontSize="sm"
                 fontWeight="medium"
