@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import {
+  SpaceMembershipRequiredError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -362,7 +366,7 @@ describe('GetSkillByIdUseCase', () => {
 
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+          UserNotFoundError,
         );
       });
     });
@@ -452,7 +456,7 @@ describe('GetSkillByIdUseCase', () => {
 
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+          UserNotInOrganizationError,
         );
       });
     });

@@ -16,6 +16,7 @@ export * from './llm';
 export * from './marketplaces';
 export * from './sse';
 export * from './database/types';
+export * from './errors';
 export * from './events';
 export * from './playbookChangeManagement';
 export * from './playbookChangeApplier';

@@ -1,4 +1,5 @@
 import { Span, SpanStatusCode, trace } from '@opentelemetry/api';
+import { isDomainError } from '@packmind/types';
 
 // The instrumentation scope, surfaced in Tempo as `scope.name`. It is what
 // distinguishes our own spans from those the auto-instrumentations emit
@@ -26,10 +27,19 @@ export function withSpan<T>(
       return await fn(span);
     } catch (error) {
       span.recordException(error as Error);
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : String(error),
-      });
+
+      // A domain error is an expected outcome of the request, not a fault, so
+      // it must not count against the span error rate — a permission denial
+      // used to degrade the service's error ratio in Tempo exactly as a crash
+      // did. The exception is still recorded above, so the span keeps the
+      // evidence; only the verdict changes.
+      if (!isDomainError(error)) {
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       throw error;
     } finally {
       // In `finally` so the span closes on the error path too — an unended

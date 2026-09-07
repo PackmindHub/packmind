@@ -113,7 +113,7 @@ describe('untrackHandler', () => {
   describe('when the caller is not an organization admin', () => {
     beforeEach(async () => {
       const error: Error & { statusCode?: number } = new Error(
-        'User 947009df-5a1d-45e8-ab1b-c996320eb000 must be an admin of organization ce0eda86-2018-437a-b91d-14feedd72e89 to perform this action',
+        'Only organization admins can perform this action. Ask an admin of your organization to do it for you.',
       );
       error.statusCode = 403;
       mockTrackRepository.mockRejectedValue(error);

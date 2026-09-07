@@ -372,9 +372,42 @@ describe('trackHandler', () => {
     });
   });
 
+  // A deleted account holding a live API key answers 404 on every authenticated
+  // route, so the feature-absent reading of a 404 has to check the reason.
+  describe('when the account behind the API key no longer exists (404)', () => {
+    const serverMessage =
+      'Packmind cannot find your account. Sign in again, or contact your organization admin if this keeps happening.';
+
+    beforeEach(async () => {
+      const error: Error & { statusCode?: number; reason?: string } = new Error(
+        serverMessage,
+      );
+      error.statusCode = 404;
+      error.reason = 'user_not_found';
+      mockTrackRepository.mockRejectedValue(error);
+      await trackHandler(deps);
+    });
+
+    it('surfaces the server message', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        serverMessage,
+      );
+    });
+
+    it('does not report the feature as unavailable', () => {
+      expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalledWith(
+        'Repository tracking is not available for your account.',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('when the caller is not an organization admin (403)', () => {
     const serverMessage =
-      'User 947009df-5a1d-45e8-ab1b-c996320eb000 must be an admin of organization ce0eda86-2018-437a-b91d-14feedd72e89 to perform this action';
+      'Only organization admins can perform this action. Ask an admin of your organization to do it for you.';
 
     beforeEach(async () => {
       const error: Error & { statusCode?: number } = new Error(serverMessage);
@@ -389,16 +422,33 @@ describe('trackHandler', () => {
       );
     });
 
-    // The server names the user and the organization by UUID, which is useless
-    // to someone at a terminal.
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the server message carries identifiers (403)', () => {
+    // Not what the server sends any more — the access-error messages were
+    // reworded to be identifier-free. It stands in for any upstream message
+    // that leaks ids, because the guarantee is that the CLI prints its own copy
+    // whatever arrives on the wire.
+    const leakyServerMessage =
+      'User 947009df-5a1d-45e8-ab1b-c996320eb000 must be an admin of organization ce0eda86-2018-437a-b91d-14feedd72e89 to perform this action';
+
+    beforeEach(async () => {
+      const error: Error & { statusCode?: number } = new Error(
+        leakyServerMessage,
+      );
+      error.statusCode = 403;
+      mockTrackRepository.mockRejectedValue(error);
+      await trackHandler(deps);
+    });
+
+    // UUIDs are useless to someone at a terminal.
     it('does not leak the server identifiers', () => {
       expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalledWith(
         expect.stringContaining('947009df'),
       );
-    });
-
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
     });
   });
 });

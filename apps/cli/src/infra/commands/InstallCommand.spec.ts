@@ -1864,6 +1864,34 @@ describe('installCommand', () => {
       });
     });
 
+    // Every authenticated route answers 404 for a deleted account, so the
+    // kill-switch reading of a 404 must not swallow one.
+    describe('when the account behind the API key no longer exists', () => {
+      const serverMessage =
+        'Packmind cannot find your account. Sign in again, or contact your organization admin if this keeps happening.';
+
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockRejectedValue(
+          Object.assign(new Error(serverMessage), {
+            statusCode: 404,
+            reason: 'user_not_found',
+          }),
+        );
+        useHexaInGitRepo({});
+        await runInstall();
+      });
+
+      it('does not record the distribution', () => {
+        expect(mockNotifyArtefactsDistribution).not.toHaveBeenCalled();
+      });
+
+      it('warns with the server message', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining(serverMessage),
+        );
+      });
+    });
+
     describe('when the directory is not in a git repository', () => {
       beforeEach(async () => {
         useHexaInGitRepo({ gitRoot: null });

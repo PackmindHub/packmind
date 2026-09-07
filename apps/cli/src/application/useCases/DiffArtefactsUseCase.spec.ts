@@ -2518,6 +2518,42 @@ describe('DiffArtefactsUseCase', () => {
       });
     });
 
+    // The 404 fallback above must not absorb an access failure: it answers 404
+    // too, and the retry would fail identically while looking like a success.
+    describe('when getContentByVersions returns 404 for an access failure', () => {
+      beforeEach(() => {
+        const error: Error & { statusCode?: number; reason?: string } =
+          new Error('Packmind cannot find your account.');
+        error.statusCode = 404;
+        error.reason = 'user_not_found';
+        mockGetContentByVersions.mockRejectedValue(error);
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          }),
+        ).rejects.toThrow('Packmind cannot find your account.');
+      });
+
+      it('does not call getDeployed', async () => {
+        try {
+          await useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+        } catch {
+          // expected to throw
+        }
+
+        expect(mockGetDeployed).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when getContentByVersions returns 500', () => {
       beforeEach(() => {
         const error: Error & { statusCode?: number } = new Error(

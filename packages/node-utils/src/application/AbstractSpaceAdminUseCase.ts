@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DomainError,
   IAccountsPort,
   ISpacesPort,
   PackmindResult,
@@ -12,10 +13,19 @@ const defaultOrigin = 'AbstractSpaceAdminUseCase';
 
 export type SpaceAdminContext = MemberContext;
 
-export class SpaceAdminRequiredError extends Error {
+export class SpaceAdminRequiredError extends DomainError {
+  readonly kind = 'forbidden' as const;
+  readonly reason = 'space_admin_required' as const;
+
+  /** The ids the check ran on, kept for logging rather than for the caller. */
+  readonly context: { userId: string; spaceId: string };
+
   constructor(userId: string, spaceId: string) {
-    super(`User ${userId} is not an admin of space ${spaceId}`);
+    super(
+      'Only space admins can perform this action. Ask an admin of this space to do it for you.',
+    );
     this.name = 'SpaceAdminRequiredError';
+    this.context = { userId, spaceId };
   }
 }
 
