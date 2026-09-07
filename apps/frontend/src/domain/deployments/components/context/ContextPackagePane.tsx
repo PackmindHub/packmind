@@ -54,6 +54,8 @@ import {
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
+import { packageActivity } from './packageActivity';
+import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import {
   COMPONENT_ACTION_ICONS,
@@ -646,6 +648,7 @@ export function ContextPackagePane({
         <PMHStack align="start" justify="space-between" gap={6}>
           <PMBox minW={0} maxWidth="68ch">
             <PMHeading level="h2">{pkg.name}</PMHeading>
+            <PackageActivity pkg={pkg} />
             {pkg.description && (
               <ContextPackageDescription
                 packageName={pkg.name}
@@ -1130,5 +1133,45 @@ function EmptyPackageBody({
         )}
       </PMBox>
     </PMBox>
+  );
+}
+
+/**
+ * When this package appeared, and when it last changed.
+ *
+ * Asked for as insight: a package nobody has touched in months is the one worth
+ * looking at, and until now the only dates on this screen belonged to
+ * distributions. Under the name rather than beside the controls, because it
+ * says what this package is rather than offering something to do, and above the
+ * description so a long one cannot push it out of sight.
+ *
+ * Relative, as every other date on the surrounding surfaces is: the question a
+ * reader brings here is how long it has been, not which Tuesday it was.
+ *
+ * The second half is dropped when the package has not changed since it was
+ * created, which is the common case for one made and filled in a single
+ * sitting: both columns hold the same instant, and printing both would say one
+ * thing twice.
+ */
+function PackageActivity({ pkg }: Readonly<{ pkg: PackageResponse }>) {
+  const activity = packageActivity(pkg);
+  if (!activity) return null;
+
+  return (
+    <PMHStack gap={1.5} paddingTop={1} align="center">
+      <PMText fontSize="xs" color="faded">
+        Created {formatRelativeDate(activity.createdAt)}
+      </PMText>
+      {activity.changedAt && (
+        <>
+          <PMText fontSize="xs" color="faded" aria-hidden>
+            &middot;
+          </PMText>
+          <PMText fontSize="xs" color="faded">
+            Updated {formatRelativeDate(activity.changedAt)}
+          </PMText>
+        </>
+      )}
+    </PMHStack>
   );
 }

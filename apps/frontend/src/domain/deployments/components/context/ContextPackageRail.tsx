@@ -27,6 +27,8 @@ import {
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
 import type { PackageAttention } from './buildPackageAttention';
 import { searchPackages, type PackageSearchRow } from './searchPackages';
+import { packageActivity } from './packageActivity';
+import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 
 /** Past this, one package's matches would out-scroll the list they sit in. */
 const MAX_SHOWN_MATCHES = 3;
@@ -800,6 +802,18 @@ function PackageRow({
 }>) {
   const { pkg, matches, isPinned } = row;
   const count = packageComponentCount(pkg);
+  /*
+   * One date on the line that already counts the contents: when something last
+   * happened to this package. It is what the dates were asked for - a reader
+   * scanning a long list can see which packages nobody has touched - and the
+   * rail is where that scanning happens. The package's own header says both
+   * dates in full.
+   *
+   * Named for what it is rather than always "updated": a package created and
+   * never touched since has one date, and calling it an update says something
+   * happened that did not.
+   */
+  const activity = packageActivity(pkg);
   const shown = matches.slice(0, MAX_SHOWN_MATCHES);
   const hidden = matches.length - shown.length;
 
@@ -878,6 +892,10 @@ function PackageRow({
             truncate
           >
             {count} component{count === 1 ? '' : 's'}
+            {activity &&
+              ` \u00b7 ${activity.changedAt ? 'updated' : 'created'} ${formatRelativeDate(
+                activity.changedAt ?? activity.createdAt,
+              )}`}
             {pinnedNote(isPinned, isDriftPinned)}
           </PMBox>
         </PMBox>
