@@ -237,6 +237,22 @@ export function RepositoryDetailPane({
   })();
   const repoSyncDisabled = lockProfile !== 'none';
 
+  /**
+   * One call per picked landing, which is what the per-row button does too: a
+   * selection here is a handful of package-on-target pairs, not a repository.
+   */
+  const distributeSelected = () => {
+    for (const key of selectedKeys) {
+      if (!driftedRowKeys.includes(key)) continue;
+      const [targetIdStr, packageIdStr] = key.split('::');
+      onSyncPackageOnTarget(
+        packageIdStr as PackageId,
+        repo.id,
+        targetIdStr as TargetId,
+      );
+    }
+  };
+
   return (
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
@@ -272,21 +288,90 @@ export function RepositoryDetailPane({
                 </PMHStack>
               </PMHStack>
             </PMVStack>
-            {hasDrift && (
-              <PMTooltip label={headerLockTooltip} placement="top">
+            {/*
+              One action slot, whose scope follows what the reader has picked.
+              Ticking rows narrows it from the repository to the handful of
+              distributions selected, and Clear widens it back.
+
+              The narrow scope used to live in a strip pinned to the bottom of
+              the pane. In the full-bleed Distribution layout the bottom of the
+              pane is the bottom of the page, and the rail's action bar is
+              already down there, so the two read as one footer of buttons
+              under a surface that is otherwise all content. The strip also
+              stood there permanently to say "Select packages to distribute."
+              beside a disabled button, which is an instruction, not an action.
+
+              Here instead, because this slot is right-aligned in a row whose
+              other half is elastic: the selection can take it over without
+              moving a single row of the list underneath. A band above the list
+              could not, it would wrap and push every row down by its own
+              height on the first tick.
+            */}
+            {selectedDriftedCount > 0 ? (
+              <PMHStack gap={2} align="center" flexShrink={0}>
+                <PMText
+                  fontSize="xs"
+                  color="secondary"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {selectedDriftedCount} selected
+                </PMText>
+                <PMBox
+                  as="button"
+                  onClick={() => setSelectedKeys(new Set())}
+                  fontSize="xs"
+                  /*
+                    A step quieter than the count beside it, but not the faded
+                    ramp: text.faded lands at 4.54:1 on this background, which
+                    clears AA by four hundredths and is too thin a margin for
+                    something meant to be clicked. text.tertiary is 8.35:1.
+                  */
+                  color="text.tertiary"
+                  bg="transparent"
+                  border="none"
+                  cursor="pointer"
+                  padding={0}
+                  _hover={{ color: 'text.primary' }}
+                  aria-label="Clear the selection and act on the whole repository again"
+                >
+                  Clear selection
+                </PMBox>
+                {/*
+                  Never disabled, and it needs no lock tooltip: a row's
+                  checkbox is only enabled when that row has drift and its
+                  provider is neither mid-distribution nor missing a token, so
+                  a selection existing at all is proof there is something here
+                  this button can commit.
+                */}
                 <PMButton
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
-                  onClick={() => onSyncRepository(repo.id)}
-                  disabled={repoSyncDisabled}
-                  title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
+                  onClick={distributeSelected}
+                  title={`Distribute the ${selectedDriftedCount} selected distribution${selectedDriftedCount === 1 ? '' : 's'}`}
                 >
                   <PMIcon fontSize="sm">
                     <LuRotateCw />
                   </PMIcon>
-                  Distribute repository
+                  Distribute selected
                 </PMButton>
-              </PMTooltip>
+              </PMHStack>
+            ) : (
+              hasDrift && (
+                <PMTooltip label={headerLockTooltip} placement="top">
+                  <PMButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onSyncRepository(repo.id)}
+                    disabled={repoSyncDisabled}
+                    title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
+                  >
+                    <PMIcon fontSize="sm">
+                      <LuRotateCw />
+                    </PMIcon>
+                    Distribute repository
+                  </PMButton>
+                </PMTooltip>
+              )
             )}
           </PMHStack>
           <PMHStack gap={5} align="center" wrap="wrap">
@@ -452,47 +537,6 @@ export function RepositoryDetailPane({
           </PMVStack>
         )}
       </PMBox>
-
-      {hasDrift && (
-        <PMBox
-          paddingX={6}
-          paddingY={2.5}
-          borderTopWidth="1px"
-          borderColor="border.tertiary"
-          bg="background.secondary"
-          position="sticky"
-          bottom={0}
-        >
-          <PMHStack gap={3} align="center" justify="space-between">
-            <PMText fontSize="xs" color="secondary">
-              {selectedDriftedCount === 0
-                ? 'Select packages to distribute.'
-                : `${selectedDriftedCount} of ${driftedRowKeys.length} drifted selected.`}
-            </PMText>
-            <PMButton
-              variant="primary"
-              size="sm"
-              disabled={selectedDriftedCount === 0 || repoSyncDisabled}
-              onClick={() => {
-                for (const key of selectedKeys) {
-                  if (!driftedRowKeys.includes(key)) continue;
-                  const [targetIdStr, packageIdStr] = key.split('::');
-                  onSyncPackageOnTarget(
-                    packageIdStr as PackageId,
-                    repo.id,
-                    targetIdStr as TargetId,
-                  );
-                }
-              }}
-            >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-              Distribute selected
-            </PMButton>
-          </PMHStack>
-        </PMBox>
-      )}
     </PMVStack>
   );
 }
