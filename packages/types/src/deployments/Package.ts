@@ -20,6 +20,17 @@ export type Package = {
   skills: SkillId[];
 };
 
+/**
+ * Identifies one package by its slug within one space.
+ *
+ * Package slugs are unique per space, not per organization, so a batched
+ * lookup spanning several spaces has to carry the space alongside each slug.
+ */
+export type PackageSlugInSpace = {
+  slug: string;
+  spaceId: SpaceId;
+};
+
 export type PackageWithArtefacts = Omit<
   Package,
   'recipes' | 'standards' | 'skills'
@@ -27,6 +38,24 @@ export type PackageWithArtefacts = Omit<
   recipes: Command[];
   standards: Standard[];
   skills: Skill[];
+};
+
+/**
+ * A package hydrated with its standards only.
+ *
+ * Exists for the readers that consume nothing but the standards of a package —
+ * the CLI's detection-program lookup above all. Hydrating a
+ * {@link PackageWithArtefacts} would additionally read the command and skill
+ * junctions and then the command and skill rows themselves, four queries whose
+ * results those callers never look at. Deliberately not a
+ * `PackageWithArtefacts` with empty arrays: an empty `recipes` would be
+ * indistinguishable from a package that genuinely has no command.
+ */
+export type PackageWithStandards = Omit<
+  Package,
+  'recipes' | 'standards' | 'skills'
+> & {
+  standards: Standard[];
 };
 
 /**

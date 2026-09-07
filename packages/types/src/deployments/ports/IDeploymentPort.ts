@@ -73,7 +73,13 @@ import {
 } from '../contracts';
 import { OrganizationId } from '../../accounts/Organization';
 import { Distribution } from '../Distribution';
-import { Package, PackageId, PackageWithArtefacts } from '../Package';
+import {
+  Package,
+  PackageId,
+  PackageSlugInSpace,
+  PackageWithArtefacts,
+  PackageWithStandards,
+} from '../Package';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -421,6 +427,23 @@ export interface IDeploymentPort {
     slugs: string[],
     organizationId: OrganizationId,
   ): Promise<PackageWithArtefacts[]>;
+
+  /**
+   * System-level bulk package lookup by (slug, space) pair, hydrated with the
+   * standards of each package. Same contract as
+   * `getPackagesBySlugsWithArtefacts`, except that it honours space
+   * boundaries, resolves entries spanning several spaces in a single query,
+   * and reads the standards only. Intended for sibling hexas and flows that
+   * operate without a member context.
+   *
+   * Unlike its `organizationId`-taking sibling, this method performs no
+   * tenant check of its own, so the caller is obliged to have resolved the
+   * entries' spaces within an already validated organization — space ids
+   * taken straight from a request would read across tenants.
+   */
+  getPackagesBySlugsAndSpacesWithStandards(
+    entries: PackageSlugInSpace[],
+  ): Promise<PackageWithStandards[]>;
 
   /**
    * Deletes multiple packages in batch

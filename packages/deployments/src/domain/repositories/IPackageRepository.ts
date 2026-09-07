@@ -2,7 +2,9 @@ import {
   Package,
   PackageArtifactCounts,
   PackageId,
+  PackageSlugInSpace,
   PackageWithArtefacts,
+  PackageWithStandards,
   CommandId,
   SpaceId,
   StandardId,
@@ -23,6 +25,15 @@ export interface IPackageRepository extends IRepository<Package> {
     slugs: string[],
     spaceId: SpaceId,
   ): Promise<PackageWithArtefacts[]>;
+  /**
+   * Batched sibling of `findBySlugsAndSpaceWithArtefacts` for entries that may
+   * span several spaces: one packages query for every (slug, space) pair,
+   * rather than one query per space. Hydrates the standards only, so callers
+   * that read nothing else do not pay for the command and skill lookups.
+   */
+  findBySlugsAndSpacesWithStandards(
+    entries: PackageSlugInSpace[],
+  ): Promise<PackageWithStandards[]>;
   /**
    * Count recipe/standard/skill artifacts for every package in the given
    * space. The returned map covers all packages in the space, so callers can

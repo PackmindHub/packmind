@@ -42,7 +42,9 @@ import {
   OrganizationId,
   Package,
   PackageId,
+  PackageSlugInSpace,
   PackageWithArtefacts,
+  PackageWithStandards,
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
@@ -793,6 +795,14 @@ export class DeploymentsAdapter
     return this.deploymentsServices
       .getPackageService()
       .getPackagesBySlugsWithArtefacts(slugs, organizationId);
+  }
+
+  async getPackagesBySlugsAndSpacesWithStandards(
+    entries: PackageSlugInSpace[],
+  ): Promise<PackageWithStandards[]> {
+    return this.deploymentsServices
+      .getPackageService()
+      .getPackagesBySlugsAndSpacesWithStandards(entries);
   }
 
   async deletePackagesBatch(

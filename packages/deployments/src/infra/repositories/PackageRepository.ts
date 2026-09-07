@@ -3,7 +3,9 @@ import {
   Package,
   PackageArtifactCounts,
   PackageId,
+  PackageSlugInSpace,
   PackageWithArtefacts,
+  PackageWithStandards,
   Command,
   CommandId,
   SpaceId,
@@ -392,6 +394,105 @@ export class PackageRepository
       });
       throw error;
     }
+  }
+
+  async findBySlugsAndSpacesWithStandards(
+    entries: PackageSlugInSpace[],
+  ): Promise<PackageWithStandards[]> {
+    if (entries.length === 0) {
+      this.logger.info(
+        'No entries provided to findBySlugsAndSpacesWithStandards',
+      );
+      return [];
+    }
+
+    // Callers legitimately repeat a pair — the detection-programs use case
+    // keeps one entry per requested slug so it can emit one target each — and
+    // a repeated pair would only add a redundant branch to the `where` below.
+    // The entries are distinct objects, so the composite key does the keying.
+    const uniqueEntries = [
+      ...new Map(
+        entries.map((entry) => [`${entry.spaceId}:${entry.slug}`, entry]),
+      ).values(),
+    ];
+
+    this.logger.info('Finding packages by slugs and spaces with standards', {
+      count: entries.length,
+    });
+
+    try {
+      // An array of conditions is an OR of ANDs, so every (slug, space) pair
+      // is matched exactly, in one query and with no cross-product to narrow
+      // down afterwards. Postgres tuple IN would say the same thing more
+      // tersely, but the in-memory database the tests run on lacks it.
+      const packages = await this.repository.find({
+        where: uniqueEntries.map(({ slug, spaceId }) => ({ slug, spaceId })),
+      });
+
+      const result = await this.enrichPackagesWithStandards(packages);
+
+      this.logger.info('Packages found by slugs and spaces successfully', {
+        requestedCount: entries.length,
+        foundCount: result.length,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find packages by slugs and spaces', {
+        count: entries.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Narrow sibling of `enrichPackagesWithArtefacts`: one junction read plus
+   * one entity read, and nothing about commands or skills. A junction row
+   * pointing at a soft-deleted standard is silently dropped, as it is there.
+   */
+  private async enrichPackagesWithStandards(
+    packages: Package[],
+  ): Promise<PackageWithStandards[]> {
+    if (packages.length === 0) {
+      return [];
+    }
+
+    const packageIds = packages.map((pkg) => pkg.id);
+
+    const standardRelations = await this.repository.manager
+      .getRepository(PackageStandardsSchema)
+      .find({ where: { package_id: In(packageIds) } });
+
+    const uniqueStandardIds = [
+      ...new Set(standardRelations.map((relation) => relation.standard_id)),
+    ];
+
+    const standards =
+      uniqueStandardIds.length > 0
+        ? await this.repository.manager
+            .getRepository<Standard>(StandardSchema)
+            .find({ where: { id: In(uniqueStandardIds) } })
+        : [];
+
+    const standardsMap = new Map<string, Standard>(
+      standards.map((standard) => [standard.id, standard]),
+    );
+
+    const standardsByPackage = standardRelations.reduce(
+      (acc, relation) => {
+        if (!acc[relation.package_id]) acc[relation.package_id] = [];
+        const standard = standardsMap.get(relation.standard_id);
+        if (standard) acc[relation.package_id].push(standard);
+        return acc;
+      },
+      {} as Record<string, Standard[]>,
+    );
+
+    return packages.map((pkg) => ({
+      ...pkg,
+      standards: standardsByPackage[pkg.id] || [],
+    }));
   }
 
   private async enrichPackagesWithArtefacts(
