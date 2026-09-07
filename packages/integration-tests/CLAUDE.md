@@ -42,7 +42,7 @@ targeted error.
 
 | Helper | Use |
 | --- | --- |
-| `helpers/integrationTest.ts` | `integrationTest` / `integrationTestWithUser` wrappers; give the `getContext` accessor |
+| `helpers/integrationTest.ts` | `integrationTest` / `integrationTestWithUser` wrappers; the test callback takes a `getContext` accessor |
 | `helpers/TestApp.ts` | reach a domain through `testContext.testApp.<domain>Hexa.getAdapter()` |
 | `helpers/createIntegrationTestFixture.ts` | schema created once per file; `snapshot()` / `cleanup()` rewind between tests |
 | `helpers/DataFactory.ts` / `DataQuery.ts` | seed and read fixture data |

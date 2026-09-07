@@ -23,6 +23,12 @@ Registered keys: `typescript`, `javascript`, `python`, `java`, `go`, `kotlin`, `
 > `TypeScriptTSXParser` exists in `src/parsers/` and is exported from `src/index.ts`, but is **not**
 > in `parserClasses` — `getParser('tsx')` throws. Use it directly if you need TSX.
 
+> `css` is registered but `res/` has no `tree-sitter-css.wasm` — only `tree-sitter-scss.wasm`.
+> `getParser('css')` throws `ParserInitializationError` at runtime; add the missing grammar file
+> before relying on it. Separately, `YAMLParser` is registered in `parserClasses` but not
+> re-exported from `src/index.ts` — the other 15 parsers are, so this is likely an oversight rather
+> than intentional.
+
 Other entry points: `src/core/BaseParser.ts` (the class to extend) and
 `src/application/LinterAstAdapter.ts` (what consumers outside the package use).
 

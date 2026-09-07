@@ -40,7 +40,8 @@ the reporting and rollback paths will silently omit the new type.
 1. Add the version type to `ApplierObjectVersions` in
    `packages/types/src/playbookChangeManagement/applier/`, alongside the per-type
    `*ChangeProposalApplier` helpers the appliers build on, and extend
-   `getItemTypeFromChangeProposalType`.
+   `getItemTypeFromChangeProposalType` (one level up, in
+   `packages/types/src/playbookChangeManagement/ChangeProposalType.ts`).
 2. Add `src/appliers/<Type>ChangesApplier.ts` and export it from `src/appliers/index.ts`.
 3. Widen every inline `itemType: 'standard' | 'command' | 'skill'` annotation, then update each
    switch in `ApplyPlaybookUseCase`:

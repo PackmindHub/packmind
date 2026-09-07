@@ -9,9 +9,15 @@ builds swap the aliases to real implementations.
 `PACKMIND_EDITION` (or `VITE_PACKMIND_EDITION`, defaulting to `oss`) is read by
 `scripts/select-tsconfig.mjs`, which merges `tsconfig.base.json` with either
 `tsconfig.paths.oss.json` or `tsconfig.paths.proprietary.json` and writes the **generated**
-`tsconfig.base.effective.json`. Every `jest.config.ts` in the monorepo `require`s that generated
-file and feeds its `paths` to `pathsToModuleNameMapper`, so nothing type-checks or tests until it
-has been produced.
+`tsconfig.base.effective.json`. Most projects need it before they type check or test, but not all —
+check the project you are in rather than assuming:
+
+- **typecheck**: 25 of the 31 `tsconfig.json` files extend the generated config and fail until it
+  exists. The six that extend the plain `tsconfig.base.json` instead need no setup: `linter-ast`,
+  `linter-execution`, `llm`, `logger`, `test-utils` and `apps/cli-e2e-tests`.
+- **test**: 13 of the 26 `jest.config.ts` files `require` the generated config and feed its `paths`
+  to `pathsToModuleNameMapper`; `deployments` reads the plain `tsconfig.base.json`; the other twelve
+  declare no path mapping at all and run without either.
 
 In OSS, all of these resolve to `packages/editions/src/index.ts`:
 

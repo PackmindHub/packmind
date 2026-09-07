@@ -11,10 +11,11 @@ own — most of what a new spec needs already exists.
 
 > **`src/factories/standards/`, `git/`, `deployments/` and `commands/` are stale duplicates.** They
 > re-declare factories that also exist in the domain packages' `test/` folders (e.g. `standardFactory`
-> is byte-identical to the one in `packages/standards/test/`). They are exported from `src/index.ts`
-> but have **no call sites** — every spec imports from `@packmind/<pkg>/test`. Do not add entity
-> factories here, and when you touch one of these, change the `@packmind/<pkg>/test` copy: that is the
-> one actually under test.
+> is byte-identical to the one in `packages/standards/test/`). They are exported from `src/index.ts`;
+> almost every spec imports from `@packmind/<pkg>/test` instead, with two known exceptions
+> (`apps/frontend/src/domain/deployments/components/{StandardCentricView,CommandCentricView}/*.spec.tsx`).
+> Do not add entity factories here, and when you touch one of these, change the `@packmind/<pkg>/test`
+> copy: that is the one actually under test.
 
 ## What's available
 
