@@ -556,6 +556,35 @@ export class PackageRepository
     }
   }
 
+  /**
+   * Records that the package changed, when what changed is what it holds.
+   *
+   * Membership lives in three join tables and is written straight into them,
+   * which the row's update-date column never sees: a package that had gained
+   * five components today still read as last touched the day it was named. The
+   * column had no reader at all before this, so this is what it now means for a
+   * package - the last time someone changed it as a package, by renaming it,
+   * describing it, or changing its contents.
+   *
+   * Here rather than in the use cases, next to the writes it has to accompany,
+   * so no caller can add a component and forget to say so. It is one statement
+   * per membership change rather than per component, and the callers already
+   * batch.
+   *
+   * The three `remove...FromAllPackages` cascades deliberately do not touch:
+   * they fire when a component is deleted from the space, which is not
+   * something anyone did to the packages that happened to hold it, and it would
+   * be one write per package on a delete.
+   */
+  private async touch(packageId: PackageId): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update(PackageSchema)
+      .set({ updatedAt: () => 'now()' })
+      .where('id = :packageId', { packageId })
+      .execute();
+  }
+
   async addCommands(
     packageId: PackageId,
     recipeIds: CommandId[],
@@ -581,6 +610,8 @@ export class PackageRepository
         .into('package_commands')
         .values(values)
         .execute();
+
+      await this.touch(packageId);
 
       this.logger.info('Recipes added to package successfully', {
         packageId,
@@ -620,6 +651,8 @@ export class PackageRepository
         .into('package_standards')
         .values(values)
         .execute();
+
+      await this.touch(packageId);
 
       this.logger.info('Standards added to package successfully', {
         packageId,
@@ -695,6 +728,8 @@ export class PackageRepository
           .execute();
       }
 
+      await this.touch(packageId);
+
       this.logger.info('Recipes set for package successfully', {
         packageId,
         recipeCount: recipeIds.length,
@@ -738,6 +773,8 @@ export class PackageRepository
           .values(values)
           .execute();
       }
+
+      await this.touch(packageId);
 
       this.logger.info('Standards set for package successfully', {
         packageId,
@@ -823,6 +860,8 @@ export class PackageRepository
         .values(values)
         .execute();
 
+      await this.touch(packageId);
+
       this.logger.info('Skills added to package successfully', {
         packageId,
         skillCount: skillIds.length,
@@ -863,6 +902,8 @@ export class PackageRepository
           .values(values)
           .execute();
       }
+
+      await this.touch(packageId);
 
       this.logger.info('Skills set for package successfully', {
         packageId,
@@ -923,6 +964,8 @@ export class PackageRepository
         .andWhere('command_id IN (:...recipeIds)', { recipeIds })
         .execute();
 
+      await this.touch(packageId);
+
       this.logger.info('Recipes removed from package successfully', {
         packageId,
         recipeCount: recipeIds.length,
@@ -958,6 +1001,8 @@ export class PackageRepository
         .andWhere('standard_id IN (:...standardIds)', { standardIds })
         .execute();
 
+      await this.touch(packageId);
+
       this.logger.info('Standards removed from package successfully', {
         packageId,
         standardCount: standardIds.length,
@@ -989,6 +1034,8 @@ export class PackageRepository
         .where('package_id = :packageId', { packageId })
         .andWhere('skill_id IN (:...skillIds)', { skillIds })
         .execute();
+
+      await this.touch(packageId);
 
       this.logger.info('Skills removed from package successfully', {
         packageId,
