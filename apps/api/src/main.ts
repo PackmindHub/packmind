@@ -108,9 +108,8 @@ async function bootstrap() {
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
 
-    // Publish the edition on every response, before route matching, so that a
-    // routing 404 from a Community Edition stub carries it too. Resolved once:
-    // getConfig is async and the edition cannot change while the server runs.
+    // Before route matching, so a routing 404 from a Community Edition stub
+    // carries the header too. Resolved once: getConfig is async.
     const edition = await resolvePackmindEdition();
     app.use(createEditionHeaderMiddleware(edition));
     logger.info('Edition header enabled', { edition });

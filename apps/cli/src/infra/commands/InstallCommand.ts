@@ -276,14 +276,11 @@ async function resolveTrackingLookup(
   } catch (error) {
     const statusCode = (error as { statusCode?: number })?.statusCode;
     if (statusCode === 404) {
-      // Not a feature flag, whatever this branch used to claim: no flag gates
-      // this route, and it lives in the API itself rather than in a package an
-      // edition stubs out, so both editions mount it. A server that has it
-      // answers `gitRepo: null` for a repository nobody tracks and maps its
-      // refusals to 409 or 403 — so a 404 here means the route is absent,
-      // i.e. the server predates repository tracking. Record the way every
-      // CLI did before tracking existed instead of dropping the
-      // distribution on the floor.
+      // Not a feature flag, whatever this branch used to claim: none gates
+      // this route. A server that has it answers `gitRepo: null` for an
+      // untracked repo and maps refusals to 409 or 403, so a 404 means the
+      // route is absent — the server predates repository tracking. Keep
+      // recording rather than dropping the distribution.
       return { status: 'tracking-unsupported' };
     }
     return { status: 'unavailable' };

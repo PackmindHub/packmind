@@ -27,12 +27,8 @@ describe('ChangeProposalGateway', () => {
     jest.clearAllMocks();
   });
 
-  /**
-   * Drives the gateway's onError callback the way PackmindHttpClient does: the
-   * callback first, then the generic error built from the response. A caller
-   * that draws no conclusion therefore surfaces that generic error, which is
-   * what the assertions below tell apart.
-   */
+  // Mirrors PackmindHttpClient: onError first, then the generic error built
+  // from the response. Drawing no conclusion surfaces the latter.
   const respondWith = (status: number, edition?: string): void => {
     const response = new Response(null, {
       status,

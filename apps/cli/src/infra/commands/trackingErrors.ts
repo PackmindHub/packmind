@@ -15,11 +15,9 @@ export function handleTrackingError(error: unknown): void {
   const statusCode = (error as { statusCode?: number })?.statusCode;
   if (statusCode === 404) {
     // Not a kill-switch, whatever this branch used to claim: no feature flag
-    // gates these routes, and they live in the API itself rather than in a
-    // package an edition stubs out, so both editions mount them. A server that
-    // has them maps every refusal to 403 or 409, so a 404 means the route is
-    // absent — the server predates repository tracking. That is nothing to do
-    // with the account, which is what the old message blamed.
+    // gates these routes. A server that has them maps refusals to 403 or 409,
+    // so a 404 means the server predates repository tracking — nothing to do
+    // with the account the old message blamed.
     logErrorConsole(
       'Repository tracking is not available on this Packmind server. Ask your administrator to update it.',
     );

@@ -1,9 +1,8 @@
 import { Configuration } from '@packmind/node-utils';
 import { PackmindEdition } from '@packmind/types';
 
-// Re-exported so existing importers keep their single import site. The type
-// itself lives in @packmind/types because the CLI reads the same values off
-// the Packmind-Edition response header.
+// Lives in @packmind/types because the CLI reads the same values off the
+// Packmind-Edition header; re-exported so importers here keep one import site.
 export type { PackmindEdition };
 
 export async function resolvePackmindEdition(): Promise<PackmindEdition> {
