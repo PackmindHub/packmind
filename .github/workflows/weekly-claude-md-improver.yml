@@ -39,6 +39,14 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: Install dependencies
+        # Only the "Dump the Nx target inventory" step below needs node_modules: it runs the
+        # local nx to read the project graph. `prepare` no-ops under CI (scripts/prepare.mjs
+        # exits early when $CI is set), so this installs and nothing else.
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code@latest
 
@@ -100,6 +108,44 @@ jobs:
 
           echo "=== worklist ($(wc -l < tmp/claude-md-worklist.txt) entries) ==="
           cat tmp/claude-md-worklist.txt
+
+      - name: Dump the Nx target inventory
+        # Ground truth for the audit, alongside the worklist above. Nx *infers* targets that no
+        # project.json lists, so neither the file nor the agent can tell a real command from a
+        # plausible one: `frontend`'s build comes from @nx/react/router-plugin, and `migrations`
+        # has no build target at all (only `bundle`). A CLAUDE.md that documents `nx build
+        # migrations` sends every reader to a command that fails, which is what this prevents.
+        # The skill reads tmp/nx-targets.txt and may not write a command absent from it.
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+
+          ./node_modules/.bin/nx graph --file=tmp/nx-graph.json > /dev/null
+
+          node -e '
+            const graph = require("./tmp/nx-graph.json");
+            const nodes = graph.graph?.nodes ?? graph.nodes ?? {};
+            const lines = Object.keys(nodes)
+              .sort()
+              .map(
+                (project) =>
+                  project +
+                  ": " +
+                  Object.keys(nodes[project].data.targets ?? {})
+                    .sort()
+                    .join(" "),
+              );
+            if (lines.length === 0) {
+              console.error("::error::Nx project graph is empty - the target inventory would be a lie.");
+              process.exit(1);
+            }
+            require("node:fs").writeFileSync("tmp/nx-targets.txt", lines.join("\n") + "\n");
+          '
+
+          rm tmp/nx-graph.json
+
+          echo "=== nx targets ($(wc -l < tmp/nx-targets.txt) projects) ==="
+          cat tmp/nx-targets.txt
 
       - name: Improve CLAUDE.md files with Claude
         env:
