@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
@@ -15,7 +15,7 @@ import {
 } from '@packmind/marketplaces';
 import { llmSchemas } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, DomainExceptionFilter } from '@packmind/node-utils';
 import { CommandsHexa, commandsSchemas } from '@packmind/commands';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
@@ -285,6 +285,20 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    // Without a filter registered here, NestJS falls back to its default
+    // ExceptionsHandler, which turns every non-HttpException into a 500 with a
+    // stack trace — so a permission denial the domain detected correctly was
+    // being reported to the client, and to the error-rate SLO, as a server
+    // fault. Lives in @packmind/node-utils rather than in this app so both
+    // editions get the behaviour from one implementation.
+    //
+    // useFactory, not useClass: this module already provides a PackmindLogger
+    // bound to the origin 'AppController', and useClass would inject that one,
+    // filing every mapped error under the wrong origin.
+    {
+      provide: APP_FILTER,
+      useFactory: () => new DomainExceptionFilter(),
     },
     {
       provide: PackmindLogger,
