@@ -12,6 +12,7 @@ import {
   IPullContentResponse,
 } from '@packmind/types';
 import { resolveDeployedRenderAgents } from '../../infra/utils/deployedFilesUtils';
+import { isAccessDeniedError } from '../../infra/http/accessDeniedError';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
@@ -111,7 +112,11 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
       } catch (error) {
         const statusCode = (error as Error & { statusCode?: number })
           .statusCode;
-        if (statusCode !== 404) {
+        // A 404 here means the pinned versions are gone from the server, and
+        // asking for what is deployed instead is the recovery. An access
+        // failure answers 404 too, and swallowing that one would hide a broken
+        // session behind a second request that fails exactly the same way.
+        if (statusCode !== 404 || isAccessDeniedError(error)) {
           throw error;
         }
       }

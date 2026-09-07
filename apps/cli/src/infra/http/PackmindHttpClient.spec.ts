@@ -190,6 +190,44 @@ describe('PackmindHttpClient', () => {
       });
     });
 
+    describe('when the error body carries a reason', () => {
+      it('copies the reason onto the thrown error', async () => {
+        const client = new PackmindHttpClient(createTestApiKey());
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          json: jest.fn().mockResolvedValue({
+            message: 'Packmind cannot find your account.',
+            reason: 'user_not_found',
+          }),
+        });
+
+        await expect(client.request('/test')).rejects.toMatchObject({
+          statusCode: 404,
+          reason: 'user_not_found',
+        });
+      });
+    });
+
+    // Non-domain errors, and any server older than the discriminator, send no
+    // reason at all: the callers that guard a 404 depend on it staying absent.
+    describe('when the error body carries no reason', () => {
+      it('leaves the reason off the thrown error', async () => {
+        const client = new PackmindHttpClient(createTestApiKey());
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          json: jest.fn().mockResolvedValue({ message: 'Not Found' }),
+        });
+
+        await expect(client.request('/test')).rejects.not.toHaveProperty(
+          'reason',
+        );
+      });
+    });
+
     describe('when network error occurs', () => {
       it('throws server not accessible error', async () => {
         const client = new PackmindHttpClient(createTestApiKey());

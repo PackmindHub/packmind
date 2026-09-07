@@ -38,6 +38,7 @@ import {
   ParsedPackageSlug,
 } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
+import { isAccessDeniedError } from '../http/accessDeniedError';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -274,6 +275,17 @@ async function resolveTrackingLookup(
     });
     return { status: 'resolved', trackedGitRepo: gitRepo };
   } catch (error) {
+    // An access failure answers 404 as well as 403, so the kill-switch reading
+    // below must not claim it. Its message is the only actionable thing here —
+    // the account is gone, or was never in this organization — and install
+    // carries on without recording a distribution.
+    if (isAccessDeniedError(error)) {
+      logWarningConsole(
+        `Distribution not recorded — ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return { status: 'unavailable' };
+    }
+
     const statusCode = (error as { statusCode?: number })?.statusCode;
     if (statusCode === 404) {
       return { status: 'flag-off' };

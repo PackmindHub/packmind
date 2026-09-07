@@ -1,5 +1,6 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { logErrorConsole } from '../utils/consoleLogger';
+import { isAccessDeniedError } from '../http/accessDeniedError';
 
 /**
  * Shared failure reporting for the `track` and `untrack` commands. Both talk to
@@ -13,17 +14,23 @@ export function handleTrackingError(error: unknown): void {
   }
 
   const statusCode = (error as { statusCode?: number })?.statusCode;
-  if (statusCode === 404) {
+  if (statusCode === 404 && !isAccessDeniedError(error)) {
     // Kill-switch: the feature flag is off for this user. Behave as feature-absent.
+    //
+    // Only when the 404 is about the route. An access failure answers 404 too
+    // (a deleted account, a space the caller is not in), and telling that
+    // caller the feature does not exist sends them after the wrong problem —
+    // those fall through to the server's own message below.
     logErrorConsole('Repository tracking is not available for your account.');
     process.exit(1);
     return;
   }
 
   if (statusCode === 403) {
-    // The server's OrganizationAdminRequiredError message names the user and the
-    // organization by UUID, which tells a CLI user nothing they can act on.
-    // Replace it with something actionable; the ids stay in the server logs.
+    // The server's OrganizationAdminRequiredError message is deliberately
+    // generic, because it is raised on every admin-only route. Replace it with
+    // copy that names the action, so the reader knows which command was
+    // refused and what to ask an admin for.
     logErrorConsole(
       'Only organization admins can change which repository Packmind tracks. Ask an admin of your organization to run this command.',
     );

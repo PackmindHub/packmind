@@ -133,16 +133,26 @@ export class PackmindHttpClient {
         }
 
         let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        let reason: string | undefined;
         try {
           const errorBody = await response.json();
           if (errorBody?.message) {
             errorMsg = errorBody.message;
           }
+          if (typeof errorBody?.reason === 'string') {
+            reason = errorBody.reason;
+          }
         } catch {
           // ignore
         }
-        const error: Error & { statusCode?: number } = new Error(errorMsg);
+        const error: Error & { statusCode?: number; reason?: string } =
+          new Error(errorMsg);
         error.statusCode = response.status;
+        // Only domain errors carry a reason, and only from servers new enough
+        // to send one, so every reader must treat it as optional.
+        if (reason) {
+          error.reason = reason;
+        }
         throw error;
       }
 
