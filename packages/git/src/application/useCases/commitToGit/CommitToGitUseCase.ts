@@ -111,21 +111,34 @@ export class CommitToGitUseCase {
     // Combine passed-in deleteFiles with files that became empty
     const allFilesToDelete = [...(deleteFiles ?? []), ...filesToDelete];
 
+    // Directory deletions are expanded in one call rather than one per
+    // directory. The previous `for … of` with an `await` inside asked the
+    // provider once per directory, and on GitHub each of those asks walks
+    // `ref -> commit -> tree?recursive=1` and filters a listing of the whole
+    // repository down to a single directory - so 112 directories cost 336
+    // sequential requests to answer what one tree already answered.
     const expandedFilesToDelete: DeleteItem[] = [];
+    const directoryPaths: string[] = [];
+
     for (const deleteFile of allFilesToDelete) {
       if (deleteFile.type === DeleteItemType.Directory) {
-        const filesInDir = await gitRepoInstance.listFilesInDirectory(
-          deleteFile.path,
-          repo.branch,
-        );
-        if (filesInDir.length > 0) {
-          expandedFilesToDelete.push(
-            ...filesInDir.map((f) => ({ ...f, type: DeleteItemType.File })),
-          );
-        }
+        directoryPaths.push(deleteFile.path);
       } else {
         expandedFilesToDelete.push(deleteFile);
       }
+    }
+
+    if (directoryPaths.length > 0) {
+      const filesInDirectories = await gitRepoInstance.listFilesInDirectories(
+        directoryPaths,
+        repo.branch,
+      );
+      expandedFilesToDelete.push(
+        ...filesInDirectories.map((file) => ({
+          path: file.path,
+          type: DeleteItemType.File,
+        })),
+      );
     }
 
     const createPaths = new Set(processedFiles.map((f) => f.path));

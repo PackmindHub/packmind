@@ -1334,4 +1334,25 @@ export class GitlabRepository implements IGitRepo {
       return [];
     }
   }
+
+  /**
+   * Sequential on purpose. GitLab's tree endpoint paginates, so serving every
+   * path from one listing is a larger change than the GitHub side needed, and
+   * collapsing it here was deliberately left out of the fan-out fix so that
+   * one ticket touched one provider. GitLab therefore keeps exactly the
+   * behaviour it had when the caller looped: one paginated tree walk per
+   * directory. It needs its own ticket.
+   */
+  async listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    const files: { path: string }[] = [];
+
+    for (const path of paths) {
+      files.push(...(await this.listFilesInDirectory(path, branch)));
+    }
+
+    return files;
+  }
 }

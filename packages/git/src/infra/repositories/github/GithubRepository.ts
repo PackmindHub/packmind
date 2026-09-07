@@ -1103,4 +1103,74 @@ export class GithubRepository implements IGitRepo {
       return [];
     }
   }
+
+  async listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    const { owner, repo } = this.options;
+
+    if (paths.length === 0) {
+      return [];
+    }
+
+    try {
+      // One `ref -> commit -> tree` walk for every path, not one per path.
+      // The recursive tree covers the whole repository, so the per-directory
+      // loop this replaced was re-downloading the same listing and throwing
+      // all but one directory's worth away.
+      const refResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
+      );
+      const refSha = refResponse.data.object.sha;
+
+      const commitResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/commits/${refSha}`,
+      );
+      const baseTreeSha = commitResponse.data.tree.sha;
+
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
+        { params: { recursive: 1 } },
+      );
+
+      const blobPaths: string[] = treeResponse.data.tree
+        .filter(
+          (item: { type: string; path?: string }) =>
+            item.type === 'blob' && !!item.path,
+        )
+        .map((item: { path: string }) => item.path);
+
+      // Filtered per path rather than once against all prefixes, so the
+      // result is ordered and duplicated exactly as calling the singular form
+      // for each path in turn would have been.
+      const files = paths.flatMap((path) => {
+        const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+        return blobPaths
+          .filter((blobPath) => blobPath.startsWith(normalizedPath))
+          .map((blobPath) => ({ path: blobPath }));
+      });
+
+      this.logger.debug('Listed files in directories', {
+        directoryCount: paths.length,
+        branch,
+        fileCount: files.length,
+      });
+
+      return files;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to list files in directories', {
+        directoryCount: paths.length,
+        owner,
+        repo,
+        branch,
+        error: errorMessage,
+      });
+      // Matches the singular form: an unreachable or missing tree means
+      // "nothing to expand", not a failed publish.
+      return [];
+    }
+  }
 }

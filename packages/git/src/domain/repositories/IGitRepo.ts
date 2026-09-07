@@ -37,6 +37,28 @@ export interface IGitRepo {
   ): Promise<{ path: string }[]>;
 
   /**
+   * Batched sibling of `listFilesInDirectory`: the files under each of
+   * `paths`, concatenated in the order the paths were given.
+   *
+   * Exists because expanding a directory deletion into file deletions used to
+   * call the singular form once per directory, and on GitHub each of those
+   * calls walks `ref -> commit -> tree?recursive=1` and then filters a
+   * listing of the *whole* repository down to one directory. Deleting 112
+   * directories therefore cost 336 requests, run one after another, to answer
+   * a question a single tree already answers. Implementations that can serve
+   * every path from one listing must do so, which makes the request count
+   * independent of how many directories are being deleted.
+   *
+   * A path with no files under it contributes nothing. Overlapping paths
+   * (`a` and `a/b`) report the nested files under both, exactly as calling the
+   * singular form for each would.
+   */
+  listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]>;
+
+  /**
    * Ensure a target branch exists on the repository, creating it from the
    * repository's configured base branch when missing.
    *

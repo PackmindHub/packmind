@@ -1684,4 +1684,101 @@ describe('GithubRepository', () => {
       });
     });
   });
+
+  describe('listFilesInDirectories', () => {
+    const refSha = 'ref-sha-123';
+    const baseTreeSha = 'base-tree-sha-456';
+
+    const treeCalls = () =>
+      (mockAxiosInstance.get as jest.Mock).mock.calls.filter(([url]) =>
+        String(url).includes('/git/trees/'),
+      ).length;
+
+    beforeEach(() => {
+      mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+        if (url.includes('/git/ref/heads/')) {
+          return Promise.resolve({ data: { object: { sha: refSha } } });
+        } else if (url.includes('/git/commits/')) {
+          return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+        } else if (url.includes('/git/trees/')) {
+          return Promise.resolve({
+            data: {
+              tree: [
+                { path: 'packmind/a/one.md', type: 'blob' },
+                { path: 'packmind/a/two.md', type: 'blob' },
+                { path: 'packmind/b/three.md', type: 'blob' },
+                { path: 'packmind/c', type: 'tree' },
+                { path: 'other/four.md', type: 'blob' },
+              ],
+            },
+          });
+        }
+        return Promise.reject(new Error(`Unexpected GET: ${url}`));
+      });
+    });
+
+    it('returns the files under every requested directory', async () => {
+      const files = await githubRepository.listFilesInDirectories(
+        ['packmind/a', 'packmind/b'],
+        'main',
+      );
+
+      expect(files).toEqual([
+        { path: 'packmind/a/one.md' },
+        { path: 'packmind/a/two.md' },
+        { path: 'packmind/b/three.md' },
+      ]);
+    });
+
+    it('leaves out directories that were not asked for', async () => {
+      const files = await githubRepository.listFilesInDirectories(
+        ['packmind/b'],
+        'main',
+      );
+
+      expect(files).toEqual([{ path: 'packmind/b/three.md' }]);
+    });
+
+    it('downloads the tree once for one directory', async () => {
+      await githubRepository.listFilesInDirectories(['packmind/a'], 'main');
+
+      expect(treeCalls()).toBe(1);
+    });
+
+    describe('when many directories are requested', () => {
+      it('still downloads the tree once', async () => {
+        // The whole point of the batched form: the request count must not
+        // scale with the number of directories being deleted.
+        await githubRepository.listFilesInDirectories(
+          Array.from({ length: 50 }, (_, i) => `packmind/dir-${i}`),
+          'main',
+        );
+
+        expect(treeCalls()).toBe(1);
+      });
+    });
+
+    describe('when no directory is requested', () => {
+      it('issues no request at all', async () => {
+        await githubRepository.listFilesInDirectories([], 'main');
+
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the tree cannot be read', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockRejectedValue(new Error('boom'));
+      });
+
+      it('reports no files rather than failing the publish', async () => {
+        const files = await githubRepository.listFilesInDirectories(
+          ['packmind/a'],
+          'main',
+        );
+
+        expect(files).toEqual([]);
+      });
+    });
+  });
 });
