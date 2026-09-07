@@ -47,6 +47,10 @@ import {
   installLockReason,
   type InstallLockReason,
 } from '../selectors/installLock';
+import {
+  NO_GIT_CONNECTION_ALL_TOOLTIP,
+  NO_GIT_CONNECTION_TOOLTIP,
+} from '../../noGitConnection';
 import type { PackageDrift } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
 
@@ -207,7 +211,7 @@ export function PackageDetailPane({
       return 'A distribution is already in progress for every drifted target.';
     }
     if (driftedLockCounts.noAppToken === driftedKeys.length) {
-      return 'Every drifted target lives on a provider without a token — use `packmind install`.';
+      return NO_GIT_CONNECTION_ALL_TOOLTIP;
     }
     return 'Every drifted target is either in progress or distributed via `packmind install`.';
   })();
@@ -640,8 +644,7 @@ type InstallRowProps = {
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
   'in-progress': 'Distributing to this target.',
-  'no-app-token':
-    'This provider has no token — use `packmind install` to update this distribution.',
+  'no-app-token': NO_GIT_CONNECTION_TOOLTIP,
 };
 
 function InstallRow({

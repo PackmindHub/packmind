@@ -1,6 +1,7 @@
 import { packageBehindInstallCount } from '../redesign/selectors/buildPackageDriftOverview';
 import type { PackageLockProfile } from '../redesign/selectors/installLock';
 import type { PackageDrift } from '../redesign/types';
+import { NO_GIT_CONNECTION_ALL_TOOLTIP } from '../noGitConnection';
 
 /**
  * What the package-wide send control in the pane header is, once the drift is
@@ -101,6 +102,5 @@ const LOCK_TOOLTIP: Record<PackageLockProfile, string | null> = {
   none: null,
   'all-in-progress':
     'Packmind is already distributing to every drifted destination.',
-  'all-no-app-token':
-    'Every drifted destination is on a provider without a token. Update those with `packmind install`.',
+  'all-no-app-token': NO_GIT_CONNECTION_ALL_TOOLTIP,
 };

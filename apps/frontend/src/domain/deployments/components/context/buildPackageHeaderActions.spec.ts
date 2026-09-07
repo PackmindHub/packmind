@@ -136,12 +136,12 @@ describe('buildPackageHeaderActions', () => {
       });
     });
 
-    describe('when no provider has a token', () => {
-      it('points at the CLI', () => {
+    describe('when Packmind has no Git connection to any of them', () => {
+      it('says what it cannot do, then what to run instead', () => {
         expect(
           build(pkg, { lockProfile: 'all-no-app-token' }).update?.lockTooltip,
         ).toBe(
-          'Every drifted destination is on a provider without a token. Update those with `packmind install`.',
+          'Packmind cannot push to any drifted destination. Run `packmind install` in a checkout.',
         );
       });
     });

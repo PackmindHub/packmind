@@ -51,6 +51,7 @@ import {
   installLockReason,
   type InstallLockReason,
 } from '../selectors/installLock';
+import { NO_GIT_CONNECTION_TOOLTIP } from '../../noGitConnection';
 import type {
   ArtifactKind,
   MarketplaceDrift,
@@ -1188,8 +1189,7 @@ function MarketplaceSyncBlock({
 
 const LOCK_ROW_TOOLTIP: Record<LockReason, string> = {
   'in-progress': 'Distributing — wait for it to finish.',
-  'no-app-token':
-    'This provider has no token — use `packmind install` to update this distribution.',
+  'no-app-token': NO_GIT_CONNECTION_TOOLTIP,
 };
 
 const LOCK_ROW_BADGE: Record<
