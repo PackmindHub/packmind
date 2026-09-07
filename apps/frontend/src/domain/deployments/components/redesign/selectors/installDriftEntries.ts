@@ -22,6 +22,20 @@ export function relativeDaysAgo(iso: string): number {
 export function formatRelativeDate(iso: string): string {
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return iso;
+
+  /*
+   * Under a minute reads as "just now". `formatDistanceToNowStrict` says
+   * "0 seconds ago", and that is exactly what a reader sees in the moment they
+   * act: a package that has just taken a component, a distribution that has
+   * just left. Every caller drops this into the same sentence shape, so they
+   * all get "Distributed just now" rather than a number that is zero.
+   *
+   * A date in the future keeps the strict wording, which is how a clock skew
+   * shows itself as one rather than as something that just happened.
+   */
+  const elapsed = Date.now() - parsed.getTime();
+  if (elapsed >= 0 && elapsed < 60_000) return 'just now';
+
   return formatDistanceToNowStrict(parsed, { addSuffix: true });
 }
 
