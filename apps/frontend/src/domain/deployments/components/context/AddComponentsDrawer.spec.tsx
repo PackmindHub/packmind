@@ -103,14 +103,17 @@ function renderDrawer({
     getDeployedMarketplaces: () => [],
   });
 
-  render(
+  const tree = (
+    holdsNow: readonly StandardId[],
+    alongsideNow: readonly PackageResponse[],
+  ) => (
     <MemoryRouter>
       <UIProvider>
         <AddComponentsDrawer
           open
           onOpenChange={vi.fn()}
-          pkg={pkg(holds)}
-          packages={[pkg(holds), ...alongside]}
+          pkg={pkg(holdsNow)}
+          packages={[pkg(holdsNow), ...alongsideNow]}
           catalogue={catalogue}
           spaceId={spaceId}
           organizationId={organizationId}
@@ -118,10 +121,20 @@ function renderDrawer({
           spaceSlug="platform"
         />
       </UIProvider>
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 
-  return { mutateAsync };
+  const { rerender } = render(tree(holds, alongside));
+
+  /**
+   * The same open drawer, told that the space has moved under it. Which is what
+   * happens when another reader puts the last free candidate into a package
+   * while this one is picking.
+   */
+  const withPackages = (alongsideNow: readonly PackageResponse[]) =>
+    rerender(tree(holds, alongsideNow));
+
+  return { mutateAsync, withPackages };
 }
 
 const createControl = () =>
@@ -235,6 +248,39 @@ describe('AddComponentsDrawer', () => {
       renderDrawer(allShipped);
 
       expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The filter cannot strand the reader either, which is the harder half: the
+   * count it filters on can fall to zero while the drawer stands, and the chip
+   * that would undo it is drawn only while both populations exist.
+   */
+  describe('when the last free candidate is taken while the drawer is open', () => {
+    it('keeps showing it rather than emptying the list behind the filter', () => {
+      const { withPackages } = renderDrawer();
+
+      withPackages([otherPackage([NAMING.id])]);
+
+      expect(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('never answers a search nobody typed', () => {
+      const { withPackages } = renderDrawer();
+
+      withPackages([otherPackage([NAMING.id])]);
+
+      expect(screen.queryByText(/Nothing matches/)).not.toBeInTheDocument();
+    });
+
+    it('says what the list has become', () => {
+      const { withPackages } = renderDrawer();
+
+      withPackages([otherPackage([NAMING.id])]);
+
+      expect(screen.getByText(/does not hold yet/)).toBeInTheDocument();
     });
   });
 

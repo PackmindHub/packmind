@@ -139,15 +139,32 @@ export function AddComponentsDrawer({
    * Held here and not in the address, unlike the inventory's copy of the same
    * filter: that one describes a page worth sending to someone, this one is a
    * step inside a gesture that ends when the drawer closes.
-   *
-   * Lazily initialised, so a package whose every candidate already ships
-   * somewhere opens on the whole list instead of on an empty one behind a filter
-   * hiding everything. The drawer is mounted only while open, so this runs once
-   * per opening and reads the count of that moment.
    */
-  const [coverage, setCoverage] = useState<InventoryCoverage>(() =>
-    addable.freeTotal > 0 ? 'none' : 'all',
-  );
+  const [pickedCoverage, setPickedCoverage] =
+    useState<InventoryCoverage>('none');
+
+  /*
+   * The filter actually applied: the picked one, unless it has nothing left to
+   * show.
+   *
+   * The drawer opens on the components no package carries, and that is a filter
+   * showing nothing once every candidate ships from somewhere else. This was
+   * resolved at mount instead, which answered the common case — the drawer is
+   * mounted only while open, so it read the count of that opening — and left one
+   * hole. The count can fall to zero while the drawer stands, and the chip that
+   * would undo the filter is drawn only while both populations exist. The reader
+   * was then held behind an invisible filter, over an empty list, under a line
+   * saying nothing matched a search they had never typed.
+   *
+   * Derived rather than corrected in an effect, so no render exists in which the
+   * two disagree, and one rule stands where there were two. It is also what
+   * keeps the empty-list line honest: with the filter unable to empty the list,
+   * that line only ever answers a query someone typed.
+   */
+  const coverage: InventoryCoverage =
+    pickedCoverage === 'none' && addable.freeTotal === 0
+      ? 'all'
+      : pickedCoverage;
   const showingFree = coverage === 'none';
 
   /*
@@ -231,7 +248,7 @@ export function AddComponentsDrawer({
    * "show me the rest" with a filtered fragment of it.
    */
   const handleCoverageChange = (next: InventoryCoverage) => {
-    setCoverage(next);
+    setPickedCoverage(next);
     setQuery('');
   };
 
