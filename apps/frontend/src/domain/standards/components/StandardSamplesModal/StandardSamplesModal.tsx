@@ -71,36 +71,50 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
     [searchQuery],
   );
 
-  const handleCreate = () => {
+  /*
+   * Awaited rather than reported through `mutate`'s own callbacks, because
+   * those are dropped when the caller is gone: react-query fires them only
+   * `if (this.#mutateOptions && this.hasListeners())`, and this modal is opened
+   * from surfaces that the creation itself takes off the screen — a package's
+   * empty state offers samples exactly while the space owns nothing, and the
+   * mutation's success invalidates the standards list, which is what makes that
+   * state stop rendering. The first standard of a new space was created,
+   * `onCreated` was never called, and it stayed in no package.
+   *
+   * A promise continuation has no such condition: it runs whether or not this
+   * component is still mounted, which is what the handoff needs. The state
+   * resets below are no-ops in that case, and harmless.
+   */
+  const handleCreate = async () => {
     const samples: SampleInput[] = [
       ...selectedLanguages.map((id) => ({ type: 'language' as const, id })),
       ...selectedFrameworks.map((id) => ({ type: 'framework' as const, id })),
     ];
 
-    createMutation.mutate(samples, {
-      onSuccess: (data) => {
-        const count = data.created.length;
-        pmToaster.create({
-          type: 'success',
-          title: 'Standards created',
-          description: `${count} standard${count !== 1 ? 's' : ''} created successfully`,
-        });
-        setSelectedLanguages([]);
-        setSelectedFrameworks([]);
-        setSearchQuery('');
-        onOpenChange(false);
-        if (data.created.length > 0) {
-          onCreated?.(data.created);
-        }
-      },
-      onError: () => {
-        pmToaster.error({
-          title: 'Failed to create standards',
-          description:
-            'An error occurred while creating standards from samples',
-        });
-      },
+    let created: Standard[];
+    try {
+      ({ created } = await createMutation.mutateAsync(samples));
+    } catch {
+      pmToaster.error({
+        title: 'Failed to create standards',
+        description: 'An error occurred while creating standards from samples',
+      });
+      return;
+    }
+
+    const count = created.length;
+    pmToaster.create({
+      type: 'success',
+      title: 'Standards created',
+      description: `${count} standard${count !== 1 ? 's' : ''} created successfully`,
     });
+    setSelectedLanguages([]);
+    setSelectedFrameworks([]);
+    setSearchQuery('');
+    onOpenChange(false);
+    if (created.length > 0) {
+      onCreated?.(created);
+    }
   };
 
   const handleCancel = () => {
@@ -187,7 +201,7 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
                 </PMButton>
                 <PMButton
                   variant="primary"
-                  onClick={handleCreate}
+                  onClick={() => void handleCreate()}
                   loading={createMutation.isPending}
                   disabled={
                     selectedLanguages.length === 0 &&

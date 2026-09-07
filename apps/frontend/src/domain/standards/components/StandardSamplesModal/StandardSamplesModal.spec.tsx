@@ -185,11 +185,16 @@ describe('StandardSamplesModal', () => {
 
   describe('when clicking Create button', () => {
     describe('with samples selected', () => {
-      const selectSamplesAndClickCreate = async (mockMutate: Mock) => {
+      const selectSamplesAndClickCreate = async (
+        mockMutateAsync: Mock,
+        props: Partial<React.ComponentProps<typeof StandardSamplesModal>> = {},
+      ) => {
         mockUseCreateStandardsFromSamplesMutation.mockReturnValue(
-          createMockMutation({ mutate: mockMutate }),
+          createMockMutation({ mutateAsync: mockMutateAsync }),
         );
-        renderWithProviders(<StandardSamplesModal {...defaultProps} />);
+        const view = renderWithProviders(
+          <StandardSamplesModal {...defaultProps} {...props} />,
+        );
 
         const javaCard = screen.getByText('Java').closest('label');
         await act(async () => {
@@ -221,19 +226,54 @@ describe('StandardSamplesModal', () => {
         await act(async () => {
           fireEvent.click(createButton);
         });
+
+        return view;
       };
 
       it('calls mutation with selected samples', async () => {
-        const mockMutate = vi.fn();
-        await selectSamplesAndClickCreate(mockMutate);
+        const mockMutateAsync = vi.fn().mockResolvedValue({ created: [] });
+        await selectSamplesAndClickCreate(mockMutateAsync);
 
-        expect(mockMutate).toHaveBeenCalledWith(
-          [
-            { type: 'language', id: 'java' },
-            { type: 'framework', id: 'react' },
-          ],
-          expect.any(Object),
+        expect(mockMutateAsync).toHaveBeenCalledWith([
+          { type: 'language', id: 'java' },
+          { type: 'framework', id: 'react' },
+        ]);
+      });
+
+      it('hands the created standards to the caller', async () => {
+        const created = [{ id: 'standard-1' }];
+        const onCreated = vi.fn();
+        await selectSamplesAndClickCreate(
+          vi.fn().mockResolvedValue({ created }),
+          { onCreated },
         );
+
+        expect(onCreated).toHaveBeenCalledWith(created);
+      });
+
+      describe('when the modal is gone before the creation lands', () => {
+        it('hands the created standards over all the same', async () => {
+          const created = [{ id: 'standard-1' }];
+          const onCreated = vi.fn();
+          let settle: (value: { created: unknown[] }) => void = () => undefined;
+          const pending = new Promise((resolve) => {
+            settle = resolve as typeof settle;
+          });
+
+          const view = await selectSamplesAndClickCreate(
+            vi.fn().mockReturnValue(pending),
+            { onCreated },
+          );
+
+          // What the reported case does: creating the first standard of an
+          // empty space takes the surface that offered the samples off screen.
+          view.unmount();
+          await act(async () => {
+            settle({ created });
+          });
+
+          expect(onCreated).toHaveBeenCalledWith(created);
+        });
       });
     });
 
@@ -248,9 +288,9 @@ describe('StandardSamplesModal', () => {
 
       describe('when button is clicked', () => {
         it('does not call mutation', async () => {
-          const mockMutate = vi.fn();
+          const mockMutateAsync = vi.fn();
           mockUseCreateStandardsFromSamplesMutation.mockReturnValue(
-            createMockMutation({ mutate: mockMutate }),
+            createMockMutation({ mutateAsync: mockMutateAsync }),
           );
           renderWithProviders(<StandardSamplesModal {...defaultProps} />);
 
@@ -259,7 +299,7 @@ describe('StandardSamplesModal', () => {
             fireEvent.click(createButton);
           });
 
-          expect(mockMutate).not.toHaveBeenCalled();
+          expect(mockMutateAsync).not.toHaveBeenCalled();
         });
       });
     });
