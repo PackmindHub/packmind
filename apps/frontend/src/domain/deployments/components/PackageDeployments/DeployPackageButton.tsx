@@ -16,6 +16,7 @@ import { RunDistribution } from '../RunDistribution/RunDistribution';
 import { Package } from '@packmind/types';
 import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 import { PackageInstallSnippets } from '../PackageInstallSnippets';
+import { splitButtonHalf } from '../splitButton';
 
 export interface DeployPackageButtonProps {
   label?: string;
@@ -101,7 +102,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
                 disabled={disabled}
                 aria-label={label}
                 paddingInline={2}
-                borderStartRadius={0}
+                {...splitButtonHalf('trailing')}
               >
                 <LuChevronDown aria-hidden />
               </PMButton>
@@ -183,7 +184,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
           variant={variant}
           disabled={disabled}
           onClick={() => setCodeRepoOpen(true)}
-          borderStartRadius={trigger === 'split' ? 0 : undefined}
+          {...(trigger === 'split' ? splitButtonHalf('trailing') : {})}
         >
           {label}
         </PMButton>

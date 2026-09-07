@@ -62,6 +62,7 @@ import {
   ContextComponentList,
 } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
+import { SPLIT_BUTTON_SEAM, splitButtonHalf } from '../splitButton';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
 import { packageLockProfile } from '../redesign/selectors/installLock';
@@ -687,8 +688,9 @@ export function ContextPackagePane({
               distributing. Picking from the space takes the wide half, since it
               is the act with a list behind it and the one a package being filled
               performs over and over, and the four ways of making something new
-              keep the chevron. The seam is a pixel of the page showing between
-              two halves of one colour.
+              keep the chevron. The seam is a hairline of the page showing
+              between two halves of one colour, and `splitButton` is where its
+              width and the joined edges are decided.
 
               Creating sits here, on the pane, and not in the rail below the list
               of packages: the rail creates containers, this creates what goes in
@@ -705,12 +707,12 @@ export function ContextPackagePane({
             */}
             {tab === COMPONENTS_TAB &&
               (addableCount > 0 ? (
-                <PMHStack gap="1px">
+                <PMHStack gap={SPLIT_BUTTON_SEAM}>
                   <PMButton
                     variant="secondary"
                     size="sm"
                     onClick={() => setAddingComponents(true)}
-                    borderEndRadius={0}
+                    {...splitButtonHalf('leading')}
                   >
                     <PMIcon fontSize="xs">
                       <LuPlus />
@@ -750,9 +752,10 @@ export function ContextPackagePane({
 
               So they join. The corrective push takes the wide half, since it is
               the one thing the state is asking for, and the open ended one
-              keeps the chevron it already had. The seam is a pixel of the page
-              showing between two halves of the same colour, which is what makes
-              them read as one object rather than as two buttons that touch.
+              keeps the chevron it already had. The seam is a hairline of the
+              page showing between two halves of the same colour, which is what
+              makes them read as one object rather than as two buttons that
+              touch.
 
               Behind a chevron is a real cost for someone who came to add a
               destination while the package happens to be drifting. It is paid
@@ -766,7 +769,7 @@ export function ContextPackagePane({
               written as a button.
             */}
             {headerActions.update ? (
-              <PMHStack gap="1px">
+              <PMHStack gap={SPLIT_BUTTON_SEAM}>
                 <PMTooltip
                   label={headerActions.update.lockTooltip}
                   placement="top"
@@ -776,7 +779,7 @@ export function ContextPackagePane({
                     size="sm"
                     disabled={headerActions.update.lockTooltip !== null}
                     onClick={updateDriftedDestinations}
-                    borderEndRadius={isEmpty ? undefined : 0}
+                    {...(isEmpty ? {} : splitButtonHalf('leading'))}
                   >
                     <PMIcon fontSize="xs">
                       <LuRotateCw />

@@ -34,6 +34,7 @@ import { StandardSamplesModal } from '../../../standards/components/StandardSamp
 import { useSamplesIntoPackage } from '../../../standards/components/useSamplesIntoPackage';
 import { SkillsImportContent } from '../../../skills/components/SkillsImportContent';
 import { withPackageParam } from '../../hooks/useCreateIntoPackage';
+import { splitButtonHalf } from '../splitButton';
 import {
   COMPONENT_TYPE_LABELS,
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -245,7 +246,7 @@ export function ContextCreateMenu({
               variant={variant}
               aria-label={CREATE_LABEL}
               paddingInline={2}
-              borderStartRadius={0}
+              {...splitButtonHalf('trailing')}
             >
               <LuChevronDown aria-hidden />
             </PMButton>
