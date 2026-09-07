@@ -342,7 +342,7 @@ export function ContextCreateMenu({
         isOpen={isImportDialogOpen}
         onClose={() => setIsImportDialogOpen(false)}
       >
-        <SkillsImportContent />
+        <SkillsImportContent packageId={packageId} />
       </MethodDialog>
 
       <StandardSamplesModal

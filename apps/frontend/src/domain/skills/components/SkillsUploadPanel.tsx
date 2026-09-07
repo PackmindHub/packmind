@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMBox, PMButton, PMText, PMVStack } from '@packmind/ui';
+import { PMBox, PMButton, PMText, PMVStack, pmToaster } from '@packmind/ui';
+import type { PackageId, SkillId } from '@packmind/types';
 
 import { useWarnBeforeUnload } from '../../../shared/hooks';
+import {
+  NOT_ADDED_TO_PACKAGE_HINT,
+  useAttachToPackage,
+} from '../../deployments/hooks/useCreateIntoPackage';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import {
   useGetSkillsQuery,
@@ -39,13 +44,29 @@ const NO_EXISTING_SKILLS: { name: string }[] = [];
  */
 type ResolvedSkill = DetectedSkill & { folder: string };
 
-export const SkillsUploadPanel = () => {
+export const SkillsUploadPanel = ({
+  packageId,
+}: Readonly<{
+  /**
+   * The package the panel was opened from, when it was opened from one. What is
+   * imported joins it, which is the whole point of importing from a package's
+   * own screen: without this the skills landed in the space and in no package,
+   * and the reader had to go and add them by hand to the package they had just
+   * asked to fill.
+   */
+  packageId?: PackageId;
+}> = {}) => {
   const [detectedSkills, setDetectedSkills] = useState<ResolvedSkill[]>([]);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
   const { data: existingSkills } = useGetSkillsQuery();
   const { mutateAsync: uploadSkillFiles } = useUploadSkillMutation();
+  const attachToPackage = useAttachToPackage(packageId ?? null);
+
+  // What the batch has actually created, kept as the uploads land: a row knows
+  // its name and its status, and joining a package takes an id.
+  const uploadedIdsRef = useRef<SkillId[]>([]);
 
   const uploadSkill = useCallback(
     async (skill: DetectedSkill, signal: AbortSignal) => {
@@ -57,7 +78,9 @@ export const SkillsUploadPanel = () => {
       const tooLarge = findOversizedPayload(files);
       if (tooLarge) throw new Error(tooLarge);
 
-      return uploadSkillFiles({ files, signal });
+      const response = await uploadSkillFiles({ files, signal });
+      uploadedIdsRef.current.push(response.skill.id);
+      return response;
     },
     [uploadSkillFiles],
   );
@@ -65,7 +88,31 @@ export const SkillsUploadPanel = () => {
   const hasImportedRef = useRef(false);
   const onFinished = useCallback(() => {
     hasImportedRef.current = true;
-  }, []);
+
+    /*
+     * One request for the batch, once the batch has settled, and only for the
+     * skills that reached the server — a cancelled or failed one has no id to
+     * add. It runs here rather than per upload so a five-skill folder is one
+     * membership change rather than five, and so a cancellation does not leave
+     * the package half filled while the rows still say "pending".
+     *
+     * The results stay on screen through it: this panel refreshes the skills
+     * list on unmount, so what the package now holds cannot be resolved yet by
+     * the surface behind the dialog, and the empty state that opened it does
+     * not swap out from under the reader.
+     */
+    const created = uploadedIdsRef.current;
+    if (created.length === 0) return;
+
+    void attachToPackage({ skillIds: created }).then((outcome) => {
+      if (outcome === 'failed') {
+        pmToaster.error({
+          title: 'Skills imported, but not added to the package',
+          description: NOT_ADDED_TO_PACKAGE_HINT,
+        });
+      }
+    });
+  }, [attachToPackage]);
 
   // The skills list is refreshed when the panel goes away, not when the import
   // finishes. Invalidating straight away swaps the page's blank state for the
@@ -127,6 +174,7 @@ export const SkillsUploadPanel = () => {
       const claimedTwice = new Set(findDuplicateSkillNames(identities));
 
       reset();
+      uploadedIdsRef.current = [];
       setDetectedSkills(
         resolved
           .map((skill) => {

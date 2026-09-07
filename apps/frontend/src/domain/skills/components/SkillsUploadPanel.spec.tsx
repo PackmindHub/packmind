@@ -3,9 +3,18 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { UIProvider } from '@packmind/ui';
-import { createSpaceId } from '@packmind/types';
+import { pmToaster, UIProvider } from '@packmind/ui';
+import {
+  createPackageId,
+  createSkillId,
+  createSpaceId,
+  type PackageId,
+} from '@packmind/types';
 
+import {
+  NOT_ADDED_TO_PACKAGE_HINT,
+  useAttachToPackage,
+} from '../../deployments/hooks/useCreateIntoPackage';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import {
   useGetSkillsQuery,
@@ -23,6 +32,18 @@ vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: vi.fn(),
 }));
 
+// Only the hook: the failure copy this panel prints lives in the same module,
+// and a mocked constant would let the assertion agree with itself.
+vi.mock(
+  '../../deployments/hooks/useCreateIntoPackage',
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import('../../deployments/hooks/useCreateIntoPackage')
+    >()),
+    useAttachToPackage: vi.fn(),
+  }),
+);
+
 const mockUseGetSkillsQuery = useGetSkillsQuery as MockedFunction<
   typeof useGetSkillsQuery
 >;
@@ -32,6 +53,15 @@ const mockUseUploadSkillMutation = useUploadSkillMutation as MockedFunction<
 const mockUseCurrentSpace = useCurrentSpace as MockedFunction<
   typeof useCurrentSpace
 >;
+const mockUseAttachToPackage = useAttachToPackage as MockedFunction<
+  typeof useAttachToPackage
+>;
+
+/** What the upload endpoint answers with: the skill it just created. */
+const uploaded = (id = 'skill-1') => ({
+  skill: { id: createSkillId(id) },
+  versionCreated: true,
+});
 
 /**
  * A File shaped the way the directory picker hands it over.
@@ -59,11 +89,15 @@ function pickedFile(relativePath: string, declaredName?: string): File {
 type RenderOptions = {
   existingSkills?: { name: string }[];
   uploadSkill?: Mock;
+  packageId?: PackageId;
+  attachToPackage?: Mock;
 };
 
 function renderPanel({
   existingSkills = [],
-  uploadSkill = vi.fn().mockResolvedValue({}),
+  uploadSkill = vi.fn().mockResolvedValue(uploaded()),
+  packageId,
+  attachToPackage = vi.fn().mockResolvedValue('attached'),
 }: RenderOptions = {}) {
   mockUseCurrentSpace.mockReturnValue({
     spaceId: createSpaceId('space-1'),
@@ -77,6 +111,10 @@ function renderPanel({
     mutateAsync: uploadSkill,
   } as unknown as ReturnType<typeof useUploadSkillMutation>);
 
+  mockUseAttachToPackage.mockReturnValue(
+    attachToPackage as unknown as ReturnType<typeof useAttachToPackage>,
+  );
+
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -87,12 +125,12 @@ function renderPanel({
   const rendered = render(
     <QueryClientProvider client={queryClient}>
       <UIProvider>
-        <SkillsUploadPanel />
+        <SkillsUploadPanel packageId={packageId} />
       </UIProvider>
     </QueryClientProvider>,
   );
 
-  return { ...rendered, uploadSkill, invalidateQueries };
+  return { ...rendered, uploadSkill, invalidateQueries, attachToPackage };
 }
 
 /**
@@ -361,11 +399,118 @@ describe('SkillsUploadPanel', () => {
     });
   });
 
+  describe('when the panel was opened from a package', () => {
+    const packageId = createPackageId('package-1');
+
+    it('adds the imported skills to it in one go', async () => {
+      const uploadSkill = vi
+        .fn()
+        .mockResolvedValueOnce(uploaded('skill-doc'))
+        .mockResolvedValueOnce(uploaded('skill-onboarding'));
+      const { container, attachToPackage } = renderPanel({
+        packageId,
+        uploadSkill,
+      });
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+        pickedFile('skills/onboarding/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('2 imported, 0 failed');
+
+      expect(attachToPackage).toHaveBeenCalledTimes(1);
+      expect(attachToPackage).toHaveBeenCalledWith({
+        skillIds: [
+          createSkillId('skill-doc'),
+          createSkillId('skill-onboarding'),
+        ],
+      });
+    });
+
+    describe('when part of the batch failed', () => {
+      it('adds only the skills that reached the server', async () => {
+        const uploadSkill = vi
+          .fn()
+          .mockResolvedValueOnce(uploaded('skill-doc'))
+          .mockRejectedValueOnce(new Error('Invalid frontmatter'));
+        const { container, attachToPackage } = renderPanel({
+          packageId,
+          uploadSkill,
+        });
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+          pickedFile('skills/onboarding/SKILL.md'),
+        ]);
+        await userEvent.click(importButton());
+        await screen.findByText('1 imported, 1 failed');
+
+        expect(attachToPackage).toHaveBeenCalledWith({
+          skillIds: [createSkillId('skill-doc')],
+        });
+      });
+    });
+
+    describe('when nothing reached the server', () => {
+      it('asks for no membership change', async () => {
+        const { container, attachToPackage } = renderPanel({
+          packageId,
+          uploadSkill: vi.fn().mockRejectedValue(new Error('Invalid')),
+        });
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+        ]);
+        await userEvent.click(importButton());
+        await screen.findByText('0 imported, 1 failed');
+
+        expect(attachToPackage).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the membership change fails', () => {
+      it('says where the skills are instead', async () => {
+        const failure = vi.spyOn(pmToaster, 'error');
+        const { container } = renderPanel({
+          packageId,
+          attachToPackage: vi.fn().mockResolvedValue('failed'),
+        });
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+        ]);
+        await userEvent.click(importButton());
+
+        await waitFor(() =>
+          expect(failure).toHaveBeenCalledWith({
+            title: 'Skills imported, but not added to the package',
+            description: NOT_ADDED_TO_PACKAGE_HINT,
+          }),
+        );
+      });
+    });
+  });
+
+  describe('when the panel was opened outside any package', () => {
+    it('asks for no package', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+
+      expect(mockUseAttachToPackage).toHaveBeenCalledWith(null);
+    });
+  });
+
   describe('when the import partly succeeds', () => {
     it('summarises what happened', async () => {
       const uploadSkill = vi
         .fn()
-        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce(uploaded())
         .mockRejectedValueOnce(new Error('Invalid frontmatter'));
       const { container } = renderPanel({ uploadSkill });
 
@@ -383,7 +528,7 @@ describe('SkillsUploadPanel', () => {
     it('shows the reason the failed skill failed', async () => {
       const uploadSkill = vi
         .fn()
-        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce(uploaded())
         .mockRejectedValueOnce(new Error('Invalid frontmatter'));
       const { container } = renderPanel({ uploadSkill });
 

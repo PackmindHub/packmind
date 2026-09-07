@@ -14,6 +14,7 @@ import {
   PMAlert,
 } from '@packmind/ui';
 import { LuTerminal, LuUpload } from 'react-icons/lu';
+import type { PackageId } from '@packmind/types';
 
 import {
   CopiableTextField,
@@ -91,7 +92,10 @@ const AccordionItemHeader: React.FC<AccordionItemHeaderProps> = ({
   </PMVStack>
 );
 
-export const SkillsImportContent: React.FC = () => {
+export const SkillsImportContent: React.FC<{
+  /** Passed through to the upload panel: what is imported joins this package. */
+  packageId?: PackageId;
+}> = ({ packageId }) => {
   const loginCodeMutation = useCreateCliLoginCodeMutation();
   const [selectedOs, setSelectedOs] = useState<'macos-linux' | 'windows'>(
     detectUserOs,
@@ -130,7 +134,7 @@ export const SkillsImportContent: React.FC = () => {
         </PMText>
       </PMBox>
 
-      <SkillsUploadPanel />
+      <SkillsUploadPanel packageId={packageId} />
 
       <PMBox>
         <PMText color="tertiary" variant="small">

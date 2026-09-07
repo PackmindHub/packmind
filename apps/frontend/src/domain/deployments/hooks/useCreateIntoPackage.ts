@@ -26,6 +26,18 @@ export function withPackageParam(href: string, packageId?: PackageId): string {
 export type PackageArtefacts = Omit<AddArtefactsToPackagesEntry, 'packageId'>;
 
 /**
+ * What a reader needs to hear after "created, but not added to the package":
+ * where the components actually are, and what is left to do.
+ *
+ * Shared because two creation paths report the same failure — standards from
+ * samples and a folder of skills from the import panel — and this sentence
+ * should not exist in two versions. The title above it belongs to each path,
+ * which is why only this half is here: one path creates and the other imports.
+ */
+export const NOT_ADDED_TO_PACKAGE_HINT =
+  'They are in the space. Add them to a package to distribute them.';
+
+/**
  * 'not-asked' means the form was opened outside any package, which is the
  * normal case from the per-type pages and not a failure.
  */
