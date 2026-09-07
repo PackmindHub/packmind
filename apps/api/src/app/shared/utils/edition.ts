@@ -1,6 +1,10 @@
 import { Configuration } from '@packmind/node-utils';
+import { PackmindEdition } from '@packmind/types';
 
-export type PackmindEdition = 'cloud' | 'oss';
+// Re-exported so existing importers keep their single import site. The type
+// itself lives in @packmind/types because the CLI reads the same values off
+// the Packmind-Edition response header.
+export type { PackmindEdition };
 
 export async function resolvePackmindEdition(): Promise<PackmindEdition> {
   const raw = await Configuration.getConfig('PACKMIND_EDITION');
