@@ -29,7 +29,7 @@ describe('user access errors', () => {
     [
       'UserNotFoundError',
       new UserNotFoundError({ userId }),
-      'forbidden',
+      'not_found',
       'user_not_found',
     ],
     [

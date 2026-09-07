@@ -37,23 +37,17 @@ export abstract class UserAccessError extends DomainError {
 }
 
 /**
- * `forbidden`, not `not_found`, even though the name says otherwise.
+ * `not_found`: the requester's own record is gone, so the resource the request
+ * names cannot be resolved at all.
  *
- * The missing user here is the *requester*, not a resource they asked for: a
- * token authenticates a subject that no longer resolves. 404 would be right
- * for `GET /users/:id`; for "whoever you are, you do not exist", the honest
- * answer is that the request cannot be authorized.
- *
- * The practical argument points the same way. The CLI reads a 404 on several
- * routes as a *feature-absent* sentinel — `trackingErrors.ts:16` prints
- * "Repository tracking is not available for your account", and
- * `ChangeProposalGateway.ts:28` raises `CommunityEditionError` — so a deleted
- * user with a live API key would be told their Enterprise features do not
- * exist. `apps/cli/src` is under the OSS parity contract, so teaching those
- * call sites about `reason` belongs in an OSS-first change, not here.
+ * This status is load-bearing for the CLI, which reads a 404 on several routes
+ * as a *feature-absent* sentinel. Those call sites now check `reason` before
+ * drawing that conclusion, so a deleted user with a live API key is told to
+ * sign in again rather than that their features do not exist. If you add
+ * another 404 branch to a CLI gateway, guard it the same way.
  */
 export class UserNotFoundError extends UserAccessError {
-  readonly kind = 'forbidden' as const;
+  readonly kind = 'not_found' as const;
 
   constructor(context: UserAccessErrorContext) {
     super(
