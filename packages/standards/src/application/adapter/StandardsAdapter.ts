@@ -329,6 +329,14 @@ export class StandardsAdapter
       .getLatestRulesByStandardId(id);
   }
 
+  getLatestStandardVersionsWithRules(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    return this.services
+      .getStandardVersionService()
+      .getLatestVersionsWithRulesByStandardIds(standardIds);
+  }
+
   getRulesByStandardId(id: StandardId): Promise<Rule[]> {
     return this._getRulesByStandardId.getRulesByStandardId(id);
   }
@@ -393,24 +401,6 @@ export class StandardsAdapter
     };
     const response = await this._listStandardsBySpace.execute(command);
     return response.standards;
-  }
-
-  async listAllStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    if (!this.spacesPort) {
-      this.logger.warn('SpacesPort not available, returning empty results');
-      return [];
-    }
-
-    const spaces =
-      await this.spacesPort.listSpacesByOrganization(organizationId);
-    const standardsPerSpace = await Promise.all(
-      spaces.map((space) =>
-        this.services.getStandardService().listStandardsBySpace(space.id),
-      ),
-    );
-    return standardsPerSpace.flat();
   }
 
   countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {

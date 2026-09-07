@@ -43,6 +43,15 @@ export interface IStandardsPort {
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]>;
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;
+  /**
+   * Batched sibling of `getLatestRulesByStandardId`: the latest version of
+   * every given standard, carrying that version's rules. Two queries in
+   * total, whatever the number of standards. Standards with no version at
+   * all are absent from the result.
+   */
+  getLatestStandardVersionsWithRules(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]>;
   getRulesByStandardId(id: StandardId): Promise<Rule[]>;
   getRulesByVersionId(versionId: StandardVersionId): Promise<Rule[]>;
   listStandardsBySpace(
@@ -50,9 +59,6 @@ export interface IStandardsPort {
     organizationId: OrganizationId,
     userId: string,
     opts?: Pick<QueryOption, 'includeDeleted'>,
-  ): Promise<Standard[]>;
-  listAllStandardsByOrganization(
-    organizationId: OrganizationId,
   ): Promise<Standard[]>;
   countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
