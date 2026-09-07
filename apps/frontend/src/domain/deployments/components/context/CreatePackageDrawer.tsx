@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import {
   PMBox,
   PMButton,
@@ -100,6 +100,26 @@ export function CreatePackageDrawer({
     }
   };
 
+  /**
+   * Enter creates, pressed in the field the drawer opens on.
+   *
+   * A package's name is usually one word long, and this drawer is opened in the
+   * middle of something else: leaving the keyboard to reach the Create button
+   * is the interruption a second time. The description editor below keeps Enter
+   * for its own newlines, which is why this is the name field's handler and not
+   * the drawer's.
+   *
+   * Ignored mid-composition: an input method takes Enter to accept the
+   * characters it is proposing, and reading that as "create" would name the
+   * package with a word its author had not finished typing.
+   */
+  const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+    if (!canCreate) return;
+    event.preventDefault();
+    void handleCreate();
+  };
+
   return (
     <PMDrawer.Root
       open={open}
@@ -128,6 +148,7 @@ export function CreatePackageDrawer({
                       placeholder="Enter package name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
+                      onKeyDown={handleNameKeyDown}
                       disabled={isPending}
                       autoFocus
                     />

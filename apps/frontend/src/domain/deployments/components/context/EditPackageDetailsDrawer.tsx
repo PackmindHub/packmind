@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import {
   PMBox,
   PMButton,
@@ -96,6 +96,19 @@ export function EditPackageDetailsDrawer({
     }
   };
 
+  /**
+   * Enter saves, for the reason the create drawer beside this one takes it: the
+   * two drawers ask the same two questions in the same place, and a reader who
+   * has learned the keystroke on one will press it on the other. Here too the
+   * description editor keeps Enter for its own newlines.
+   */
+  const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+    if (!canSave) return;
+    event.preventDefault();
+    void handleSave();
+  };
+
   return (
     <PMDrawer.Root
       open={open}
@@ -124,6 +137,7 @@ export function EditPackageDetailsDrawer({
                       placeholder="Enter package name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
+                      onKeyDown={handleNameKeyDown}
                       disabled={isPending}
                     />
                   </PMField.Root>
