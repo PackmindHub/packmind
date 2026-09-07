@@ -250,6 +250,9 @@ export function DeploymentsOverviewRedesignContent() {
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
+  const gitSettingsHref = organization
+    ? routes.org.toSettingsGit(organization.slug)
+    : null;
   const selectedPackageHistory =
     organization && spaceSlug && selectedPackage
       ? {
@@ -455,6 +458,7 @@ export function DeploymentsOverviewRedesignContent() {
                     onSyncPackageOnTarget={handleSyncPackageOnTarget}
                     onSyncRepository={handleSyncRepository}
                     packageHistoryHref={packageHistoryHref}
+                    gitSettingsHref={gitSettingsHref}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">

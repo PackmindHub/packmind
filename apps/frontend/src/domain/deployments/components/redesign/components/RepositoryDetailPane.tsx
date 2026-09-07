@@ -9,6 +9,7 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMIconButton,
   PMInput,
   PMLink,
   PMSpinner,
@@ -21,6 +22,7 @@ import {
   LuChevronDown,
   LuChevronRight,
   LuGitBranch,
+  LuInfo,
   LuPackage,
   LuRotateCw,
   LuSearch,
@@ -53,6 +55,14 @@ import {
 } from '../selectors/buildRepositoryDriftOverview';
 import type { PackageDrift, RepositoryDrift, TargetDrift } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
+import {
+  ADD_GIT_CONNECTION_LABEL,
+  NO_GIT_CONNECTION_BODY,
+  NO_GIT_CONNECTION_TITLE,
+  NO_GIT_CONNECTION_TOOLTIP,
+  NO_GIT_CONNECTION_WHY,
+  NO_GIT_CONNECTION_WHY_LABEL,
+} from '../../noGitConnection';
 
 const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
   [DistributionStatus.success]: 'Distributed',
@@ -73,6 +83,17 @@ type RepositoryDetailPaneProps = {
   onSyncRepository: (repoId: GitRepoId) => void;
   /** Link to a single package's distribution history, used to surface error logs. */
   packageHistoryHref: (packageId: PackageId) => string | null;
+  /**
+   * Where a reader goes to connect this repository's provider, so the banner
+   * that says the app cannot write here can also offer the way out.
+   *
+   * Built by the caller, like the history link above it: this pane is handed
+   * its hrefs rather than reading the route params, which is what lets both
+   * surfaces that render it keep their own url shapes. Null while the caller
+   * has no organisation to point at, where the banner keeps its explanation
+   * and drops the offer rather than linking somewhere that does not exist.
+   */
+  gitSettingsHref: string | null;
 };
 
 type PackageFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -105,6 +126,7 @@ export function RepositoryDetailPane({
   onSyncPackageOnTarget,
   onSyncRepository,
   packageHistoryHref,
+  gitSettingsHref,
 }: Readonly<RepositoryDetailPaneProps>) {
   const lockProfile = repositoryLockProfile(
     repo,
@@ -206,7 +228,7 @@ export function RepositoryDetailPane({
 
   const headerLockTooltip = (() => {
     if (lockProfile === 'all-no-app-token') {
-      return 'Use `packmind install` to update distributions on this repository.';
+      return NO_GIT_CONNECTION_TOOLTIP;
     }
     if (lockProfile === 'all-in-progress') {
       return 'A distribution is in progress for every drifted target.';
@@ -293,6 +315,20 @@ export function RepositoryDetailPane({
               />
             )}
           </PMHStack>
+          {/*
+            The banner names what the app cannot do, then what to run instead.
+            It used to be one line, "use `packmind install` to update
+            distributions on this repository", which told the reader what to
+            type and nothing about why the app would not do it for them. The
+            wording, and the reason it is worded this way, are in
+            `noGitConnection`.
+
+            The link is here because the sentence names an alternative, and an
+            alternative a reader cannot reach is a remark rather than an
+            option. Secondary, and after the text: this is a state to
+            understand before it is a state to fix, and the fix belongs to an
+            admin who may not be the person reading.
+          */}
           {lockProfile === 'all-no-app-token' && (
             <PMAlert.Root status="warning">
               <PMAlert.Indicator>
@@ -301,10 +337,43 @@ export function RepositoryDetailPane({
                 </PMIcon>
               </PMAlert.Indicator>
               <PMAlert.Content>
-                <PMAlert.Title>
-                  Use `packmind install` to update distributions on this
-                  repository.
-                </PMAlert.Title>
+                <PMHStack gap={1.5} align="center">
+                  <PMAlert.Title>{NO_GIT_CONNECTION_TITLE}</PMAlert.Title>
+                  {/*
+                    The explanation, one hover away. A real button rather than
+                    the hoverable box this pattern usually is, so the reader on
+                    a keyboard reaches it and the one on a touch screen can tap
+                    it: a tooltip nobody can open is the same as not writing it.
+                    And a `PMIconButton` rather than a boxed one, because a bare
+                    `button` element gets the browser's own blue ring when
+                    focused, which is the one thing on this screen that would
+                    not be Packmind's.
+                  */}
+                  <PMTooltip label={NO_GIT_CONNECTION_WHY} placement="top">
+                    <PMIconButton
+                      aria-label={NO_GIT_CONNECTION_WHY_LABEL}
+                      variant="ghost"
+                      size="xs"
+                      cursor="help"
+                      minW="auto"
+                      height="auto"
+                    >
+                      <PMIcon as={LuInfo} />
+                    </PMIconButton>
+                  </PMTooltip>
+                </PMHStack>
+                <PMAlert.Description>
+                  {NO_GIT_CONNECTION_BODY}
+                </PMAlert.Description>
+                {gitSettingsHref && (
+                  <PMBox paddingTop={2}>
+                    <PMButton variant="secondary" size="xs" asChild>
+                      <Link to={gitSettingsHref}>
+                        {ADD_GIT_CONNECTION_LABEL}
+                      </Link>
+                    </PMButton>
+                  </PMBox>
+                )}
               </PMAlert.Content>
             </PMAlert.Root>
           )}
@@ -540,7 +609,7 @@ type PackageOnTargetRowProps = {
 
 const LOCK_TOOLTIP: Record<string, string> = {
   'in-progress': 'Distributing this package to this target.',
-  'no-app-token': 'Use `packmind install` to update this distribution.',
+  'no-app-token': NO_GIT_CONNECTION_TOOLTIP,
 };
 
 function PackageOnTargetRow({

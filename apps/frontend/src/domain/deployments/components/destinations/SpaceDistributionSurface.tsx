@@ -425,6 +425,9 @@ function DestinationPane({
       onSyncPackageOnTarget={onSyncPackageOnTarget}
       onSyncRepository={onSyncRepository}
       packageHistoryHref={packageHistoryHref}
+      gitSettingsHref={
+        organizationSlug ? routes.org.toSettingsGit(organizationSlug) : null
+      }
     />
   );
 }
