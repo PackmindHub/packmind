@@ -16,18 +16,14 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import {
-  LuArrowRight,
   LuArrowUpRight,
-  LuBookOpen,
   LuChevronDown,
   LuChevronRight,
   LuGitBranch,
   LuRotateCw,
   LuSearch,
   LuTerminal,
-  LuTrash2,
   LuTriangleAlert,
-  LuWandSparkles,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { format } from 'date-fns';
@@ -45,26 +41,14 @@ import {
   packageMostRecentPush,
   STALE_DAYS_THRESHOLD,
   formatRelativeDate,
-  type DriftArtifactEntry,
   type InstallDriftEntry,
 } from '../selectors/installDriftEntries';
 import {
   installLockReason,
   type InstallLockReason,
 } from '../selectors/installLock';
-import type { ArtifactKind, PackageDrift } from '../types';
-
-const KIND_ICON: Record<ArtifactKind, IconType> = {
-  standard: LuBookOpen,
-  command: LuTerminal,
-  skill: LuWandSparkles,
-};
-
-const KIND_NOUN: Record<ArtifactKind, string> = {
-  standard: 'standard',
-  command: 'command',
-  skill: 'skill',
-};
+import type { PackageDrift } from '../types';
+import { DriftArtifactRow } from './DriftArtifactRow';
 
 const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
   [DistributionStatus.success]: 'Distributed',
@@ -794,88 +778,6 @@ function InstallRow({
         </PMBox>
       )}
     </PMBox>
-  );
-}
-
-function DriftArtifactRow({ entry }: Readonly<{ entry: DriftArtifactEntry }>) {
-  const Icon = KIND_ICON[entry.artifact.kind];
-  return (
-    <PMHStack
-      gap={3}
-      align="center"
-      paddingY={1.5}
-      paddingX={2}
-      borderBottomWidth="1px"
-      borderColor="border.tertiary"
-      _last={{ borderBottom: 'none' }}
-    >
-      <PMIcon fontSize="sm" color="text.faded">
-        <Icon />
-      </PMIcon>
-      <PMText
-        fontSize="sm"
-        color="secondary"
-        fontFamily={entry.artifact.kind === 'command' ? 'mono' : undefined}
-        flex={1}
-        minW={0}
-        truncate
-      >
-        {entry.artifact.name}
-      </PMText>
-      <DriftReasonIndicator entry={entry} />
-    </PMHStack>
-  );
-}
-
-function DriftReasonIndicator({
-  entry,
-}: Readonly<{ entry: DriftArtifactEntry }>) {
-  if (entry.reason === 'needs-removal') {
-    return (
-      <PMTooltip
-        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after the next distribution.`}
-        placement="top"
-      >
-        <PMHStack gap={1.5} align="center" cursor="help">
-          <PMIcon fontSize="xs" color="red.500">
-            <LuTrash2 />
-          </PMIcon>
-          <PMBadge colorPalette="red" size="sm">
-            Needs removal
-          </PMBadge>
-        </PMHStack>
-      </PMTooltip>
-    );
-  }
-  if (entry.reason === 'not-distributed') {
-    return (
-      <PMTooltip
-        label="Added to the package — included in the next distribution."
-        placement="top"
-      >
-        <PMBadge colorPalette="red" size="sm">
-          Not distributed
-        </PMBadge>
-      </PMTooltip>
-    );
-  }
-  return (
-    <PMHStack gap={2} align="center">
-      <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
-        v{entry.deployedVersion}
-      </PMText>
-      <PMIcon fontSize="xs" color="text.faded">
-        <LuArrowRight />
-      </PMIcon>
-      <PMText
-        fontSize="xs"
-        color="primary"
-        fontWeight="medium"
-        fontVariantNumeric="tabular-nums"
-      >
-        v{entry.artifact.packmindVersion}
-      </PMText>
-    </PMHStack>
   );
 }
 
