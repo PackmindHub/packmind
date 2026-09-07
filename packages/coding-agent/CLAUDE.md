@@ -22,6 +22,7 @@ snake_case strings, not the folder names:
 | `continue` | `continue/` |
 | `opencode` | `opencode/` |
 | `codex` | `codex/` |
+| `kiro` | `kiro/` |
 
 Four sibling folders are **not** registry-backed agents:
 
@@ -61,8 +62,9 @@ These do **not** fail at compile time — miss one and the agent misbehaves at r
 - **`createDeployer`'s switch** in the same file — its `default` throws at runtime rather than
   failing the build.
 - **`CODING_AGENT_ARTEFACT_PATHS`** — `packages/types/src/coding-agent/CodingAgentArtefactPaths.ts`.
-  It is a `Partial<Record<…>>`, so a missing entry compiles fine; needed only for agents that write
-  artefacts to their own directories.
+  It is total over `MultiFileCodingAgent` (the compiler forces an entry there) and only
+  `Partial<Record<CodingAgent, …>>` over the rest, so a missing entry compiles fine **only** for an
+  agent outside `MultiFileCodingAgent`.
 
 Then:
 

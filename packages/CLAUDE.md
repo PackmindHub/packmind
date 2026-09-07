@@ -8,7 +8,7 @@ This directory contains reusable domain and infrastructure packages shared acros
 
 - **types** - Shared TypeScript types and interfaces used across packages and apps
 - **logger** - Logging utilities with console and structured output support
-- **node-utils** - Node.js utility functions for file system, path manipulation, and common operations
+- **node-utils** - Shared backend framework: `BaseHexa`/`HexaRegistry`, scoped repositories, config, cache, jobs, SSE, mail
 - **test-utils** - Test factories, fixtures, and utilities for consistent test data creation
 - **migrations** - TypeORM database migrations for schema evolution
 
@@ -42,7 +42,7 @@ This directory contains reusable domain and infrastructure packages shared acros
 
 ### Supporting
 
-- **assets** - Static assets, WASM files, and embedded resources
+- **assets** - Static assets: fonts, icons, images, styles (tree-sitter WASM grammars live in `linter-ast/res/`, not here)
 - **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.)
 
 ## Environment Tags and Import Boundaries
@@ -71,14 +71,14 @@ them; the rest exist where the package needs them, so check before assuming a di
 
 ```
 src/<Name>Hexa.ts                       always — entry point, extends BaseHexa
-src/application/adapter/<Name>Adapter.ts always
-src/application/services/               always
+src/application/adapter/<Name>Adapter.ts always — plural `adapters/` in `spaces`
+src/application/services/               most — `llm` uses `src/infra/services/` instead
 src/index.ts                            always — public barrel; nothing is importable until exported here
-src/application/useCases/<useCaseName>/ all but spaces (which drives everything through services)
+src/application/useCases/<useCaseName>/ most — `spaces` and `llm` use flat `src/application/usecases/<UseCaseName>.ts` files instead of one folder per use case
 src/domain/repositories|useCases|errors/ most
 src/domain/entities/                    only accounts and standards
 src/infra/schemas/                      persistence packages only — <name>Schemas.ts barrel of TypeORM EntitySchemas
-src/infra/repositories/                 persistence packages only
+src/infra/repositories/                 persistence packages, plus `coding-agent` (deployer implementations, not persisted entities)
 src/application/jobs/ + src/domain/jobs/ only commands, deployments, git
 test/                                   only the 7 packages listed below
 ```
@@ -87,7 +87,8 @@ test/                                   only the 7 packages listed below
 (`packages/node-utils/src/hexa/`).
 
 Two of the packages above are **not** persistence domains and diverge most: `coding-agent` has no
-`infra/schemas/`, no `test/` and stores nothing, and `llm` has schemas but no `test/`.
+`infra/schemas/` and no `test/` (its `infra/repositories/` holds deployer implementations, not
+persisted entities — see its own `CLAUDE.md`), and `llm` has schemas but no `test/`.
 
 ### Architecture rules live in `packages/.claude/rules/packmind/`
 
@@ -150,11 +151,11 @@ packages. What it does not tell you:
 > `nx.json`). So a `project.json` that lists only `build` still has a `test` target — check with
 > `./node_modules/.bin/nx show project <package-name>` instead of reading `project.json`.
 >
-> Every package declares `typecheck` (`tsc --noEmit`), and `build` depends on it, so building a
-> package type checks it. The target is one line — `"typecheck": {}` — inheriting its command from
-> `targetDefaults` in `nx.json`; a package that omits it silently gets no type gate.
+> Every package declares `typecheck` (`tsc --noEmit`). Most `build` targets depend on it via the
+> `@nx/js:swc` executor's `targetDefaults` in `nx.json`, so building one of those packages type checks
+> it; the target is one line — `"typecheck": {}` — inheriting its command from the same file. `migrations`
+> builds with `@nx/esbuild:esbuild` instead, whose `targetDefaults` do **not** depend on `typecheck`, so
+> `nx build migrations` does not type check despite the target existing.
 >
 > `ui` is the one package whose `build` is not purely inferred: it declares `dependsOn` so the vite
 > build gates on `typecheck` too. Its build output goes to `dist/packages/packmind-ui`.
-
-**Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`

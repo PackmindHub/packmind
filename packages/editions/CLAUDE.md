@@ -9,9 +9,9 @@ builds swap the aliases to real implementations.
 `PACKMIND_EDITION` (or `VITE_PACKMIND_EDITION`, defaulting to `oss`) is read by
 `scripts/select-tsconfig.mjs`, which merges `tsconfig.base.json` with either
 `tsconfig.paths.oss.json` or `tsconfig.paths.proprietary.json` and writes the **generated**
-`tsconfig.base.effective.json`. Every `jest.config.ts` in the monorepo `require`s that generated
-file and feeds its `paths` to `pathsToModuleNameMapper`, so nothing type-checks or tests until it
-has been produced.
+`tsconfig.base.effective.json`. Most `jest.config.ts` files `require` that generated file and feed
+its `paths` to `pathsToModuleNameMapper`, so nothing type-checks or tests until it has been
+produced; a handful of packages still point their jest config at the plain `tsconfig.base.json`.
 
 In OSS, all of these resolve to `packages/editions/src/index.ts`:
 

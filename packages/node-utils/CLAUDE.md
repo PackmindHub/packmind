@@ -33,8 +33,8 @@ Note `IRepository` and `QueryOption` come from `@packmind/types`, **not** from h
 | `SSEEventPublisher`, `RedisSSEClient` | `src/sse/` | server-sent events to the frontend |
 | `MailService`, `SmtpMailService` | `src/mail/` | |
 | `isFeatureEnabled` | `src/featureFlags/` | backend feature-flag gate (see the `feature-flags-authoring` skill) |
-| `Public`, `authRequest` | `src/nest/` | NestJS decorators/helpers usable without depending on the API app |
-| `migrationColumns`, `database/schemas`, `database/types` | `src/database/` | shared TypeORM column definitions and schema helpers — use these so entities stay consistent |
+| `Public`, `AuthenticatedRequest` | `src/nest/` | NestJS decorators/helpers usable without depending on the API app |
+| `uuidMigrationColumn`, `timestampsMigrationColumns`, `softDeleteMigrationColumns`, `database/schemas`, `database/types` | `src/database/` | shared TypeORM column definitions and schema helpers — use these so entities stay consistent |
 | `instrumentMethods`, `withSpan` | `src/observability/` | OpenTelemetry span helpers |
 | `localDataSource` | `src/dataSources/local.ts` | |
 
