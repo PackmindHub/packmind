@@ -271,6 +271,124 @@ describe('StandardVersionRepository', () => {
     expect(allVersions).toHaveLength(2);
   });
 
+  describe('findLatestByStandardIds', () => {
+    let firstStandard: Standard;
+    let secondStandard: Standard;
+    let standardWithoutVersion: Standard;
+    let latestOfFirst: StandardVersion;
+    let latestOfSecond: StandardVersion;
+
+    beforeEach(async () => {
+      firstStandard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+      secondStandard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+      standardWithoutVersion = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: firstStandard.id, version: 1 }),
+      );
+      latestOfFirst = standardVersionFactory({
+        standardId: firstStandard.id,
+        version: 2,
+      });
+      await standardVersionRepository.add(latestOfFirst);
+
+      latestOfSecond = standardVersionFactory({
+        standardId: secondStandard.id,
+        version: 1,
+      });
+      await standardVersionRepository.add(latestOfSecond);
+    });
+
+    it('returns the highest version of every requested standard', async () => {
+      const versions = await standardVersionRepository.findLatestByStandardIds([
+        firstStandard.id,
+        secondStandard.id,
+      ]);
+
+      expect(versions.map((version) => version.id).sort()).toEqual(
+        [latestOfFirst.id, latestOfSecond.id].sort(),
+      );
+    });
+
+    it('omits standards that have no version', async () => {
+      const versions = await standardVersionRepository.findLatestByStandardIds([
+        firstStandard.id,
+        standardWithoutVersion.id,
+      ]);
+
+      expect(versions).toHaveLength(1);
+    });
+
+    it('issues a single query for several standard ids', async () => {
+      const spy = jest.spyOn(fixture.datasource, 'createQueryRunner');
+      spy.mockClear();
+
+      await standardVersionRepository.findLatestByStandardIds([
+        firstStandard.id,
+        secondStandard.id,
+      ]);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when the same standard id is repeated', () => {
+      it('issues a single query', async () => {
+        const spy = jest.spyOn(fixture.datasource, 'createQueryRunner');
+        spy.mockClear();
+
+        await standardVersionRepository.findLatestByStandardIds([
+          firstStandard.id,
+          firstStandard.id,
+          secondStandard.id,
+        ]);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns the repeated standard once', async () => {
+        const versions =
+          await standardVersionRepository.findLatestByStandardIds([
+            firstStandard.id,
+            firstStandard.id,
+          ]);
+
+        expect(versions).toHaveLength(1);
+      });
+    });
+
+    describe('when no id is given', () => {
+      it('returns nothing without querying', async () => {
+        const spy = jest.spyOn(fixture.datasource, 'createQueryRunner');
+        spy.mockClear();
+
+        await standardVersionRepository.findLatestByStandardIds([]);
+
+        expect(spy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the latest version was soft deleted', () => {
+      beforeEach(async () => {
+        await typeormRepo.softDelete(latestOfFirst.id);
+      });
+
+      it('falls back to the newest remaining version', async () => {
+        const versions =
+          await standardVersionRepository.findLatestByStandardIds([
+            firstStandard.id,
+          ]);
+
+        expect(versions[0].version).toBe(1);
+      });
+    });
+  });
+
   describe('when finding non-existent standard versions', () => {
     it('returns null for non-existent id', async () => {
       const foundVersion = await standardVersionRepository.findById(

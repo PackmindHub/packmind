@@ -36,6 +36,7 @@ describe('StandardVersionService', () => {
       restoreById: jest.fn(),
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
+      findLatestByStandardIds: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
     };
 
@@ -43,6 +44,7 @@ describe('StandardVersionService', () => {
       add: jest.fn(),
       findById: jest.fn(),
       findByStandardVersionId: jest.fn(),
+      findByStandardVersionIds: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
     };
@@ -389,6 +391,95 @@ describe('StandardVersionService', () => {
           await standardVersionService.getLatestStandardVersion(standardId);
 
         expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('getLatestVersionsWithRulesByStandardIds', () => {
+    const firstStandardId = createStandardId(uuidv4());
+    const secondStandardId = createStandardId(uuidv4());
+
+    let firstVersion: StandardVersion;
+    let secondVersion: StandardVersion;
+
+    beforeEach(() => {
+      firstVersion = standardVersionFactory({
+        standardId: firstStandardId,
+        version: 2,
+      });
+      secondVersion = standardVersionFactory({
+        standardId: secondStandardId,
+        version: 1,
+      });
+    });
+
+    describe('when every standard has a version', () => {
+      let result: StandardVersion[];
+      let firstRule: ReturnType<typeof ruleFactory>;
+
+      beforeEach(async () => {
+        firstRule = ruleFactory({ standardVersionId: firstVersion.id });
+
+        (
+          standardVersionRepository.findLatestByStandardIds as jest.Mock
+        ).mockResolvedValue([firstVersion, secondVersion]);
+        (
+          ruleRepository.findByStandardVersionIds as jest.Mock
+        ).mockResolvedValue([firstRule]);
+
+        result =
+          await standardVersionService.getLatestVersionsWithRulesByStandardIds([
+            firstStandardId,
+            secondStandardId,
+          ]);
+      });
+
+      it('looks the versions up in a single call', () => {
+        expect(
+          standardVersionRepository.findLatestByStandardIds,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      it('looks the rules up in a single call, for every returned version', () => {
+        expect(ruleRepository.findByStandardVersionIds).toHaveBeenCalledWith([
+          firstVersion.id,
+          secondVersion.id,
+        ]);
+      });
+
+      it('attaches the rules to the version they belong to', () => {
+        expect(
+          result.find((version) => version.id === firstVersion.id)?.rules,
+        ).toEqual([firstRule]);
+      });
+
+      it('gives an empty rule list to a version with no rule', () => {
+        expect(
+          result.find((version) => version.id === secondVersion.id)?.rules,
+        ).toEqual([]);
+      });
+    });
+
+    describe('when no standard has a version', () => {
+      let result: StandardVersion[];
+
+      beforeEach(async () => {
+        (
+          standardVersionRepository.findLatestByStandardIds as jest.Mock
+        ).mockResolvedValue([]);
+
+        result =
+          await standardVersionService.getLatestVersionsWithRulesByStandardIds([
+            firstStandardId,
+          ]);
+      });
+
+      it('returns nothing', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('does not look any rule up', () => {
+        expect(ruleRepository.findByStandardVersionIds).not.toHaveBeenCalled();
       });
     });
   });

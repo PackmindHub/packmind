@@ -11,6 +11,13 @@ export interface IStandardVersionRepository extends IRepository<StandardVersion>
   findLatestByStandardId(
     standardId: StandardId,
   ): Promise<StandardVersion | null>;
+  /**
+   * Batched sibling of `findLatestByStandardId`: the latest version of every
+   * given standard in one query, and without hydrating any relation.
+   */
+  findLatestByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]>;
   findByStandardIdAndVersion(
     standardId: StandardId,
     version: number,

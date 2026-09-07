@@ -78,6 +78,57 @@ export class StandardVersionRepository
     }
   }
 
+  async findLatestByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    const uniqueStandardIds = [...new Set(standardIds)];
+
+    if (uniqueStandardIds.length === 0) {
+      this.logger.info('No standard IDs provided to findLatestByStandardIds');
+      return [];
+    }
+
+    this.logger.info('Finding latest standard versions by standard IDs', {
+      count: uniqueStandardIds.length,
+    });
+
+    try {
+      // DISTINCT ON keeps a single row per standard at the SQL layer, so the
+      // whole version history of a standard never crosses the wire: a standard
+      // at version 60 would otherwise hydrate 60 entities, each carrying the
+      // full markdown of its `description`, to yield one.
+      //
+      // No relations: callers of this method want the version row itself, and
+      // hydrating `rules` and `gitCommit` for every version of every standard
+      // is what makes the per-standard variant expensive.
+      const versions = await this.repository
+        .createQueryBuilder('standardVersion')
+        .where('standardVersion.standardId IN (:...standardIds)', {
+          standardIds: uniqueStandardIds as string[],
+        })
+        .distinctOn(['standardVersion.standardId'])
+        .orderBy('standardVersion.standardId', 'ASC')
+        .addOrderBy('standardVersion.version', 'DESC')
+        .getMany();
+
+      this.logger.info('Latest standard versions found by standard IDs', {
+        requestedCount: uniqueStandardIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find latest standard versions by standard IDs',
+        {
+          count: uniqueStandardIds.length,
+          error: getErrorMessage(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async findLatestByStandardId(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
