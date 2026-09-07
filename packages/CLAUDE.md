@@ -74,7 +74,7 @@ src/<Name>Hexa.ts                       always — entry point, extends BaseHexa
 src/application/adapter/<Name>Adapter.ts always — plural `adapters/` in `spaces`
 src/application/services/               most — `llm` uses `src/infra/services/` instead
 src/index.ts                            always — public barrel; nothing is importable until exported here
-src/application/useCases/<useCaseName>/ most — `spaces` and `llm` use flat `src/application/usecases/<UseCaseName>.ts` files instead of one folder per use case
+src/application/useCases/<useCaseName>/ most — `spaces` uses flat `src/application/usecases/<UseCaseName>.ts` files instead of one folder per use case
 src/domain/repositories|useCases|errors/ most
 src/domain/entities/                    only accounts and standards
 src/infra/schemas/                      persistence packages only — <name>Schemas.ts barrel of TypeORM EntitySchemas
@@ -153,9 +153,10 @@ packages. What it does not tell you:
 >
 > Every package declares `typecheck` (`tsc --noEmit`). Most `build` targets depend on it via the
 > `@nx/js:swc` executor's `targetDefaults` in `nx.json`, so building one of those packages type checks
-> it; the target is one line — `"typecheck": {}` — inheriting its command from the same file. `migrations`
-> builds with `@nx/esbuild:esbuild` instead, whose `targetDefaults` do **not** depend on `typecheck`, so
-> `nx build migrations` does not type check despite the target existing.
+> it; the target is one line — `"typecheck": {}` — inheriting its command from the same file.
+> `migrations` has **no** `build` target at all — its esbuild output is produced by `bundle`
+> (`@nx/esbuild:esbuild`), whose `targetDefaults` depend on `^build` but not on `typecheck`, so
+> `nx bundle migrations` does not type check. Run `nx typecheck migrations` separately.
 >
 > `ui` is the one package whose `build` is not purely inferred: it declares `dependsOn` so the vite
 > build gates on `typecheck` too. Its build output goes to `dist/packages/packmind-ui`.

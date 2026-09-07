@@ -9,9 +9,11 @@ builds swap the aliases to real implementations.
 `PACKMIND_EDITION` (or `VITE_PACKMIND_EDITION`, defaulting to `oss`) is read by
 `scripts/select-tsconfig.mjs`, which merges `tsconfig.base.json` with either
 `tsconfig.paths.oss.json` or `tsconfig.paths.proprietary.json` and writes the **generated**
-`tsconfig.base.effective.json`. Most `jest.config.ts` files `require` that generated file and feed
-its `paths` to `pathsToModuleNameMapper`, so nothing type-checks or tests until it has been
-produced; a handful of packages still point their jest config at the plain `tsconfig.base.json`.
+`tsconfig.base.effective.json`. Nearly every `tsconfig.json` extends it, so **nothing type-checks**
+until it has been produced. Tests are more uneven: half of the `jest.config.ts` files `require` the
+generated file and feed its `paths` to `pathsToModuleNameMapper` (those need it too), `deployments`
+still reads the plain `tsconfig.base.json`, and the rest declare no path mapping at all and run
+without it.
 
 In OSS, all of these resolve to `packages/editions/src/index.ts`:
 
