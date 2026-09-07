@@ -46,18 +46,21 @@ import {
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
 import { ContextChip } from './ContextChip';
+import { ContextCreateMenu } from './ContextCreateMenu';
 
 /** Above this many candidates the list gets a filter rather than a scroll. */
 const SEARCHABLE_FROM = 7;
 
 /**
- * Putting components the space already owns into the package being read.
+ * Filling the package being read, whichever way that happens.
  *
- * The counterpart of the create menu beside it. That one makes a component that
- * does not exist yet and drops it in; this one places one that does. Until it
- * existed, filling a package from this surface meant leaving for the package's
- * edit form, which is a page whose other half is the identity fields the drawer
- * next door already covers.
+ * Both ways are here: the body picks from what the space already owns, and the
+ * title row creates what does not exist yet. They used to be two controls in
+ * the pane's header, and the pane now has one door.
+ *
+ * Until it existed, filling a package from this surface meant leaving for the
+ * package's edit form, which is a page whose other half is the identity fields
+ * the drawer next door already covers.
  *
  * A drawer for the reason the others are: a list to work through rather than a
  * question to answer, and the package it is filling stays on screen beside it,
@@ -146,6 +149,12 @@ export function AddComponentsDrawer({
     addable.freeTotal > 0 ? 'none' : 'all',
   );
   const showingFree = coverage === 'none';
+
+  /*
+   * Whether there is a list at all, which decides both what the footer offers
+   * and which of the two ways of filling the package is the loud one.
+   */
+  const hasCandidates = addable.total > 0;
 
   /*
    * Coverage first, then the query, the order the inventory composes the same
@@ -278,8 +287,62 @@ export function AddComponentsDrawer({
         <PMDrawer.Backdrop />
         <PMDrawer.Positioner>
           <PMDrawer.Content>
+            {/*
+              Both ways of filling the package, on the line that names the
+              package.
+
+              Creating used to be a second control in the pane's header, beside
+              the one that opens this drawer, and the two asked the reader to
+              sort their intention before they could act on it. The intention is
+              one, get this into the package, and the fact needed to choose
+              between the two ways — is it already in this space? — was only
+              knowable after opening the picker. So the ways come inside, where
+              the list is on screen and the choice can actually be made, and the
+              pane keeps one door.
+
+              Here rather than in the footer, which is where it first went. The
+              footer is a bar for validating a decision: a reader looks at it
+              after choosing, not while searching, and a creation route parked
+              beside Cancel was reported as hard to find. The moment a reader
+              needs it is the moment they conclude the list does not hold what
+              they came for, and that happens against the list and its
+              explanation, in the first eyeful of the drawer.
+
+              Cleared of the close trigger, which the drawer pins to the corner
+              of this row. It goes loud when the list is empty, which is the one
+              state where creating is the whole of what is left to do.
+
+              A pick in progress is not protected from the menu. Three of the
+              four methods open something over this drawer and leave it
+              standing, but the manual one navigates, and a reader who ticked
+              rows first loses the ticks. It is left that way: the ticks are
+              already declared throwaway, the drawer discards them on every
+              close, and a control that disappeared when a box was ticked would
+              be a control the reader cannot find twice.
+            */}
             <PMDrawer.Header>
-              <PMDrawer.Title>Add components to {pkg.name}</PMDrawer.Title>
+              <PMHStack
+                width="full"
+                justify="space-between"
+                align="center"
+                gap={4}
+                paddingRight={8}
+              >
+                <PMDrawer.Title>Add components to {pkg.name}</PMDrawer.Title>
+                <ContextCreateMenu
+                  orgSlug={orgSlug}
+                  spaceSlug={spaceSlug}
+                  packageId={pkg.id}
+                  /*
+                    Loud only where creating is the whole of what is left to do.
+                    One control either way, in one place: a second copy beside
+                    the sentence explaining that state would have put two
+                    buttons of the same name a few pixels apart, and a route
+                    that moves with the state is a route to look for twice.
+                  */
+                  variant={hasCandidates ? 'secondary' : 'primary'}
+                />
+              </PMHStack>
               <PMDrawer.CloseTrigger asChild>
                 <PMCloseButton disabled={isPending} />
               </PMDrawer.CloseTrigger>
@@ -287,7 +350,7 @@ export function AddComponentsDrawer({
 
             <PMDrawer.Body>
               <PMVStack gap={4} alignItems="stretch">
-                {addable.total === 0 ? (
+                {!hasCandidates ? (
                   <NothingToAdd
                     packageName={pkg.name}
                     spaceIsEmpty={addable.catalogueTotal === 0}
@@ -417,6 +480,16 @@ export function AddComponentsDrawer({
               </PMVStack>
             </PMDrawer.Body>
 
+            {/*
+              The bar for validating the decision, and nothing else. Creating is
+              on the title row, where a reader who finds nothing that fits is
+              actually looking; it spent one iteration down here beside Cancel
+              and was reported as hard to find.
+
+              Add is absent rather than disabled when there is nothing to pick:
+              a control that could never be enabled is a sentence written as a
+              button, and the body above already says what state this is.
+            */}
             <PMDrawer.Footer>
               <PMButton
                 variant="tertiary"
@@ -426,15 +499,17 @@ export function AddComponentsDrawer({
               >
                 Cancel
               </PMButton>
-              <PMButton
-                variant="primary"
-                size="sm"
-                disabled={picked.length === 0 || isPending}
-                loading={isPending}
-                onClick={() => void handleAdd()}
-              >
-                {picked.length === 0 ? 'Add' : `Add ${picked.length} ${kind}`}
-              </PMButton>
+              {hasCandidates && (
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  disabled={picked.length === 0 || isPending}
+                  loading={isPending}
+                  onClick={() => void handleAdd()}
+                >
+                  {picked.length === 0 ? 'Add' : `Add ${picked.length} ${kind}`}
+                </PMButton>
+              )}
             </PMDrawer.Footer>
           </PMDrawer.Content>
         </PMDrawer.Positioner>
@@ -695,6 +770,17 @@ function CurrentPackages({ names }: Readonly<{ names: readonly string[] }>) {
  * as an empty list, and they ask for opposite things next: one wants a
  * component written, the other wants nothing at all.
  */
+/**
+ * Nothing left to pick, which used to be where this drawer stopped: two lines
+ * saying a component would have to be created, above a footer that could only
+ * cancel. The way out was a chevron in the header behind the drawer, which the
+ * reader had closed this to read.
+ *
+ * The footer now carries it, so what varies here is only the statement. Whether
+ * the space owns nothing at all or the package already holds all of it changes
+ * what is true, not what to do about it, and the instruction under both is the
+ * same sentence.
+ */
 function NothingToAdd({
   packageName,
   spaceIsEmpty,
@@ -707,9 +793,7 @@ function NothingToAdd({
           : `${packageName} already holds everything in this space.`}
       </PMText>
       <PMText variant="small" color="faded">
-        {spaceIsEmpty
-          ? 'Create one from this package, and it joins the package as it is created.'
-          : 'Anything created from now on can be added here.'}
+        Create one and it joins {packageName} as it is created.
       </PMText>
     </PMVStack>
   );
