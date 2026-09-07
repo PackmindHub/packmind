@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   PMAlertDialog,
@@ -61,7 +61,6 @@ import {
   COMPONENT_ACTION_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
-import { ContextCreateMenu } from './ContextCreateMenu';
 import { SPLIT_BUTTON_SEAM, splitButtonHalf } from '../splitButton';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
@@ -667,9 +666,10 @@ export function ContextPackagePane({
               and not on the list being shown.
             */}
             {/*
-              One control for filling this package, whatever the way. It used to
-              be two buttons, `Add components` and `Create`, and they asked the
-              reader to sort their own intention before they could act on it: the
+              One door for filling this package, whatever the way.
+
+              It was two buttons, `Add components` and `Create`, which asked the
+              reader to sort their own intention before they could act on it. The
               intention is one, "get this into the package", and the two doors
               divided it by a fact about the space the reader does not hold. Is
               there already a standard about naming conventions in here? That is
@@ -684,64 +684,39 @@ export function ContextPackagePane({
               actually separates the halves is narrower, whether the component is
               already in this space.
 
-              So they join, in the shape this header already uses for
-              distributing. Picking from the space takes the wide half, since it
-              is the act with a list behind it and the one a package being filled
-              performs over and over, and the four ways of making something new
-              keep the chevron. The seam is a hairline of the page showing
-              between two halves of one colour, and `splitButton` is where its
-              width and the joined edges are decided.
+              They joined first as a split button, wide half picking and chevron
+              creating, which put the two ways under one label and still made the
+              reader choose between them before the drawer they lead to had said
+              anything. So the chevron goes inside: the drawer already holds the
+              list, and it now holds the four ways of making something new in its
+              footer. Up here that leaves one button with one label, on both the
+              full package and the empty one, and it no longer changes shape with
+              what the space happens to have left.
 
-              Creating sits here, on the pane, and not in the rail below the list
-              of packages: the rail creates containers, this creates what goes in
-              them, and side by side the two would read as the same gesture.
+              Creating sits in this drawer, opened from the pane, and not in the
+              rail below the list of packages: the rail creates containers, this
+              creates what goes in them, and side by side the two would read as
+              the same gesture.
 
-              Secondary in every state, both halves of it. The control used to go
-              primary while the package was empty, on the grounds that filling it
-              is the thing to do next, but the body below is already saying that
-              in a sentence with its own primary button under it. Two loud
-              controls asking for the same act, and once the space has nothing
-              left to offer and this collapses to creating, they were the same
-              control twice. So the invitation stays where the explanation is,
-              and up here Distribute owns the one primary the header has.
+              Secondary. The control used to go primary while the package was
+              empty, on the grounds that filling it is the thing to do next, but
+              the body below is already saying that in a sentence with its own
+              primary button under it. Two loud controls asking for the same act.
+              So the invitation stays where the explanation is, and up here
+              Distribute owns the one primary the header has.
             */}
-            {tab === COMPONENTS_TAB &&
-              (addableCount > 0 ? (
-                <PMHStack gap={SPLIT_BUTTON_SEAM}>
-                  <PMButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setAddingComponents(true)}
-                    {...splitButtonHalf('leading')}
-                  >
-                    <PMIcon fontSize="xs">
-                      <LuPlus />
-                    </PMIcon>
-                    Add components
-                  </PMButton>
-                  <ContextCreateMenu
-                    orgSlug={orgSlug}
-                    spaceSlug={spaceSlug}
-                    packageId={pkg.id}
-                    variant="secondary"
-                    trigger="split"
-                  />
-                </PMHStack>
-              ) : (
-                /*
-                  Nothing left in the space to pick, so the wide half has no
-                  list to open and the control collapses to the one act that
-                  remains. A greyed half saying "there is nothing here" would be
-                  a sentence written as a button, and the drawer it refuses to
-                  open is the only place that could explain itself.
-                */
-                <ContextCreateMenu
-                  orgSlug={orgSlug}
-                  spaceSlug={spaceSlug}
-                  packageId={pkg.id}
-                  variant="secondary"
-                />
-              ))}
+            {tab === COMPONENTS_TAB && (
+              <PMButton
+                variant="secondary"
+                size="sm"
+                onClick={() => setAddingComponents(true)}
+              >
+                <PMIcon fontSize="xs">
+                  <LuPlus />
+                </PMIcon>
+                Add components
+              </PMButton>
+            )}
             {/*
               One send control, whatever the state. Catching up where the
               package already is and reaching somewhere new are two questions,
@@ -916,13 +891,6 @@ export function ContextPackagePane({
           <EmptyPackageBody
             canAdd={addableCount > 0}
             onAdd={() => setAddingComponents(true)}
-            create={
-              <ContextCreateMenu
-                orgSlug={orgSlug}
-                spaceSlug={spaceSlug}
-                packageId={pkg.id}
-              />
-            }
           />
         ) : (
           <PMVStack gap={5} align="stretch">
@@ -1103,11 +1071,19 @@ export function ContextPackagePane({
  * same count that chose its own shape: on an empty package the two questions are
  * one question, since a space with anything in it has everything in it to offer.
  */
+/**
+ * The invitation, and the one control it needs.
+ *
+ * It used to hold two: the button that opens the picker, and the create menu in
+ * its place when the space had nothing left to pick from. Whether the space owns
+ * anything still changes what is true, which is the second half of the sentence,
+ * but it no longer changes what to press: the drawer explains that state itself
+ * and offers creating from inside it.
+ */
 function EmptyPackageBody({
   canAdd,
   onAdd,
-  create,
-}: Readonly<{ canAdd: boolean; onAdd: () => void; create: ReactNode }>) {
+}: Readonly<{ canAdd: boolean; onAdd: () => void }>) {
   return (
     <PMBox
       borderWidth="1px"
@@ -1124,16 +1100,12 @@ function EmptyPackageBody({
         distributes nothing.{' '}
         {canAdd
           ? 'Pick standards, commands and skills the space already owns, and it is distributable as soon as you add them.'
-          : 'This space owns no standard, command or skill yet, so there is nothing to pick from: write the first one and it joins this package as it is created.'}
+          : 'This space owns no standard, command or skill yet, so there is nothing to pick from: create the first one and it joins this package as it is made.'}
       </PMText>
       <PMBox paddingTop={4}>
-        {canAdd ? (
-          <PMButton variant="primary" size="sm" onClick={onAdd}>
-            Add components
-          </PMButton>
-        ) : (
-          create
-        )}
+        <PMButton variant="primary" size="sm" onClick={onAdd}>
+          Add components
+        </PMButton>
       </PMBox>
     </PMBox>
   );

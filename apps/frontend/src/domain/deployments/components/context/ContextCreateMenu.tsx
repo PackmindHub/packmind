@@ -34,7 +34,6 @@ import { StandardSamplesModal } from '../../../standards/components/StandardSamp
 import { useSamplesIntoPackage } from '../../../standards/components/useSamplesIntoPackage';
 import { SkillsImportContent } from '../../../skills/components/SkillsImportContent';
 import { withPackageParam } from '../../hooks/useCreateIntoPackage';
-import { splitButtonHalf } from '../splitButton';
 import {
   COMPONENT_TYPE_LABELS,
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -64,10 +63,8 @@ import {
  * its own and cannot drift from what exists.
  */
 /**
- * What every one of these four methods produces, said once. The trigger states
- * it when it has room for words, and the menu states it when the trigger is a
- * chevron: the same phrase either way, so the shape the control takes never
- * changes what it is called.
+ * What every one of these four methods produces, said once, on the one control
+ * that opens them.
  */
 const CREATE_LABEL = 'Create a component';
 
@@ -76,7 +73,6 @@ export function ContextCreateMenu({
   spaceSlug,
   packageId,
   variant = 'primary',
-  trigger = 'standalone',
 }: Readonly<{
   orgSlug: string;
   spaceSlug: string;
@@ -87,18 +83,6 @@ export function ContextCreateMenu({
    * has no way of knowing.
    */
   variant?: PMButtonVariants;
-  /**
-   * How the control presents itself, the same two shapes the distribute control
-   * takes in this header.
-   *
-   * `standalone` is the button on its own: the plus, the label, the chevron.
-   *
-   * `split` is the right half of a split button whose wide half adds what the
-   * space already owns. It draws the chevron alone and squares the joined edge,
-   * and the word it gives up moves inside as the menu's own heading, so what
-   * the chevron holds is still named somewhere the reader can find it.
-   */
-  trigger?: 'standalone' | 'split';
 }>) {
   const methods = buildCreationMethods(
     ARTIFACT_CREATION_ROUTES,
@@ -240,32 +224,20 @@ export function ContextCreateMenu({
     <>
       <PMMenu.Root>
         <PMMenu.Trigger asChild>
-          {trigger === 'split' ? (
-            <PMButton
-              size="sm"
-              variant={variant}
-              aria-label={CREATE_LABEL}
-              paddingInline={2}
-              {...splitButtonHalf('trailing')}
-            >
-              <LuChevronDown aria-hidden />
-            </PMButton>
-          ) : (
-            /*
-             * Named rather than left at "Create", which is what the three
-             * per-type pages call their own button. Up here it sat beside a
-             * second control that also filled this package, and a bare verb
-             * next to "Add components" made the reader guess which of the two
-             * was theirs. Saying the object costs four words and settles it.
-             */
-            <PMButton size="sm" variant={variant}>
-              <PMIcon fontSize="xs">
-                <LuPlus />
-              </PMIcon>
-              {CREATE_LABEL}
-              <LuChevronDown aria-hidden />
-            </PMButton>
-          )}
+          {/*
+            Named rather than left at "Create", which is what the three per-type
+            pages call their own button. It sits beside another control that also
+            fills the package, and a bare verb next to "Add 3 standards" made the
+            reader guess which of the two was theirs. Saying the object costs
+            four words and settles it.
+          */}
+          <PMButton size="sm" variant={variant}>
+            <PMIcon fontSize="xs">
+              <LuPlus />
+            </PMIcon>
+            {CREATE_LABEL}
+            <LuChevronDown aria-hidden />
+          </PMButton>
         </PMMenu.Trigger>
         <PMPortal>
           <PMMenu.Positioner>
@@ -288,42 +260,7 @@ export function ContextCreateMenu({
               maxW="400px"
               maxH="calc(100vh - 10rem)"
             >
-              {/*
-                A labelled group only in the split shape, where the trigger is a
-                chevron with no word on it: the heading is where the word the
-                shape gave up ends up, and the group is what ties it to the four
-                entries it names. Standalone, the button already says this, and a
-                heading repeating the label it was opened from is a line of the
-                menu spent saying nothing.
-              */}
-              {trigger === 'split' ? (
-                <PMMenu.ItemGroup>
-                  {/*
-                    The product's own group label, the one the space overview
-                    and the sidebar's sections use: uppercase, tracked, and a
-                    step quieter than the entries. Left at plain sentence case
-                    it landed on 13px medium in the same colour as every
-                    description under it, which made it a fifth line of content
-                    competing with the first entry's title rather than a name
-                    for the four.
-                  */}
-                  <PMMenu.ItemGroupLabel
-                    paddingInline={3}
-                    paddingTop={2}
-                    paddingBottom={1}
-                    fontSize="xs"
-                    fontWeight="medium"
-                    textTransform="uppercase"
-                    letterSpacing="0.08em"
-                    color="text.faded"
-                  >
-                    {CREATE_LABEL}
-                  </PMMenu.ItemGroupLabel>
-                  {entries}
-                </PMMenu.ItemGroup>
-              ) : (
-                entries
-              )}
+              {entries}
             </PMMenu.Content>
           </PMMenu.Positioner>
         </PMPortal>
