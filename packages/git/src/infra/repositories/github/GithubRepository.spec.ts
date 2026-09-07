@@ -4,6 +4,10 @@ import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import {
+  PROVIDER_MAX_SOCKETS,
+  providerHttpsAgent,
+} from '../http/providerHttpAgent';
 
 // Mock axios
 jest.mock('axios');
@@ -55,6 +59,25 @@ describe('GithubRepository', () => {
           'Content-Type': 'application/json',
           Accept: 'application/vnd.github.v3+json',
         },
+        httpsAgent: providerHttpsAgent,
+      });
+    });
+
+    describe('the agent it is given', () => {
+      // Asserting `keepAlive` alone would pass with no code change at all -
+      // Node has defaulted it to true since v19. The finite socket ceiling is
+      // the part that actually changes behaviour, because reuse only happens
+      // when a request finds a free socket instead of opening its own.
+      it('caps how many sockets may be open at once', () => {
+        expect(providerHttpsAgent.maxSockets).toBe(PROVIDER_MAX_SOCKETS);
+      });
+
+      it('caps them at a finite number', () => {
+        expect(Number.isFinite(providerHttpsAgent.maxSockets)).toBe(true);
+      });
+
+      it('keeps sockets alive so the cap can be reused against', () => {
+        expect(providerHttpsAgent.options.keepAlive).toBe(true);
       });
     });
 

@@ -12,6 +12,7 @@ import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
 } from '../http/withTransientRetry';
+import { providerHttpsAgent } from '../http/providerHttpAgent';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -59,6 +60,7 @@ export class GithubRepository implements IGitRepo {
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
+      httpsAgent: providerHttpsAgent,
     });
 
     // Inject token from resolver on every request
