@@ -10,7 +10,7 @@ import {
 
 import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { throwIfFeatureAbsent } from '../http/packmindEdition';
 
 export class ChangeProposalGateway implements IChangeProposalGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
@@ -25,9 +25,7 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
         method: 'POST',
         body: { proposals: command.proposals },
         onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('change proposals');
-          }
+          throwIfFeatureAbsent(response, 'change proposals');
         },
       },
     );
@@ -58,9 +56,7 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
         method: 'POST',
         body: { proposals: command.proposals },
         onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('change proposals');
-          }
+          throwIfFeatureAbsent(response, 'change proposals');
         },
       },
     );

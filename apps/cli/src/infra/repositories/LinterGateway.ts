@@ -10,7 +10,7 @@ import {
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { handleScope } from '../../application/utils/handleScope';
-import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { throwIfFeatureAbsent } from '../http/packmindEdition';
 
 export class LinterGateway implements ILinterGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
@@ -34,9 +34,7 @@ export class LinterGateway implements ILinterGateway {
         method: 'POST',
         body: payload,
         onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('local linting with packages');
-          }
+          throwIfFeatureAbsent(response, 'local linting with packages');
         },
       });
     };
@@ -60,9 +58,7 @@ export class LinterGateway implements ILinterGateway {
         method: 'POST',
         body: payload,
         onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('local linting with packages');
-          }
+          throwIfFeatureAbsent(response, 'local linting with packages');
         },
       });
     };
@@ -78,9 +74,7 @@ export class LinterGateway implements ILinterGateway {
               packagesSlugs: command.packagesSlugs,
             },
             onError: (response) => {
-              if (response.status === 404) {
-                throw new CommunityEditionError('local linting with packages');
-              }
+              throwIfFeatureAbsent(response, 'local linting with packages');
             },
           },
         );
