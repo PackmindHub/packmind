@@ -28,6 +28,7 @@ import {
   componentEditHref,
   componentEntryHref,
   componentFileHref,
+  contextComponentHref,
   contextPackageHref,
   packageDetailHref,
   packageDetailParams,
@@ -203,6 +204,39 @@ describe('contextPackageHref', () => {
     it('escapes it', () => {
       expect(contextPackageHref(TARGET, PACKAGE, 'a b&c')).toBe(
         '/org/acme/space/core/context?package=pkg-1&component=a+b%26c',
+      );
+    });
+  });
+});
+
+describe('contextComponentHref', () => {
+  it('names the surface and the component', () => {
+    expect(contextComponentHref(TARGET, 'standard-1')).toBe(
+      '/org/acme/space/core/context?component=standard-1',
+    );
+  });
+
+  /*
+    The addresses this replaces name no package either, and the surface resolves
+    one from the component. Naming one here would pick a package for a reader
+    who never asked for it.
+  */
+  it('names no package', () => {
+    expect(contextComponentHref(TARGET, 'standard-1')).not.toContain('package');
+  });
+
+  describe('when a file is asked for', () => {
+    it('opens the component on that file', () => {
+      expect(contextComponentHref(TARGET, 'skill-1', 'setup/install.md')).toBe(
+        '/org/acme/space/core/context?component=skill-1&file=setup%2Finstall.md',
+      );
+    });
+  });
+
+  describe('when no file is asked for', () => {
+    it('leaves the file out of the address', () => {
+      expect(contextComponentHref(TARGET, 'skill-1', null)).toBe(
+        '/org/acme/space/core/context?component=skill-1',
       );
     });
   });

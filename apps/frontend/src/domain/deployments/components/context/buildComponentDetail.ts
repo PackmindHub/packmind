@@ -274,6 +274,36 @@ export function contextPackageHref(
 }
 
 /**
+ * The Context surface of a space, opened on one component and on whichever
+ * package turns out to hold it.
+ *
+ * A whole path like the builder above it, and for a sharper version of the same
+ * reason: its callers are the component pages themselves, redirecting a reader
+ * who arrived on an address from before this surface existed. A bookmark, a
+ * link in an email, a link out of Review changes.
+ *
+ * It names no package, unlike the builder above, because the addresses it
+ * replaces name none either. `selectContextPackage` answers that from the
+ * component, which is what makes a component no package holds openable at all.
+ *
+ * The file is here rather than in a builder of its own because a skill's file
+ * addresses are what people actually bookmark: the skill's own index sends them
+ * to one, so `/skills/x/files/setup.md` is the address in the wild and it has
+ * to land on that file and not on the skill's instructions.
+ */
+export function contextComponentHref(
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+  componentKey: string,
+  filePath?: string | null,
+): string {
+  const params = new URLSearchParams({ [COMPONENT_PARAM]: componentKey });
+  if (filePath) {
+    params.set(FILE_PARAM, filePath);
+  }
+  return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
+}
+
+/**
  * The address of one file of the component that is already open.
  *
  * It names no component, only the file. The rail that builds these links is the

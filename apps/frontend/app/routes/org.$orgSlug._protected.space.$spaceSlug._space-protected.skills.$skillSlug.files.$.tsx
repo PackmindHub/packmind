@@ -1,5 +1,10 @@
 import { useCallback, useMemo, type MouseEvent } from 'react';
-import { useNavigate, useOutletContext, useParams } from 'react-router';
+import {
+  useNavigate,
+  useOutletContext,
+  useParams,
+  type LoaderFunctionArgs,
+} from 'react-router';
 import { PMVStack } from '@packmind/ui';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
@@ -13,6 +18,25 @@ import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLi
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
+import { redirectSkillToContextComponent } from '../../src/shared/data/redirectToContext';
+
+/**
+ * One file of a skill, which in the plugin-first navigation is read in the
+ * Context pane. This is the address people actually hold: the skill's index
+ * sends them here, so `/skills/x/files/setup.md` is what gets copied out of the
+ * address bar.
+ *
+ * SKILL.md carries across as no file at all, which is the same rule the pane
+ * follows and the mirror of the default below. It is not one of the skill's
+ * files, it is the skill, and the address that shows it is the one naming none.
+ */
+export async function clientLoader(args: LoaderFunctionArgs) {
+  const requested = args.params['*'];
+  return redirectSkillToContextComponent(
+    args,
+    !requested || requested === SKILL_MD_FILENAME ? null : requested,
+  );
+}
 
 export default function SkillFilesRouteModule() {
   const {
