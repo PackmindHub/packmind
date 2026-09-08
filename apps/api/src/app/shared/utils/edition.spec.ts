@@ -12,39 +12,29 @@ jest.mock('@packmind/node-utils', () => ({
 const getConfig = Configuration.getConfig as jest.Mock;
 
 describe('resolvePackmindEdition', () => {
-  // PACKMIND_EDITION keeps the vocabulary the deployment tooling writes, which
-  // is not the one the API publishes. This mapping is the whole join between
-  // them, and `proprietary` is the value every enterprise deployment sets.
-  describe.each(['proprietary', 'cloud'])(
-    'when PACKMIND_EDITION is %s',
-    (raw) => {
-      it('resolves the enterprise edition', async () => {
-        getConfig.mockResolvedValue(raw);
+  // The mapping itself is `editionFromDeploymentValue`, tested in
+  // @packmind/types. What is worth pinning here is that the edition comes from
+  // the config layer — which reads Infisical as well as the environment — and
+  // not from process.env directly.
+  describe('when the config layer answers proprietary', () => {
+    it('resolves the enterprise edition', async () => {
+      getConfig.mockResolvedValue('proprietary');
 
-        await expect(resolvePackmindEdition()).resolves.toBe('enterprise');
-      });
-    },
-  );
+      await expect(resolvePackmindEdition()).resolves.toBe('enterprise');
+    });
 
-  // The published name is not an accepted input: webpack builds the stubs for
-  // anything but `proprietary`, so answering `enterprise` here would announce
-  // routes the binary does not have.
-  describe('when PACKMIND_EDITION is the published name enterprise', () => {
-    it('resolves the community edition, matching what was built', async () => {
-      getConfig.mockResolvedValue('enterprise');
+    it('asks the config layer for PACKMIND_EDITION', async () => {
+      getConfig.mockResolvedValue('proprietary');
 
-      await expect(resolvePackmindEdition()).resolves.toBe('community');
+      await resolvePackmindEdition();
+
+      expect(getConfig).toHaveBeenCalledWith('PACKMIND_EDITION');
     });
   });
 
-  describe.each([
-    ['oss', 'oss'],
-    ['unset', undefined],
-    ['empty', ''],
-    ['a name nobody ships', 'starship'],
-  ])('when PACKMIND_EDITION is %s', (_label, raw) => {
+  describe('when the config layer has no value', () => {
     it('resolves the community edition', async () => {
-      getConfig.mockResolvedValue(raw);
+      getConfig.mockResolvedValue(null);
 
       await expect(resolvePackmindEdition()).resolves.toBe('community');
     });
