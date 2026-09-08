@@ -31,8 +31,7 @@ error, so the type change is what drives the rest.
 
 - **Model defaults live in `@packmind/types`.** `src/constants/defaultModels.ts` only re-exports
   `DEFAULT_OPENAI_MODELS`, `DEFAULT_ANTHROPIC_MODELS`, `DEFAULT_GEMINI_MODELS` and
-  `DEFAULT_AZURE_OPENAI_API_VERSION` for back-compat — change a default there, not here. Provider
-  endpoints (`OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT`) do live in that file.
+  `DEFAULT_AZURE_OPENAI_API_VERSION` for back-compat — change a default there, not here.
 - Provider failures are normalised for users by
   `src/infra/services/extractUserFriendlyErrorMessage.ts` — route new provider errors through it
   instead of surfacing raw SDK messages.

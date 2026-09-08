@@ -27,7 +27,7 @@ snake_case strings, not the folder names:
 Four sibling folders are **not** registry-backed agents:
 
 - `genericSectionWriter/` — shared writers for agents whose output is a single marked-up file
-  (`GenericSectionWriter`, `GenericStandardSectionWriter`, `GenericCommandSectionWriter`,
+  (`GenericSectionWriter`, `GenericStandardSectionWriter`, `GenericStandardWriter`,
   `SingleFileDeployer`). Most single-file agents should compose these rather than re-implement
   marker handling.
 - `defaultSkillsDeployer/` — deploys the built-in skills (`OnboardDeployer`,
