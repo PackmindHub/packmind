@@ -76,7 +76,7 @@ const setFlashToastMock = setFlashToast as Mock;
 const redirectMock = redirect as MockedFunction<typeof redirect>;
 
 const me = {
-  edition: 'oss' as const,
+  edition: 'community' as const,
   authenticated: true,
   user: { id: 'user-1', email: 'test@example.com' },
   organization: {

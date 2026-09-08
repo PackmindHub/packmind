@@ -213,14 +213,14 @@ describe('PackmindHttpClient', () => {
       describe('when the header states the edition', () => {
         beforeEach(async () => {
           (global.fetch as jest.Mock).mockResolvedValue(
-            respondWith(404, { 'Packmind-Edition': 'cloud' }),
+            respondWith(404, { 'Packmind-Edition': 'enterprise' }),
           );
 
           await request();
         });
 
         it('hands that edition to the caller', () => {
-          expect(onError).toHaveBeenCalledWith(expect.anything(), 'cloud');
+          expect(onError).toHaveBeenCalledWith(expect.anything(), 'enterprise');
         });
 
         it('asks the server nothing further', () => {
@@ -232,13 +232,13 @@ describe('PackmindHttpClient', () => {
         beforeEach(async () => {
           (global.fetch as jest.Mock)
             .mockResolvedValueOnce(respondWith(404))
-            .mockResolvedValueOnce(authMeAnswering({ edition: 'oss' }));
+            .mockResolvedValueOnce(authMeAnswering({ edition: 'community' }));
 
           await request();
         });
 
         it('takes the edition from /auth/me', () => {
-          expect(onError).toHaveBeenCalledWith(expect.anything(), 'oss');
+          expect(onError).toHaveBeenCalledWith(expect.anything(), 'community');
         });
 
         it('reads it off the unauthenticated answer', () => {
@@ -281,7 +281,7 @@ describe('PackmindHttpClient', () => {
         beforeEach(async () => {
           (global.fetch as jest.Mock)
             .mockResolvedValueOnce(respondWith(404))
-            .mockResolvedValueOnce(authMeAnswering({ edition: 'oss' }))
+            .mockResolvedValueOnce(authMeAnswering({ edition: 'community' }))
             .mockResolvedValueOnce(respondWith(404));
 
           await request();
@@ -293,7 +293,10 @@ describe('PackmindHttpClient', () => {
         });
 
         it('still hands it to the caller', () => {
-          expect(onError).toHaveBeenLastCalledWith(expect.anything(), 'oss');
+          expect(onError).toHaveBeenLastCalledWith(
+            expect.anything(),
+            'community',
+          );
         });
       });
 

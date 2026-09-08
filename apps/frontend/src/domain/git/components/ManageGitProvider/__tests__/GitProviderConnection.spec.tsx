@@ -148,7 +148,7 @@ describe('GitProviderConnection', () => {
     mockUseGetMeQuery.mockReturnValue({
       data: {
         authenticated: true,
-        edition: 'oss',
+        edition: 'community',
         message: 'ok',
         user: {
           id: 'user-1',
@@ -251,7 +251,7 @@ describe('GitProviderConnection', () => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'cloud',
+          edition: 'enterprise',
           message: 'ok',
           user: {
             id: 'user-1',

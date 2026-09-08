@@ -21,7 +21,7 @@ type Captured = {
  * Boots a real server rather than calling the middleware directly. The unit
  * spec proves it sets the header when it runs; only a request-level test
  * proves Express runs it for a path no controller claims — the routing 404 an
- * OSS stub produces, and the reason this is not a `NestModule.configure`
+ * Community Edition stub produces, and the reason this is not a `NestModule.configure`
  * middleware.
  */
 describe('the edition header over the request pipeline', () => {
@@ -44,7 +44,7 @@ describe('the edition header over the request pipeline', () => {
 
     app = testingModule.createNestApplication();
     // Registered exactly as `main.ts` does it.
-    app.use(createEditionHeaderMiddleware('oss'));
+    app.use(createEditionHeaderMiddleware('community'));
     await app.listen(0);
 
     const { port } = app.getHttpServer().address() as AddressInfo;
@@ -67,7 +67,7 @@ describe('the edition header over the request pipeline', () => {
     });
 
     it('answers with the edition header', () => {
-      expect(captured.edition).toBe('oss');
+      expect(captured.edition).toBe('community');
     });
   });
 
@@ -83,7 +83,7 @@ describe('the edition header over the request pipeline', () => {
     });
 
     it('answers with the edition header', () => {
-      expect(captured.edition).toBe('oss');
+      expect(captured.edition).toBe('community');
     });
   });
 });

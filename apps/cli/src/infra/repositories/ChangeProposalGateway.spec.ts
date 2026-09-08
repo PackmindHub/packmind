@@ -32,7 +32,7 @@ describe('ChangeProposalGateway', () => {
   // edition surfaces the latter.
   const respondWith = (
     status: number,
-    edition: 'cloud' | 'oss' | null = null,
+    edition: 'enterprise' | 'community' | null = null,
   ): void => {
     const response = new Response(null, { status });
 
@@ -64,7 +64,7 @@ describe('ChangeProposalGateway', () => {
   describe.each(callEachRoute)('$name', ({ call }) => {
     describe('when a Community Edition server does not mount the route', () => {
       beforeEach(() => {
-        respondWith(404, 'oss');
+        respondWith(404, 'community');
       });
 
       it('reports change proposals as unavailable', async () => {
@@ -72,9 +72,9 @@ describe('ChangeProposalGateway', () => {
       });
     });
 
-    describe('when a cloud server answers 404', () => {
+    describe('when an enterprise server answers 404', () => {
       beforeEach(() => {
-        respondWith(404, 'cloud');
+        respondWith(404, 'enterprise');
       });
 
       it('surfaces the real error instead of blaming the edition', async () => {
@@ -100,7 +100,7 @@ describe('ChangeProposalGateway', () => {
 
     describe('when a Community Edition server fails for another reason', () => {
       beforeEach(() => {
-        respondWith(500, 'oss');
+        respondWith(500, 'community');
       });
 
       it('surfaces the real error instead of blaming the edition', async () => {

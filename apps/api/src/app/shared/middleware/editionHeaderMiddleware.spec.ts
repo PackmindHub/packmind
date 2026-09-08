@@ -11,7 +11,7 @@ describe('createEditionHeaderMiddleware', () => {
     next = jest.fn();
   });
 
-  const run = (edition: 'cloud' | 'oss'): void => {
+  const run = (edition: 'enterprise' | 'community'): void => {
     createEditionHeaderMiddleware(edition)(
       {} as Request,
       res as unknown as Response,
@@ -19,35 +19,35 @@ describe('createEditionHeaderMiddleware', () => {
     );
   };
 
-  describe('when the deployment runs the cloud edition', () => {
-    it('sets the edition header to cloud', () => {
-      run('cloud');
+  describe('when the deployment runs the enterprise edition', () => {
+    it('sets the edition header to enterprise', () => {
+      run('enterprise');
 
       expect(res.setHeader).toHaveBeenCalledWith(
         PACKMIND_EDITION_HEADER,
-        'cloud',
+        'enterprise',
       );
     });
 
     it('calls next', () => {
-      run('cloud');
+      run('enterprise');
 
       expect(next).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('when the deployment runs the OSS edition', () => {
-    it('sets the edition header to oss', () => {
-      run('oss');
+  describe('when the deployment runs the community edition', () => {
+    it('sets the edition header to community', () => {
+      run('community');
 
       expect(res.setHeader).toHaveBeenCalledWith(
         PACKMIND_EDITION_HEADER,
-        'oss',
+        'community',
       );
     });
 
     it('calls next', () => {
-      run('oss');
+      run('community');
 
       expect(next).toHaveBeenCalledTimes(1);
     });

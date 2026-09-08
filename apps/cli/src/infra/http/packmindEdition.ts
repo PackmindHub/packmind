@@ -4,16 +4,27 @@ import { CommunityEditionError } from '../../domain/errors/CommunityEditionError
 
 // Keyed by the union, so a new server-side edition is a compile error here
 // until this file says what the CLI does with it.
-const KNOWN_EDITIONS: Record<PackmindEdition, true> = {
-  cloud: true,
-  oss: true,
+const KNOWN_EDITIONS: Record<PackmindEdition, PackmindEdition> = {
+  enterprise: 'enterprise',
+  community: 'community',
+};
+
+// /auth/me has answered `cloud`/`oss` since long before these names, and
+// reaching servers that old is the whole point of that fallback. Kept apart
+// from the union above so the old vocabulary cannot leak into new code.
+const LEGACY_EDITIONS: Record<string, PackmindEdition> = {
+  cloud: 'enterprise',
+  oss: 'community',
 };
 
 export function parsePackmindEdition(value: unknown): PackmindEdition | null {
-  return typeof value === 'string' &&
-    Object.prototype.hasOwnProperty.call(KNOWN_EDITIONS, value)
-    ? (value as PackmindEdition)
-    : null;
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  return (
+    KNOWN_EDITIONS[value as PackmindEdition] ?? LEGACY_EDITIONS[value] ?? null
+  );
 }
 
 /**
@@ -29,8 +40,8 @@ export function readPackmindEdition(
 /**
  * Raises `CommunityEditionError` only when the edition proves the server lacks
  * the feature: it stubs these routes out, so the route is absent and answers
- * 404. The status alone was the old bug — a cloud 404 also means a missing
- * organization, space or resource.
+ * 404. The status alone was the old bug — an enterprise 404 also means a
+ * missing organization, space or resource.
  */
 export function throwIfFeatureAbsent(
   response: Response,
@@ -41,7 +52,7 @@ export function throwIfFeatureAbsent(
     return;
   }
 
-  if (edition === 'oss') {
+  if (edition === 'community') {
     throw new CommunityEditionError(feature);
   }
 
@@ -54,7 +65,7 @@ export function throwIfFeatureAbsent(
 
 const unstatedEditionError = (feature: string): Error => {
   const error: Error & { statusCode?: number } = new Error(
-    `The "${feature}" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on a cloud deployment, check that the space and organization still exist.`,
+    `The "${feature}" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on an Enterprise deployment, check that the space and organization still exist.`,
   );
   // Stamped so PackmindHttpClient rethrows it as it is rather than wrapping it.
   error.statusCode = 404;

@@ -99,7 +99,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns authenticated user with organization', () => {
           expect(result).toEqual({
-            edition: 'oss',
+            edition: 'community',
             authenticated: true,
             user: {
               id: '1',
@@ -146,7 +146,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns unauthenticated response', () => {
           expect(result).toEqual({
-            edition: 'oss',
+            edition: 'community',
             message: 'User does not have access to the organization in token',
             authenticated: false,
           });
@@ -175,7 +175,7 @@ describe('AuthService - getMe method', () => {
           const result = await authService.getMe('valid-jwt-token');
 
           expect(result).toEqual({
-            edition: 'oss',
+            edition: 'community',
             message: 'User does not have access to the organization in token',
             authenticated: false,
           });
@@ -226,7 +226,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns authenticated with user organizations list', () => {
           expect(result).toEqual({
-            edition: 'oss',
+            edition: 'community',
             user: {
               id: '1',
               email: 'testuser@packmind.com',
@@ -291,7 +291,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -311,7 +311,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -331,7 +331,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -354,7 +354,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'Invalid or expired access token',
           authenticated: false,
         });
@@ -377,7 +377,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'Invalid or expired access token',
           authenticated: false,
         });
@@ -400,7 +400,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
-          edition: 'oss',
+          edition: 'community',
           message: 'Invalid or expired access token',
           authenticated: false,
         });

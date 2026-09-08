@@ -837,11 +837,11 @@ describe('AuthController', () => {
       status: jest.fn().mockReturnThis(),
     } as unknown as Response;
 
-    describe('when edition is cloud (PACKMIND_EDITION=proprietary)', () => {
+    describe('when edition is enterprise (PACKMIND_EDITION=proprietary)', () => {
       beforeEach(async () => {
         mockConfiguration.getConfig.mockResolvedValue('proprietary');
         mockAuthService.getMe.mockResolvedValue({
-          edition: 'cloud' as const,
+          edition: 'enterprise' as const,
           user: {
             id: createUserId('1'),
             email: 'test@example.com',
@@ -858,31 +858,31 @@ describe('AuthController', () => {
         });
       });
 
-      it('returns edition "cloud" in the response', async () => {
+      it('returns edition "enterprise" in the response', async () => {
         const result = await controller.getMe(
           mockRequest,
           mockResponseWithStatus,
         );
-        expect(result.edition).toBe('cloud');
+        expect(result.edition).toBe('enterprise');
       });
     });
 
-    describe('when PACKMIND_EDITION is not set (OSS default)', () => {
+    describe('when PACKMIND_EDITION is not set (community default)', () => {
       beforeEach(() => {
         mockConfiguration.getConfig.mockResolvedValue(undefined);
         mockAuthService.getMe.mockResolvedValue({
-          edition: 'oss' as const,
+          edition: 'community' as const,
           message: 'No valid access token found',
           authenticated: false,
         });
       });
 
-      it('returns edition "oss" in the response', async () => {
+      it('returns edition "community" in the response', async () => {
         const result = await controller.getMe(
           mockRequest,
           mockResponseWithStatus,
         );
-        expect(result.edition).toBe('oss');
+        expect(result.edition).toBe('community');
       });
     });
 
@@ -892,12 +892,12 @@ describe('AuthController', () => {
         mockAuthService.getMe.mockRejectedValue(new Error('Unexpected error'));
       });
 
-      it('returns edition "oss" in the fallback response', async () => {
+      it('returns edition "community" in the fallback response', async () => {
         const result = await controller.getMe(
           mockRequest,
           mockResponseWithStatus,
         );
-        expect(result.edition).toBe('oss');
+        expect(result.edition).toBe('community');
       });
     });
   });

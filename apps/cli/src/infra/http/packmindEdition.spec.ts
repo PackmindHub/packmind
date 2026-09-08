@@ -1,5 +1,9 @@
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
-import { readPackmindEdition, throwIfFeatureAbsent } from './packmindEdition';
+import {
+  parsePackmindEdition,
+  readPackmindEdition,
+  throwIfFeatureAbsent,
+} from './packmindEdition';
 
 const buildResponse = (
   status: number,
@@ -7,19 +11,19 @@ const buildResponse = (
 ): Response => new Response(null, { status, headers });
 
 describe('readPackmindEdition', () => {
-  describe('when the server published the cloud edition', () => {
-    it('reads cloud', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'cloud' });
+  describe('when the server published the enterprise edition', () => {
+    it('reads enterprise', () => {
+      const response = buildResponse(404, { 'Packmind-Edition': 'enterprise' });
 
-      expect(readPackmindEdition(response)).toBe('cloud');
+      expect(readPackmindEdition(response)).toBe('enterprise');
     });
   });
 
-  describe('when the server published the oss edition', () => {
-    it('reads oss', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'oss' });
+  describe('when the server published the community edition', () => {
+    it('reads community', () => {
+      const response = buildResponse(404, { 'Packmind-Edition': 'community' });
 
-      expect(readPackmindEdition(response)).toBe('oss');
+      expect(readPackmindEdition(response)).toBe('community');
     });
   });
 
@@ -31,9 +35,29 @@ describe('readPackmindEdition', () => {
 
   describe('when the header carries an edition this CLI does not know', () => {
     it('reads nothing', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'enterprise' });
+      const response = buildResponse(404, { 'Packmind-Edition': 'starship' });
 
       expect(readPackmindEdition(response)).toBeNull();
+    });
+  });
+});
+
+describe('parsePackmindEdition', () => {
+  // /auth/me on a server that predates this vocabulary still answers with the
+  // old names, and reading those servers is why the fallback exists.
+  describe('when the value uses the names that came before', () => {
+    it('reads cloud as enterprise', () => {
+      expect(parsePackmindEdition('cloud')).toBe('enterprise');
+    });
+
+    it('reads oss as community', () => {
+      expect(parsePackmindEdition('oss')).toBe('community');
+    });
+  });
+
+  describe('when the value is not a string', () => {
+    it('reads nothing', () => {
+      expect(parsePackmindEdition(undefined)).toBeNull();
     });
   });
 });
@@ -42,23 +66,35 @@ describe('throwIfFeatureAbsent', () => {
   describe('when a 404 comes from a Community Edition server', () => {
     it('reports the feature as absent', () => {
       expect(() =>
-        throwIfFeatureAbsent(buildResponse(404), 'oss', 'change proposals'),
+        throwIfFeatureAbsent(
+          buildResponse(404),
+          'community',
+          'change proposals',
+        ),
       ).toThrow(CommunityEditionError);
     });
 
     it('names the feature in the message', () => {
       expect(() =>
-        throwIfFeatureAbsent(buildResponse(404), 'oss', 'change proposals'),
+        throwIfFeatureAbsent(
+          buildResponse(404),
+          'community',
+          'change proposals',
+        ),
       ).toThrow(
         'The "change proposals" feature is not available in Packmind Community Edition.',
       );
     });
   });
 
-  describe('when a 404 comes from a cloud server', () => {
+  describe('when a 404 comes from an enterprise server', () => {
     it('lets the real error surface', () => {
       expect(() =>
-        throwIfFeatureAbsent(buildResponse(404), 'cloud', 'change proposals'),
+        throwIfFeatureAbsent(
+          buildResponse(404),
+          'enterprise',
+          'change proposals',
+        ),
       ).not.toThrow();
     });
   });
@@ -66,7 +102,11 @@ describe('throwIfFeatureAbsent', () => {
   describe('when a Community Edition server fails on a route it does mount', () => {
     it('lets the real error surface', () => {
       expect(() =>
-        throwIfFeatureAbsent(buildResponse(502), 'oss', 'change proposals'),
+        throwIfFeatureAbsent(
+          buildResponse(502),
+          'community',
+          'change proposals',
+        ),
       ).not.toThrow();
     });
   });
@@ -82,7 +122,7 @@ describe('throwIfFeatureAbsent', () => {
       expect(() =>
         throwIfFeatureAbsent(buildResponse(404), null, 'change proposals'),
       ).toThrow(
-        'The "change proposals" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on a cloud deployment, check that the space and organization still exist.',
+        'The "change proposals" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on an Enterprise deployment, check that the space and organization still exist.',
       );
     });
 

@@ -97,7 +97,7 @@ describe('AuthGatewayApi', () => {
   describe('getMe', () => {
     describe('when user is authenticated', () => {
       const mockResponse = {
-        edition: 'oss' as const,
+        edition: 'community' as const,
         message: 'User authenticated',
         authenticated: true,
         user: {
@@ -139,7 +139,7 @@ describe('AuthGatewayApi', () => {
     describe('when user is not authenticated', () => {
       it('returns authentication failure response', async () => {
         const mockResponse = {
-          edition: 'oss' as const,
+          edition: 'community' as const,
           message: 'Not authenticated',
           authenticated: false,
         };
