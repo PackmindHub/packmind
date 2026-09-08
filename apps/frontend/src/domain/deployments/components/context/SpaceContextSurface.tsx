@@ -229,6 +229,35 @@ export function SpaceContextSurface() {
     : spaceComponent;
 
   /*
+   * Which of the three things the right half is, decided once. The rail reads
+   * the answer too, because a skill open in the pane takes the rail with it,
+   * and two conditions written apart are how the two halves come to disagree
+   * about what is on screen.
+   *
+   * A component with no package comes first, ahead of the inventory it was
+   * opened from: an address naming a component the surface can read is an
+   * address about that component, and the inventory is where its back link
+   * goes. It is also the only reading that works in a space with no package at
+   * all, where `resolveContextView` has nothing else to offer and would
+   * otherwise answer the inventory over the component the reader asked for.
+   */
+  const paneContent: 'orphan' | 'inventory' | 'package' =
+    detail && !selectedPackage
+      ? 'orphan'
+      : showingInventory
+        ? 'inventory'
+        : 'package';
+
+  /*
+   * The inventory row of the rail is marked while the pane is showing the
+   * inventory and while it is showing a component out of it, the same way a
+   * package row stays marked while one of its components is open: the mark says
+   * where what is on screen lives, and a component no package carries lives in
+   * that list and nowhere else.
+   */
+  const railShowsInventory = paneContent !== 'package';
+
+  /*
    * The files of the open skill, when that is what is open.
    *
    * The query is the one the pane's own body runs, by the same id, so the two
@@ -489,11 +518,15 @@ export function SpaceContextSurface() {
           once, and the tree of something the pane is not showing would be a
           third thing on screen, answering to nobody.
         */}
-          {selectedPackage && detail && treeFiles && !showingInventory ? (
+          {detail && treeFiles && paneContent !== 'inventory' ? (
             <ContextSkillFileRail
               skillName={detail.name}
-              packageName={selectedPackage.name}
-              backHref={packageDetailHref(searchParams, selectedPackage.id)}
+              backLabel={selectedPackage?.name ?? 'All components'}
+              backHref={
+                selectedPackage
+                  ? packageDetailHref(searchParams, selectedPackage.id)
+                  : inventoryHref(searchParams)
+              }
               files={treeFiles}
               selectedPath={selectedFile?.path ?? SKILL_MD_FILENAME}
               onSelectFile={selectFile}
@@ -507,10 +540,12 @@ export function SpaceContextSurface() {
               selectedPackageId={selectedPackage?.id ?? null}
               attention={attention}
               isAttentionUnavailable={isDriftError}
-              showingInventory={showingInventory}
+              showingInventory={railShowsInventory}
               inventoryCount={inventoryCount}
               orphanCount={orphanCount}
-              showingOrphans={showingInventory && coverage === NO_PACKAGE_VALUE}
+              showingOrphans={
+                railShowsInventory && coverage === NO_PACKAGE_VALUE
+              }
               onSelect={selectPackage}
               onShowInventory={showInventory}
               onShowOrphans={showOrphans}
@@ -528,17 +563,10 @@ export function SpaceContextSurface() {
             display="flex"
             flexDirection="column"
           >
-            {/*
-              A component with no package first, ahead of the inventory it was
-              opened from: an address naming a component the surface can read is
-              an address about that component, and the inventory is where the
-              back link goes. Nothing writes both parameters at once, so this
-              only decides a hand-edited address, and it decides it in favour of
-              the more specific half.
-            */}
-            {detail && !selectedPackage ? (
+            {paneContent === 'orphan' && detail ? (
               <ContextOrphanPane
                 component={detail}
+                file={selectedFile}
                 packages={packages}
                 spaceId={spaceId}
                 organizationId={organization.id}
@@ -546,7 +574,7 @@ export function SpaceContextSurface() {
                 spaceSlug={spaceSlug}
                 onCreatePackage={createAndStay}
               />
-            ) : showingInventory ? (
+            ) : paneContent === 'inventory' ? (
               <SpaceInventoryPane
                 packages={packages}
                 catalogue={catalogue}

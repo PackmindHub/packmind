@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { PMAlertDialog, pmToaster } from '@packmind/ui';
-import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
+import { PMAlertDialog, PMBox, pmToaster } from '@packmind/ui';
+import type {
+  OrganizationId,
+  PackageResponse,
+  SkillFile,
+  SpaceId,
+} from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
   type ContextComponent,
 } from './buildPackageContext';
 import {
   componentEditHref,
+  componentEntryHref,
   inventoryHref,
   isDefaultTab,
   selectTab,
   TAB_PARAM,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
+import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 
@@ -40,6 +47,7 @@ import { useDeleteContextComponent } from './useDeleteContextComponent';
  */
 export function ContextOrphanPane({
   component,
+  file,
   packages,
   spaceId,
   organizationId,
@@ -48,6 +56,13 @@ export function ContextOrphanPane({
   onCreatePackage,
 }: Readonly<{
   component: ContextComponent;
+  /**
+   * The file of it the address asks for, when it is a skill and the address
+   * asks for one. Resolved by the surface, which owns the query the rail's tree
+   * is built from: two resolutions of the same parameter would be two chances
+   * to disagree about which row of that tree is open.
+   */
+  file: SkillFile | null;
   /** The space's packages, as candidates for the add. */
   packages: readonly PackageResponse[];
   spaceId: SpaceId;
@@ -113,6 +128,23 @@ export function ContextOrphanPane({
   };
 
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type].toLowerCase();
+
+  /*
+   * A file in place of the component, not beside it, exactly as inside a
+   * package: the tree in the rail is what says which of the two is on screen,
+   * and the component is its first row.
+   */
+  if (file) {
+    return (
+      <PMBox flex="1" minH={0} overflowY="auto">
+        <ContextSkillFileDetail
+          file={file}
+          skillName={component.name}
+          backHref={componentEntryHref(searchParams)}
+        />
+      </PMBox>
+    );
+  }
 
   return (
     <>

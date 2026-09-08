@@ -22,16 +22,21 @@ import { SkillFileTree } from '../../../skills/components/SkillFileTree';
  */
 export function ContextSkillFileRail({
   skillName,
-  packageName,
+  backLabel,
   backHref,
   files,
   selectedPath,
   onSelectFile,
 }: Readonly<{
   skillName: string;
-  /** Named on the way back, because that is the information, not "Back". */
-  packageName: string;
-  /** The package this skill was opened from, tab and all. */
+  /**
+   * What the way back names, because that is the information and not "Back":
+   * the package this skill is being read in, or the inventory when no package
+   * carries it. The same pair the component's own frame carries, for the same
+   * reason.
+   */
+  backLabel: string;
+  /** Where that link goes, tab and all. */
   backHref: string;
   /** SKILL.md included: the tree pins it above the rest, as its entry point. */
   files: readonly SkillFile[];
@@ -74,7 +79,7 @@ export function ContextSkillFileRail({
             <PMIcon fontSize="xs">
               <LuChevronLeft />
             </PMIcon>
-            {packageName}
+            {backLabel}
           </Link>
         </PMBox>
         <PMText as="div" fontSize="sm" fontWeight="semibold" paddingTop={1}>
