@@ -126,20 +126,27 @@ import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/f
  */
 export function ContextComponentDetail({
   component,
-  packageName,
+  backLabel,
   backHref,
   editHref,
   tab,
   onTabChange,
   orgSlug,
   spaceSlug,
+  moveLabel,
   onMove,
   onRemove,
   onDelete,
 }: Readonly<{
   component: ContextComponent;
-  packageName: string;
-  /** The package this component was opened from, tab and all. */
+  /**
+   * What the back link names, which is where it goes: the package this
+   * component is being read in, or the inventory when no package carries it.
+   * The label rather than the package, because the second case has none, and
+   * because a link that names its destination is the information.
+   */
+  backLabel: string;
+  /** Where that link goes, tab and all. */
   backHref: string;
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
@@ -154,12 +161,24 @@ export function ContextComponentDetail({
   /** Both slugs, for the distribution lists, which link out to destinations. */
   orgSlug: string;
   spaceSlug: string;
+  /**
+   * `Move` inside a package and `Add to package` outside one. The same drawer
+   * either way: what changes is whether the component is also leaving
+   * somewhere, and the word has to say which, because "move" a component that
+   * is nowhere is a sentence about a place that does not exist.
+   */
+  moveLabel: string;
   onMove: () => void;
   /**
    * Taking this component out of the package named in the back link, which is
    * where the reader lands once it is gone from here.
+   *
+   * Null when there is no package to take it out of. Absent rather than
+   * disabled: a greyed item is an affordance saying the reader could do this
+   * under some condition they are meant to guess at, and here there is no such
+   * condition.
    */
-  onRemove: () => void;
+  onRemove: (() => void) | null;
   onDelete: () => void;
 }>) {
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type];
@@ -204,7 +223,7 @@ export function ContextComponentDetail({
             <PMIcon fontSize="sm">
               <LuChevronLeft />
             </PMIcon>
-            {packageName}
+            {backLabel}
           </Link>
         </PMBox>
 
@@ -269,7 +288,7 @@ export function ContextComponentDetail({
               <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
             </PMButton>
             <PMButton variant="secondary" size="sm" onClick={onMove}>
-              Move
+              {moveLabel}
             </PMButton>
             {editHref && (
               <PMButton variant="primary" size="sm" asChild>
@@ -335,12 +354,14 @@ export function ContextComponentDetail({
                         </PMMenu.Item>
                       </PMFeatureFlag>
                     )}
-                    <PMMenu.Item value="remove-component" onClick={onRemove}>
-                      <PMHStack gap={2}>
-                        <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
-                        Remove from package
-                      </PMHStack>
-                    </PMMenu.Item>
+                    {onRemove && (
+                      <PMMenu.Item value="remove-component" onClick={onRemove}>
+                        <PMHStack gap={2}>
+                          <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
+                          Remove from package
+                        </PMHStack>
+                      </PMMenu.Item>
+                    )}
                     <PMMenu.Item
                       value="delete-component"
                       color="text.error"

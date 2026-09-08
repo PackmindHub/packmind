@@ -615,13 +615,14 @@ export function ContextPackagePane({
         ) : (
           <ContextComponentDetail
             component={detail}
-            packageName={pkg.name}
+            backLabel={pkg.name}
             backHref={packageDetailHref(searchParams, pkg.id)}
             editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
             tab={tab}
             onTabChange={showTab}
             orgSlug={orgSlug}
             spaceSlug={spaceSlug}
+            moveLabel="Move"
             onMove={() => setMoving([detail])}
             onRemove={() => setRemoving([detail])}
             onDelete={() => setDeletingComponent(detail)}

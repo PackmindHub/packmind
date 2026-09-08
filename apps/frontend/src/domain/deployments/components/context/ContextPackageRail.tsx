@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   PMBox,
   PMButton,
@@ -26,6 +26,7 @@ import {
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
 import type { PackageAttention } from './buildPackageAttention';
+import { withPaneDetailHref } from './buildComponentDetail';
 import { searchPackages, type PackageSearchRow } from './searchPackages';
 import { packageActivity } from './packageActivity';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
@@ -123,16 +124,45 @@ export function ContextPackageRail({
    */
   const hasPackages = packages.length > 0;
 
-  const { rows, needle, matchCount } = useMemo(
-    () =>
-      searchPackages(
-        packages,
-        catalogue,
-        { orgSlug, spaceSlug },
-        { query, selectedPackageId },
-      ),
-    [packages, catalogue, orgSlug, spaceSlug, query, selectedPackageId],
-  );
+  /*
+   * Read for the matched components' addresses only. A match opens in the pane
+   * now, and the link has to carry whatever else the reader arrived with, the
+   * navigation mode above all.
+   */
+  const [searchParams] = useSearchParams();
+
+  const { rows, needle, matchCount } = useMemo(() => {
+    const found = searchPackages(
+      packages,
+      catalogue,
+      { orgSlug, spaceSlug },
+      { query, selectedPackageId },
+    );
+
+    /*
+     * Each match pointed at the package it was found in, which is the one thing
+     * a search result knows that the inventory's rows do not: the reader typed
+     * a component's name and the answer says which container holds it, so the
+     * click opens it there rather than leaving the surface to resolve it.
+     */
+    return {
+      ...found,
+      rows: found.rows.map((row) => ({
+        ...row,
+        matches: row.matches.map((component) =>
+          withPaneDetailHref(component, searchParams, row.pkg.id),
+        ),
+      })),
+    };
+  }, [
+    packages,
+    catalogue,
+    orgSlug,
+    spaceSlug,
+    query,
+    selectedPackageId,
+    searchParams,
+  ]);
 
   /*
    * Counted off the rail's own list rather than off the map, so the number on

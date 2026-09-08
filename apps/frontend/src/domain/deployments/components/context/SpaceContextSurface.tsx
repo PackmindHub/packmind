@@ -27,7 +27,11 @@ import {
 import {
   COMPONENT_PARAM,
   FILE_PARAM,
+  INVENTORY_VALUE,
+  findSpaceComponent,
+  inventoryHref,
   packageDetailHref,
+  selectContextPackage,
   selectDetailComponent,
   selectSkillFile,
   sortFilesByPath,
@@ -38,19 +42,8 @@ import { CreatePackageDrawer } from './CreatePackageDrawer';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextSkillFileRail } from './ContextSkillFileRail';
 import { ContextPackagePane } from './ContextPackagePane';
+import { ContextOrphanPane } from './ContextOrphanPane';
 import { SpaceInventoryPane } from './SpaceInventoryPane';
-
-/**
- * What the same parameter says when the pane shows the space-wide inventory
- * instead of one package. One parameter, one meaning — "what the pane shows" —
- * rather than two that have to be reconciled when they disagree. Package ids
- * are generated, so nothing can collide with it.
- *
- * Arriving on Context without the parameter still lands on a package, which is
- * what says the package is the unit here. The inventory is a way of reading it,
- * reachable by link but never the default.
- */
-const INVENTORY_VALUE = 'all';
 
 /**
  * What the inventory is filtered on, when it is.
@@ -179,8 +172,32 @@ export function SpaceContextSurface() {
     searchParams.get(COVERAGE_PARAM) === NO_PACKAGE_VALUE
       ? NO_PACKAGE_VALUE
       : 'all';
-  const selectedPackage =
-    packages.find((pkg) => pkg.id === requestedId) ?? packages[0] ?? null;
+  /*
+   * The component the address names, looked up across the space before any
+   * package is chosen, because it is what chooses the package: the inventory's
+   * rows name a component and no package, and so will the per-type pages once
+   * they redirect here.
+   *
+   * Across the space rather than inside the package, so the lookup can answer
+   * for a component no package carries. Those are the rows the inventory exists
+   * to show, and until now clicking one was the last way to fall out of this
+   * surface.
+   */
+  const requestedComponentKey = searchParams.get(COMPONENT_PARAM);
+  const spaceComponent = useMemo(
+    () =>
+      findSpaceComponent(catalogue, requestedComponentKey, {
+        orgSlug,
+        spaceSlug,
+      }),
+    [catalogue, requestedComponentKey, orgSlug, spaceSlug],
+  );
+
+  const selectedPackage = selectContextPackage(
+    packages,
+    requestedId,
+    spaceComponent,
+  );
 
   /*
    * The contents of the open package, and the one of them the address asks for.
@@ -201,10 +218,15 @@ export function SpaceContextSurface() {
     [selectedPackage, catalogue, orgSlug, spaceSlug],
   );
 
-  const detail = selectDetailComponent(
-    groups,
-    searchParams.get(COMPONENT_PARAM),
-  );
+  /*
+   * Against the package's rows when there is a package, so a component that has
+   * just left it falls back to the list on its own. Against the space when there
+   * is none, which is the component in no package: the lookup above already did
+   * that work, and there is no list for it to fall back to.
+   */
+  const detail = selectedPackage
+    ? selectDetailComponent(groups, requestedComponentKey)
+    : spaceComponent;
 
   /*
    * The files of the open skill, when that is what is open.
@@ -506,7 +528,25 @@ export function SpaceContextSurface() {
             display="flex"
             flexDirection="column"
           >
-            {showingInventory ? (
+            {/*
+              A component with no package first, ahead of the inventory it was
+              opened from: an address naming a component the surface can read is
+              an address about that component, and the inventory is where the
+              back link goes. Nothing writes both parameters at once, so this
+              only decides a hand-edited address, and it decides it in favour of
+              the more specific half.
+            */}
+            {detail && !selectedPackage ? (
+              <ContextOrphanPane
+                component={detail}
+                packages={packages}
+                spaceId={spaceId}
+                organizationId={organization.id}
+                orgSlug={orgSlug}
+                spaceSlug={spaceSlug}
+                onCreatePackage={createAndStay}
+              />
+            ) : showingInventory ? (
               <SpaceInventoryPane
                 packages={packages}
                 catalogue={catalogue}

@@ -1,11 +1,25 @@
-import { createPackageId } from '@packmind/types';
+import {
+  createCommandId,
+  createPackageId,
+  createSkillId,
+  createStandardId,
+  type Command,
+  type PackageId,
+  type Skill,
+  type Standard,
+} from '@packmind/types';
 import type {
   ContextComponent,
   ContextComponentType,
   ContextGroup,
+  PackageComponentIds,
+  SpaceCatalogue,
 } from './buildPackageContext';
 import {
   COMPONENTS_TAB,
+  findSpaceComponent,
+  inventoryHref,
+  selectContextPackage,
   DISTRIBUTION_TAB,
   HISTORY_TAB,
   INSTRUCTIONS_TAB,
@@ -515,5 +529,283 @@ describe('isComponentOnlyTab', () => {
 
   it('does not say so of a default', () => {
     expect(isComponentOnlyTab(INSTRUCTIONS_TAB)).toBe(false);
+  });
+});
+
+/*
+ * The three entities the space-wide lookup reads, in the shape the mappers
+ * touch. Cast the way `buildPackageContext.spec` casts them: what they need is
+ * five fields, and standing up three whole payloads would say nothing about
+ * the lookup.
+ */
+const standardEntity = (id: string, name = id): Standard =>
+  ({
+    id: createStandardId(id),
+    name,
+    slug: name.toLowerCase(),
+    description: '',
+    version: 3,
+  }) as Standard;
+
+const commandEntity = (id: string, name = id): Command =>
+  ({
+    id: createCommandId(id),
+    name,
+    slug: name.toLowerCase(),
+    content: 'body',
+    version: 1,
+  }) as Command;
+
+const skillEntity = (id: string, name = id): Skill =>
+  ({
+    id: createSkillId(id),
+    name,
+    slug: name.toLowerCase(),
+    description: '',
+    version: 2,
+  }) as Skill;
+
+const catalogueOf = (parts: Partial<SpaceCatalogue> = {}): SpaceCatalogue => ({
+  standards: parts.standards ?? [],
+  commands: parts.commands ?? [],
+  skills: parts.skills ?? [],
+});
+
+const pkgOf = (
+  id: string,
+  parts: Partial<PackageComponentIds> = {},
+): PackageComponentIds & { id: PackageId } => ({
+  id: createPackageId(id),
+  standards: parts.standards ?? [],
+  commands: parts.commands ?? [],
+  skills: parts.skills ?? [],
+});
+
+describe('componentDetailHref with no package', () => {
+  it('names the component and clears the package', () => {
+    expect(
+      componentDetailHref(
+        new URLSearchParams('package=all&coverage=none'),
+        null,
+        'standard-1',
+      ),
+    ).toBe('?coverage=none&component=standard-1');
+  });
+
+  /*
+   * The filter survives. Going back from the component lands on the part of
+   * the inventory it was opened from rather than on the whole of it.
+   */
+  it('keeps everything else the reader arrived with', () => {
+    expect(
+      componentDetailHref(
+        new URLSearchParams('nav=plugin-first&package=all'),
+        null,
+        'skill-1',
+      ),
+    ).toBe('?nav=plugin-first&component=skill-1');
+  });
+});
+
+describe('withPaneDetailHref with no package', () => {
+  it('points the row at the pane without naming a package', () => {
+    expect(
+      withPaneDetailHref(
+        component('standard', 'standard-1'),
+        new URLSearchParams('package=all'),
+        null,
+      ).href,
+    ).toBe('?component=standard-1');
+  });
+});
+
+describe('inventoryHref', () => {
+  it('asks for the inventory and closes the component', () => {
+    expect(inventoryHref(new URLSearchParams('component=standard-1'))).toBe(
+      '?package=all',
+    );
+  });
+
+  describe('when a tab only a component has is open', () => {
+    it('drops it, since the inventory has no such tab', () => {
+      expect(
+        inventoryHref(
+          new URLSearchParams(`component=standard-1&tab=${HISTORY_TAB}`),
+        ),
+      ).toBe('?package=all');
+    });
+  });
+
+  describe('when the tab is one both depths share', () => {
+    it('keeps it', () => {
+      expect(
+        inventoryHref(
+          new URLSearchParams(`component=standard-1&tab=${DISTRIBUTION_TAB}`),
+        ),
+      ).toBe(`?tab=${DISTRIBUTION_TAB}&package=all`);
+    });
+  });
+});
+
+describe('findSpaceComponent', () => {
+  describe('when the address names no component', () => {
+    it('is nothing', () => {
+      expect(
+        findSpaceComponent(
+          catalogueOf({ standards: [standardEntity('standard-1')] }),
+          null,
+          TARGET,
+        ),
+      ).toBeNull();
+    });
+  });
+
+  it('is nothing for a key the space does not hold', () => {
+    expect(
+      findSpaceComponent(
+        catalogueOf({ standards: [standardEntity('standard-1')] }),
+        'standard-9',
+        TARGET,
+      ),
+    ).toBeNull();
+  });
+
+  describe('when the key names a standard', () => {
+    it('resolves it into a row', () => {
+      expect(
+        findSpaceComponent(
+          catalogueOf({ standards: [standardEntity('standard-1', 'Naming')] }),
+          'standard-1',
+          TARGET,
+        )?.name,
+      ).toBe('Naming');
+    });
+  });
+
+  describe('when the key names a command', () => {
+    it('resolves it into a row', () => {
+      expect(
+        findSpaceComponent(
+          catalogueOf({ commands: [commandEntity('command-1', 'Ship')] }),
+          'command-1',
+          TARGET,
+        )?.type,
+      ).toBe('command');
+    });
+  });
+
+  describe('when the key names a skill', () => {
+    it('resolves it into a row', () => {
+      expect(
+        findSpaceComponent(
+          catalogueOf({ skills: [skillEntity('skill-1', 'Review')] }),
+          'skill-1',
+          TARGET,
+        )?.type,
+      ).toBe('skill');
+    });
+  });
+});
+
+describe('selectContextPackage', () => {
+  describe('when the address names a package', () => {
+    it('answers with it', () => {
+      expect(
+        selectContextPackage([pkgOf('pkg-1'), pkgOf('pkg-2')], 'pkg-2', null)
+          ?.id,
+      ).toBe('pkg-2');
+    });
+
+    /*
+     * Which is the moment after a successful move: the address still names the
+     * package the component left, and the pane answers with its list.
+     */
+    describe('when that package does not hold the open component', () => {
+      it('answers with it anyway', () => {
+        expect(
+          selectContextPackage(
+            [
+              pkgOf('pkg-1', { standards: [createStandardId('standard-1')] }),
+              pkgOf('pkg-2'),
+            ],
+            'pkg-2',
+            { type: 'standard', key: 'standard-1' },
+          )?.id,
+        ).toBe('pkg-2');
+      });
+    });
+  });
+
+  describe('when the address names only a component', () => {
+    it('answers with the package holding it', () => {
+      expect(
+        selectContextPackage(
+          [
+            pkgOf('pkg-1'),
+            pkgOf('pkg-2', { standards: [createStandardId('standard-1')] }),
+          ],
+          null,
+          { type: 'standard', key: 'standard-1' },
+        )?.id,
+      ).toBe('pkg-2');
+    });
+
+    describe('when two packages hold it', () => {
+      it('answers with the first of them', () => {
+        expect(
+          selectContextPackage(
+            [
+              pkgOf('pkg-1', { standards: [createStandardId('standard-1')] }),
+              pkgOf('pkg-2', { standards: [createStandardId('standard-1')] }),
+            ],
+            null,
+            { type: 'standard', key: 'standard-1' },
+          )?.id,
+        ).toBe('pkg-1');
+      });
+    });
+
+    /* Two entities of different types can carry the same id. */
+    it('does not match a package holding that id under another type', () => {
+      expect(
+        selectContextPackage(
+          [pkgOf('pkg-1', { commands: [createCommandId('shared-1')] })],
+          null,
+          { type: 'standard', key: 'shared-1' },
+        ),
+      ).toBeNull();
+    });
+
+    describe('when no package holds it', () => {
+      it('answers with no package', () => {
+        expect(
+          selectContextPackage([pkgOf('pkg-1'), pkgOf('pkg-2')], null, {
+            type: 'skill',
+            key: 'skill-1',
+          }),
+        ).toBeNull();
+      });
+    });
+  });
+
+  describe('when the address names neither', () => {
+    it('falls back to the first package', () => {
+      expect(
+        selectContextPackage([pkgOf('pkg-1'), pkgOf('pkg-2')], null, null)?.id,
+      ).toBe('pkg-1');
+    });
+
+    it('answers with no package in a space that has none', () => {
+      expect(selectContextPackage([], null, null)).toBeNull();
+    });
+  });
+
+  /* A key the space does not hold arrives here as no component at all. */
+  describe('when the package it names is gone', () => {
+    it('falls back to the first package', () => {
+      expect(selectContextPackage([pkgOf('pkg-1')], 'pkg-9', null)?.id).toBe(
+        'pkg-1',
+      );
+    });
   });
 });

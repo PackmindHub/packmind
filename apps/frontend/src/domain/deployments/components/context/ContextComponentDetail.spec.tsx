@@ -201,6 +201,16 @@ async function renderDetail(
   component: ContextComponent,
   tab: string = DISTRIBUTION_TAB,
   onTabChange: (value: string) => void = vi.fn(),
+  /**
+   * What the two panes disagree on. Defaults to being read inside a package,
+   * which is what every case here was written against; the space-wide pane
+   * passes the other three.
+   */
+  scope: Readonly<{
+    backLabel?: string;
+    moveLabel?: string;
+    onRemove?: (() => void) | null;
+  }> = {},
 ) {
   await act(async () => {
     render(
@@ -208,15 +218,16 @@ async function renderDetail(
         <MemoryRouter>
           <ContextComponentDetail
             component={component}
-            packageName="Backend conventions"
+            backLabel={scope.backLabel ?? 'Backend conventions'}
             backHref="?package=pkg-1"
             editHref="/edit"
             tab={tab}
             onTabChange={onTabChange}
             orgSlug="acme"
             spaceSlug="core"
+            moveLabel={scope.moveLabel ?? 'Move'}
             onMove={vi.fn()}
-            onRemove={vi.fn()}
+            onRemove={scope.onRemove === undefined ? vi.fn() : scope.onRemove}
             onDelete={vi.fn()}
           />
         </MemoryRouter>
@@ -1165,5 +1176,88 @@ describe('whether a rule is detected automatically', () => {
 
       expect(screen.getAllByText('Languages')).toHaveLength(2);
     });
+  });
+});
+
+describe('a component read with no package around it', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  const SPACE_WIDE = {
+    backLabel: 'All components',
+    moveLabel: 'Add to package',
+    onRemove: null,
+  } as const;
+
+  it('names the inventory in the back link, since that is where it goes', async () => {
+    await renderDetail(
+      componentOfType('standard', STANDARD_ID),
+      DISTRIBUTION_TAB,
+      vi.fn(),
+      SPACE_WIDE,
+    );
+
+    expect(screen.getByRole('link', { name: /all components/i })).toBeVisible();
+  });
+
+  /* "Move" is a sentence about leaving a place, and there is no place. */
+  it('offers to add it to a package rather than to move it', async () => {
+    await renderDetail(
+      componentOfType('standard', STANDARD_ID),
+      DISTRIBUTION_TAB,
+      vi.fn(),
+      SPACE_WIDE,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Add to package' }),
+    ).toBeVisible();
+  });
+
+  it('does not offer to remove it from a package', async () => {
+    await renderDetail(
+      componentOfType('standard', STANDARD_ID),
+      DISTRIBUTION_TAB,
+      vi.fn(),
+      SPACE_WIDE,
+    );
+    await openActions();
+
+    expect(
+      screen.queryByRole('menuitem', { name: /remove from package/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  /* The one action that is the same either way: it leaves the space. */
+  it('still offers to delete it', async () => {
+    await renderDetail(
+      componentOfType('standard', STANDARD_ID),
+      DISTRIBUTION_TAB,
+      vi.fn(),
+      SPACE_WIDE,
+    );
+    await openActions();
+
+    expect(
+      screen.getByRole('menuitem', { name: /delete standard/i }),
+    ).toBeVisible();
+  });
+});
+
+describe('a component read inside a package', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  it('offers to remove it from that package', async () => {
+    await renderDetail(componentOfType('standard', STANDARD_ID));
+    await openActions();
+
+    expect(
+      screen.getByRole('menuitem', { name: /remove from package/i }),
+    ).toBeVisible();
   });
 });

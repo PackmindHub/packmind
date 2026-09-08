@@ -4,12 +4,18 @@ import {
   PACKAGE_PARAM,
   withPackageParam,
 } from '../../hooks/useCreateIntoPackage';
-import type {
-  ContextComponent,
-  ContextComponentType,
-  ContextGroup,
-  ContextLinkTarget,
+import {
+  commandToComponent,
+  skillToComponent,
+  standardToComponent,
+  type ContextComponent,
+  type ContextComponentType,
+  type ContextGroup,
+  type ContextLinkTarget,
+  type PackageComponentIds,
+  type SpaceCatalogue,
 } from './buildPackageContext';
+import { packageHoldsComponent } from './buildMoveTargets';
 
 /**
  * The component the pane is showing, in the URL, beside the package it is being
@@ -53,6 +59,22 @@ export const FILE_PARAM = 'file';
  * it has to survive being pasted.
  */
 export const TAB_PARAM = 'tab';
+
+/**
+ * What the `package` parameter says when the pane shows the space-wide
+ * inventory instead of one package. One parameter, one meaning, "what the pane
+ * shows", rather than two that have to be reconciled when they disagree.
+ * Package ids are generated, so nothing can collide with it.
+ *
+ * Arriving on Context without the parameter still lands on a package, which is
+ * what says the package is the unit here. The inventory is a way of reading it,
+ * reachable by link but never the default.
+ *
+ * Here rather than on the surface that reads it, because it is a value of the
+ * same parameter the builders below write, and a component read with no package
+ * has to be able to build the way back to it.
+ */
+export const INVENTORY_VALUE = 'all';
 
 export const COMPONENTS_TAB = 'components';
 export const INSTRUCTIONS_TAB = 'instructions';
@@ -121,10 +143,10 @@ export function isDefaultTab(value: string): boolean {
 /**
  * Which types the pane can show itself, and the only place it is decided.
  *
- * All three types say yes now, so no row in a package pane leads out of the
- * surface any more. The per-type pages still have readers, though: the frame's
- * "Open ..." button, the space inventory and the rail's search results all
- * still point at them, and cutting those is a step of its own.
+ * All three types say yes now, and no row anywhere on the surface leads out of
+ * it any more: not in a package pane, not in the space inventory, and not in
+ * the rail's search results. One reader of the per-type pages is left, the
+ * frame's own "Open ..." button, and cutting it is a step of its own.
  *
  * The record stays because the question does. A fourth type arrives with no
  * body written for it, and this is where it says so, rather than by leaving a
@@ -149,14 +171,23 @@ export const RENDERS_IN_PANE: Record<ContextComponentType, boolean> = {
  *
  * Search-only, so the path is the caller's and this cannot navigate anywhere
  * but the surface it is already on.
+ *
+ * The package is nullable because half the rows that link here do not have one.
+ * A row of a package pane knows which package it is being read in; a row of the
+ * space inventory is one component and any number of packages, including none,
+ * so it names the component and lets the surface resolve the rest. Naming no
+ * package is not the same as leaving the parameter alone: the inventory is a
+ * value of that same parameter, so a link out of it has to clear it or the pane
+ * would answer with the list the reader just clicked out of.
  */
 export function componentDetailHref(
   searchParams: URLSearchParams,
-  packageId: PackageId,
+  packageId: PackageId | null,
   componentKey: string,
 ): string {
   const next = new URLSearchParams(searchParams);
-  next.set(PACKAGE_PARAM, packageId);
+  if (packageId) next.set(PACKAGE_PARAM, packageId);
+  else next.delete(PACKAGE_PARAM);
   next.set(COMPONENT_PARAM, componentKey);
   // A file belongs to the component it was opened from, so a different
   // component cannot inherit it. Two skills can hold the same path.
@@ -174,7 +205,7 @@ export function componentDetailHref(
  */
 export function packageDetailParams(
   searchParams: URLSearchParams,
-  packageId: PackageId,
+  packageId: PackageId | typeof INVENTORY_VALUE,
 ): URLSearchParams {
   const next = new URLSearchParams(searchParams);
   next.set(PACKAGE_PARAM, packageId);
@@ -191,6 +222,15 @@ export function packageDetailParams(
     next.delete(TAB_PARAM);
   }
   return next;
+}
+
+/**
+ * The way back out of a component that was read with no package: to the
+ * inventory, which is the list it was opened from and the only list it appears
+ * in.
+ */
+export function inventoryHref(searchParams: URLSearchParams): string {
+  return `?${packageDetailParams(searchParams, INVENTORY_VALUE).toString()}`;
 }
 
 /** The way back out of a component, to the package it was read from. */
@@ -270,18 +310,23 @@ export function selectSkillFile<File extends { path: string }>(
 }
 
 /**
- * A row of the package pane, pointed at the pane itself when the pane can show
- * what it points to.
+ * A row pointed at the pane itself when the pane can show what it points to.
  *
- * The rewrite happens here rather than in `buildPackageContext` because the
- * default target is the right one everywhere else: the space-wide inventory and
- * the rail's search results are not scoped to a package, and a component read
- * outside a package has no back link and nothing to be moved out of.
+ * The rewrite happens here rather than in `buildPackageContext` because that
+ * builder answers what a package holds, and the rows it builds are read in
+ * three places that do not agree on where a click should land. Two of them do
+ * now: a row of a package pane and a search result in the rail both open in the
+ * pane, the first inside the package it is listed under and the second inside
+ * the package it was found in.
+ *
+ * The third is the space inventory, which has no package to name, hence the
+ * null. A component listed there sits in any number of packages, and the point
+ * of the list is that the number can be zero.
  */
 export function withPaneDetailHref(
   component: ContextComponent,
   searchParams: URLSearchParams,
-  packageId: PackageId,
+  packageId: PackageId | null,
 ): ContextComponent {
   if (!RENDERS_IN_PANE[component.type]) return component;
   return {
@@ -315,6 +360,88 @@ export function selectDetailComponent(
   }
 
   return null;
+}
+
+/**
+ * The component the address names, resolved against the whole space instead of
+ * against one package's contents.
+ *
+ * `selectDetailComponent` answers the same question inside a package and cannot
+ * answer it at all for a component no package carries. Those exist and are not
+ * a corner case: a standard arrives from a repository before anyone sorts it,
+ * and a component outlives the packages that referenced it. In the plugin-first
+ * navigation the space inventory is the only list they appear in, so the pane
+ * has to be able to open one from there.
+ *
+ * The same rule about a type the pane cannot render, for the same reason and so
+ * that the two resolvers cannot disagree: it reads as no request at all.
+ */
+export function findSpaceComponent(
+  catalogue: SpaceCatalogue,
+  requested: string | null,
+  target: ContextLinkTarget,
+): ContextComponent | null {
+  if (!requested) return null;
+
+  const standard = catalogue.standards.find(
+    (entity) => entity.id === requested,
+  );
+  if (standard) return renderableInPane(standardToComponent(standard, target));
+
+  const command = catalogue.commands.find((entity) => entity.id === requested);
+  if (command) return renderableInPane(commandToComponent(command, target));
+
+  const skill = catalogue.skills.find((entity) => entity.id === requested);
+  if (skill) return renderableInPane(skillToComponent(skill, target));
+
+  return null;
+}
+
+function renderableInPane(
+  component: ContextComponent,
+): ContextComponent | null {
+  return RENDERS_IN_PANE[component.type] ? component : null;
+}
+
+/**
+ * The package the pane reads the open component in, which the address does not
+ * always say.
+ *
+ * Three answers, in the order of how explicit the address is.
+ *
+ * A named package wins, even when it does not hold the component. The address
+ * says which package, and `selectDetailComponent` then answers with that
+ * package's list, which is exactly what the moment after a successful move
+ * looks like.
+ *
+ * Failing that, the component decides. An address naming only a component is
+ * what the inventory's rows carry, and what a bookmark from before this surface
+ * existed will carry: it has to open somewhere, and the somewhere is the first
+ * package holding it in the order the rail lists them. First rather than a
+ * choice offered to the reader, because a component in two packages is read the
+ * same way in both and the header names the one it landed in.
+ *
+ * Null when no package holds it. Not the first package of the space, which
+ * would put a back link into a package that does not hold what is on screen,
+ * beside an offer to remove the component from it.
+ */
+export function selectContextPackage<
+  Pkg extends PackageComponentIds & { id: PackageId },
+>(
+  packages: readonly Pkg[],
+  requestedPackageId: string | null,
+  component: Pick<ContextComponent, 'type' | 'key'> | null,
+): Pkg | null {
+  const named = packages.find((pkg) => pkg.id === requestedPackageId);
+  if (named) return named;
+
+  if (component) {
+    return (
+      packages.find((pkg) => packageHoldsComponent(pkg, component)) ?? null
+    );
+  }
+
+  return packages[0] ?? null;
 }
 
 /**

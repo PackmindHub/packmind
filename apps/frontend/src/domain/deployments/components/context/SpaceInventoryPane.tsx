@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { LuPackageX } from 'react-icons/lu';
 import { PMBox, PMHStack, PMHeading, PMText, PMVStack } from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
@@ -19,6 +20,7 @@ import {
   COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
+import { withPaneDetailHref } from './buildComponentDetail';
 import { ContextChip } from './ContextChip';
 import { SelectionBar } from '../SelectionBar';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
@@ -93,9 +95,43 @@ export function SpaceInventoryPane({
     null,
   );
 
+  /*
+   * Read for the rows' addresses only. Every row of this list points into the
+   * pane now, and the pane is this surface, so the link has to carry whatever
+   * else the reader arrived with: the navigation mode above all, since a row
+   * click that dropped it would send a plugin-first reader back to the old
+   * navigation.
+   */
+  const [searchParams] = useSearchParams();
+
   const inventory = useMemo(
     () => buildSpaceInventory(packages, catalogue, { orgSlug, spaceSlug }),
     [packages, catalogue, orgSlug, spaceSlug],
+  );
+
+  /*
+   * The rows, pointed at the pane rather than at the per-type pages.
+   *
+   * Rewritten here and not in `buildSpaceInventory`, which stays a statement
+   * about what the space holds: where a row leads depends on the address the
+   * reader is at, which is not something a description of the space should
+   * have to hold.
+   *
+   * With no package in the link, unlike a row of a package pane. A component
+   * here is in any number of packages and the whole point of the list is that
+   * the number can be zero, so the row names the component and the surface
+   * resolves the rest.
+   */
+  const paneGroups = useMemo(
+    () =>
+      inventory.groups.map((group) => ({
+        ...group,
+        entries: group.entries.map((entry) => ({
+          ...entry,
+          component: withPaneDetailHref(entry.component, searchParams, null),
+        })),
+      })),
+    [inventory.groups, searchParams],
   );
 
   /*
@@ -105,8 +141,8 @@ export function SpaceInventoryPane({
    * turning a filter on never renumbers the control that turned it on.
    */
   const covered = useMemo(
-    () => filterInventoryGroups(inventory.groups, coverage),
-    [inventory.groups, coverage],
+    () => filterInventoryGroups(paneGroups, coverage),
+    [paneGroups, coverage],
   );
 
   const shownGroups = typeFilter
@@ -184,7 +220,7 @@ export function SpaceInventoryPane({
         ) : (
           <>
             Everything this space owns, across its {packages.length} package
-            {packages.length === 1 ? '' : 's'}. Open one to reach its page.
+            {packages.length === 1 ? '' : 's'}. Open one to read it here.
           </>
         )}
       </PMText>
