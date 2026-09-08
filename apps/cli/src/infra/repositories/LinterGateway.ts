@@ -33,8 +33,12 @@ export class LinterGateway implements ILinterGateway {
       return this.httpClient.request('/api/v0/list-draft-detection-program', {
         method: 'POST',
         body: payload,
-        onError: (response) => {
-          throwIfFeatureAbsent(response, 'local linting with packages');
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(
+            response,
+            edition,
+            'local linting with packages',
+          );
         },
       });
     };
@@ -57,8 +61,12 @@ export class LinterGateway implements ILinterGateway {
       return this.httpClient.request('/api/v0/list-active-detection-program', {
         method: 'POST',
         body: payload,
-        onError: (response) => {
-          throwIfFeatureAbsent(response, 'local linting with packages');
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(
+            response,
+            edition,
+            'local linting with packages',
+          );
         },
       });
     };
@@ -73,8 +81,12 @@ export class LinterGateway implements ILinterGateway {
             body: {
               packagesSlugs: command.packagesSlugs,
             },
-            onError: (response) => {
-              throwIfFeatureAbsent(response, 'local linting with packages');
+            onError: (response, edition) => {
+              throwIfFeatureAbsent(
+                response,
+                edition,
+                'local linting with packages',
+              );
             },
           },
         );

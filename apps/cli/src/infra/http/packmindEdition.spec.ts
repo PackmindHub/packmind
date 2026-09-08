@@ -41,17 +41,15 @@ describe('readPackmindEdition', () => {
 describe('throwIfFeatureAbsent', () => {
   describe('when a 404 comes from a Community Edition server', () => {
     it('reports the feature as absent', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'oss' });
-
-      expect(() => throwIfFeatureAbsent(response, 'change proposals')).toThrow(
-        CommunityEditionError,
-      );
+      expect(() =>
+        throwIfFeatureAbsent(buildResponse(404), 'oss', 'change proposals'),
+      ).toThrow(CommunityEditionError);
     });
 
     it('names the feature in the message', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'oss' });
-
-      expect(() => throwIfFeatureAbsent(response, 'change proposals')).toThrow(
+      expect(() =>
+        throwIfFeatureAbsent(buildResponse(404), 'oss', 'change proposals'),
+      ).toThrow(
         'The "change proposals" feature is not available in Packmind Community Edition.',
       );
     });
@@ -59,28 +57,49 @@ describe('throwIfFeatureAbsent', () => {
 
   describe('when a 404 comes from a cloud server', () => {
     it('lets the real error surface', () => {
-      const response = buildResponse(404, { 'Packmind-Edition': 'cloud' });
-
       expect(() =>
-        throwIfFeatureAbsent(response, 'change proposals'),
-      ).not.toThrow();
-    });
-  });
-
-  describe('when a 404 carries no edition header', () => {
-    it('lets the real error surface', () => {
-      expect(() =>
-        throwIfFeatureAbsent(buildResponse(404), 'change proposals'),
+        throwIfFeatureAbsent(buildResponse(404), 'cloud', 'change proposals'),
       ).not.toThrow();
     });
   });
 
   describe('when a Community Edition server fails on a route it does mount', () => {
     it('lets the real error surface', () => {
-      const response = buildResponse(502, { 'Packmind-Edition': 'oss' });
-
       expect(() =>
-        throwIfFeatureAbsent(response, 'change proposals'),
+        throwIfFeatureAbsent(buildResponse(502), 'oss', 'change proposals'),
+      ).not.toThrow();
+    });
+  });
+
+  describe('when no edition could be established', () => {
+    it('does not claim the Community Edition', () => {
+      expect(() =>
+        throwIfFeatureAbsent(buildResponse(404), null, 'change proposals'),
+      ).not.toThrow(CommunityEditionError);
+    });
+
+    it('names both possible causes', () => {
+      expect(() =>
+        throwIfFeatureAbsent(buildResponse(404), null, 'change proposals'),
+      ).toThrow(
+        'The "change proposals" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on a cloud deployment, check that the space and organization still exist.',
+      );
+    });
+
+    it('carries the status, so the transport surfaces it verbatim', () => {
+      let thrown: (Error & { statusCode?: number }) | undefined;
+      try {
+        throwIfFeatureAbsent(buildResponse(404), null, 'change proposals');
+      } catch (error) {
+        thrown = error as Error & { statusCode?: number };
+      }
+
+      expect(thrown?.statusCode).toBe(404);
+    });
+
+    it('lets a non-404 through untouched', () => {
+      expect(() =>
+        throwIfFeatureAbsent(buildResponse(500), null, 'change proposals'),
       ).not.toThrow();
     });
   });

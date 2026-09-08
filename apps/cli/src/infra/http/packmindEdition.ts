@@ -9,35 +9,55 @@ const KNOWN_EDITIONS: Record<PackmindEdition, true> = {
   oss: true,
 };
 
-const isKnownEdition = (value: string): value is PackmindEdition =>
-  Object.prototype.hasOwnProperty.call(KNOWN_EDITIONS, value);
+export function parsePackmindEdition(value: unknown): PackmindEdition | null {
+  return typeof value === 'string' &&
+    Object.prototype.hasOwnProperty.call(KNOWN_EDITIONS, value)
+    ? (value as PackmindEdition)
+    : null;
+}
 
 /**
- * The edition the API published, or null when it published nothing this CLI
- * understands — an older server, a proxy that stripped the header, or an
- * edition it has never heard of.
+ * The edition the API published in the response header, or null when it
+ * published nothing this CLI understands.
  */
 export function readPackmindEdition(
   response: Response,
 ): PackmindEdition | null {
-  const raw = response.headers.get(PACKMIND_EDITION_HEADER);
-
-  return raw !== null && isKnownEdition(raw) ? raw : null;
+  return parsePackmindEdition(response.headers.get(PACKMIND_EDITION_HEADER));
 }
 
 /**
- * Raises `CommunityEditionError` only when the server proves it lacks the
- * feature: it stubs these routes out, so the route is absent and answers 404.
- * The status alone was the old bug — a cloud 404 also means a missing
- * organization, space or resource. The header alone would call a Community
- * server's 502 or rate limit a missing feature. No header, no conclusion:
- * the real error surfaces.
+ * Raises `CommunityEditionError` only when the edition proves the server lacks
+ * the feature: it stubs these routes out, so the route is absent and answers
+ * 404. The status alone was the old bug — a cloud 404 also means a missing
+ * organization, space or resource.
  */
 export function throwIfFeatureAbsent(
   response: Response,
+  edition: PackmindEdition | null,
   feature: string,
 ): void {
-  if (response.status === 404 && readPackmindEdition(response) === 'oss') {
+  if (response.status !== 404) {
+    return;
+  }
+
+  if (edition === 'oss') {
     throw new CommunityEditionError(feature);
   }
+
+  // An edition nobody stated is a server older than both the header and
+  // /auth/me's edition field. Name both causes rather than pick one.
+  if (edition === null) {
+    throw unstatedEditionError(feature);
+  }
 }
+
+const unstatedEditionError = (feature: string): Error => {
+  const error: Error & { statusCode?: number } = new Error(
+    `The "${feature}" feature answered 404 and this Packmind server does not state which edition it runs. The feature is not part of Packmind Community Edition; on a cloud deployment, check that the space and organization still exist.`,
+  );
+  // Stamped so PackmindHttpClient rethrows it as it is rather than wrapping it.
+  error.statusCode = 404;
+
+  return error;
+};

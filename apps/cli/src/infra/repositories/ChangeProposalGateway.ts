@@ -24,8 +24,8 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
       {
         method: 'POST',
         body: { proposals: command.proposals },
-        onError: (response) => {
-          throwIfFeatureAbsent(response, 'change proposals');
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(response, edition, 'change proposals');
         },
       },
     );
@@ -55,8 +55,8 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
       {
         method: 'POST',
         body: { proposals: command.proposals },
-        onError: (response) => {
-          throwIfFeatureAbsent(response, 'change proposals');
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(response, edition, 'change proposals');
         },
       },
     );

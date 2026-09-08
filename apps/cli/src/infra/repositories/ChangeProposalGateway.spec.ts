@@ -27,16 +27,17 @@ describe('ChangeProposalGateway', () => {
     jest.clearAllMocks();
   });
 
-  // Mirrors PackmindHttpClient: onError first, then the generic error built
-  // from the response. Drawing no conclusion surfaces the latter.
-  const respondWith = (status: number, edition?: string): void => {
-    const response = new Response(null, {
-      status,
-      headers: edition ? { 'Packmind-Edition': edition } : {},
-    });
+  // Mirrors PackmindHttpClient: the resolved edition handed to onError, then
+  // the generic error built from the response. Drawing no conclusion from the
+  // edition surfaces the latter.
+  const respondWith = (
+    status: number,
+    edition: 'cloud' | 'oss' | null = null,
+  ): void => {
+    const response = new Response(null, { status });
 
     mockHttpClient.request.mockImplementation(async (_path, options) => {
-      options?.onError?.(response);
+      options?.onError?.(response, edition);
 
       const error: Error & { statusCode?: number } = new Error(SERVER_MESSAGE);
       error.statusCode = status;
@@ -81,13 +82,19 @@ describe('ChangeProposalGateway', () => {
       });
     });
 
-    describe('when the server publishes no edition', () => {
+    describe('when no edition could be established', () => {
       beforeEach(() => {
-        respondWith(404);
+        respondWith(404, null);
       });
 
-      it('surfaces the real error instead of blaming the edition', async () => {
-        await expect(call()).rejects.toThrow(SERVER_MESSAGE);
+      it('does not claim the Community Edition', async () => {
+        await expect(call()).rejects.not.toThrow(CommunityEditionError);
+      });
+
+      it('names both possible causes', async () => {
+        await expect(call()).rejects.toThrow(
+          'does not state which edition it runs',
+        );
       });
     });
 

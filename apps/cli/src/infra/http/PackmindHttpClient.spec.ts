@@ -190,6 +190,130 @@ describe('PackmindHttpClient', () => {
       });
     });
 
+    describe('when a 404 needs an edition the header does not carry', () => {
+      const respondWith = (
+        status: number,
+        headers: Record<string, string> = {},
+      ) => new Response(null, { status, headers });
+
+      const authMeAnswering = (body: unknown) =>
+        new Response(JSON.stringify(body), { status: 401 });
+
+      let onError: jest.Mock;
+      let client: PackmindHttpClient;
+
+      beforeEach(() => {
+        onError = jest.fn();
+        client = new PackmindHttpClient(createTestApiKey());
+      });
+
+      const request = () =>
+        client.request('/api/v0/thing', { onError }).catch(() => undefined);
+
+      describe('when the header states the edition', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock).mockResolvedValue(
+            respondWith(404, { 'Packmind-Edition': 'cloud' }),
+          );
+
+          await request();
+        });
+
+        it('hands that edition to the caller', () => {
+          expect(onError).toHaveBeenCalledWith(expect.anything(), 'cloud');
+        });
+
+        it('asks the server nothing further', () => {
+          expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe('when the server is too old to set the header', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock)
+            .mockResolvedValueOnce(respondWith(404))
+            .mockResolvedValueOnce(authMeAnswering({ edition: 'oss' }));
+
+          await request();
+        });
+
+        it('takes the edition from /auth/me', () => {
+          expect(onError).toHaveBeenCalledWith(expect.anything(), 'oss');
+        });
+
+        it('reads it off the unauthenticated answer', () => {
+          expect(global.fetch).toHaveBeenLastCalledWith(
+            'https://api.packmind.com/api/v0/auth/me',
+            expect.anything(),
+          );
+        });
+      });
+
+      describe('when /auth/me predates the edition field too', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock)
+            .mockResolvedValueOnce(respondWith(404))
+            .mockResolvedValueOnce(authMeAnswering({ authenticated: false }));
+
+          await request();
+        });
+
+        it('establishes no edition', () => {
+          expect(onError).toHaveBeenCalledWith(expect.anything(), null);
+        });
+      });
+
+      describe('when /auth/me cannot be reached', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock)
+            .mockResolvedValueOnce(respondWith(404))
+            .mockRejectedValueOnce(new Error('Failed to fetch'));
+
+          await request();
+        });
+
+        it('establishes no edition rather than failing the call', () => {
+          expect(onError).toHaveBeenCalledWith(expect.anything(), null);
+        });
+      });
+
+      describe('when a second 404 arrives', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock)
+            .mockResolvedValueOnce(respondWith(404))
+            .mockResolvedValueOnce(authMeAnswering({ edition: 'oss' }))
+            .mockResolvedValueOnce(respondWith(404));
+
+          await request();
+          await request();
+        });
+
+        it('reuses the edition instead of asking again', () => {
+          expect(global.fetch).toHaveBeenCalledTimes(3);
+        });
+
+        it('still hands it to the caller', () => {
+          expect(onError).toHaveBeenLastCalledWith(expect.anything(), 'oss');
+        });
+      });
+
+      describe('when a status other than 404 fails', () => {
+        beforeEach(async () => {
+          (global.fetch as jest.Mock).mockResolvedValue(respondWith(500));
+
+          await request();
+        });
+
+        it('does not spend a request on the edition', () => {
+          expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+
+        it('establishes no edition', () => {
+          expect(onError).toHaveBeenCalledWith(expect.anything(), null);
+        });
+      });
+    });
+
     describe('when network error occurs', () => {
       it('throws server not accessible error', async () => {
         const client = new PackmindHttpClient(createTestApiKey());
