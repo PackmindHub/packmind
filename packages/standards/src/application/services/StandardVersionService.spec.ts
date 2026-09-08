@@ -4,6 +4,7 @@ import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
+import { ruleFactory } from '../../../test/ruleFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { createStandardId } from '@packmind/types';
 import {
