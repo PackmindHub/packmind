@@ -71,8 +71,10 @@ export class SkillVersionRepository
     });
 
     try {
-      const versions = await this.findBySkillId(skillId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const latestVersion = await this.repository.findOne({
+        where: { skillId },
+        order: { version: 'DESC' },
+      });
 
       if (latestVersion) {
         this.logger.info('Latest skill version found', {
@@ -90,7 +92,7 @@ export class SkillVersionRepository
     } catch (error) {
       this.logger.error('Failed to find latest skill version by skill ID', {
         skillId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
