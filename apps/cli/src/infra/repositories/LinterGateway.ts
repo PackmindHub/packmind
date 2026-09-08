@@ -94,12 +94,18 @@ export class LinterGateway implements ILinterGateway {
       return handleScopeInTargetsResponse(response);
     };
 
+  // The last route on the stubbed linter controller. Both callers discard
+  // whatever this rejects with, so the error only ever has to be the honest
+  // one rather than a 404 dressed up as something else.
   trackLinterExecution: Gateway<ITrackLinterExecutionUseCase> = async (
     command,
   ) => {
     return this.httpClient.request(`/api/v0/track-execution`, {
       method: 'POST',
       body: command,
+      onError: (response, edition) => {
+        throwIfFeatureAbsent(response, edition, 'linter execution tracking');
+      },
     });
   };
 }
