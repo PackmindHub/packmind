@@ -32,15 +32,23 @@ describeForEdition('community', 'edition', () => {
       expect(matched.headers.get(PACKMIND_EDITION_HEADER)).toBe('community');
     });
 
-    // The one that matters: an absent feature is exactly an unmatched route.
-    it('publishes the edition on a route it does not serve', () => {
-      expect(unmatched.status).toBe(404);
-      expect(unmatched.headers.get(PACKMIND_EDITION_HEADER)).toBe('community');
+    describe('on a route it does not serve', () => {
+      // The one that matters: an absent feature is exactly an unmatched route.
+      it('answers 404', () => {
+        expect(unmatched.status).toBe(404);
+      });
+
+      it('publishes the edition anyway', () => {
+        expect(unmatched.headers.get(PACKMIND_EDITION_HEADER)).toBe(
+          'community',
+        );
+      });
     });
   });
 
   describeWithUserSignedUp('playbook submit', (getContext) => {
     let context: UserSignedUpContext;
+    let added: RunCliResult;
     let result: RunCliResult;
 
     beforeEach(async () => {
@@ -61,12 +69,16 @@ describeForEdition('community', 'edition', () => {
         context.testDir,
       );
 
-      const added = await context.runCli(
+      added = await context.runCli(
         'playbook add .packmind/standards/my-standard.md',
       );
-      expect(added.returnCode).toBe(0);
-
       result = await context.runCli('playbook submit -m "A message"');
+    });
+
+    // Asserted rather than assumed: an `add` that failed would otherwise
+    // surface as a confusing mismatch on the submit assertions below.
+    it('stages the artefact first', () => {
+      expect(added.returnCode).toBe(0);
     });
 
     it('reports the feature as absent from this edition', () => {
