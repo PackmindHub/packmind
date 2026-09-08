@@ -31,7 +31,6 @@ describe('SignUpWithOrganizationUseCase', () => {
       getUserByEmail: jest.fn(),
       hashPassword: jest.fn(),
       validatePassword: jest.fn(),
-      listUsers: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
     mockOrganizationService = {

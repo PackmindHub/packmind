@@ -290,48 +290,81 @@ describe('UserRepository', () => {
     });
   });
 
-  describe('.list', () => {
-    describe('when no users exist', () => {
+  describe('.listByOrganization', () => {
+    describe('when the organization has no users', () => {
       it('returns empty array', async () => {
-        const result = await userRepository.list();
+        const result = await userRepository.listByOrganization(
+          testOrganization.id,
+        );
 
         expect(result).toEqual([]);
       });
     });
 
-    it('returns all users with expected length', async () => {
-      const user1Id = createUserId('123e4567-e89b-12d3-a456-426614174000');
-      const user1 = userFactory({
-        id: user1Id,
-        email: 'user1@packmind.com',
-        memberships: [
+    describe('when users belong to several organizations', () => {
+      const memberId = createUserId('123e4567-e89b-12d3-a456-426614174000');
+      const otherOrgUserId = createUserId(
+        '123e4567-e89b-12d3-a456-426614174001',
+      );
+      let result: User[];
+
+      beforeEach(async () => {
+        const otherOrganization = await organizationRepository.save(
+          organizationFactory({
+            name: 'Other Organization',
+            slug: 'other-organization',
+          }),
+        );
+
+        await userRepository.add(
+          userFactory({
+            id: memberId,
+            email: 'member@packmind.com',
+            memberships: [
+              {
+                userId: memberId,
+                organizationId: testOrganization.id,
+                role: 'admin',
+              },
+            ],
+          }),
+        );
+        await userRepository.add(
+          userFactory({
+            id: otherOrgUserId,
+            email: 'other-org@packmind.com',
+            memberships: [
+              {
+                userId: otherOrgUserId,
+                organizationId: otherOrganization.id,
+                role: 'admin',
+              },
+            ],
+          }),
+        );
+
+        result = await userRepository.listByOrganization(testOrganization.id);
+      });
+
+      it('returns only the users of the queried organization', () => {
+        expect(result.map((user) => user.id)).toEqual([memberId]);
+      });
+
+      it('hydrates the memberships of the returned users', () => {
+        expect(result[0].memberships).toMatchObject([
           {
-            userId: user1Id,
+            userId: memberId,
             organizationId: testOrganization.id,
             role: 'admin',
           },
-        ],
+        ]);
       });
 
-      const user2Id = createUserId('123e4567-e89b-12d3-a456-426614174001');
-      const user2 = userFactory({
-        id: user2Id,
-        email: 'user2@packmind.com',
-        memberships: [
-          {
-            userId: user2Id,
-            organizationId: testOrganization.id,
-            role: 'admin',
-          },
-        ],
+      it('hydrates the organization of each membership', () => {
+        expect(result[0].memberships?.[0].organization?.id).toBe(
+          testOrganization.id,
+        );
       });
-
-      await userRepository.add(user1);
-      await userRepository.add(user2);
-
-      const result = await userRepository.list();
-
-      expect(result).toHaveLength(2);
     });
   });
 });

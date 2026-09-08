@@ -125,29 +125,6 @@ export class UserRepository
     }
   }
 
-  async list(): Promise<User[]> {
-    this.logger.info('Listing users');
-
-    try {
-      const users = await this.repository.find({
-        relations: {
-          memberships: {
-            organization: true,
-          },
-        },
-      });
-      this.logger.info('Users listed successfully', {
-        count: users.length,
-      });
-      return users;
-    } catch (error) {
-      this.logger.error('Failed to list users', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async listByOrganization(organizationId: string): Promise<User[]> {
     this.logger.info('Listing users by organization', { organizationId });
 

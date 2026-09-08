@@ -35,7 +35,7 @@ describe('UserService', () => {
       findById: jest.fn(),
       findByEmail: jest.fn(),
       findByEmailCaseInsensitive: jest.fn(),
-      list: jest.fn(),
+      listByOrganization: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
@@ -842,67 +842,45 @@ describe('UserService', () => {
     });
   });
 
-  describe('.listUsers', () => {
-    describe('when users exist', () => {
+  describe('.listUsersByOrganization', () => {
+    const organizationId = createOrganizationId(
+      '123e4567-e89b-12d3-a456-426614174001',
+    );
+
+    describe('when the organization has users', () => {
       let users: User[];
       let result: User[];
 
       beforeEach(async () => {
+        const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
         users = [
-          {
-            id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+          userFactory({
+            id: userId,
             email: 'testuser1@packmind.com',
-            passwordHash: 'hashedpassword123',
-            active: true,
-            memberships: [
-              {
-                userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-                organizationId: createOrganizationId(
-                  '123e4567-e89b-12d3-a456-426614174001',
-                ),
-                role: 'admin',
-              },
-            ],
-          },
-          {
-            id: createUserId('123e4567-e89b-12d3-a456-426614174001'),
-            email: 'testuser2@packmind.com',
-            passwordHash: 'hashedpassword456',
-            active: true,
-            memberships: [
-              {
-                userId: createUserId('123e4567-e89b-12d3-a456-426614174001'),
-                organizationId: createOrganizationId(
-                  '123e4567-e89b-12d3-a456-426614174002',
-                ),
-                role: 'admin',
-              },
-            ],
-          },
+            memberships: [{ userId, organizationId, role: 'admin' }],
+          }),
         ];
-        mockUserRepository.list.mockResolvedValue(users);
-        result = await userService.listUsers();
+        mockUserRepository.listByOrganization.mockResolvedValue(users);
+        result = await userService.listUsersByOrganization(organizationId);
       });
 
-      it('calls repository list method', () => {
-        expect(mockUserRepository.list).toHaveBeenCalled();
+      it('queries the repository with the organization id', () => {
+        expect(mockUserRepository.listByOrganization).toHaveBeenCalledWith(
+          organizationId,
+        );
       });
 
-      it('returns all users', () => {
+      it('returns the organization users', () => {
         expect(result).toEqual(users);
       });
     });
 
-    describe('when no users exist', () => {
+    describe('when the organization has no users', () => {
       let result: User[];
 
       beforeEach(async () => {
-        mockUserRepository.list.mockResolvedValue([]);
-        result = await userService.listUsers();
-      });
-
-      it('calls repository list method', () => {
-        expect(mockUserRepository.list).toHaveBeenCalled();
+        mockUserRepository.listByOrganization.mockResolvedValue([]);
+        result = await userService.listUsersByOrganization(organizationId);
       });
 
       it('returns empty array', () => {

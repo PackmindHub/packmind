@@ -238,11 +238,6 @@ export class UserService {
     return bcrypt.hash(password, saltRounds);
   }
 
-  async listUsers(): Promise<User[]> {
-    this.logger.info('Listing all users');
-    return this.userRepository.list();
-  }
-
   async listUsersByOrganization(
     organizationId: OrganizationId,
   ): Promise<User[]> {
