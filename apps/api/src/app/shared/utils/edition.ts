@@ -6,14 +6,21 @@ import { PackmindEdition } from '@packmind/types';
 export type { PackmindEdition };
 
 // PACKMIND_EDITION is a deployment input with its own older vocabulary
-// (`proprietary`, `oss`) baked into compose files, CI and the build's tsconfig
-// selection, so it keeps accepting those names; only what we publish is
-// renamed. Anything unrecognised stays community, the safe default.
+// (`proprietary`, `oss`), baked into compose files and CI; only what we
+// publish is renamed, so the names we answer to here are not the ones we
+// answer with.
+//
+// Deliberately NOT accepting `enterprise`. What decides whether a route
+// exists is `apps/api/webpack.config.js`, which compiles the stubs for
+// anything that is not literally `proprietary` — and it reads process.env at
+// build time, so it never sees a value only Infisical holds. Announcing an
+// edition this rule does not recognise would claim routes the binary was
+// built without, and the CLI would then read their 404 as a missing resource
+// rather than a missing feature. Match that rule; anything else is community,
+// which is the reading that degrades safely.
 export async function resolvePackmindEdition(): Promise<PackmindEdition> {
   const raw = await Configuration.getConfig('PACKMIND_EDITION');
-  return raw === 'proprietary' || raw === 'cloud' || raw === 'enterprise'
-    ? 'enterprise'
-    : 'community';
+  return raw === 'proprietary' || raw === 'cloud' ? 'enterprise' : 'community';
 }
 
 // Hosting mode for the GitHub App integration. Distinct from edition: the
