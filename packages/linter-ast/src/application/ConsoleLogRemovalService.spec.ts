@@ -18,7 +18,7 @@ describe('ConsoleLogRemovalService', () => {
           ProgrammingLanguage.TYPESCRIPT,
         ),
       ).rejects.toThrow(
-        'ConsoleRemovalService only supports JAVASCRIPT, received: TYPESCRIPT',
+        'ConsoleLogRemovalService only supports JAVASCRIPT, received: TYPESCRIPT',
       );
     });
 
@@ -31,7 +31,7 @@ describe('ConsoleLogRemovalService', () => {
           ProgrammingLanguage.PYTHON,
         ),
       ).rejects.toThrow(
-        'ConsoleRemovalService only supports JAVASCRIPT, received: PYTHON',
+        'ConsoleLogRemovalService only supports JAVASCRIPT, received: PYTHON',
       );
     });
   });
