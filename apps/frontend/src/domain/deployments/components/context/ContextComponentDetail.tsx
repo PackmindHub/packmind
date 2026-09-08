@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
@@ -19,12 +19,16 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import {
+  LuChevronDown,
   LuChevronLeft,
+  LuCircleCheck,
+  LuCircleOff,
   LuEllipsisVertical,
   LuExternalLink,
   LuMessageSquarePlus,
   LuTrash2,
 } from 'react-icons/lu';
+import { TiWarningOutline } from 'react-icons/ti';
 import type {
   Command,
   CommandId,
@@ -74,6 +78,13 @@ import {
   pendingProposalCount,
   reviewChangesLabel,
 } from './componentMaintenance';
+import {
+  ruleDetectionLabel,
+  ruleDetectionOpens,
+  ruleDetectionsById,
+  type RuleDetection,
+  type RuleDetectionState,
+} from './ruleDetection';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import {
@@ -95,6 +106,8 @@ import {
   useListChangeProposalsBySkillQuery,
   useListChangeProposalsByStandardQuery,
 } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { getLanguageDisplayName } from '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 
 /**
  * One component, read inside the package that carries it.
@@ -1306,6 +1319,7 @@ function StandardBody({ standardId }: Readonly<{ standardId: StandardId }>) {
         <PMBox paddingTop={1}>
           <RulesSection
             rules={sortedRules}
+            standardId={standardId}
             isLoading={rulesLoading}
             isError={rulesError}
           />
@@ -1321,18 +1335,65 @@ function StandardBody({ standardId }: Readonly<{ standardId: StandardId }>) {
  * The table is not reusable here: it carries a linter status column of its own
  * and builds its links from the route parameters of the standard's page, which
  * the pane does not have. A row is not a link for the same reason the prototype
- * does not make it one — a rule opens on that page, and the way there is the
- * button in the header that says so.
+ * does not make it one.
+ *
+ * What a row does carry now is whether the rule is checked automatically. A
+ * rule nothing can check is a sentence in a document, and a rule with a
+ * detection program behind it is enforced. That difference decides how much of
+ * the standard the reader should expect to be held to, and until now finding it
+ * out was a page per rule.
  */
 function RulesSection({
   rules,
+  standardId,
   isLoading,
   isError,
 }: Readonly<{
   rules: readonly Rule[];
+  standardId: StandardId;
   isLoading: boolean;
   isError: boolean;
 }>) {
+  /*
+   * One request for the whole standard rather than one per rule, and the same
+   * key the standard's own page reads, so opening a standard here and opening
+   * it there costs the linter one answer between them.
+   *
+   * The data only. A failure leaves every row as plain content, which is the
+   * rendering the OSS edition gets anyway, and announcing above a list of rules
+   * that the linter could not be reached answers a question the reader has not
+   * asked yet.
+   */
+  const { data: detectionStatuses } =
+    useGetStandardRulesDetectionStatusQuery(standardId);
+
+  const detections = useMemo(
+    () => ruleDetectionsById(detectionStatuses),
+    [detectionStatuses],
+  );
+
+  /*
+   * A set rather than one open row at a time. Two rules of the same standard
+   * being checked in different languages is exactly the comparison this is for,
+   * and a list that closes what you were reading to show you what you clicked
+   * makes that comparison impossible.
+   */
+  const [openRuleIds, setOpenRuleIds] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  );
+
+  const toggleRule = (ruleId: string) => {
+    setOpenRuleIds((open) => {
+      const next = new Set(open);
+
+      if (!next.delete(ruleId)) {
+        next.add(ruleId);
+      }
+
+      return next;
+    });
+  };
+
   if (isLoading) {
     return (
       <PMText fontSize="sm" color="faded">
@@ -1362,17 +1423,164 @@ function RulesSection({
       overflow="hidden"
     >
       {rules.map((rule, index) => (
-        <PMBox
+        <RuleRow
           key={rule.id}
-          paddingX={3}
-          paddingY="10px"
-          borderTopWidth={index === 0 ? '0' : '1px'}
-          borderColor="border.tertiary"
-        >
-          <PMText fontSize="sm">{rule.content}</PMText>
-        </PMBox>
+          rule={rule}
+          detection={detections.get(rule.id) ?? null}
+          isFirst={index === 0}
+          isOpen={openRuleIds.has(rule.id)}
+          onToggle={() => toggleRule(rule.id)}
+        />
       ))}
     </PMBox>
+  );
+}
+
+/**
+ * One rule, and its detection status when the edition has one to give.
+ *
+ * The prose is not the trigger. It is the thing being read, sometimes a full
+ * sentence worth copying into a review comment, and a paragraph inside a button
+ * cannot be selected with the mouse. So the status and the chevron are the
+ * trigger, together: one target, on the side of the row where the status
+ * already sits, leaving the sentence to be a sentence.
+ *
+ * The status is one element in all cases, a button only when there is something
+ * to open, and it keeps the chevron's width either way. A row whose label says
+ * everything there is loses the chevron, and the ten labels above and below it
+ * have to stay in the same column: an alignment that moves by sixteen pixels
+ * from row to row is read as a mistake long before it is read as a meaning.
+ *
+ * With no detection status at all the row is what it was before this increment,
+ * down to the padding. That is the OSS rendering, and also a proprietary rule
+ * the linter has never been pointed at.
+ */
+function RuleRow({
+  rule,
+  detection,
+  isFirst,
+  isOpen,
+  onToggle,
+}: Readonly<{
+  rule: Rule;
+  detection: RuleDetection | null;
+  isFirst: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+}>) {
+  const detailId = `rule-detection-${rule.id}`;
+  const opens = detection ? ruleDetectionOpens(detection) : false;
+
+  return (
+    <PMBox
+      paddingX={3}
+      paddingY="10px"
+      borderTopWidth={isFirst ? '0' : '1px'}
+      borderColor="border.tertiary"
+    >
+      <PMHStack gap={3} align="start" justify="space-between">
+        {/*
+          Growing and allowed to shrink to nothing, so a long rule wraps inside
+          its own width instead of pushing the status off the row. The pane is
+          narrow and the rules are prose: this is the column that has to give.
+        */}
+        <PMText fontSize="sm" flex="1" minWidth={0}>
+          {rule.content}
+        </PMText>
+
+        {detection && (
+          <PMBox
+            as={opens ? 'button' : 'div'}
+            aria-expanded={opens ? isOpen : undefined}
+            aria-controls={opens ? detailId : undefined}
+            onClick={opens ? onToggle : undefined}
+            cursor={opens ? 'pointer' : undefined}
+            display="flex"
+            alignItems="center"
+            gap={1.5}
+            flexShrink={0}
+            paddingX={1.5}
+            paddingY={0.5}
+            marginY="-2px"
+            marginRight="-6px"
+            borderRadius="sm"
+            _hover={
+              opens ? { backgroundColor: 'background.secondary' } : undefined
+            }
+            _focusVisible={{
+              outline: '2px solid',
+              outlineColor: 'branding.primary',
+              outlineOffset: '1px',
+            }}
+          >
+            <RuleDetectionMark state={detection.state} />
+            <PMText fontSize="xs" color="secondary" whiteSpace="nowrap">
+              {ruleDetectionLabel(detection, getLanguageDisplayName)}
+            </PMText>
+            {/*
+              Kept in the layout when it has nothing to do, so the labels of
+              every row in the list end at the same place.
+            */}
+            <PMIcon
+              as="span"
+              display="inline-flex"
+              fontSize="sm"
+              color="text.faded"
+              visibility={opens ? undefined : 'hidden'}
+              transform={isOpen ? 'rotate(180deg)' : undefined}
+              transition="transform 120ms ease"
+            >
+              <LuChevronDown />
+            </PMIcon>
+          </PMBox>
+        )}
+      </PMHStack>
+
+      {detection && opens && isOpen && (
+        <PMHStack id={detailId} gap={3} align="start" paddingTop={2.5}>
+          <PMText fontSize="xs" color="faded" flexShrink={0} minWidth="72px">
+            Languages
+          </PMText>
+          <PMHStack gap={3} minWidth={0} flexWrap="wrap">
+            {detection.languages.map(({ language, state }) => (
+              <PMHStack key={language} gap={1.5}>
+                <RuleDetectionMark state={state} />
+                <PMText fontSize="xs" color="secondary" whiteSpace="nowrap">
+                  {getLanguageDisplayName(language)}
+                </PMText>
+              </PMHStack>
+            ))}
+          </PMHStack>
+        </PMHStack>
+      )}
+    </PMBox>
+  );
+}
+
+/**
+ * The mark beside a detection status. Three shapes, used by the rule's own
+ * status and by each of its languages: the collapsed row and the languages it
+ * opens onto have to agree, or the reader learns the mapping twice.
+ *
+ * The shapes are the ones the standard's rule summary already uses, so the two
+ * screens do not disagree either for as long as both exist.
+ */
+const RULE_DETECTION_MARKS: Record<
+  RuleDetectionState,
+  { Icon: ComponentType; color: string }
+> = {
+  checked: { Icon: LuCircleCheck, color: 'text.success' },
+  'in-progress': { Icon: TiWarningOutline, color: 'text.warning' },
+  unchecked: { Icon: LuCircleOff, color: 'text.tertiary' },
+};
+
+function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
+  const { Icon, color } = RULE_DETECTION_MARKS[state];
+
+  return (
+    <PMIcon as="span" display="inline-flex" fontSize="sm" color={color}>
+      <Icon />
+    </PMIcon>
   );
 }
 

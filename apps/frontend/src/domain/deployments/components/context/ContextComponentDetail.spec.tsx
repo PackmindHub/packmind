@@ -4,10 +4,14 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import {
+  ProgrammingLanguage,
+  RuleLanguageDetectionStatus,
   createCommandId,
+  createRuleId,
   createSkillId,
   createStandardId,
 } from '@packmind/types';
+import type { RuleDetectionStatusSummary } from '@packmind/types';
 import type { Mock } from 'vitest';
 
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -27,9 +31,11 @@ import {
   useGetCommandVersionsQuery,
 } from '../../../commands/api/queries/CommandsQueries';
 import {
+  useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
   useGetStandardVersionsQuery,
 } from '../../../standards/api/queries/StandardsQueries';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
@@ -71,6 +77,40 @@ vi.mock(
     useListChangeProposalsByCommandQuery: vi.fn(),
     useListChangeProposalsByStandardQuery: vi.fn(),
     useListChangeProposalsBySkillQuery: vi.fn(),
+  }),
+);
+
+/**
+ * The detection statuses, which decide whether a rule row says anything about
+ * being checked and whether it opens.
+ *
+ * Mocked at the alias rather than at either edition's module, so both
+ * repositories run the same cases: the OSS stub answers with an empty array
+ * forever, which would leave every case here asserting the absence of
+ * everything.
+ */
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
+  async () => ({
+    ...(await vi.importActual(
+      '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
+    )),
+    useGetStandardRulesDetectionStatusQuery: vi.fn(),
+  }),
+);
+
+/**
+ * A language spells as itself here. The real function is edition-dependent, and
+ * a case asserting on "TypeScript" would read "Checked in TypeScript" in one
+ * repository and "Checked in " in the other.
+ */
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils',
+  async () => ({
+    ...(await vi.importActual(
+      '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils',
+    )),
+    getLanguageDisplayName: (language?: string | null) => language ?? '',
   }),
 );
 
@@ -223,6 +263,13 @@ function resetToEmpty() {
   });
   (useListChangeProposalsBySkillQuery as Mock).mockReturnValue({
     data: undefined,
+  });
+  (useGetRulesByStandardIdQuery as Mock).mockReturnValue({ data: [] });
+  /* The answer of a standard no detection program was ever written for. */
+  (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+    data: [],
+    isLoading: false,
+    isError: false,
   });
   const idleQuery = { data: undefined, isLoading: false, isError: false };
   (useGetCommandVersionsQuery as Mock).mockReturnValue(idleQuery);
@@ -917,6 +964,206 @@ describe('what a version changed', () => {
       await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
 
       expect(screen.queryByText(/renamed from/)).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('whether a rule is checked automatically', () => {
+  const FIRST_RULE = createRuleId('rule-1');
+  const SECOND_RULE = createRuleId('rule-2');
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+    (useGetStandardByIdQuery as Mock).mockReturnValue({
+      data: { standard: { slug: 'naming', description: '' } },
+    });
+  });
+
+  function withRules(...contents: string[]) {
+    (useGetRulesByStandardIdQuery as Mock).mockReturnValue({
+      data: contents.map((content, index) => ({
+        id: index === 0 ? FIRST_RULE : SECOND_RULE,
+        content,
+      })),
+    });
+  }
+
+  function withStatuses(...summaries: RuleDetectionStatusSummary[]) {
+    (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+      data: summaries,
+      isLoading: false,
+      isError: false,
+    });
+  }
+
+  function statusesFor(
+    ruleId: RuleDetectionStatusSummary['ruleId'],
+    languages: [ProgrammingLanguage, RuleLanguageDetectionStatus][],
+  ): RuleDetectionStatusSummary {
+    return {
+      ruleId,
+      languages: languages.map(([language, status]) => ({ language, status })),
+    };
+  }
+
+  async function renderStandard() {
+    await renderDetail(
+      componentOfType('standard', STANDARD_ID),
+      INSTRUCTIONS_TAB,
+    );
+  }
+
+  describe('when no detection program was ever written', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+    });
+
+    it('still prints the rule', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('Event name ends with the verb')).toBeVisible();
+    });
+
+    it('offers nothing to open, the rendering the OSS edition gets', async () => {
+      await renderStandard();
+
+      expect(
+        screen.queryByRole('button', { name: /checked|in progress/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the rule is checked in its only language', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      withStatuses(
+        statusesFor(FIRST_RULE, [
+          [ProgrammingLanguage.TYPESCRIPT, RuleLanguageDetectionStatus.OK],
+        ]),
+      );
+    });
+
+    it('names the language on the row', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('Checked in TYPESCRIPT')).toBeVisible();
+    });
+
+    it('offers nothing to open, since the row said it all', async () => {
+      await renderStandard();
+
+      expect(
+        screen.queryByRole('button', { name: /checked in/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the rule is checked in one language out of two', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      withStatuses(
+        statusesFor(FIRST_RULE, [
+          [ProgrammingLanguage.TYPESCRIPT, RuleLanguageDetectionStatus.OK],
+          [ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.NONE],
+        ]),
+      );
+    });
+
+    it('keeps the languages shut until asked', async () => {
+      await renderStandard();
+
+      expect(screen.queryByText('Languages')).not.toBeInTheDocument();
+    });
+
+    it('opens onto them', async () => {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /checked in TYPESCRIPT/i }),
+      );
+
+      expect(screen.getByText('PYTHON')).toBeVisible();
+    });
+
+    it('shuts again on a second click', async () => {
+      await renderStandard();
+      const trigger = screen.getByRole('button', {
+        name: /checked in TYPESCRIPT/i,
+      });
+      await userEvent.click(trigger);
+      await userEvent.click(trigger);
+
+      expect(screen.queryByText('Languages')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the only language is still being worked on', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      withStatuses(
+        statusesFor(FIRST_RULE, [
+          [ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.WIP],
+        ]),
+      );
+    });
+
+    it('says so in the words the detection screens use', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('In progress')).toBeVisible();
+    });
+
+    it('opens, since the row named no language', async () => {
+      await renderStandard();
+
+      expect(
+        screen.getByRole('button', { name: /in progress/i }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when a language was answered for but nothing checks it', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      withStatuses(
+        statusesFor(FIRST_RULE, [
+          [ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.NONE],
+        ]),
+      );
+    });
+
+    it('says the rule is not checked', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('Not checked')).toBeVisible();
+    });
+  });
+
+  describe('when two rules of the same standard both open', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb', 'Property name is camel case');
+      withStatuses(
+        statusesFor(FIRST_RULE, [
+          [ProgrammingLanguage.TYPESCRIPT, RuleLanguageDetectionStatus.OK],
+          [ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.NONE],
+        ]),
+        statusesFor(SECOND_RULE, [
+          [ProgrammingLanguage.JAVA, RuleLanguageDetectionStatus.WIP],
+        ]),
+      );
+    });
+
+    /* The comparison the set of open rows exists for. */
+    it('leaves both open rather than closing the first', async () => {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /checked in TYPESCRIPT/i }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: /in progress/i }),
+      );
+
+      expect(screen.getAllByText('Languages')).toHaveLength(2);
     });
   });
 });
