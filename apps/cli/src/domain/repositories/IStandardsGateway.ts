@@ -45,8 +45,6 @@ export type ListedStandard = {
   spaceId: SpaceId;
 };
 
-export type ListStandardsResult = ListedStandard[];
-
 export interface IStandardsGateway {
   create(
     spaceId: string,

@@ -9,10 +9,8 @@ import {
   DeleteSkillCommand,
   DeleteSkillsBatchCommand,
   DeleteSkillsBatchResponse,
-  FindSkillBySlugCommand,
   GetLatestSkillVersionCommand,
   GetSkillByIdCommand,
-  GetSkillVersionCommand,
   GetSkillWithFilesCommand,
   GetSkillWithFilesResponse,
   IAccountsPort,
@@ -20,7 +18,6 @@ import {
   ISkillsPort,
   ISpacesPort,
   ISpacesPortName,
-  ListSkillsBySpaceCommand,
   ListSkillVersionsCommand,
   ListSkillVersionsResponse,
   OrganizationId,
@@ -32,30 +29,26 @@ import {
   SkillVersion,
   SkillVersionId,
   SpaceId,
-  UpdateSkillCommand,
   UpdateSkillFileFromUICommand,
   UpdateSkillFileFromUIResponse,
   UploadSkillCommand,
   UserId,
   UploadSkillResponse,
-  createSkillId,
-  createSkillVersionId,
-  createUserId,
 } from '@packmind/types';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
 import { SkillsServices } from '../services/SkillsServices';
 import { CreateSkillUseCase } from '../useCases/createSkill/CreateSkillUseCase';
 import { DeleteSkillUseCase } from '../useCases/deleteSkill/DeleteSkillUseCase';
 import { DeleteSkillsBatchUseCase } from '../useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase';
-import { FindSkillBySlugUseCase } from '../useCases/findSkillBySlug/FindSkillBySlugUseCase';
+
 import { GetLatestSkillVersionUseCase } from '../useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase';
 import { GetSkillByIdUseCase } from '../useCases/getSkillById/GetSkillByIdUseCase';
-import { GetSkillVersionUseCase } from '../useCases/getSkillVersion/GetSkillVersionUseCase';
+
 import { GetSkillWithFilesUseCase } from '../useCases/getSkillWithFiles/GetSkillWithFilesUseCase';
 import { ListSkillsBySpaceUseCase } from '../useCases/listSkillsBySpace/ListSkillsBySpaceUseCase';
 import { ListSkillVersionsUseCase } from '../useCases/listSkillVersions/ListSkillVersionsUseCase';
 import { SaveSkillVersionUseCase } from '../useCases/saveSkillVersion/SaveSkillVersionUseCase';
-import { UpdateSkillUseCase } from '../useCases/updateSkill/UpdateSkillUseCase';
+
 import { UpdateSkillFileFromUIUseCase } from '../useCases/updateSkillFileFromUI/UpdateSkillFileFromUIUseCase';
 import { UploadSkillUseCase } from '../useCases/uploadSkill/UploadSkillUseCase';
 
@@ -69,14 +62,11 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   // Use cases - all initialized in initialize()
   private _createSkill!: CreateSkillUseCase;
   private _uploadSkill!: UploadSkillUseCase;
-  private _updateSkill!: UpdateSkillUseCase;
   private _deleteSkill!: DeleteSkillUseCase;
   private _deleteSkillsBatch!: DeleteSkillsBatchUseCase;
   private _getSkillById!: GetSkillByIdUseCase;
   private _getSkillWithFiles!: GetSkillWithFilesUseCase;
-  private _findSkillBySlug!: FindSkillBySlugUseCase;
   private _listSkillsBySpace!: ListSkillsBySpaceUseCase;
-  private _getSkillVersion!: GetSkillVersionUseCase;
   private _getLatestSkillVersion!: GetLatestSkillVersionUseCase;
   private _listSkillVersions!: ListSkillVersionsUseCase;
   private _saveSkillVersion!: SaveSkillVersionUseCase;
@@ -131,14 +121,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.eventEmitterService,
     );
 
-    this._updateSkill = new UpdateSkillUseCase(
-      this.accountsPort,
-      this.spacesPort,
-      this.services.getSkillService(),
-      this.services.getSkillVersionService(),
-      this.eventEmitterService,
-    );
-
     this._deleteSkill = new DeleteSkillUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -166,23 +148,10 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillFileService(),
     );
 
-    this._findSkillBySlug = new FindSkillBySlugUseCase(
-      this.accountsPort,
-      this.services.getSkillService(),
-      this.spacesPort,
-    );
-
     this._listSkillsBySpace = new ListSkillsBySpaceUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
-    );
-
-    this._getSkillVersion = new GetSkillVersionUseCase(
-      this.accountsPort,
-      this.services.getSkillVersionService(),
-      this.services.getSkillService(),
-      this.spacesPort,
     );
 
     this._getLatestSkillVersion = new GetLatestSkillVersionUseCase(
@@ -394,15 +363,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this._uploadSkill.execute(command);
   }
 
-  async updateSkill(command: UpdateSkillCommand): Promise<Skill> {
-    this.logger.info('updateSkill use case invoked', {
-      skillId: command.skillId,
-      userId: command.userId.substring(0, 6) + '*',
-      organizationId: command.organizationId,
-    });
-    return this._updateSkill.execute(command);
-  }
-
   async deleteSkill(
     command: DeleteSkillCommand,
   ): Promise<{ success: boolean }> {
@@ -435,41 +395,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._getSkillById.execute(command);
-  }
-
-  async findSkillBySlugUseCase(
-    command: FindSkillBySlugCommand,
-  ): Promise<{ skill: Skill | null }> {
-    this.logger.info('findSkillBySlug use case invoked', {
-      slug: command.slug,
-      userId: command.userId.substring(0, 6) + '*',
-      organizationId: command.organizationId,
-    });
-    return this._findSkillBySlug.execute(command);
-  }
-
-  async listSkillsBySpaceUseCase(
-    command: ListSkillsBySpaceCommand,
-  ): Promise<Skill[]> {
-    this.logger.info('listSkillsBySpace use case invoked', {
-      spaceId: command.spaceId,
-      userId: command.userId.substring(0, 6) + '*',
-      organizationId: command.organizationId,
-    });
-    return this._listSkillsBySpace.execute(command);
-  }
-
-  async getSkillVersionUseCase(
-    command: GetSkillVersionCommand,
-  ): Promise<{ skillVersion: SkillVersion | null }> {
-    this.logger.info('getSkillVersion use case invoked', {
-      skillId: command.skillId,
-      version: command.version,
-      spaceId: command.spaceId,
-      userId: command.userId.substring(0, 6) + '*',
-      organizationId: command.organizationId,
-    });
-    return this._getSkillVersion.execute(command);
   }
 
   async getLatestSkillVersionUseCase(
@@ -506,21 +431,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._listSkillVersions.execute(command);
-  }
-
-  /**
-   * Helper: Convert string IDs to branded types for internal use case calls.
-   */
-  public createSkillIdFromString(id: string): SkillId {
-    return createSkillId(id);
-  }
-
-  public createSkillVersionIdFromString(id: string): SkillVersionId {
-    return createSkillVersionId(id);
-  }
-
-  public createUserIdFromString(id: string) {
-    return createUserId(id);
   }
 
   async duplicateSkillToSpace(

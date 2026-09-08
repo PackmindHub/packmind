@@ -146,29 +146,6 @@ export class RedisSSEClient {
   }
 
   /**
-   * Unsubscribe from a Redis channel
-   */
-  async unsubscribe(channel: string): Promise<void> {
-    if (!this.subscriberClient) {
-      return;
-    }
-
-    this.logger.info('Unsubscribing from Redis channel', { channel });
-
-    try {
-      await this.subscriberClient.unsubscribe(channel);
-      this.logger.info('Successfully unsubscribed from Redis channel', {
-        channel,
-      });
-    } catch (error) {
-      this.logger.error('Failed to unsubscribe from Redis channel', {
-        channel,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  /**
    * Clean up Redis connections
    */
   async disconnect(): Promise<void> {
@@ -190,16 +167,5 @@ export class RedisSSEClient {
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  }
-
-  /**
-   * Get connection status
-   */
-  isConnected(): boolean {
-    return (
-      this.initialized &&
-      this.publisherClient?.status === 'ready' &&
-      this.subscriberClient?.status === 'ready'
-    );
   }
 }

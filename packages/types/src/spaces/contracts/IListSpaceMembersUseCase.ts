@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership } from '../UserSpaceMembership';
 
@@ -7,8 +7,3 @@ export type ListSpaceMembersCommand = PackmindCommand & {
 };
 
 export type ListSpaceMembersResponse = UserSpaceMembership[];
-
-export type IListSpaceMembersUseCase = IUseCase<
-  ListSpaceMembersCommand,
-  ListSpaceMembersResponse
->;

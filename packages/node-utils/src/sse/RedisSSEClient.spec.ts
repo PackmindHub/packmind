@@ -110,27 +110,7 @@ describe('RedisSSEClient', () => {
     });
   });
 
-  describe('unsubscribe', () => {
-    it('unsubscribes from a Redis channel', async () => {
-      // Initialize the client first by calling a method that initializes Redis connections
-      await client.publish(SSE_REDIS_CHANNELS.EVENTS, 'init');
-
-      await client.unsubscribe(SSE_REDIS_CHANNELS.EVENTS);
-
-      expect(mockRedisInstance.unsubscribe).toHaveBeenCalledWith(
-        SSE_REDIS_CHANNELS.EVENTS,
-      );
-    });
-  });
-
   describe('connection management', () => {
-    it('reports connected status for ready clients', async () => {
-      // Initialize by calling a method
-      await client.publish(SSE_REDIS_CHANNELS.SUBSCRIPTIONS, 'test');
-
-      expect(client.isConnected()).toBe(true);
-    });
-
     it('disconnects both publisher and subscriber clients', async () => {
       // Initialize by calling a method
       await client.publish(SSE_REDIS_CHANNELS.SUBSCRIPTIONS, 'test');

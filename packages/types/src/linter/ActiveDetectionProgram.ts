@@ -26,5 +26,3 @@ export type LanguageDetectionPrograms = ActiveDetectionProgram & {
   draftDetectionProgram: DetectionProgram | null;
   isExampleOnly?: boolean;
 };
-
-export type ActiveDetectionProgramWithRelations = LanguageDetectionPrograms;

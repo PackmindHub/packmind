@@ -1,9 +1,4 @@
-import {
-  Button,
-  ButtonProps,
-  ButtonGroup,
-  ButtonGroupProps,
-} from '@chakra-ui/react';
+import { Button, ButtonProps, ButtonGroup } from '@chakra-ui/react';
 
 export type PMButtonVariants =
   | 'primary'
@@ -31,4 +26,3 @@ export const PMButton = (props: IPMButtonProps) => {
 };
 
 export const PMButtonGroup = ButtonGroup;
-export type PMButtonGroupProps = ButtonGroupProps;

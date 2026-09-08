@@ -1,4 +1,4 @@
-import { IPublicUseCase, PublicPackmindCommand } from '../../UseCase';
+import { PublicPackmindCommand } from '../../UseCase';
 import { MarketplaceId } from '../MarketplaceId';
 import {
   PluginInstallAgent,
@@ -76,8 +76,3 @@ export type TrackPluginInstallHeartbeatResponse = {
   created: boolean;
   marketplaceId: MarketplaceId;
 };
-
-export type ITrackPluginInstallHeartbeatUseCase = IPublicUseCase<
-  TrackPluginInstallHeartbeatCommand,
-  TrackPluginInstallHeartbeatResponse
->;

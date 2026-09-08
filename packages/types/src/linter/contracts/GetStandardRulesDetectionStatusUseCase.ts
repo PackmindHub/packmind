@@ -2,7 +2,7 @@ import { OrganizationId, UserId } from '../../accounts';
 import { StandardId, RuleId } from '../../standards';
 import { ProgrammingLanguage } from '../../languages';
 import { RuleLanguageDetectionStatus } from '../../standards';
-import { IUseCase } from '../../UseCase';
+
 import {
   DetectionSeverity,
   ActiveDetectionProgramId,
@@ -29,8 +29,3 @@ export type RuleDetectionStatusSummary = {
 export type GetStandardRulesDetectionStatusResponse = {
   rules: RuleDetectionStatusSummary[];
 };
-
-export type IGetStandardRulesDetectionStatusUseCase = IUseCase<
-  GetStandardRulesDetectionStatusCommand,
-  GetStandardRulesDetectionStatusResponse
->;

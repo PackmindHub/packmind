@@ -22,7 +22,7 @@ import { EXEC_NAME } from '../../utils/execName';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface IAddToPackageHandlerResult {
+interface IAddToPackageHandlerResult {
   success: boolean;
   added?: string[];
   skipped?: string[];

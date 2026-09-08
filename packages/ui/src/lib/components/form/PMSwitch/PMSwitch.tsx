@@ -1,7 +1,4 @@
-import {
-  Switch as ChakraSwitch,
-  type SwitchCheckedChangeDetails,
-} from '@chakra-ui/react';
+import { Switch as ChakraSwitch } from '@chakra-ui/react';
 import * as React from 'react';
 
 export interface PMSwitchProps extends Omit<
@@ -12,8 +9,6 @@ export interface PMSwitchProps extends Omit<
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   rootRef?: React.RefObject<HTMLLabelElement | null>;
 }
-
-export type PMSwitchCheckedChangeDetails = SwitchCheckedChangeDetails;
 
 export const PMSwitch = React.forwardRef<HTMLInputElement, PMSwitchProps>(
   function Switch(props, ref) {

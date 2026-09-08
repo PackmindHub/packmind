@@ -42,34 +42,6 @@ export class PackmindSerializer {
     return value as T;
   }
 
-  static parse<T>(json: string): T {
-    return JSON.parse(json, (key, value) => {
-      if (isPackmindSerializedDate(value)) {
-        return new Date(value.value);
-      }
-
-      return value;
-    });
-  }
-
-  static stringify<T>(data: T): string {
-    return JSON.stringify(data, (key, value) => {
-      if (Array.isArray(value)) {
-        return value.map(PackmindSerializer.toPackmindSerializedDate);
-      }
-
-      if (typeof value === 'object' && value !== null && value !== undefined) {
-        return Object.fromEntries(
-          Object.entries(value).map(([key, value]) => {
-            return [key, PackmindSerializer.toPackmindSerializedDate(value)];
-          }),
-        );
-      }
-
-      return value;
-    });
-  }
-
   private static toPackmindSerializedDate<T>(
     value: T,
   ): T | PackmindSerializedDate {

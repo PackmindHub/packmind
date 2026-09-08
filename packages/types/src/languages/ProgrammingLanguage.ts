@@ -193,13 +193,6 @@ export const getAllLanguagesSortedByDisplayName = (): Array<{
 };
 
 /**
- * Returns an array of all ProgrammingLanguage enum values
- */
-export const getAllProgrammingLanguages = (): ProgrammingLanguage[] => {
-  return Object.values(ProgrammingLanguage);
-};
-
-/**
  * Converts a string to a ProgrammingLanguage enum value.
  * Matches case-insensitively against language names, display names, and file extensions.
  * @param input - The string to convert (language name or file extension)

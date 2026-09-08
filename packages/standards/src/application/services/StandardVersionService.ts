@@ -327,68 +327,6 @@ export class StandardVersionService {
     }
   }
 
-  async prepareForGitPublishing(
-    standardId: StandardId,
-    version: number,
-    allowedSpaceIds: SpaceId[],
-  ): Promise<{ filePath: string; content: string }> {
-    this.logger.info('Preparing standard version for Git publishing', {
-      standardId,
-      version,
-    });
-
-    try {
-      const standardVersion =
-        await this.standardVersionRepository.findByStandardIdAndVersion(
-          standardId,
-          version,
-          allowedSpaceIds,
-        );
-
-      if (!standardVersion) {
-        this.logger.error('Standard version not found for Git publishing', {
-          standardId,
-          version,
-        });
-        throw new Error(
-          `Standard version not found for standard ${standardId} version ${version}`,
-        );
-      }
-
-      // Get rules for this version
-      const rules = await this.ruleRepository.findByStandardVersionId(
-        standardVersion.id,
-      );
-
-      // Generate markdown content
-      const content = this.generateStandardMarkdown(standardVersion, rules);
-      const filePath = `.packmind/standards/${standardVersion.slug}.md`;
-
-      this.logger.info('Standard version prepared for Git publishing', {
-        standardId,
-        version,
-        filePath,
-        standardName: standardVersion.name,
-        rulesCount: rules.length,
-      });
-
-      return {
-        filePath,
-        content,
-      };
-    } catch (error) {
-      this.logger.error(
-        'Failed to prepare standard version for Git publishing',
-        {
-          standardId,
-          version,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
-  }
-
   async getRulesByVersionId(
     standardVersionId: StandardVersionId,
   ): Promise<Rule[]> {

@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { Skill } from '../Skill';
 
 export type UpdateSkillCommand = PackmindCommand & {
@@ -13,8 +13,3 @@ export type UpdateSkillCommand = PackmindCommand & {
 };
 
 export type UpdateSkillResponse = Skill;
-
-export type IUpdateSkillUseCase = IUseCase<
-  UpdateSkillCommand,
-  UpdateSkillResponse
->;

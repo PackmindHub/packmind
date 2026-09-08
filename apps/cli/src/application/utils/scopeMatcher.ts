@@ -40,7 +40,7 @@ export function buildEffectivePattern(
   return pattern;
 }
 
-export function isNegativePattern(pattern: string): boolean {
+function isNegativePattern(pattern: string): boolean {
   return pattern.startsWith('!');
 }
 

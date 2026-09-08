@@ -41,23 +41,6 @@ export class SkillVersionRepository
     };
   }
 
-  async list(): Promise<SkillVersion[]> {
-    this.logger.info('Listing all skill versions from database');
-
-    try {
-      const versions = await this.repository.find();
-      this.logger.info('Skill versions listed successfully', {
-        count: versions.length,
-      });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list skill versions from database', {
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
   async findBySkillId(skillId: SkillId): Promise<SkillVersion[]> {
     this.logger.info('Finding skill versions by skill ID', {
       skillId,
