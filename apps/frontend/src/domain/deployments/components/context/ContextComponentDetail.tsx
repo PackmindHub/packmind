@@ -21,6 +21,7 @@ import {
 import {
   LuChevronLeft,
   LuEllipsisVertical,
+  LuExternalLink,
   LuMessageSquarePlus,
   LuTrash2,
 } from 'react-icons/lu';
@@ -36,21 +37,37 @@ import type {
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
+import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
+import {
+  useGetCommandByIdQuery,
+  useGetCommandVersionsQuery,
+} from '../../../commands/api/queries/CommandsQueries';
 import { ProposeChangeModal } from '../../../commands/components/ProposeChangeModal';
-import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
+import {
+  useGetSkillVersionsQuery,
+  useGetSkillWithFilesByIdQuery,
+} from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
 import { parseCommandFrontmatter } from '../../../commands/utils/parseCommandFrontmatter';
 import {
   useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
+  useGetStandardVersionsQuery,
 } from '../../../standards/api/queries/StandardsQueries';
 import {
   DISTRIBUTION_TAB,
+  HISTORY_TAB,
   INSTRUCTIONS_TAB,
   sortRulesByContent,
 } from './buildComponentDetail';
+import {
+  displayNamesById,
+  historyAuthor,
+  historyEntries,
+  type HistoryCommit,
+  type HistoryEntry,
+} from './componentHistory';
 import {
   REVIEW_ARTEFACT_TYPES,
   componentUpdatedAt,
@@ -365,6 +382,14 @@ export function ContextComponentDetail({
               */}
               <DistributionCount component={component} />
             </PMTabsCompound.Trigger>
+            {/*
+              No count on this one. The number of versions is the `v4` in the
+              header two lines up, and printing it twice would invite the
+              reader to check whether the two agree.
+            */}
+            <PMTabsCompound.Trigger value={HISTORY_TAB}>
+              History
+            </PMTabsCompound.Trigger>
           </PMTabsCompound.List>
         </PMBox>
       </PMBox>
@@ -393,6 +418,17 @@ export function ContextComponentDetail({
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
         />
+      </PMTabsCompound.Content>
+
+      <PMTabsCompound.Content
+        value={HISTORY_TAB}
+        flex="1"
+        minH={0}
+        overflowY="auto"
+        paddingX={6}
+        paddingY={5}
+      >
+        <ComponentHistory component={component} />
       </PMTabsCompound.Content>
     </PMTabsCompound.Root>
   );
@@ -886,6 +922,243 @@ function SkillDistribution({
         spaceSlug={spaceSlug}
       />
     </DistributionBody>
+  );
+}
+
+/**
+ * What has been done to this component, and when.
+ *
+ * A tab and not a drawer. Version history has lived behind a `See History` link
+ * on all three pages, which is a screen on top of a screen for information one
+ * column wide. Here it sits beside the instructions and the landings, which is
+ * the whole of what there is to know about a component.
+ *
+ * Per type, for the reason the other two families are: three queries, three
+ * ids, and a hook cannot be called conditionally.
+ */
+function ComponentHistory({
+  component,
+}: Readonly<{ component: ContextComponent }>) {
+  switch (component.type) {
+    case 'command':
+      return <CommandHistory commandId={component.key as CommandId} />;
+    case 'standard':
+      return <StandardHistory standardId={component.key as StandardId} />;
+    case 'skill':
+      return <SkillHistory skillId={component.key as SkillId} />;
+  }
+}
+
+function CommandHistory({ commandId }: Readonly<{ commandId: CommandId }>) {
+  const { data, isLoading, isError } = useGetCommandVersionsQuery(commandId);
+
+  return (
+    <HistoryBody
+      entries={historyEntries(data)}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  );
+}
+
+function StandardHistory({ standardId }: Readonly<{ standardId: StandardId }>) {
+  const { data, isLoading, isError } = useGetStandardVersionsQuery(standardId);
+
+  return (
+    <HistoryBody
+      entries={historyEntries(data)}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  );
+}
+
+function SkillHistory({ skillId }: Readonly<{ skillId: SkillId }>) {
+  const { data, isLoading, isError } = useGetSkillVersionsQuery(skillId);
+
+  return (
+    <HistoryBody
+      entries={historyEntries(data)}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  );
+}
+
+/**
+ * The rows, or the reason there are none.
+ *
+ * A component that exists was created once, so one row is the floor rather than
+ * a state to apologise for. The line above it says so in words, because a list
+ * of one on a tab called History reads as a list that failed to load.
+ */
+function HistoryBody({
+  entries,
+  isLoading,
+  isError,
+}: Readonly<{
+  entries: readonly HistoryEntry[];
+  isLoading: boolean;
+  isError: boolean;
+}>) {
+  /*
+   * Asked for once here rather than per row. A version carries the id of who
+   * cut it and nothing else, and the names live with the organisation's
+   * members: one org-wide query, cached, answers every row.
+   *
+   * Its failure is not this tab's failure. A history with no names is still a
+   * history, so nothing below waits on it or reports it.
+   */
+  const { data: organizationUsers } = useGetUsersInMyOrganizationQuery();
+  const displayNames = displayNamesById(organizationUsers?.users);
+
+  if (isLoading) {
+    return (
+      <PMBox display="flex" justifyContent="center" paddingY={10}>
+        <PMSpinner />
+      </PMBox>
+    );
+  }
+
+  if (isError) {
+    return <PMText color="error">Error loading this history.</PMText>;
+  }
+
+  if (entries.length === 0) {
+    return (
+      <PMText as="div" fontSize="sm" color="secondary">
+        No version recorded.
+      </PMText>
+    );
+  }
+
+  return (
+    <PMVStack gap={4} align="stretch" maxWidth="72ch">
+      {entries.length === 1 && (
+        <PMText as="div" fontSize="sm" color="secondary">
+          One version. Nothing has changed since this component was created.
+        </PMText>
+      )}
+      <PMVStack gap={0} align="stretch">
+        {entries.map((entry) => (
+          <HistoryRow
+            key={entry.key}
+            entry={entry}
+            author={historyAuthor(entry, displayNames)}
+          />
+        ))}
+      </PMVStack>
+    </PMVStack>
+  );
+}
+
+/**
+ * One version: its number, what it came out of, and when.
+ *
+ * The date and the author sit together on the right, stacked, the way the
+ * `Distributed At` column of the distribution table stacks them. The subject
+ * wraps rather than truncating: it is prose, the list is 72ch wide, and a row
+ * growing by a line costs nothing in a column that already scrolls.
+ *
+ * Separated by a rule rather than boxed. A version is not a card, and eight
+ * bordered boxes down a pane is a table with extra steps.
+ */
+function HistoryRow({
+  entry,
+  author,
+}: Readonly<{ entry: HistoryEntry; author: string | null }>) {
+  return (
+    <PMHStack
+      align="start"
+      gap={4}
+      paddingY={3}
+      borderTopWidth="1px"
+      borderColor="border.tertiary"
+      _first={{ borderTopWidth: 0, paddingTop: 0 }}
+    >
+      <PMText
+        fontSize="sm"
+        color="secondary"
+        fontVariantNumeric="tabular-nums"
+        flexShrink={0}
+        minWidth="3.5ch"
+      >
+        v{entry.version}
+      </PMText>
+
+      <PMVStack flex="1" minW={0} gap={1} align="stretch">
+        {/*
+          No commit on a version that was not cut by one, which is every
+          version of every skill: `SkillVersion` has no such field. Nothing
+          takes its place, because the only other thing the version carries is
+          a user id, and that says who rather than from where.
+        */}
+        {entry.commit && <CommitSubject commit={entry.commit} />}
+        {entry.renamedFrom && (
+          <PMText as="div" fontSize="xs" color="secondary">
+            {`renamed from "${entry.renamedFrom}"`}
+          </PMText>
+        )}
+      </PMVStack>
+
+      <PMVStack gap={0} align="end" flexShrink={0}>
+        {entry.createdAt && (
+          <PMText fontSize="xs" color="faded" whiteSpace="nowrap">
+            {formatRelativeDate(entry.createdAt)}
+          </PMText>
+        )}
+        {author && (
+          <PMText fontSize="xs" color="faded" whiteSpace="nowrap">
+            {author}
+          </PMText>
+        )}
+      </PMVStack>
+    </PMHStack>
+  );
+}
+
+/**
+ * The commit a version came out of: its sha, its subject, and a way to it.
+ *
+ * A link only when the payload carries a url. A sha with nowhere to go is still
+ * worth printing, and dressing it as a link that does nothing is worse than
+ * printing it plain.
+ */
+function CommitSubject({ commit }: Readonly<{ commit: HistoryCommit }>) {
+  const line = (
+    <PMHStack gap={2} align="baseline" minW={0}>
+      <PMText
+        fontSize="xs"
+        fontFamily="mono"
+        color="faded"
+        flexShrink={0}
+        whiteSpace="nowrap"
+      >
+        {commit.shortSha}
+      </PMText>
+      <PMText as="div" fontSize="sm">
+        {commit.subject}
+      </PMText>
+      {commit.url && (
+        <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+          <LuExternalLink />
+        </PMIcon>
+      )}
+    </PMHStack>
+  );
+
+  if (!commit.url) return line;
+
+  return (
+    <PMBox
+      _hover={{ color: 'branding.primary' }}
+      transition="color 150ms ease-out"
+      asChild
+    >
+      <a href={commit.url} target="_blank" rel="noreferrer">
+        {line}
+      </a>
+    </PMBox>
   );
 }
 

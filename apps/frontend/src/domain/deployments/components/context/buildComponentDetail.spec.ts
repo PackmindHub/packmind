@@ -7,7 +7,9 @@ import type {
 import {
   COMPONENTS_TAB,
   DISTRIBUTION_TAB,
+  HISTORY_TAB,
   INSTRUCTIONS_TAB,
+  isComponentOnlyTab,
   componentDetailHref,
   componentEditHref,
   componentEntryHref,
@@ -110,6 +112,32 @@ describe('packageDetailParams', () => {
     packageDetailParams(original, PACKAGE);
 
     expect(original.get('component')).toBe('command-1');
+  });
+
+  describe('when the component was being read on a tab a package does not have', () => {
+    it('drops the tab as well, so the next component does not inherit it', () => {
+      expect(
+        packageDetailParams(
+          new URLSearchParams(
+            `package=pkg-1&component=command-1&tab=${HISTORY_TAB}`,
+          ),
+          PACKAGE,
+        ).has('tab'),
+      ).toBe(false);
+    });
+  });
+
+  describe('when the tab is one both depths have', () => {
+    it('keeps it, so closing a component stays on the same question', () => {
+      expect(
+        packageDetailParams(
+          new URLSearchParams(
+            `package=pkg-1&component=command-1&tab=${DISTRIBUTION_TAB}`,
+          ),
+          PACKAGE,
+        ).get('tab'),
+      ).toBe(DISTRIBUTION_TAB);
+    });
   });
 });
 
@@ -431,6 +459,20 @@ describe('selectTab', () => {
     it("ignores the package's default, which is not a component tab", () => {
       expect(selectTab(COMPONENTS_TAB, true)).toBe(INSTRUCTIONS_TAB);
     });
+
+    it('reads the history it alone has', () => {
+      expect(selectTab(HISTORY_TAB, true)).toBe(HISTORY_TAB);
+    });
+  });
+
+  /*
+   * The address outlives the component: closing one leaves whatever tab was
+   * open in the URL, and a package has no history to show.
+   */
+  describe('when a component-only tab is asked for with no component open', () => {
+    it('answers with the package default', () => {
+      expect(selectTab(HISTORY_TAB, false)).toBe(COMPONENTS_TAB);
+    });
   });
 
   describe('when the address was hand edited', () => {
@@ -455,5 +497,23 @@ describe('isDefaultTab', () => {
 
   it('writes the tab the two depths share', () => {
     expect(isDefaultTab(DISTRIBUTION_TAB)).toBe(false);
+  });
+
+  it('writes the tab only a component has', () => {
+    expect(isDefaultTab(HISTORY_TAB)).toBe(false);
+  });
+});
+
+describe('isComponentOnlyTab', () => {
+  it('says so of the history', () => {
+    expect(isComponentOnlyTab(HISTORY_TAB)).toBe(true);
+  });
+
+  it('does not say so of the tab both depths have', () => {
+    expect(isComponentOnlyTab(DISTRIBUTION_TAB)).toBe(false);
+  });
+
+  it('does not say so of a default', () => {
+    expect(isComponentOnlyTab(INSTRUCTIONS_TAB)).toBe(false);
   });
 });

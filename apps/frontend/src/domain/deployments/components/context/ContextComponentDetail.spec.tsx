@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
@@ -11,16 +11,29 @@ import {
 import type { Mock } from 'vitest';
 
 import { ContextComponentDetail } from './ContextComponentDetail';
-import { DISTRIBUTION_TAB, INSTRUCTIONS_TAB } from './buildComponentDetail';
+import {
+  DISTRIBUTION_TAB,
+  HISTORY_TAB,
+  INSTRUCTIONS_TAB,
+} from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import {
   useListCommandDistributionsQuery,
   useListSkillDistributionsQuery,
   useListStandardDistributionsQuery,
 } from '../../api/queries/DeploymentsQueries';
-import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
-import { useGetStandardByIdQuery } from '../../../standards/api/queries/StandardsQueries';
-import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
+import {
+  useGetCommandByIdQuery,
+  useGetCommandVersionsQuery,
+} from '../../../commands/api/queries/CommandsQueries';
+import {
+  useGetStandardByIdQuery,
+  useGetStandardVersionsQuery,
+} from '../../../standards/api/queries/StandardsQueries';
+import {
+  useGetSkillVersionsQuery,
+  useGetSkillWithFilesByIdQuery,
+} from '../../../skills/api/queries/SkillsQueries';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
@@ -35,15 +48,18 @@ vi.mock('../../api/queries/DeploymentsQueries', () => ({
 
 vi.mock('../../../commands/api/queries/CommandsQueries', () => ({
   useGetCommandByIdQuery: vi.fn(),
+  useGetCommandVersionsQuery: vi.fn(),
 }));
 
 vi.mock('../../../standards/api/queries/StandardsQueries', () => ({
   useGetStandardByIdQuery: vi.fn(),
+  useGetStandardVersionsQuery: vi.fn(),
   useGetRulesByStandardIdQuery: vi.fn(() => ({ data: [] })),
 }));
 
 vi.mock('../../../skills/api/queries/SkillsQueries', () => ({
   useGetSkillWithFilesByIdQuery: vi.fn(),
+  useGetSkillVersionsQuery: vi.fn(),
 }));
 
 vi.mock(
@@ -73,6 +89,17 @@ vi.mock('../../../accounts/hooks/useAuthContext', () => ({
 
 vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({ spaceId: 'space-1' }),
+}));
+
+/**
+ * The organisation's members, which the history reads a version's `userId`
+ * against. One name in it, so a row can be seen naming a person and a row can
+ * be seen naming nobody.
+ */
+vi.mock('../../../accounts/api/queries/UserQueries', () => ({
+  useGetUsersInMyOrganizationQuery: vi.fn(() => ({
+    data: { users: [{ userId: 'user-1', displayName: 'Joan Racenet' }] },
+  })),
 }));
 
 /**
@@ -197,6 +224,10 @@ function resetToEmpty() {
   (useListChangeProposalsBySkillQuery as Mock).mockReturnValue({
     data: undefined,
   });
+  const idleQuery = { data: undefined, isLoading: false, isError: false };
+  (useGetCommandVersionsQuery as Mock).mockReturnValue(idleQuery);
+  (useGetStandardVersionsQuery as Mock).mockReturnValue(idleQuery);
+  (useGetSkillVersionsQuery as Mock).mockReturnValue(idleQuery);
   /* Outside the flag's audience, so the propose item is off unless a case asks. */
   auth.value = {
     organization: { id: 'org-1' },
@@ -578,6 +609,314 @@ describe('the distribution body', () => {
       expect(
         screen.queryByRole('menuitem', { name: /propose name change/i }),
       ).not.toBeInTheDocument();
+    });
+  });
+});
+
+const COMMIT = {
+  sha: '4f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39',
+  message: 'Packmind: distribute Scratch package\n\nbody nobody needs here',
+  author: 'joan.racenet',
+  url: 'https://github.com/acme/repo/commit/4f2a9c1',
+};
+
+/**
+ * The version numbers listed on the tab, in the order they are rendered.
+ *
+ * Scoped to the panel and not to the screen. The header prints the component's
+ * own version in the same shape two lines above, so an unscoped query reads it
+ * as the first row of the list and every ordering assertion passes for the
+ * wrong reason.
+ */
+function versionsOnScreen() {
+  const panel = screen.getByRole('tabpanel');
+  return within(panel)
+    .getAllByText(/^v\d+$/)
+    .map((node) => node.textContent);
+}
+
+describe('the history tab', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  it('is offered as a third way of reading a component', async () => {
+    await renderDetail(componentOfType('command', COMMAND_ID));
+
+    expect(screen.getByRole('tab', { name: /history/i })).toBeVisible();
+  });
+
+  /* No count on the trigger: the number of versions is the v4 in the header. */
+  it('wears no count', async () => {
+    (useGetCommandVersionsQuery as Mock).mockReturnValue({
+      data: [
+        { id: 'a', version: 1 },
+        { id: 'b', version: 2 },
+      ],
+      isLoading: false,
+      isError: false,
+    });
+    await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+    expect(screen.getByRole('tab', { name: /history/i })).toHaveTextContent(
+      /^History$/,
+    );
+  });
+
+  describe('the order of the rows', () => {
+    it('puts the newest version first, whatever order the API sent', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'a', version: 1 },
+          { id: 'c', version: 3 },
+          { id: 'b', version: 2 },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(versionsOnScreen()).toEqual(['v3', 'v2', 'v1']);
+    });
+  });
+
+  describe('when there is only one version', () => {
+    beforeEach(() => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, createdAt: THREE_DAYS_AGO }],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    it('says so as a fact rather than showing an empty state', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByText(/^One version\./)).toBeVisible();
+    });
+
+    it('still lists it', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(versionsOnScreen()).toEqual(['v1']);
+    });
+  });
+
+  describe('when there are several', () => {
+    it('leaves the one-version line out', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'a', version: 1 },
+          { id: 'b', version: 2 },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/^One version\./)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a version came out of a commit', () => {
+    beforeEach(() => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'a', version: 2, createdAt: THREE_DAYS_AGO, gitCommit: COMMIT },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    it('names it by its short sha', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByText('4f2a9c1')).toBeVisible();
+    });
+
+    it('prints the subject and not the body', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(
+        screen.getByText('Packmind: distribute Scratch package'),
+      ).toBeVisible();
+    });
+
+    it('leaves the body of the message behind', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/body nobody needs/)).not.toBeInTheDocument();
+    });
+
+    it('offers a way to the commit itself', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByRole('link', { name: /4f2a9c1/ })).toHaveAttribute(
+        'href',
+        COMMIT.url,
+      );
+    });
+
+    it('names the author beside the date', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByText('joan.racenet')).toBeVisible();
+    });
+  });
+
+  describe('when a commit carries no link', () => {
+    it('prints the sha plain rather than as a link that goes nowhere', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 2, gitCommit: { ...COMMIT, url: '' } }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(
+        screen.queryByRole('link', { name: /4f2a9c1/ }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  /*
+   * Every version of every skill, `SkillVersion` having no commit field, so a
+   * row with nothing but a number and a date has to be an ordinary row.
+   */
+  describe('when a version came out of no commit', () => {
+    it('lists it with nothing invented about where it came from', async () => {
+      (useGetSkillVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, createdAt: THREE_DAYS_AGO }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('skill', SKILL_ID), HISTORY_TAB);
+
+      expect(versionsOnScreen()).toEqual(['v1']);
+    });
+
+    it('says nothing about a web app it cannot know about', async () => {
+      (useGetSkillVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, createdAt: THREE_DAYS_AGO }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('skill', SKILL_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/web app/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('while the versions are being fetched', () => {
+    it('claims nothing about how many there are', async () => {
+      (useGetStandardVersionsQuery as Mock).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/^One version\./)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the versions cannot be read', () => {
+    it('says so rather than showing a component with no past', async () => {
+      (useGetStandardVersionsQuery as Mock).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID), HISTORY_TAB);
+
+      expect(screen.getByText(/Error loading this history/)).toBeVisible();
+    });
+  });
+});
+
+describe('who cut a version', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  describe('when the version carries a user id', () => {
+    it('reads it as the name of an organisation member', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, userId: 'user-1' }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByText('Joan Racenet')).toBeVisible();
+    });
+  });
+
+  describe('when the version came out of a commit as well', () => {
+    it("names the commit's author over the session's", async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, userId: 'user-1', gitCommit: COMMIT }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.queryByText('Joan Racenet')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the id belongs to nobody in the organisation', () => {
+    it('names nobody rather than printing the id', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a', version: 1, userId: 'user-gone' }],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/user-gone/)).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('what a version changed', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  describe('when the name changed in it', () => {
+    it('says what the name was before', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'b', version: 2, name: 'Run migrations' },
+          { id: 'a', version: 1, name: 'Stuff' },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.getByText('renamed from "Stuff"')).toBeVisible();
+    });
+  });
+
+  describe('when the name did not change', () => {
+    it('says nothing about a rename', async () => {
+      (useGetCommandVersionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'b', version: 2, name: 'Same' },
+          { id: 'a', version: 1, name: 'Same' },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID), HISTORY_TAB);
+
+      expect(screen.queryByText(/renamed from/)).not.toBeInTheDocument();
     });
   });
 });

@@ -64,6 +64,25 @@ export const INSTRUCTIONS_TAB = 'instructions';
  */
 export const DISTRIBUTION_TAB = 'distribution';
 
+/**
+ * Not shared, unlike the one above it. A package has no history of its own: the
+ * versions listed here belong to one component, and closing the component
+ * leaves nothing for this tab to be about.
+ */
+export const HISTORY_TAB = 'history';
+
+/**
+ * The tabs that exist only while a component is open. Closing the component
+ * has to take them out of the address as well as off the screen, or the next
+ * component opened from that package inherits a tab the reader never picked.
+ */
+const COMPONENT_ONLY_TABS: ReadonlySet<string> = new Set([HISTORY_TAB]);
+
+/** Whether this tab stops existing when the component closes. */
+export function isComponentOnlyTab(value: string): boolean {
+  return COMPONENT_ONLY_TABS.has(value);
+}
+
 /** The default of each depth, which is what stays out of the address. */
 const DEFAULT_TABS: ReadonlySet<string> = new Set([
   COMPONENTS_TAB,
@@ -82,6 +101,9 @@ export function selectTab(
   isComponentOpen: boolean,
 ): string {
   if (requested === DISTRIBUTION_TAB) return DISTRIBUTION_TAB;
+  if (requested && isComponentOnlyTab(requested) && isComponentOpen) {
+    return requested;
+  }
   return isComponentOpen ? INSTRUCTIONS_TAB : COMPONENTS_TAB;
 }
 
@@ -158,6 +180,16 @@ export function packageDetailParams(
   next.set(PACKAGE_PARAM, packageId);
   next.delete(COMPONENT_PARAM);
   next.delete(FILE_PARAM);
+  /*
+   * And the tab, when it was one only a component has. `selectTab` already
+   * reads such a value as the package's default, so the screen would be right
+   * either way; the address would not, and it is the address that gets pasted
+   * and that the next component opened from here would inherit.
+   */
+  const tab = next.get(TAB_PARAM);
+  if (tab && isComponentOnlyTab(tab)) {
+    next.delete(TAB_PARAM);
+  }
   return next;
 }
 
