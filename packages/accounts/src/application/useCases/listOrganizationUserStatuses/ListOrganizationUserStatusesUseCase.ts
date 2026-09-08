@@ -49,12 +49,9 @@ export class ListOrganizationUserStatusesUseCase
       organizationId: command.organizationId,
     });
 
-    // Get all users and filter by organization
-    const allUsers = await this.userService.listUsers();
-    const users = allUsers.filter((user) =>
-      user.memberships?.some(
-        (membership) => membership.organizationId === command.organizationId,
-      ),
+    // Get users by organization directly from database
+    const users = await this.userService.listUsersByOrganization(
+      command.organizationId,
     );
 
     if (users.length === 0) {
