@@ -19,7 +19,7 @@ describe('ChangeUserRoleUseCase', () => {
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
   let mockChangeUserRole: jest.Mock;
-  let mockListUsers: jest.Mock;
+  let mockListUsersByOrganization: jest.Mock;
   let userService: jest.Mocked<UserService>;
   const mockLogger = stubLogger();
 
@@ -31,7 +31,7 @@ describe('ChangeUserRoleUseCase', () => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
     mockChangeUserRole = jest.fn();
-    mockListUsers = jest.fn();
+    mockListUsersByOrganization = jest.fn();
 
     const accountsPort = {
       getUserById: mockGetUserById,
@@ -41,7 +41,7 @@ describe('ChangeUserRoleUseCase', () => {
     userService = {
       getUserById: mockGetUserById,
       changeUserRole: mockChangeUserRole,
-      listUsers: mockListUsers,
+      listUsersByOrganization: mockListUsersByOrganization,
     } as unknown as jest.Mocked<UserService>;
 
     const organization = organizationFactory({
@@ -144,7 +144,11 @@ describe('ChangeUserRoleUseCase', () => {
         mockGetUserById
           .mockResolvedValueOnce(adminUser)
           .mockResolvedValueOnce(targetUser);
-        mockListUsers.mockResolvedValue([adminUser, targetUser, otherAdmin]);
+        mockListUsersByOrganization.mockResolvedValue([
+          adminUser,
+          targetUser,
+          otherAdmin,
+        ]);
         mockChangeUserRole.mockResolvedValue(true);
 
         result = await useCase.execute(command);
@@ -306,7 +310,10 @@ describe('ChangeUserRoleUseCase', () => {
           mockGetUserById
             .mockResolvedValueOnce(adminUser)
             .mockResolvedValueOnce(targetUser);
-          mockListUsers.mockResolvedValue([targetUser, memberUser]);
+          mockListUsersByOrganization.mockResolvedValue([
+            targetUser,
+            memberUser,
+          ]);
           mockChangeUserRole.mockResolvedValue(false);
         });
 
@@ -326,6 +333,46 @@ describe('ChangeUserRoleUseCase', () => {
           }
 
           expect(mockChangeUserRole).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when the only other admin belongs to another organization', () => {
+        beforeEach(() => {
+          const adminUser = createAdminUser();
+          const targetUser = createTargetUser('admin');
+          const otherOrgAdminId = createUserId(uuidv4());
+          const otherOrgAdmin = userFactory({
+            id: otherOrgAdminId,
+            memberships: [
+              {
+                userId: otherOrgAdminId,
+                organizationId: createOrganizationId(uuidv4()),
+                role: 'admin',
+              },
+            ],
+          });
+
+          mockGetUserById
+            .mockResolvedValueOnce(adminUser)
+            .mockResolvedValueOnce(targetUser);
+          mockListUsersByOrganization.mockImplementation(
+            async (queriedOrganizationId) =>
+              [targetUser, otherOrgAdmin].filter((user) =>
+                user.memberships?.some(
+                  (membership) =>
+                    membership.organizationId === queriedOrganizationId,
+                ),
+              ),
+          );
+          mockChangeUserRole.mockResolvedValue(false);
+        });
+
+        it('throws error preventing organization lockout', async () => {
+          await expect(
+            useCase.execute(createCommand('member')),
+          ).rejects.toThrow(
+            'Cannot demote the last administrator of the organization',
+          );
         });
       });
 
@@ -349,7 +396,7 @@ describe('ChangeUserRoleUseCase', () => {
           mockGetUserById
             .mockResolvedValueOnce(adminUser)
             .mockResolvedValueOnce(targetUser);
-          mockListUsers.mockResolvedValue([
+          mockListUsersByOrganization.mockResolvedValue([
             adminUser,
             targetUser,
             anotherAdmin,
@@ -357,6 +404,12 @@ describe('ChangeUserRoleUseCase', () => {
           mockChangeUserRole.mockResolvedValue(true);
 
           result = await useCase.execute(createCommand('member'));
+        });
+
+        it('counts admins with an organization-scoped query', () => {
+          expect(mockListUsersByOrganization).toHaveBeenCalledWith(
+            createOrganizationId(organizationId),
+          );
         });
 
         it('allows demotion and returns success', () => {
@@ -399,7 +452,7 @@ describe('ChangeUserRoleUseCase', () => {
       });
 
       it('does not check admin count', () => {
-        expect(mockListUsers).not.toHaveBeenCalled();
+        expect(mockListUsersByOrganization).not.toHaveBeenCalled();
       });
 
       it('calls changeUserRole with correct parameters', () => {
