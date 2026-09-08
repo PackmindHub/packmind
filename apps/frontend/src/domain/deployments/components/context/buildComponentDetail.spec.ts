@@ -5,6 +5,9 @@ import type {
   ContextGroup,
 } from './buildPackageContext';
 import {
+  COMPONENTS_TAB,
+  DISTRIBUTION_TAB,
+  INSTRUCTIONS_TAB,
   componentDetailHref,
   componentEditHref,
   componentEntryHref,
@@ -15,6 +18,8 @@ import {
   selectDetailComponent,
   selectSkillFile,
   sortFilesByPath,
+  isDefaultTab,
+  selectTab,
   sortRulesByContent,
   withPaneDetailHref,
 } from './buildComponentDetail';
@@ -396,5 +401,59 @@ describe('selectSkillFile', () => {
 
   it('falls back to the instructions for SKILL.md, which is not a file', () => {
     expect(selectSkillFile(files, 'SKILL.md')).toBeNull();
+  });
+});
+
+describe('selectTab', () => {
+  describe('when no component is open', () => {
+    it('defaults to the package contents', () => {
+      expect(selectTab(null, false)).toBe(COMPONENTS_TAB);
+    });
+
+    it('reads the shared value as the package distribution', () => {
+      expect(selectTab(DISTRIBUTION_TAB, false)).toBe(DISTRIBUTION_TAB);
+    });
+
+    it("ignores the component's default, which is not a package tab", () => {
+      expect(selectTab(INSTRUCTIONS_TAB, false)).toBe(COMPONENTS_TAB);
+    });
+  });
+
+  describe('when a component is open', () => {
+    it('defaults to its instructions', () => {
+      expect(selectTab(null, true)).toBe(INSTRUCTIONS_TAB);
+    });
+
+    it('reads the shared value as the component distribution', () => {
+      expect(selectTab(DISTRIBUTION_TAB, true)).toBe(DISTRIBUTION_TAB);
+    });
+
+    it("ignores the package's default, which is not a component tab", () => {
+      expect(selectTab(COMPONENTS_TAB, true)).toBe(INSTRUCTIONS_TAB);
+    });
+  });
+
+  describe('when the address was hand edited', () => {
+    it('answers with the package default while no component is open', () => {
+      expect(selectTab('rules', false)).toBe(COMPONENTS_TAB);
+    });
+
+    it('answers with the component default while one is open', () => {
+      expect(selectTab('rules', true)).toBe(INSTRUCTIONS_TAB);
+    });
+  });
+});
+
+describe('isDefaultTab', () => {
+  it("keeps the package's default out of the address", () => {
+    expect(isDefaultTab(COMPONENTS_TAB)).toBe(true);
+  });
+
+  it("keeps the component's default out of the address", () => {
+    expect(isDefaultTab(INSTRUCTIONS_TAB)).toBe(true);
+  });
+
+  it('writes the tab the two depths share', () => {
+    expect(isDefaultTab(DISTRIBUTION_TAB)).toBe(false);
   });
 });

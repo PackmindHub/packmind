@@ -46,10 +46,15 @@ import type { PackageAttention } from './buildPackageAttention';
 import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
+  COMPONENTS_TAB,
+  DISTRIBUTION_TAB,
+  TAB_PARAM,
   componentEditHref,
   componentEntryHref,
+  isDefaultTab,
   packageDetailHref,
   packageDetailParams,
+  selectTab,
   withPaneDetailHref,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -84,17 +89,6 @@ import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
 import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
-
-const COMPONENTS_TAB = 'components';
-const DISTRIBUTION_TAB = 'distribution';
-
-/**
- * Which half of the package is being read. The same parameter name the package
- * page uses for its own tabs, and in the URL for the same reason the selected
- * package is: "this package is behind in two repositories" is a thing people
- * send each other, and it has to survive being pasted.
- */
-const TAB_PARAM = 'tab';
 
 /**
  * One package, read from two sides: what it holds, and where it landed.
@@ -425,17 +419,20 @@ export function ContextPackagePane({
     }
   };
 
-  const tab =
-    searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
-      ? DISTRIBUTION_TAB
-      : COMPONENTS_TAB;
+  /*
+   * One variable for both depths, resolved against what is on screen: the same
+   * parameter names the component's tab while one is open and the package's the
+   * rest of the time. `selectTab` is what knows which, so neither branch below
+   * has to.
+   */
+  const tab = selectTab(searchParams.get(TAB_PARAM), detail !== null);
 
   const showTab = (value: string) => {
     // Mutating the params we were handed, so the selected package survives the
-    // tab change. Components is the default, so it leaves the URL clean.
+    // tab change. Either depth's default leaves the URL clean.
     setSearchParams(
       (previous) => {
-        if (value === COMPONENTS_TAB) previous.delete(TAB_PARAM);
+        if (isDefaultTab(value)) previous.delete(TAB_PARAM);
         else previous.set(TAB_PARAM, value);
         return previous;
       },
@@ -597,34 +594,39 @@ export function ContextPackagePane({
   if (detail) {
     return (
       <>
-        <PMBox flex="1" minH={0} overflowY="auto">
-          {/*
-            A file in place of the component, not beside it. The tree in the
-            rail is what says which of the two is on screen, and the component
-            is one row of it: its first.
-          */}
-          {detailFile ? (
+        {/*
+          A file in place of the component, not beside it. The tree in the rail
+          is what says which of the two is on screen, and the component is one
+          row of it: its first.
+
+          The file keeps the scrolling wrapper it always had. The component no
+          longer needs one: it holds a tab strip that has to stay put while the
+          body under it moves, so it owns its own scroll, exactly as the package
+          below does.
+        */}
+        {detailFile ? (
+          <PMBox flex="1" minH={0} overflowY="auto">
             <ContextSkillFileDetail
               file={detailFile}
               skillName={detail.name}
               backHref={componentEntryHref(searchParams)}
             />
-          ) : (
-            <ContextComponentDetail
-              component={detail}
-              packageName={pkg.name}
-              backHref={packageDetailHref(searchParams, pkg.id)}
-              editHref={componentEditHref(
-                detail,
-                { orgSlug, spaceSlug },
-                pkg.id,
-              )}
-              onMove={() => setMoving([detail])}
-              onRemove={() => setRemoving([detail])}
-              onDelete={() => setDeletingComponent(detail)}
-            />
-          )}
-        </PMBox>
+          </PMBox>
+        ) : (
+          <ContextComponentDetail
+            component={detail}
+            packageName={pkg.name}
+            backHref={packageDetailHref(searchParams, pkg.id)}
+            editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
+            tab={tab}
+            onTabChange={showTab}
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            onMove={() => setMoving([detail])}
+            onRemove={() => setRemoving([detail])}
+            onDelete={() => setDeletingComponent(detail)}
+          />
+        )}
         {moveDrawer}
         {removeComponentsDialog}
         {deleteComponentDialog}

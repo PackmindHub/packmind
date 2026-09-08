@@ -11,6 +11,7 @@ import {
   PMMenu,
   PMPortal,
   PMSpinner,
+  PMTabsCompound,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -34,32 +35,50 @@ import {
   useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
 } from '../../../standards/api/queries/StandardsQueries';
-import { sortRulesByContent } from './buildComponentDetail';
+import {
+  DISTRIBUTION_TAB,
+  INSTRUCTIONS_TAB,
+  sortRulesByContent,
+} from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import {
   COMPONENT_ACTION_ICONS,
   COMPONENT_TYPE_ICONS,
 } from './ContextComponentList';
+import {
+  useListCommandDistributionsQuery,
+  useListSkillDistributionsQuery,
+  useListStandardDistributionsQuery,
+} from '../../api/queries/DeploymentsQueries';
+import { CommandDistributionsList } from '../CommandDistributionsList/CommandDistributionsList';
+import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistributionsList';
+import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
 
 /**
  * One component, read inside the package that carries it.
  *
  * The frame is the same for every type: where it comes from, what it is, what
- * can be done to it. Only the body below the divider changes, and which body to
- * render is the one thing this file decides per type. A new type is a new case
- * in `ComponentBody` and a flipped entry in `RENDERS_IN_PANE`, not a new screen.
+ * can be done to it. Only the tab bodies change, and which body to render is
+ * the one thing this file decides per type. A new type is a new case in
+ * `ComponentBody`, a new case in `ComponentDistribution`, and a flipped entry
+ * in `RENDERS_IN_PANE`, not a new screen.
  *
- * It replaces the package's tab strip rather than sitting under it: Content and
- * Distribution are two ways of reading the package, and neither is what is on
- * screen while a component is open. The back link is what says so, and it names
- * the package rather than saying "Back", because that is the information.
+ * It replaces the package's tab strip with one of its own rather than sitting
+ * under it: Content and Distribution are two ways of reading the package, and
+ * neither is what is on screen while a component is open. The back link is what
+ * says so, and it names the package rather than saying "Back", because that is
+ * the information.
  */
 export function ContextComponentDetail({
   component,
   packageName,
   backHref,
   editHref,
+  tab,
+  onTabChange,
+  orgSlug,
+  spaceSlug,
   onMove,
   onRemove,
   onDelete,
@@ -70,6 +89,17 @@ export function ContextComponentDetail({
   backHref: string;
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
+  /**
+   * Which of the two tabs is open. Owned by the pane rather than read here,
+   * for the reason every other link on this frame is handed in already built:
+   * this component does not touch the address, so it cannot drop a parameter
+   * the surface put there.
+   */
+  tab: string;
+  onTabChange: (value: string) => void;
+  /** Both slugs, for the distribution lists, which link out to destinations. */
+  orgSlug: string;
+  spaceSlug: string;
   onMove: () => void;
   /**
    * Taking this component out of the package named in the back link, which is
@@ -81,80 +111,100 @@ export function ContextComponentDetail({
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type];
 
   return (
-    <PMBox padding={6}>
-      <PMBox
-        display="inline-flex"
-        alignItems="center"
-        gap="4px"
-        fontSize="sm"
-        color="text.faded"
-        _hover={{ color: 'text.primary' }}
-        transition="color 150ms ease-out"
-        asChild
-      >
-        <Link to={backHref}>
-          <PMIcon fontSize="sm">
-            <LuChevronLeft />
-          </PMIcon>
-          {packageName}
-        </Link>
-      </PMBox>
+    /*
+     * The same arrangement the package pane uses: header and strip held in
+     * place, only the tab body below them moving. Laid out here rather than by
+     * the pane, so the frame owns its own scroll and the pane hands it a slot.
+     */
+    <PMTabsCompound.Root
+      value={tab}
+      onValueChange={(details) => onTabChange(details.value)}
+      variant="line"
+      height="100%"
+      minH={0}
+      display="flex"
+      flexDirection="column"
+      lazyMount
+      unmountOnExit
+    >
+      <PMBox paddingX={6} paddingTop={6} flexShrink={0}>
+        <PMBox
+          display="inline-flex"
+          alignItems="center"
+          gap="4px"
+          fontSize="sm"
+          color="text.faded"
+          _hover={{ color: 'text.primary' }}
+          transition="color 150ms ease-out"
+          asChild
+        >
+          <Link to={backHref}>
+            <PMIcon fontSize="sm">
+              <LuChevronLeft />
+            </PMIcon>
+            {packageName}
+          </Link>
+        </PMBox>
 
-      <PMHStack align="start" justify="space-between" gap={6} paddingTop={2}>
-        <PMBox minW={0} maxWidth="68ch">
-          <PMHeading level="h2">{component.name}</PMHeading>
-          <PMHStack gap={2} paddingTop={2} align="center" wrap="wrap">
-            <PMHStack gap="6px" align="center">
-              <PMIcon fontSize="xs" color="text.faded">
-                {COMPONENT_TYPE_ICONS[component.type]}
-              </PMIcon>
-              <PMText fontSize="sm" color="secondary">
-                {label}
+        <PMHStack align="start" justify="space-between" gap={6} paddingTop={2}>
+          <PMBox minW={0} maxWidth="68ch">
+            <PMHeading level="h2">{component.name}</PMHeading>
+            <PMHStack gap={2} paddingTop={2} align="center" wrap="wrap">
+              <PMHStack gap="6px" align="center">
+                <PMIcon fontSize="xs" color="text.faded">
+                  {COMPONENT_TYPE_ICONS[component.type]}
+                </PMIcon>
+                <PMText fontSize="sm" color="secondary">
+                  {label}
+                </PMText>
+              </PMHStack>
+              <PMText fontSize="sm" color="faded" aria-hidden>
+                ·
               </PMText>
-            </PMHStack>
-            <PMText fontSize="sm" color="faded" aria-hidden>
-              ·
-            </PMText>
-            <PMText fontSize="sm" color="faded">
-              v{component.version}
-            </PMText>
-            {/*
+              <PMText fontSize="sm" color="faded">
+                v{component.version}
+              </PMText>
+              {/*
               No repository count here. Where a component landed is a property of
               the package, one level up, and printing it on the component is
               what used to make people think a component is distributed alone.
             */}
-          </PMHStack>
-          {/*
+            </PMHStack>
+            {/*
             And no summary either. For a standard and a skill the row's summary
             is the entity's description, which is the first thing the body below
             prints: on screen it read as the same paragraph twice.
           */}
-        </PMBox>
+          </PMBox>
 
-        <PMHStack gap={2} flexShrink={0}>
-          {/*
+          <PMHStack gap={2} flexShrink={0}>
+            {/*
             The way out to everything the pane does not carry yet: version
-            history, distributions of this one component, deletion, change
-            proposals. It keeps its own label rather than saying "Open page",
-            so the button says what will be on screen.
+            history and change proposals. Distributions left this list the day
+            the tab below arrived. It keeps its own label rather than saying
+            "Open page", so the button says what will be on screen.
+
+            It is on its way out. While it is here no reader loses anything to
+            a half-absorbed frame, which is the only reason it survived the
+            arrival of the tab strip.
 
             Secondary, because reading the component is what this screen is
             for. The package header used to carry a button like it and no longer
             does: everything its page held is on this surface now. A component's
             page is not, which is why this one is still here.
           */}
-          <PMButton variant="secondary" size="sm" asChild>
-            <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
-          </PMButton>
-          <PMButton variant="secondary" size="sm" onClick={onMove}>
-            Move
-          </PMButton>
-          {editHref && (
-            <PMButton variant="primary" size="sm" asChild>
-              <Link to={editHref}>Edit</Link>
+            <PMButton variant="secondary" size="sm" asChild>
+              <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
             </PMButton>
-          )}
-          {/*
+            <PMButton variant="secondary" size="sm" onClick={onMove}>
+              Move
+            </PMButton>
+            {editHref && (
+              <PMButton variant="primary" size="sm" asChild>
+                <Link to={editHref}>Edit</Link>
+              </PMButton>
+            )}
+            {/*
             Deleting, behind a menu for the same reason the package's own
             deletion is: it is the one action here that destroys what the screen
             is showing, and it should not sit one stray click away from Edit.
@@ -163,59 +213,100 @@ export function ContextComponentDetail({
             made deleting the one maintenance task that forced the reader out of
             this surface.
           */}
-          <PMMenu.Root>
-            <PMMenu.Trigger asChild>
-              <PMIconButton
-                aria-label={`More actions for ${component.name}`}
-                variant="tertiary"
-                size="sm"
-              >
-                <LuEllipsisVertical />
-              </PMIconButton>
-            </PMMenu.Trigger>
-            <PMPortal>
-              <PMMenu.Positioner>
-                <PMMenu.Content>
-                  {/*
+            <PMMenu.Root>
+              <PMMenu.Trigger asChild>
+                <PMIconButton
+                  aria-label={`More actions for ${component.name}`}
+                  variant="tertiary"
+                  size="sm"
+                >
+                  <LuEllipsisVertical />
+                </PMIconButton>
+              </PMMenu.Trigger>
+              <PMPortal>
+                <PMMenu.Positioner>
+                  <PMMenu.Content>
+                    {/*
                     Above the deletion and not coloured like it, because the two
                     are one word apart and only one of them destroys anything:
                     this one takes the component out of one package, the other
                     takes it out of the space.
                   */}
-                  <PMMenu.Item value="remove-component" onClick={onRemove}>
-                    <PMHStack gap={2}>
-                      <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
-                      Remove from package
-                    </PMHStack>
-                  </PMMenu.Item>
-                  <PMMenu.Item
-                    value="delete-component"
-                    color="text.error"
-                    onClick={onDelete}
-                  >
-                    <PMHStack gap={2}>
-                      <PMIcon>
-                        <LuTrash2 />
-                      </PMIcon>
-                      {`Delete ${label.toLowerCase()}`}
-                    </PMHStack>
-                  </PMMenu.Item>
-                </PMMenu.Content>
-              </PMMenu.Positioner>
-            </PMPortal>
-          </PMMenu.Root>
+                    <PMMenu.Item value="remove-component" onClick={onRemove}>
+                      <PMHStack gap={2}>
+                        <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
+                        Remove from package
+                      </PMHStack>
+                    </PMMenu.Item>
+                    <PMMenu.Item
+                      value="delete-component"
+                      color="text.error"
+                      onClick={onDelete}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>
+                          <LuTrash2 />
+                        </PMIcon>
+                        {`Delete ${label.toLowerCase()}`}
+                      </PMHStack>
+                    </PMMenu.Item>
+                  </PMMenu.Content>
+                </PMMenu.Positioner>
+              </PMPortal>
+            </PMMenu.Root>
+          </PMHStack>
         </PMHStack>
-      </PMHStack>
 
-      <PMBox
-        marginTop={5}
-        borderTopWidth="1px"
-        borderColor="border.tertiary"
-        paddingTop={5}
+        {/*
+          No divider under the header any more. The strip's own line is the
+          separation, and two rules a few pixels apart read as a mistake.
+        */}
+        <PMBox paddingTop={5}>
+          <PMTabsCompound.List>
+            <PMTabsCompound.Trigger value={INSTRUCTIONS_TAB}>
+              Instructions
+            </PMTabsCompound.Trigger>
+            <PMTabsCompound.Trigger value={DISTRIBUTION_TAB}>
+              Distribution
+              {/*
+                A plain number and not a badge, the same as the package's own
+                Components count: this is the size of the half you are not
+                looking at, not something to go and fix. The coloured badge on
+                the package's Distribution tab means the opposite, and the two
+                must not be confused for each other.
+              */}
+              <DistributionCount component={component} />
+            </PMTabsCompound.Trigger>
+          </PMTabsCompound.List>
+        </PMBox>
+      </PMBox>
+
+      <PMTabsCompound.Content
+        value={INSTRUCTIONS_TAB}
+        flex="1"
+        minH={0}
+        overflowY="auto"
+        paddingX={6}
+        paddingY={5}
       >
         <ComponentBody component={component} />
-      </PMBox>
-    </PMBox>
+      </PMTabsCompound.Content>
+
+      <PMTabsCompound.Content
+        value={DISTRIBUTION_TAB}
+        flex="1"
+        minH={0}
+        overflowY="auto"
+        paddingX={6}
+        paddingY={5}
+      >
+        <ComponentDistribution
+          component={component}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      </PMTabsCompound.Content>
+    </PMTabsCompound.Root>
   );
 }
 
@@ -245,6 +336,217 @@ function BodySectionLabel({ children }: Readonly<{ children: string }>) {
     >
       {children}
     </PMText>
+  );
+}
+
+/**
+ * How many places this one component reached, on the tab that lists them.
+ *
+ * Per type rather than one call with a switch inside it, for the reason the
+ * bodies below are: a hook cannot be called conditionally, and the three
+ * queries take three different ids. One component per type calls exactly one.
+ *
+ * It sits on the trigger rather than in the body, so it is outside the lazy
+ * mount and answers before the tab is ever opened. That is the whole point of
+ * it: whether a component has been distributed at all is the question a reader
+ * has before they decide to look.
+ */
+function DistributionCount({
+  component,
+}: Readonly<{ component: ContextComponent }>) {
+  switch (component.type) {
+    case 'command':
+      return (
+        <CommandDistributionCount commandId={component.key as CommandId} />
+      );
+    case 'standard':
+      return (
+        <StandardDistributionCount standardId={component.key as StandardId} />
+      );
+    case 'skill':
+      return <SkillDistributionCount skillId={component.key as SkillId} />;
+  }
+}
+
+/**
+ * The number itself, or nothing at all.
+ *
+ * Nothing rather than a zero: a component that has not been distributed is the
+ * ordinary state of one just written, and a "0" on the tab reads as a count
+ * that failed to load. The tab body says it in words instead.
+ */
+function TabCount({ value }: Readonly<{ value: number | undefined }>) {
+  if (!value) return null;
+
+  return (
+    <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
+      {value}
+    </PMText>
+  );
+}
+
+function CommandDistributionCount({
+  commandId,
+}: Readonly<{ commandId: CommandId }>) {
+  const { data } = useListCommandDistributionsQuery(commandId);
+  return <TabCount value={data?.length} />;
+}
+
+function StandardDistributionCount({
+  standardId,
+}: Readonly<{ standardId: StandardId }>) {
+  const { data } = useListStandardDistributionsQuery(standardId);
+  return <TabCount value={data?.length} />;
+}
+
+function SkillDistributionCount({ skillId }: Readonly<{ skillId: SkillId }>) {
+  const { data } = useListSkillDistributionsQuery(skillId);
+  return <TabCount value={data?.length} />;
+}
+
+/**
+ * Where this one component went, and under what name an agent reads it.
+ *
+ * A different question from the package's own Distribution tab, which asks
+ * whether a whole set of components reached a set of repositories. This one
+ * asks where a single file can be found, and it is the question that used to
+ * force a reader onto the component's own page.
+ */
+function ComponentDistribution({
+  component,
+  orgSlug,
+  spaceSlug,
+}: Readonly<{
+  component: ContextComponent;
+  orgSlug: string;
+  spaceSlug: string;
+}>) {
+  switch (component.type) {
+    case 'command':
+      return (
+        <CommandDistribution
+          commandId={component.key as CommandId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      );
+    case 'standard':
+      return (
+        <StandardDistribution
+          standardId={component.key as StandardId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      );
+    case 'skill':
+      return (
+        <SkillDistribution
+          skillId={component.key as SkillId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      );
+  }
+}
+
+/**
+ * The path a coding agent reads this component from.
+ *
+ * Named as the Packmind one rather than as "the" path, because it is not the
+ * only one: every render mode writes the same component somewhere of its own,
+ * and calling one of them the path is exactly the smoothing of agent
+ * differences the product exists to refuse. The list below names the formats
+ * each destination received.
+ *
+ * No scope line beside it. A standard's scope is a property of the standard and
+ * is already the first thing its Instructions tab prints; a command's is the
+ * literal `**\/*` for every command there is, which is not information.
+ */
+function DistributedAs({ path }: Readonly<{ path: string }>) {
+  return (
+    <PMBox>
+      <BodySectionLabel>Distributed as</BodySectionLabel>
+      <PMText as="div" fontSize="sm" fontFamily="mono" paddingTop={1}>
+        {path}
+      </PMText>
+      <PMText as="div" fontSize="xs" color="secondary" paddingTop={1}>
+        The Packmind path. Each agent reads this component from one of its own.
+      </PMText>
+    </PMBox>
+  );
+}
+
+/**
+ * The three below share a shape: the path when the entity has arrived, and the
+ * list of landings, which fetches and fails on its own.
+ *
+ * The path is conditional and carries no spinner of its own on purpose. It
+ * needs the entity only for a slug, and a failed slug must not empty a tab
+ * whose subject is the list underneath it.
+ */
+function CommandDistribution({
+  commandId,
+  orgSlug,
+  spaceSlug,
+}: Readonly<{ commandId: CommandId; orgSlug: string; spaceSlug: string }>) {
+  const { data: command } = useGetCommandByIdQuery(commandId);
+
+  return (
+    <PMVStack gap={6} align="stretch">
+      {command?.slug && (
+        <DistributedAs path={`.packmind/recipes/${command.slug}.md`} />
+      )}
+      <CommandDistributionsList
+        recipeId={commandId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    </PMVStack>
+  );
+}
+
+function StandardDistribution({
+  standardId,
+  orgSlug,
+  spaceSlug,
+}: Readonly<{ standardId: StandardId; orgSlug: string; spaceSlug: string }>) {
+  const { data } = useGetStandardByIdQuery(standardId);
+  const slug = data?.standard?.slug;
+
+  return (
+    <PMVStack gap={6} align="stretch">
+      {slug && <DistributedAs path={`.packmind/standards/${slug}.md`} />}
+      <StandardDistributionsList
+        standardId={standardId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    </PMVStack>
+  );
+}
+
+/**
+ * A skill is a folder, so its path is one, trailing slash and all. The files
+ * inside it are the rail, which is where they belong: this tab is about where
+ * the folder landed, not what is in it.
+ */
+function SkillDistribution({
+  skillId,
+  orgSlug,
+  spaceSlug,
+}: Readonly<{ skillId: SkillId; orgSlug: string; spaceSlug: string }>) {
+  const { data } = useGetSkillWithFilesByIdQuery(skillId);
+  const slug = data?.latestVersion.slug;
+
+  return (
+    <PMVStack gap={6} align="stretch">
+      {slug && <DistributedAs path={`.packmind/skills/${slug}/`} />}
+      <SkillDistributionsList
+        skillId={skillId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    </PMVStack>
   );
 }
 
