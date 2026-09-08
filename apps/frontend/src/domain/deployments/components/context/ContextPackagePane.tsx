@@ -406,7 +406,9 @@ export function ContextPackagePane({
     /*
      * The component on screen just left the package this pane is showing, so the
      * address that says it is open has to close, exactly as it does when one is
-     * deleted. It still exists, and its own page is still where it is read.
+     * deleted. It still exists, and the inventory is where it is read now: the
+     * pane opens a component no package holds, so closing this one costs the
+     * reader nothing but the package around it.
      */
     if (
       detail &&

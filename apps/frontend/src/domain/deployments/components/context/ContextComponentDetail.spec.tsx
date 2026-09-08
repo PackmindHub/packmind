@@ -765,6 +765,28 @@ describe('the distribution body', () => {
       expect(screen.getByRole('link', { name: /manage rules/i })).toBeVisible();
     });
 
+    /*
+      Not the row's own href, which points at the standard. That address comes
+      back to this pane in the plugin-first navigation, so a link built from it
+      would leave and be sent straight back.
+    */
+    it('lands on the page that holds the rules table', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '' } },
+      });
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(
+        screen.getByRole('link', { name: /manage rules/i }),
+      ).toHaveAttribute(
+        'href',
+        '/org/acme/space/core/standards/standard-1/summary',
+      );
+    });
+
     describe('when the component is a command', () => {
       it('is absent, a command having no rules', async () => {
         (useGetCommandByIdQuery as Mock).mockReturnValue({

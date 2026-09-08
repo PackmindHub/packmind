@@ -471,7 +471,11 @@ export function ContextComponentDetail({
         paddingX={6}
         paddingY={5}
       >
-        <ComponentBody component={component} />
+        <ComponentBody
+          component={component}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
       </PMTabsCompound.Content>
 
       <PMTabsCompound.Content
@@ -505,7 +509,13 @@ export function ContextComponentDetail({
 
 function ComponentBody({
   component,
-}: Readonly<{ component: ContextComponent }>) {
+  orgSlug,
+  spaceSlug,
+}: Readonly<{
+  component: ContextComponent;
+  orgSlug: string;
+  spaceSlug: string;
+}>) {
   switch (component.type) {
     case 'command':
       return <CommandBody commandId={component.key as CommandId} />;
@@ -514,12 +524,17 @@ function ComponentBody({
         <StandardBody
           standardId={component.key as StandardId}
           /*
-            The row already carries the address of the standard's own page,
-            which is where its rules are set up. Handed down rather than rebuilt
-            from the slugs, so the pane has one answer to where a standard lives
-            and not two that can drift.
+            The summary route, and not the row's own href. The row points at the
+            standard, which in the plugin-first navigation is an address that
+            comes back here: the link would leave the pane and be sent straight
+            to it again. Naming the page where the rules actually are is both
+            the honest label and the only target that survives.
           */
-          rulesHref={component.href}
+          rulesHref={routes.space.toStandardSummary(
+            orgSlug,
+            spaceSlug,
+            component.key,
+          )}
         />
       );
     case 'skill':
