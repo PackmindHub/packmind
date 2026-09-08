@@ -1,8 +1,11 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
+  ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
   PMBox,
   PMButton,
+  PMFeatureFlag,
   PMHStack,
   PMHeading,
   PMIcon,
@@ -15,18 +18,26 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronLeft, LuEllipsisVertical, LuTrash2 } from 'react-icons/lu';
+import {
+  LuChevronLeft,
+  LuEllipsisVertical,
+  LuMessageSquarePlus,
+  LuTrash2,
+} from 'react-icons/lu';
 import type {
+  Command,
   CommandId,
   OrganizationId,
   Rule,
   SkillId,
   SpaceId,
   StandardId,
+  WithTimestamps,
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
+import { ProposeChangeModal } from '../../../commands/components/ProposeChangeModal';
 import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
@@ -40,6 +51,12 @@ import {
   INSTRUCTIONS_TAB,
   sortRulesByContent,
 } from './buildComponentDetail';
+import {
+  REVIEW_ARTEFACT_TYPES,
+  componentUpdatedAt,
+  pendingProposalCount,
+  reviewChangesLabel,
+} from './componentMaintenance';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import {
@@ -54,6 +71,13 @@ import {
 import { CommandDistributionsList } from '../CommandDistributionsList/CommandDistributionsList';
 import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistributionsList';
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
+import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
+import { routes } from '../../../../shared/utils/routes';
+import {
+  useListChangeProposalsByCommandQuery,
+  useListChangeProposalsBySkillQuery,
+  useListChangeProposalsByStandardQuery,
+} from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 /**
  * One component, read inside the package that carries it.
@@ -109,6 +133,14 @@ export function ContextComponentDetail({
   onDelete: () => void;
 }>) {
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type];
+  const { organization, user } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+  /*
+   * Held by the frame and not by the menu item that opens it. The menu unmounts
+   * its content when it closes, and the click that opens a drawer mounted in
+   * there is the same click that closes the menu.
+   */
+  const [proposeNameOpen, setProposeNameOpen] = useState(false);
 
   return (
     /*
@@ -158,12 +190,22 @@ export function ContextComponentDetail({
                   {label}
                 </PMText>
               </PMHStack>
-              <PMText fontSize="sm" color="faded" aria-hidden>
-                ·
-              </PMText>
+              <MetaSeparator />
               <PMText fontSize="sm" color="faded">
                 v{component.version}
               </PMText>
+              {/*
+                Whether anyone is looking after this component. Beside the
+                version rather than on a line of its own, because a version
+                number and the date it was cut are one fact read together, and
+                a proposal waiting on someone is the only thing in this row
+                worth interrupting for.
+              */}
+              <ComponentMaintenance
+                component={component}
+                orgSlug={orgSlug}
+                spaceSlug={spaceSlug}
+              />
               {/*
               No repository count here. Where a component landed is a property of
               the package, one level up, and printing it on the component is
@@ -232,6 +274,37 @@ export function ContextComponentDetail({
                     this one takes the component out of one package, the other
                     takes it out of the space.
                   */}
+                    {/*
+                    Proposing a change instead of making one, for a reader
+                    without the standing to edit or without the certainty. Only
+                    on a command, and named after the field it changes: the
+                    capability exists for one type and one field today, and the
+                    command's own page hides that behind two identical "Propose
+                    change" links, one of which renames and one of which edits
+                    the description. An affordance the other two types cannot
+                    honour is worse than an absent one, so it is absent there.
+                  */}
+                    {component.type === 'command' && (
+                      <PMFeatureFlag
+                        featureKeys={[
+                          ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
+                        ]}
+                        featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+                        userEmail={user?.email}
+                      >
+                        <PMMenu.Item
+                          value="propose-name-change"
+                          onClick={() => setProposeNameOpen(true)}
+                        >
+                          <PMHStack gap={2}>
+                            <PMIcon>
+                              <LuMessageSquarePlus />
+                            </PMIcon>
+                            Propose name change
+                          </PMHStack>
+                        </PMMenu.Item>
+                      </PMFeatureFlag>
+                    )}
                     <PMMenu.Item value="remove-component" onClick={onRemove}>
                       <PMHStack gap={2}>
                         <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
@@ -254,6 +327,21 @@ export function ContextComponentDetail({
                 </PMMenu.Positioner>
               </PMPortal>
             </PMMenu.Root>
+            {/*
+              Beside the menu that opens it rather than at the end of the file,
+              which is where the component's own page keeps its dialogs too. It
+              portals out, so it adds nothing to this row.
+            */}
+            {component.type === 'command' && organization && spaceId && (
+              <ProposeChangeModal
+                commandName={component.name}
+                recipeId={component.key as CommandId}
+                organizationId={organization.id}
+                spaceId={spaceId}
+                open={proposeNameOpen}
+                onOpenChange={({ open }) => setProposeNameOpen(open)}
+              />
+            )}
           </PMHStack>
         </PMHStack>
 
@@ -336,6 +424,185 @@ function BodySectionLabel({ children }: Readonly<{ children: string }>) {
     >
       {children}
     </PMText>
+  );
+}
+
+/** The dot between two facts in the meta row. */
+function MetaSeparator() {
+  return (
+    <PMText fontSize="sm" color="faded" aria-hidden>
+      &middot;
+    </PMText>
+  );
+}
+
+/**
+ * Whether this component is being looked after, and whether it is waiting on
+ * anyone.
+ *
+ * Per type for the reason `DistributionCount` is: two queries per type, three
+ * different ids, and a hook cannot be called conditionally. Each of the three
+ * below calls exactly two and hands the same two facts back.
+ *
+ * Both queries are the ones the component's own page runs, by the same ids, so
+ * the pane and the page cannot disagree about how fresh a component is or how
+ * many proposals are open on it.
+ */
+function ComponentMaintenance({
+  component,
+  orgSlug,
+  spaceSlug,
+}: Readonly<{
+  component: ContextComponent;
+  orgSlug: string;
+  spaceSlug: string;
+}>) {
+  /*
+   * Built here rather than in each of the three, and built whether or not
+   * anything is pending: the count decides if the link renders, not where it
+   * goes.
+   */
+  const reviewHref = routes.space.toReviewChangesArtefact(
+    orgSlug,
+    spaceSlug,
+    REVIEW_ARTEFACT_TYPES[component.type],
+    component.key,
+  );
+
+  switch (component.type) {
+    case 'command':
+      return (
+        <CommandMaintenance
+          commandId={component.key as CommandId}
+          reviewHref={reviewHref}
+        />
+      );
+    case 'standard':
+      return (
+        <StandardMaintenance
+          standardId={component.key as StandardId}
+          reviewHref={reviewHref}
+        />
+      );
+    case 'skill':
+      return (
+        <SkillMaintenance
+          skillId={component.key as SkillId}
+          reviewHref={reviewHref}
+        />
+      );
+  }
+}
+
+/**
+ * The two facts, or as many of them as are true.
+ *
+ * Each carries its own separator, so a component with no date and nothing
+ * pending leaves the row exactly as it was rather than ending it on a dot.
+ *
+ * The pending link is the one thing on this header allowed to leave the
+ * surface, and it is allowed because it leaves to a sidebar entry: reviewing a
+ * proposal is its own piece of work, with its own screen, and pretending
+ * otherwise would put a diff viewer in a pane. It is also the only accent on
+ * this surface, which is the point. Everything else here is a fact; this one is
+ * someone waiting.
+ */
+function MaintenanceMeta({
+  updatedAt,
+  pending,
+  reviewHref,
+}: Readonly<{
+  /** Null when the entity sent no date, which is ordinary for a command. */
+  updatedAt: string | null;
+  pending: number;
+  reviewHref: string;
+}>) {
+  return (
+    <>
+      {updatedAt && (
+        <>
+          <MetaSeparator />
+          <PMText fontSize="sm" color="faded">
+            {`updated ${formatRelativeDate(updatedAt)}`}
+          </PMText>
+        </>
+      )}
+      {pending > 0 && (
+        <>
+          <MetaSeparator />
+          <PMBox
+            fontSize="sm"
+            color="branding.primary"
+            _hover={{ textDecoration: 'underline' }}
+            asChild
+          >
+            <Link to={reviewHref}>{reviewChangesLabel(pending)}</Link>
+          </PMBox>
+        </>
+      )}
+    </>
+  );
+}
+
+function CommandMaintenance({
+  commandId,
+  reviewHref,
+}: Readonly<{ commandId: CommandId; reviewHref: string }>) {
+  const { data: command } = useGetCommandByIdQuery(commandId);
+  const { data: proposals } = useListChangeProposalsByCommandQuery(commandId);
+
+  return (
+    <MaintenanceMeta
+      /*
+       * Cast because `Command` does not declare the timestamp its own table
+       * carries, which is what `CommandVersionHistoryHeader` and `CommandsList`
+       * both work around the same way. The cast promises a date; the reader it
+       * is handed to does not believe it, and answers null when none arrives.
+       */
+      updatedAt={componentUpdatedAt(
+        command as WithTimestamps<Command> | undefined,
+      )}
+      pending={pendingProposalCount(proposals)}
+      reviewHref={reviewHref}
+    />
+  );
+}
+
+function StandardMaintenance({
+  standardId,
+  reviewHref,
+}: Readonly<{ standardId: StandardId; reviewHref: string }>) {
+  const { data } = useGetStandardByIdQuery(standardId);
+  const { data: proposals } = useListChangeProposalsByStandardQuery(standardId);
+
+  return (
+    <MaintenanceMeta
+      updatedAt={componentUpdatedAt(data?.standard)}
+      pending={pendingProposalCount(proposals)}
+      reviewHref={reviewHref}
+    />
+  );
+}
+
+/*
+ * The skill's date comes off the skill and not off its latest version, which is
+ * the one the Distribution tab reads for a slug. A version is cut when the
+ * folder changes, and the row moves with it: the two answer the same question
+ * here, and the entity is the one that also moves when a file is renamed.
+ */
+function SkillMaintenance({
+  skillId,
+  reviewHref,
+}: Readonly<{ skillId: SkillId; reviewHref: string }>) {
+  const { data } = useGetSkillWithFilesByIdQuery(skillId);
+  const { data: proposals } = useListChangeProposalsBySkillQuery(skillId);
+
+  return (
+    <MaintenanceMeta
+      updatedAt={componentUpdatedAt(data?.skill)}
+      pending={pendingProposalCount(proposals)}
+      reviewHref={reviewHref}
+    />
   );
 }
 

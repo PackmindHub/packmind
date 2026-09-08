@@ -21,6 +21,11 @@ import {
 import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetStandardByIdQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
+import {
+  useListChangeProposalsByCommandQuery,
+  useListChangeProposalsBySkillQuery,
+  useListChangeProposalsByStandardQuery,
+} from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListCommandDistributionsQuery: vi.fn(),
@@ -41,8 +46,29 @@ vi.mock('../../../skills/api/queries/SkillsQueries', () => ({
   useGetSkillWithFilesByIdQuery: vi.fn(),
 }));
 
+vi.mock(
+  '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+  async () => ({
+    ...(await vi.importActual(
+      '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+    )),
+    useListChangeProposalsByCommandQuery: vi.fn(),
+    useListChangeProposalsByStandardQuery: vi.fn(),
+    useListChangeProposalsBySkillQuery: vi.fn(),
+  }),
+);
+
+/**
+ * Reassigned per case rather than fixed, because the propose affordance is
+ * behind a flag evaluated on the signed-in address: both states of it have to
+ * be reachable from here.
+ */
+const auth = vi.hoisted(() => ({
+  value: {} as { organization?: { id: string }; user?: { email: string } },
+}));
+
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: () => ({ organization: { id: 'org-1' } }),
+  useAuthContext: () => auth.value,
 }));
 
 vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
@@ -63,6 +89,20 @@ vi.mock('../StandardDistributionsList/StandardDistributionsList', () => ({
 }));
 vi.mock('../SkillDistributionsList/SkillDistributionsList', () => ({
   SkillDistributionsList: () => <div data-testid="skill-list" />,
+}));
+
+/**
+ * The propose drawer is stood in for, for the same reason and for one more.
+ * What this file decides is whether the item that opens it is offered at all;
+ * the drawer owns its own form and its own mutation.
+ *
+ * The one more: that mutation is edition-dependent. It is a noop in the OSS
+ * stub and a real `useMutation` in the proprietary module the same import
+ * resolves to, so rendering it for real makes this file pass in one repo and
+ * fail in the other for want of a `QueryClientProvider`.
+ */
+vi.mock('../../../commands/components/ProposeChangeModal', () => ({
+  ProposeChangeModal: () => <div data-testid="propose-name-drawer" />,
 }));
 
 const COMMAND_ID = createCommandId('command-1');
@@ -118,6 +158,24 @@ async function renderDetail(
   });
 }
 
+/*
+ * Relative to now rather than a fixed instant, because the header prints the
+ * distance and not the date: a literal would read as a different number every
+ * day the suite runs.
+ */
+const THREE_DAYS_AGO = new Date(
+  Date.now() - 3 * 24 * 60 * 60 * 1000,
+).toISOString();
+
+function pending() {
+  return { status: 'pending' };
+}
+
+/** The menu the propose item lives in, which is shut until it is asked for. */
+async function openActions() {
+  await userEvent.click(screen.getByRole('button', { name: /more actions/i }));
+}
+
 /** No distributions and no entity, which is every query's starting point. */
 function resetToEmpty() {
   (useListCommandDistributionsQuery as Mock).mockReturnValue({
@@ -130,6 +188,20 @@ function resetToEmpty() {
   (useGetCommandByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({ data: undefined });
+  (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
+    data: undefined,
+  });
+  (useListChangeProposalsByStandardQuery as Mock).mockReturnValue({
+    data: undefined,
+  });
+  (useListChangeProposalsBySkillQuery as Mock).mockReturnValue({
+    data: undefined,
+  });
+  /* Outside the flag's audience, so the propose item is off unless a case asks. */
+  auth.value = {
+    organization: { id: 'org-1' },
+    user: { email: 'reader@example.com' },
+  };
 }
 
 describe('ContextComponentDetail', () => {
@@ -352,6 +424,159 @@ describe('the distribution body', () => {
 
       expect(
         screen.queryByText(/whichever package sent it/),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the component last changed', () => {
+    it('says how long ago, off a command', async () => {
+      (useGetCommandByIdQuery as Mock).mockReturnValue({
+        data: {
+          slug: 'run-migrations',
+          content: '',
+          updatedAt: THREE_DAYS_AGO,
+        },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+    });
+
+    it('says how long ago, off a standard', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', updatedAt: THREE_DAYS_AGO } },
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+    });
+
+    /* Off the skill and not off the version the Distribution tab reads. */
+    it('says how long ago, off a skill', async () => {
+      (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({
+        data: {
+          skill: { updatedAt: THREE_DAYS_AGO },
+          latestVersion: { slug: 'review-pr' },
+          files: [],
+        },
+      });
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+    });
+  });
+
+  describe('when the entity sent no date', () => {
+    it('says nothing rather than reporting the present moment', async () => {
+      (useGetCommandByIdQuery as Mock).mockReturnValue({
+        data: { slug: 'run-migrations', content: '' },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.queryByText(/^updated /)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a change is waiting on someone', () => {
+    it('says how many, in the header', async () => {
+      (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
+        data: { changeProposals: [pending(), pending()] },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.getByRole('link', { name: '2 changes to review' }),
+      ).toBeVisible();
+    });
+
+    it('sends the reader to the review surface for a command', async () => {
+      (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
+        data: { changeProposals: [pending()] },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.getByRole('link', { name: '1 change to review' }),
+      ).toHaveAttribute(
+        'href',
+        `/org/acme/space/core/review-changes/commands/${COMMAND_ID}`,
+      );
+    });
+
+    it('sends the reader to the review surface for a standard', async () => {
+      (useListChangeProposalsByStandardQuery as Mock).mockReturnValue({
+        data: { changeProposals: [pending()] },
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.getByRole('link', { name: '1 change to review' }),
+      ).toHaveAttribute(
+        'href',
+        `/org/acme/space/core/review-changes/standards/${STANDARD_ID}`,
+      );
+    });
+
+    it('sends the reader to the review surface for a skill', async () => {
+      (useListChangeProposalsBySkillQuery as Mock).mockReturnValue({
+        data: { changeProposals: [pending()] },
+      });
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(
+        screen.getByRole('link', { name: '1 change to review' }),
+      ).toHaveAttribute(
+        'href',
+        `/org/acme/space/core/review-changes/skills/${SKILL_ID}`,
+      );
+    });
+  });
+
+  describe('when every proposal has been decided', () => {
+    it('leaves the header quiet', async () => {
+      (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
+        data: { changeProposals: [{ status: 'applied' }] },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.queryByText(/to review/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('proposing a change instead of making one', () => {
+    it('offers it on a command, to a reader the flag covers', async () => {
+      auth.value = {
+        organization: { id: 'org-1' },
+        user: { email: 'dev@packmind.com' },
+      };
+      await renderDetail(componentOfType('command', COMMAND_ID));
+      await openActions();
+
+      expect(
+        screen.getByRole('menuitem', { name: /propose name change/i }),
+      ).toBeVisible();
+    });
+
+    /* The capability exists for one type, so it is offered on one type. */
+    it('does not offer it on a standard, there being nothing behind it', async () => {
+      auth.value = {
+        organization: { id: 'org-1' },
+        user: { email: 'dev@packmind.com' },
+      };
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+      await openActions();
+
+      expect(
+        screen.queryByRole('menuitem', { name: /propose name change/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('stays hidden from a reader outside the flag', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+      await openActions();
+
+      expect(
+        screen.queryByRole('menuitem', { name: /propose name change/i }),
       ).not.toBeInTheDocument();
     });
   });
