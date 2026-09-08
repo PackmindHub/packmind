@@ -47,11 +47,13 @@ import {
   useGetCommandVersionsQuery,
 } from '../../../commands/api/queries/CommandsQueries';
 import { ProposeChangeModal } from '../../../commands/components/ProposeChangeModal';
+import { ProposeDescriptionChangeModal } from '../../../commands/components/ProposeDescriptionChangeModal';
 import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
 } from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
+import { DownloadSkillPopover } from '../../../skills/components/DownloadSkillPopover';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
 import { parseCommandFrontmatter } from '../../../commands/utils/parseCommandFrontmatter';
 import {
@@ -190,6 +192,7 @@ export function ContextComponentDetail({
    * there is the same click that closes the menu.
    */
   const [proposeNameOpen, setProposeNameOpen] = useState(false);
+  const [proposeInstructionsOpen, setProposeInstructionsOpen] = useState(false);
 
   return (
     /*
@@ -287,6 +290,22 @@ export function ContextComponentDetail({
             <PMButton variant="secondary" size="sm" asChild>
               <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
             </PMButton>
+            {/*
+              Taking the skill away with you, for the agent you actually run.
+              The one control the skill's own page had that this frame did not,
+              and the reason that page could not be let go of: a reader who came
+              here to fetch a skill had to leave to fetch it.
+
+              Its own popover rather than a menu item, because what it asks is
+              which agent, and the answer is three icons wide.
+            */}
+            {component.type === 'skill' && organization && spaceId && (
+              <DownloadSkillPopover
+                skillId={component.key as SkillId}
+                organizationId={organization.id}
+                spaceId={spaceId}
+              />
+            )}
             <PMButton variant="secondary" size="sm" onClick={onMove}>
               {moveLabel}
             </PMButton>
@@ -352,6 +371,26 @@ export function ContextComponentDetail({
                             Propose name change
                           </PMHStack>
                         </PMMenu.Item>
+                        {/*
+                          The second field a change can be proposed on, and the
+                          other half of what the command's page hid behind two
+                          identical "Propose change" links. Named after the tab
+                          it edits rather than after the domain, which calls it
+                          the description while the modal is handed the whole
+                          content: what the reader changes is what the
+                          Instructions tab above is showing.
+                        */}
+                        <PMMenu.Item
+                          value="propose-instructions-change"
+                          onClick={() => setProposeInstructionsOpen(true)}
+                        >
+                          <PMHStack gap={2}>
+                            <PMIcon>
+                              <LuMessageSquarePlus />
+                            </PMIcon>
+                            Propose instructions change
+                          </PMHStack>
+                        </PMMenu.Item>
                       </PMFeatureFlag>
                     )}
                     {onRemove && (
@@ -383,14 +422,13 @@ export function ContextComponentDetail({
               which is where the component's own page keeps its dialogs too. It
               portals out, so it adds nothing to this row.
             */}
-            {component.type === 'command' && organization && spaceId && (
-              <ProposeChangeModal
-                commandName={component.name}
-                recipeId={component.key as CommandId}
-                organizationId={organization.id}
-                spaceId={spaceId}
-                open={proposeNameOpen}
-                onOpenChange={({ open }) => setProposeNameOpen(open)}
+            {component.type === 'command' && (
+              <CommandProposals
+                component={component}
+                nameOpen={proposeNameOpen}
+                onNameOpenChange={setProposeNameOpen}
+                instructionsOpen={proposeInstructionsOpen}
+                onInstructionsOpenChange={setProposeInstructionsOpen}
               />
             )}
           </PMHStack>
@@ -494,6 +532,68 @@ function BodySectionLabel({ children }: Readonly<{ children: string }>) {
     >
       {children}
     </PMText>
+  );
+}
+
+/**
+ * The two changes a reader without the standing to edit can propose on a
+ * command, and the modals that take them.
+ *
+ * A component of its own because the second one needs the command itself: the
+ * modal is handed the content to diff a proposal against, and the frame above
+ * carries a row, not an entity. Querying it here rather than in the frame keeps
+ * the request off the two types that have nothing to propose, and React Query
+ * answers it from the same cache entry the Instructions tab reads.
+ *
+ * Both mounted beside the menu that opens them, which is where the command's
+ * own page keeps its dialogs too. They portal out, so they add nothing to the
+ * row they sit in.
+ */
+function CommandProposals({
+  component,
+  nameOpen,
+  onNameOpenChange,
+  instructionsOpen,
+  onInstructionsOpenChange,
+}: Readonly<{
+  component: ContextComponent;
+  nameOpen: boolean;
+  onNameOpenChange: (open: boolean) => void;
+  instructionsOpen: boolean;
+  onInstructionsOpenChange: (open: boolean) => void;
+}>) {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+  const { data: command } = useGetCommandByIdQuery(component.key as CommandId);
+
+  if (!organization || !spaceId) return null;
+
+  return (
+    <>
+      <ProposeChangeModal
+        commandName={component.name}
+        recipeId={component.key as CommandId}
+        organizationId={organization.id}
+        spaceId={spaceId}
+        open={nameOpen}
+        onOpenChange={({ open }) => onNameOpenChange(open)}
+      />
+      {/*
+        Only once the content has arrived. The modal opens on it as its starting
+        point and calls anything else a change, so mounting it empty would offer
+        to replace the command's instructions with nothing.
+      */}
+      {command && (
+        <ProposeDescriptionChangeModal
+          commandDescription={command.content}
+          recipeId={component.key as CommandId}
+          organizationId={organization.id}
+          spaceId={spaceId}
+          open={instructionsOpen}
+          onOpenChange={({ open }) => onInstructionsOpenChange(open)}
+        />
+      )}
+    </>
   );
 }
 

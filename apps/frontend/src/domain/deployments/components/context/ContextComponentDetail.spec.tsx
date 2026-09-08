@@ -172,6 +172,23 @@ vi.mock('../../../commands/components/ProposeChangeModal', () => ({
   ProposeChangeModal: () => <div data-testid="propose-name-drawer" />,
 }));
 
+/* The other one, for both of the same reasons. */
+vi.mock('../../../commands/components/ProposeDescriptionChangeModal', () => ({
+  ProposeDescriptionChangeModal: () => (
+    <div data-testid="propose-instructions-drawer" />
+  ),
+}));
+
+/**
+ * The download popover is stood in for too. What this file decides is whether
+ * it is offered and on which type; the popover owns its agent list and its
+ * download call, and it reads analytics through the edition alias, which is a
+ * provider in one repository and a noop in the other.
+ */
+vi.mock('../../../skills/components/DownloadSkillPopover', () => ({
+  DownloadSkillPopover: () => <div data-testid="download-skill" />,
+}));
+
 const COMMAND_ID = createCommandId('command-1');
 const STANDARD_ID = createStandardId('standard-1');
 const SKILL_ID = createSkillId('skill-1');
@@ -667,6 +684,55 @@ describe('the distribution body', () => {
       expect(
         screen.queryByRole('menuitem', { name: /propose name change/i }),
       ).not.toBeInTheDocument();
+    });
+
+    /*
+      The second field, which the command's page hid behind a link with the
+      same words as the first one. Named after the tab it edits.
+    */
+    it('offers the instructions as the other field a change can be proposed on', async () => {
+      auth.value = {
+        organization: { id: 'org-1' },
+        user: { email: 'dev@packmind.com' },
+      };
+      await renderDetail(componentOfType('command', COMMAND_ID));
+      await openActions();
+
+      expect(
+        screen.getByRole('menuitem', { name: /propose instructions change/i }),
+      ).toBeVisible();
+    });
+
+    it('hides the instructions one too, from a reader outside the flag', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+      await openActions();
+
+      expect(
+        screen.queryByRole('menuitem', {
+          name: /propose instructions change/i,
+        }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('taking a skill away with you', () => {
+    it('offers the download on a skill', async () => {
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(screen.getByTestId('download-skill')).toBeInTheDocument();
+    });
+
+    /* Neither of the other two is a folder anyone runs. */
+    it('does not offer it on a command', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.queryByTestId('download-skill')).not.toBeInTheDocument();
+    });
+
+    it('does not offer it on a standard', async () => {
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(screen.queryByTestId('download-skill')).not.toBeInTheDocument();
     });
   });
 });
