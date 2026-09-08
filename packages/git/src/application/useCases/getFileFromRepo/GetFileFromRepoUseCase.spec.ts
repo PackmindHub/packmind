@@ -1,5 +1,6 @@
 import { GetFileFromRepoUseCase } from './GetFileFromRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { GitRepo } from '@packmind/types';
@@ -52,9 +53,13 @@ describe('GetFileFromRepoUseCase', () => {
       }),
     } as jest.Mocked<IGitRepoFactory>;
 
+    // The real resolver, not a stub: how often a read resolves is the point.
     useCase = new GetFileFromRepoUseCase(
-      gitProviderService,
-      gitRepoFactory,
+      new ResolvedGitRepoService(
+        gitProviderService,
+        gitRepoFactory,
+        stubLogger(),
+      ),
       stubLogger(),
     );
   });
@@ -189,6 +194,45 @@ describe('GetFileFromRepoUseCase', () => {
         'test-file.txt',
         customBranch,
       );
+    });
+  });
+
+  describe('when a deployment reads many files across many targets', () => {
+    const targets = ['/', 'apps/api', 'apps/frontend', 'packages/git'];
+    const agentFiles = [
+      'CLAUDE.md',
+      'AGENTS.md',
+      '.github/copilot-instructions.md',
+      '.cursor/rules/packmind/recipes-index.mdc',
+      '.junie/guidelines.md',
+    ];
+
+    beforeEach(async () => {
+      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue(null);
+
+      for (const target of targets) {
+        for (const agentFile of agentFiles) {
+          await useCase.getFileFromRepo(
+            mockGitRepoEntity,
+            `${target}/${agentFile}`,
+          );
+        }
+      }
+    });
+
+    it('reads every file', () => {
+      expect(mockGitRepoInstance.getFileOnRepo).toHaveBeenCalledTimes(
+        targets.length * agentFiles.length,
+      );
+    });
+
+    it('builds the git repository once per (repository, provider)', () => {
+      expect(gitRepoFactory.createGitRepo).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads the git provider once per (repository, provider)', () => {
+      expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
     });
   });
 });
