@@ -82,7 +82,7 @@ vi.mock(
 
 /**
  * The detection statuses, which decide whether a rule row says anything about
- * being checked and whether it opens.
+ * being detected automatically, and whether it opens.
  *
  * Mocked at the alias rather than at either edition's module, so both
  * repositories run the same cases: the OSS stub answers with an empty array
@@ -101,8 +101,8 @@ vi.mock(
 
 /**
  * A language spells as itself here. The real function is edition-dependent, and
- * a case asserting on "TypeScript" would read "Checked in TypeScript" in one
- * repository and "Checked in " in the other.
+ * a case asserting on "TypeScript" would read "Active in TypeScript" in one
+ * repository and "Active in " in the other.
  */
 vi.mock(
   '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils',
@@ -968,7 +968,7 @@ describe('what a version changed', () => {
   });
 });
 
-describe('whether a rule is checked automatically', () => {
+describe('whether a rule is detected automatically', () => {
   const FIRST_RULE = createRuleId('rule-1');
   const SECOND_RULE = createRuleId('rule-2');
 
@@ -1029,12 +1029,12 @@ describe('whether a rule is checked automatically', () => {
       await renderStandard();
 
       expect(
-        screen.queryByRole('button', { name: /checked|in progress/i }),
+        screen.queryByRole('button', { name: /active|in progress/i }),
       ).not.toBeInTheDocument();
     });
   });
 
-  describe('when the rule is checked in its only language', () => {
+  describe('when the rule is active in its only language', () => {
     beforeEach(() => {
       withRules('Event name ends with the verb');
       withStatuses(
@@ -1047,19 +1047,19 @@ describe('whether a rule is checked automatically', () => {
     it('names the language on the row', async () => {
       await renderStandard();
 
-      expect(screen.getByText('Checked in TYPESCRIPT')).toBeVisible();
+      expect(screen.getByText('Active in TYPESCRIPT')).toBeVisible();
     });
 
     it('offers nothing to open, since the row said it all', async () => {
       await renderStandard();
 
       expect(
-        screen.queryByRole('button', { name: /checked in/i }),
+        screen.queryByRole('button', { name: /active in/i }),
       ).not.toBeInTheDocument();
     });
   });
 
-  describe('when the rule is checked in one language out of two', () => {
+  describe('when the rule is active in one language out of two', () => {
     beforeEach(() => {
       withRules('Event name ends with the verb');
       withStatuses(
@@ -1079,7 +1079,7 @@ describe('whether a rule is checked automatically', () => {
     it('opens onto them', async () => {
       await renderStandard();
       await userEvent.click(
-        screen.getByRole('button', { name: /checked in TYPESCRIPT/i }),
+        screen.getByRole('button', { name: /active in TYPESCRIPT/i }),
       );
 
       expect(screen.getByText('PYTHON')).toBeVisible();
@@ -1088,7 +1088,7 @@ describe('whether a rule is checked automatically', () => {
     it('shuts again on a second click', async () => {
       await renderStandard();
       const trigger = screen.getByRole('button', {
-        name: /checked in TYPESCRIPT/i,
+        name: /active in TYPESCRIPT/i,
       });
       await userEvent.click(trigger);
       await userEvent.click(trigger);
@@ -1122,7 +1122,7 @@ describe('whether a rule is checked automatically', () => {
     });
   });
 
-  describe('when a language was answered for but nothing checks it', () => {
+  describe('when a language was answered for but nothing detects it', () => {
     beforeEach(() => {
       withRules('Event name ends with the verb');
       withStatuses(
@@ -1132,10 +1132,10 @@ describe('whether a rule is checked automatically', () => {
       );
     });
 
-    it('says the rule is not checked', async () => {
+    it('says the rule is not active', async () => {
       await renderStandard();
 
-      expect(screen.getByText('Not checked')).toBeVisible();
+      expect(screen.getByText('Not active')).toBeVisible();
     });
   });
 
@@ -1157,7 +1157,7 @@ describe('whether a rule is checked automatically', () => {
     it('leaves both open rather than closing the first', async () => {
       await renderStandard();
       await userEvent.click(
-        screen.getByRole('button', { name: /checked in TYPESCRIPT/i }),
+        screen.getByRole('button', { name: /active in TYPESCRIPT/i }),
       );
       await userEvent.click(
         screen.getByRole('button', { name: /in progress/i }),

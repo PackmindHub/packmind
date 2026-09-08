@@ -32,25 +32,25 @@ function language(
 
 function detection(
   state: RuleDetection['state'],
-  checkedLanguages: ProgrammingLanguage[] = [],
-  languages: RuleDetection['languages'] = checkedLanguages.map((value) => ({
+  activeLanguages: ProgrammingLanguage[] = [],
+  languages: RuleDetection['languages'] = activeLanguages.map((value) => ({
     language: value,
-    state: 'checked' as const,
+    state: 'active' as const,
   })),
 ): RuleDetection {
-  return { state, checkedLanguages, languages };
+  return { state, activeLanguages, languages };
 }
 
-function unchecked(value: ProgrammingLanguage) {
-  return { language: value, state: 'unchecked' as const };
+function inactive(value: ProgrammingLanguage) {
+  return { language: value, state: 'inactive' as const };
 }
 
 function inProgress(value: ProgrammingLanguage) {
   return { language: value, state: 'in-progress' as const };
 }
 
-function checked(value: ProgrammingLanguage) {
-  return { language: value, state: 'checked' as const };
+function active(value: ProgrammingLanguage) {
+  return { language: value, state: 'active' as const };
 }
 
 /** Spelled the way the alias-free tests need it: the identity of the enum. */
@@ -75,7 +75,7 @@ describe('ruleDetectionsById', () => {
     });
   });
 
-  describe('when one language is checked', () => {
+  describe('when one language is active', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
         language(
@@ -85,14 +85,14 @@ describe('ruleDetectionsById', () => {
       ]),
     ]);
 
-    it('reads the rule as checked in that language', () => {
+    it('reads the rule as active in that language', () => {
       expect(detections.get(RULE_ID)).toEqual(
-        detection('checked', [ProgrammingLanguage.TYPESCRIPT]),
+        detection('active', [ProgrammingLanguage.TYPESCRIPT]),
       );
     });
   });
 
-  describe('when one language is checked and another is not', () => {
+  describe('when one language is active and another is not', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
         language(ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.NONE),
@@ -103,21 +103,21 @@ describe('ruleDetectionsById', () => {
       ]),
     ]);
 
-    it('keeps only the checked language', () => {
-      expect(detections.get(RULE_ID)?.checkedLanguages).toEqual([
+    it('keeps only the active language', () => {
+      expect(detections.get(RULE_ID)?.activeLanguages).toEqual([
         ProgrammingLanguage.TYPESCRIPT,
       ]);
     });
 
-    it('keeps both languages, the checked one first', () => {
+    it('keeps both languages, the active one first', () => {
       expect(detections.get(RULE_ID)?.languages).toEqual([
-        checked(ProgrammingLanguage.TYPESCRIPT),
-        unchecked(ProgrammingLanguage.PYTHON),
+        active(ProgrammingLanguage.TYPESCRIPT),
+        inactive(ProgrammingLanguage.PYTHON),
       ]);
     });
   });
 
-  describe('when one language is checked and another is being worked on', () => {
+  describe('when one language is active and another is being worked on', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
         language(ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.WIP),
@@ -128,8 +128,8 @@ describe('ruleDetectionsById', () => {
       ]),
     ]);
 
-    it('reads the rule as checked rather than in progress', () => {
-      expect(detections.get(RULE_ID)?.state).toBe('checked');
+    it('reads the rule as active rather than in progress', () => {
+      expect(detections.get(RULE_ID)?.state).toBe('active');
     });
   });
 
@@ -147,7 +147,7 @@ describe('ruleDetectionsById', () => {
     });
   });
 
-  describe('when no language is checked or being worked on', () => {
+  describe('when no language is active or being worked on', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
         language(ProgrammingLanguage.PYTHON, RuleLanguageDetectionStatus.NONE),
@@ -155,21 +155,21 @@ describe('ruleDetectionsById', () => {
       ]),
     ]);
 
-    it('reads the rule as unchecked', () => {
+    it('reads the rule as inactive', () => {
       expect(detections.get(RULE_ID)).toEqual(
         detection(
-          'unchecked',
+          'inactive',
           [],
           [
-            unchecked(ProgrammingLanguage.JAVA),
-            unchecked(ProgrammingLanguage.PYTHON),
+            inactive(ProgrammingLanguage.JAVA),
+            inactive(ProgrammingLanguage.PYTHON),
           ],
         ),
       );
     });
   });
 
-  describe('when several languages are checked', () => {
+  describe('when several languages are active', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
         language(
@@ -181,7 +181,7 @@ describe('ruleDetectionsById', () => {
     ]);
 
     it('orders them, so the same statuses always read the same way', () => {
-      expect(detections.get(RULE_ID)?.checkedLanguages).toEqual([
+      expect(detections.get(RULE_ID)?.activeLanguages).toEqual([
         ProgrammingLanguage.JAVA,
         ProgrammingLanguage.TYPESCRIPT,
       ]);
@@ -206,28 +206,28 @@ describe('ruleDetectionsById', () => {
 });
 
 describe('ruleDetectionLabel', () => {
-  describe('when the rule is checked in one language', () => {
+  describe('when the rule is active in one language', () => {
     it('names the language', () => {
       expect(
         ruleDetectionLabel(
-          detection('checked', [ProgrammingLanguage.TYPESCRIPT]),
+          detection('active', [ProgrammingLanguage.TYPESCRIPT]),
           spell,
         ),
-      ).toBe('Checked in TYPESCRIPT');
+      ).toBe('Active in TYPESCRIPT');
     });
   });
 
-  describe('when the rule is checked in several languages', () => {
+  describe('when the rule is active in several languages', () => {
     it('counts them rather than listing them', () => {
       expect(
         ruleDetectionLabel(
-          detection('checked', [
+          detection('active', [
             ProgrammingLanguage.JAVA,
             ProgrammingLanguage.TYPESCRIPT,
           ]),
           spell,
         ),
-      ).toBe('Checked in 2 languages');
+      ).toBe('Active in 2 languages');
     });
   });
 
@@ -239,36 +239,36 @@ describe('ruleDetectionLabel', () => {
     });
   });
 
-  describe('when the rule is unchecked', () => {
-    it('says the rule is not checked', () => {
-      expect(ruleDetectionLabel(detection('unchecked'), spell)).toBe(
-        'Not checked',
+  describe('when the rule is inactive', () => {
+    it('says the rule is not active', () => {
+      expect(ruleDetectionLabel(detection('inactive'), spell)).toBe(
+        'Not active',
       );
     });
   });
 });
 
 describe('ruleDetectionOpens', () => {
-  describe('when the rule is checked in its only language', () => {
+  describe('when the rule is active in its only language', () => {
     it('has nothing left to open', () => {
       expect(
         ruleDetectionOpens(
-          detection('checked', [ProgrammingLanguage.TYPESCRIPT]),
+          detection('active', [ProgrammingLanguage.TYPESCRIPT]),
         ),
       ).toBe(false);
     });
   });
 
-  describe('when the rule is checked in one language out of two', () => {
+  describe('when the rule is active in one language out of two', () => {
     it('opens, to say which language is the other one', () => {
       expect(
         ruleDetectionOpens(
           detection(
-            'checked',
+            'active',
             [ProgrammingLanguage.TYPESCRIPT],
             [
-              checked(ProgrammingLanguage.TYPESCRIPT),
-              unchecked(ProgrammingLanguage.PYTHON),
+              active(ProgrammingLanguage.TYPESCRIPT),
+              inactive(ProgrammingLanguage.PYTHON),
             ],
           ),
         ),
@@ -276,11 +276,11 @@ describe('ruleDetectionOpens', () => {
     });
   });
 
-  describe('when the rule is checked in several languages', () => {
+  describe('when the rule is active in several languages', () => {
     it('opens, to name the languages the label only counted', () => {
       expect(
         ruleDetectionOpens(
-          detection('checked', [
+          detection('active', [
             ProgrammingLanguage.JAVA,
             ProgrammingLanguage.TYPESCRIPT,
           ]),
@@ -299,11 +299,11 @@ describe('ruleDetectionOpens', () => {
     });
   });
 
-  describe('when the rule is unchecked', () => {
+  describe('when the rule is inactive', () => {
     it('opens, since the label names no language at all', () => {
       expect(
         ruleDetectionOpens(
-          detection('unchecked', [], [unchecked(ProgrammingLanguage.JAVA)]),
+          detection('inactive', [], [inactive(ProgrammingLanguage.JAVA)]),
         ),
       ).toBe(true);
     });
@@ -312,8 +312,8 @@ describe('ruleDetectionOpens', () => {
 
 describe('languageState', () => {
   describe('when the language has a ready program', () => {
-    it('reads as checked', () => {
-      expect(languageState(RuleLanguageDetectionStatus.OK)).toBe('checked');
+    it('reads as active', () => {
+      expect(languageState(RuleLanguageDetectionStatus.OK)).toBe('active');
     });
   });
 
@@ -326,8 +326,8 @@ describe('languageState', () => {
   });
 
   describe('when the language has no program', () => {
-    it('reads as unchecked', () => {
-      expect(languageState(RuleLanguageDetectionStatus.NONE)).toBe('unchecked');
+    it('reads as inactive', () => {
+      expect(languageState(RuleLanguageDetectionStatus.NONE)).toBe('inactive');
     });
   });
 });

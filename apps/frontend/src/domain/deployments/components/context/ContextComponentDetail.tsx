@@ -1337,8 +1337,8 @@ function StandardBody({ standardId }: Readonly<{ standardId: StandardId }>) {
  * the pane does not have. A row is not a link for the same reason the prototype
  * does not make it one.
  *
- * What a row does carry now is whether the rule is checked automatically. A
- * rule nothing can check is a sentence in a document, and a rule with a
+ * What a row does carry now is whether the rule is detected automatically. A
+ * rule nothing can check is a sentence in a document, and a rule with an active
  * detection program behind it is enforced. That difference decides how much of
  * the standard the reader should expect to be held to, and until now finding it
  * out was a page per rule.
@@ -1374,7 +1374,7 @@ function RulesSection({
 
   /*
    * A set rather than one open row at a time. Two rules of the same standard
-   * being checked in different languages is exactly the comparison this is for,
+   * being active in different languages is exactly the comparison this is for,
    * and a list that closes what you were reading to show you what you clicked
    * makes that comparison impossible.
    */
@@ -1569,9 +1569,9 @@ const RULE_DETECTION_MARKS: Record<
   RuleDetectionState,
   { Icon: ComponentType; color: string }
 > = {
-  checked: { Icon: LuCircleCheck, color: 'text.success' },
+  active: { Icon: LuCircleCheck, color: 'text.success' },
   'in-progress': { Icon: TiWarningOutline, color: 'text.warning' },
-  unchecked: { Icon: LuCircleOff, color: 'text.tertiary' },
+  inactive: { Icon: LuCircleOff, color: 'text.tertiary' },
 };
 
 function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
