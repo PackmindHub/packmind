@@ -232,19 +232,6 @@ export class CommandsAdapter
     return this as ICommandsPort;
   }
 
-  /**
-   * Get the delayed jobs for testing purposes.
-   * @internal This method is intended for testing only
-   */
-  public getCommandsDelayedJobs(): ICommandsDelayedJobs {
-    if (!this.commandsDelayedJobs) {
-      throw new Error(
-        'RecipesDelayedJobs not initialized. Call initialize() first.',
-      );
-    }
-    return this.commandsDelayedJobs;
-  }
-
   public captureCommand(command: CaptureCommandCommand) {
     return this._captureCommand.execute(command);
   }

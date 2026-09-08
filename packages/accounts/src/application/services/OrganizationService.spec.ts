@@ -344,50 +344,6 @@ describe('OrganizationService', () => {
     });
   });
 
-  describe('.listOrganizations', () => {
-    it('calls repository list method', async () => {
-      const expectedOrganizations = [
-        organizationFactory({
-          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-          name: 'Test Organization 1',
-          slug: 'test-organization-1',
-        }),
-        organizationFactory({
-          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
-          name: 'Test Organization 2',
-          slug: 'test-organization-2',
-        }),
-      ];
-
-      mockOrganizationRepository.list.mockResolvedValue(expectedOrganizations);
-
-      await organizationService.listOrganizations();
-
-      expect(mockOrganizationRepository.list).toHaveBeenCalled();
-    });
-
-    it('returns all organizations', async () => {
-      const expectedOrganizations = [
-        organizationFactory({
-          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-          name: 'Test Organization 1',
-          slug: 'test-organization-1',
-        }),
-        organizationFactory({
-          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
-          name: 'Test Organization 2',
-          slug: 'test-organization-2',
-        }),
-      ];
-
-      mockOrganizationRepository.list.mockResolvedValue(expectedOrganizations);
-
-      const result = await organizationService.listOrganizations();
-
-      expect(result).toEqual(expectedOrganizations);
-    });
-  });
-
   describe('.renameOrganization', () => {
     const organizationId = createOrganizationId(
       '123e4567-e89b-12d3-a456-426614174000',

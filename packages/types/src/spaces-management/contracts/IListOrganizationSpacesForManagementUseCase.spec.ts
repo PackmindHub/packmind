@@ -1,7 +1,6 @@
 import {
   ListOrganizationSpacesForManagementCommand,
   ListOrganizationSpacesForManagementResponse,
-  IListOrganizationSpacesForManagementUseCase,
   SpaceManagementListItem,
   SpaceManagementListItemAdmin,
   ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
@@ -48,12 +47,6 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
       displayName: 'Ada Lovelace',
     };
     expect(admin.displayName).toBe('Ada Lovelace');
-  });
-
-  it('aliases the IUseCase contract for the command/response pair', () => {
-    const factory = (): IListOrganizationSpacesForManagementUseCase | null =>
-      null;
-    expect(factory()).toBeNull();
   });
 
   it('declares SpaceManagementListItem as Space enriched with aggregations', () => {

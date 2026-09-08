@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { Space, SpaceType } from '../Space';
 
 export type CreateSpaceCommand = PackmindCommand & {
@@ -6,8 +6,3 @@ export type CreateSpaceCommand = PackmindCommand & {
   type?: SpaceType;
 };
 export type CreateSpaceResponse = Space;
-
-export type ICreateSpaceUseCase = IUseCase<
-  CreateSpaceCommand,
-  CreateSpaceResponse
->;

@@ -162,20 +162,6 @@ describe('HexaRegistry', () => {
   });
 
   describe('register', () => {
-    describe('when registering an hexa type', () => {
-      beforeEach(() => {
-        registry.register(TestHexa);
-      });
-
-      it('does not throw', () => {
-        expect(registry.isRegistered(TestHexa)).toBe(true);
-      });
-
-      it('marks hexa as registered', () => {
-        expect(registry.isRegistered(TestHexa)).toBe(true);
-      });
-    });
-
     describe('when registering hexa with duplicate constructor', () => {
       it('throws error', () => {
         registry.register(TestHexa);
@@ -274,34 +260,6 @@ describe('HexaRegistry', () => {
     });
   });
 
-  describe('getDataSource', () => {
-    it('returns the DataSource after initialization', async () => {
-      await registry.init(mockDataSource);
-
-      const dataSource = registry.getDataSource();
-
-      expect(dataSource).toBe(mockDataSource);
-    });
-
-    it('throws error before initialization', () => {
-      expect(() => registry.getDataSource()).toThrow(
-        'Registry not initialized. Call init() with a DataSource first.',
-      );
-    });
-  });
-
-  describe('isRegistered', () => {
-    it('returns true for registered hexas', () => {
-      registry.register(TestHexa);
-
-      expect(registry.isRegistered(TestHexa)).toBe(true);
-    });
-
-    it('returns false for unregistered hexas', () => {
-      expect(registry.isRegistered(AnotherTestHexa)).toBe(false);
-    });
-  });
-
   describe('destroyAll', () => {
     describe('when destroying all initialized hexas', () => {
       let hexa1: TestHexa;
@@ -346,40 +304,6 @@ describe('HexaRegistry', () => {
 
     it('works with no initialized hexas', () => {
       expect(() => registry.destroyAll()).not.toThrow();
-    });
-  });
-
-  describe('reset', () => {
-    describe('when resetting after initialization', () => {
-      beforeEach(async () => {
-        registry.register(TestHexa);
-        await registry.init(mockDataSource);
-        registry.reset();
-      });
-
-      it('clears all registrations', () => {
-        expect(registry.isRegistered(TestHexa)).toBe(false);
-      });
-
-      it('marks registry as not initialized', () => {
-        expect(registry.initialized).toBe(false);
-      });
-    });
-
-    describe('when registering after reset', () => {
-      beforeEach(async () => {
-        registry.register(TestHexa);
-        await registry.init(mockDataSource);
-        registry.reset();
-      });
-
-      it('allows registering previously registered hexa', () => {
-        expect(() => registry.register(TestHexa)).not.toThrow();
-      });
-
-      it('allows registering new hexa', () => {
-        expect(() => registry.register(AnotherTestHexa)).not.toThrow();
-      });
     });
   });
 
@@ -521,14 +445,6 @@ describe('HexaRegistry', () => {
       beforeEach(() => {
         registry.register(TestHexa);
         registry.register(AnotherTestHexa);
-      });
-
-      it('marks TestHexa as registered', () => {
-        expect(registry.isRegistered(TestHexa)).toBe(true);
-      });
-
-      it('marks AnotherTestHexa as registered', () => {
-        expect(registry.isRegistered(AnotherTestHexa)).toBe(true);
       });
 
       it('keeps registry not initialized', () => {

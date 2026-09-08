@@ -7,9 +7,9 @@ import {
   SkillProperties,
 } from '../../domain/SkillProperties';
 
-export const NAME_MAX_LENGTH = 64;
+const NAME_MAX_LENGTH = 64;
 export const DESCRIPTION_MAX_LENGTH = 1024;
-export const COMPATIBILITY_MAX_LENGTH = 500;
+const COMPATIBILITY_MAX_LENGTH = 500;
 export const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
 const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
 
@@ -67,20 +67,6 @@ export class SkillValidator {
     this.validateUnexpectedFields(metadata, errors);
 
     return errors;
-  }
-
-  /**
-   * Validates the skill metadata and throws if invalid.
-   *
-   * @param metadata - The parsed skill metadata to validate
-   * @throws {SkillValidationError} If validation fails
-   */
-  validateOrThrow(metadata: Partial<SkillProperties>): void {
-    const errors = this.validate(metadata);
-
-    if (errors.length > 0) {
-      throw new SkillValidationError(errors);
-    }
   }
 
   private validateRequiredFields(

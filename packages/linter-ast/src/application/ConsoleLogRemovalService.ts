@@ -22,7 +22,7 @@ export class ConsoleLogRemovalService {
     // Only support JavaScript
     if (language !== ProgrammingLanguage.JAVASCRIPT) {
       throw new Error(
-        `ConsoleRemovalService only supports JAVASCRIPT, received: ${language}`,
+        `ConsoleLogRemovalService only supports JAVASCRIPT, received: ${language}`,
       );
     }
 

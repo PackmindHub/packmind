@@ -5,11 +5,9 @@ import {
   DeleteItemType,
   FileModification,
   FileUpdates,
-  GitRepo,
   CommandVersion,
   SkillVersion,
   StandardVersion,
-  Target,
 } from '@packmind/types';
 import { instrumentComponents, instrumentMethods } from '@packmind/node-utils';
 import { DeployerService } from './DeployerService';
@@ -28,90 +26,6 @@ export class CodingAgentServices {
     // the deployer it holds.
     instrumentMethods(this);
     instrumentComponents([this.deployerService]);
-  }
-
-  async prepareCommandsDeployment(
-    recipeVersions: CommandVersion[],
-    gitRepo: GitRepo,
-    targets: Target[],
-    codingAgents: CodingAgent[],
-  ): Promise<FileUpdates> {
-    this.logger.info('Preparing recipes deployment', {
-      recipesCount: recipeVersions.length,
-      targetsCount: targets.length,
-      agentsCount: codingAgents.length,
-      gitRepoId: gitRepo.id,
-    });
-
-    if (recipeVersions.length === 0) {
-      this.logger.warn('No recipes provided for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    if (targets.length === 0) {
-      this.logger.warn('No targets specified for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    if (codingAgents.length === 0) {
-      this.logger.warn('No coding agents specified for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    const result = await this.deployerService.aggregateCommandDeployments(
-      recipeVersions,
-      gitRepo,
-      targets,
-      codingAgents,
-    );
-
-    this.logger.info('Recipes deployment prepared successfully', {
-      filesCount: result.createOrUpdate.length + result.delete.length,
-    });
-
-    return result;
-  }
-
-  async prepareStandardsDeployment(
-    standardVersions: StandardVersion[],
-    gitRepo: GitRepo,
-    targets: Target[],
-    codingAgents: CodingAgent[],
-  ): Promise<FileUpdates> {
-    this.logger.info('Preparing standards deployment', {
-      standardsCount: standardVersions.length,
-      targetsCount: targets.length,
-      agentsCount: codingAgents.length,
-      gitRepoId: gitRepo.id,
-    });
-
-    if (standardVersions.length === 0) {
-      this.logger.warn('No standards provided for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    if (targets.length === 0) {
-      this.logger.warn('No targets specified for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    if (codingAgents.length === 0) {
-      this.logger.warn('No coding agents specified for deployment');
-      return { createOrUpdate: [], delete: [] };
-    }
-
-    const result = await this.deployerService.aggregateStandardsDeployments(
-      standardVersions,
-      gitRepo,
-      targets,
-      codingAgents,
-    );
-
-    this.logger.info('Standards deployment prepared successfully', {
-      filesCount: result.createOrUpdate.length + result.delete.length,
-    });
-
-    return result;
   }
 
   async renderArtifacts(

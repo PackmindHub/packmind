@@ -8,22 +8,6 @@ export interface SSEEvent<TData = unknown> {
   timestamp: string;
 }
 
-// Specific event types that can be sent through SSE
-export type SSEEventType =
-  | 'hello_world'
-  | 'PUT'
-  | 'DELETE'
-  | 'CREATE'
-  | 'UPDATE'
-  | 'NOTIFICATION'
-  | 'PROGRAM_STATUS_CHANGE'
-  | 'ASSESSMENT_STATUS_CHANGE'
-  | 'DETECTION_HEURISTICS_UPDATED'
-  | 'USER_CONTEXT_CHANGE'
-  | 'DISTRIBUTION_STATUS_CHANGE'
-  | 'CHANGE_PROPOSAL_UPDATE'
-  | 'MARKETPLACE_PUBLISH_COMPLETED';
-
 // Hello World event for testing
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
   type: 'hello_world';
@@ -136,29 +120,6 @@ export function createHelloWorldEvent(message: string): HelloWorldEvent {
   return {
     type: 'hello_world',
     data: { message },
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export function createDataChangeEvent<TPayload>(
-  type: 'PUT' | 'DELETE' | 'CREATE' | 'UPDATE',
-  data: TPayload,
-): DataChangeEvent<TPayload> {
-  return {
-    type,
-    data,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export function createNotificationEvent(
-  title: string,
-  message: string,
-  level: 'info' | 'warning' | 'error' | 'success' = 'info',
-): NotificationEvent {
-  return {
-    type: 'NOTIFICATION',
-    data: { title, message, level },
     timestamp: new Date().toISOString(),
   };
 }

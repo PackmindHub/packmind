@@ -181,11 +181,6 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
-    this.logger.info('Getting user by email', { email: maskEmail(email) });
-    return this.userRepository.findByEmail(email);
-  }
-
   async createSocialLoginUser(email: string): Promise<User> {
     const normalizedEmail = email.trim().toLowerCase();
     this.logger.info('Creating social login user', {
@@ -241,11 +236,6 @@ export class UserService {
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
     return bcrypt.hash(password, saltRounds);
-  }
-
-  async listUsers(): Promise<User[]> {
-    this.logger.info('Listing all users');
-    return this.userRepository.list();
   }
 
   async listUsersByOrganization(

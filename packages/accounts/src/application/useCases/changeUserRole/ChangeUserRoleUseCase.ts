@@ -75,8 +75,9 @@ export class ChangeUserRoleUseCase
     // Business rule: Prevent demoting the last admin
     if (targetMembership.role === 'admin' && command.newRole !== 'admin') {
       // Count current admins in the organization
-      const allUsers = await this.userService.listUsers();
-      const orgAdmins = allUsers.filter((user) =>
+      const orgUsers =
+        await this.userService.listUsersByOrganization(organizationId);
+      const orgAdmins = orgUsers.filter((user) =>
         user.memberships?.some(
           (membership) =>
             membership.organizationId === organizationId &&

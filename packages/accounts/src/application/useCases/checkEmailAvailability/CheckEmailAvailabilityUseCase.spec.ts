@@ -16,7 +16,6 @@ describe('CheckEmailAvailabilityUseCase', () => {
       getUserByEmailCaseInsensitive: jest.fn(),
       hashPassword: jest.fn(),
       validatePassword: jest.fn(),
-      listUsers: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
     checkEmailAvailabilityUseCase = new CheckEmailAvailabilityUseCase(

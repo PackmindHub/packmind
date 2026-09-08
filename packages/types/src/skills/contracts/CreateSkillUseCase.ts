@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { Skill } from '../Skill';
 import { SpaceId } from '../../spaces';
 
@@ -14,8 +14,3 @@ export type CreateSkillCommand = PackmindCommand & {
 };
 
 export type CreateSkillResponse = Skill;
-
-export type ICreateSkillUseCase = IUseCase<
-  CreateSkillCommand,
-  CreateSkillResponse
->;

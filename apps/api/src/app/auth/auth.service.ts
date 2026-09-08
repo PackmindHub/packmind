@@ -49,21 +49,6 @@ import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
-export interface TokenRequestBody {
-  grant_type: string;
-  email: string;
-  password: string;
-  client_id?: string;
-  scope?: string;
-}
-
-export interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  scope?: string;
-}
-
 export interface GetMeResponse {
   edition: 'cloud' | 'oss';
   user: {
@@ -921,14 +906,5 @@ export class AuthService {
       });
       throw error;
     }
-  }
-
-  /**
-   * Verifies a JWT token and returns the payload
-   * @param token JWT token to verify
-   * @returns Decoded JWT payload
-   */
-  verifyToken(token: string): JwtPayload {
-    return this.jwtService.verify<JwtPayload>(token);
   }
 }

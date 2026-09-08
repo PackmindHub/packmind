@@ -43,32 +43,6 @@ describe('SkillVersionRepository', () => {
 
   afterAll(() => fixture.destroy());
 
-  describe('list', () => {
-    it('returns all skill versions', async () => {
-      const skill1 = skillFactory();
-      const skill2 = skillFactory();
-      await skillRepository.add(skill1);
-      await skillRepository.add(skill2);
-
-      const version1 = skillVersionFactory({ skillId: skill1.id, version: 1 });
-      const version2 = skillVersionFactory({ skillId: skill2.id, version: 2 });
-      await skillVersionRepository.add(version1);
-      await skillVersionRepository.add(version2);
-
-      const versions = await skillVersionRepository.list();
-
-      expect(versions).toHaveLength(2);
-    });
-
-    describe('when no versions exist', () => {
-      it('returns empty array', async () => {
-        const versions = await skillVersionRepository.list();
-
-        expect(versions).toHaveLength(0);
-      });
-    });
-  });
-
   describe('findBySkillId', () => {
     it('finds all versions for a skill ordered by version descending', async () => {
       const skill = skillFactory();

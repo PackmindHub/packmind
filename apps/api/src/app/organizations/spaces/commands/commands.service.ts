@@ -8,9 +8,7 @@ import {
   Command,
   CommandId,
   CommandVersion,
-  CommandVersionId,
   SpaceId,
-  TargetId,
   UpdateCommandFromUICommand,
   UserId,
 } from '@packmind/types';
@@ -96,33 +94,6 @@ export class CommandsService {
 
   async getCommandVersionsById(id: CommandId): Promise<CommandVersion[]> {
     return this.commandsAdapter.listCommandVersions(id);
-  }
-
-  async publishCommandToTargets(
-    recipeVersionIds: CommandVersionId[],
-    targetIds: TargetId[],
-    authorId: UserId,
-    organizationId: OrganizationId,
-    source: ClientSource,
-  ) {
-    const result = await this.deploymentAdapter.publishArtifacts({
-      userId: authorId,
-      organizationId,
-      recipeVersionIds,
-      standardVersionIds: [],
-      targetIds,
-      packagesSlugs: [],
-      packageIds: [],
-      source,
-    });
-
-    return {
-      deploymentsCreated: true,
-      success: true,
-      commitsWithChangesCount: result.distributions.filter(
-        (distribution) => distribution.gitCommit,
-      ).length,
-    };
   }
 
   async deleteCommand(

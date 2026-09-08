@@ -18,7 +18,6 @@ export { PMBreadcrumb } from './PMBreadcrumb/PMBreadcrumb';
 export { PMDrawer } from './PMDrawer/PMDrawer';
 export { PMCloseButton } from './PMCloseButton/PMCloseButton';
 export { PMIcon } from './PMIcon/PMIcon';
-export { PMTwoColumnsLayout } from './PMTwoColumnsLayout/PMTwoColumnsLayout';
 export { PMImage } from './PMImage/PMImage';
 export { PMAccordion } from './PMAccordion/PMAccordion';
 export { PMStat } from './PMStat/PMStat';
@@ -35,6 +34,4 @@ export {
   PMTimelineTitle,
   PMTimelineDescription,
 } from './PMTimeline/PMTimeline';
-export { PMCarousel } from './PMCarousel/PMCarousel';
 export { PMColorSwatch } from './PMColorSwatch';
-export type { PMColorSwatchProps } from './PMColorSwatch';

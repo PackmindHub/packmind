@@ -10,9 +10,7 @@ const origin = 'EncryptionService';
 
 export class EncryptionService {
   private readonly algorithm = 'aes-256-gcm';
-  private readonly keyLength = 32; // 256 bits
   private readonly ivLength = 16; // 128 bits
-  private readonly tagLength = 16; // 128 bits
 
   constructor(
     private readonly encryptionKey: string,

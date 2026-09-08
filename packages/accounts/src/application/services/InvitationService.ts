@@ -93,21 +93,11 @@ export class InvitationService {
   }
 
   // Methods from our ListInvitations implementation
-  async findById(id: InvitationId): Promise<Invitation | null> {
-    this.logger.debug('Finding invitation by id', { id });
-    return this.invitationRepository.findById(id);
-  }
-
   async findByToken(token: InvitationToken): Promise<Invitation | null> {
     this.logger.debug('Finding invitation by token', {
       token: this.maskToken(token),
     });
     return this.invitationRepository.findByToken(token);
-  }
-
-  async findByUserId(userId: UserId): Promise<Invitation[]> {
-    this.logger.debug('Finding invitations by user id', { userId });
-    return this.invitationRepository.findByUserId(userId);
   }
 
   async findLatestByUserId(userId: UserId): Promise<Invitation | null> {
@@ -120,11 +110,6 @@ export class InvitationService {
       count: userIds.length,
     });
     return this.invitationRepository.findByUserIds(userIds);
-  }
-
-  async save(invitation: Invitation): Promise<Invitation> {
-    this.logger.debug('Saving invitation', { invitation });
-    return this.invitationRepository.save(invitation);
   }
 
   async delete(id: InvitationId): Promise<void> {

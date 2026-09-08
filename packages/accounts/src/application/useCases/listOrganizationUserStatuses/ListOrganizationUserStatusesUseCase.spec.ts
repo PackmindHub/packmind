@@ -18,7 +18,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
   let mockLogger: ReturnType<typeof stubLogger>;
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
-  let mockListUsers: jest.Mock;
+  let mockListUsersByOrganization: jest.Mock;
   let mockFindByUserIds: jest.Mock;
   let userService: jest.Mocked<UserService>;
   let invitationService: jest.Mocked<InvitationService>;
@@ -29,7 +29,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
   beforeEach(() => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
-    mockListUsers = jest.fn();
+    mockListUsersByOrganization = jest.fn();
     mockFindByUserIds = jest.fn();
 
     const accountsPort = {
@@ -39,7 +39,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
 
     userService = {
       getUserById: mockGetUserById,
-      listUsers: mockListUsers,
+      listUsersByOrganization: mockListUsersByOrganization,
     } as unknown as jest.Mocked<UserService>;
 
     invitationService = {
@@ -75,7 +75,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     });
 
     mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([]);
+    mockListUsersByOrganization.mockResolvedValue([]);
     mockFindByUserIds.mockResolvedValue([]);
 
     const command: ListOrganizationUserStatusesCommand = {
@@ -112,7 +112,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       });
 
       mockGetUserById.mockResolvedValue(adminUser);
-      mockListUsers.mockResolvedValue([activeUser]);
+      mockListUsersByOrganization.mockResolvedValue([activeUser]);
       mockFindByUserIds.mockResolvedValue([]);
 
       const command: ListOrganizationUserStatusesCommand = {
@@ -121,6 +121,10 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       };
 
       result = await useCase.execute(command);
+    });
+
+    it('queries only the users of the organization', () => {
+      expect(mockListUsersByOrganization).toHaveBeenCalledWith(organizationId);
     });
 
     it('returns accepted invitation status', () => {
@@ -167,7 +171,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       invitationToken = invitation.token;
 
       mockGetUserById.mockResolvedValue(adminUser);
-      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockListUsersByOrganization.mockResolvedValue([inactiveUser]);
       mockFindByUserIds.mockResolvedValue([invitation]);
 
       const command: ListOrganizationUserStatusesCommand = {
@@ -221,7 +225,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       });
 
       mockGetUserById.mockResolvedValue(adminUser);
-      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockListUsersByOrganization.mockResolvedValue([inactiveUser]);
       mockFindByUserIds.mockResolvedValue([invitation]);
 
       const command: ListOrganizationUserStatusesCommand = {
@@ -268,7 +272,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       });
 
       mockGetUserById.mockResolvedValue(adminUser);
-      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockListUsersByOrganization.mockResolvedValue([inactiveUser]);
       mockFindByUserIds.mockResolvedValue([]);
 
       const command: ListOrganizationUserStatusesCommand = {
@@ -330,7 +334,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       newInvitationToken = newInvitation.token;
 
       mockGetUserById.mockResolvedValue(adminUser);
-      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockListUsersByOrganization.mockResolvedValue([inactiveUser]);
       mockFindByUserIds.mockResolvedValue([oldInvitation, newInvitation]);
 
       const command: ListOrganizationUserStatusesCommand = {

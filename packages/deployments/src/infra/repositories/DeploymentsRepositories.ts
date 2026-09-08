@@ -91,10 +91,6 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
     return this.targetRepository;
   }
 
-  getPackagesDeploymentRepository(): IPackagesDeploymentRepository {
-    return this.packagesDeploymentRepository;
-  }
-
   getRenderModeConfigurationRepository(): IRenderModeConfigurationRepository {
     return this.renderModeConfigurationRepository;
   }

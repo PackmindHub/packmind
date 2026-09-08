@@ -4,12 +4,11 @@ export {
   ParserNotAvailableError,
   ParserInitializationError,
 } from './core/ParserError';
-export type { ASTNode, ParseResult } from './core/types/ast.types';
+export type { ASTNode } from './core/types/ast.types';
 export { LinterAstAdapter } from './application/LinterAstAdapter';
 
 // Convenience exports
 export { default as TypeScriptParser } from './parsers/TypeScriptParser';
-export { default as TypeScriptTSXParser } from './parsers/TypeScriptTSXParser';
 export { default as JavaScriptParser } from './parsers/JavaScriptParser';
 export { default as CPPParser } from './parsers/CPPParser';
 export { default as GoParser } from './parsers/GoParser';

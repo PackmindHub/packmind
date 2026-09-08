@@ -61,7 +61,6 @@ describe('CreateInvitationsUseCase', () => {
       createInactiveUser: jest.fn(),
       addOrganizationMembership: jest.fn(),
       hashPassword: jest.fn(),
-      listUsers: jest.fn(),
       validatePassword: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 

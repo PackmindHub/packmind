@@ -4,8 +4,6 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { resolveEditor } from './resolveEditor';
 
-const MAX_MESSAGE_LENGTH = 1024;
-
 const EDITOR_TEMPLATE = `
 # Enter a message describing the intent behind these changes.
 # Lines starting with '#' will be ignored.
@@ -41,23 +39,4 @@ export function openEditorForMessage(prefill?: string): string {
       // ignore cleanup errors
     }
   }
-}
-
-export function validateMessage(
-  message: string,
-): { valid: true; message: string } | { valid: false; error: string } {
-  const trimmed = message.trim();
-
-  if (trimmed.length === 0) {
-    return { valid: false, error: 'Message cannot be empty.' };
-  }
-
-  if (trimmed.length > MAX_MESSAGE_LENGTH) {
-    return {
-      valid: false,
-      error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters (got ${trimmed.length}).`,
-    };
-  }
-
-  return { valid: true, message: trimmed };
 }

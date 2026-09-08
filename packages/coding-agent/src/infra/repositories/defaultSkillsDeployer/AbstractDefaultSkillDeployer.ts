@@ -8,12 +8,12 @@ export type SemVer = `${IntString}.${IntString}.${IntString}`;
 /**
  * Canonical name of the Packmind CLI executable.
  */
-export const PACKMIND_EXEC_NAME = 'packmind';
+const PACKMIND_EXEC_NAME = 'packmind';
 
 /**
  * Name the Packmind CLI executable shipped under before the rename.
  */
-export const LEGACY_PACKMIND_EXEC_NAME = 'packmind-cli';
+const LEGACY_PACKMIND_EXEC_NAME = 'packmind-cli';
 
 /**
  * CLI release that introduced the `packmind` executable. Installations older
@@ -21,7 +21,7 @@ export const LEGACY_PACKMIND_EXEC_NAME = 'packmind-cli';
  * for them must keep naming the legacy executable — telling those users to run
  * `packmind` points them at a binary they do not have.
  */
-export const PACKMIND_EXEC_NAME_SINCE_VERSION: SemVer = '0.24.0';
+const PACKMIND_EXEC_NAME_SINCE_VERSION: SemVer = '0.24.0';
 
 /**
  * Drops the `-next` pre-release suffix so an in-development build compares as

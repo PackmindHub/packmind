@@ -20,8 +20,8 @@ workspace's pnpm lockfile.
 Registered keys: `typescript`, `javascript`, `python`, `java`, `go`, `kotlin`, `swift`, `ruby`,
 `php`, `csharp`, `cpp`, `css`, `scss`, `html`, `json`, `yaml`.
 
-> `TypeScriptTSXParser` exists in `src/parsers/` and is exported from `src/index.ts`, but is **not**
-> in `parserClasses` — `getParser('tsx')` throws. Use it directly if you need TSX.
+> `res/` still carries `tree-sitter-tsx.wasm`, but no parser loads it — TSX has no parser at all, so
+> `getParser('tsx')` throws.
 
 > `css` is registered but `res/` has no `tree-sitter-css.wasm` — only `tree-sitter-scss.wasm`.
 > `getParser('css')` throws `ParserInitializationError` at runtime; add the missing grammar file
@@ -37,7 +37,7 @@ Other entry points: `src/core/BaseParser.ts` (the class to extend) and
 1. Drop `tree-sitter-<lang>.wasm` into `res/`.
 2. Add `src/parsers/<Lang>Parser.ts` extending `BaseParser`, exported as `default`.
 3. Register it in `parserClasses` in `ParserRegistry.ts` — this is the step that makes
-   `getParser()` and `getAvailableParsers()` see it.
+   `getParser()` see it.
 4. Export it from `src/index.ts` (the convenience exports use
    `export { default as <Lang>Parser }`).
 5. Add a spec modelled on `src/parsers/TypeScriptParser.spec.ts`.

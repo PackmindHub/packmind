@@ -16,7 +16,6 @@ export type {
   RuleWithId,
   RuleExample,
   ListedStandard,
-  ListStandardsResult,
 } from './IStandardsGateway';
 
 export interface IPackmindGateway {
