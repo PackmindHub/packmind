@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -477,31 +477,97 @@ function DistributedAs({ path }: Readonly<{ path: string }>) {
 }
 
 /**
- * The three below share a shape: the path when the entity has arrived, and the
- * list of landings, which fetches and fails on its own.
+ * The frame the three types share: the path, then either the landings or the
+ * reason there are none.
  *
  * The path is conditional and carries no spinner of its own on purpose. It
  * needs the entity only for a slug, and a failed slug must not empty a tab
  * whose subject is the list underneath it.
+ *
+ * The count decides which half renders, and `undefined` is not zero: while the
+ * query is in flight nothing is claimed, so the list stands with its own
+ * spinner and neither the empty state nor the scope line flashes on the way in.
  */
+function DistributionBody({
+  path,
+  count,
+  children,
+}: Readonly<{
+  path: string | null;
+  /** Undefined while the landings are still being fetched. */
+  count: number | undefined;
+  children: ReactNode;
+}>) {
+  if (count === 0) {
+    return (
+      <PMVStack gap={6} align="stretch" maxWidth="72ch">
+        {path && <DistributedAs path={path} />}
+        {/*
+          Not `DeploymentsHistory`'s own empty state, which is centred, bold,
+          and reads as a query that failed. Nothing failed here: this is the
+          ordinary state of a component just written, and the line says what
+          would send it rather than reporting an absence.
+        */}
+        <PMText as="div" fontSize="sm" color="secondary">
+          Not distributed yet. A component travels inside a package, so
+          distributing a package that carries this one is what sends it.
+        </PMText>
+      </PMVStack>
+    );
+  }
+
+  return (
+    <PMVStack gap={6} align="stretch">
+      {path && <DistributedAs path={path} />}
+      <PMVStack gap={2} align="stretch">
+        {/*
+          Said because the frame around it says something else. The back link
+          names the package the component was opened from, and these rows can
+          name a different one: a component sits in several packages, and this
+          is every landing of it rather than the ones this package caused.
+          Filtering to the open package would be the alternative, and it would
+          hide real landings.
+
+          Held back until the count is known, so it does not appear above a
+          spinner that resolves to nothing.
+        */}
+        {count !== undefined && (
+          <PMText as="div" fontSize="xs" color="secondary">
+            Every landing of this component, whichever package sent it. The
+            Package column says which.
+          </PMText>
+        )}
+        {children}
+      </PMVStack>
+    </PMVStack>
+  );
+}
+
 function CommandDistribution({
   commandId,
   orgSlug,
   spaceSlug,
 }: Readonly<{ commandId: CommandId; orgSlug: string; spaceSlug: string }>) {
   const { data: command } = useGetCommandByIdQuery(commandId);
+  /*
+   * The same query the tab's own count runs, by the same id, so React Query
+   * answers both from one request. Asked for here because the frame needs the
+   * number to decide which half of itself to render, and the list below it
+   * cannot report upward.
+   */
+  const { data: landings } = useListCommandDistributionsQuery(commandId);
 
   return (
-    <PMVStack gap={6} align="stretch">
-      {command?.slug && (
-        <DistributedAs path={`.packmind/recipes/${command.slug}.md`} />
-      )}
+    <DistributionBody
+      path={command?.slug ? `.packmind/recipes/${command.slug}.md` : null}
+      count={landings?.length}
+    >
       <CommandDistributionsList
         recipeId={commandId}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
-    </PMVStack>
+    </DistributionBody>
   );
 }
 
@@ -512,16 +578,19 @@ function StandardDistribution({
 }: Readonly<{ standardId: StandardId; orgSlug: string; spaceSlug: string }>) {
   const { data } = useGetStandardByIdQuery(standardId);
   const slug = data?.standard?.slug;
+  const { data: landings } = useListStandardDistributionsQuery(standardId);
 
   return (
-    <PMVStack gap={6} align="stretch">
-      {slug && <DistributedAs path={`.packmind/standards/${slug}.md`} />}
+    <DistributionBody
+      path={slug ? `.packmind/standards/${slug}.md` : null}
+      count={landings?.length}
+    >
       <StandardDistributionsList
         standardId={standardId}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
-    </PMVStack>
+    </DistributionBody>
   );
 }
 
@@ -537,16 +606,19 @@ function SkillDistribution({
 }: Readonly<{ skillId: SkillId; orgSlug: string; spaceSlug: string }>) {
   const { data } = useGetSkillWithFilesByIdQuery(skillId);
   const slug = data?.latestVersion.slug;
+  const { data: landings } = useListSkillDistributionsQuery(skillId);
 
   return (
-    <PMVStack gap={6} align="stretch">
-      {slug && <DistributedAs path={`.packmind/skills/${slug}/`} />}
+    <DistributionBody
+      path={slug ? `.packmind/skills/${slug}/` : null}
+      count={landings?.length}
+    >
       <SkillDistributionsList
         skillId={skillId}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
-    </PMVStack>
+    </DistributionBody>
   );
 }
 

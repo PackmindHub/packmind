@@ -202,7 +202,7 @@ describe('ContextComponentDetail', () => {
       expect(screen.queryByText(/^\.packmind\//)).not.toBeInTheDocument();
     });
 
-    it('leaves the list underneath it standing meanwhile', async () => {
+    it('leaves the list underneath it standing while it waits', async () => {
       await renderDetail(componentOfType('command', COMMAND_ID));
 
       expect(screen.getByTestId('command-list')).toBeVisible();
@@ -274,5 +274,85 @@ describe('the landings listed under the path', () => {
     await renderDetail(componentOfType('skill', SKILL_ID));
 
     expect(screen.getByTestId('skill-list')).toBeVisible();
+  });
+});
+
+describe('the distribution body', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetToEmpty();
+  });
+
+  describe('when the component has landed nowhere', () => {
+    beforeEach(() => {
+      (useListCommandDistributionsQuery as Mock).mockReturnValue({ data: [] });
+      (useGetCommandByIdQuery as Mock).mockReturnValue({
+        data: { slug: 'run-migrations' },
+      });
+    });
+
+    it('says what would send it rather than reporting an absence', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.getByText(/Not distributed yet/)).toBeVisible();
+    });
+
+    it('still prints the path an agent would read it from', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.getByText('.packmind/recipes/run-migrations.md'),
+      ).toBeVisible();
+    });
+
+    it("does not mount the list's own empty state underneath it", async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.queryByTestId('command-list')).not.toBeInTheDocument();
+    });
+
+    it('leaves the scope line out, there being nothing to scope', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.queryByText(/whichever package sent it/),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the component has landed somewhere', () => {
+    beforeEach(() => {
+      (useListCommandDistributionsQuery as Mock).mockReturnValue({
+        data: [{ id: 'a' }],
+      });
+    });
+
+    it('says the list is not scoped to the package being read', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.getByText(/whichever package sent it/)).toBeVisible();
+    });
+
+    it('mounts the list', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.getByTestId('command-list')).toBeVisible();
+    });
+  });
+
+  describe('while the landings are still being fetched', () => {
+    it('claims neither that there are none nor how they are scoped', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(screen.queryByText(/Not distributed yet/)).not.toBeInTheDocument();
+    });
+
+    it('holds the scope line back until the count is known', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.queryByText(/whichever package sent it/),
+      ).not.toBeInTheDocument();
+    });
   });
 });
