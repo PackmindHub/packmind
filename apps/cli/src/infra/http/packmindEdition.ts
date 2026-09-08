@@ -4,9 +4,9 @@ import { CommunityEditionError } from '../../domain/errors/CommunityEditionError
 
 // Keyed by the union, so a new server-side edition is a compile error here
 // until this file says what the CLI does with it.
-const KNOWN_EDITIONS: Record<PackmindEdition, PackmindEdition> = {
-  enterprise: 'enterprise',
-  community: 'community',
+const KNOWN_EDITIONS: Record<PackmindEdition, true> = {
+  enterprise: true,
+  community: true,
 };
 
 // /auth/me has answered `cloud`/`oss` since long before these names, and
@@ -22,9 +22,16 @@ export function parsePackmindEdition(value: unknown): PackmindEdition | null {
     return null;
   }
 
-  return (
-    KNOWN_EDITIONS[value as PackmindEdition] ?? LEGACY_EDITIONS[value] ?? null
-  );
+  // hasOwnProperty, not a bare lookup: `constructor` and `toString` are
+  // truthy on any object literal, and a header saying either would otherwise
+  // parse as an edition and silence the 404 it came with.
+  if (Object.prototype.hasOwnProperty.call(KNOWN_EDITIONS, value)) {
+    return value as PackmindEdition;
+  }
+
+  return Object.prototype.hasOwnProperty.call(LEGACY_EDITIONS, value)
+    ? LEGACY_EDITIONS[value]
+    : null;
 }
 
 /**

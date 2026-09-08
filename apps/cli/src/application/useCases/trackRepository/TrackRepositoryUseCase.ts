@@ -95,8 +95,8 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       return { status: 'branch-not-found', owner, repo, branch };
     }
 
-    // Read the current tracking state. Also the single point where a disabled
-    // feature flag surfaces (server returns 404).
+    // Read the current tracking state. Also the single point where a server
+    // predating repository tracking surfaces (it has no route, so 404).
     const { gitRepo: tracked } = await this.gateway.getTrackedRepository({
       owner,
       repo,

@@ -60,6 +60,17 @@ describe('parsePackmindEdition', () => {
       expect(parsePackmindEdition(undefined)).toBeNull();
     });
   });
+
+  // A bare lookup on an object literal answers these, and a truthy answer
+  // here would silence the 404 the header arrived with.
+  describe.each(['constructor', 'toString', 'valueOf', '__proto__'])(
+    'when the value is the inherited property %s',
+    (value) => {
+      it('reads nothing', () => {
+        expect(parsePackmindEdition(value)).toBeNull();
+      });
+    },
+  );
 });
 
 describe('throwIfFeatureAbsent', () => {

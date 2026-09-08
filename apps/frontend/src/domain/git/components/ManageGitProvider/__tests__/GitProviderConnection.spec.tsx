@@ -144,7 +144,7 @@ describe('GitProviderConnection', () => {
       createMockMutation<ReturnType<typeof useUpdateGitProviderMutation>>(),
     );
 
-    // Default: OSS user
+    // Default: community-edition user
     mockUseGetMeQuery.mockReturnValue({
       data: {
         authenticated: true,
@@ -246,7 +246,7 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when edition is cloud', () => {
+  describe('when edition is enterprise', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
@@ -270,7 +270,7 @@ describe('GitProviderConnection', () => {
       } as ReturnType<typeof useGetMeQuery>);
     });
 
-    it('shows the cloud install button in the App tab', () => {
+    it('shows the hosted install button in the App tab', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
@@ -280,7 +280,7 @@ describe('GitProviderConnection', () => {
       ).toBeInTheDocument();
     });
 
-    it('does not render the OSS manual form inputs', () => {
+    it('does not render the self-hosted manual form inputs', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
@@ -348,7 +348,7 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when OSS edition and GitHub App tab is active', () => {
+  describe('when community edition and GitHub App tab is active', () => {
     it('does not render installation ID input (manual form is gone)', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,

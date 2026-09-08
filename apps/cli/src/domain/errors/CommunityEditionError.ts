@@ -1,6 +1,8 @@
 /**
  * Error thrown when an endpoint is not available in the Community Edition.
- * This error should be caught and handled gracefully (exit 0 with a message).
+ * Caught per command rather than centrally, because what to do about a missing
+ * feature differs: `lint` has nothing to lint and exits 0, `playbook submit`
+ * has changes it could not submit and exits 1.
  */
 export class CommunityEditionError extends Error {
   public readonly isCommunityEditionError = true;
@@ -16,5 +18,11 @@ export class CommunityEditionError extends Error {
 export function isCommunityEditionError(
   tbd: unknown,
 ): tbd is CommunityEditionError {
-  return (tbd as CommunityEditionError).isCommunityEditionError;
+  // `throw null` is legal, and reading a property off it here would replace
+  // the caller's error with a TypeError from its own catch block.
+  return (
+    typeof tbd === 'object' &&
+    tbd !== null &&
+    (tbd as CommunityEditionError).isCommunityEditionError === true
+  );
 }
