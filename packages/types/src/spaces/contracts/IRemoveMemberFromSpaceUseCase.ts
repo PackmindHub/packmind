@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { UserId } from '../../accounts/User';
 import { SpaceId } from '../SpaceId';
 
@@ -8,8 +8,3 @@ export type RemoveMemberFromSpaceCommand = PackmindCommand & {
 };
 
 export type RemoveMemberFromSpaceResponse = { removed: boolean };
-
-export type IRemoveMemberFromSpaceUseCase = IUseCase<
-  RemoveMemberFromSpaceCommand,
-  RemoveMemberFromSpaceResponse
->;

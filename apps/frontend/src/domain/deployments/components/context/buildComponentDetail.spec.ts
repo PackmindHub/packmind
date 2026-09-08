@@ -5,6 +5,11 @@ import type {
   ContextGroup,
 } from './buildPackageContext';
 import {
+  COMPONENTS_TAB,
+  DISTRIBUTION_TAB,
+  HISTORY_TAB,
+  INSTRUCTIONS_TAB,
+  isComponentOnlyTab,
   componentDetailHref,
   componentEditHref,
   componentEntryHref,
@@ -15,6 +20,8 @@ import {
   selectDetailComponent,
   selectSkillFile,
   sortFilesByPath,
+  isDefaultTab,
+  selectTab,
   sortRulesByContent,
   withPaneDetailHref,
 } from './buildComponentDetail';
@@ -105,6 +112,32 @@ describe('packageDetailParams', () => {
     packageDetailParams(original, PACKAGE);
 
     expect(original.get('component')).toBe('command-1');
+  });
+
+  describe('when the component was being read on a tab a package does not have', () => {
+    it('drops the tab as well, so the next component does not inherit it', () => {
+      expect(
+        packageDetailParams(
+          new URLSearchParams(
+            `package=pkg-1&component=command-1&tab=${HISTORY_TAB}`,
+          ),
+          PACKAGE,
+        ).has('tab'),
+      ).toBe(false);
+    });
+  });
+
+  describe('when the tab is one both depths have', () => {
+    it('keeps it, so closing a component stays on the same question', () => {
+      expect(
+        packageDetailParams(
+          new URLSearchParams(
+            `package=pkg-1&component=command-1&tab=${DISTRIBUTION_TAB}`,
+          ),
+          PACKAGE,
+        ).get('tab'),
+      ).toBe(DISTRIBUTION_TAB);
+    });
   });
 });
 
@@ -396,5 +429,91 @@ describe('selectSkillFile', () => {
 
   it('falls back to the instructions for SKILL.md, which is not a file', () => {
     expect(selectSkillFile(files, 'SKILL.md')).toBeNull();
+  });
+});
+
+describe('selectTab', () => {
+  describe('when no component is open', () => {
+    it('defaults to the package contents', () => {
+      expect(selectTab(null, false)).toBe(COMPONENTS_TAB);
+    });
+
+    it('reads the shared value as the package distribution', () => {
+      expect(selectTab(DISTRIBUTION_TAB, false)).toBe(DISTRIBUTION_TAB);
+    });
+
+    it("ignores the component's default, which is not a package tab", () => {
+      expect(selectTab(INSTRUCTIONS_TAB, false)).toBe(COMPONENTS_TAB);
+    });
+  });
+
+  describe('when a component is open', () => {
+    it('defaults to its instructions', () => {
+      expect(selectTab(null, true)).toBe(INSTRUCTIONS_TAB);
+    });
+
+    it('reads the shared value as the component distribution', () => {
+      expect(selectTab(DISTRIBUTION_TAB, true)).toBe(DISTRIBUTION_TAB);
+    });
+
+    it("ignores the package's default, which is not a component tab", () => {
+      expect(selectTab(COMPONENTS_TAB, true)).toBe(INSTRUCTIONS_TAB);
+    });
+
+    it('reads the history it alone has', () => {
+      expect(selectTab(HISTORY_TAB, true)).toBe(HISTORY_TAB);
+    });
+  });
+
+  /*
+   * The address outlives the component: closing one leaves whatever tab was
+   * open in the URL, and a package has no history to show.
+   */
+  describe('when a component-only tab is asked for with no component open', () => {
+    it('answers with the package default', () => {
+      expect(selectTab(HISTORY_TAB, false)).toBe(COMPONENTS_TAB);
+    });
+  });
+
+  describe('when the address was hand edited', () => {
+    it('answers with the package default while no component is open', () => {
+      expect(selectTab('rules', false)).toBe(COMPONENTS_TAB);
+    });
+
+    it('answers with the component default while one is open', () => {
+      expect(selectTab('rules', true)).toBe(INSTRUCTIONS_TAB);
+    });
+  });
+});
+
+describe('isDefaultTab', () => {
+  it("keeps the package's default out of the address", () => {
+    expect(isDefaultTab(COMPONENTS_TAB)).toBe(true);
+  });
+
+  it("keeps the component's default out of the address", () => {
+    expect(isDefaultTab(INSTRUCTIONS_TAB)).toBe(true);
+  });
+
+  it('writes the tab the two depths share', () => {
+    expect(isDefaultTab(DISTRIBUTION_TAB)).toBe(false);
+  });
+
+  it('writes the tab only a component has', () => {
+    expect(isDefaultTab(HISTORY_TAB)).toBe(false);
+  });
+});
+
+describe('isComponentOnlyTab', () => {
+  it('says so of the history', () => {
+    expect(isComponentOnlyTab(HISTORY_TAB)).toBe(true);
+  });
+
+  it('does not say so of the tab both depths have', () => {
+    expect(isComponentOnlyTab(DISTRIBUTION_TAB)).toBe(false);
+  });
+
+  it('does not say so of a default', () => {
+    expect(isComponentOnlyTab(INSTRUCTIONS_TAB)).toBe(false);
   });
 });

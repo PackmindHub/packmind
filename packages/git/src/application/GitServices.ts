@@ -4,7 +4,7 @@ import { GitCommitService } from './services/GitCommitService';
 import { instrumentComponents } from '@packmind/node-utils';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
-import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+
 import { IOrganizationGitHubAppRepository } from '../domain/repositories/IOrganizationGitHubAppRepository';
 
 /**
@@ -56,10 +56,6 @@ export class GitServices {
 
   getGitRepoFactory(): IGitRepoFactory {
     return this.gitRepositories.getGitRepoFactory();
-  }
-
-  getGitProviderFactory(): IGitProviderFactory {
-    return this.gitRepositories.getGitProviderFactory();
   }
 
   getOrganizationGitHubAppRepository(): IOrganizationGitHubAppRepository {

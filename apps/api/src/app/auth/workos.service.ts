@@ -38,10 +38,6 @@ export class WorkOsService {
     return true;
   }
 
-  async isConfigured(): Promise<boolean> {
-    return this.ensureInitialized();
-  }
-
   async getAvailableProviders(): Promise<SocialProvider[]> {
     const configured = await this.ensureInitialized();
     if (!configured) {

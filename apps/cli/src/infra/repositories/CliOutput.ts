@@ -42,10 +42,6 @@ class CliFormatter {
     return chalk.bold(title);
   }
 
-  public static slug(slug: string) {
-    return chalk.blue.bold(slug);
-  }
-
   public static label(label: string) {
     return chalk.dim(label);
   }

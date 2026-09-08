@@ -7,12 +7,10 @@ import {
   CreateStandardSamplesResponse,
   DeleteStandardCommand,
   DeleteStandardsBatchCommand,
-  Distribution,
   GetStandardByIdResponse,
   IDeploymentPort,
   ListStandardsBySpaceResponse,
   OrganizationId,
-  PublishStandardsCommand,
   RuleId,
   SampleInput,
   SpaceId,
@@ -157,18 +155,6 @@ export class StandardsService {
 
   async getStandardVersionsById(id: StandardId): Promise<StandardVersion[]> {
     return this.standardsHexa.getAdapter().listStandardVersions(id);
-  }
-
-  async deployStandardsToGit(
-    command: PublishStandardsCommand,
-  ): Promise<Distribution[]> {
-    const result = await this.deploymentAdapter.publishArtifacts({
-      ...command,
-      recipeVersionIds: [],
-      packagesSlugs: [],
-      packageIds: [],
-    });
-    return result.distributions;
   }
 
   async deleteStandard(command: DeleteStandardCommand): Promise<void> {

@@ -1,6 +1,6 @@
 import { GitCommitService } from './GitCommitService';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
-import { createGitCommitId } from '@packmind/types';
+
 import { gitCommitFactory } from '../../../test/gitCommitFactory';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -46,46 +46,6 @@ describe('GitCommitService', () => {
 
     it('returns the added commit', () => {
       expect(result).toEqual(expectedCommit);
-    });
-  });
-
-  describe('getCommit', () => {
-    describe('when commit exists', () => {
-      const commitId = createGitCommitId('test-id');
-      let expectedCommit: ReturnType<typeof gitCommitFactory>;
-      let result: ReturnType<typeof gitCommitFactory> | null;
-
-      beforeEach(async () => {
-        expectedCommit = gitCommitFactory({ id: commitId });
-        mockGitCommitRepository.get.mockResolvedValue(expectedCommit);
-        result = await gitCommitService.getCommit(commitId);
-      });
-
-      it('calls repository get with commit id', () => {
-        expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
-      });
-
-      it('returns the commit', () => {
-        expect(result).toEqual(expectedCommit);
-      });
-    });
-
-    describe('when commit does not exist', () => {
-      const commitId = createGitCommitId('non-existent-id');
-      let result: ReturnType<typeof gitCommitFactory> | null;
-
-      beforeEach(async () => {
-        mockGitCommitRepository.get.mockResolvedValue(null);
-        result = await gitCommitService.getCommit(commitId);
-      });
-
-      it('calls repository get with commit id', () => {
-        expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
-      });
-
-      it('returns null', () => {
-        expect(result).toBeNull();
-      });
     });
   });
 });

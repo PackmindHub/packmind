@@ -41,6 +41,84 @@ export const COMPONENT_PARAM = 'component';
 export const FILE_PARAM = 'file';
 
 /**
+ * Which half of what is on screen is being read.
+ *
+ * One parameter for both depths, because two things on this surface cannot be
+ * open at once: while a component is open `tab` names the component's tab, and
+ * the rest of the time it names the package's. Reconciling two parameters that
+ * can disagree is worse than reading one two ways.
+ *
+ * In the URL for the same reason the package and the component are: "this
+ * package is behind in two repositories" is a thing people send each other, and
+ * it has to survive being pasted.
+ */
+export const TAB_PARAM = 'tab';
+
+export const COMPONENTS_TAB = 'components';
+export const INSTRUCTIONS_TAB = 'instructions';
+
+/**
+ * Shared by both depths on purpose. Closing a component while reading where it
+ * landed lands on where its package landed, which is the same question one
+ * scope out, so the tab that survives the move is the honest answer.
+ */
+export const DISTRIBUTION_TAB = 'distribution';
+
+/**
+ * Not shared, unlike the one above it. A package has no history of its own: the
+ * versions listed here belong to one component, and closing the component
+ * leaves nothing for this tab to be about.
+ */
+export const HISTORY_TAB = 'history';
+
+/**
+ * The tabs that exist only while a component is open. Closing the component
+ * has to take them out of the address as well as off the screen, or the next
+ * component opened from that package inherits a tab the reader never picked.
+ */
+const COMPONENT_ONLY_TABS: ReadonlySet<string> = new Set([HISTORY_TAB]);
+
+/** Whether this tab stops existing when the component closes. */
+export function isComponentOnlyTab(value: string): boolean {
+  return COMPONENT_ONLY_TABS.has(value);
+}
+
+/** The default of each depth, which is what stays out of the address. */
+const DEFAULT_TABS: ReadonlySet<string> = new Set([
+  COMPONENTS_TAB,
+  INSTRUCTIONS_TAB,
+]);
+
+/**
+ * The tab the address asks for, read against what is on screen.
+ *
+ * Anything other than the one shared value reads as that depth's default rather
+ * than as an error, so a hand-edited or truncated address answers with the
+ * screen the reader already asked for.
+ */
+export function selectTab(
+  requested: string | null,
+  isComponentOpen: boolean,
+): string {
+  if (requested === DISTRIBUTION_TAB) return DISTRIBUTION_TAB;
+  if (requested && isComponentOnlyTab(requested) && isComponentOpen) {
+    return requested;
+  }
+  return isComponentOpen ? INSTRUCTIONS_TAB : COMPONENTS_TAB;
+}
+
+/**
+ * Whether selecting this tab should drop the parameter instead of writing it.
+ *
+ * Both defaults, not just the package's. Writing `?tab=instructions` would give
+ * the plain reading of a component two addresses, and the one nobody links to
+ * is the one that ends up pasted.
+ */
+export function isDefaultTab(value: string): boolean {
+  return DEFAULT_TABS.has(value);
+}
+
+/**
  * Which types the pane can show itself, and the only place it is decided.
  *
  * All three types say yes now, so no row in a package pane leads out of the
@@ -102,6 +180,16 @@ export function packageDetailParams(
   next.set(PACKAGE_PARAM, packageId);
   next.delete(COMPONENT_PARAM);
   next.delete(FILE_PARAM);
+  /*
+   * And the tab, when it was one only a component has. `selectTab` already
+   * reads such a value as the package's default, so the screen would be right
+   * either way; the address would not, and it is the address that gets pasted
+   * and that the next component opened from here would inherit.
+   */
+  const tab = next.get(TAB_PARAM);
+  if (tab && isComponentOnlyTab(tab)) {
+    next.delete(TAB_PARAM);
+  }
   return next;
 }
 

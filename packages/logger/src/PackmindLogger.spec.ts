@@ -84,20 +84,8 @@ describe('PackmindLogger', () => {
       expect(() => logger.info('Test info message')).not.toThrow();
     });
 
-    it('executes http method without throwing', () => {
-      expect(() => logger.http('Test http message')).not.toThrow();
-    });
-
-    it('executes verbose method without throwing', () => {
-      expect(() => logger.verbose('Test verbose message')).not.toThrow();
-    });
-
     it('executes debug method without throwing', () => {
       expect(() => logger.debug('Test debug message')).not.toThrow();
-    });
-
-    it('executes silly method without throwing', () => {
-      expect(() => logger.silly('Test silly message')).not.toThrow();
     });
 
     it('accepts metadata in log methods', () => {
@@ -105,17 +93,6 @@ describe('PackmindLogger', () => {
       expect(() =>
         logger.info('Test message with metadata', meta),
       ).not.toThrow();
-    });
-
-    it('uses generic log method with level parameter', () => {
-      expect(() =>
-        logger.log(LogLevel.INFO, 'Test generic log message'),
-      ).not.toThrow();
-    });
-
-    it('allows changing log level after construction', () => {
-      logger = new PackmindLogger('ConfigurableLogger', LogLevel.ERROR);
-      expect(() => logger.setLevel(LogLevel.INFO)).not.toThrow();
     });
   });
 
@@ -163,19 +140,6 @@ describe('PackmindLogger', () => {
         consoleSpy.mockRestore();
       });
 
-      it('executes logging methods without throwing', () => {
-        expect(() => {
-          logger.error('Silent error');
-          logger.warn('Silent warn');
-          logger.info('Silent info');
-          logger.http('Silent http');
-          logger.verbose('Silent verbose');
-          logger.debug('Silent debug');
-          logger.silly('Silent silly');
-          logger.log(LogLevel.ERROR, 'Silent generic log');
-        }).not.toThrow();
-      });
-
       it('does not produce console output', () => {
         logger.error('Silent error');
         logger.warn('Silent warn');
@@ -183,43 +147,6 @@ describe('PackmindLogger', () => {
 
         expect(consoleSpy).not.toHaveBeenCalled();
       });
-    });
-
-    describe('when switching to SILENT mode after construction', () => {
-      let consoleSpy: jest.SpyInstance;
-
-      beforeEach(() => {
-        logger = new PackmindLogger('TestLogger', LogLevel.INFO);
-        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-        logger.setLevel(LogLevel.SILENT);
-      });
-
-      afterEach(() => {
-        consoleSpy.mockRestore();
-      });
-
-      it('executes logging methods without throwing', () => {
-        expect(() => {
-          logger.error('Silent error after setLevel');
-          logger.info('Silent info after setLevel');
-        }).not.toThrow();
-      });
-
-      it('does not produce console output', () => {
-        logger.error('Silent error after setLevel');
-        logger.info('Silent info after setLevel');
-
-        expect(consoleSpy).not.toHaveBeenCalled();
-      });
-    });
-
-    it('can switch from SILENT mode back to normal logging', () => {
-      logger = new PackmindLogger('TestLogger', LogLevel.SILENT);
-      logger.setLevel(LogLevel.ERROR);
-
-      expect(() => {
-        logger.error('Error after switching from silent');
-      }).not.toThrow();
     });
   });
 
@@ -277,20 +204,6 @@ describe('PackmindLogger', () => {
           '2026-08-14T17:00:00.000Z [TestService] info: Something happened',
         );
       });
-    });
-  });
-
-  describe('integration test', () => {
-    it('creates logger and logs messages at different levels', () => {
-      logger = new PackmindLogger('IntegrationTestLogger', LogLevel.INFO);
-
-      expect(() => {
-        logger.error('Integration test error');
-        logger.warn('Integration test warn');
-        logger.info('Integration test info');
-        logger.setLevel(LogLevel.DEBUG);
-        logger.debug('Integration test debug');
-      }).not.toThrow();
     });
   });
 });

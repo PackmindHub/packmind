@@ -9,13 +9,3 @@ export {
   DEFAULT_GEMINI_MODELS,
   DEFAULT_AZURE_OPENAI_API_VERSION,
 } from '@packmind/types';
-
-/**
- * OpenAI official API endpoint
- */
-export const OPENAI_ENDPOINT = 'https://api.openai.com/v1';
-
-/**
- * Anthropic official API endpoint
- */
-export const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com';

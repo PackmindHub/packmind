@@ -59,38 +59,4 @@ describe.skip('ParserRegistry', () => {
       });
     });
   });
-
-  describe('getAvailableParsers', () => {
-    describe('when retrieving available parsers', () => {
-      let available: string[];
-
-      beforeEach(() => {
-        available = registry.getAvailableParsers();
-      });
-
-      it('returns an array', () => {
-        expect(Array.isArray(available)).toBe(true);
-      });
-
-      it('returns a non-empty array', () => {
-        expect(available.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('includes typescript in available parsers', () => {
-      const available = registry.getAvailableParsers();
-
-      expect(available).toContain('typescript');
-    });
-  });
-
-  describe('clearCache', () => {
-    it('clears cached parser instances', async () => {
-      const parser1 = await registry.getParser('typescript');
-      registry.clearCache();
-      const parser2 = await registry.getParser('typescript');
-
-      expect(parser1).not.toBe(parser2);
-    });
-  });
 });

@@ -200,14 +200,6 @@ export class HexaRegistry {
   }
 
   /**
-   * @deprecated This method is no longer needed. Initialization is now handled in init().
-   * This method is kept for backward compatibility but does nothing.
-   */
-  public async initAsync(): Promise<void> {
-    // No-op: initialization is now handled in init()
-  }
-
-  /**
    * Get a registered and initialized hexa by its constructor.
    *
    * @param constructor - The constructor of the hexa
@@ -255,28 +247,6 @@ export class HexaRegistry {
       throw new Error(`Service ${constructor.name} not registered`);
     }
     return service as T;
-  }
-
-  /**
-   * Get a registered and initialized hexa by its class name.
-   * Use this method only when direct imports would create circular dependencies.
-   * Prefer using get() with the constructor class when possible.
-   *
-   * @param className - The name of the hexa class (e.g., 'LinterHexa')
-   * @returns The hexa instance or undefined if not found
-   */
-  public getByName<T extends BaseHexa = BaseHexa>(
-    className: string,
-  ): T | undefined {
-    if (!this.isInitialized)
-      throw new Error('Registry not initialized. Call init() first.');
-
-    for (const [constructor, hexa] of this.hexas.entries()) {
-      if (constructor.name === className) {
-        return hexa as T;
-      }
-    }
-    return undefined;
   }
 
   /**
@@ -330,33 +300,6 @@ export class HexaRegistry {
   }
 
   /**
-   * Get the DataSource used by this registry.
-   *
-   * @returns The DataSource instance
-   * @throws Error if registry is not initialized
-   */
-  public getDataSource(): DataSource {
-    if (!this.isInitialized || !this.dataSource) {
-      throw new Error(
-        'Registry not initialized. Call init() with a DataSource first.',
-      );
-    }
-    return this.dataSource;
-  }
-
-  /**
-   * Check if an hexa type is registered (regardless of initialization status).
-   *
-   * @param constructor - The constructor of the hexa
-   * @returns True if the hexa type is registered
-   */
-  public isRegistered<T extends BaseHexa>(
-    constructor: HexaConstructor<T>,
-  ): boolean {
-    return this.registrations.has(constructor);
-  }
-
-  /**
    * Check if the registry has been initialized.
    *
    * @returns True if init() has been called
@@ -382,15 +325,5 @@ export class HexaRegistry {
     this.portToHexaMap.clear();
     this.dataSource = null;
     this.isInitialized = false;
-  }
-
-  /**
-   * Clear all registrations, hexas, and services (complete reset).
-   * Useful for testing or complete reinitialization.
-   */
-  public reset(): void {
-    this.destroyAll();
-    this.registrations.clear();
-    this.serviceRegistrations.clear();
   }
 }

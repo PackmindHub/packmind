@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { Space } from '../../spaces/Space';
 import { UserId } from '../../accounts/User';
 
@@ -26,8 +26,3 @@ export type ListOrganizationSpacesForManagementResponse = {
   page: number;
   pageSize: number;
 };
-
-export type IListOrganizationSpacesForManagementUseCase = IUseCase<
-  ListOrganizationSpacesForManagementCommand,
-  ListOrganizationSpacesForManagementResponse
->;

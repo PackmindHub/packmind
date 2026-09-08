@@ -118,7 +118,7 @@ const astJson = await getFullAstFromASourceCode(
 
 Currently supported languages:
 
-- ✅ **TypeScript** (and TSX) - Working
+- ✅ **TypeScript** - Working (TSX is not covered: the grammar ships, the parser does not)
 - ✅ **Java** - Working
 - ⚠️ **JavaScript** (and JSX) - Requires Python < 3.12 for build
 - ⚠️ **Python** - Requires Python < 3.12 for build

@@ -14,7 +14,7 @@ export enum RenderMode {
   KIRO = 'KIRO',
 }
 
-export const REQUIRED_RENDER_MODE = RenderMode.PACKMIND;
+const REQUIRED_RENDER_MODE = RenderMode.PACKMIND;
 
 export const RENDER_MODE_ORDER: RenderMode[] = [
   RenderMode.PACKMIND,

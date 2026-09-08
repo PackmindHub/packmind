@@ -1,5 +1,4 @@
 import { Checkbox as ChakraCheckbox } from '@chakra-ui/react';
-import type { CheckedChangeDetails } from '@zag-js/checkbox';
 import * as React from 'react';
 
 export interface PMCheckboxProps extends Omit<
@@ -14,8 +13,6 @@ export interface PMCheckboxProps extends Omit<
   labelProps?: ChakraCheckbox.LabelProps;
   rootRef?: React.RefObject<HTMLLabelElement | null>;
 }
-export type PMCheckboxCheckedChangeDetails = CheckedChangeDetails;
-
 export const PMCheckbox = React.forwardRef<HTMLInputElement, PMCheckboxProps>(
   function Checkbox(props, ref) {
     const {

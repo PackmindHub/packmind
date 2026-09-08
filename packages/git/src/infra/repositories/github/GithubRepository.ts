@@ -12,6 +12,8 @@ import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
 } from '../http/withTransientRetry';
+import { providerHttpsAgent } from '../http/providerHttpAgent';
+import { gitBlobSha } from '@packmind/node-utils';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -59,6 +61,7 @@ export class GithubRepository implements IGitRepo {
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
+      httpsAgent: providerHttpsAgent,
     });
 
     // Inject token from resolver on every request
@@ -114,32 +117,19 @@ export class GithubRepository implements IGitRepo {
       const { owner, repo, branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Step 1: Check if there are any actual changes to commit (file modifications or permission changes)
-      const fileDifferenceCheck = await Promise.all(
-        files.map(async (file) => {
-          const existingFile = await this.getFileOnRepo(
-            file.path,
-            targetBranch,
-          );
-          if (!existingFile) {
-            // File doesn't exist, so it's a new file
-            return { path: file.path, hasChanges: true };
-          } else {
-            // File exists, check if content is different
-            const existingContent = Buffer.from(
-              existingFile.content,
-              'base64',
-            ).toString('utf-8');
-            return {
-              path: file.path,
-              hasChanges: existingContent !== file.content,
-              hasPermissionsSpecified: !!file.permissions,
-            };
-          }
-        }),
-      );
-
-      // Step 2: Get the reference to the current branch
+      // Step 1: Walk ref -> commit -> tree, once.
+      //
+      // A recursive tree lists every path in the repository with its mode and
+      // the SHA of its content, which is all it takes to work out what
+      // changed: a blob SHA is a hash of the bytes, so hashing the content we
+      // mean to write and comparing answers the question without downloading
+      // anything.
+      //
+      // This walk used to sit *after* a `Promise.all` that asked the same
+      // question one file and one `GET /contents` at a time, and then kept
+      // only the modes off the tree and threw the SHAs away. On a 1,129-file
+      // package that was 1,129 uncapped requests taking over two minutes,
+      // usually to conclude that nothing had changed at all.
       this.logger.debug('Getting reference to branch', {
         owner,
         repo,
@@ -152,7 +142,6 @@ export class GithubRepository implements IGitRepo {
 
       const refSha = refResponse.data.object.sha;
 
-      // Step 3: Get the commit that the reference points to
       this.logger.debug('Getting commit that reference points to', {
         owner,
         repo,
@@ -165,23 +154,41 @@ export class GithubRepository implements IGitRepo {
 
       const baseTreeSha = commitResponse.data.tree.sha;
 
-      // Step 4: Fetch full tree to know which files exist (for filtering deletions)
       const treeResponse = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
         { params: { recursive: 1 } },
       );
-      const existingPathsWithModes = new Map<string, string>(
+      const existingBlobs = new Map<string, { mode: string; sha: string }>(
         treeResponse.data.tree
           .filter((item: { type: string }) => item.type === 'blob')
-          .map((item: { path: string; mode: string }) => [
+          .map((item: { path: string; mode: string; sha: string }) => [
             item.path,
-            item.mode,
+            { mode: item.mode, sha: item.sha },
           ]),
       );
 
-      // Step 5: Filter delete files to only those that exist in the repo
+      // Step 2: Work out which files changed, by hash rather than by download.
+      //
+      // The hash is taken over the exact bytes we would write, with no
+      // normalisation, so a file differing from the repository copy only in
+      // its line endings counts as changed - which is also what the previous
+      // string comparison concluded.
+      const fileDifferenceCheck = files.map((file) => {
+        const existingBlob = existingBlobs.get(file.path);
+
+        return {
+          path: file.path,
+          // Absent from the tree means new, which is what a 404 from
+          // `GET /contents` used to stand for.
+          hasChanges:
+            !existingBlob || existingBlob.sha !== gitBlobSha(file.content),
+          hasPermissionsSpecified: !!file.permissions,
+        };
+      });
+
+      // Step 3: Filter delete files to only those that exist in the repo
       const existingDeleteFiles = deleteFiles
-        ? deleteFiles.filter((file) => existingPathsWithModes.has(file.path))
+        ? deleteFiles.filter((file) => existingBlobs.has(file.path))
         : [];
 
       const skippedDeleteCount =
@@ -194,11 +201,11 @@ export class GithubRepository implements IGitRepo {
         });
       }
 
-      // Step 6: Check if there are any changes to commit (file modifications, permission changes, or deletions)
+      // Step 4: Check if there are any changes to commit (file modifications, permission changes, or deletions)
       // For permission changes, compare the existing tree mode with the desired mode
       const hasPermissionChanges = fileDifferenceCheck.some((check, i) => {
         if (!check.hasPermissionsSpecified) return false;
-        const existingMode = existingPathsWithModes.get(check.path);
+        const existingMode = existingBlobs.get(check.path)?.mode;
         const desiredMode = this.getGitMode(files[i].permissions);
         return existingMode !== desiredMode;
       });
@@ -225,7 +232,7 @@ export class GithubRepository implements IGitRepo {
         };
       }
 
-      // Step 7: Prepare tree items - only add files with actual changes
+      // Step 5: Prepare tree items - only add files with actual changes
       this.logger.debug('Preparing tree items', {
         owner,
         repo,
@@ -244,7 +251,7 @@ export class GithubRepository implements IGitRepo {
       // Add files that have content changes or permission changes
       for (let i = 0; i < files.length; i++) {
         const hasContentChanges = fileDifferenceCheck[i].hasChanges;
-        const existingMode = existingPathsWithModes.get(files[i].path);
+        const existingMode = existingBlobs.get(files[i].path)?.mode;
         const desiredMode = this.getGitMode(files[i].permissions);
         const hasModeChange =
           files[i].permissions && existingMode !== desiredMode;
@@ -285,7 +292,7 @@ export class GithubRepository implements IGitRepo {
         }
       }
 
-      // Step 8: Create a new tree with all file changes
+      // Step 6: Create a new tree with all file changes
       this.logger.debug('Creating new tree with all file changes', {
         owner,
         repo,
@@ -304,7 +311,7 @@ export class GithubRepository implements IGitRepo {
 
       const newTreeSha = createTreeResponse.data.sha;
 
-      // Step 9: Create a new commit pointing to the new tree
+      // Step 7: Create a new commit pointing to the new tree
       this.logger.debug('Creating new commit pointing to the new tree', {
         owner,
         repo,
@@ -323,7 +330,7 @@ export class GithubRepository implements IGitRepo {
 
       const newCommitSha = createCommitResponse.data.sha;
 
-      // Step 10: Update the reference to point to the new commit
+      // Step 8: Update the reference to point to the new commit
       this.logger.debug('Updating reference to point to the new commit', {
         owner,
         repo,
@@ -1093,6 +1100,76 @@ export class GithubRepository implements IGitRepo {
         error: errorMessage,
       });
       // Return empty array if directory doesn't exist
+      return [];
+    }
+  }
+
+  async listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    const { owner, repo } = this.options;
+
+    if (paths.length === 0) {
+      return [];
+    }
+
+    try {
+      // One `ref -> commit -> tree` walk for every path, not one per path.
+      // The recursive tree covers the whole repository, so the per-directory
+      // loop this replaced was re-downloading the same listing and throwing
+      // all but one directory's worth away.
+      const refResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
+      );
+      const refSha = refResponse.data.object.sha;
+
+      const commitResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/commits/${refSha}`,
+      );
+      const baseTreeSha = commitResponse.data.tree.sha;
+
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
+        { params: { recursive: 1 } },
+      );
+
+      const blobPaths: string[] = treeResponse.data.tree
+        .filter(
+          (item: { type: string; path?: string }) =>
+            item.type === 'blob' && !!item.path,
+        )
+        .map((item: { path: string }) => item.path);
+
+      // Filtered per path rather than once against all prefixes, so the
+      // result is ordered and duplicated exactly as calling the singular form
+      // for each path in turn would have been.
+      const files = paths.flatMap((path) => {
+        const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+        return blobPaths
+          .filter((blobPath) => blobPath.startsWith(normalizedPath))
+          .map((blobPath) => ({ path: blobPath }));
+      });
+
+      this.logger.debug('Listed files in directories', {
+        directoryCount: paths.length,
+        branch,
+        fileCount: files.length,
+      });
+
+      return files;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to list files in directories', {
+        directoryCount: paths.length,
+        owner,
+        repo,
+        branch,
+        error: errorMessage,
+      });
+      // Matches the singular form: an unreachable or missing tree means
+      // "nothing to expand", not a failed publish.
       return [];
     }
   }

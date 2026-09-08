@@ -23,7 +23,7 @@ function deriveColorFromName(name: string): SpaceColor {
   return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
 }
 
-export const DEFAULT_SPACE_NAME = 'Global';
+const DEFAULT_SPACE_NAME = 'Global';
 
 export class SpaceService {
   constructor(
@@ -212,22 +212,5 @@ export class SpaceService {
 
   async deleteSpace(spaceId: SpaceId, deletedBy: string): Promise<void> {
     await this.spaceRepository.deleteById(spaceId, deletedBy);
-  }
-
-  async listSpaces(): Promise<Space[]> {
-    this.logger.info('Listing all spaces');
-
-    try {
-      const spaces = await this.spaceRepository.list();
-      this.logger.info('All spaces listed successfully', {
-        count: spaces.length,
-      });
-      return spaces;
-    } catch (error) {
-      this.logger.error('Failed to list all spaces', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
   }
 }

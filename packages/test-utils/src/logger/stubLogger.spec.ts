@@ -1,5 +1,4 @@
 import { stubLogger } from './stubLogger';
-import { LogLevel } from '@packmind/logger';
 
 describe('stubLogger', () => {
   describe('getName', () => {
@@ -28,12 +27,7 @@ describe('stubLogger', () => {
         logger.error('error');
         logger.warn('warn');
         logger.info('info');
-        logger.http('http');
-        logger.verbose('verbose');
         logger.debug('debug');
-        logger.silly('silly');
-        logger.log(LogLevel.INFO, 'log');
-        logger.setLevel(LogLevel.DEBUG);
       }).not.toThrow();
     });
   });

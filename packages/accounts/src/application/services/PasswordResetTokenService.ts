@@ -79,13 +79,6 @@ export class PasswordResetTokenService {
     };
   }
 
-  async findById(
-    id: PasswordResetTokenId,
-  ): Promise<PasswordResetTokenEntity | null> {
-    this.logger.debug('Finding password reset token by id', { id });
-    return this.passwordResetTokenRepository.findById(id);
-  }
-
   async findByToken(
     token: PasswordResetToken,
   ): Promise<PasswordResetTokenEntity | null> {
@@ -95,30 +88,9 @@ export class PasswordResetTokenService {
     return this.passwordResetTokenRepository.findByToken(token);
   }
 
-  async findLatestByUserId(
-    userId: UserId,
-  ): Promise<PasswordResetTokenEntity | null> {
-    this.logger.debug('Finding latest password reset token by user id', {
-      userId,
-    });
-    return this.passwordResetTokenRepository.findLatestByUserId(userId);
-  }
-
-  async save(
-    token: PasswordResetTokenEntity,
-  ): Promise<PasswordResetTokenEntity> {
-    this.logger.debug('Saving password reset token', { tokenId: token.id });
-    return this.passwordResetTokenRepository.save(token);
-  }
-
   async delete(id: PasswordResetTokenId): Promise<void> {
     this.logger.debug('Deleting password reset token', { id });
     return this.passwordResetTokenRepository.delete(id);
-  }
-
-  async deleteByUserId(userId: UserId): Promise<void> {
-    this.logger.debug('Deleting password reset tokens by user id', { userId });
-    return this.passwordResetTokenRepository.deleteByUserId(userId);
   }
 
   private buildPasswordResetToken(userId: UserId): PasswordResetTokenEntity {

@@ -618,7 +618,7 @@ export async function stageSinglePath(
   return { status: 'staged', filePath, artifactType };
 }
 
-export function formatSpaceList(spaces: Space[]): string {
+function formatSpaceList(spaces: Space[]): string {
   const maxSlugLength = Math.max(...spaces.map((s) => s.slug.length));
   return spaces
     .map((s) => `  ${s.slug.padEnd(maxSlugLength)}  (${s.name})`)

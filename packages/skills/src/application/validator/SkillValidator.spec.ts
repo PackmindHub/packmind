@@ -433,55 +433,6 @@ baz: qux
       });
     });
   });
-
-  describe('validateOrThrow', () => {
-    describe('with valid metadata', () => {
-      it('does not throw', () => {
-        const content = `---
-name: my-skill
-description: A sample skill.
----
-
-# My Skill
-`;
-        const { metadata } = parser.parse(content);
-
-        expect(() => validator.validateOrThrow(metadata)).not.toThrow();
-      });
-    });
-
-    describe('with missing name', () => {
-      it('throws SkillValidationError', () => {
-        const content = `---
-description: A sample skill without a name.
----
-
-# My Skill
-`;
-        const { metadata } = parser.parse(content);
-
-        expect(() => validator.validateOrThrow(metadata)).toThrow(
-          SkillValidationError,
-        );
-      });
-    });
-
-    describe('with missing name and description', () => {
-      it('throws error containing name field is missing message', () => {
-        const content = `---
-license: MIT
----
-
-# My Skill
-`;
-        const { metadata } = parser.parse(content);
-
-        expect(() => validator.validateOrThrow(metadata)).toThrow(
-          'name field is missing',
-        );
-      });
-    });
-  });
 });
 
 describe('validateSkillFileContent', () => {

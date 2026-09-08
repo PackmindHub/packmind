@@ -18,8 +18,3 @@ export * from './domain/errors/PackagesNotFoundError';
 export * from './domain/errors/TargetNotFoundError';
 
 export { parsePackageSlug } from './application/services/packageSlugHelpers';
-
-/**
- * Package version
- */
-export const DEPLOYMENTS_VERSION = '0.0.1';

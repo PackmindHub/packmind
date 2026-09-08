@@ -787,10 +787,6 @@ export class GitProvidersService {
     };
   }
 
-  async getRepositories(organizationId: OrganizationId): Promise<GitRepo[]> {
-    return this.gitAdapter.getOrganizationRepositories(organizationId);
-  }
-
   async listAvailableRepos(
     command: ListAvailableReposCommand,
   ): Promise<ListAvailableReposResponse> {

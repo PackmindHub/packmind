@@ -1,21 +1,16 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  AnySSEEvent,
-  createHelloWorldEvent,
-  createDataChangeEvent,
-  createNotificationEvent,
-} from '@packmind/types';
+import { AnySSEEvent, createHelloWorldEvent } from '@packmind/types';
 import {
   RedisSSEClient,
   SSE_REDIS_CHANNELS,
-  type SSESubscriptionMessage,
-  type SSEEventMessage,
   isSSESubscriptionMessage,
   isSSEEventMessage,
   deserializeSSERedisMessage,
   createSSESubscriptionMessage,
   serializeSSERedisMessage,
+  type SSEEventMessage,
+  type SSESubscriptionMessage,
 } from '@packmind/node-utils';
 import { Response } from 'express';
 
@@ -500,147 +495,6 @@ export class SSEService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Broadcast an event to all connections
-   */
-  broadcastEvent(event: AnySSEEvent): number {
-    const totalConnections = this.getTotalConnectionCount();
-
-    this.logger.info('Broadcasting event to all connections', {
-      eventType: event.type,
-      totalConnections,
-    });
-
-    let successCount = 0;
-
-    for (const userConnections of this.connections.values()) {
-      for (const connection of userConnections) {
-        if (this.sendEventToConnection(connection.id, event)) {
-          successCount++;
-        }
-      }
-    }
-
-    this.logger.info('Event broadcast completed', {
-      eventType: event.type,
-      successCount,
-      totalConnections,
-    });
-
-    return successCount;
-  }
-
-  /**
-   * Broadcast event to connections of a specific user
-   */
-  broadcastEventToUser(userId: string, event: AnySSEEvent): number {
-    const userConnections = this.connections.get(userId) || [];
-
-    this.logger.info('Broadcasting event to user connections', {
-      userId,
-      eventType: event.type,
-      userConnectionCount: userConnections.length,
-    });
-
-    let successCount = 0;
-
-    for (const connection of userConnections) {
-      if (this.sendEventToConnection(connection.id, event)) {
-        successCount++;
-      }
-    }
-
-    this.logger.info('User event broadcast completed', {
-      userId,
-      eventType: event.type,
-      successCount,
-    });
-
-    return successCount;
-  }
-
-  /**
-   * Broadcast event to connections of a specific organization
-   */
-  broadcastEventToOrganization(
-    organizationId: string,
-    event: AnySSEEvent,
-  ): number {
-    this.logger.info('Broadcasting event to organization connections', {
-      organizationId,
-      eventType: event.type,
-    });
-
-    let successCount = 0;
-
-    for (const userConnections of this.connections.values()) {
-      for (const connection of userConnections) {
-        if (connection.organizationId === organizationId) {
-          if (this.sendEventToConnection(connection.id, event)) {
-            successCount++;
-          }
-        }
-      }
-    }
-
-    this.logger.info('Organization event broadcast completed', {
-      organizationId,
-      eventType: event.type,
-      successCount,
-    });
-
-    return successCount;
-  }
-
-  /**
-   * Send a hello world event to all connections (for testing)
-   */
-  sendHelloWorld(message = 'Hello from SSE!'): number {
-    const event = createHelloWorldEvent(message);
-    return this.broadcastEvent(event);
-  }
-
-  /**
-   * Send a data change event
-   */
-  sendDataChangeEvent<TPayload>(
-    type: 'PUT' | 'DELETE' | 'CREATE' | 'UPDATE',
-    data: TPayload,
-    targetUserId?: string,
-    targetOrganizationId?: string,
-  ): number {
-    const event = createDataChangeEvent(type, data);
-
-    if (targetUserId) {
-      return this.broadcastEventToUser(targetUserId, event);
-    } else if (targetOrganizationId) {
-      return this.broadcastEventToOrganization(targetOrganizationId, event);
-    } else {
-      return this.broadcastEvent(event);
-    }
-  }
-
-  /**
-   * Send a notification event
-   */
-  sendNotification(
-    title: string,
-    message: string,
-    level = 'info' as 'info' | 'warning' | 'error' | 'success',
-    targetUserId?: string,
-    targetOrganizationId?: string,
-  ): number {
-    const event = createNotificationEvent(title, message, level);
-
-    if (targetUserId) {
-      return this.broadcastEventToUser(targetUserId, event);
-    } else if (targetOrganizationId) {
-      return this.broadcastEventToOrganization(targetOrganizationId, event);
-    } else {
-      return this.broadcastEvent(event);
-    }
-  }
-
-  /**
    * Subscribe a user's connections to a specific event type with parameters
    */
   async subscribeUser(
@@ -732,69 +586,6 @@ export class SSEService implements OnModuleInit, OnModuleDestroy {
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  }
-
-  /**
-   * Get user subscriptions
-   */
-  getUserSubscriptions(userId: string): string[] {
-    const userConnections = this.connections.get(userId) || [];
-    const subscriptions = new Set<string>();
-
-    for (const connection of userConnections) {
-      for (const subscription of connection.subscriptions) {
-        subscriptions.add(subscription);
-      }
-    }
-
-    return Array.from(subscriptions);
-  }
-
-  /**
-   * Get connection statistics
-   */
-  getConnectionStats(): {
-    totalConnections: number;
-    connectionsByUser: Record<string, number>;
-    connectionsByOrganization: Record<string, number>;
-    subscriptionStats: {
-      totalSubscriptions: number;
-      subscriptionsByEventType: Record<string, number>;
-    };
-  } {
-    const connectionsByUser: Record<string, number> = {};
-    const connectionsByOrganization: Record<string, number> = {};
-    const allSubscriptions = new Set<string>();
-    const subscriptionsByEventType: Record<string, number> = {};
-
-    for (const [userId, userConnections] of this.connections) {
-      connectionsByUser[userId] = userConnections.length;
-
-      for (const connection of userConnections) {
-        if (connection.organizationId) {
-          connectionsByOrganization[connection.organizationId] =
-            (connectionsByOrganization[connection.organizationId] || 0) + 1;
-        }
-
-        // Collect subscription stats
-        for (const subscription of connection.subscriptions) {
-          allSubscriptions.add(subscription);
-          const eventType = subscription.split(':')[0];
-          subscriptionsByEventType[eventType] =
-            (subscriptionsByEventType[eventType] || 0) + 1;
-        }
-      }
-    }
-
-    return {
-      totalConnections: this.getTotalConnectionCount(),
-      connectionsByUser,
-      connectionsByOrganization,
-      subscriptionStats: {
-        totalSubscriptions: allSubscriptions.size,
-        subscriptionsByEventType,
-      },
-    };
   }
 
   /**

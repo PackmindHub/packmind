@@ -3,27 +3,6 @@ import { Standard } from '../standards/Standard';
 import { StandardVersion } from '../standards/StandardVersion';
 import { Target } from './Target';
 
-export interface RepositoryStandardDeploymentStatus {
-  gitRepo: GitRepo;
-  deployedStandards: DeployedStandardInfo[];
-  hasOutdatedStandards: boolean;
-}
-
-export interface TargetStandardDeploymentStatus {
-  target: Target;
-  gitRepo: GitRepo;
-  deployedStandards: DeployedStandardTargetInfo[];
-  hasOutdatedStandards: boolean;
-}
-
-export interface DeployedStandardInfo {
-  standard: Standard;
-  deployedVersion: StandardVersion;
-  latestVersion: StandardVersion;
-  isUpToDate: boolean;
-  deploymentDate: string;
-}
-
 export interface DeployedStandardTargetInfo {
   standard: Standard;
   deployedVersion: StandardVersion;

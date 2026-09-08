@@ -1,6 +1,5 @@
-import { Command, CommandId } from '../../commands';
-import { Package, PackageWithArtefacts } from '../Package';
-
+import { CommandId } from '../../commands';
+import { Package } from '../Package';
 /**
  * Wire DTO for HTTP responses that carry a persisted {@link Package}.
  *
@@ -28,13 +27,4 @@ export type PackageResponse = Package & {
    */
   createdAt?: string;
   updatedAt?: string;
-};
-
-/**
- * Wire DTO for HTTP responses that carry a hydrated
- * {@link PackageWithArtefacts}. Same superset rule as {@link PackageResponse},
- * but the twin holds the full {@link Command} objects.
- */
-export type PackageWithArtefactsResponse = PackageWithArtefacts & {
-  commands: Command[];
 };

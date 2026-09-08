@@ -48,7 +48,8 @@ describe('CommitToGitUseCase', () => {
       getFileOnRepo: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
       checkDirectoryExists: jest.fn(),
-    } as jest.Mocked<IGitRepo>;
+      listFilesInDirectories: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<IGitRepo>;
 
     mockGitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((gitRepo, provider) => {
@@ -522,6 +523,114 @@ Some content
           const committedFiles =
             mockGithubRepository.commitFiles.mock.calls[0][0];
           expect(committedFiles[0].permissions).toBe('rwxr-xr-x');
+        });
+      });
+    });
+
+    describe('when expanding directory deletions', () => {
+      const files = [{ path: 'test/file1.txt', content: 'test content 1' }];
+
+      const directoriesToDelete = (count: number) =>
+        Array.from({ length: count }, (_, index) => ({
+          path: `packmind/dir-${index}`,
+          type: DeleteItemType.Directory,
+        }));
+
+      const askCount = async (directoryCount: number) => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(gitCommitFactory());
+        mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
+
+        await commitToGit.commitToGit(
+          mockGitRepo,
+          files,
+          'Remove directories',
+          directoriesToDelete(directoryCount),
+        );
+
+        return mockGithubRepository.listFilesInDirectories.mock.calls.length;
+      };
+
+      it('asks the provider once, whatever the number of directories', async () => {
+        // The provider is asked once per publish rather than once per
+        // directory, which is what keeps the `ref -> commit -> tree` request
+        // count independent of how many directories are being deleted.
+        const forOne = await askCount(1);
+        jest.clearAllMocks();
+        const forFifty = await askCount(50);
+
+        expect(forFifty).toBe(forOne);
+      });
+
+      it('hands every directory to that single call', async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(gitCommitFactory());
+        mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
+
+        await commitToGit.commitToGit(
+          mockGitRepo,
+          files,
+          'Remove directories',
+          directoriesToDelete(3),
+        );
+
+        expect(
+          mockGithubRepository.listFilesInDirectories,
+        ).toHaveBeenCalledWith(
+          ['packmind/dir-0', 'packmind/dir-1', 'packmind/dir-2'],
+          'main',
+        );
+      });
+
+      describe('when no directory is being deleted', () => {
+        it('does not ask the provider at all', async () => {
+          mockGitProviderService.findGitProviderById.mockResolvedValue(
+            mockGitProvider,
+          );
+          mockGithubRepository.commitFiles.mockResolvedValue(
+            gitCommitFactory(),
+          );
+          mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
+
+          await commitToGit.commitToGit(mockGitRepo, files, 'Add a file', [
+            { path: 'test/gone.txt', type: DeleteItemType.File },
+          ]);
+
+          expect(
+            mockGithubRepository.listFilesInDirectories,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when a directory holds files', () => {
+        it('passes the expanded file deletions on to the commit', async () => {
+          mockGitProviderService.findGitProviderById.mockResolvedValue(
+            mockGitProvider,
+          );
+          mockGithubRepository.commitFiles.mockResolvedValue(
+            gitCommitFactory(),
+          );
+          mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
+          mockGithubRepository.listFilesInDirectories.mockResolvedValue([
+            { path: 'packmind/dir-0/a.md' },
+            { path: 'packmind/dir-0/b.md' },
+          ]);
+
+          await commitToGit.commitToGit(
+            mockGitRepo,
+            files,
+            'Remove directories',
+            directoriesToDelete(1),
+          );
+
+          expect(mockGithubRepository.commitFiles.mock.calls[0][2]).toEqual([
+            { path: 'packmind/dir-0/a.md', type: DeleteItemType.File },
+            { path: 'packmind/dir-0/b.md', type: DeleteItemType.File },
+          ]);
         });
       });
     });

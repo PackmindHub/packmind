@@ -30,7 +30,7 @@ export function parseOwnerRepo(gitRemoteUrl: string): {
 /**
  * Infer the git provider vendor from a remote URL.
  */
-export function parseProviderVendor(gitRemoteUrl: string): GitProviderVendor {
+function parseProviderVendor(gitRemoteUrl: string): GitProviderVendor {
   const normalized = gitRemoteUrl.toLowerCase();
   if (normalized.includes('github.com')) {
     return 'github';

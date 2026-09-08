@@ -23,9 +23,6 @@ export const ALLOWED_FRONTMATTER_FIELDS = [
   'additionalProperties',
 ] as const;
 
-export type AllowedFrontmatterField =
-  (typeof ALLOWED_FRONTMATTER_FIELDS)[number];
-
 /**
  * Represents the parsed frontmatter properties from a SKILL.md file.
  * Derived from Skill, excluding entity-specific fields (id, spaceId, version, prompt).

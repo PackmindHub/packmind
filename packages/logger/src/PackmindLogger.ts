@@ -109,36 +109,9 @@ export class PackmindLogger {
     this.logger.info(message, meta);
   }
 
-  http(message: string, meta?: Record<string, unknown>): void {
-    if (this.currentLevel === LogLevel.SILENT || !this.logger) return;
-    this.logger.http(message, meta);
-  }
-
-  verbose(message: string, meta?: Record<string, unknown>): void {
-    if (this.currentLevel === LogLevel.SILENT || !this.logger) return;
-    this.logger.verbose(message, meta);
-  }
-
   debug(message: string, meta?: Record<string, unknown>): void {
     if (this.currentLevel === LogLevel.SILENT || !this.logger) return;
     this.logger.debug(message, meta);
-  }
-
-  silly(message: string, meta?: Record<string, unknown>): void {
-    if (this.currentLevel === LogLevel.SILENT || !this.logger) return;
-    this.logger.silly(message, meta);
-  }
-
-  log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
-    if (this.currentLevel === LogLevel.SILENT || !this.logger) return;
-    this.logger.log(level, message, meta);
-  }
-
-  setLevel(level: LogLevel): void {
-    this.currentLevel = level;
-    if (level !== LogLevel.SILENT && this.logger) {
-      this.logger.level = level;
-    }
   }
 
   getName(): string {

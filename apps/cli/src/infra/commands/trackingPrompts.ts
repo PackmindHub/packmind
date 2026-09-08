@@ -8,7 +8,7 @@ export type ConfirmPromptFn = (message: string) => Promise<boolean>;
  * Shared between the `track` command and the `init` prompt so both surfaces
  * use identical copy.
  */
-export function buildTrackConfirmationMessage(
+function buildTrackConfirmationMessage(
   details: TrackRepositoryConfirmation,
 ): string {
   if (details.mode === 'remove') {
