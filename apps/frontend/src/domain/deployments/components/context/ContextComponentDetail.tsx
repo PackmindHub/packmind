@@ -21,6 +21,7 @@ import {
 import {
   LuChevronDown,
   LuChevronLeft,
+  LuChevronRight,
   LuCircleCheck,
   LuCircleOff,
   LuEllipsisVertical,
@@ -273,23 +274,19 @@ export function ContextComponentDetail({
 
           <PMHStack gap={2} flexShrink={0}>
             {/*
-            The way out to everything the pane does not carry yet: version
-            history and change proposals. Distributions left this list the day
-            the tab below arrived. It keeps its own label rather than saying
-            "Open page", so the button says what will be on screen.
+            No "Open standard" here any more, nor its two siblings.
 
-            It is on its way out. While it is here no reader loses anything to
-            a half-absorbed frame, which is the only reason it survived the
-            arrival of the tab strip.
+            The button was the surprise this whole redesign is about: it sat in
+            the header of a component, read as the way to open that component,
+            and led to a page whose first screen was a second copy of what the
+            reader was already looking at. Everything about it that was not a
+            copy has since arrived here: where it landed, its history, whether
+            anyone is looking after it, whether its rules are detected, its
+            download, both of its change proposals.
 
-            Secondary, because reading the component is what this screen is
-            for. The package header used to carry a button like it and no longer
-            does: everything its page held is on this surface now. A component's
-            page is not, which is why this one is still here.
+            What is left of those pages is the setting up of a standard's rules,
+            and the link to that is beside the rules, named after the work.
           */}
-            <PMButton variant="secondary" size="sm" asChild>
-              <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
-            </PMButton>
             {/*
               Taking the skill away with you, for the agent you actually run.
               The one control the skill's own page had that this frame did not,
@@ -513,7 +510,18 @@ function ComponentBody({
     case 'command':
       return <CommandBody commandId={component.key as CommandId} />;
     case 'standard':
-      return <StandardBody standardId={component.key as StandardId} />;
+      return (
+        <StandardBody
+          standardId={component.key as StandardId}
+          /*
+            The row already carries the address of the standard's own page,
+            which is where its rules are set up. Handed down rather than rebuilt
+            from the slugs, so the pane has one answer to where a standard lives
+            and not two that can drift.
+          */
+          rulesHref={component.href}
+        />
+      );
     case 'skill':
       return <SkillBody skillId={component.key as SkillId} />;
   }
@@ -1368,7 +1376,10 @@ function CommandBody({ commandId }: Readonly<{ commandId: CommandId }>) {
  * standard body, but it is the line that says where the standard applies, and
  * the pane is on its way to being the only place a standard is read.
  */
-function StandardBody({ standardId }: Readonly<{ standardId: StandardId }>) {
+function StandardBody({
+  standardId,
+  rulesHref,
+}: Readonly<{ standardId: StandardId; rulesHref: string }>) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
@@ -1427,16 +1438,60 @@ function StandardBody({ standardId }: Readonly<{ standardId: StandardId }>) {
       )}
 
       <PMBox>
-        {/*
-          The count only when there is one to give: loading, failed and empty
-          all read better as the plain heading, and "0 rules" above a line that
-          already says there is no rule was saying it twice.
-        */}
-        <BodySectionLabel>
-          {sortedRules.length > 0
-            ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
-            : 'Rules'}
-        </BodySectionLabel>
+        <PMHStack justify="space-between" align="baseline" gap={4}>
+          {/*
+            The count only when there is one to give: loading, failed and empty
+            all read better as the plain heading, and "0 rules" above a line
+            that already says there is no rule was saying it twice.
+          */}
+          <BodySectionLabel>
+            {sortedRules.length > 0
+              ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
+              : 'Rules'}
+          </BodySectionLabel>
+          {/*
+            The one way out this surface keeps, and the reason the header's
+            "Open standard" can go.
+            
+            A standard's rules are set up on the standard's own page: the code
+            examples that decide which languages a rule can be detected in, the
+            linter program per language, and the severity it reports at. None of
+            that fits a reading pane, and none of it is what the pane shows.
+            
+            Which is exactly what made the header button surprising and this one
+            not. That button promised a page and delivered a second copy of what
+            was already on screen. This one is beside the list it is about, and
+            it names work the reader cannot do here.
+            
+            Not the accent. The proposal waiting on someone in the header is the
+            one thing on this surface worth interrupting for, and a second
+            periwinkle link would make that one a colour rather than a signal.
+          */}
+          <PMBox
+            /*
+              Sized to the label it shares the line with, not to the body. At
+              `xs` beside a 10px heading it read as the loudest thing in the
+              section, which is the wrong way round: the rules are what the
+              section is, and this is the way to go and set them up.
+            */
+            fontSize="11px"
+            color="text.secondary"
+            flexShrink={0}
+            display="inline-flex"
+            alignItems="center"
+            gap="2px"
+            _hover={{ color: 'text.primary' }}
+            transition="color 150ms ease-out"
+            asChild
+          >
+            <Link to={rulesHref}>
+              Manage rules
+              <PMIcon fontSize="11px">
+                <LuChevronRight />
+              </PMIcon>
+            </Link>
+          </PMBox>
+        </PMHStack>
         <PMBox paddingTop={1}>
           <RulesSection
             rules={sortedRules}

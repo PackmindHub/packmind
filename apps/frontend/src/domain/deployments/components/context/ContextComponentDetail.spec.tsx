@@ -715,6 +715,73 @@ describe('the distribution body', () => {
     });
   });
 
+  describe('the way out of the surface', () => {
+    /*
+      The button this whole redesign is about. It read as the way to open the
+      component whose header it sat in, and opened a page whose first screen was
+      a copy of what was already on screen.
+    */
+    it('is gone from a command', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.queryByRole('link', { name: /^open command$/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('is gone from a standard', async () => {
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.queryByRole('link', { name: /^open standard$/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('is gone from a skill', async () => {
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(
+        screen.queryByRole('link', { name: /^open skill$/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("setting up a standard's rules", () => {
+    /*
+      The one thing the pane cannot carry: the code examples that decide which
+      languages a rule can be detected in, the linter program per language, and
+      the severity it reports at. Beside the rules rather than in the header,
+      and named after the work rather than after the page.
+    */
+    it('is offered beside the rules of a standard', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '' } },
+      });
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(screen.getByRole('link', { name: /manage rules/i })).toBeVisible();
+    });
+
+    describe('when the component is a command', () => {
+      it('is absent, a command having no rules', async () => {
+        (useGetCommandByIdQuery as Mock).mockReturnValue({
+          data: { slug: 'run-migrations', content: 'body' },
+        });
+        await renderDetail(
+          componentOfType('command', COMMAND_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.queryByRole('link', { name: /manage rules/i }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe('taking a skill away with you', () => {
     it('offers the download on a skill', async () => {
       await renderDetail(componentOfType('skill', SKILL_ID));

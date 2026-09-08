@@ -143,10 +143,15 @@ export function isDefaultTab(value: string): boolean {
 /**
  * Which types the pane can show itself, and the only place it is decided.
  *
- * All three types say yes now, and no row anywhere on the surface leads out of
- * it any more: not in a package pane, not in the space inventory, and not in
- * the rail's search results. One reader of the per-type pages is left, the
- * frame's own "Open ..." button, and cutting it is a step of its own.
+ * All three types say yes now, and nothing on this surface leads out of it to
+ * read a component any more: not a row in a package pane, not one in the space
+ * inventory, not a search result in the rail, and not the frame's own header,
+ * which no longer offers to open the page it was already showing.
+ *
+ * The per-type pages have one reader left, and it is not about reading: a
+ * standard's rules are set up on the standard's page, and the link to that sits
+ * beside the rules, named after the work. `href` is what carries it, which is
+ * why the rows still have one.
  *
  * The record stays because the question does. A fourth type arrives with no
  * body written for it, and this is where it says so, rather than by leaving a
