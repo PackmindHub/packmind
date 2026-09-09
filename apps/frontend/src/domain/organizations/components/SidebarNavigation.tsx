@@ -62,6 +62,8 @@ interface SidebarNavigationLinkProps {
   url: string;
   label: string;
   exact?: boolean;
+  /** Path prefixes this entry stands for besides its own url. */
+  alsoOwns?: string[];
   icon?: React.ReactNode;
   badge?: {
     text: string;
@@ -74,37 +76,53 @@ interface SidebarNavigationLinkProps {
 export function SidebarNavigationLink(
   props: Readonly<SidebarNavigationLinkProps>,
 ): React.ReactElement {
-  const { url, label, exact = false, icon, badge } = props;
+  const { url, label, exact = false, icon, badge, alsoOwns } = props;
   const { isCollapsed } = useSidebarCollapse();
+  /* The same broader question the expanded sidebar asks. */
+  const { pathname } = useLocation();
+  const owns = alsoOwns?.some((prefix) => pathname.startsWith(prefix)) ?? false;
 
   const linkContent = (
     <NavLink to={url} end={exact} prefetch="intent">
-      {({ isActive }) => (
-        <PMLink
-          variant="navbar"
-          fontSize="xs"
-          fontWeight="normal"
-          data-active={isActive ? 'true' : undefined}
-          as="span"
-          data-testid={props['data-testid']}
-          display="flex"
-          alignItems="center"
-          justifyContent={isCollapsed ? 'center' : 'space-between'}
-          {...(isCollapsed && { paddingY: 2 })}
-          {...(isCollapsed && isActive && { backgroundColor: 'blue.700' })}
-          width="100%"
-        >
-          {isCollapsed ? (
-            icon && <PMIcon fontSize="md">{icon}</PMIcon>
-          ) : (
-            <>
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                {icon && <PMIcon mr={2}>{icon}</PMIcon>}
-                {label}
-              </span>
-              {badge &&
-                (badge.tooltipLabel ? (
-                  <PMTooltip label={badge.tooltipLabel}>
+      {({ isActive: isOwnAddress }) => {
+        const isActive = isOwnAddress || owns;
+
+        return (
+          <PMLink
+            variant="navbar"
+            fontSize="xs"
+            fontWeight="normal"
+            data-active={isActive ? 'true' : undefined}
+            as="span"
+            data-testid={props['data-testid']}
+            display="flex"
+            alignItems="center"
+            justifyContent={isCollapsed ? 'center' : 'space-between'}
+            {...(isCollapsed && { paddingY: 2 })}
+            {...(isCollapsed && isActive && { backgroundColor: 'blue.700' })}
+            width="100%"
+          >
+            {isCollapsed ? (
+              icon && <PMIcon fontSize="md">{icon}</PMIcon>
+            ) : (
+              <>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  {icon && <PMIcon mr={2}>{icon}</PMIcon>}
+                  {label}
+                </span>
+                {badge &&
+                  (badge.tooltipLabel ? (
+                    <PMTooltip label={badge.tooltipLabel}>
+                      <PMBadge
+                        size="sm"
+                        colorScheme={badge.colorScheme || 'purple'}
+                        ml={2}
+                        fontSize="xs"
+                      >
+                        {badge.text}
+                      </PMBadge>
+                    </PMTooltip>
+                  ) : (
                     <PMBadge
                       size="sm"
                       colorScheme={badge.colorScheme || 'purple'}
@@ -113,21 +131,12 @@ export function SidebarNavigationLink(
                     >
                       {badge.text}
                     </PMBadge>
-                  </PMTooltip>
-                ) : (
-                  <PMBadge
-                    size="sm"
-                    colorScheme={badge.colorScheme || 'purple'}
-                    ml={2}
-                    fontSize="xs"
-                  >
-                    {badge.text}
-                  </PMBadge>
-                ))}
-            </>
-          )}
-        </PMLink>
-      )}
+                  ))}
+              </>
+            )}
+          </PMLink>
+        );
+      }}
     </NavLink>
   );
 

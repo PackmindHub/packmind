@@ -21,12 +21,12 @@ const SPACE_SLUG = 'platform';
 const OUTSIDE_BETA = 'someone@example.com';
 const CHOICE_KEY = 'space-nav-mode.v2';
 
-function renderIn(mode: SpaceNavMode) {
+function renderIn(mode: SpaceNavMode, address = '/') {
   localStorage.setItem(CHOICE_KEY, mode);
 
   return render(
     <UIProvider>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[address]}>
         <SpaceNavModeProvider userEmail={OUTSIDE_BETA}>
           <SpaceNavSections orgSlug={ORG_SLUG} spaceSlug={SPACE_SLUG} />
         </SpaceNavModeProvider>
@@ -97,6 +97,24 @@ describe('SpaceNavSections', () => {
         'href',
         `/org/${ORG_SLUG}/space/${SPACE_SLUG}/distribution`,
       );
+    });
+
+    /*
+      A reader who followed a link out of the pane, into a standard's rules or
+      an edit form. The address is not under Context's own url, and until this
+      the sidebar went dark and read as having left the navigation.
+    */
+    it('keeps Context lit on the pages it stands for', () => {
+      renderIn(
+        'plugin-first',
+        `/org/${ORG_SLUG}/space/${SPACE_SLUG}/standards/standard-1/summary`,
+      );
+
+      expect(
+        screen
+          .getByRole('link', { name: 'Context' })
+          .querySelector('[data-active="true"]'),
+      ).not.toBeNull();
     });
 
     it('drops the entry the space index redirects away from', () => {

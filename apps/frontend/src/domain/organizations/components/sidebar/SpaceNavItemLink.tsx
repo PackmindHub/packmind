@@ -1,11 +1,13 @@
 import React from 'react';
 import { PMBadge, PMBox, PMIcon, PMText, PMTooltip } from '@packmind/ui';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 
 interface SpaceNavItemLinkProps {
   url: string;
   label: string;
   exact?: boolean;
+  /** Path prefixes this entry stands for besides its own url. */
+  alsoOwns?: string[];
   icon?: React.ReactNode;
   badge?: {
     /*
@@ -24,52 +26,73 @@ interface SpaceNavItemLinkProps {
 export function SpaceNavItemLink(
   props: Readonly<SpaceNavItemLinkProps>,
 ): React.ReactElement {
-  const { url, label, exact = false, icon, badge } = props;
+  const { url, label, exact = false, icon, badge, alsoOwns } = props;
+  /*
+   * Read here rather than compared inside the render prop, because what
+   * `NavLink` answers is whether the address is under this entry's own url and
+   * the question is broader: see `alsoOwns` on `SpaceNavItem`.
+   */
+  const { pathname } = useLocation();
+  const owns = alsoOwns?.some((prefix) => pathname.startsWith(prefix)) ?? false;
 
   return (
     <NavLink to={url} end={exact} prefetch="intent">
-      {({ isActive }) => (
-        <PMBox
-          display="flex"
-          alignItems="center"
-          gap={2}
-          w="full"
-          pl={4}
-          pr={2}
-          py={1}
-          fontSize="xs"
-          borderRadius="sm"
-          cursor="pointer"
-          bg="transparent"
-          _hover={
-            isActive ? undefined : { bg: 'blue.800', color: 'text.primary' }
-          }
-          transition="background-color 0.15s"
-          textAlign="left"
-          data-testid={props['data-testid']}
-        >
-          {icon && (
-            <PMIcon
-              fontSize="sm"
-              flexShrink={0}
-              color={isActive ? 'branding.primary' : 'text.tertiary'}
-            >
-              {icon}
-            </PMIcon>
-          )}
-          <PMText
+      {({ isActive: isOwnAddress }) => {
+        const isActive = isOwnAddress || owns;
+
+        return (
+          <PMBox
+            display="flex"
+            alignItems="center"
+            gap={2}
+            w="full"
+            pl={4}
+            pr={2}
+            py={1}
             fontSize="xs"
-            flex={1}
-            textProps={{
-              color: isActive ? 'branding.primary' : 'text.secondary',
-            }}
-            fontWeight={isActive ? 'semibold' : 'normal'}
+            borderRadius="sm"
+            cursor="pointer"
+            bg="transparent"
+            _hover={
+              isActive ? undefined : { bg: 'blue.800', color: 'text.primary' }
+            }
+            transition="background-color 0.15s"
+            textAlign="left"
+            /* Same marker the collapsed rail's link carries, for the same reason. */
+            data-active={isActive ? 'true' : undefined}
+            data-testid={props['data-testid']}
           >
-            {label}
-          </PMText>
-          {badge &&
-            (badge.tooltipLabel ? (
-              <PMTooltip label={badge.tooltipLabel}>
+            {icon && (
+              <PMIcon
+                fontSize="sm"
+                flexShrink={0}
+                color={isActive ? 'branding.primary' : 'text.tertiary'}
+              >
+                {icon}
+              </PMIcon>
+            )}
+            <PMText
+              fontSize="xs"
+              flex={1}
+              textProps={{
+                color: isActive ? 'branding.primary' : 'text.secondary',
+              }}
+              fontWeight={isActive ? 'semibold' : 'normal'}
+            >
+              {label}
+            </PMText>
+            {badge &&
+              (badge.tooltipLabel ? (
+                <PMTooltip label={badge.tooltipLabel}>
+                  <PMBadge
+                    size="sm"
+                    colorPalette={badge.colorScheme}
+                    fontSize="xs"
+                  >
+                    {badge.text}
+                  </PMBadge>
+                </PMTooltip>
+              ) : (
                 <PMBadge
                   size="sm"
                   colorPalette={badge.colorScheme}
@@ -77,14 +100,10 @@ export function SpaceNavItemLink(
                 >
                   {badge.text}
                 </PMBadge>
-              </PMTooltip>
-            ) : (
-              <PMBadge size="sm" colorPalette={badge.colorScheme} fontSize="xs">
-                {badge.text}
-              </PMBadge>
-            ))}
-        </PMBox>
-      )}
+              ))}
+          </PMBox>
+        );
+      }}
     </NavLink>
   );
 }
