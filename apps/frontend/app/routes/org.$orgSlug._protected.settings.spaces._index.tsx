@@ -1,11 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
-import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  ORGA_SPACE_MANAGEMENT_FEATURE_KEY,
-  PMFeatureFlag,
-  PMPage,
-} from '@packmind/ui';
+import { PMPage } from '@packmind/ui';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 import { getSpacesQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
@@ -26,7 +21,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 }
 
 export default function SettingsSpacesRouteModule() {
-  const { user, organization } = useAuthContext();
+  const { organization } = useAuthContext();
   const { spaceCount } = useLoaderData<typeof clientLoader>();
 
   if (!organization) {
@@ -41,14 +36,8 @@ export default function SettingsSpacesRouteModule() {
         }`;
 
   return (
-    <PMFeatureFlag
-      featureKeys={[ORGA_SPACE_MANAGEMENT_FEATURE_KEY]}
-      featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-      userEmail={user?.email}
-    >
-      <PMPage title="Spaces" subtitle={subtitle} actions={<SpacesToolbar />}>
-        <SpacesManagementPage />
-      </PMPage>
-    </PMFeatureFlag>
+    <PMPage title="Spaces" subtitle={subtitle} actions={<SpacesToolbar />}>
+      <SpacesManagementPage />
+    </PMPage>
   );
 }
