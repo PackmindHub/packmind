@@ -1,5 +1,5 @@
 ---
-applyTo: '**/*.spec.ts'
+applyTo: 'apps/api/**/*.spec.ts,packages/**/*.spec.ts'
 ---
 # Standard: Backend Tests Redaction
 
