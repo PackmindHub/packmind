@@ -211,36 +211,6 @@ export class GitProviderRepository
     }
   }
 
-  async list(organizationId?: OrganizationId): Promise<GitProvider[]> {
-    this.logger.info('Listing git providers', { organizationId });
-
-    try {
-      if (organizationId) {
-        return this.findByOrganizationId(organizationId);
-      }
-
-      const results = await this.repository.find({
-        relations: ['repos'],
-      });
-
-      // Decrypt all results
-      const decryptedResults = await Promise.all(
-        results.map((result) => this.decryptGitProvider(result)),
-      );
-
-      this.logger.info('Git providers listed successfully', {
-        count: decryptedResults.length,
-      });
-      return decryptedResults;
-    } catch (error) {
-      this.logger.error('Failed to list git providers', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async update(
     id: string,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,

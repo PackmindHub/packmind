@@ -344,65 +344,6 @@ describe('GitProviderRepository', () => {
     });
   });
 
-  describe('when listing all git providers', () => {
-    let gitProvider1: ReturnType<typeof gitProviderFactory>;
-    let gitProvider2: ReturnType<typeof gitProviderFactory>;
-    let allGitProviders: Awaited<ReturnType<typeof gitProviderRepository.list>>;
-
-    beforeEach(async () => {
-      gitProvider1 = gitProviderFactory({
-        organizationId: testOrganization.id,
-      });
-      gitProvider2 = gitProviderFactory({
-        organizationId: testOrganization.id,
-      });
-      await gitProviderRepository.add(gitProvider1);
-      await gitProviderRepository.add(gitProvider2);
-
-      allGitProviders = await gitProviderRepository.list();
-    });
-
-    it('returns correct number of providers', async () => {
-      expect(allGitProviders).toHaveLength(2);
-    });
-
-    it('includes first provider in results', async () => {
-      expect(allGitProviders.map((p) => p.id)).toContain(gitProvider1.id);
-    });
-
-    it('includes second provider in results', async () => {
-      expect(allGitProviders.map((p) => p.id)).toContain(gitProvider2.id);
-    });
-  });
-
-  describe('when listing git providers by organization ID', () => {
-    let gitProvider: ReturnType<typeof gitProviderFactory>;
-    let gitProvidersByOrg: Awaited<
-      ReturnType<typeof gitProviderRepository.list>
-    >;
-
-    beforeEach(async () => {
-      gitProvider = gitProviderFactory({
-        organizationId: testOrganization.id,
-      });
-      await gitProviderRepository.add(gitProvider);
-
-      gitProvidersByOrg = await gitProviderRepository.list(testOrganization.id);
-    });
-
-    it('returns correct number of providers', async () => {
-      expect(gitProvidersByOrg).toHaveLength(1);
-    });
-
-    it('returns provider with correct properties', async () => {
-      expect(gitProvidersByOrg[0]).toMatchObject({
-        id: gitProvider.id,
-        source: gitProvider.source,
-        organizationId: gitProvider.organizationId,
-      });
-    });
-  });
-
   describe('when updating git provider with token encryption', () => {
     let gitProvider: ReturnType<typeof gitProviderFactory>;
     let updatedProvider: Awaited<

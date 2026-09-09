@@ -33,7 +33,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
       findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
       findGitReposByProviderId: jest.fn(),
       findGitReposByOrganizationId: jest.fn(),
-      listGitRepos: jest.fn(),
       updateGitRepo: jest.fn(),
       deleteGitRepo: jest.fn(),
     } as unknown as jest.Mocked<GitRepoService>;

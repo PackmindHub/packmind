@@ -433,40 +433,4 @@ export class GitRepoRepository
       throw error;
     }
   }
-
-  async list(
-    organizationId?: OrganizationId,
-    opts?: { type?: GitRepoTypeFilter },
-  ): Promise<GitRepo[]> {
-    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
-
-    this.logger.info('Listing git repos', { organizationId, type });
-
-    try {
-      let gitRepos: GitRepo[];
-      if (organizationId) {
-        gitRepos = await this.findByOrganizationId(organizationId, { type });
-      } else {
-        const queryBuilder = this.repository.createQueryBuilder('gitRepo');
-        if (type !== 'any') {
-          queryBuilder.where('gitRepo.type = :type', { type });
-        }
-        gitRepos = await queryBuilder.getMany();
-      }
-
-      this.logger.info('Git repos listed successfully', {
-        organizationId,
-        type,
-        count: gitRepos.length,
-      });
-      return gitRepos;
-    } catch (error) {
-      this.logger.error('Failed to list git repos', {
-        organizationId,
-        type,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
 }
