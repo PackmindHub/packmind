@@ -1,10 +1,14 @@
 import { Configuration } from '@packmind/node-utils';
+import { editionFromDeploymentValue, PackmindEdition } from '@packmind/types';
 
-export type PackmindEdition = 'cloud' | 'oss';
+// Lives in @packmind/types because the CLI reads the same values off the
+// Packmind-Edition header; re-exported so importers here keep one import site.
+export type { PackmindEdition };
 
 export async function resolvePackmindEdition(): Promise<PackmindEdition> {
-  const raw = await Configuration.getConfig('PACKMIND_EDITION');
-  return raw === 'proprietary' || raw === 'cloud' ? 'cloud' : 'oss';
+  return editionFromDeploymentValue(
+    await Configuration.getConfig('PACKMIND_EDITION'),
+  );
 }
 
 // Hosting mode for the GitHub App integration. Distinct from edition: the

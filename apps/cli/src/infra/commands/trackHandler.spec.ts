@@ -353,7 +353,7 @@ describe('trackHandler', () => {
     });
   });
 
-  describe('when the feature is not available (404)', () => {
+  describe('when the server predates repository tracking (404)', () => {
     beforeEach(async () => {
       const error: Error & { statusCode?: number } = new Error('Not Found');
       error.statusCode = 404;
@@ -363,7 +363,7 @@ describe('trackHandler', () => {
 
     it('reports the feature is unavailable', () => {
       expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'Repository tracking is not available for your account.',
+        'Repository tracking is not available on this Packmind server. Ask your administrator to update it.',
       );
     });
 

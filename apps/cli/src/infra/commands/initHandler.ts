@@ -155,8 +155,8 @@ export async function initHandler(
   }
 
   // Step 3: Offer to track the current repository + branch. Gated on an
-  // interactive terminal; the feature flag is enforced server-side (a 404
-  // response makes this a silent no-op).
+  // interactive terminal; against a server predating repository tracking the
+  // route is absent, and that 404 makes this a silent no-op.
   if (resolvedIsTTY && trackRepository) {
     await offerRepositoryTracking({
       trackRepository,
