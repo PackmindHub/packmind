@@ -1830,7 +1830,13 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
 
   if (isEditing) {
     return (
-      <PMVStack gap={6} align="stretch" maxWidth="72ch">
+      /*
+        No 72ch cap while editing, unlike the read view above. That measure is
+        for reading prose; an editor is a working surface, and capped it gave
+        four hundred pixels of writing room inside a twelve hundred pixel pane.
+        The same reason a file is shown full width here.
+      */
+      <PMVStack gap={6} align="stretch">
         <SkillFrontmatterInfo skillVersion={latestVersion} />
         {/*
           The body alone, which is what `prompt` holds. The frontmatter above is
@@ -1856,34 +1862,40 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
       <SkillFrontmatterInfo skillVersion={latestVersion} />
 
       {/*
-        Right-aligned above the prose, which is where the same pencil sits in
-        the file view: with the content it changes, and out of the way of
-        reading it.
-      */}
-      {canEdit && (
-        <PMBox display="flex" justifyContent="flex-end" marginBottom={-4}>
-          <PMIconButton
-            aria-label="Edit instructions"
-            size="sm"
-            variant="tertiary"
-            onClick={() => setIsEditing(true)}
-          >
-            <LuPencil />
-          </PMIconButton>
-        </PMBox>
-      )}
+        The pencil is in the prose's own top-right corner, which is where the
+        same pencil sits on a file. It began on a line of its own above, and on
+        screen that line read as belonging to nothing: the stack's gap above it
+        and the first heading's own margin below it are close enough in size
+        that it centred itself between the frontmatter and the text. Inside the
+        block it edits, it cannot do that, and it costs no vertical space,
+        sitting in the margin the heading already leaves.
 
-      {latestVersion.prompt ? (
-        <PMBox>
+        Outside the branch below, because a skill with no instructions is the
+        one that most needs the way to write some.
+      */}
+      <PMBox position="relative">
+        {canEdit && (
+          <PMBox position="absolute" top={0} right={0} zIndex={1}>
+            <PMIconButton
+              aria-label="Edit instructions"
+              size="sm"
+              variant="tertiary"
+              onClick={() => setIsEditing(true)}
+            >
+              <LuPencil />
+            </PMIconButton>
+          </PMBox>
+        )}
+        {latestVersion.prompt ? (
           <PMMarkdownViewer content={latestVersion.prompt} />
-        </PMBox>
-      ) : (
-        <PMText color="secondary">
-          This skill has no instructions yet. Its frontmatter tells a coding
-          agent when to reach for it, and nothing tells it what to do once it
-          has.
-        </PMText>
-      )}
+        ) : (
+          <PMText color="secondary">
+            This skill has no instructions yet. Its frontmatter tells a coding
+            agent when to reach for it, and nothing tells it what to do once it
+            has.
+          </PMText>
+        )}
+      </PMBox>
 
       {/*
         No list of files here. The surface reads the same query and turns the
