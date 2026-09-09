@@ -158,7 +158,6 @@ describe('UpdateStandardUseCase', () => {
         createdBy: mockUser.id,
         updatedBy: mockUser.id,
       }),
-      listSpaces: jest.fn(),
       createSpace: jest.fn(),
       updateSpace: jest.fn(),
       deleteSpace: jest.fn(),

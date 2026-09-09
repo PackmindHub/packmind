@@ -1,7 +1,8 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
-import { UserOrganizationRole } from '@packmind/types';
+import { PackmindEdition, UserOrganizationRole } from '@packmind/types';
+import { parsePackmindEdition, readPackmindEdition } from './packmindEdition';
 import { Agent } from 'undici';
 import * as tls from 'tls';
 import * as fs from 'fs';
@@ -50,10 +51,13 @@ interface IAuthContext {
 interface IRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
-  onError?: (response: Response) => void;
+  onError?: (response: Response, edition: PackmindEdition | null) => void;
 }
 
 export class PackmindHttpClient {
+  // undefined until asked; null once asked and unanswered.
+  private editionFromAuthMe: PackmindEdition | null | undefined;
+
   constructor(private readonly apiKey: string) {}
 
   getAuthContext(): IAuthContext {
@@ -129,7 +133,7 @@ export class PackmindHttpClient {
 
       if (!response.ok) {
         if (options.onError) {
-          options.onError(response);
+          options.onError(response, await this.resolveEdition(response));
         }
 
         let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
@@ -182,6 +186,54 @@ export class PackmindHttpClient {
       throw new Error(
         `Request failed: ${err?.message || JSON.stringify(error)}`,
       );
+    }
+  }
+
+  /**
+   * The edition behind a failed response, for callers whose route means
+   * different things per edition.
+   *
+   * Falls back to /auth/me, which has carried `edition` since well before the
+   * header and answers it even unauthenticated, so a server too old to set the
+   * header can still be identified rather than guessed at. Asked once per
+   * client, and only for a 404 — the one status whose meaning depends on the
+   * edition, and the only reason to spend a request here.
+   */
+  private async resolveEdition(
+    response: Response,
+  ): Promise<PackmindEdition | null> {
+    const fromHeader = readPackmindEdition(response);
+
+    if (fromHeader !== null || response.status !== 404) {
+      return fromHeader;
+    }
+
+    if (this.editionFromAuthMe === undefined) {
+      this.editionFromAuthMe = await this.fetchEditionFromAuthMe();
+    }
+
+    return this.editionFromAuthMe;
+  }
+
+  private async fetchEditionFromAuthMe(): Promise<PackmindEdition | null> {
+    try {
+      const { host } = this.getAuthContext();
+      const response = await fetch(`${host}/api/v0/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'User-Agent': `packmind-cli:${version}`,
+        },
+        // @ts-expect-error — Node.js fetch (undici) accepts a dispatcher option not present in the DOM types
+        dispatcher,
+      });
+
+      // The edition rides both the authenticated body and the 401 one, so the
+      // status is not worth checking.
+      const body: unknown = await response.json();
+
+      return parsePackmindEdition((body as { edition?: unknown })?.edition);
+    } catch {
+      return null;
     }
   }
 }

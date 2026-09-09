@@ -6,6 +6,8 @@ export * from './fileHelpers';
 export * from './setupGitRepo';
 export * from './config';
 export * from './describeForVersion';
+export * from './describeForEdition';
+export * from './serverEdition';
 export { isProductionMode } from './cliVersion';
 export { PackmindGateway } from './gateways/PackmindGateway';
 export type {

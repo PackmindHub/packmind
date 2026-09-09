@@ -1927,13 +1927,13 @@ describe('installCommand', () => {
 });
 
 describe('decideDistributionTracking', () => {
-  describe('when the feature flag is off', () => {
-    it('records unconditionally (legacy behaviour)', () => {
+  describe('when the server predates repository tracking', () => {
+    it('records unconditionally, the way CLIs did before tracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
           detached: false,
-          lookup: { status: 'flag-off' },
+          lookup: { status: 'tracking-unsupported' },
           currentBranch: 'main',
         }),
       ).toEqual({ action: 'record-legacy' });

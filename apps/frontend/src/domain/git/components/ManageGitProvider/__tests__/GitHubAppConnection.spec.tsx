@@ -356,7 +356,7 @@ describe('GitHubAppConnection', () => {
     mockUseGetMeQuery.mockReturnValue({
       data: {
         authenticated: true,
-        edition: 'oss',
+        edition: 'community',
         message: 'ok',
         user: {
           id: 'user-1',
@@ -379,12 +379,12 @@ describe('GitHubAppConnection', () => {
     vi.restoreAllMocks();
   });
 
-  describe('when edition is cloud', () => {
+  describe('when edition is enterprise', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'cloud',
+          edition: 'enterprise',
           message: 'ok',
           user: {
             id: 'user-1',
@@ -430,12 +430,12 @@ describe('GitHubAppConnection', () => {
     });
   });
 
-  describe('when edition is oss and status is loading', () => {
+  describe('when edition is community and status is loading', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'oss',
+          edition: 'community',
           message: 'ok',
           user: {
             id: 'user-1',
@@ -478,12 +478,12 @@ describe('GitHubAppConnection', () => {
     });
   });
 
-  describe('when edition is oss and status query errored', () => {
+  describe('when edition is community and status query errored', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'oss',
+          edition: 'community',
           message: 'ok',
           user: {
             id: 'user-1',
@@ -558,12 +558,12 @@ describe('GitHubAppConnection', () => {
     });
   });
 
-  describe('when edition is oss and hasApp is false', () => {
+  describe('when edition is community and hasApp is false', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'oss',
+          edition: 'community',
           message: 'ok',
           user: {
             id: 'user-1',
@@ -773,12 +773,12 @@ describe('GitHubAppConnection', () => {
     });
   });
 
-  describe('when edition is oss and hasApp is true', () => {
+  describe('when edition is community and hasApp is true', () => {
     beforeEach(() => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: true,
-          edition: 'oss',
+          edition: 'community',
           message: 'ok',
           user: {
             id: 'user-1',

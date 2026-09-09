@@ -62,8 +62,4 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
    * not stamp a removal.
    */
   markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo>;
-  list(
-    organizationId?: OrganizationId,
-    opts?: { type?: GitRepoTypeFilter },
-  ): Promise<GitRepo[]>;
 }

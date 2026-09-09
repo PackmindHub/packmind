@@ -255,33 +255,6 @@ describe('GitRepoRepository', () => {
     });
   });
 
-  describe('list', () => {
-    let gitRepo1: GitRepo;
-    let gitRepo2: GitRepo;
-    let allGitRepos: GitRepo[];
-
-    beforeEach(async () => {
-      gitRepo1 = gitRepoFactory({ providerId: testProvider.id });
-      gitRepo2 = gitRepoFactory({ providerId: testProvider.id });
-      await gitRepoRepository.add(gitRepo1);
-      await gitRepoRepository.add(gitRepo2);
-
-      allGitRepos = await gitRepoRepository.list();
-    });
-
-    it('returns all repos', async () => {
-      expect(allGitRepos).toHaveLength(2);
-    });
-
-    it('includes the first repo', async () => {
-      expect(allGitRepos.map((r) => r.id)).toContain(gitRepo1.id);
-    });
-
-    it('includes the second repo', async () => {
-      expect(allGitRepos.map((r) => r.id)).toContain(gitRepo2.id);
-    });
-  });
-
   describe('findTrackedByOwnerRepoInOrganization', () => {
     it('returns the tracked repo for the owner/repo in the organization', async () => {
       await gitRepoRepository.add(
@@ -485,30 +458,6 @@ describe('GitRepoRepository', () => {
 
     it('keeps the row readable rather than soft-deleting it', () => {
       expect(reloaded).not.toBeNull();
-    });
-  });
-
-  describe('list with organization ID', () => {
-    let gitRepo: GitRepo;
-    let gitReposByOrg: GitRepo[];
-
-    beforeEach(async () => {
-      gitRepo = gitRepoFactory({ providerId: testProvider.id });
-      await gitRepoRepository.add(gitRepo);
-
-      gitReposByOrg = await gitRepoRepository.list(testOrganization.id);
-    });
-
-    it('returns repos for the organization', async () => {
-      expect(gitReposByOrg).toHaveLength(1);
-    });
-
-    it('returns the correct repo data', async () => {
-      expect(gitReposByOrg[0]).toMatchObject({
-        id: gitRepo.id,
-        owner: gitRepo.owner,
-        repo: gitRepo.repo,
-      });
     });
   });
 });

@@ -8,7 +8,6 @@ export interface IGitProviderRepository extends IRepository<GitProvider> {
     organizationId: OrganizationId,
     appInstallationId: number,
   ): Promise<GitProvider | null>;
-  list(organizationId?: OrganizationId): Promise<GitProvider[]>;
   update(
     id: string,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,

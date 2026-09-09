@@ -10,7 +10,7 @@ import {
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { handleScope } from '../../application/utils/handleScope';
-import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { throwIfFeatureAbsent } from '../http/packmindEdition';
 
 export class LinterGateway implements ILinterGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
@@ -33,10 +33,12 @@ export class LinterGateway implements ILinterGateway {
       return this.httpClient.request('/api/v0/list-draft-detection-program', {
         method: 'POST',
         body: payload,
-        onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('local linting with packages');
-          }
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(
+            response,
+            edition,
+            'local linting with packages',
+          );
         },
       });
     };
@@ -59,10 +61,12 @@ export class LinterGateway implements ILinterGateway {
       return this.httpClient.request('/api/v0/list-active-detection-program', {
         method: 'POST',
         body: payload,
-        onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('local linting with packages');
-          }
+        onError: (response, edition) => {
+          throwIfFeatureAbsent(
+            response,
+            edition,
+            'local linting with packages',
+          );
         },
       });
     };
@@ -77,10 +81,12 @@ export class LinterGateway implements ILinterGateway {
             body: {
               packagesSlugs: command.packagesSlugs,
             },
-            onError: (response) => {
-              if (response.status === 404) {
-                throw new CommunityEditionError('local linting with packages');
-              }
+            onError: (response, edition) => {
+              throwIfFeatureAbsent(
+                response,
+                edition,
+                'local linting with packages',
+              );
             },
           },
         );
@@ -88,12 +94,18 @@ export class LinterGateway implements ILinterGateway {
       return handleScopeInTargetsResponse(response);
     };
 
+  // The last route on the stubbed linter controller. Both callers discard
+  // whatever this rejects with, so the error only ever has to be the honest
+  // one rather than a 404 dressed up as something else.
   trackLinterExecution: Gateway<ITrackLinterExecutionUseCase> = async (
     command,
   ) => {
     return this.httpClient.request(`/api/v0/track-execution`, {
       method: 'POST',
       body: command,
+      onError: (response, edition) => {
+        throwIfFeatureAbsent(response, edition, 'linter execution tracking');
+      },
     });
   };
 }
