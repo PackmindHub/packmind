@@ -31,6 +31,7 @@ import type {
   PackageId,
   PackageResponse,
   SkillFile,
+  SkillId,
   SpaceId,
 } from '@packmind/types';
 import {
@@ -610,6 +611,7 @@ export function ContextPackagePane({
           <PMBox flex="1" minH={0} overflowY="auto">
             <ContextSkillFileDetail
               file={detailFile}
+              skillId={detail.key as SkillId}
               skillName={detail.name}
               backHref={componentEntryHref(searchParams)}
             />

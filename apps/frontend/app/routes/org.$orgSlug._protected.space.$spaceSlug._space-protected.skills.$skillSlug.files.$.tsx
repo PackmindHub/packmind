@@ -15,8 +15,7 @@ import {
   SKILL_MD_FILENAME,
 } from '../../src/domain/skills/utils/skillMdUtils';
 import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLinkUtils';
-import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { useGetSpaceMembersQuery } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { useCanEditSkillFiles } from '../../src/domain/skills/hooks/useCanEditSkillFiles';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 import { redirectSkillToContextComponent } from '../../src/shared/data/redirectToContext';
 
@@ -53,19 +52,7 @@ export default function SkillFilesRouteModule() {
   const navigate = useNavigate();
   const { skill, files, latestVersion } =
     useOutletContext<ISkillDetailsOutletContext>();
-  const { user, organization } = useAuthContext();
-  const { data: spaceMembersData } = useGetSpaceMembersQuery(skill.spaceId);
-
-  // Client-side gate for UX only — mirrors UpdateSkillFileFromUIUseCase's
-  // permission check (space admin, org admin, or the skill's creator). The
-  // server remains the source of truth and returns 403 if this is ever wrong.
-  const currentUserMember = spaceMembersData?.members?.find(
-    (member) => member.userId === user?.id,
-  );
-  const isSpaceAdmin = currentUserMember?.role === 'admin';
-  const isOrgAdmin = organization?.role === 'admin';
-  const isCreator = skill.userId === user?.id;
-  const canEditSkillFiles = isSpaceAdmin || isOrgAdmin || isCreator;
+  const canEditSkillFiles = useCanEditSkillFiles(skill);
 
   const skillMdFile = useMemo(
     () => buildVirtualSkillMdFile(latestVersion),
