@@ -22,6 +22,10 @@ export interface ISkillsPort {
   getSkill(id: SkillId): Promise<Skill | null>;
   getSkillVersion(id: SkillVersionId): Promise<SkillVersion | null>;
   getLatestSkillVersion(skillId: SkillId): Promise<SkillVersion | null>;
+  getLatestSkillVersions(skillIds: SkillId[]): Promise<SkillVersion[]>;
+  getSkillVersionsByIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillVersion[]>;
   getSkillVersionByNumber(
     skillId: SkillId,
     version: number,
@@ -50,6 +54,9 @@ export interface ISkillsPort {
     organizationId: OrganizationId,
   ): Promise<Skill | null>;
   getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
+  getSkillFilesByVersionIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<Map<SkillVersionId, SkillFile[]>>;
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
   updateSkillFileFromUI(
     command: UpdateSkillFileFromUICommand,

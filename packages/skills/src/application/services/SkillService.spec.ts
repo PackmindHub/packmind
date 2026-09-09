@@ -47,6 +47,8 @@ describe('SkillService', () => {
       restoreById: jest.fn(),
       findBySkillId: jest.fn(),
       findLatestBySkillId: jest.fn(),
+      findLatestBySkillIds: jest.fn(),
+      findByIds: jest.fn(),
       findBySkillIdAndVersion: jest.fn(),
       updateMetadata: jest.fn(),
     };

@@ -19,6 +19,7 @@ import {
   Target,
   TargetId,
   CommandVersion,
+  SkillFile,
   SkillVersion,
   SkillVersionId,
   StandardVersion,
@@ -284,16 +285,19 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           }),
         );
 
-        // Load files for all skill versions that don't have them populated
-        // This is critical for previously deployed skills which come from the database
-        // without their files relation loaded
-        const skillVersionsWithFiles = await Promise.all(
-          filteredSkillVersions.map(async (sv) => {
-            if (sv.files !== undefined) return sv;
-            const files = await this.skillsPort.getSkillFiles(sv.id);
-            return { ...sv, files };
-          }),
-        );
+        const versionIdsMissingFiles = filteredSkillVersions
+          .filter((sv) => sv.files === undefined)
+          .map((sv) => sv.id);
+        const missingFilesByVersionId =
+          versionIdsMissingFiles.length > 0
+            ? await this.skillsPort.getSkillFilesByVersionIds(
+                versionIdsMissingFiles,
+              )
+            : new Map<SkillVersionId, SkillFile[]>();
+        const skillVersionsWithFiles = filteredSkillVersions.map((sv) => {
+          if (sv.files !== undefined) return sv;
+          return { ...sv, files: missingFilesByVersionId.get(sv.id) ?? [] };
+        });
 
         // Prepare unified deployment using renderArtifacts for ALL targets
         const {
@@ -778,15 +782,22 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async fetchSkillVersions(
     skillVersionIds: SkillVersionId[],
   ): Promise<SkillVersion[]> {
+    const [fetchedVersions, filesByVersionId] = await Promise.all([
+      this.skillsPort.getSkillVersionsByIds(skillVersionIds),
+      this.skillsPort.getSkillFilesByVersionIds(skillVersionIds),
+    ]);
+
+    const versionsById = new Map(
+      fetchedVersions.map((version) => [version.id, version]),
+    );
+
     const versions: SkillVersion[] = [];
     for (const id of skillVersionIds) {
-      const version = await this.skillsPort.getSkillVersion(id);
+      const version = versionsById.get(id);
       if (!version) {
         throw new Error(`Skill version with ID ${id} not found`);
       }
-      // Fetch skill files for this version
-      const files = await this.skillsPort.getSkillFiles(id);
-      versions.push({ ...version, files });
+      versions.push({ ...version, files: filesByVersionId.get(id) ?? [] });
     }
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }

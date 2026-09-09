@@ -10,6 +10,8 @@ import {
   createCommandVersionId,
   createStandardVersionId,
   createDistributionId,
+  createSkillId,
+  SkillVersion,
   PublishPackagesCommand,
   Package,
   CommandVersion,
@@ -25,6 +27,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { commandVersionFactory } from '@packmind/commands/test/commandVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
+import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
@@ -80,7 +83,7 @@ describe('PublishPackagesUseCase', () => {
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
-      getLatestSkillVersion: jest.fn(),
+      getLatestSkillVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockDeploymentPort = {
@@ -684,6 +687,82 @@ describe('PublishPackagesUseCase', () => {
 
     it('returns one distribution', () => {
       expect(result).toHaveLength(1);
+    });
+  });
+  describe('when packages contain skills', () => {
+    const firstSkillId = createSkillId(uuidv4());
+    const secondSkillId = createSkillId(uuidv4());
+    const skillWithoutVersionId = createSkillId(uuidv4());
+    const otherPackageId = createPackageId(uuidv4());
+
+    let firstSkillVersion: SkillVersion;
+    let secondSkillVersion: SkillVersion;
+
+    beforeEach(() => {
+      firstSkillVersion = skillVersionFactory({ skillId: firstSkillId });
+      secondSkillVersion = skillVersionFactory({ skillId: secondSkillId });
+
+      // The first skill is shared by both packages, so it must be resolved once.
+      const firstPackage = packageFactory({
+        id: packageId,
+        skills: [firstSkillId, secondSkillId],
+      });
+      const otherPackage = packageFactory({
+        id: otherPackageId,
+        skills: [firstSkillId, skillWithoutVersionId],
+      });
+
+      mockPackageService.findById.mockImplementation(async (id) =>
+        id === packageId ? firstPackage : otherPackage,
+      );
+      mockSkillsPort.getLatestSkillVersions.mockImplementation(
+        async (skillIds) =>
+          [firstSkillVersion, secondSkillVersion].filter((version) =>
+            skillIds.includes(version.skillId),
+          ),
+      );
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        distributions: [],
+      });
+    });
+
+    it('resolves every skill version in a single call', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        packageIds: [packageId, otherPackageId],
+        targetIds: [targetId],
+      });
+
+      expect(mockSkillsPort.getLatestSkillVersions).toHaveBeenCalledTimes(1);
+    });
+
+    it('passes the deduplicated skill version ids to publishArtifacts', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        packageIds: [packageId, otherPackageId],
+        targetIds: [targetId],
+      });
+
+      expect(
+        mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
+      ).toEqual([firstSkillVersion.id, secondSkillVersion.id]);
+    });
+
+    describe('when a skill has no version', () => {
+      it('omits it without failing the publish', async () => {
+        await useCase.execute({
+          userId,
+          organizationId,
+          packageIds: [otherPackageId],
+          targetIds: [targetId],
+        });
+
+        expect(
+          mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
+        ).toEqual([firstSkillVersion.id]);
+      });
     });
   });
 });

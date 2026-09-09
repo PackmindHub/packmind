@@ -135,6 +135,56 @@ export class SkillVersionService {
     }
   }
 
+  async getLatestSkillVersions(skillIds: SkillId[]): Promise<SkillVersion[]> {
+    this.logger.info('Getting latest skill versions', {
+      count: skillIds.length,
+    });
+
+    try {
+      const versions =
+        await this.skillVersionRepository.findLatestBySkillIds(skillIds);
+
+      this.logger.info('Latest skill versions retrieved successfully', {
+        requestedCount: skillIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to get latest skill versions', {
+        count: skillIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getSkillVersionsByIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillVersion[]> {
+    this.logger.info('Getting skill versions by IDs', {
+      count: skillVersionIds.length,
+    });
+
+    try {
+      const versions =
+        await this.skillVersionRepository.findByIds(skillVersionIds);
+
+      this.logger.info('Skill versions retrieved by IDs successfully', {
+        requestedCount: skillVersionIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to get skill versions by IDs', {
+        count: skillVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async listSkillVersions(skillId: SkillId): Promise<SkillVersion[]> {
     this.logger.info('Listing skill versions', { skillId });
 

@@ -65,6 +65,79 @@ export class SkillVersionRepository
     }
   }
 
+  async findLatestBySkillIds(skillIds: SkillId[]): Promise<SkillVersion[]> {
+    const uniqueSkillIds = [...new Set(skillIds)];
+
+    if (uniqueSkillIds.length === 0) {
+      this.logger.info('No skill IDs provided to findLatestBySkillIds');
+      return [];
+    }
+
+    this.logger.info('Finding latest skill versions by skill IDs', {
+      count: uniqueSkillIds.length,
+    });
+
+    try {
+      const versions = await this.repository
+        .createQueryBuilder('skillVersion')
+        .where('skillVersion.skillId IN (:...skillIds)', {
+          skillIds: uniqueSkillIds as string[],
+        })
+        .distinctOn(['skillVersion.skillId'])
+        .orderBy('skillVersion.skillId', 'ASC')
+        .addOrderBy('skillVersion.version', 'DESC')
+        .getMany();
+
+      this.logger.info('Latest skill versions found by skill IDs', {
+        requestedCount: uniqueSkillIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find latest skill versions by skill IDs', {
+        count: uniqueSkillIds.length,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByIds(skillVersionIds: SkillVersionId[]): Promise<SkillVersion[]> {
+    const uniqueVersionIds = [...new Set(skillVersionIds)];
+
+    if (uniqueVersionIds.length === 0) {
+      this.logger.info('No skill version IDs provided to findByIds');
+      return [];
+    }
+
+    this.logger.info('Finding skill versions by IDs', {
+      count: uniqueVersionIds.length,
+    });
+
+    try {
+      const versions = await this.repository
+        .createQueryBuilder('skillVersion')
+        .where('skillVersion.id IN (:...skillVersionIds)', {
+          skillVersionIds: uniqueVersionIds as string[],
+        })
+        .getMany();
+
+      this.logger.info('Skill versions found by IDs', {
+        requestedCount: uniqueVersionIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find skill versions by IDs', {
+        count: uniqueVersionIds.length,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
   async findLatestBySkillId(skillId: SkillId): Promise<SkillVersion | null> {
     this.logger.info('Finding latest skill version by skill ID', {
       skillId,

@@ -91,8 +91,8 @@ describe('PublishArtifactsUseCase', () => {
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
-      getSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
+      getSkillVersionsByIds: jest.fn().mockResolvedValue([]),
+      getSkillFilesByVersionIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockGitPort = {
@@ -1781,11 +1781,15 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
-      mockSkillsPort.getSkillFiles.mockImplementation(async (id) => {
-        if (id === previousSkillVersionId) return mockFiles;
-        return [];
-      });
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([newSkillVersion]);
+      mockSkillsPort.getSkillFilesByVersionIds.mockImplementation(
+        async (ids) =>
+          new Map(
+            ids
+              .filter((id) => id === previousSkillVersionId)
+              .map((id) => [id, mockFiles]),
+          ),
+      );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1823,9 +1827,9 @@ describe('PublishArtifactsUseCase', () => {
     it('loads files for previously deployed skills', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
+      expect(mockSkillsPort.getSkillFilesByVersionIds).toHaveBeenCalledWith([
         previousSkillVersion.id,
-      );
+      ]);
     });
 
     it('passes skills with loaded files to renderArtifacts', async () => {
@@ -2501,8 +2505,10 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(skillVersion);
-      mockSkillsPort.getSkillFiles.mockResolvedValue(skillFiles);
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([skillVersion]);
+      mockSkillsPort.getSkillFilesByVersionIds.mockResolvedValue(
+        new Map([[skillVersion.id, skillFiles]]),
+      );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2544,12 +2550,12 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('fetches skill files for each skill version', async () => {
+    it('fetches the skill files of every version in a single call', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
+      expect(mockSkillsPort.getSkillFilesByVersionIds).toHaveBeenCalledWith([
         skillVersion.id,
-      );
+      ]);
     });
 
     it('passes skill versions with files to renderArtifacts', async () => {
@@ -2603,7 +2609,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockSkillsPort.getSkillVersion.mockResolvedValue(null);
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Skill version with ID',
@@ -2668,8 +2674,8 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
-      mockSkillsPort.getSkillFiles.mockResolvedValue([]);
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([newSkillVersion]);
+      mockSkillsPort.getSkillFilesByVersionIds.mockResolvedValue(new Map());
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);

@@ -55,7 +55,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
-      getLatestSkillVersion: jest.fn(),
+      getLatestSkillVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockDeploymentPort = {

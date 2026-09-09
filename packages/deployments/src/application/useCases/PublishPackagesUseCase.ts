@@ -6,7 +6,6 @@ import {
   PackageId,
   CommandId,
   StandardId,
-  SkillId,
   CommandVersionId,
   StandardVersionId,
   SkillVersionId,
@@ -85,6 +84,19 @@ export class PublishPackagesUseCase implements IPublishPackages {
     // Track per-package versions for distribution storage
     const packageVersionsMap: PackageVersionsMap = new Map();
 
+    // Resolve every skill's latest version up front: one query for the whole
+    // publish, rather than one per skill inside the loop below. A skill with no
+    // version never enters the cache and so contributes nothing downstream.
+    const latestSkillVersions = await this.skillsPort.getLatestSkillVersions(
+      packages.flatMap((pkg) => pkg.skills),
+    );
+    for (const skillVersion of latestSkillVersions) {
+      skillVersionCache.set(
+        skillVersion.skillId,
+        skillVersion.id as SkillVersionId,
+      );
+    }
+
     // Resolve versions per package and cache them
     for (const pkg of packages) {
       const pkgCommandVersionIds: CommandVersionId[] = [];
@@ -133,16 +145,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
         }
       }
 
-      // Resolve skill versions
       for (const skillId of pkg.skills) {
-        if (!skillVersionCache.has(skillId)) {
-          const latestVersion = await this.skillsPort.getLatestSkillVersion(
-            skillId as SkillId,
-          );
-          if (latestVersion) {
-            skillVersionCache.set(skillId, latestVersion.id as SkillVersionId);
-          }
-        }
         const versionId = skillVersionCache.get(skillId);
         if (versionId) {
           pkgSkillVersionIds.push(versionId);
