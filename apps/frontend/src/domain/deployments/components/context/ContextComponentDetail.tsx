@@ -110,6 +110,8 @@ import { StandardDistributionsList } from '../StandardDistributionsList/Standard
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { routes } from '../../../../shared/utils/routes';
 import { withPackageParam } from '../../hooks/useCreateIntoPackage';
+import { CopyMarkdownButton } from '../../../artifacts/components/CopyMarkdownButton';
+import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
@@ -317,6 +319,21 @@ export function ContextComponentDetail({
                 skillId={component.key as SkillId}
                 organizationId={organization.id}
                 spaceId={spaceId}
+              />
+            )}
+            {/*
+              The same move for the type whose content is one file: taking the
+              standard away as the file an agent reads.
+
+              It was on the rules page until the prose block that carried it
+              went, and that block was the only place in the product that would
+              hand a standard over as text. The pane is where a standard is read
+              now, so this is where it belongs.
+            */}
+            {component.type === 'standard' && (
+              <CopyStandardMarkdown
+                standardId={component.key as StandardId}
+                name={component.name}
               />
             )}
             <PMButton variant="secondary" size="sm" onClick={onMove}>
@@ -1410,6 +1427,47 @@ function CommandBody({ commandId }: Readonly<{ commandId: CommandId }>) {
  * standard body, but it is the line that says where the standard applies, and
  * the pane is on its way to being the only place a standard is read.
  */
+/**
+ * A standard as the markdown a coding agent reads, on the clipboard.
+ *
+ * Both queries are the ones the body below runs, with the same keys, so this
+ * asks for nothing: React Query answers it from the requests already in
+ * flight. Nothing renders until the standard is there, a copy control being a
+ * promise about content and not a placeholder.
+ */
+function CopyStandardMarkdown({
+  standardId,
+  name,
+}: Readonly<{
+  standardId: StandardId;
+  /** Off the frame, which is showing it, rather than out of the query again. */
+  name: string;
+}>) {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+  const { data } = useGetStandardByIdQuery(standardId);
+  const { data: rules } = useGetRulesByStandardIdQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standardId,
+  );
+
+  const standard = data?.standard ?? null;
+
+  if (!standard) return null;
+
+  return (
+    <CopyMarkdownButton
+      markdown={serializeStandardToMarkdown({
+        name,
+        scope: standard.scope ?? '',
+        description: standard.description,
+        rules: rules ?? [],
+      })}
+    />
+  );
+}
+
 function StandardBody({
   standardId,
   rulesHref,

@@ -934,6 +934,51 @@ describe('the distribution body', () => {
       expect(screen.queryByTestId('download-skill')).not.toBeInTheDocument();
     });
   });
+
+  /*
+    The rules page carried this until the prose block that held it went, and
+    that block was the only place in the product that handed a standard over as
+    the file an agent reads.
+  */
+  describe('taking a standard away with you', () => {
+    it('offers the copy on a standard', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '' } },
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.getByRole('button', { name: /copy markdown/i }),
+      ).toBeInTheDocument();
+    });
+
+    /* Nothing to serialise yet, and a copy control is a promise about content. */
+    it('offers nothing while the standard is still loading', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not offer it on a command', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    /* A skill is a folder, and the download beside it is what hands that over. */
+    it('does not offer it on a skill', async () => {
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
 
 const COMMIT = {
