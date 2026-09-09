@@ -36,23 +36,6 @@ export class StandardVersionRepository
     };
   }
 
-  async list(): Promise<StandardVersion[]> {
-    this.logger.info('Listing all standard versions from database');
-
-    try {
-      const versions = await this.repository.find();
-      this.logger.info('Standard versions listed successfully', {
-        count: versions.length,
-      });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list standard versions from database', {
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
   async findByStandardId(standardId: StandardId): Promise<StandardVersion[]> {
     this.logger.info('Finding standard versions by standard ID', {
       standardId,

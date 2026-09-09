@@ -251,26 +251,6 @@ describe('StandardVersionRepository', () => {
     });
   });
 
-  it('can list all standard versions', async () => {
-    // Create standards first
-    const standard1 = await standardRepo.save(
-      standardFactory({ slug: `standard-${uuidv4()}` }),
-    );
-    const standard2 = await standardRepo.save(
-      standardFactory({ slug: `standard-${uuidv4()}` }),
-    );
-
-    await standardVersionRepository.add(
-      standardVersionFactory({ standardId: standard1.id }),
-    );
-    await standardVersionRepository.add(
-      standardVersionFactory({ standardId: standard2.id }),
-    );
-
-    const allVersions = await standardVersionRepository.list();
-    expect(allVersions).toHaveLength(2);
-  });
-
   describe('findLatestByStandardIds', () => {
     let firstStandard: Standard;
     let secondStandard: Standard;
