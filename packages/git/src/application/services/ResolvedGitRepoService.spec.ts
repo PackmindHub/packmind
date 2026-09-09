@@ -10,6 +10,7 @@ import {
 import { GitProvider, GitProviderNotFoundError } from '@packmind/types';
 import { gitProviderFactory, gitRepoFactory } from '../../../test';
 import { stubLogger } from '@packmind/test-utils';
+import { instrumentComponents } from '@packmind/node-utils';
 
 const stubGitRepoInstance = (): jest.Mocked<IGitRepo> =>
   ({
@@ -94,6 +95,42 @@ describe('ResolvedGitRepoService', () => {
     });
 
     it('reads the provider once rather than once per file per target', () => {
+      expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Both miss, both resolve, and the slower one used to overwrite the faster —
+  // putting a client built from stale credentials back in front.
+  describe('when two reads race on the same repository', () => {
+    let first: IGitRepo;
+    let second: IGitRepo;
+
+    beforeEach(async () => {
+      const gitRepo = gitRepoFactory();
+      let resolveProvider: ((provider: GitProvider) => void) | undefined;
+      gitProviderService.findGitProviderById.mockReturnValue(
+        new Promise<GitProvider>((resolve) => {
+          resolveProvider = resolve;
+        }),
+      );
+
+      const both = Promise.all([
+        service.resolve(gitRepo),
+        service.resolve(gitRepo),
+      ]);
+      resolveProvider?.(provider);
+      [first, second] = await both;
+    });
+
+    it('hands both reads the same instance', () => {
+      expect(second).toBe(first);
+    });
+
+    it('builds the repository once', () => {
+      expect(gitRepoFactoryPort.createGitRepo).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads the provider once', () => {
       expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
     });
   });
@@ -227,6 +264,19 @@ describe('ResolvedGitRepoService', () => {
 
     it('does not remember the failure', async () => {
       await expect(service.resolve(gitRepo)).resolves.toBeDefined();
+    });
+  });
+
+  // The race fix relies on the cache write running before the caller can call
+  // again. Instrumentation wraps `resolve`, so pin the invariant through it.
+  describe('when instrumented and two reads race', () => {
+    it('still builds the repository once', async () => {
+      instrumentComponents([service]);
+      const gitRepo = gitRepoFactory();
+
+      await Promise.all([service.resolve(gitRepo), service.resolve(gitRepo)]);
+
+      expect(gitRepoFactoryPort.createGitRepo).toHaveBeenCalledTimes(1);
     });
   });
 

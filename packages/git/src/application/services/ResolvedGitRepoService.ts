@@ -13,7 +13,13 @@ const origin = 'ResolvedGitRepoService';
 const RESOLVED_REPO_REUSE_MS = 10_000;
 
 type ResolvedGitRepo = {
-  instance: IGitRepo;
+  /**
+   * The in-flight resolution, not its result. Stored before the first await so
+   * concurrent misses on one key share it: otherwise both resolve, and the one
+   * that finishes last wins — which can put a client built from just-rotated
+   * credentials behind one built from the old ones.
+   */
+  instance: Promise<IGitRepo>;
   expiresAt: number;
 };
 
@@ -31,6 +37,8 @@ export class ResolvedGitRepoService {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
+  // `async` with no `await` on purpose: only native async methods are given a
+  // span, and the body must stay synchronous — see the cache write below.
   async resolve(gitRepo: GitRepo): Promise<IGitRepo> {
     const key = ResolvedGitRepoService.cacheKey(gitRepo);
 
@@ -41,6 +49,28 @@ export class ResolvedGitRepoService {
 
     this.evictExpired();
 
+    const pending = this.build(gitRepo);
+
+    // Set synchronously — an await here would reopen the race this closes. The
+    // window therefore runs from when the credentials were read, not from when
+    // the client was built.
+    this.resolvedRepos.set(key, {
+      instance: pending,
+      expiresAt: Date.now() + RESOLVED_REPO_REUSE_MS,
+    });
+
+    // Failures are deliberately not cached. Guarded on identity so a newer
+    // entry is left alone.
+    pending.catch(() => {
+      if (this.resolvedRepos.get(key)?.instance === pending) {
+        this.resolvedRepos.delete(key);
+      }
+    });
+
+    return pending;
+  }
+
+  private async build(gitRepo: GitRepo): Promise<IGitRepo> {
     const provider = await this.gitProviderService.findGitProviderById(
       gitRepo.providerId,
     );
@@ -56,15 +86,7 @@ export class ResolvedGitRepoService {
       providerId: gitRepo.providerId,
     });
 
-    const instance = await this.gitRepoFactory.createGitRepo(gitRepo, provider);
-
-    // Failures are deliberately not cached.
-    this.resolvedRepos.set(key, {
-      instance,
-      expiresAt: Date.now() + RESOLVED_REPO_REUSE_MS,
-    });
-
-    return instance;
+    return this.gitRepoFactory.createGitRepo(gitRepo, provider);
   }
 
   /**
