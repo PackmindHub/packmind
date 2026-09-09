@@ -27,6 +27,7 @@ import {
   LuEllipsisVertical,
   LuExternalLink,
   LuMessageSquarePlus,
+  LuPencil,
   LuTrash2,
 } from 'react-icons/lu';
 import { TiWarningOutline } from 'react-icons/ti';
@@ -54,6 +55,9 @@ import {
   useGetSkillWithFilesByIdQuery,
 } from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
+import { SkillFileEditor } from '../../../skills/components/SkillFileEditor';
+import { SKILL_MD_FILENAME } from '../../../skills/utils/skillMdUtils';
+import { useCanEditSkillFiles } from '../../../skills/hooks/useCanEditSkillFiles';
 import { DownloadSkillPopover } from '../../../skills/components/DownloadSkillPopover';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
 import { parseCommandFrontmatter } from '../../../commands/utils/parseCommandFrontmatter';
@@ -1787,8 +1791,23 @@ function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
  * disagreement nobody notices until the agent behaves differently from what the
  * page showed.
  */
+/**
+ * A skill's instructions, and the one control that changes them.
+ *
+ * The pencil is here rather than in the header, unlike the `Edit` a standard
+ * and a command carry. Theirs leaves for a form and comes back; this one swaps
+ * the prose for an editor in place, which is what the skill's own page does
+ * too, and a trigger that far from what it changes would have to hand state
+ * back down through a frame that serves three types.
+ *
+ * Editable at all only since the plugin-first navigation stopped serving the
+ * page that used to carry this. See `ContextSkillFileDetail` for the other half
+ * and `useCanEditSkillFiles` for the rule both ask.
+ */
 function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
   const { data, isLoading, isError } = useGetSkillWithFilesByIdQuery(skillId);
+  const canEdit = useCanEditSkillFiles(data?.skill);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (isLoading) {
     return (
@@ -1809,9 +1828,50 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
 
   const { latestVersion } = data;
 
+  if (isEditing) {
+    return (
+      <PMVStack gap={6} align="stretch" maxWidth="72ch">
+        <SkillFrontmatterInfo skillVersion={latestVersion} />
+        {/*
+          The body alone, which is what `prompt` holds. The frontmatter above is
+          parsed into columns of the version and is not edited as text here, so
+          handing the editor the reassembled file would invite a change this
+          save cannot keep.
+        */}
+        <SkillFileEditor
+          skillId={skillId}
+          skillSlug={data.skill.slug}
+          filePath={SKILL_MD_FILENAME}
+          initialContent={latestVersion.prompt}
+          currentVersion={latestVersion.version}
+          onCancel={() => setIsEditing(false)}
+          onSaved={() => setIsEditing(false)}
+        />
+      </PMVStack>
+    );
+  }
+
   return (
     <PMVStack gap={6} align="stretch" maxWidth="72ch">
       <SkillFrontmatterInfo skillVersion={latestVersion} />
+
+      {/*
+        Right-aligned above the prose, which is where the same pencil sits in
+        the file view: with the content it changes, and out of the way of
+        reading it.
+      */}
+      {canEdit && (
+        <PMBox display="flex" justifyContent="flex-end" marginBottom={-4}>
+          <PMIconButton
+            aria-label="Edit instructions"
+            size="sm"
+            variant="tertiary"
+            onClick={() => setIsEditing(true)}
+          >
+            <LuPencil />
+          </PMIconButton>
+        </PMBox>
+      )}
 
       {latestVersion.prompt ? (
         <PMBox>

@@ -40,6 +40,7 @@ import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
 } from '../../../skills/api/queries/SkillsQueries';
+import { useCanEditSkillFiles } from '../../../skills/hooks/useCanEditSkillFiles';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
@@ -189,6 +190,21 @@ vi.mock('../../../skills/components/DownloadSkillPopover', () => ({
   DownloadSkillPopover: () => <div data-testid="download-skill" />,
 }));
 
+vi.mock('../../../skills/hooks/useCanEditSkillFiles', () => ({
+  useCanEditSkillFiles: vi.fn(),
+}));
+
+/*
+  The real editor mounts CodeMirror, which jsdom has no layout for. What these
+  cases are about is whether the pane offers the edit at all, so a marker is
+  enough to say the prose gave way to it.
+*/
+vi.mock('../../../skills/components/SkillFileEditor', () => ({
+  SkillFileEditor: ({ filePath }: { filePath: string }) => (
+    <div data-testid="skill-file-editor">{filePath}</div>
+  ),
+}));
+
 const COMMAND_ID = createCommandId('command-1');
 const STANDARD_ID = createStandardId('standard-1');
 const SKILL_ID = createSkillId('skill-1');
@@ -283,6 +299,7 @@ function resetToEmpty() {
   (useGetCommandByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({ data: undefined });
+  (useCanEditSkillFiles as Mock).mockReturnValue(false);
   (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
     data: undefined,
   });
@@ -799,6 +816,69 @@ describe('the distribution body', () => {
 
         expect(
           screen.queryByRole('link', { name: /manage rules/i }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("editing a skill's instructions", () => {
+    /*
+      The other half of the regression increments 6 and 7 opened. A skill has no
+      `Edit` in its header because it has no single form, and its instructions
+      were editable only on the page that stopped answering.
+    */
+    const loadedSkill = () => {
+      (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({
+        data: {
+          skill: { id: SKILL_ID, slug: 'release-checklist' },
+          files: [],
+          latestVersion: { version: 3, prompt: 'Cut the tag.' },
+        },
+      });
+    };
+
+    describe('when the reader may edit the skill', () => {
+      it('offers the pencil', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(true);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByRole('button', { name: /edit instructions/i }),
+        ).toBeVisible();
+      });
+
+      it('gives the prose over to the editor when it is pressed', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(true);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+        await act(async () => {
+          screen.getByRole('button', { name: /edit instructions/i }).click();
+        });
+
+        expect(screen.getByTestId('skill-file-editor')).toHaveTextContent(
+          'SKILL.md',
+        );
+      });
+    });
+
+    describe('when the reader may not', () => {
+      it('does not offer it', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(false);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.queryByRole('button', { name: /edit instructions/i }),
         ).not.toBeInTheDocument();
       });
     });
