@@ -12,7 +12,6 @@ import {
  */
 export {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
-  ORGA_SPACE_MANAGEMENT_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/feature-flags';

@@ -24,14 +24,6 @@ describe('isFeatureEnabled', () => {
       );
     });
 
-    it('reads the SCREAMING_SNAKE env key for the orga-space-management flag', async () => {
-      getConfigSpy.mockResolvedValue('on');
-
-      await isFeatureEnabled('orga-space-management', {});
-
-      expect(getConfigSpy).toHaveBeenCalledWith('FF_ORGA_SPACE_MANAGEMENT');
-    });
-
     describe('when set to "on"', () => {
       it('returns true', async () => {
         getConfigSpy.mockResolvedValue('on');
@@ -118,16 +110,6 @@ describe('isFeatureEnabled', () => {
       });
 
       expect(result).toBe(false);
-    });
-
-    it('gates the orga-space-management flag by its allowed domain', async () => {
-      getConfigSpy.mockResolvedValue(null);
-
-      const result = await isFeatureEnabled('orga-space-management', {
-        userEmail: 'user@packmind.com',
-      });
-
-      expect(result).toBe(true);
     });
   });
 
