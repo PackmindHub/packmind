@@ -7,7 +7,7 @@ import { ArtifactResultFilePreview } from '../../src/domain/artifacts/components
 import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
 
 export default function StandardDetailSummaryRouteModule() {
-  const { standard, rules, rulesLoading, rulesError } =
+  const { standard, rules, rulesLoading, rulesError, navMode } =
     useOutletContext<StandardDetailsOutletContext>();
 
   const markdown = useMemo(
@@ -33,6 +33,28 @@ export default function StandardDetailSummaryRouteModule() {
     </PMBox>
   );
 
+  const rulesTable = (
+    <RuleSummaryTable
+      standardId={standard.id}
+      rules={rules}
+      isLoading={rulesLoading}
+      isError={rulesError}
+    />
+  );
+
+  /*
+   * The table, and that is the whole page.
+   *
+   * The frame above already names the standard, in the link back to the pane
+   * this reader came from, and titles the page Rules. What is left to drop is
+   * the prose: the pane's Instructions tab is what a standard says, and reading
+   * the same paragraph again under the rules it introduces was the content half
+   * of the duplication `StandardRulesFrame` fixes the chrome half of.
+   */
+  if (navMode === 'plugin-first') {
+    return rulesTable;
+  }
+
   return (
     <PMVStack align="stretch" gap={6} width="full">
       <ArtifactResultFilePreview
@@ -43,12 +65,7 @@ export default function StandardDetailSummaryRouteModule() {
 
       <PMVStack align="stretch" gap={4} width="full">
         <PMHeading level="h3">Rules</PMHeading>
-        <RuleSummaryTable
-          standardId={standard.id}
-          rules={rules}
-          isLoading={rulesLoading}
-          isError={rulesError}
-        />
+        {rulesTable}
       </PMVStack>
     </PMVStack>
   );

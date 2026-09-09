@@ -154,6 +154,8 @@ export function ContextOrphanPane({
         component={component}
         backLabel="All components"
         backHref={inventoryHref(searchParams)}
+        /* No package to come back to, which is what this pane is about. */
+        packageId={null}
         /*
           No package on the edit link. It is what the form reads to come back to
           the package it was opened from, and there is none: the form returns to

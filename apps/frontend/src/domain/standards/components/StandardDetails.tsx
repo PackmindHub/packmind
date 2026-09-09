@@ -22,6 +22,19 @@ import { useStandardEditionFeatures } from '@packmind/proprietary/frontend/domai
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { LuArrowLeft } from 'react-icons/lu';
+import {
+  useSpaceNavMode,
+  type SpaceNavMode,
+} from '../../organizations/components/SpaceNavModeContext';
+import {
+  usePackageInAddress,
+  withPackageParam,
+} from '../../deployments/hooks/useCreateIntoPackage';
+import {
+  contextComponentHref,
+  contextPackageHref,
+} from '../../deployments/components/context/buildComponentDetail';
+import { StandardRulesFrame } from './StandardRulesFrame';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -35,6 +48,15 @@ export type StandardDetailsOutletContext = {
   rulesLoading: boolean;
   rulesError: boolean;
   ruleLanguages: Record<string, string[]>;
+  /**
+   * Which navigation the reader is on, resolved once here.
+   *
+   * The bodies below need it for the same reason this component does: what the
+   * frame prints decides what is left for them to print. Handing it down
+   * through the context they already read is what keeps the two from
+   * disagreeing and showing a standard's prose under a title that says Rules.
+   */
+  navMode: SpaceNavMode;
 };
 
 export const StandardDetails = ({
@@ -46,6 +68,13 @@ export const StandardDetails = ({
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const { pathname } = useLocation();
+  const { mode: navMode } = useSpaceNavMode();
+  /*
+   * Only to find the way back. A reader who opened these rules from the pane
+   * came from one package, and the pane can hold a component two packages carry:
+   * without this, going back lands in whichever of them the rail lists first.
+   */
+  const packageInAddress = usePackageInAddress();
   const isEditing = pathname.endsWith('/edit');
   const defaultPath = `.packmind/standards/${standard.slug}.md`;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -116,6 +145,7 @@ export const StandardDetails = ({
       rulesLoading,
       rulesError,
       ruleLanguages,
+      navMode,
     }),
     [
       standard,
@@ -124,6 +154,7 @@ export const StandardDetails = ({
       rulesLoading,
       rulesError,
       ruleLanguages,
+      navMode,
     ],
   );
 
@@ -202,6 +233,53 @@ export const StandardDetails = ({
   // When editing, render only the outlet (edit form handles its own layout)
   if (isEditing) {
     return <Outlet context={outletContext} />;
+  }
+
+  /*
+   * The plugin-first navigation reads a standard in the Context pane, which
+   * makes these pages one level below it rather than the standard's own screen.
+   * What they keep once the pane's copy of this header is gone, and why, is in
+   * `StandardRulesFrame`.
+   *
+   * Everything below this branch is untouched. In the current navigation these
+   * pages are the standard, and their header is the only one its reader has
+   * seen.
+   */
+  if (navMode === 'plugin-first' && orgSlug && spaceSlug) {
+    const paneHref = packageInAddress
+      ? contextPackageHref(
+          { orgSlug, spaceSlug },
+          packageInAddress,
+          standard.id,
+        )
+      : contextComponentHref({ orgSlug, spaceSlug }, standard.id);
+
+    /*
+     * One hop per link, the way the pane's own back link works: a rule returns
+     * to the rules, the rules return to the standard in the pane. The package
+     * travels with the first hop so the second one lands where the reader
+     * started rather than in whichever package the rail happens to list first.
+     */
+    const trail = isRuleView
+      ? {
+          title: currentRule?.content ?? 'Rule',
+          backLabel: 'Rules',
+          backHref: withPackageParam(
+            routes.space.toStandardSummary(orgSlug, spaceSlug, standard.id),
+            packageInAddress ?? undefined,
+          ),
+        }
+      : {
+          title: activeTab === 'distribution' ? 'Distribution' : 'Rules',
+          backLabel: standard.name,
+          backHref: paneHref,
+        };
+
+    return (
+      <StandardRulesFrame {...trail}>
+        <Outlet context={outletContext} />
+      </StandardRulesFrame>
+    );
   }
 
   const tabs = [

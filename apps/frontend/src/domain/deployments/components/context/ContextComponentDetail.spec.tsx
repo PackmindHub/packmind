@@ -11,7 +11,7 @@ import {
   createSkillId,
   createStandardId,
 } from '@packmind/types';
-import type { RuleDetectionStatusSummary } from '@packmind/types';
+import type { PackageId, RuleDetectionStatusSummary } from '@packmind/types';
 import type { Mock } from 'vitest';
 
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -243,6 +243,7 @@ async function renderDetail(
     backLabel?: string;
     moveLabel?: string;
     onRemove?: (() => void) | null;
+    packageId?: PackageId | null;
   }> = {},
 ) {
   await act(async () => {
@@ -253,6 +254,11 @@ async function renderDetail(
             component={component}
             backLabel={scope.backLabel ?? 'Backend conventions'}
             backHref="?package=pkg-1"
+            packageId={
+              scope.packageId === undefined
+                ? ('pkg-1' as PackageId)
+                : scope.packageId
+            }
             editHref="/edit"
             tab={tab}
             onTabChange={onTabChange}
@@ -794,6 +800,30 @@ describe('the distribution body', () => {
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
+      );
+
+      expect(
+        screen.getByRole('link', { name: /manage rules/i }),
+      ).toHaveAttribute(
+        'href',
+        '/org/acme/space/core/standards/standard-1/summary?package=pkg-1',
+      );
+    });
+
+    /*
+      The package the reader is in, carried onto the page that opens so its own
+      back link returns here rather than to whichever package the rail lists
+      first for a standard two of them carry.
+    */
+    it('carries no package when the standard is read outside one', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '' } },
+      });
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+        vi.fn(),
+        { packageId: null },
       );
 
       expect(

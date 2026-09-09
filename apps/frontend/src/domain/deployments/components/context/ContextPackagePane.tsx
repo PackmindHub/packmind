@@ -621,6 +621,7 @@ export function ContextPackagePane({
             component={detail}
             backLabel={pkg.name}
             backHref={packageDetailHref(searchParams, pkg.id)}
+            packageId={pkg.id}
             editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
             tab={tab}
             onTabChange={showTab}

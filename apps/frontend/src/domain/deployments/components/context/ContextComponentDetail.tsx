@@ -35,6 +35,7 @@ import type {
   Command,
   CommandId,
   OrganizationId,
+  PackageId,
   Rule,
   SkillId,
   SpaceId,
@@ -108,6 +109,7 @@ import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistribut
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { routes } from '../../../../shared/utils/routes';
+import { withPackageParam } from '../../hooks/useCreateIntoPackage';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
@@ -135,6 +137,7 @@ export function ContextComponentDetail({
   component,
   backLabel,
   backHref,
+  packageId,
   editHref,
   tab,
   onTabChange,
@@ -155,6 +158,15 @@ export function ContextComponentDetail({
   backLabel: string;
   /** Where that link goes, tab and all. */
   backHref: string;
+  /**
+   * The package this component is being read in, null outside one.
+   *
+   * Not for anything on this frame, which is handed its links already built.
+   * It travels with the one link that leaves the surface, so the page it opens
+   * can come back to the package the reader was in rather than to whichever
+   * package the rail lists first.
+   */
+  packageId: PackageId | null;
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
   /**
@@ -479,6 +491,7 @@ export function ContextComponentDetail({
           component={component}
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
+          packageId={packageId}
         />
       </PMTabsCompound.Content>
 
@@ -515,10 +528,13 @@ function ComponentBody({
   component,
   orgSlug,
   spaceSlug,
+  packageId,
 }: Readonly<{
   component: ContextComponent;
   orgSlug: string;
   spaceSlug: string;
+  /** Only for the rules link below, which is the one link that leaves. */
+  packageId: PackageId | null;
 }>) {
   switch (component.type) {
     case 'command':
@@ -534,10 +550,9 @@ function ComponentBody({
             to it again. Naming the page where the rules actually are is both
             the honest label and the only target that survives.
           */
-          rulesHref={routes.space.toStandardSummary(
-            orgSlug,
-            spaceSlug,
-            component.key,
+          rulesHref={withPackageParam(
+            routes.space.toStandardSummary(orgSlug, spaceSlug, component.key),
+            packageId ?? undefined,
           )}
         />
       );
