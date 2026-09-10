@@ -2,7 +2,6 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
 import {
   CaptureCommandCommand,
   CommandCreatedEvent,
@@ -56,7 +55,7 @@ describe('CaptureRecipeUseCase', () => {
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    } as Partial<jest.Mocked<ISpacesPort>> as jest.Mocked<ISpacesPort>;
 
     // Mock RecipeService
     commandService = {
@@ -81,8 +80,6 @@ describe('CaptureRecipeUseCase', () => {
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
-
-    stubLogger();
 
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
