@@ -1,7 +1,9 @@
 import {
+  DetectionSeverity,
   ProgrammingLanguage,
   RuleLanguageDetectionStatus,
   createRuleId,
+  type ActiveDetectionProgramId,
   type RuleDetectionStatusSummary,
 } from '@packmind/types';
 
@@ -28,6 +30,21 @@ function language(
   status: RuleLanguageDetectionStatus,
 ) {
   return { language: value, status };
+}
+
+const PROGRAM_ID = 'program-1' as ActiveDetectionProgramId;
+
+/** An active language the way the API answers for one that reports something. */
+function reporting(
+  value: ProgrammingLanguage,
+  severity: DetectionSeverity = DetectionSeverity.ERROR,
+) {
+  return {
+    language: value,
+    status: RuleLanguageDetectionStatus.OK,
+    severity,
+    activeDetectionProgramId: PROGRAM_ID,
+  };
 }
 
 function detection(
@@ -188,6 +205,58 @@ describe('ruleDetectionsById', () => {
     });
   });
 
+  describe('when an active language reports at a severity', () => {
+    const statuses = [summary(RULE_ID, [reporting(ProgrammingLanguage.JAVA)])];
+
+    it('carries the severity on the language', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBe(DetectionSeverity.ERROR);
+    });
+
+    it('carries the program the severity is set on', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]
+          ?.activeDetectionProgramId,
+      ).toBe(PROGRAM_ID);
+    });
+  });
+
+  /*
+    Half a pair is a control with nowhere to write, so neither half is kept.
+  */
+  describe('when a severity arrives with no program to set it on', () => {
+    const statuses = [
+      summary(RULE_ID, [
+        {
+          language: ProgrammingLanguage.JAVA,
+          status: RuleLanguageDetectionStatus.OK,
+          severity: DetectionSeverity.WARNING,
+        },
+      ]),
+    ];
+
+    it('leaves the severity out', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBeUndefined();
+    });
+  });
+
+  describe('when a language is still being worked on', () => {
+    const statuses = [
+      summary(RULE_ID, [
+        language(ProgrammingLanguage.JAVA, RuleLanguageDetectionStatus.WIP),
+      ]),
+    ];
+
+    it('carries no severity, nothing being reported yet', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBeUndefined();
+    });
+  });
+
   describe('when several rules answer at once', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
@@ -256,6 +325,29 @@ describe('ruleDetectionOpens', () => {
           detection('active', [ProgrammingLanguage.TYPESCRIPT]),
         ),
       ).toBe(false);
+    });
+  });
+
+  /*
+    The one thing in there a reader can change, and the label never carries it.
+  */
+  describe('when its only language reports at a severity', () => {
+    it('opens, to offer the severity', () => {
+      expect(
+        ruleDetectionOpens(
+          detection(
+            'active',
+            [ProgrammingLanguage.TYPESCRIPT],
+            [
+              {
+                ...active(ProgrammingLanguage.TYPESCRIPT),
+                severity: DetectionSeverity.WARNING,
+                activeDetectionProgramId: PROGRAM_ID,
+              },
+            ],
+          ),
+        ),
+      ).toBe(true);
     });
   });
 

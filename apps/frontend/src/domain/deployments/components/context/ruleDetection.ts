@@ -1,5 +1,7 @@
 import {
   RuleLanguageDetectionStatus,
+  type ActiveDetectionProgramId,
+  type DetectionSeverity,
   type ProgrammingLanguage,
   type RuleDetectionStatusSummary,
   type RuleId,
@@ -24,6 +26,19 @@ export type RuleDetectionState = 'active' | 'in-progress' | 'inactive';
 export type RuleDetectionLanguage = {
   language: ProgrammingLanguage;
   state: RuleDetectionState;
+  /**
+   * What a violation is reported as, and the program it is set on.
+   *
+   * Together or not at all: changing a severity is a call about one program,
+   * and a severity with no program to set it on is a control with nowhere to
+   * write. The API answers with both or neither, and this keeps that true one
+   * step further in.
+   *
+   * Only an active language has them. A language whose program is still being
+   * worked on reports nothing yet, so there is nothing to choose.
+   */
+  severity?: DetectionSeverity;
+  activeDetectionProgramId?: ActiveDetectionProgramId;
 };
 
 export type RuleDetection = {
@@ -70,9 +85,16 @@ export function ruleDetectionsById(
       state: detectionState(activeLanguages.length, isInProgress),
       activeLanguages,
       languages: languages
-        .map(({ language, status }) => ({
+        .map(({ language, status, severity, activeDetectionProgramId }) => ({
           language,
           state: languageState(status),
+          /*
+           * Dropped unless the pair is complete, for the reason the type gives:
+           * half of it is a control with nowhere to write.
+           */
+          ...(severity && activeDetectionProgramId
+            ? { severity, activeDetectionProgramId }
+            : {}),
         }))
         .sort(byStateThenName),
     });
@@ -157,11 +179,20 @@ export function ruleDetectionLabel(
  * Whether the languages behind a rule say more than its label does.
  *
  * A rule active in its one and only language has a label that already names
- * that language, so opening it would show the same fact a second time: no
- * chevron there. Every other case has something to add, either the languages
- * the label only counted or the ones it never mentioned because nothing detects
- * them.
+ * that language, so opening it would show the same fact a second time. Every
+ * other case has something to add: the languages the label only counted, the
+ * ones it never mentioned because nothing detects them, or a severity, which
+ * the label never carries and which is the one thing in here a reader can
+ * change.
+ *
+ * Severity is asked of the data rather than assumed from the state, because an
+ * active language can arrive without one. No chevron opening onto nothing is
+ * the rule this whole affordance was built on.
  */
 export function ruleDetectionOpens(detection: RuleDetection): boolean {
-  return detection.state !== 'active' || detection.languages.length > 1;
+  return (
+    detection.state !== 'active' ||
+    detection.languages.length > 1 ||
+    detection.languages.some((language) => language.severity)
+  );
 }

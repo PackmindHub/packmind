@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import {
+  DetectionSeverity,
   ProgrammingLanguage,
   RuleLanguageDetectionStatus,
   createCommandId,
@@ -11,7 +12,11 @@ import {
   createSkillId,
   createStandardId,
 } from '@packmind/types';
-import type { PackageId, RuleDetectionStatusSummary } from '@packmind/types';
+import type {
+  ActiveDetectionProgramId,
+  PackageId,
+  RuleDetectionStatusSummary,
+} from '@packmind/types';
 import type { Mock } from 'vitest';
 
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -36,6 +41,7 @@ import {
   useGetStandardVersionsQuery,
 } from '../../../standards/api/queries/StandardsQueries';
 import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import { useUpdateActiveDetectionProgramSeverityMutation } from '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries';
 import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
@@ -90,6 +96,18 @@ vi.mock(
  * forever, which would leave every case here asserting the absence of
  * everything.
  */
+/**
+ * Setting a severity, which only the proprietary edition can do. A factory with
+ * no `importActual`, because in the other repository this specifier resolves to
+ * a stub whose whole content is this one export.
+ */
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries',
+  () => ({
+    useUpdateActiveDetectionProgramSeverityMutation: vi.fn(),
+  }),
+);
+
 vi.mock(
   '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
   async () => ({
@@ -1293,11 +1311,17 @@ describe('whether a rule is detected automatically', () => {
   const FIRST_RULE = createRuleId('rule-1');
   const SECOND_RULE = createRuleId('rule-2');
 
+  const updateSeverity = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetToEmpty();
     (useGetStandardByIdQuery as Mock).mockReturnValue({
       data: { standard: { slug: 'naming', description: '' } },
+    });
+    (useUpdateActiveDetectionProgramSeverityMutation as Mock).mockReturnValue({
+      mutate: updateSeverity,
+      isPending: false,
     });
   });
 
@@ -1415,6 +1439,115 @@ describe('whether a rule is detected automatically', () => {
       await userEvent.click(trigger);
 
       expect(screen.queryByText('Languages')).not.toBeInTheDocument();
+    });
+  });
+
+  /*
+    The one setting on this tab, and the only reason a rule active in its one
+    and only language has anything to open onto.
+  */
+  describe('when the language reports at a severity', () => {
+    const PROGRAM_ID = 'program-1' as ActiveDetectionProgramId;
+
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: FIRST_RULE,
+            languages: [
+              {
+                language: ProgrammingLanguage.JAVA,
+                status: RuleLanguageDetectionStatus.OK,
+                severity: DetectionSeverity.WARNING,
+                activeDetectionProgramId: PROGRAM_ID,
+              },
+            ],
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    async function openLanguages() {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /active in JAVA/i }),
+      );
+    }
+
+    it('offers the severity beside the language', async () => {
+      await openLanguages();
+
+      expect(
+        screen.getByRole('button', { name: 'Reported as warning in JAVA' }),
+      ).toBeVisible();
+    });
+
+    it('leaves the collapsed row saying nothing about it', async () => {
+      await renderStandard();
+
+      expect(
+        screen.queryByRole('button', { name: /reported as/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('sets the other severity on the program behind that language', async () => {
+      await openLanguages();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Reported as warning in JAVA' }),
+      );
+      await userEvent.click(
+        screen.getByRole('menuitem', { name: 'Report as error' }),
+      );
+
+      expect(updateSeverity).toHaveBeenCalledWith({
+        standardId: STANDARD_ID,
+        ruleId: FIRST_RULE,
+        activeDetectionProgramId: PROGRAM_ID,
+        severity: DetectionSeverity.ERROR,
+      });
+    });
+  });
+
+  describe('when a language is still being worked on beside one that reports', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: FIRST_RULE,
+            languages: [
+              {
+                language: ProgrammingLanguage.JAVA,
+                status: RuleLanguageDetectionStatus.OK,
+                severity: DetectionSeverity.ERROR,
+                activeDetectionProgramId:
+                  'program-1' as ActiveDetectionProgramId,
+              },
+              {
+                language: ProgrammingLanguage.PYTHON,
+                status: RuleLanguageDetectionStatus.WIP,
+              },
+            ],
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    /* Nothing is being reported yet, so there is nothing to choose. */
+    it('offers a severity for the reporting language only', async () => {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /active in JAVA/i }),
+      );
+
+      expect(
+        screen.getAllByRole('button', { name: /reported as/i }),
+      ).toHaveLength(1);
     });
   });
 
