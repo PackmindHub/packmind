@@ -23,6 +23,8 @@ import { shutdownOtel } from './otel';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/editions';
+import { createEditionHeaderMiddleware } from './app/shared/middleware/editionHeaderMiddleware';
+import { resolvePackmindEdition } from './app/shared/utils/edition';
 import { pingPackmindSetup } from './startup/ping-packmind-setup';
 import { warmUpDatabasePool } from './startup/warm-up-database-pool';
 import { DataSource } from 'typeorm';
@@ -105,6 +107,12 @@ async function bootstrap() {
     // Enable cookie parsing
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
+
+    // Before route matching, so a routing 404 from a Community Edition stub
+    // carries the header too. Resolved once: getConfig is async.
+    const edition = await resolvePackmindEdition();
+    app.use(createEditionHeaderMiddleware(edition));
+    logger.info('Edition header enabled', { edition });
 
     // Configure body-parser with increased limit for bulk imports and skill uploads
     // Limit set to 15MB to accommodate 10MB skills with base64 encoding overhead (~33% increase)

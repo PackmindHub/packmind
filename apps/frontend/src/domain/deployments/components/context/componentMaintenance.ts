@@ -1,5 +1,8 @@
 import { ChangeProposalStatus } from '@packmind/types';
-import type { ContextComponentType } from './buildPackageContext';
+import {
+  componentSelectionKey,
+  type ContextComponentType,
+} from './buildPackageContext';
 
 /**
  * What the component header says about whether anyone is looking after this
@@ -60,6 +63,64 @@ export function pendingProposalCount(payload: ChangeProposalsPayload): number {
       (proposal) => proposal.status === ChangeProposalStatus.pending,
     ).length ?? 0
   );
+}
+
+/**
+ * The space's whole answer, as loosely as the grouped query gives it.
+ *
+ * `creations` is deliberately absent. A proposal to create a component names no
+ * artefact yet, so it cannot mark a row in a list of components that exist.
+ */
+type GroupedProposalsPayload =
+  | {
+      standards?: { artefactId: string; changeProposalCount: number }[] | null;
+      commands?: { artefactId: string; changeProposalCount: number }[] | null;
+      skills?: { artefactId: string; changeProposalCount: number }[] | null;
+    }
+  | null
+  | undefined;
+
+/**
+ * How many proposals wait on each component of the space, keyed the way a row
+ * is identified.
+ *
+ * Keyed by `componentSelectionKey` and not by the artefact id, for the reason
+ * that function exists: two entities of different types can carry the same id,
+ * and a lookup on the id alone would mark a standard because a command with the
+ * same id has a proposal open.
+ *
+ * The counts are already the pending ones. `groupProposalsByArtefact` filters
+ * on `ChangeProposalStatus.pending` before it groups, so this agrees with
+ * `pendingProposalCount` above by construction rather than by coincidence: the
+ * header of a component and its row in the list read one number two ways.
+ *
+ * An empty map when the payload is missing, which is what the OSS edition's
+ * stub returns. A caller must show nothing there rather than a zero, the same
+ * rule the header follows.
+ */
+export function pendingReviewsByComponent(
+  grouped: GroupedProposalsPayload,
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  if (!grouped) return counts;
+
+  const groups = [
+    { type: 'standard' as const, overviews: grouped.standards },
+    { type: 'command' as const, overviews: grouped.commands },
+    { type: 'skill' as const, overviews: grouped.skills },
+  ];
+
+  for (const { type, overviews } of groups) {
+    for (const overview of overviews ?? []) {
+      if (overview.changeProposalCount <= 0) continue;
+      counts.set(
+        componentSelectionKey({ type, key: overview.artefactId }),
+        overview.changeProposalCount,
+      );
+    }
+  }
+
+  return counts;
 }
 
 /**

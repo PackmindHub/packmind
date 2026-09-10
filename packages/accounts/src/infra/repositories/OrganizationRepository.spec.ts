@@ -110,39 +110,41 @@ describe('OrganizationRepository', () => {
         expect(result).toBeNull();
       });
     });
-  });
 
-  describe('.list', () => {
-    describe('when no organizations exist', () => {
-      it('returns empty array', async () => {
-        const result = await organizationRepository.list();
+    describe('when several organizations are stored', () => {
+      let techCorporation: Organization;
+      let marketingInc: Organization;
 
-        expect(result).toEqual([]);
-      });
-    });
-
-    describe('when organizations exist', () => {
-      it('returns all organizations', async () => {
-        const organization1 = organizationFactory({
+      beforeEach(async () => {
+        techCorporation = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
           name: 'Tech Corporation',
           slug: 'tech-corporation',
         });
-
-        const organization2 = organizationFactory({
+        marketingInc = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
           name: 'Marketing Inc',
           slug: 'marketing-inc',
         });
 
-        await organizationRepository.add(organization1);
-        await organizationRepository.add(organization2);
+        await organizationRepository.add(techCorporation);
+        await organizationRepository.add(marketingInc);
+      });
 
-        const result = await organizationRepository.list();
-
-        expect(result).toEqual(
-          expect.arrayContaining([organization1, organization2]),
+      it('returns the first organization for its own slug', async () => {
+        const result = await organizationRepository.findBySlug(
+          techCorporation.slug,
         );
+
+        expect(result).toEqual(techCorporation);
+      });
+
+      it('returns the second organization for its own slug', async () => {
+        const result = await organizationRepository.findBySlug(
+          marketingInc.slug,
+        );
+
+        expect(result).toEqual(marketingInc);
       });
     });
   });

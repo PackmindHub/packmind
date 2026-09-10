@@ -14,8 +14,13 @@ export function handleTrackingError(error: unknown): void {
 
   const statusCode = (error as { statusCode?: number })?.statusCode;
   if (statusCode === 404) {
-    // Kill-switch: the feature flag is off for this user. Behave as feature-absent.
-    logErrorConsole('Repository tracking is not available for your account.');
+    // Not a kill-switch, whatever this branch used to claim: no feature flag
+    // gates these routes. A server that has them maps refusals to 403 or 409,
+    // so a 404 means the server predates repository tracking — nothing to do
+    // with the account the old message blamed.
+    logErrorConsole(
+      'Repository tracking is not available on this Packmind server. Ask your administrator to update it.',
+    );
     process.exit(1);
     return;
   }

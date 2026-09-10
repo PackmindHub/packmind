@@ -32,6 +32,17 @@ export function isPackmindError(tbd: unknown): tbd is PackmindError {
   );
 }
 
+/**
+ * The server answering "there is no such thing" rather than failing to answer.
+ *
+ * Worth its own predicate because it is not always a failure: an address can
+ * name something that does not exist in the space being read, and the caller
+ * that asked is usually the one that knows what to do about it.
+ */
+export function isPackmindNotFoundError(tbd: unknown): tbd is PackmindError {
+  return isPackmindError(tbd) && tbd.serverError.status === 404;
+}
+
 export function isServerErrorResponse(
   tbd: unknown,
 ): tbd is ServerErrorResponse {

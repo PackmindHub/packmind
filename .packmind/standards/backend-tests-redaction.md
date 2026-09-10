@@ -4,7 +4,7 @@ This standard establishes best practices for writing backend tests using Jest in
 
 ## Scope
 
-**/*.spec.ts
+apps/api/**/*.spec.ts,packages/**/*.spec.ts
 
 ## Rules
 

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -9,6 +9,7 @@ import {
   PMMenu,
   PMPortal,
   PMText,
+  PMTooltip,
 } from '@packmind/ui';
 import {
   LuBookCheck,
@@ -21,11 +22,16 @@ import {
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import {
   componentSelectionKey,
   type ContextComponent,
   type ContextComponentType,
 } from './buildPackageContext';
+import {
+  pendingReviewsByComponent,
+  reviewChangesLabel,
+} from './componentMaintenance';
 
 /**
  * The mark of each type, in one place. The two panes and the filter chips read
@@ -102,6 +108,39 @@ export function ContextComponentList({
    */
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
+  /*
+   * Asked for here rather than handed down, because the two panes that render
+   * this list would then hold one map each for a fact neither of them uses.
+   * The Context sidebar already runs this exact query for its `Review changes`
+   * badge, and React Query keys it on the space, so a list of twenty rows adds
+   * no request at all.
+   *
+   * Not `useListChangeProposalsBy{Standard,Command,Skill}Query`, which is what
+   * a component's own header uses: those are keyed per artefact, so a list
+   * would open one request per row to render one number.
+   */
+  const { data: groupedProposals } = useGetGroupedChangeProposalsQuery();
+  const pendingReviews = useMemo(
+    () => pendingReviewsByComponent(groupedProposals),
+    [groupedProposals],
+  );
+
+  /*
+   * The column exists when the space has something waiting, not when this list
+   * does. Deciding per list was the first attempt and it is wrong: both panes
+   * render one list per type, so a package holding a marked standard and an
+   * unmarked command would reserve the width in one group and not in the next,
+   * and the version column would step 42px sideways between two groups of one
+   * pane. The eye runs down that column, and this file already says why its own
+   * width is fixed.
+   *
+   * So the width is reserved everywhere or nowhere, and every row on the
+   * surface keeps its version under the same x. What that costs is 42px of
+   * description in a package where nothing is pending, in a space where
+   * something is; what it buys is a column that never moves.
+   */
+  const showReviews = pendingReviews.size > 0;
+
   return (
     <PMBox
       borderWidth="1px"
@@ -115,6 +154,10 @@ export function ContextComponentList({
           entry={entry}
           isFirst={index === 0}
           showPackages={showPackages}
+          showReviews={showReviews}
+          pendingReviews={
+            pendingReviews.get(componentSelectionKey(entry.component)) ?? 0
+          }
           onMove={onMove}
           onRemove={onRemove}
           isSelected={
@@ -131,6 +174,8 @@ function ComponentRow({
   entry,
   isFirst,
   showPackages,
+  showReviews,
+  pendingReviews,
   onMove,
   onRemove,
   isSelected,
@@ -139,6 +184,10 @@ function ComponentRow({
   entry: ComponentListEntry;
   isFirst: boolean;
   showPackages: boolean;
+  /** Whether any row of this list is waiting on someone. */
+  showReviews: boolean;
+  /** How many proposals wait on this one, zero for most rows. */
+  pendingReviews: number;
   onMove?: (component: ContextComponent) => void;
   onRemove?: (component: ContextComponent) => void;
   isSelected: boolean;
@@ -232,6 +281,7 @@ function ComponentRow({
               )}
             </PMBox>
             {showPackages && <PackageColumn names={packageNames} />}
+            {showReviews && <ReviewColumn count={pendingReviews} />}
             {/*
               A fixed width, not the width of the number: v12 is one character
               wider than v5, and every column to its left would move with it.
@@ -305,6 +355,81 @@ function ComponentRow({
         </PMBox>
       )}
     </PMHStack>
+  );
+}
+
+/**
+ * Whether someone is waiting on this component.
+ *
+ * The rail's `AttentionMark` decided how this surface notes an exception in the
+ * margin of an index of content, and this is the same mark for a different
+ * fact: a dot that carries the colour, a number that carries the quantity in
+ * the neutral ramp, and a tooltip that is the whole sentence, because "2" on
+ * its own is not one. The three dedicated lists spell it with a solid yellow
+ * badge, which is right for a table column headed `Pending reviews` and wrong
+ * for a dense row in a low-chrome pane.
+ *
+ * The colour is `branding.primary`, the surface's one accent, because the
+ * component's own header already spends it on exactly this fact. Not the rail's
+ * orange: that one means something it was sent to has drifted, and two facts
+ * wearing one colour would make both unreadable.
+ *
+ * Not a link, and this is the deliberate departure from the three lists. A row
+ * has one destination, which is the component; giving the mark a second one
+ * would make the row's target depend on which 8 pixels the pointer landed on.
+ * The reader opens the component and its header carries the link, spelled out
+ * in full, which is the longer form this mark is the short version of.
+ *
+ * Absent at zero, not a zero. Most rows have nothing pending, and a column of
+ * zeroes would teach the eye to skip the one row that has a number. It is also
+ * what makes the OSS edition correct for free: its stub answers nothing, no row
+ * has a count, and the column never appears.
+ */
+function ReviewColumn({ count }: Readonly<{ count: number }>) {
+  const label = reviewChangesLabel(count);
+
+  return (
+    <PMBox
+      flexShrink={0}
+      /*
+       * Room for two digits and no more. A component with a hundred proposals
+       * open is not a case worth widening every row for; the tooltip and the
+       * header both still say the number.
+       */
+      width="30px"
+      display="flex"
+      alignItems="center"
+      justifyContent="flex-end"
+      gap="6px"
+    >
+      {count > 0 && (
+        <PMTooltip label={label} showArrow>
+          <PMBox
+            display="flex"
+            alignItems="center"
+            gap="6px"
+            role="img"
+            aria-label={label}
+          >
+            <PMBox
+              width="8px"
+              height="8px"
+              borderRadius="full"
+              bg="branding.primary"
+              flexShrink={0}
+              aria-hidden
+            />
+            <PMText
+              fontSize="xs"
+              color="faded"
+              fontVariantNumeric="tabular-nums"
+            >
+              {count}
+            </PMText>
+          </PMBox>
+        </PMTooltip>
+      )}
+    </PMBox>
   );
 }
 

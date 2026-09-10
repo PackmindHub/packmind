@@ -130,7 +130,6 @@ function MyComponent() {
 - `toRecipe(orgSlug, spaceSlug, recipeId)`
 - `toStandards(orgSlug, spaceSlug)`
 - `toStandard(orgSlug, spaceSlug, standardId)`
-- `toStandardRules(orgSlug, spaceSlug, standardId)`
 - `toStandardEdit(orgSlug, spaceSlug, standardId)`
 - `toCreateStandard(orgSlug, spaceSlug)`
 

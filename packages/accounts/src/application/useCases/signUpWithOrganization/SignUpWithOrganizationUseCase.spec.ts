@@ -37,7 +37,6 @@ describe('SignUpWithOrganizationUseCase', () => {
       createOrganization: jest.fn(),
       getOrganizationById: jest.fn(),
       getOrganizationByName: jest.fn().mockResolvedValue(null),
-      listOrganizations: jest.fn(),
     } as unknown as jest.Mocked<OrganizationService>;
 
     mockEventEmitterService = {

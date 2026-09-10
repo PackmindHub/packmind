@@ -42,7 +42,7 @@ const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
 const authenticatedMe = {
   authenticated: true as const,
   message: 'ok',
-  edition: 'oss' as const,
+  edition: 'community' as const,
   user: {
     id: 'user-1',
     email: 'user@packmind.com',
@@ -334,7 +334,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: false,
-          edition: 'oss',
+          edition: 'community',
           message: 'not authenticated',
         },
         isLoading: false,
@@ -349,7 +349,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       mockUseGetMeQuery.mockReturnValue({
         data: {
           authenticated: false,
-          edition: 'oss',
+          edition: 'community',
           message: 'not authenticated',
         },
         isLoading: false,

@@ -121,6 +121,24 @@ export function resolveSpaceNavMode(
 }
 
 /**
+ * An address with the explicit `nav` carried across, when there was one.
+ *
+ * A loader that redirects has to hand the parameter on or it undoes itself: the
+ * mode it just answered for came from the address, and the address it sends the
+ * reader to would resolve to the mode stored in the browser instead. A pinned
+ * demo link would come apart on the first redirect, and so would an e2e spec
+ * that pins the architecture without the feature flag.
+ *
+ * Here rather than in the routes, because this module owns the parameter, and
+ * four callers hand-appending the same two lines is four chances to forget.
+ */
+export function withNavMode(href: string, search: string): string {
+  const requested = new URLSearchParams(search).get('nav');
+  if (!requested) return href;
+  return `${href}${href.includes('?') ? '&' : '?'}nav=${encodeURIComponent(requested)}`;
+}
+
+/**
  * Holds the mode for the whole authenticated layout. `?nav=plugin-first` (or
  * `?nav=today`) wins over a mode that was chosen and is stored as one, so a
  * link is enough to pin a demo to one architecture — which is also how an e2e

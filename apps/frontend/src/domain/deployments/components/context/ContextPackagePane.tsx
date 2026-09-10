@@ -30,8 +30,11 @@ import type {
   OrganizationId,
   PackageId,
   PackageResponse,
+  Rule,
   SkillFile,
+  SkillId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -51,6 +54,8 @@ import {
   TAB_PARAM,
   componentEditHref,
   componentEntryHref,
+  componentRuleHref,
+  selectRuleTab,
   isDefaultTab,
   packageDetailHref,
   packageDetailParams,
@@ -62,6 +67,7 @@ import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
+import { ContextRuleDetail } from './ContextRuleDetail';
 import {
   COMPONENT_ACTION_ICONS,
   ContextComponentList,
@@ -115,6 +121,7 @@ export function ContextPackagePane({
   total,
   detail,
   detailFile,
+  detailRule,
   spaceId,
   organizationId,
   orgSlug,
@@ -145,6 +152,8 @@ export function ContextPackagePane({
   detail: ContextComponent | null;
   /** One of that component's files, or null to show the component itself. */
   detailFile: SkillFile | null;
+  /** One of that component's rules, or null to show the component itself. */
+  detailRule: Rule | null;
   spaceId: SpaceId;
   organizationId: OrganizationId;
   orgSlug: string;
@@ -406,7 +415,9 @@ export function ContextPackagePane({
     /*
      * The component on screen just left the package this pane is showing, so the
      * address that says it is open has to close, exactly as it does when one is
-     * deleted. It still exists, and its own page is still where it is read.
+     * deleted. It still exists, and the inventory is where it is read now: the
+     * pane opens a component no package holds, so closing this one costs the
+     * reader nothing but the package around it.
      */
     if (
       detail &&
@@ -608,8 +619,21 @@ export function ContextPackagePane({
           <PMBox flex="1" minH={0} overflowY="auto">
             <ContextSkillFileDetail
               file={detailFile}
+              skillId={detail.key as SkillId}
               skillName={detail.name}
               backHref={componentEntryHref(searchParams)}
+            />
+          </PMBox>
+        ) : detailRule ? (
+          /* A rule in place of the standard, for the reason a file is. */
+          <PMBox flex="1" minH={0} overflowY="auto">
+            <ContextRuleDetail
+              standardId={detail.key as StandardId}
+              rule={detailRule}
+              standardName={detail.name}
+              backHref={componentEntryHref(searchParams)}
+              tab={selectRuleTab(searchParams.get(TAB_PARAM))}
+              onTabChange={showTab}
             />
           </PMBox>
         ) : (
@@ -617,6 +641,7 @@ export function ContextPackagePane({
             component={detail}
             backLabel={pkg.name}
             backHref={packageDetailHref(searchParams, pkg.id)}
+            ruleHref={(ruleId) => componentRuleHref(searchParams, ruleId)}
             editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
             tab={tab}
             onTabChange={showTab}

@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import {
+  DetectionSeverity,
   ProgrammingLanguage,
   RuleLanguageDetectionStatus,
   createCommandId,
@@ -11,7 +12,11 @@ import {
   createSkillId,
   createStandardId,
 } from '@packmind/types';
-import type { RuleDetectionStatusSummary } from '@packmind/types';
+import type {
+  ActiveDetectionProgramId,
+  PackageId,
+  RuleDetectionStatusSummary,
+} from '@packmind/types';
 import type { Mock } from 'vitest';
 
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -36,10 +41,13 @@ import {
   useGetStandardVersionsQuery,
 } from '../../../standards/api/queries/StandardsQueries';
 import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import { useUpdateActiveDetectionProgramSeverityMutation } from '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries';
+import { hasRuleDetection } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
 } from '../../../skills/api/queries/SkillsQueries';
+import { useCanEditSkillFiles } from '../../../skills/hooks/useCanEditSkillFiles';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
@@ -89,6 +97,18 @@ vi.mock(
  * forever, which would leave every case here asserting the absence of
  * everything.
  */
+/**
+ * Setting a severity, which only the proprietary edition can do. A factory with
+ * no `importActual`, because in the other repository this specifier resolves to
+ * a stub whose whole content is this one export.
+ */
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries',
+  () => ({
+    useUpdateActiveDetectionProgramSeverityMutation: vi.fn(),
+  }),
+);
+
 vi.mock(
   '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
   async () => ({
@@ -96,6 +116,13 @@ vi.mock(
       '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
     )),
     useGetStandardRulesDetectionStatusQuery: vi.fn(),
+    /*
+      Forced rather than read, for the reason the query above is mocked: the
+      real answer differs by repository, and an unchecked rule renders one way
+      in the edition with a linter and another in the edition without one. Both
+      are worth a case and each repository should run both.
+    */
+    hasRuleDetection: vi.fn(),
   }),
 );
 
@@ -189,6 +216,21 @@ vi.mock('../../../skills/components/DownloadSkillPopover', () => ({
   DownloadSkillPopover: () => <div data-testid="download-skill" />,
 }));
 
+vi.mock('../../../skills/hooks/useCanEditSkillFiles', () => ({
+  useCanEditSkillFiles: vi.fn(),
+}));
+
+/*
+  The real editor mounts CodeMirror, which jsdom has no layout for. What these
+  cases are about is whether the pane offers the edit at all, so a marker is
+  enough to say the prose gave way to it.
+*/
+vi.mock('../../../skills/components/SkillFileEditor', () => ({
+  SkillFileEditor: ({ filePath }: { filePath: string }) => (
+    <div data-testid="skill-file-editor">{filePath}</div>
+  ),
+}));
+
 const COMMAND_ID = createCommandId('command-1');
 const STANDARD_ID = createStandardId('standard-1');
 const SKILL_ID = createSkillId('skill-1');
@@ -237,6 +279,14 @@ async function renderDetail(
             component={component}
             backLabel={scope.backLabel ?? 'Backend conventions'}
             backHref="?package=pkg-1"
+            /*
+              A search-only address, the way the panes build it: a rule opens in
+              the pane beside the standard, so the assertions below are about a
+              link that does not leave the surface.
+            */
+            ruleHref={(ruleId) =>
+              `?package=pkg-1&component=standard-1&rule=${ruleId}`
+            }
             editHref="/edit"
             tab={tab}
             onTabChange={onTabChange}
@@ -283,6 +333,7 @@ function resetToEmpty() {
   (useGetCommandByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({ data: undefined });
+  (useCanEditSkillFiles as Mock).mockReturnValue(false);
   (useListChangeProposalsByCommandQuery as Mock).mockReturnValue({
     data: undefined,
   });
@@ -293,6 +344,8 @@ function resetToEmpty() {
     data: undefined,
   });
   (useGetRulesByStandardIdQuery as Mock).mockReturnValue({ data: [] });
+  /* The edition with a linter, which is the one these cases are written for. */
+  (hasRuleDetection as Mock).mockReturnValue(true);
   /* The answer of a standard no detection program was ever written for. */
   (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
     data: [],
@@ -750,19 +803,82 @@ describe('the distribution body', () => {
     /*
       The one thing the pane cannot carry: the code examples that decide which
       languages a rule can be detected in, the linter program per language, and
-      the severity it reports at. Beside the rules rather than in the header,
-      and named after the work rather than after the page.
+      the severity it reports at. On the row of the rule they belong to rather
+      than above the list, because a rule is the thing that gets configured.
     */
-    it('is offered beside the rules of a standard', async () => {
+    function withOneRule() {
       (useGetStandardByIdQuery as Mock).mockReturnValue({
         data: { standard: { slug: 'naming', description: '' } },
+      });
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({
+        data: [{ id: 'rule-1', content: 'Event name ends with the verb' }],
+      });
+    }
+
+    it('is offered on the row of a rule nothing detects, which is the row that needs it', async () => {
+      withOneRule();
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(screen.getByRole('link', { name: 'Configure' })).toHaveAttribute(
+        'href',
+        /* Resolved against the router's own path, which is `/` here. */
+        '/?package=pkg-1&component=standard-1&rule=rule-1',
+      );
+    });
+
+    it('is offered once per rule', async () => {
+      withOneRule();
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'rule-1', content: 'Event name ends with the verb' },
+          { id: 'rule-2', content: 'Property names are camelCase' },
+        ],
       });
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
       );
 
-      expect(screen.getByRole('link', { name: /manage rules/i })).toBeVisible();
+      expect(screen.getAllByRole('link', { name: 'Configure' })).toHaveLength(
+        2,
+      );
+    });
+
+    /*
+      Search-only, which is what says it stays on this surface. It was a page
+      route until the pane grew a depth of its own for a rule, and a link that
+      leaves is the thing this whole redesign is about.
+    */
+    it('stays on the surface rather than opening a page', async () => {
+      withOneRule();
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(
+        screen.getByRole('link', { name: 'Configure' }).getAttribute('href'),
+      ).toMatch(/^\/\?/);
+    });
+
+    /*
+      The list of rules is the pane's own now. The link above it led to a second
+      copy of it, one screen away, holding a name, a linter status and a
+      severity this pane prints itself.
+    */
+    it('no longer offers the rules table as a stop on the way', async () => {
+      withOneRule();
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(
+        screen.queryByRole('link', { name: /manage rules/i }),
+      ).not.toBeInTheDocument();
     });
 
     describe('when the component is a command', () => {
@@ -776,7 +892,70 @@ describe('the distribution body', () => {
         );
 
         expect(
-          screen.queryByRole('link', { name: /manage rules/i }),
+          screen.queryByRole('link', { name: 'Configure' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("editing a skill's instructions", () => {
+    /*
+      The other half of the regression increments 6 and 7 opened. A skill has no
+      `Edit` in its header because it has no single form, and its instructions
+      were editable only on the page that stopped answering.
+    */
+    const loadedSkill = () => {
+      (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({
+        data: {
+          skill: { id: SKILL_ID, slug: 'release-checklist' },
+          files: [],
+          latestVersion: { version: 3, prompt: 'Cut the tag.' },
+        },
+      });
+    };
+
+    describe('when the reader may edit the skill', () => {
+      it('offers the pencil', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(true);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByRole('button', { name: /edit instructions/i }),
+        ).toBeVisible();
+      });
+
+      it('gives the prose over to the editor when it is pressed', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(true);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+        await act(async () => {
+          screen.getByRole('button', { name: /edit instructions/i }).click();
+        });
+
+        expect(screen.getByTestId('skill-file-editor')).toHaveTextContent(
+          'SKILL.md',
+        );
+      });
+    });
+
+    describe('when the reader may not', () => {
+      it('does not offer it', async () => {
+        loadedSkill();
+        (useCanEditSkillFiles as Mock).mockReturnValue(false);
+        await renderDetail(
+          componentOfType('skill', SKILL_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.queryByRole('button', { name: /edit instructions/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -800,6 +979,51 @@ describe('the distribution body', () => {
       await renderDetail(componentOfType('standard', STANDARD_ID));
 
       expect(screen.queryByTestId('download-skill')).not.toBeInTheDocument();
+    });
+  });
+
+  /*
+    The rules page carried this until the prose block that held it went, and
+    that block was the only place in the product that handed a standard over as
+    the file an agent reads.
+  */
+  describe('taking a standard away with you', () => {
+    it('offers the copy on a standard', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '' } },
+      });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.getByRole('button', { name: /copy markdown/i }),
+      ).toBeInTheDocument();
+    });
+
+    /* Nothing to serialise yet, and a copy control is a promise about content. */
+    it('offers nothing while the standard is still loading', async () => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
+      await renderDetail(componentOfType('standard', STANDARD_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not offer it on a command', async () => {
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    /* A skill is a folder, and the download beside it is what hands that over. */
+    it('does not offer it on a skill', async () => {
+      await renderDetail(componentOfType('skill', SKILL_ID));
+
+      expect(
+        screen.queryByRole('button', { name: /copy markdown/i }),
+      ).not.toBeInTheDocument();
     });
   });
 });
@@ -1116,11 +1340,17 @@ describe('whether a rule is detected automatically', () => {
   const FIRST_RULE = createRuleId('rule-1');
   const SECOND_RULE = createRuleId('rule-2');
 
+  const updateSeverity = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetToEmpty();
     (useGetStandardByIdQuery as Mock).mockReturnValue({
       data: { standard: { slug: 'naming', description: '' } },
+    });
+    (useUpdateActiveDetectionProgramSeverityMutation as Mock).mockReturnValue({
+      mutate: updateSeverity,
+      isPending: false,
     });
   });
 
@@ -1169,12 +1399,41 @@ describe('whether a rule is detected automatically', () => {
       expect(screen.getByText('Event name ends with the verb')).toBeVisible();
     });
 
-    it('offers nothing to open, the rendering the OSS edition gets', async () => {
+    /*
+      The absence of an answer is an answer in the edition that has a linter,
+      and it names the cause: a program is generated from examples. Silence read
+      as a rendering gap beside a standard whose every row carries a state, and
+      left `Configure` on a row with no reason on it.
+    */
+    it('says nothing has been written to check it', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('No examples')).toBeVisible();
+    });
+
+    it('offers nothing to open, there being no language to list', async () => {
       await renderStandard();
 
       expect(
-        screen.queryByRole('button', { name: /active|in progress/i }),
+        screen.queryByRole('button', { name: /no examples/i }),
       ).not.toBeInTheDocument();
+    });
+
+    /*
+      The rendering of the edition with no linter, which must not name one. Its
+      stubbed query answers with an empty array for every rule of every
+      standard, so the sentence above would be on every row of the product.
+    */
+    describe('when the edition has no linter', () => {
+      beforeEach(() => {
+        (hasRuleDetection as Mock).mockReturnValue(false);
+      });
+
+      it('says nothing about detection at all', async () => {
+        await renderStandard();
+
+        expect(screen.queryByText('No examples')).not.toBeInTheDocument();
+      });
     });
   });
 
@@ -1238,6 +1497,115 @@ describe('whether a rule is detected automatically', () => {
       await userEvent.click(trigger);
 
       expect(screen.queryByText('Languages')).not.toBeInTheDocument();
+    });
+  });
+
+  /*
+    The one setting on this tab, and the only reason a rule active in its one
+    and only language has anything to open onto.
+  */
+  describe('when the language reports at a severity', () => {
+    const PROGRAM_ID = 'program-1' as ActiveDetectionProgramId;
+
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: FIRST_RULE,
+            languages: [
+              {
+                language: ProgrammingLanguage.JAVA,
+                status: RuleLanguageDetectionStatus.OK,
+                severity: DetectionSeverity.WARNING,
+                activeDetectionProgramId: PROGRAM_ID,
+              },
+            ],
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    async function openLanguages() {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /active in JAVA/i }),
+      );
+    }
+
+    it('offers the severity beside the language', async () => {
+      await openLanguages();
+
+      expect(
+        screen.getByRole('button', { name: 'Reported as warning in JAVA' }),
+      ).toBeVisible();
+    });
+
+    it('leaves the collapsed row saying nothing about it', async () => {
+      await renderStandard();
+
+      expect(
+        screen.queryByRole('button', { name: /reported as/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('sets the other severity on the program behind that language', async () => {
+      await openLanguages();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Reported as warning in JAVA' }),
+      );
+      await userEvent.click(
+        screen.getByRole('menuitem', { name: 'Report as error' }),
+      );
+
+      expect(updateSeverity).toHaveBeenCalledWith({
+        standardId: STANDARD_ID,
+        ruleId: FIRST_RULE,
+        activeDetectionProgramId: PROGRAM_ID,
+        severity: DetectionSeverity.ERROR,
+      });
+    });
+  });
+
+  describe('when a language is still being worked on beside one that reports', () => {
+    beforeEach(() => {
+      withRules('Event name ends with the verb');
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: FIRST_RULE,
+            languages: [
+              {
+                language: ProgrammingLanguage.JAVA,
+                status: RuleLanguageDetectionStatus.OK,
+                severity: DetectionSeverity.ERROR,
+                activeDetectionProgramId:
+                  'program-1' as ActiveDetectionProgramId,
+              },
+              {
+                language: ProgrammingLanguage.PYTHON,
+                status: RuleLanguageDetectionStatus.WIP,
+              },
+            ],
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    /* Nothing is being reported yet, so there is nothing to choose. */
+    it('offers a severity for the reporting language only', async () => {
+      await renderStandard();
+      await userEvent.click(
+        screen.getByRole('button', { name: /active in JAVA/i }),
+      );
+
+      expect(
+        screen.getAllByRole('button', { name: /reported as/i }),
+      ).toHaveLength(1);
     });
   });
 

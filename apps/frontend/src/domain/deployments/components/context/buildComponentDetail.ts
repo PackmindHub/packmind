@@ -47,6 +47,27 @@ export const COMPONENT_PARAM = 'component';
 export const FILE_PARAM = 'file';
 
 /**
+ * The rule of that component the pane is showing, when the component is a
+ * standard and the address asks for one.
+ *
+ * The same move `FILE_PARAM` is, one type over. A skill is a folder and its
+ * files are its leaves; a standard is a document and its rules are its. Both
+ * open in place of the component rather than beside it, because the component
+ * is what they are part of and there is one pane.
+ *
+ * Its value is the rule's id, which is what the standard's own rule route uses,
+ * so the same rule is named the same way on both surfaces.
+ *
+ * Why a depth at all, when a rule is already a row of the standard's body: the
+ * row holds the sentence and whether anything detects it, which is what a
+ * reader wants. Setting it up is a screen's worth of work, its code examples
+ * per language, and until this parameter existed the only place that screen
+ * existed was a page outside the surface. Following a rule out of Context to
+ * configure it is the thing this whole plan is about.
+ */
+export const RULE_PARAM = 'rule';
+
+/**
  * Which half of what is on screen is being read.
  *
  * One parameter for both depths, because two things on this surface cannot be
@@ -94,21 +115,41 @@ export const DISTRIBUTION_TAB = 'distribution';
 export const HISTORY_TAB = 'history';
 
 /**
+ * The two halves of a rule: what it looks like in code, and what checks it.
+ *
+ * `examples` is the default and stays out of the address, the same way the
+ * other two depths' defaults do. `linter` is in the address while a rule is
+ * open and has to leave with it, for the reason `HISTORY_TAB` gives one depth
+ * up: nothing else on this surface has a linter program.
+ */
+export const EXAMPLES_TAB = 'examples';
+export const LINTER_TAB = 'linter';
+
+/**
  * The tabs that exist only while a component is open. Closing the component
  * has to take them out of the address as well as off the screen, or the next
  * component opened from that package inherits a tab the reader never picked.
  */
 const COMPONENT_ONLY_TABS: ReadonlySet<string> = new Set([HISTORY_TAB]);
 
+/** The same, one depth further in: the tabs only an open rule has. */
+const RULE_ONLY_TABS: ReadonlySet<string> = new Set([LINTER_TAB]);
+
 /** Whether this tab stops existing when the component closes. */
 export function isComponentOnlyTab(value: string): boolean {
   return COMPONENT_ONLY_TABS.has(value);
+}
+
+/** Whether this tab stops existing when the rule closes. */
+export function isRuleOnlyTab(value: string): boolean {
+  return RULE_ONLY_TABS.has(value);
 }
 
 /** The default of each depth, which is what stays out of the address. */
 const DEFAULT_TABS: ReadonlySet<string> = new Set([
   COMPONENTS_TAB,
   INSTRUCTIONS_TAB,
+  EXAMPLES_TAB,
 ]);
 
 /**
@@ -127,6 +168,18 @@ export function selectTab(
     return requested;
   }
   return isComponentOpen ? INSTRUCTIONS_TAB : COMPONENTS_TAB;
+}
+
+/**
+ * The tab of the open rule the address asks for.
+ *
+ * Its own resolver rather than a third branch of `selectTab`, because the two
+ * answer to different things being open and the parameter they read means the
+ * innermost of them. Anything else reads as the rule's default, which is the
+ * same forgiveness `selectTab` gives a hand-edited address.
+ */
+export function selectRuleTab(requested: string | null): string {
+  return requested === LINTER_TAB ? LINTER_TAB : EXAMPLES_TAB;
 }
 
 /**
@@ -195,8 +248,12 @@ export function componentDetailHref(
   else next.delete(PACKAGE_PARAM);
   next.set(COMPONENT_PARAM, componentKey);
   // A file belongs to the component it was opened from, so a different
-  // component cannot inherit it. Two skills can hold the same path.
+  // component cannot inherit it. Two skills can hold the same path. A rule is
+  // the same question with a different answer: its id is unique, so the next
+  // component would resolve it to nothing rather than to the wrong thing, and
+  // an address naming a rule of a standard it is not in is still a lie.
   next.delete(FILE_PARAM);
+  next.delete(RULE_PARAM);
   return `?${next.toString()}`;
 }
 
@@ -216,6 +273,7 @@ export function packageDetailParams(
   next.set(PACKAGE_PARAM, packageId);
   next.delete(COMPONENT_PARAM);
   next.delete(FILE_PARAM);
+  next.delete(RULE_PARAM);
   /*
    * And the tab, when it was one only a component has. `selectTab` already
    * reads such a value as the package's default, so the screen would be right
@@ -223,7 +281,7 @@ export function packageDetailParams(
    * and that the next component opened from here would inherit.
    */
   const tab = next.get(TAB_PARAM);
-  if (tab && isComponentOnlyTab(tab)) {
+  if (tab && (isComponentOnlyTab(tab) || isRuleOnlyTab(tab))) {
     next.delete(TAB_PARAM);
   }
   return next;
@@ -274,6 +332,36 @@ export function contextPackageHref(
 }
 
 /**
+ * The Context surface of a space, opened on one component and on whichever
+ * package turns out to hold it.
+ *
+ * A whole path like the builder above it, and for a sharper version of the same
+ * reason: its callers are the component pages themselves, redirecting a reader
+ * who arrived on an address from before this surface existed. A bookmark, a
+ * link in an email, a link out of Review changes.
+ *
+ * It names no package, unlike the builder above, because the addresses it
+ * replaces name none either. `selectContextPackage` answers that from the
+ * component, which is what makes a component no package holds openable at all.
+ *
+ * The file is here rather than in a builder of its own because a skill's file
+ * addresses are what people actually bookmark: the skill's own index sends them
+ * to one, so `/skills/x/files/setup.md` is the address in the wild and it has
+ * to land on that file and not on the skill's instructions.
+ */
+export function contextComponentHref(
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+  componentKey: string,
+  filePath?: string | null,
+): string {
+  const params = new URLSearchParams({ [COMPONENT_PARAM]: componentKey });
+  if (filePath) {
+    params.set(FILE_PARAM, filePath);
+  }
+  return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
+}
+
+/**
  * The address of one file of the component that is already open.
  *
  * It names no component, only the file. The rail that builds these links is the
@@ -289,10 +377,38 @@ export function componentFileHref(
   return `?${next.toString()}`;
 }
 
-/** The way back from a file to the component that carries it. */
+/**
+ * The address of one rule of the standard that is already open.
+ *
+ * It names no component, only the rule, for the reason `componentFileHref`
+ * gives: the list these links are built from is the open standard's own, so a
+ * link that could name another component would be a link that can lie about
+ * which standard the rule belongs to.
+ */
+export function componentRuleHref(
+  searchParams: URLSearchParams,
+  ruleId: string,
+): string {
+  const next = new URLSearchParams(searchParams);
+  next.set(RULE_PARAM, ruleId);
+  return `?${next.toString()}`;
+}
+
+/** The way back from a file or a rule to the component that carries it. */
 export function componentEntryHref(searchParams: URLSearchParams): string {
   const next = new URLSearchParams(searchParams);
   next.delete(FILE_PARAM);
+  next.delete(RULE_PARAM);
+  /*
+   * And the tab, when it was one only a rule has, for the reason
+   * `packageDetailParams` deletes a component's: the screen would be right
+   * either way, since `selectTab` reads an unknown value as the depth's
+   * default, but the address would say the reader is somewhere they are not.
+   */
+  const tab = next.get(TAB_PARAM);
+  if (tab && isRuleOnlyTab(tab)) {
+    next.delete(TAB_PARAM);
+  }
   return `?${next.toString()}`;
 }
 
@@ -312,6 +428,21 @@ export function selectSkillFile<File extends { path: string }>(
 ): File | null {
   if (!requested) return null;
   return files.find((file) => file.path === requested) ?? null;
+}
+
+/**
+ * The rule the address asks for, or null to show the standard itself.
+ *
+ * Resolved against the rules the query returned, the way a file is, so a rule
+ * that has been deleted or renamed out of the standard falls back to the
+ * standard's own body instead of an empty frame.
+ */
+export function selectStandardRule<Rule extends { id: string }>(
+  rules: readonly Rule[],
+  requested: string | null,
+): Rule | null {
+  if (!requested) return null;
+  return rules.find((rule) => rule.id === requested) ?? null;
 }
 
 /**

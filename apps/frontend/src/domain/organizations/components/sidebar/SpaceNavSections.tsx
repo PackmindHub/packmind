@@ -69,6 +69,7 @@ function PluginFirstNavSections({
         url={routes.space.toContext(orgSlug, spaceSlug)}
         label="Context"
         icon={<LuLayers />}
+        alsoOwns={contextPages(orgSlug, spaceSlug)}
       />
       {/*
         The same graph as Context, indexed by destination instead of by package.
@@ -83,6 +84,27 @@ function PluginFirstNavSections({
       />
     </>
   );
+}
+
+/**
+ * The pages a component still has of its own, and the package forms.
+ *
+ * `NavLink` lights an entry when the address is under its own url, which is the
+ * whole story in the current navigation: every page belongs to the entry that
+ * names its kind. This list names no kind, so a reader who followed a link out
+ * of the pane, into a standard's rules or an edit form, watched the sidebar go
+ * dark and read it as having left the navigation. They had not: those pages are
+ * the work Context is for.
+ *
+ * Whole trees rather than single addresses, because each of them has children.
+ */
+export function contextPages(orgSlug: string, spaceSlug: string): string[] {
+  return [
+    routes.space.toStandards(orgSlug, spaceSlug),
+    routes.space.toCommands(orgSlug, spaceSlug),
+    routes.space.toSkills(orgSlug, spaceSlug),
+    routes.space.toPackages(orgSlug, spaceSlug),
+  ];
 }
 
 function TodayNavSections({

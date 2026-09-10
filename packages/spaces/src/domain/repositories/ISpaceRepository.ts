@@ -13,7 +13,6 @@ export interface ISpaceRepository {
     page: number,
     pageSize: number,
   ): Promise<{ items: Space[]; totalCount: number }>;
-  list(): Promise<Space[]>;
   updateFields(
     id: SpaceId,
     fields: Partial<Pick<Space, 'name' | 'slug' | 'type' | 'color'>>,

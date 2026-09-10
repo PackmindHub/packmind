@@ -2,19 +2,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const PACKMIND_EDITION = (
-  process.env.PACKMIND_EDITION ||
-  process.env.VITE_PACKMIND_EDITION ||
-  'oss'
-).toLowerCase();
+const PACKMIND_EDITION =
+  process.env.PACKMIND_EDITION || process.env.VITE_PACKMIND_EDITION || 'oss';
 
 const ROOT = process.cwd();
 const BASE = path.join(ROOT, 'tsconfig.base.json');
+// Only the literal `proprietary` selects the proprietary paths, byte for byte
+// as apps/api/webpack.config.js and apps/frontend/vite.config.ts decide which
+// sources they compile. The test used to be the other way round — anything but
+// `oss` was proprietary — so a value like `enterprise` picked proprietary
+// paths for an OSS build, and the mismatch surfaced as unresolved imports.
 const PATHS = path.join(
   ROOT,
-  PACKMIND_EDITION === 'oss'
-    ? 'tsconfig.paths.oss.json'
-    : 'tsconfig.paths.proprietary.json',
+  PACKMIND_EDITION === 'proprietary'
+    ? 'tsconfig.paths.proprietary.json'
+    : 'tsconfig.paths.oss.json',
 );
 const OUT = path.join(ROOT, 'tsconfig.base.effective.json');
 

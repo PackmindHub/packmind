@@ -213,7 +213,7 @@ export const RuleExamplesManager = React.forwardRef<
             loading={createRuleExampleMutation.isPending}
             disabled={createRuleExampleMutation.isPending}
           >
-            Add Example
+            Add example
           </PMButton>
         </PMBox>
       )}

@@ -55,21 +55,4 @@ export class OrganizationRepository
       throw error;
     }
   }
-
-  async list(): Promise<Organization[]> {
-    this.logger.info('Listing organizations');
-
-    try {
-      const organizations = await this.repository.find();
-      this.logger.info('Organizations listed successfully', {
-        count: organizations.length,
-      });
-      return organizations;
-    } catch (error) {
-      this.logger.error('Failed to list organizations', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
 }

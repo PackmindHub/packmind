@@ -123,23 +123,6 @@ export class SpaceRepository
     }
   }
 
-  async list(): Promise<Space[]> {
-    this.logger.info('Listing spaces');
-
-    try {
-      const spaces = await this.repository.find();
-      this.logger.info('Spaces listed successfully', {
-        count: spaces.length,
-      });
-      return spaces;
-    } catch (error) {
-      this.logger.error('Failed to list spaces', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async findOrgPagePaginated(
     organizationId: OrganizationId,
     page: number,

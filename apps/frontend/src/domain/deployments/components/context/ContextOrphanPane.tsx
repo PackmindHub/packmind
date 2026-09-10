@@ -4,8 +4,11 @@ import { PMAlertDialog, PMBox, pmToaster } from '@packmind/ui';
 import type {
   OrganizationId,
   PackageResponse,
+  Rule,
   SkillFile,
+  SkillId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -14,13 +17,16 @@ import {
 import {
   componentEditHref,
   componentEntryHref,
+  componentRuleHref,
   inventoryHref,
   isDefaultTab,
+  selectRuleTab,
   selectTab,
   TAB_PARAM,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
+import { ContextRuleDetail } from './ContextRuleDetail';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 
@@ -48,6 +54,7 @@ import { useDeleteContextComponent } from './useDeleteContextComponent';
 export function ContextOrphanPane({
   component,
   file,
+  rule,
   packages,
   spaceId,
   organizationId,
@@ -63,6 +70,11 @@ export function ContextOrphanPane({
    * to disagree about which row of that tree is open.
    */
   file: SkillFile | null;
+  /**
+   * The rule of it the address asks for, when it is a standard and the address
+   * asks for one. Resolved by the surface for the same reason the file is.
+   */
+  rule: Rule | null;
   /** The space's packages, as candidates for the add. */
   packages: readonly PackageResponse[];
   spaceId: SpaceId;
@@ -139,8 +151,25 @@ export function ContextOrphanPane({
       <PMBox flex="1" minH={0} overflowY="auto">
         <ContextSkillFileDetail
           file={file}
+          skillId={component.key as SkillId}
           skillName={component.name}
           backHref={componentEntryHref(searchParams)}
+        />
+      </PMBox>
+    );
+  }
+
+  /* And a rule in place of the standard, for the same reason. */
+  if (rule) {
+    return (
+      <PMBox flex="1" minH={0} overflowY="auto">
+        <ContextRuleDetail
+          standardId={component.key as StandardId}
+          rule={rule}
+          standardName={component.name}
+          backHref={componentEntryHref(searchParams)}
+          tab={selectRuleTab(searchParams.get(TAB_PARAM))}
+          onTabChange={showTab}
         />
       </PMBox>
     );
@@ -152,6 +181,7 @@ export function ContextOrphanPane({
         component={component}
         backLabel="All components"
         backHref={inventoryHref(searchParams)}
+        ruleHref={(ruleId) => componentRuleHref(searchParams, ruleId)}
         /*
           No package on the edit link. It is what the form reads to come back to
           the package it was opened from, and there is none: the form returns to

@@ -3,6 +3,7 @@ import {
   REVIEW_ARTEFACT_TYPES,
   componentUpdatedAt,
   pendingProposalCount,
+  pendingReviewsByComponent,
   reviewChangesLabel,
 } from './componentMaintenance';
 
@@ -96,6 +97,85 @@ describe('pendingProposalCount', () => {
 
     it('counts nothing for an envelope with no list', () => {
       expect(pendingProposalCount({})).toBe(0);
+    });
+  });
+});
+
+describe('pendingReviewsByComponent', () => {
+  describe('when components of each type are waiting', () => {
+    const counts = pendingReviewsByComponent({
+      standards: [{ artefactId: 'std-1', changeProposalCount: 2 }],
+      commands: [{ artefactId: 'cmd-1', changeProposalCount: 1 }],
+      skills: [{ artefactId: 'skl-1', changeProposalCount: 5 }],
+    });
+
+    it('keys a standard by its type and id', () => {
+      expect(counts.get('standard:std-1')).toBe(2);
+    });
+
+    it('keys a command by its type and id', () => {
+      expect(counts.get('command:cmd-1')).toBe(1);
+    });
+
+    it('keys a skill by its type and id', () => {
+      expect(counts.get('skill:skl-1')).toBe(5);
+    });
+  });
+
+  /*
+   * The reason the key is not the artefact id alone. Two entities of different
+   * types can carry the same one, and a lookup on the id would mark a standard
+   * because a command has a proposal open.
+   */
+  describe('when two types share an id', () => {
+    const counts = pendingReviewsByComponent({
+      standards: [{ artefactId: 'shared', changeProposalCount: 2 }],
+      commands: [{ artefactId: 'shared', changeProposalCount: 7 }],
+    });
+
+    it('tells the standard from the command', () => {
+      expect(counts.get('standard:shared')).toBe(2);
+    });
+
+    it('does not let one type answer for the other', () => {
+      expect(counts.get('command:shared')).toBe(7);
+    });
+  });
+
+  describe('when a component has nothing waiting', () => {
+    const counts = pendingReviewsByComponent({
+      standards: [{ artefactId: 'std-1', changeProposalCount: 0 }],
+    });
+
+    it('leaves it out rather than keying it to zero', () => {
+      expect(counts.has('standard:std-1')).toBe(false);
+    });
+  });
+
+  /*
+   * A proposal to create a component names no artefact, so it cannot mark a row
+   * in a list of components that exist.
+   */
+  describe('when the space has creations pending', () => {
+    const counts = pendingReviewsByComponent({
+      standards: [],
+      commands: [],
+      skills: [],
+    });
+
+    it('marks nothing', () => {
+      expect(counts.size).toBe(0);
+    });
+  });
+
+  /* What the OSS stub answers, where proposals do not exist. */
+  describe('when there is no payload', () => {
+    it('marks nothing', () => {
+      expect(pendingReviewsByComponent(undefined).size).toBe(0);
+    });
+
+    it('marks nothing for an envelope with no lists', () => {
+      expect(pendingReviewsByComponent({}).size).toBe(0);
     });
   });
 });

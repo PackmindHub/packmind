@@ -1,7 +1,9 @@
 import {
+  DetectionSeverity,
   ProgrammingLanguage,
   RuleLanguageDetectionStatus,
   createRuleId,
+  type ActiveDetectionProgramId,
   type RuleDetectionStatusSummary,
 } from '@packmind/types';
 
@@ -11,6 +13,7 @@ import {
   ruleDetectionOpens,
   ruleDetectionsById,
   type RuleDetection,
+  UNDETECTED_RULE,
 } from './ruleDetection';
 
 const RULE_ID = createRuleId('rule-1');
@@ -28,6 +31,21 @@ function language(
   status: RuleLanguageDetectionStatus,
 ) {
   return { language: value, status };
+}
+
+const PROGRAM_ID = 'program-1' as ActiveDetectionProgramId;
+
+/** An active language the way the API answers for one that reports something. */
+function reporting(
+  value: ProgrammingLanguage,
+  severity: DetectionSeverity = DetectionSeverity.ERROR,
+) {
+  return {
+    language: value,
+    status: RuleLanguageDetectionStatus.OK,
+    severity,
+    activeDetectionProgramId: PROGRAM_ID,
+  };
 }
 
 function detection(
@@ -188,6 +206,58 @@ describe('ruleDetectionsById', () => {
     });
   });
 
+  describe('when an active language reports at a severity', () => {
+    const statuses = [summary(RULE_ID, [reporting(ProgrammingLanguage.JAVA)])];
+
+    it('carries the severity on the language', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBe(DetectionSeverity.ERROR);
+    });
+
+    it('carries the program the severity is set on', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]
+          ?.activeDetectionProgramId,
+      ).toBe(PROGRAM_ID);
+    });
+  });
+
+  /*
+    Half a pair is a control with nowhere to write, so neither half is kept.
+  */
+  describe('when a severity arrives with no program to set it on', () => {
+    const statuses = [
+      summary(RULE_ID, [
+        {
+          language: ProgrammingLanguage.JAVA,
+          status: RuleLanguageDetectionStatus.OK,
+          severity: DetectionSeverity.WARNING,
+        },
+      ]),
+    ];
+
+    it('leaves the severity out', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBeUndefined();
+    });
+  });
+
+  describe('when a language is still being worked on', () => {
+    const statuses = [
+      summary(RULE_ID, [
+        language(ProgrammingLanguage.JAVA, RuleLanguageDetectionStatus.WIP),
+      ]),
+    ];
+
+    it('carries no severity, nothing being reported yet', () => {
+      expect(
+        ruleDetectionsById(statuses).get(RULE_ID)?.languages[0]?.severity,
+      ).toBeUndefined();
+    });
+  });
+
   describe('when several rules answer at once', () => {
     const detections = ruleDetectionsById([
       summary(RULE_ID, [
@@ -233,22 +303,49 @@ describe('ruleDetectionLabel', () => {
 
   describe('when the rule is in progress', () => {
     it('says so in the words the detection screens use', () => {
-      expect(ruleDetectionLabel(detection('in-progress'), spell)).toBe(
-        'In progress',
-      );
+      expect(
+        ruleDetectionLabel(
+          detection(
+            'in-progress',
+            [],
+            [{ language: ProgrammingLanguage.JAVA, state: 'in-progress' }],
+          ),
+          spell,
+        ),
+      ).toBe('In progress');
     });
   });
 
-  describe('when the rule is inactive', () => {
+  describe('when the rule is inactive in a language it was answered for', () => {
     it('says the rule is not active', () => {
-      expect(ruleDetectionLabel(detection('inactive'), spell)).toBe(
-        'Not active',
-      );
+      expect(
+        ruleDetectionLabel(
+          detection('inactive', [], [inactive(ProgrammingLanguage.JAVA)]),
+          spell,
+        ),
+      ).toBe('Not active');
+    });
+  });
+
+  /*
+    The cause rather than the symptom. A program is generated from examples, so
+    a rule with none cannot be detected in any language, and "not active" would
+    send the reader looking for the setting that turns it on.
+  */
+  describe('when nothing was ever written to check the rule', () => {
+    it('says there are no examples, which is why', () => {
+      expect(ruleDetectionLabel(UNDETECTED_RULE, spell)).toBe('No examples');
     });
   });
 });
 
 describe('ruleDetectionOpens', () => {
+  describe('when nothing was ever written to check the rule', () => {
+    it('has no language to open onto', () => {
+      expect(ruleDetectionOpens(UNDETECTED_RULE)).toBe(false);
+    });
+  });
+
   describe('when the rule is active in its only language', () => {
     it('has nothing left to open', () => {
       expect(
@@ -256,6 +353,29 @@ describe('ruleDetectionOpens', () => {
           detection('active', [ProgrammingLanguage.TYPESCRIPT]),
         ),
       ).toBe(false);
+    });
+  });
+
+  /*
+    The one thing in there a reader can change, and the label never carries it.
+  */
+  describe('when its only language reports at a severity', () => {
+    it('opens, to offer the severity', () => {
+      expect(
+        ruleDetectionOpens(
+          detection(
+            'active',
+            [ProgrammingLanguage.TYPESCRIPT],
+            [
+              {
+                ...active(ProgrammingLanguage.TYPESCRIPT),
+                severity: DetectionSeverity.WARNING,
+                activeDetectionProgramId: PROGRAM_ID,
+              },
+            ],
+          ),
+        ),
+      ).toBe(true);
     });
   });
 

@@ -40,6 +40,7 @@ import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 import {
   GithubAppMode,
+  PackmindEdition,
   resolveGithubAppMode,
   resolvePackmindEdition,
 } from '../shared/utils/edition';
@@ -50,7 +51,7 @@ import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
 export interface GetMeResponse {
-  edition: 'cloud' | 'oss';
+  edition: PackmindEdition;
   user: {
     id: UserId;
     email: string;
