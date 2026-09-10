@@ -4,8 +4,13 @@
   "sourceRoot": "packages/git/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Extends the shared definition with a second pass over tsconfig.spec.json: the lib project excludes specs and test/, and @swc/jest strips their types without checking them.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/git/tsconfig.lib.json && tsc --noEmit --project packages/git/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
