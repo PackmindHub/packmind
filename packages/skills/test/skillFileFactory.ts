@@ -15,6 +15,7 @@ export const skillFileFactory: Factory<SkillFile> = (
     path: 'SKILL.md',
     content: '---\nname: test-skill\ndescription: Test skill\n---\n\nContent',
     permissions: 'rw-r--r--',
+    isBase64: false,
     ...skillFile,
   };
 };

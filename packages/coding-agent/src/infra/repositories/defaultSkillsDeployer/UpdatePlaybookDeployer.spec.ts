@@ -1,5 +1,5 @@
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
-import { DeleteItemType, FileUpdates } from '@packmind/types';
+import { DeleteItemType, FileModification, FileUpdates } from '@packmind/types';
 
 /**
  * CLI versions that only expose the legacy `packmind-cli` executable. The
@@ -49,20 +49,33 @@ describe('UpdatePlaybookDeployer', () => {
     options: { includeNext?: boolean; cliVersion?: string } = {},
   ): FileUpdates => deployer.deploy('TestAgent', '.test/skills/', options);
 
+  /**
+   * Narrows a file update to the content-carrying variant of
+   * `FileModification`; the section-based variant has no `content`.
+   */
+  const contentOf = (file: FileModification): string => {
+    if (file.content === undefined) {
+      throw new Error(`Emitted file carries no content: ${file.path}`);
+    }
+    return file.content;
+  };
+
   const contentAt = (result: FileUpdates, path: string): string => {
     const file = result.createOrUpdate.find((f) => f.path === path);
     if (!file) throw new Error(`Missing emitted file: ${path}`);
-    return file.content;
+    return contentOf(file);
   };
 
   /**
    * Files that reach every install at or above the skill's `minimumVersion`,
    * as opposed to the version-pinned ones under `packmind-versions/`.
    */
-  const unversionedFiles = (result: FileUpdates) =>
-    result.createOrUpdate.filter(
-      (file) => !file.path.includes('/packmind-versions/'),
-    );
+  const unversionedFiles = (
+    result: FileUpdates,
+  ): { path: string; content: string }[] =>
+    result.createOrUpdate
+      .filter((file) => !file.path.includes('/packmind-versions/'))
+      .map((file) => ({ path: file.path, content: contentOf(file) }));
 
   const unversionedStepFiles = [
     'analyze-standards.md',

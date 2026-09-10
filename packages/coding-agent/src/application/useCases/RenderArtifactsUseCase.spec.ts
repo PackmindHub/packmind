@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  DeleteItemType,
   FileUpdates,
   RenderArtifactsCommand,
   CommandVersion,
@@ -130,7 +131,7 @@ describe('RenderArtifactsUseCase', () => {
             { path: 'CLAUDE.md', content: 'content 1' },
             { path: 'AGENTS.md', content: 'content 2' },
           ],
-          delete: [{ path: 'old.md' }],
+          delete: [{ path: 'old.md', type: DeleteItemType.File }],
         };
 
         mockCodingAgentServices.renderArtifacts.mockResolvedValue(

@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
-import { stubLogger } from '@packmind/test-utils';
+import { gitRepoFactory, stubLogger } from '@packmind/test-utils';
 import {
   createSpaceId,
   FileUpdates,
@@ -21,6 +21,7 @@ import {
   TargetId,
   UserId,
   CodingAgent,
+  DeleteItemType,
 } from '@packmind/types';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
@@ -196,13 +197,13 @@ describe('DeployerService', () => {
       gitRepoId: createTestGitRepoId('repo-1'),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createTestGitRepoId('repo-1'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createTestGitProviderId('provider-1'),
       branch: 'main',
-    };
+    });
 
     const mockCommand: Command = commandFactory({
       id: createTestCommandId('recipe-1'),
@@ -258,7 +259,7 @@ describe('DeployerService', () => {
       beforeEach(async () => {
         const mockDeployer = new MockDeployer({
           createOrUpdate: [{ path: 'recipe1.md', content: 'content1' }],
-          delete: [{ path: 'old-recipe.md' }],
+          delete: [{ path: 'old-recipe.md', type: DeleteItemType.File }],
         });
 
         registry.registerDeployer('packmind', mockDeployer);
@@ -278,7 +279,9 @@ describe('DeployerService', () => {
       });
 
       it('returns one file to delete', () => {
-        expect(result.delete).toEqual([{ path: 'old-recipe.md' }]);
+        expect(result.delete).toEqual([
+          { path: 'old-recipe.md', type: DeleteItemType.File },
+        ]);
       });
     });
 
@@ -355,7 +358,10 @@ describe('DeployerService', () => {
       beforeEach(async () => {
         const deployer = new MockDeployer({
           createOrUpdate: [],
-          delete: [{ path: 'delete1.md' }, { path: 'delete2.md' }],
+          delete: [
+            { path: 'delete1.md', type: DeleteItemType.File },
+            { path: 'delete2.md', type: DeleteItemType.File },
+          ],
         });
 
         registry.registerDeployer('packmind', deployer);
@@ -402,23 +408,10 @@ describe('DeployerService', () => {
     });
 
     it('propagates deployer errors', async () => {
-      const errorDeployer = {
-        async deployCommands(): Promise<FileUpdates> {
-          throw new Error('Deployment failed');
-        },
-        async deployStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async deployArtifacts(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-      };
+      const errorDeployer = new MockDeployer();
+      jest
+        .spyOn(errorDeployer, 'deployCommands')
+        .mockRejectedValue(new Error('Deployment failed'));
 
       registry.registerDeployer('packmind', errorDeployer);
 
@@ -604,26 +597,13 @@ describe('DeployerService', () => {
     });
 
     it('uses correct existing content for each agent', async () => {
-      const deployArtifactsSpy = jest.fn().mockResolvedValue({
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'new content' }],
-        delete: [],
-      });
-
-      const claudeDeployer = {
-        async deployCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async deployStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        deployArtifacts: deployArtifactsSpy,
-      };
+      const claudeDeployer = new MockDeployer();
+      const deployArtifactsSpy = jest
+        .spyOn(claudeDeployer, 'deployArtifacts')
+        .mockResolvedValue({
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'new content' }],
+          delete: [],
+        });
 
       registry.registerDeployer('claude', claudeDeployer);
 
@@ -809,26 +789,13 @@ describe('DeployerService', () => {
     });
 
     it('handles missing existing content for new files', async () => {
-      const deployArtifactsSpy = jest.fn().mockResolvedValue({
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'new file content' }],
-        delete: [],
-      });
-
-      const claudeDeployer = {
-        async deployCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async deployStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        deployArtifacts: deployArtifactsSpy,
-      };
+      const claudeDeployer = new MockDeployer();
+      const deployArtifactsSpy = jest
+        .spyOn(claudeDeployer, 'deployArtifacts')
+        .mockResolvedValue({
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'new file content' }],
+          delete: [],
+        });
 
       registry.registerDeployer('claude', claudeDeployer);
 
@@ -850,23 +817,10 @@ describe('DeployerService', () => {
     });
 
     it('propagates deployer errors', async () => {
-      const errorDeployer = {
-        async deployCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async deployStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
-          return { createOrUpdate: [], delete: [] };
-        },
-        async deployArtifacts(): Promise<FileUpdates> {
-          throw new Error('Artifact deployment failed');
-        },
-      };
+      const errorDeployer = new MockDeployer();
+      jest
+        .spyOn(errorDeployer, 'deployArtifacts')
+        .mockRejectedValue(new Error('Artifact deployment failed'));
 
       registry.registerDeployer('claude', errorDeployer);
 

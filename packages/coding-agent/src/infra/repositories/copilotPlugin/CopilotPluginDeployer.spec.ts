@@ -13,6 +13,7 @@ import {
   createSkillVersionId,
   createTargetId,
   createUserId,
+  FileUpdates,
 } from '@packmind/types';
 
 function makeTarget(path: string): Target {
@@ -61,6 +62,19 @@ function makeSkill(overrides: Partial<SkillVersion> = {}): SkillVersion {
     prompt: '# prompt\n',
     ...overrides,
   };
+}
+
+/**
+ * Parses the manifest emitted by `deployPluginManifest`, narrowing the file
+ * update to the content-carrying variant of `FileModification`; the
+ * section-based variant has no `content`.
+ */
+function manifestOf(updates: FileUpdates): Record<string, unknown> {
+  const [file] = updates.createOrUpdate;
+  if (file?.content === undefined) {
+    throw new Error('Expected the plugin manifest to carry content');
+  }
+  return JSON.parse(file.content) as Record<string, unknown>;
 }
 
 describe('CopilotPluginDeployer', () => {
@@ -437,7 +451,7 @@ describe('CopilotPluginDeployer', () => {
           makeTarget('plugins/security'),
         );
 
-        expect(JSON.parse(updates.createOrUpdate[0].content)).toEqual({
+        expect(manifestOf(updates)).toEqual({
           name: 'security',
           version: '0.1.0',
           hooks: 'hooks/hooks.json',
@@ -454,9 +468,7 @@ describe('CopilotPluginDeployer', () => {
           makeTarget('plugins/security'),
         );
 
-        expect(
-          Object.keys(JSON.parse(updates.createOrUpdate[0].content)),
-        ).not.toContain('hooks');
+        expect(Object.keys(manifestOf(updates))).not.toContain('hooks');
       });
     });
   });
