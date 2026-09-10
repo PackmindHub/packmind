@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unit return record",
+  "description": "What a unit-executor subagent returns. Fixed shape, no prose. Structured memory of this kind held token usage roughly flat where replaying full history grew it substantially, and removing it collapsed performance in ablation — so the shape is load-bearing, not bookkeeping.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["unit_id", "feature", "status", "files_touched", "deviations"],
+  "properties": {
+    "unit_id": { "type": "string", "pattern": "^U-[0-9]{3}$" },
+    "feature": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "status": { "enum": ["done", "blocked"] },
+
+    "files_touched": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "action"],
+        "properties": {
+          "path": { "type": "string" },
+          "action": { "enum": ["created", "modified", "deleted"] }
+        }
+      }
+    },
+
+    "decisions_applied": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^D-[0-9]{3}$" }
+    },
+
+    "public_surface_changed": {
+      "description": "Exported symbols, endpoints, CLI flags, user-visible strings. Read later by the documentation pass, which must not have to re-read the code to learn what changed.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+
+    "behaviour_delta": {
+      "description": "One sentence a user could verify, or null when nothing observable changed.",
+      "type": ["string", "null"],
+      "maxLength": 300
+    },
+
+    "deviations": {
+      "description": "The gap between intent and reality. The reconciliation pass reads this to answer 'is what we built still what we decided', and the documentation pass reads it because the decision log alone describes only what was meant.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["spec_said", "did", "why"],
+        "properties": {
+          "spec_said": { "type": "string" },
+          "did": { "type": "string" },
+          "why": { "type": "string" }
+        }
+      }
+    },
+
+    "self_check": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["command", "passed"],
+      "properties": {
+        "command": { "type": "string" },
+        "passed": { "type": "boolean" }
+      }
+    },
+
+    "blocked": {
+      "description": "Required when status is blocked. The escalation ladder reads `needs` to decide whether the charter, the decision log, or the human answers this.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["question", "needs"],
+      "properties": {
+        "question": { "type": "string" },
+        "options_considered": { "type": "array", "items": { "type": "string" } },
+        "needs": { "enum": ["decision", "scope", "context"] }
+      }
+    },
+
+    "notes": {
+      "description": "The one thing that fits no field. Capped deliberately: prose summaries make every subagent response the orchestrator's input on the next call, which is the unbounded-context failure this architecture exists to avoid.",
+      "type": ["string", "null"],
+      "maxLength": 280
+    }
+  }
+}

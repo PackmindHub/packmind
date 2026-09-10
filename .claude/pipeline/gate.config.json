@@ -36,7 +36,8 @@
     ".github/workflows/**",
     ".husky/**",
     "scripts/agent-gate.mjs",
-    ".claude/pipeline/gate.config.json",
+    "scripts/agent-record.mjs",
+    ".claude/pipeline/**",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
@@ -45,6 +46,7 @@
 
   "$comment_always": "Pipeline bookkeeping the gate itself writes. Never a scope violation.",
   "alwaysInScope": [
+    ".claude/features/**/units/*.json",
     ".claude/features/**/metrics.jsonl",
     ".claude/features/**/records.jsonl",
     ".claude/features/**/decisions.md"

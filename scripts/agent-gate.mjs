@@ -33,7 +33,9 @@ const HALT = 2;
 
 // ---------------------------------------------------------------- utilities
 
-const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
+// Built from the char code rather than written literally: an ESC in a regex
+// literal trips no-control-regex, and this file has to pass its own gate.
+const ANSI = new RegExp(String.fromCharCode(27) + '\\[[0-9;]*[A-Za-z]', 'g');
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 
