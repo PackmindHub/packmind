@@ -82,3 +82,7 @@ videos/
 
 .nx/migrate-runs
 .impeccable
+
+# Agentic pipeline: baseline/sweep metrics with no feature to attribute them to.
+# Per-feature metrics under .claude/features/<slug>/ are committed on purpose.
+.claude/pipeline/metrics.jsonl

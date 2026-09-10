@@ -1,0 +1,52 @@
+{
+  "$comment": "Per-project configuration for scripts/agent-gate.mjs. Commands are run from the repo root with a shell.",
+
+  "nodeVersionFile": ".nvmrc",
+
+  "env": {
+    "PACKMIND_EDITION": "oss",
+    "PACKMIND_LOG_LEVEL": "silent",
+    "NODE_OPTIONS": "--max-old-space-size=16384 --no-experimental-strip-types",
+    "NX_TUI": "false",
+    "FORCE_COLOR": "0"
+  },
+
+  "commands": {
+    "wide": "./node_modules/.bin/nx run-many -t lint build --parallel=6 --tuiAutoExit",
+    "frontendTypecheck": "./node_modules/.bin/nx run frontend:typecheck --tuiAutoExit",
+    "formatCheck": "./node_modules/.bin/prettier -c .",
+    "formatFix": "./node_modules/.bin/prettier -w",
+    "lintFix": "./node_modules/.bin/eslint --fix",
+    "scoped": "./node_modules/.bin/nx affected -t lint build --nxBail --parallel=6 --tuiAutoExit --files="
+  },
+
+  "frontendTypecheckWhen": ["apps/frontend/**", "packages/ui/**", "packages/frontend-lib/**"],
+
+  "$comment_guardrails": "Editing any of these is a scope violation regardless of what the spec declared. Brief 2 §5.4: an agent that repeatedly fails a strict rule will find the config before it finds the fix.",
+  "guardrails": [
+    "eslint.config.mjs",
+    "eslint-rules/**",
+    "nx.json",
+    "tsconfig.base.json",
+    "tsconfig.paths.*.json",
+    "jest.preset.*",
+    "jest.setup.ts",
+    "jest.env-setup.ts",
+    "jest-utils.ts",
+    ".github/workflows/**",
+    ".husky/**",
+    "scripts/agent-gate.mjs",
+    ".claude/pipeline/gate.config.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    ".gitignore"
+  ],
+
+  "$comment_always": "Pipeline bookkeeping the gate itself writes. Never a scope violation.",
+  "alwaysInScope": [
+    ".claude/features/**/metrics.jsonl",
+    ".claude/features/**/records.jsonl",
+    ".claude/features/**/decisions.md"
+  ]
+}
