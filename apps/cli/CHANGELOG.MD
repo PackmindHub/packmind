@@ -6,6 +6,9 @@
 
 ## Fixed
 
+- Commands gated by edition no longer claim a feature is missing from the Packmind Community Edition when the 404 they received meant something else. On an Enterprise deployment a deleted or mistyped organization, space or resource answers that same status, so `playbook submit` and the other gated commands announced the feature did not exist to users who were paying for it. The edition now comes from the server itself, so the Community Edition message only appears when the server states it, and a server too old to state its edition yields an error naming both possible causes instead of picking one
+- `git track` and `git untrack` no longer report that repository tracking "is not available for your account". No account setting gates those routes — a 404 there means a server that predates repository tracking — so the message now points at the server and at the person who can update it
+
 ## Removed
 
 # [0.35.0] - 2026-09-02
