@@ -35,7 +35,11 @@ describe('ExchangeCliLoginCodeUseCase', () => {
       save: jest.fn(),
       delete: jest.fn(),
       deleteExpired: jest.fn(),
-    } as unknown as jest.Mocked<ICliLoginCodeRepository>;
+      addMany: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
+    } as jest.Mocked<ICliLoginCodeRepository>;
 
     mockUserService = {
       getUserById: jest.fn(),
