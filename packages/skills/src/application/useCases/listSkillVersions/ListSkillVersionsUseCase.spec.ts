@@ -1,3 +1,4 @@
+import { userFactory } from '@packmind/accounts/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -14,6 +15,7 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
+import { skillFactory } from '../../../../test/skillFactory';
 import { ListSkillVersionsUseCase } from './ListSkillVersionsUseCase';
 
 describe('ListSkillVersionsUseCase', () => {
@@ -27,13 +29,11 @@ describe('ListSkillVersionsUseCase', () => {
   const spaceId = createSpaceId('space-123');
   const skillId = createSkillId('skill-123');
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: userId,
     email: 'test@example.com',
-    passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
-    active: true,
-  };
+  });
 
   const mockOrganization: Organization = {
     id: organizationId,
@@ -41,7 +41,7 @@ describe('ListSkillVersionsUseCase', () => {
     slug: 'test-org',
   };
 
-  const mockSkill: Skill = {
+  const mockSkill: Skill = skillFactory({
     id: skillId,
     name: 'test-skill',
     slug: 'test-skill',
@@ -50,7 +50,7 @@ describe('ListSkillVersionsUseCase', () => {
     version: 3,
     userId,
     spaceId,
-  };
+  });
 
   const mockVersions: SkillVersion[] = [
     {

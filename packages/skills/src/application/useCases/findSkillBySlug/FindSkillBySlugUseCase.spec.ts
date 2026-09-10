@@ -1,4 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -8,8 +10,11 @@ import {
   IAccountsPort,
   ISpacesPort,
   Organization,
+  OrganizationId,
   Space,
+  SpaceId,
   User,
+  UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -38,7 +43,7 @@ describe('FindSkillBySlugUseCase', () => {
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
-    } as jest.Mocked<ISpacesPort>;
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     stubbedLogger = stubLogger();
 
@@ -56,9 +61,9 @@ describe('FindSkillBySlugUseCase', () => {
 
   describe('retrieve skill by slug', () => {
     describe('when spaceId is not provided', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
       let slug: string;
       let user: User;
       let organization: Organization;
@@ -71,13 +76,11 @@ describe('FindSkillBySlugUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         slug = 'test-skill';
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -158,9 +161,9 @@ describe('FindSkillBySlugUseCase', () => {
     });
 
     describe('when spaceId is provided', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
       let slug: string;
       let user: User;
       let organization: Organization;
@@ -174,24 +177,20 @@ describe('FindSkillBySlugUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         slug = 'test-skill';
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
 
         command = {
           userId,
@@ -251,9 +250,9 @@ describe('FindSkillBySlugUseCase', () => {
   describe('authorization validation', () => {
     describe('when spaceId is provided', () => {
       describe('when space not found', () => {
-        let userId: string;
-        let organizationId: string;
-        let spaceId: string;
+        let userId: UserId;
+        let organizationId: OrganizationId;
+        let spaceId: SpaceId;
         let slug: string;
         let user: User;
         let organization: Organization;
@@ -265,13 +264,11 @@ describe('FindSkillBySlugUseCase', () => {
           spaceId = createSpaceId(uuidv4());
           slug = 'test-skill';
 
-          user = {
+          user = userFactory({
             id: userId,
             email: 'test@example.com',
-            passwordHash: 'hashed_password',
             memberships: [{ organizationId, role: 'member', userId }],
-            active: true,
-          };
+          });
           organization = {
             id: organizationId,
             name: 'Test Org',
@@ -298,10 +295,10 @@ describe('FindSkillBySlugUseCase', () => {
       });
 
       describe('when space does not belong to organization', () => {
-        let userId: string;
-        let organizationId: string;
-        let otherOrganizationId: string;
-        let spaceId: string;
+        let userId: UserId;
+        let organizationId: OrganizationId;
+        let otherOrganizationId: OrganizationId;
+        let spaceId: SpaceId;
         let slug: string;
         let user: User;
         let organization: Organization;
@@ -315,24 +312,20 @@ describe('FindSkillBySlugUseCase', () => {
           spaceId = createSpaceId(uuidv4());
           slug = 'test-skill';
 
-          user = {
+          user = userFactory({
             id: userId,
             email: 'test@example.com',
-            passwordHash: 'hashed_password',
             memberships: [{ organizationId, role: 'member', userId }],
-            active: true,
-          };
+          });
           organization = {
             id: organizationId,
             name: 'Test Org',
             slug: 'test-org',
           };
-          space = {
+          space = spaceFactory({
             id: spaceId,
-            name: 'Test Space',
-            slug: 'test-space',
             organizationId: otherOrganizationId,
-          };
+          });
 
           command = {
             userId,
@@ -355,8 +348,8 @@ describe('FindSkillBySlugUseCase', () => {
     });
 
     describe('when user not found', () => {
-      let userId: string;
-      let organizationId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
       let slug: string;
       let command: FindSkillBySlugCommand;
 
@@ -382,8 +375,8 @@ describe('FindSkillBySlugUseCase', () => {
     });
 
     describe('when organization not found', () => {
-      let userId: string;
-      let organizationId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
       let slug: string;
       let user: User;
       let command: FindSkillBySlugCommand;
@@ -393,13 +386,11 @@ describe('FindSkillBySlugUseCase', () => {
         organizationId = createOrganizationId(uuidv4());
         slug = 'test-skill';
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
 
         command = {
           userId,
@@ -419,9 +410,9 @@ describe('FindSkillBySlugUseCase', () => {
     });
 
     describe('when user is not member of organization', () => {
-      let userId: string;
-      let organizationId: string;
-      let otherOrganizationId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let otherOrganizationId: OrganizationId;
       let slug: string;
       let user: User;
       let organization: Organization;
@@ -433,15 +424,13 @@ describe('FindSkillBySlugUseCase', () => {
         otherOrganizationId = createOrganizationId(uuidv4());
         slug = 'test-skill';
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [
             { organizationId: otherOrganizationId, role: 'member', userId },
           ],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
