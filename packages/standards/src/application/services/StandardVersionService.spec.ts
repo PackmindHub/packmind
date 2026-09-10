@@ -31,10 +31,11 @@ describe('StandardVersionService', () => {
   beforeEach(() => {
     standardVersionRepository = {
       add: jest.fn(),
-      list: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findLatestByStandardIds: jest.fn(),
@@ -43,11 +44,14 @@ describe('StandardVersionService', () => {
 
     ruleRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       findByStandardVersionId: jest.fn(),
       findByStandardVersionIds: jest.fn(),
+      findByIdInSpace: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

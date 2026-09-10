@@ -15,6 +15,7 @@ import {
   RuleAddedEvent,
   RuleDeletedEvent,
 } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
@@ -131,6 +132,7 @@ describe('UpdateStandardUseCase', () => {
     mockUser = {
       id: mockUserId,
       email: 'test@example.com',
+      displayName: null,
       passwordHash: 'hashed-password',
       active: true,
       memberships: [mockMembership],
@@ -142,12 +144,10 @@ describe('UpdateStandardUseCase', () => {
     } as unknown as jest.Mocked<IAccountsPort>;
 
     // Setup space mock
-    mockSpace = {
+    mockSpace = spaceFactory({
       id: createSpaceId(uuidv4()),
-      name: 'Test Space',
-      slug: 'test-space',
       organizationId: mockOrgId,
-    };
+    });
 
     spacesPort = {
       getSpaceById: jest.fn().mockResolvedValue(mockSpace),
