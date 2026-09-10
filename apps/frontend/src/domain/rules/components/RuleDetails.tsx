@@ -4,16 +4,11 @@ import {
   PMPageSection,
   PMTabsCompound,
   PMVStack,
-  PMBox,
-  PMSelect,
-  PMSelectTrigger,
-  pmCreateListCollection,
   PMHStack,
   PMField,
   PMButton,
   PMEmptyState,
   PMAlert,
-  PMPortal,
 } from '@packmind/ui';
 import {
   Rule,
@@ -27,6 +22,7 @@ import {
   RuleExamplesManager,
   RuleExamplesManagerHandle,
 } from './RuleExamplesManager';
+import { RuleLanguageSelect } from './RuleLanguageSelect';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
 import { LuPlus } from 'react-icons/lu';
 import { useGetRuleExamplesQuery } from '../api/queries';
@@ -169,34 +165,6 @@ export const RuleDetails = ({
     setSelectedLanguage(defaultLang);
   }, [detectionLanguages, searchParams]);
 
-  const { configuredLanguages, otherLanguages } = useMemo(() => {
-    const allLanguages = getAllLanguagesSortedByDisplayName();
-
-    const configured: { value: string; label: string }[] = [];
-    const other: { value: string; label: string }[] = [];
-
-    allLanguages.forEach((l) => {
-      const item = { value: l.language, label: l.info.displayName };
-      if (detectionLanguages.includes(l.language)) {
-        configured.push(item);
-      } else {
-        other.push(item);
-      }
-    });
-
-    return { configuredLanguages: configured, otherLanguages: other };
-  }, [detectionLanguages]);
-
-  const languageCollection = useMemo(() => {
-    const allLanguages = getAllLanguagesSortedByDisplayName();
-    return pmCreateListCollection({
-      items: allLanguages.map((l) => ({
-        value: l.language,
-        label: l.info.displayName,
-      })),
-    });
-  }, []);
-
   const handleNavigateToExamples = () => {
     updateTabWithUrl('examples');
   };
@@ -267,43 +235,11 @@ export const RuleDetails = ({
             <PMField.Root>
               <PMHStack gap={2} alignItems="center">
                 <PMField.Label mb={0}>Language</PMField.Label>
-                <PMBox width="200px">
-                  <PMSelect.Root
-                    collection={languageCollection}
-                    value={[selectedLanguage]}
-                    onValueChange={(e) => {
-                      const newLanguage = e.value[0] as ProgrammingLanguage;
-                      updateLanguageWithUrl(newLanguage);
-                    }}
-                  >
-                    <PMSelectTrigger placeholder="Select a language" />
-                    <PMPortal>
-                      <PMSelect.Positioner>
-                        <PMSelect.Content zIndex={1500}>
-                          {configuredLanguages.length > 0 && (
-                            <PMSelect.ItemGroup>
-                              <PMSelect.ItemGroupLabel>
-                                Configured Languages
-                              </PMSelect.ItemGroupLabel>
-                              {configuredLanguages.map((item) => (
-                                <PMSelect.Item item={item} key={item.value}>
-                                  {item.label}
-                                </PMSelect.Item>
-                              ))}
-                            </PMSelect.ItemGroup>
-                          )}
-                          <PMSelect.CollapsibleItemGroup label="Add a language">
-                            {otherLanguages.map((item) => (
-                              <PMSelect.Item item={item} key={item.value}>
-                                {item.label}
-                              </PMSelect.Item>
-                            ))}
-                          </PMSelect.CollapsibleItemGroup>
-                        </PMSelect.Content>
-                      </PMSelect.Positioner>
-                    </PMPortal>
-                  </PMSelect.Root>
-                </PMBox>
+                <RuleLanguageSelect
+                  configuredLanguages={detectionLanguages}
+                  value={selectedLanguage}
+                  onChange={updateLanguageWithUrl}
+                />
               </PMHStack>
             </PMField.Root>
             {currentTab === 'examples' && (
@@ -313,7 +249,7 @@ export const RuleDetails = ({
                 onClick={() => examplesManagerRef.current?.addExample()}
               >
                 <LuPlus />
-                Add Example
+                Add example
               </PMButton>
             )}
           </PMHStack>

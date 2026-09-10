@@ -142,7 +142,7 @@ export function ContextComponentDetail({
   component,
   backLabel,
   backHref,
-  packageId,
+  ruleHref,
   editHref,
   tab,
   onTabChange,
@@ -164,14 +164,15 @@ export function ContextComponentDetail({
   /** Where that link goes, tab and all. */
   backHref: string;
   /**
-   * The package this component is being read in, null outside one.
+   * Where one rule of a standard opens in the pane.
    *
-   * Not for anything on this frame, which is handed its links already built.
-   * It travels with the one link that leaves the surface, so the page it opens
-   * can come back to the package the reader was in rather than to whichever
-   * package the rail lists first.
+   * Built by the pane, like every other link on this frame, because it is an
+   * address of this surface: this component never touches the address, so it
+   * cannot drop a parameter the surface put there. It was a page route until
+   * the pane grew a depth for a rule, and the pane is what knows the
+   * difference.
    */
-  packageId: PackageId | null;
+  ruleHref: (ruleId: Rule['id']) => string;
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
   /**
@@ -511,7 +512,7 @@ export function ContextComponentDetail({
           component={component}
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
-          packageId={packageId}
+          ruleHref={ruleHref}
         />
       </PMTabsCompound.Content>
 
@@ -548,13 +549,13 @@ function ComponentBody({
   component,
   orgSlug,
   spaceSlug,
-  packageId,
+  ruleHref,
 }: Readonly<{
   component: ContextComponent;
   orgSlug: string;
   spaceSlug: string;
-  /** Only for the rule links below, which are the links that leave. */
-  packageId: PackageId | null;
+  /** Where one rule of a standard opens, built by the pane. */
+  ruleHref: (ruleId: Rule['id']) => string;
 }>) {
   switch (component.type) {
     case 'command':
@@ -563,27 +564,7 @@ function ComponentBody({
       return (
         <StandardBody
           standardId={component.key as StandardId}
-          /*
-            One rule's own page, not the list of them. The list was the target
-            until this increment, and it was a second copy of what the pane
-            already prints: name, linter status, severity, and nothing else.
-            A rule's page is the first screen in the path that holds something
-            this pane cannot, so it is the first one worth linking to.
-
-            The package rides along, as it does on the edit link, because the
-            page is a page and has to come back to the pane it was opened from.
-          */
-          ruleHref={(ruleId) =>
-            withPackageParam(
-              routes.space.toStandardRule(
-                orgSlug,
-                spaceSlug,
-                component.key,
-                ruleId,
-              ),
-              packageId ?? undefined,
-            )
-          }
+          ruleHref={ruleHref}
         />
       );
     case 'skill':

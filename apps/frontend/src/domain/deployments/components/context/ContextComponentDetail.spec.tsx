@@ -261,7 +261,6 @@ async function renderDetail(
     backLabel?: string;
     moveLabel?: string;
     onRemove?: (() => void) | null;
-    packageId?: PackageId | null;
   }> = {},
 ) {
   await act(async () => {
@@ -272,10 +271,13 @@ async function renderDetail(
             component={component}
             backLabel={scope.backLabel ?? 'Backend conventions'}
             backHref="?package=pkg-1"
-            packageId={
-              scope.packageId === undefined
-                ? ('pkg-1' as PackageId)
-                : scope.packageId
+            /*
+              A search-only address, the way the panes build it: a rule opens in
+              the pane beside the standard, so the assertions below are about a
+              link that does not leave the surface.
+            */
+            ruleHref={(ruleId) =>
+              `?package=pkg-1&component=standard-1&rule=${ruleId}`
             }
             editHref="/edit"
             tab={tab}
@@ -812,7 +814,8 @@ describe('the distribution body', () => {
 
       expect(screen.getByRole('link', { name: 'Configure' })).toHaveAttribute(
         'href',
-        '/org/acme/space/core/standards/standard-1/rule/rule-1?package=pkg-1',
+        /* Resolved against the router's own path, which is `/` here. */
+        '/?package=pkg-1&component=standard-1&rule=rule-1',
       );
     });
 
@@ -835,23 +838,20 @@ describe('the distribution body', () => {
     });
 
     /*
-      The package the reader is in, carried onto the page that opens so its own
-      back link returns here rather than to whichever package the rail lists
-      first for a standard two of them carry.
+      Search-only, which is what says it stays on this surface. It was a page
+      route until the pane grew a depth of its own for a rule, and a link that
+      leaves is the thing this whole redesign is about.
     */
-    it('carries no package when the standard is read outside one', async () => {
+    it('stays on the surface rather than opening a page', async () => {
       withOneRule();
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
-        vi.fn(),
-        { packageId: null },
       );
 
-      expect(screen.getByRole('link', { name: 'Configure' })).toHaveAttribute(
-        'href',
-        '/org/acme/space/core/standards/standard-1/rule/rule-1',
-      );
+      expect(
+        screen.getByRole('link', { name: 'Configure' }).getAttribute('href'),
+      ).toMatch(/^\/\?/);
     });
 
     /*
