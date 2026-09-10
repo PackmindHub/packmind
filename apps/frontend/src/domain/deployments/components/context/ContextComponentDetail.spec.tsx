@@ -42,6 +42,7 @@ import {
 } from '../../../standards/api/queries/StandardsQueries';
 import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import { useUpdateActiveDetectionProgramSeverityMutation } from '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries';
+import { hasRuleDetection } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import {
   useGetSkillVersionsQuery,
   useGetSkillWithFilesByIdQuery,
@@ -115,6 +116,13 @@ vi.mock(
       '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
     )),
     useGetStandardRulesDetectionStatusQuery: vi.fn(),
+    /*
+      Forced rather than read, for the reason the query above is mocked: the
+      real answer differs by repository, and an unchecked rule renders one way
+      in the edition with a linter and another in the edition without one. Both
+      are worth a case and each repository should run both.
+    */
+    hasRuleDetection: vi.fn(),
   }),
 );
 
@@ -336,6 +344,8 @@ function resetToEmpty() {
     data: undefined,
   });
   (useGetRulesByStandardIdQuery as Mock).mockReturnValue({ data: [] });
+  /* The edition with a linter, which is the one these cases are written for. */
+  (hasRuleDetection as Mock).mockReturnValue(true);
   /* The answer of a standard no detection program was ever written for. */
   (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
     data: [],
@@ -1389,12 +1399,41 @@ describe('whether a rule is detected automatically', () => {
       expect(screen.getByText('Event name ends with the verb')).toBeVisible();
     });
 
-    it('offers nothing to open, the rendering the OSS edition gets', async () => {
+    /*
+      The absence of an answer is an answer in the edition that has a linter,
+      and it names the cause: a program is generated from examples. Silence read
+      as a rendering gap beside a standard whose every row carries a state, and
+      left `Configure` on a row with no reason on it.
+    */
+    it('says nothing has been written to check it', async () => {
+      await renderStandard();
+
+      expect(screen.getByText('No examples')).toBeVisible();
+    });
+
+    it('offers nothing to open, there being no language to list', async () => {
       await renderStandard();
 
       expect(
-        screen.queryByRole('button', { name: /active|in progress/i }),
+        screen.queryByRole('button', { name: /no examples/i }),
       ).not.toBeInTheDocument();
+    });
+
+    /*
+      The rendering of the edition with no linter, which must not name one. Its
+      stubbed query answers with an empty array for every rule of every
+      standard, so the sentence above would be on every row of the product.
+    */
+    describe('when the edition has no linter', () => {
+      beforeEach(() => {
+        (hasRuleDetection as Mock).mockReturnValue(false);
+      });
+
+      it('says nothing about detection at all', async () => {
+        await renderStandard();
+
+        expect(screen.queryByText('No examples')).not.toBeInTheDocument();
+      });
     });
   });
 

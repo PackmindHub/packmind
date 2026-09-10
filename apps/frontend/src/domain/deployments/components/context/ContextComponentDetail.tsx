@@ -82,6 +82,7 @@ import {
   reviewChangesLabel,
 } from './componentMaintenance';
 import {
+  UNDETECTED_RULE,
   ruleDetectionLabel,
   ruleDetectionOpens,
   ruleDetectionsById,
@@ -115,7 +116,10 @@ import {
   useListChangeProposalsByStandardQuery,
 } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { getLanguageDisplayName } from '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils';
-import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import {
+  hasRuleDetection,
+  useGetStandardRulesDetectionStatusQuery,
+} from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 
 /**
  * One component, read inside the package that carries it.
@@ -1649,7 +1653,17 @@ function RulesSection({
           rule={rule}
           standardId={standardId}
           configureHref={ruleHref(rule.id)}
-          detection={detections.get(rule.id) ?? null}
+          /*
+            The absence of an answer is an answer in the edition that has a
+            linter: nothing has been written to check this rule. It was silence
+            until now, which read as a rendering gap next to a standard whose
+            every row carries a state, and left `Configure` beside a row with
+            no reason on it.
+          */
+          detection={
+            detections.get(rule.id) ??
+            (hasRuleDetection() ? UNDETECTED_RULE : null)
+          }
           isFirst={index === 0}
           isOpen={openRuleIds.has(rule.id)}
           onToggle={() => toggleRule(rule.id)}

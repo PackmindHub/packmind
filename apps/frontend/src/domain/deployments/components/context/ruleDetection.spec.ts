@@ -13,6 +13,7 @@ import {
   ruleDetectionOpens,
   ruleDetectionsById,
   type RuleDetection,
+  UNDETECTED_RULE,
 } from './ruleDetection';
 
 const RULE_ID = createRuleId('rule-1');
@@ -302,22 +303,49 @@ describe('ruleDetectionLabel', () => {
 
   describe('when the rule is in progress', () => {
     it('says so in the words the detection screens use', () => {
-      expect(ruleDetectionLabel(detection('in-progress'), spell)).toBe(
-        'In progress',
-      );
+      expect(
+        ruleDetectionLabel(
+          detection(
+            'in-progress',
+            [],
+            [{ language: ProgrammingLanguage.JAVA, state: 'in-progress' }],
+          ),
+          spell,
+        ),
+      ).toBe('In progress');
     });
   });
 
-  describe('when the rule is inactive', () => {
+  describe('when the rule is inactive in a language it was answered for', () => {
     it('says the rule is not active', () => {
-      expect(ruleDetectionLabel(detection('inactive'), spell)).toBe(
-        'Not active',
-      );
+      expect(
+        ruleDetectionLabel(
+          detection('inactive', [], [inactive(ProgrammingLanguage.JAVA)]),
+          spell,
+        ),
+      ).toBe('Not active');
+    });
+  });
+
+  /*
+    The cause rather than the symptom. A program is generated from examples, so
+    a rule with none cannot be detected in any language, and "not active" would
+    send the reader looking for the setting that turns it on.
+  */
+  describe('when nothing was ever written to check the rule', () => {
+    it('says there are no examples, which is why', () => {
+      expect(ruleDetectionLabel(UNDETECTED_RULE, spell)).toBe('No examples');
     });
   });
 });
 
 describe('ruleDetectionOpens', () => {
+  describe('when nothing was ever written to check the rule', () => {
+    it('has no language to open onto', () => {
+      expect(ruleDetectionOpens(UNDETECTED_RULE)).toBe(false);
+    });
+  });
+
   describe('when the rule is active in its only language', () => {
     it('has nothing left to open', () => {
       expect(
