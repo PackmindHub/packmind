@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { userSpaceMembershipFactory } from '../../../test/userSpaceMembershipFactory';
+import { userSpaceMembershipFactory } from '@packmind/spaces/test';
 import { stubLogger } from '@packmind/test-utils';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { AddMembersToSpaceUseCase } from './AddMembersToSpaceUseCase';

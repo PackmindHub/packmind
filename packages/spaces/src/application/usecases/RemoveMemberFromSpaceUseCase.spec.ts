@@ -14,8 +14,10 @@ import {
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { userSpaceMembershipFactory } from '../../../test/userSpaceMembershipFactory';
-import { spaceFactory } from '../../../test/spaceFactory';
+import {
+  spaceFactory,
+  userSpaceMembershipFactory,
+} from '@packmind/spaces/test';
 import { CannotRemoveFromDefaultSpaceError } from '../../domain/errors/CannotRemoveFromDefaultSpaceError';
 import { CannotRemoveSelfError } from '../../domain/errors/CannotRemoveSelfError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';

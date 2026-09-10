@@ -5,8 +5,10 @@ import {
   UserSpaceMembership,
   UserSpaceRole,
 } from '@packmind/types';
-import { spaceFactory } from '../../../test/spaceFactory';
-import { userSpaceMembershipFactory } from '../../../test/userSpaceMembershipFactory';
+import {
+  spaceFactory,
+  userSpaceMembershipFactory,
+} from '@packmind/spaces/test';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { ListUserSpacesUseCase } from './ListUserSpacesUseCase';
 
