@@ -13,6 +13,7 @@ import GitConnectionsPrototype from './git-connections/GitConnectionsPrototype';
 import DeploymentsOverviewRedesignPrototype from './deployments-overview-redesign/DeploymentsOverviewRedesignPrototype';
 import GetStartedPrototype from './get-started/GetStartedPrototype';
 import SpaceNavPluginFirstPrototype from './space-nav-plugin-first/SpaceNavPluginFirstPrototype';
+import MarketplacePluginAdoptionPrototype from './marketplace-plugin-adoption/MarketplacePluginAdoptionPrototype';
 
 export interface Prototype {
   name: string;
@@ -21,6 +22,12 @@ export interface Prototype {
 }
 
 export const prototypes: Prototype[] = [
+  {
+    name: 'Marketplace plugin — Adoption redesign',
+    description:
+      'Flattens the marketplace detail page from three tab levels to one: the single-tab "Plugins" strip is gone and Adoption\'s By repo / By person axes become a Group by control over one searchable, filterable install list — so repo-scope and machine-wide installs are finally readable together.',
+    component: MarketplacePluginAdoptionPrototype,
+  },
   {
     name: 'Space navigation — plugin-first',
     description:
