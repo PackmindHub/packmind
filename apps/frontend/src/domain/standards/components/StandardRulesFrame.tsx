@@ -31,6 +31,7 @@ export function StandardRulesFrame({
   backLabel,
   backHref,
   title,
+  titleIsSentence = false,
   children,
 }: Readonly<{
   /** Where the link goes, named. The standard from the rules, the rules from a rule. */
@@ -38,6 +39,15 @@ export function StandardRulesFrame({
   backHref: string;
   /** What this page is, which is never the standard's name: that is the back link. */
   title: string;
+  /**
+   * Whether that title is a sentence rather than a name, which a rule's is.
+   *
+   * It decides the size and nothing else. A rule reads as a rule at the size
+   * prose is set in; at heading size it is three lines of shouting before the
+   * page starts, which is what the reader sees first now that a row in the pane
+   * opens a rule directly instead of a list of them.
+   */
+  titleIsSentence?: boolean;
   children: ReactNode;
 }>) {
   return (
@@ -69,9 +79,15 @@ export function StandardRulesFrame({
           Capped at the same measure the pane's own title is. A rule's title is
           the rule, which is a sentence and not a name, and a sentence set to the
           full width of a 1200px page is read twice.
+
+          `h2` either way. The size changes, the level does not: this is the
+          heading of the page in both cases, and a document whose only heading is
+          an `h3` is a document with a hole in it.
         */}
         <PMBox paddingTop={2} maxWidth="68ch">
-          <PMHeading level="h2">{title}</PMHeading>
+          <PMHeading level="h2" fontSize={titleIsSentence ? 'lg' : undefined}>
+            {title}
+          </PMHeading>
         </PMBox>
 
         <PMBox paddingTop={6}>{children}</PMBox>

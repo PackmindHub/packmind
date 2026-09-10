@@ -9,9 +9,9 @@ import { redirectToContextComponent } from '../../src/shared/data/redirectToCont
  * On this route and not on the layout above it, which is the whole reason the
  * standard's index exists as a file of its own now. The layout carries
  * `summary`, `deployment` and `rule/:ruleId`, and a redirect placed there would
- * take all three with it. The rules table is where a standard's rules are set
- * up, the pane deliberately does not carry that, and the pane's own
- * `Manage rules` link is what points at it.
+ * take all three with it. A rule's own page is where its examples and its
+ * linter program are set up, the pane deliberately does not carry that, and the
+ * `Configure` link on each rule row is what points at it.
  */
 export async function clientLoader(args: LoaderFunctionArgs) {
   return redirectToContextComponent(args, args.params.standardId as string);

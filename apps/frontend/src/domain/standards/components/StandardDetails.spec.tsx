@@ -183,12 +183,14 @@ describe('StandardDetails', () => {
         ).toBeVisible();
       });
 
-      it('goes back one hop, to the rules', async () => {
+      it('goes back to the standard in the pane, not to the table', async () => {
         await renderAt(RULE_ADDRESS);
 
-        expect(screen.getByRole('link', { name: 'Rules' })).toHaveAttribute(
+        expect(
+          screen.getByRole('link', { name: 'Amplitude analytics usage' }),
+        ).toHaveAttribute(
           'href',
-          '/org/acme/space/core/standards/standard-1/summary?package=pkg-9',
+          '/org/acme/space/core/context?package=pkg-9&component=standard-1',
         );
       });
     });

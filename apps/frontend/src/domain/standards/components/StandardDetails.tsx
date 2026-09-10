@@ -26,10 +26,7 @@ import {
   useSpaceNavMode,
   type SpaceNavMode,
 } from '../../organizations/components/SpaceNavModeContext';
-import {
-  usePackageInAddress,
-  withPackageParam,
-} from '../../deployments/hooks/useCreateIntoPackage';
+import { usePackageInAddress } from '../../deployments/hooks/useCreateIntoPackage';
 import {
   contextComponentHref,
   contextPackageHref,
@@ -255,19 +252,23 @@ export const StandardDetails = ({
       : contextComponentHref({ orgSlug, spaceSlug }, standard.id);
 
     /*
-     * One hop per link, the way the pane's own back link works: a rule returns
-     * to the rules, the rules return to the standard in the pane. The package
-     * travels with the first hop so the second one lands where the reader
-     * started rather than in whichever package the rail happens to list first.
+     * One hop back to the pane, from either depth. A rule used to return to the
+     * rules and the rules to the standard, which is the path a reader took when
+     * the pane's own list of rules was a link to this table. It is not any
+     * more: each row in the pane opens its own rule, so the table is a screen
+     * nobody passes through, and returning them to it would land them on a list
+     * they never saw.
+     *
+     * The package travels with the link that came here, so the hop back lands
+     * in the package the reader started in rather than in whichever one the
+     * rail happens to list first.
      */
     const trail = isRuleView
       ? {
           title: currentRule?.content ?? 'Rule',
-          backLabel: 'Rules',
-          backHref: withPackageParam(
-            routes.space.toStandardSummary(orgSlug, spaceSlug, standard.id),
-            packageInAddress ?? undefined,
-          ),
+          titleIsSentence: true,
+          backLabel: standard.name,
+          backHref: paneHref,
         }
       : {
           title: activeTab === 'distribution' ? 'Distribution' : 'Rules',

@@ -21,7 +21,6 @@ import {
 import {
   LuChevronDown,
   LuChevronLeft,
-  LuChevronRight,
   LuCircleCheck,
   LuCircleOff,
   LuEllipsisVertical,
@@ -554,7 +553,7 @@ function ComponentBody({
   component: ContextComponent;
   orgSlug: string;
   spaceSlug: string;
-  /** Only for the rules link below, which is the one link that leaves. */
+  /** Only for the rule links below, which are the links that leave. */
   packageId: PackageId | null;
 }>) {
   switch (component.type) {
@@ -565,16 +564,26 @@ function ComponentBody({
         <StandardBody
           standardId={component.key as StandardId}
           /*
-            The summary route, and not the row's own href. The row points at the
-            standard, which in the plugin-first navigation is an address that
-            comes back here: the link would leave the pane and be sent straight
-            to it again. Naming the page where the rules actually are is both
-            the honest label and the only target that survives.
+            One rule's own page, not the list of them. The list was the target
+            until this increment, and it was a second copy of what the pane
+            already prints: name, linter status, severity, and nothing else.
+            A rule's page is the first screen in the path that holds something
+            this pane cannot, so it is the first one worth linking to.
+
+            The package rides along, as it does on the edit link, because the
+            page is a page and has to come back to the pane it was opened from.
           */
-          rulesHref={withPackageParam(
-            routes.space.toStandardSummary(orgSlug, spaceSlug, component.key),
-            packageId ?? undefined,
-          )}
+          ruleHref={(ruleId) =>
+            withPackageParam(
+              routes.space.toStandardRule(
+                orgSlug,
+                spaceSlug,
+                component.key,
+                ruleId,
+              ),
+              packageId ?? undefined,
+            )
+          }
         />
       );
     case 'skill':
@@ -1474,8 +1483,12 @@ function CopyStandardMarkdown({
 
 function StandardBody({
   standardId,
-  rulesHref,
-}: Readonly<{ standardId: StandardId; rulesHref: string }>) {
+  ruleHref,
+}: Readonly<{
+  standardId: StandardId;
+  /** Where one rule is configured, built per rule by the caller. */
+  ruleHref: (ruleId: Rule['id']) => string;
+}>) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
@@ -1534,64 +1547,32 @@ function StandardBody({
       )}
 
       <PMBox>
-        <PMHStack justify="space-between" align="baseline" gap={4}>
-          {/*
-            The count only when there is one to give: loading, failed and empty
-            all read better as the plain heading, and "0 rules" above a line
-            that already says there is no rule was saying it twice.
-          */}
-          <BodySectionLabel>
-            {sortedRules.length > 0
-              ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
-              : 'Rules'}
-          </BodySectionLabel>
-          {/*
-            The one way out this surface keeps, and the reason the header's
-            "Open standard" can go.
-            
-            A standard's rules are set up on the standard's own page: the code
-            examples that decide which languages a rule can be detected in, the
-            linter program per language, and the severity it reports at. None of
-            that fits a reading pane, and none of it is what the pane shows.
-            
-            Which is exactly what made the header button surprising and this one
-            not. That button promised a page and delivered a second copy of what
-            was already on screen. This one is beside the list it is about, and
-            it names work the reader cannot do here.
-            
-            Not the accent. The proposal waiting on someone in the header is the
-            one thing on this surface worth interrupting for, and a second
-            periwinkle link would make that one a colour rather than a signal.
-          */}
-          <PMBox
-            /*
-              Sized to the label it shares the line with, not to the body. At
-              `xs` beside a 10px heading it read as the loudest thing in the
-              section, which is the wrong way round: the rules are what the
-              section is, and this is the way to go and set them up.
-            */
-            fontSize="11px"
-            color="text.secondary"
-            flexShrink={0}
-            display="inline-flex"
-            alignItems="center"
-            gap="2px"
-            _hover={{ color: 'text.primary' }}
-            transition="color 150ms ease-out"
-            asChild
-          >
-            <Link to={rulesHref}>
-              Manage rules
-              <PMIcon fontSize="11px">
-                <LuChevronRight />
-              </PMIcon>
-            </Link>
-          </PMBox>
-        </PMHStack>
+        {/*
+          The heading alone on its line again. It shared it with a link to the
+          standard's rules page, which was the way out this surface kept when
+          the header's "Open standard" went: the code examples and the linter
+          program are not in the pane and someone has to be able to reach them.
+
+          The rows are what carry it now, one door each. The list it led to was
+          the same rules a second time, with a name, a linter status and a
+          severity the pane prints itself, so as a stop on the way it cost a
+          click and answered nothing. A rule is what gets configured, and the
+          row for it is where the link belongs.
+
+          The count only when there is one to give: loading, failed and empty
+          all read better as the plain heading, and "0 rules" above a line that
+          already says there is no rule was saying it twice.
+        */}
+        <BodySectionLabel>
+          {sortedRules.length > 0
+            ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
+            : 'Rules'}
+        </BodySectionLabel>
         <PMBox paddingTop={1}>
           <RulesSection
             rules={sortedRules}
             standardId={standardId}
+            ruleHref={ruleHref}
             isLoading={rulesLoading}
             isError={rulesError}
           />
@@ -1618,11 +1599,13 @@ function StandardBody({
 function RulesSection({
   rules,
   standardId,
+  ruleHref,
   isLoading,
   isError,
 }: Readonly<{
   rules: readonly Rule[];
   standardId: StandardId;
+  ruleHref: (ruleId: Rule['id']) => string;
   isLoading: boolean;
   isError: boolean;
 }>) {
@@ -1699,6 +1682,7 @@ function RulesSection({
           key={rule.id}
           rule={rule}
           standardId={standardId}
+          configureHref={ruleHref(rule.id)}
           detection={detections.get(rule.id) ?? null}
           isFirst={index === 0}
           isOpen={openRuleIds.has(rule.id)}
@@ -1724,13 +1708,15 @@ function RulesSection({
  * have to stay in the same column: an alignment that moves by sixteen pixels
  * from row to row is read as a mistake long before it is read as a meaning.
  *
- * With no detection status at all the row is what it was before this increment,
- * down to the padding. That is the OSS rendering, and also a proprietary rule
- * the linter has never been pointed at.
+ * With no detection status at all the row keeps its way out and loses the rest.
+ * That is the OSS rendering, and also a proprietary rule the linter has never
+ * been pointed at, which is the row most worth opening: the way out is what
+ * makes it detectable at all, so it cannot be the one thing the row hides.
  */
 function RuleRow({
   rule,
   standardId,
+  configureHref,
   detection,
   isFirst,
   isOpen,
@@ -1739,6 +1725,8 @@ function RuleRow({
   rule: Rule;
   /** Only for the severity, which is set on a program of this standard. */
   standardId: StandardId;
+  /** The rule's own page, where its examples and its program are. */
+  configureHref: string;
   detection: RuleDetection | null;
   isFirst: boolean;
   isOpen: boolean;
@@ -1778,7 +1766,6 @@ function RuleRow({
             paddingX={1.5}
             paddingY={0.5}
             marginY="-2px"
-            marginRight="-6px"
             borderRadius="sm"
             _hover={
               opens ? { backgroundColor: 'background.secondary' } : undefined
@@ -1810,6 +1797,35 @@ function RuleRow({
             </PMIcon>
           </PMBox>
         )}
+
+        {/*
+          One word, on every row, in its own column at the right edge. The
+          heading above the list carried this for the whole standard and landed
+          on a list of the same rules; a rule is the thing that has examples and
+          a program, so the row is the honest place for the door and the list in
+          between stops being a step.
+
+          Faded, and at the size the heading's link was rather than the row's.
+          Thirty of these in a column is the loudest a list of prose can get if
+          they are allowed to be, and what they lead to is work nobody does
+          while reading.
+
+          Its own column, and always in it, so the labels of the chips to its
+          left end at one x down the whole list. That alignment is why the
+          chevron beside them is kept in the layout when it has nothing to do,
+          and a link that came and went by row would undo it.
+        */}
+        <PMBox
+          fontSize="11px"
+          color="text.faded"
+          flexShrink={0}
+          paddingTop="3px"
+          _hover={{ color: 'text.primary' }}
+          transition="color 150ms ease-out"
+          asChild
+        >
+          <Link to={configureHref}>Configure</Link>
+        </PMBox>
       </PMHStack>
 
       {detection && opens && isOpen && (

@@ -791,40 +791,46 @@ describe('the distribution body', () => {
     /*
       The one thing the pane cannot carry: the code examples that decide which
       languages a rule can be detected in, the linter program per language, and
-      the severity it reports at. Beside the rules rather than in the header,
-      and named after the work rather than after the page.
+      the severity it reports at. On the row of the rule they belong to rather
+      than above the list, because a rule is the thing that gets configured.
     */
-    it('is offered beside the rules of a standard', async () => {
+    function withOneRule() {
       (useGetStandardByIdQuery as Mock).mockReturnValue({
         data: { standard: { slug: 'naming', description: '' } },
       });
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({
+        data: [{ id: 'rule-1', content: 'Event name ends with the verb' }],
+      });
+    }
+
+    it('is offered on the row of a rule nothing detects, which is the row that needs it', async () => {
+      withOneRule();
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
       );
 
-      expect(screen.getByRole('link', { name: /manage rules/i })).toBeVisible();
+      expect(screen.getByRole('link', { name: 'Configure' })).toHaveAttribute(
+        'href',
+        '/org/acme/space/core/standards/standard-1/rule/rule-1?package=pkg-1',
+      );
     });
 
-    /*
-      Not the row's own href, which points at the standard. That address comes
-      back to this pane in the plugin-first navigation, so a link built from it
-      would leave and be sent straight back.
-    */
-    it('lands on the page that holds the rules table', async () => {
-      (useGetStandardByIdQuery as Mock).mockReturnValue({
-        data: { standard: { slug: 'naming', description: '' } },
+    it('is offered once per rule', async () => {
+      withOneRule();
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'rule-1', content: 'Event name ends with the verb' },
+          { id: 'rule-2', content: 'Property names are camelCase' },
+        ],
       });
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
       );
 
-      expect(
-        screen.getByRole('link', { name: /manage rules/i }),
-      ).toHaveAttribute(
-        'href',
-        '/org/acme/space/core/standards/standard-1/summary?package=pkg-1',
+      expect(screen.getAllByRole('link', { name: 'Configure' })).toHaveLength(
+        2,
       );
     });
 
@@ -834,9 +840,7 @@ describe('the distribution body', () => {
       first for a standard two of them carry.
     */
     it('carries no package when the standard is read outside one', async () => {
-      (useGetStandardByIdQuery as Mock).mockReturnValue({
-        data: { standard: { slug: 'naming', description: '' } },
-      });
+      withOneRule();
       await renderDetail(
         componentOfType('standard', STANDARD_ID),
         INSTRUCTIONS_TAB,
@@ -844,12 +848,27 @@ describe('the distribution body', () => {
         { packageId: null },
       );
 
-      expect(
-        screen.getByRole('link', { name: /manage rules/i }),
-      ).toHaveAttribute(
+      expect(screen.getByRole('link', { name: 'Configure' })).toHaveAttribute(
         'href',
-        '/org/acme/space/core/standards/standard-1/summary',
+        '/org/acme/space/core/standards/standard-1/rule/rule-1',
       );
+    });
+
+    /*
+      The list of rules is the pane's own now. The link above it led to a second
+      copy of it, one screen away, holding a name, a linter status and a
+      severity this pane prints itself.
+    */
+    it('no longer offers the rules table as a stop on the way', async () => {
+      withOneRule();
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(
+        screen.queryByRole('link', { name: /manage rules/i }),
+      ).not.toBeInTheDocument();
     });
 
     describe('when the component is a command', () => {
@@ -863,7 +882,7 @@ describe('the distribution body', () => {
         );
 
         expect(
-          screen.queryByRole('link', { name: /manage rules/i }),
+          screen.queryByRole('link', { name: 'Configure' }),
         ).not.toBeInTheDocument();
       });
     });
