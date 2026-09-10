@@ -9,6 +9,7 @@ import { standardsSchemas } from '@packmind/standards';
 import {
   createTargetId,
   DeleteItemType,
+  FileModification,
   FileUpdates,
   GitProviderVendors,
   GitRepo,
@@ -94,7 +95,7 @@ describe('Cursor Deployment Integration', () => {
       content: 'This is test recipe content for Cursor deployment',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create test standard
@@ -120,6 +121,7 @@ describe('Cursor Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 
@@ -214,7 +216,7 @@ describe('Cursor Deployment Integration', () => {
 
     describe('when deploying standards', () => {
       let fileUpdates: FileUpdates;
-      let cursorStandardFile: { path: string; content: string } | undefined;
+      let cursorStandardFile: FileModification | undefined;
 
       beforeEach(async () => {
         const standardVersions: StandardVersion[] = [
@@ -295,7 +297,7 @@ describe('Cursor Deployment Integration', () => {
 
     describe('when deploying standard without scope', () => {
       let fileUpdates: FileUpdates;
-      let cursorStandardFile: { path: string; content: string };
+      let cursorStandardFile: FileModification;
       let globalStandard: Standard;
 
       beforeEach(async () => {
@@ -522,7 +524,7 @@ describe('Cursor Deployment Integration', () => {
           content: 'Second recipe content for testing',
           organizationId: organization.id,
           userId: user.id,
-          spaceId: space.id.toString(),
+          spaceId: space.id,
         });
 
         const recipeVersions: CommandVersion[] = [
@@ -594,8 +596,8 @@ describe('Cursor Deployment Integration', () => {
       let fileUpdates: FileUpdates;
       let standard1: Standard;
       let standard2: Standard;
-      let frontendFile: { path: string; content: string } | undefined;
-      let backendFile: { path: string; content: string } | undefined;
+      let frontendFile: FileModification | undefined;
+      let backendFile: FileModification | undefined;
 
       beforeEach(async () => {
         standard1 = await testApp.standardsHexa.getAdapter().createStandard({
