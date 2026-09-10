@@ -42,6 +42,16 @@ describe('shared queryClient', () => {
     });
 
     /*
+     * The budget, asserted because raising it is what broke the suite once.
+     * Every attempt is paid for on `HydrateFallback` by a reader who cannot
+     * tell a slow loader from a hung one, and query-core's backoff doubles each
+     * time. `retryPolicy.ts` says what three attempts cost.
+     */
+    it('retries a server failure once', () => {
+      expect(queryRetry()(1, answered(503))).toBe(false);
+    });
+
+    /*
      * The reason the case above matters, and the reason it is asserted through
      * `fetchQuery` rather than only on the predicate.
      *
