@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  CodingAgent,
   ArtifactVersionEntry,
   CodingAgents,
   FileUpdates,
@@ -34,24 +35,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { getDefaultSkillId } from '../utils/defaultSkillIdUtils';
 import { GetContentByVersionsUseCase } from './GetContentByVersionsUseCase';
+import { userFactory } from '@packmind/accounts/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('GetContentByVersionsUseCase', () => {
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
@@ -266,7 +269,7 @@ describe('GetContentByVersionsUseCase', () => {
 
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue(fileUpdates);
 
-      const skillFolderMap = new Map<string, string | undefined>();
+      const skillFolderMap = new Map<CodingAgent, string | undefined>();
       skillFolderMap.set('packmind', '.packmind/skills/');
       skillFolderMap.set('claude', '.claude/skills/');
       codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(

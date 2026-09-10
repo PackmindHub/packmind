@@ -2,16 +2,17 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   createDistributionId,
   createPackageId,
+  createGitRepoId,
   createTargetId,
   Distribution,
   DistributionStatus,
-  GitRepoId,
   ListDeploymentsByPackageCommand,
   OrganizationId,
   UserId,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { ListDeploymentsByPackageUseCase } from './ListDeploymentsByPackageUseCase';
+import { distributionFactory, targetFactory } from '../../../test';
 
 describe('ListDeploymentsByPackageUseCase', () => {
   let useCase: ListDeploymentsByPackageUseCase;
@@ -42,21 +43,21 @@ describe('ListDeploymentsByPackageUseCase', () => {
         userId: 'user-789' as UserId,
       };
       const mockDistributions: Distribution[] = [
-        {
+        distributionFactory({
           id: createDistributionId('distribution-1'),
           organizationId: command.organizationId as OrganizationId,
           distributedPackages: [],
-          target: {
+          target: targetFactory({
             id: createTargetId('target-123'),
             name: 'Test Target',
             path: '/test',
-            gitRepoId: 'repo-123' as GitRepoId,
-          },
+            gitRepoId: createGitRepoId('repo-123'),
+          }),
           status: DistributionStatus.success,
           authorId: 'author-123' as UserId,
           createdAt: new Date().toISOString(),
           renderModes: [],
-        },
+        }),
       ];
       let result: Distribution[];
 

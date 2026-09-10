@@ -9,6 +9,7 @@ import {
   CommandDeletedEvent,
   SkillDeletedEvent,
   StandardDeletedEvent,
+  PackmindEventSource,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
@@ -23,6 +24,7 @@ describe('DeploymentsListener', () => {
   const spaceId = createSpaceId('space-456');
   const organizationId = createOrganizationId('org-789');
   const userId = createUserId('user-abc');
+  const source: PackmindEventSource = 'ui';
 
   beforeEach(() => {
     mockDataSource = {
@@ -67,6 +69,7 @@ describe('DeploymentsListener', () => {
         spaceId,
         organizationId,
         userId,
+        source,
       });
 
       eventService.emit(event);
@@ -89,6 +92,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 
@@ -98,6 +102,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 
@@ -133,6 +138,7 @@ describe('DeploymentsListener', () => {
         spaceId,
         organizationId,
         userId,
+        source,
       });
 
       eventService.emit(event);
@@ -155,6 +161,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 
@@ -164,6 +171,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 
@@ -199,6 +207,7 @@ describe('DeploymentsListener', () => {
         spaceId,
         organizationId,
         userId,
+        source,
       });
 
       eventService.emit(event);
@@ -221,6 +230,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 
@@ -230,6 +240,7 @@ describe('DeploymentsListener', () => {
             spaceId,
             organizationId,
             userId,
+            source,
           }),
         );
 

@@ -25,6 +25,7 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
 
 describe('RemoveArtefactsFromPackageUseCase', () => {
   let useCase: RemoveArtefactsFromPackageUseCase;
@@ -65,14 +66,15 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
     slug: 'test-org',
   });
 
-  const buildSpace = (): Space => ({
-    id: spaceId,
-    slug: 'test-space',
-    name: 'Test Space',
-    organizationId,
-    type: SpaceType.open,
-    isDefaultSpace: true,
-  });
+  const buildSpace = (): Space =>
+    spaceFactory({
+      id: spaceId,
+      slug: 'test-space',
+      name: 'Test Space',
+      organizationId,
+      type: SpaceType.open,
+      isDefaultSpace: true,
+    });
 
   beforeEach(() => {
     mockPackageRepository = {

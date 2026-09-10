@@ -15,6 +15,7 @@ import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
 
 describe('ListPackagesBySpaceUseCase', () => {
   let useCase: ListPackagesBySpaceUseCase;
@@ -101,12 +102,12 @@ describe('ListPackagesBySpaceUseCase', () => {
       let package2: ReturnType<typeof packageFactory>;
 
       beforeEach(async () => {
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId,
-        };
+        });
 
         package1 = packageFactory({
           spaceId,
@@ -151,12 +152,12 @@ describe('ListPackagesBySpaceUseCase', () => {
       let result: { packages: ReturnType<typeof packageFactory>[] };
 
       beforeEach(async () => {
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId,
-        };
+        });
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
@@ -226,12 +227,12 @@ describe('ListPackagesBySpaceUseCase', () => {
 
       beforeEach(() => {
         const differentOrgId = createOrganizationId(uuidv4());
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId: differentOrgId,
-        };
+        });
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
@@ -267,12 +268,12 @@ describe('ListPackagesBySpaceUseCase', () => {
 
     describe('when service operations fail', () => {
       it('throws the error from service', async () => {
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId,
-        };
+        });
 
         const error = new Error('Database connection failed');
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);

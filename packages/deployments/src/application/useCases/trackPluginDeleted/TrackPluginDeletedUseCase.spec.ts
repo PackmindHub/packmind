@@ -21,24 +21,27 @@ import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../../services/PackageService';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 import { TrackPluginDeletedUseCase } from './TrackPluginDeletedUseCase';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('TrackPluginDeletedUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
@@ -85,14 +88,14 @@ describe('TrackPluginDeletedUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    defaultSpace = {
+    defaultSpace = spaceFactory({
       id: createSpaceId('default-space-id'),
       name: 'Default Space',
       slug: 'default',
       type: SpaceType.open,
       organizationId,
       isDefaultSpace: true,
-    };
+    });
     pkg = buildPackage();
 
     packageService = {

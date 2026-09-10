@@ -69,15 +69,15 @@ export class InstallStateSigner {
     };
 
     if (payload.organizationGitHubAppId !== undefined) {
-      fullPayload.organizationGitHubAppId = payload.organizationGitHubAppId;
+      fullPayload['organizationGitHubAppId'] = payload.organizationGitHubAppId;
     }
 
     if (payload.gitProviderId !== undefined) {
-      fullPayload.gitProviderId = payload.gitProviderId;
+      fullPayload['gitProviderId'] = payload.gitProviderId;
     }
 
     if (payload.displayName !== undefined) {
-      fullPayload.displayName = payload.displayName;
+      fullPayload['displayName'] = payload.displayName;
     }
 
     const json = JSON.stringify(fullPayload);
@@ -137,44 +137,45 @@ export class InstallStateSigner {
     if (
       typeof parsed !== 'object' ||
       parsed === null ||
-      typeof record.orgId !== 'string' ||
-      !record.orgId ||
-      typeof record.userId !== 'string' ||
-      !record.userId ||
-      typeof record.nonce !== 'string' ||
-      !record.nonce ||
-      typeof record.exp !== 'number' ||
-      !isFinite(record.exp as number)
+      typeof record['orgId'] !== 'string' ||
+      !record['orgId'] ||
+      typeof record['userId'] !== 'string' ||
+      !record['userId'] ||
+      typeof record['nonce'] !== 'string' ||
+      !record['nonce'] ||
+      typeof record['exp'] !== 'number' ||
+      !isFinite(record['exp'] as number)
     ) {
       throw new InvalidInstallStateError();
     }
 
     // kind defaults to 'install' for tokens signed before the discriminator was introduced
     const kind: InstallStateKind =
-      record.kind === 'manifest' ? 'manifest' : 'install';
+      record['kind'] === 'manifest' ? 'manifest' : 'install';
 
     const organizationGitHubAppId =
-      typeof record.organizationGitHubAppId === 'string' &&
-      record.organizationGitHubAppId.length > 0
-        ? (record.organizationGitHubAppId as string)
+      typeof record['organizationGitHubAppId'] === 'string' &&
+      record['organizationGitHubAppId'].length > 0
+        ? (record['organizationGitHubAppId'] as string)
         : undefined;
 
     const gitProviderId =
-      typeof record.gitProviderId === 'string' &&
-      record.gitProviderId.length > 0
-        ? (record.gitProviderId as string)
+      typeof record['gitProviderId'] === 'string' &&
+      record['gitProviderId'].length > 0
+        ? (record['gitProviderId'] as string)
         : undefined;
 
     const displayName =
-      typeof record.displayName === 'string' && record.displayName.length > 0
-        ? (record.displayName as string)
+      typeof record['displayName'] === 'string' &&
+      record['displayName'].length > 0
+        ? (record['displayName'] as string)
         : undefined;
 
     const payload: InstallStatePayload = {
-      orgId: record.orgId as string,
-      userId: record.userId as string,
-      nonce: record.nonce as string,
-      exp: record.exp as number,
+      orgId: record['orgId'] as string,
+      userId: record['userId'] as string,
+      nonce: record['nonce'] as string,
+      exp: record['exp'] as number,
       kind,
       organizationGitHubAppId,
       gitProviderId,

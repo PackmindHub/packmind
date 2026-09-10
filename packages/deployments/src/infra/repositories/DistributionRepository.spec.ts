@@ -21,10 +21,20 @@ import {
   StandardId,
   CommandId,
   SkillId,
+  SkillVersion,
 } from '@packmind/types';
+import { skillVersionFactory } from '@packmind/skills/test';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { DistributionRepository } from './DistributionRepository';
 import { OutdatedDeploymentsByTarget } from '../../domain/repositories/IDistributionRepository';
+
+/**
+ * Shape the repository reads through `isSkillVersionOrphaned`: a skill version
+ * row with its parent skill joined in, so the soft-delete flag is visible.
+ */
+type SkillVersionWithParentSkill = SkillVersion & {
+  skill?: { deletedAt?: Date | null } | null;
+};
 
 describe('DistributionRepository', () => {
   let repository: DistributionRepository;
@@ -263,7 +273,6 @@ describe('DistributionRepository', () => {
       slug: name.toLowerCase().replace(/ /g, '-'),
       description: `Description for ${name}`,
       version: 1,
-      summary: null,
       gitCommit: undefined,
       userId: createUserId('author-1'),
       scope: null,
@@ -604,7 +613,6 @@ describe('DistributionRepository', () => {
       slug: name.toLowerCase().replace(/ /g, '-'),
       content: `Content for ${name}`,
       version: 1,
-      summary: null,
       userId: null,
     });
 
@@ -937,8 +945,8 @@ describe('DistributionRepository', () => {
       skillId: string,
       name: string,
       opts: { parentDeletedAt?: Date | null } = {},
-    ) =>
-      ({
+    ): SkillVersionWithParentSkill => ({
+      ...skillVersionFactory({
         id: createSkillVersionId(id),
         skillId: createSkillId(skillId),
         name,
@@ -947,8 +955,9 @@ describe('DistributionRepository', () => {
         version: 1,
         prompt: '',
         userId: createUserId('author-1'),
-        skill: { deletedAt: opts.parentDeletedAt ?? null },
-      }) as never;
+      }),
+      skill: { deletedAt: opts.parentDeletedAt ?? null },
+    });
 
     const createDistribution = (
       id: string,
@@ -1075,8 +1084,8 @@ describe('DistributionRepository', () => {
       skillId: string,
       name: string,
       opts: { parentDeletedAt?: Date | null } = {},
-    ) =>
-      ({
+    ): SkillVersionWithParentSkill => ({
+      ...skillVersionFactory({
         id: createSkillVersionId(id),
         skillId: createSkillId(skillId),
         name,
@@ -1085,8 +1094,9 @@ describe('DistributionRepository', () => {
         version: 1,
         prompt: '',
         userId: createUserId('author-1'),
-        skill: { deletedAt: opts.parentDeletedAt ?? null },
-      }) as never;
+      }),
+      skill: { deletedAt: opts.parentDeletedAt ?? null },
+    });
 
     const createDistribution = (
       id: string,
@@ -1269,7 +1279,7 @@ describe('DistributionRepository', () => {
       const standardId1 = createStandardId('std-1');
       const standardId2 = createStandardId('std-2');
       const commandId1 = createCommandId('recipe-1');
-      const skillId1 = 'skill-1' as never;
+      const skillId1 = createSkillId('skill-1');
 
       let result: Awaited<
         ReturnType<typeof repository.listDeployedArtifactIdsBySpace>
@@ -1293,7 +1303,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-one',
                   description: 'desc',
                   version: 1,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,
@@ -1305,7 +1314,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-two',
                   description: 'desc',
                   version: 1,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,
@@ -1319,21 +1327,18 @@ describe('DistributionRepository', () => {
                   slug: 'recipe-one',
                   content: 'content',
                   version: 1,
-                  summary: null,
                   userId: null,
                 },
               ],
               skillVersions: [
-                {
-                  id: 'skv-1' as never,
+                skillVersionFactory({
+                  id: createSkillVersionId('skv-1'),
                   skillId: skillId1,
                   name: 'Skill One',
                   slug: 'skill-one',
-                  content: 'content',
+                  prompt: 'content',
                   version: 1,
-                  summary: null,
-                  userId: null,
-                },
+                }),
               ],
             },
           ],
@@ -1386,7 +1391,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-one',
                   description: 'desc',
                   version: 1,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,
@@ -1431,7 +1435,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-two',
                   description: 'desc',
                   version: 1,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,
@@ -1517,7 +1520,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-one',
                   description: 'desc',
                   version: 1,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,
@@ -1544,7 +1546,6 @@ describe('DistributionRepository', () => {
                   slug: 'standard-one',
                   description: 'desc',
                   version: 2,
-                  summary: null,
                   gitCommit: undefined,
                   userId: createUserId('author-1'),
                   scope: null,

@@ -35,8 +35,15 @@ import {
   createTargetId,
   createUserId,
   CodingAgents,
+  DeleteItemType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
+import { commandFactory } from '@packmind/commands/test';
+import { standardFactory } from '@packmind/standards/test';
+import { skillFactory } from '@packmind/skills/test';
+import { targetFactory } from '../../../test';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
@@ -49,19 +56,20 @@ const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('PullContentUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
@@ -212,14 +220,14 @@ describe('PullContentUseCase', () => {
       slug: 'packmind',
     };
 
-    defaultSpace = {
+    defaultSpace = spaceFactory({
       id: createSpaceId('default-space'),
       name: 'Default Space',
       slug: 'default',
       type: SpaceType.open,
       organizationId,
       isDefaultSpace: true,
-    };
+    });
 
     spacesPort = {
       listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
@@ -499,7 +507,7 @@ describe('PullContentUseCase', () => {
       let skillVersion: SkillVersion;
 
       beforeEach(() => {
-        skill = {
+        skill = skillFactory({
           id: createSkillId('skill-1'),
           name: 'Test Skill',
           slug: 'test-skill',
@@ -508,7 +516,7 @@ describe('PullContentUseCase', () => {
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
-        };
+        });
 
         skillVersion = {
           id: createSkillVersionId('skill-version-1'),
@@ -884,7 +892,7 @@ describe('PullContentUseCase', () => {
         let recipeVersion: CommandVersion;
 
         beforeEach(() => {
-          recipe = {
+          recipe = commandFactory({
             id: createCommandId('recipe-1'),
             name: 'Test Recipe',
             slug: 'test-recipe',
@@ -892,7 +900,7 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
           recipeVersion = {
             id: createCommandVersionId('rv-1'),
@@ -940,13 +948,7 @@ describe('PullContentUseCase', () => {
           };
 
           targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
-            {
-              id: targetId,
-              organizationId: organization.id,
-              gitRemoteUrl: 'https://github.com/owner/repo.git',
-              gitBranch: 'main',
-              relativePath: '/',
-            },
+            targetFactory({ id: targetId }),
           );
         });
 
@@ -989,7 +991,7 @@ describe('PullContentUseCase', () => {
       let skillVersion: SkillVersion;
 
       beforeEach(() => {
-        skill = {
+        skill = skillFactory({
           id: createSkillId('skill-1'),
           name: 'Test Skill',
           slug: 'test-skill',
@@ -998,7 +1000,7 @@ describe('PullContentUseCase', () => {
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
-        };
+        });
 
         skillVersion = {
           id: createSkillVersionId('skill-version-1'),
@@ -1107,7 +1109,7 @@ describe('PullContentUseCase', () => {
         let skillVersionB: SkillVersion;
 
         beforeEach(() => {
-          skillA = {
+          skillA = skillFactory({
             id: createSkillId('skill-a'),
             name: 'Skill A',
             slug: 'skill-a',
@@ -1116,9 +1118,9 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
-          skillB = {
+          skillB = skillFactory({
             id: createSkillId('skill-b'),
             name: 'Skill B',
             slug: 'skill-b',
@@ -1127,7 +1129,7 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
           skillVersionA = {
             id: createSkillVersionId('skill-version-a'),
@@ -1192,7 +1194,7 @@ describe('PullContentUseCase', () => {
         let previousPackage: PackageWithArtefacts;
 
         beforeEach(() => {
-          installedSkill = {
+          installedSkill = skillFactory({
             id: createSkillId('installed-skill'),
             name: 'Installed Skill',
             slug: 'installed-skill',
@@ -1201,9 +1203,9 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
-          removedSkill = {
+          removedSkill = skillFactory({
             id: createSkillId('removed-skill'),
             name: 'Removed Skill',
             slug: 'removed-skill',
@@ -1212,7 +1214,7 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
           installedSkillVersion = {
             id: createSkillVersionId('installed-skill-version'),
@@ -1286,7 +1288,12 @@ describe('PullContentUseCase', () => {
 
           codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
             createOrUpdate: [],
-            delete: [{ path: '.claude/skills/removed-skill/SKILL.md' }],
+            delete: [
+              {
+                path: '.claude/skills/removed-skill/SKILL.md',
+                type: DeleteItemType.File,
+              },
+            ],
           });
         });
 
@@ -1313,7 +1320,7 @@ describe('PullContentUseCase', () => {
         let previouslyDeployedSkillVersion: SkillVersion;
 
         beforeEach(() => {
-          currentSkill = {
+          currentSkill = skillFactory({
             id: createSkillId('current-skill'),
             name: 'Current Skill',
             slug: 'current-skill',
@@ -1322,9 +1329,9 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
-          previouslyDeployedSkill = {
+          previouslyDeployedSkill = skillFactory({
             id: createSkillId('previously-deployed-skill'),
             name: 'Previously Deployed Skill',
             slug: 'previously-deployed-skill',
@@ -1333,7 +1340,7 @@ describe('PullContentUseCase', () => {
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
-          };
+          });
 
           currentSkillVersion = {
             id: createSkillVersionId('current-skill-version'),
@@ -1409,7 +1416,10 @@ describe('PullContentUseCase', () => {
             codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
               createOrUpdate: [],
               delete: [
-                { path: '.claude/skills/previously-deployed-skill/SKILL.md' },
+                {
+                  path: '.claude/skills/previously-deployed-skill/SKILL.md',
+                  type: DeleteItemType.File,
+                },
               ],
             });
           });
@@ -1497,7 +1507,7 @@ describe('PullContentUseCase', () => {
       let previouslyDeployedStandardVersion: StandardVersion;
 
       beforeEach(() => {
-        currentStandard = {
+        currentStandard = standardFactory({
           id: createStandardId('current-standard'),
           name: 'Current Standard',
           slug: 'current-standard',
@@ -1506,9 +1516,9 @@ describe('PullContentUseCase', () => {
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
           scope: null,
-        };
+        });
 
-        previouslyDeployedStandard = {
+        previouslyDeployedStandard = standardFactory({
           id: createStandardId('previously-deployed-standard'),
           name: 'Previously Deployed Standard',
           slug: 'previously-deployed-standard',
@@ -1517,7 +1527,7 @@ describe('PullContentUseCase', () => {
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
           scope: null,
-        };
+        });
 
         currentStandardVersion = {
           id: createStandardVersionId('current-standard-version'),
@@ -1588,7 +1598,10 @@ describe('PullContentUseCase', () => {
           codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
             createOrUpdate: [],
             delete: [
-              { path: '.packmind/standards/previously-deployed-standard.md' },
+              {
+                path: '.packmind/standards/previously-deployed-standard.md',
+                type: DeleteItemType.File,
+              },
             ],
           });
         });
@@ -1646,7 +1659,7 @@ describe('PullContentUseCase', () => {
       let previouslyDeployedCommandVersion: CommandVersion;
 
       beforeEach(() => {
-        currentCommand = {
+        currentCommand = commandFactory({
           id: createCommandId('current-recipe'),
           name: 'Current Recipe',
           slug: 'current-recipe',
@@ -1654,9 +1667,9 @@ describe('PullContentUseCase', () => {
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
-        };
+        });
 
-        previouslyDeployedCommand = {
+        previouslyDeployedCommand = commandFactory({
           id: createCommandId('previously-deployed-recipe'),
           name: 'Previously Deployed Recipe',
           slug: 'previously-deployed-recipe',
@@ -1664,7 +1677,7 @@ describe('PullContentUseCase', () => {
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
-        };
+        });
 
         currentCommandVersion = {
           id: createCommandVersionId('current-recipe-version'),
@@ -1735,7 +1748,10 @@ describe('PullContentUseCase', () => {
           codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
             createOrUpdate: [],
             delete: [
-              { path: '.packmind/commands/previously-deployed-recipe.md' },
+              {
+                path: '.packmind/commands/previously-deployed-recipe.md',
+                type: DeleteItemType.File,
+              },
             ],
           });
         });
@@ -1804,6 +1820,7 @@ describe('PullContentUseCase', () => {
     let mockDeployer: {
       generateFileUpdatesForRecipes: jest.Mock;
       generateFileUpdatesForStandards: jest.Mock;
+      generateFileUpdatesForSkills: jest.Mock;
       deployArtifacts: jest.Mock;
       generateRemovalFileUpdates: jest.Mock;
     };
@@ -1813,7 +1830,7 @@ describe('PullContentUseCase', () => {
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
 
-      sharedCommand = {
+      sharedCommand = commandFactory({
         id: createCommandId('shared-recipe-id'),
         name: 'Shared Recipe',
         slug: 'shared-recipe',
@@ -1821,9 +1838,9 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
-      uniqueCommand = {
+      uniqueCommand = commandFactory({
         id: createCommandId('unique-recipe-id'),
         name: 'Unique Recipe',
         slug: 'unique-recipe',
@@ -1831,9 +1848,9 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
-      sharedStandard = {
+      sharedStandard = standardFactory({
         id: createStandardId('shared-standard-id'),
         name: 'Shared Standard',
         slug: 'shared-standard',
@@ -1842,9 +1859,9 @@ describe('PullContentUseCase', () => {
         userId,
         spaceId,
         scope: null,
-      };
+      });
 
-      uniqueStandard = {
+      uniqueStandard = standardFactory({
         id: createStandardId('unique-standard-id'),
         name: 'Unique Standard',
         slug: 'unique-standard',
@@ -1853,9 +1870,9 @@ describe('PullContentUseCase', () => {
         userId,
         spaceId,
         scope: null,
-      };
+      });
 
-      sharedSkill = {
+      sharedSkill = skillFactory({
         id: createSkillId('shared-skill-id'),
         name: 'Shared Skill',
         slug: 'shared-skill',
@@ -1864,9 +1881,9 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
-      uniqueSkill = {
+      uniqueSkill = skillFactory({
         id: createSkillId('unique-skill-id'),
         name: 'Unique Skill',
         slug: 'unique-skill',
@@ -1875,7 +1892,7 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
       sharedCommandVersion = {
         id: createCommandVersionId('rv-shared'),
@@ -2027,9 +2044,18 @@ describe('PullContentUseCase', () => {
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/commands/unique-recipe.md' },
-            { path: '.packmind/standards/unique-standard.md' },
-            { path: '.packmind/skills/unique-skill.md' },
+            {
+              path: '.packmind/commands/unique-recipe.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/standards/unique-standard.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/skills/unique-skill.md',
+              type: DeleteItemType.File,
+            },
           ],
         });
       });
@@ -2165,9 +2191,18 @@ describe('PullContentUseCase', () => {
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/commands/unique-recipe.md' },
-            { path: '.packmind/standards/unique-standard.md' },
-            { path: '.packmind/skills/unique-skill.md' },
+            {
+              path: '.packmind/commands/unique-recipe.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/standards/unique-standard.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/skills/unique-skill.md',
+              type: DeleteItemType.File,
+            },
           ],
         });
       });
@@ -2223,12 +2258,30 @@ describe('PullContentUseCase', () => {
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/commands/shared-recipe.md' },
-            { path: '.packmind/commands/unique-recipe.md' },
-            { path: '.packmind/standards/shared-standard.md' },
-            { path: '.packmind/standards/unique-standard.md' },
-            { path: '.packmind/skills/shared-skill.md' },
-            { path: '.packmind/skills/unique-skill.md' },
+            {
+              path: '.packmind/commands/shared-recipe.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/commands/unique-recipe.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/standards/shared-standard.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/standards/unique-standard.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/skills/shared-skill.md',
+              type: DeleteItemType.File,
+            },
+            {
+              path: '.packmind/skills/unique-skill.md',
+              type: DeleteItemType.File,
+            },
           ],
         });
       });
@@ -2486,7 +2539,7 @@ describe('PullContentUseCase', () => {
       const spaceId = createSpaceId('space-enrichment');
       const userId = createUserId('user-1');
 
-      recipe = {
+      recipe = commandFactory({
         id: createCommandId('recipe-enrich'),
         name: 'Enriched Recipe',
         slug: 'enriched-recipe',
@@ -2494,9 +2547,9 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
-      standard = {
+      standard = standardFactory({
         id: createStandardId('standard-enrich'),
         name: 'Enriched Standard',
         slug: 'enriched-standard',
@@ -2505,9 +2558,9 @@ describe('PullContentUseCase', () => {
         userId,
         spaceId,
         scope: null,
-      };
+      });
 
-      skill = {
+      skill = skillFactory({
         id: createSkillId('skill-enrich'),
         name: 'Enriched Skill',
         slug: 'enriched-skill',
@@ -2516,7 +2569,7 @@ describe('PullContentUseCase', () => {
         version: 1,
         userId,
         spaceId,
-      };
+      });
 
       recipeVersion = {
         id: createCommandVersionId('rv-enrich'),
@@ -2780,14 +2833,16 @@ describe('PullContentUseCase', () => {
           ...command,
           packagesSlugs: ['@my-space/test-package'],
         };
-        spacesPort.getSpaceBySlug.mockResolvedValue({
-          id: explicitSpaceId,
-          name: 'My Space',
-          slug: 'my-space',
-          type: SpaceType.open,
-          organizationId,
-          isDefaultSpace: false,
-        });
+        spacesPort.getSpaceBySlug.mockResolvedValue(
+          spaceFactory({
+            id: explicitSpaceId,
+            name: 'My Space',
+            slug: 'my-space',
+            type: SpaceType.open,
+            organizationId,
+            isDefaultSpace: false,
+          }),
+        );
         packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
           [testPackage],
         );
@@ -2920,7 +2975,7 @@ describe('PullContentUseCase', () => {
           delete: [
             {
               path: '.claude/commands/packmind/',
-              type: 'directory',
+              type: DeleteItemType.Directory,
             },
           ],
         });
@@ -2931,7 +2986,7 @@ describe('PullContentUseCase', () => {
 
         expect(result.fileUpdates.delete).toContainEqual({
           path: '.claude/commands/packmind/',
-          type: 'directory',
+          type: DeleteItemType.Directory,
         });
       });
 
@@ -2965,10 +3020,10 @@ describe('PullContentUseCase', () => {
       });
     });
 
-    describe('when target is not found', () => {
+    describe('when target resolution fails', () => {
       beforeEach(() => {
-        targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
-          null,
+        targetResolutionService.findOrCreateTargetFromGitInfo.mockRejectedValue(
+          new Error('git repository is unreachable'),
         );
       });
 
