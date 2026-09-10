@@ -13,6 +13,10 @@ import {
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
 import { AccountsAdapter } from './AccountsAdapter';
 
+// Derived from the adapter itself so the "no ports" cases below cannot drift
+// away from the real signature the way a re-declared literal did.
+type AccountsAdapterPorts = Parameters<AccountsAdapter['initialize']>[0];
+
 describe('AccountsAdapter', () => {
   let adapter: AccountsAdapter;
   let mockLogger: PackmindLogger;
@@ -78,27 +82,13 @@ describe('AccountsAdapter', () => {
     describe('when called with no ports', () => {
       it('throws an error', async () => {
         await expect(
-          adapter.initialize(
-            {} as {
-              [ISpacesPortName]: ISpacesPort;
-              [IGitPortName]: IGitPort;
-              [IStandardsPortName]: IStandardsPort;
-              [IDeploymentPortName]: IDeploymentPort;
-            },
-          ),
+          adapter.initialize({} as AccountsAdapterPorts),
         ).rejects.toThrow();
       });
 
       it('sets adapter as ready', async () => {
         try {
-          await adapter.initialize(
-            {} as {
-              [ISpacesPortName]: ISpacesPort;
-              [IGitPortName]: IGitPort;
-              [IStandardsPortName]: IStandardsPort;
-              [IDeploymentPortName]: IDeploymentPort;
-            },
-          );
+          await adapter.initialize({} as AccountsAdapterPorts);
         } catch {
           // Expected to throw
         }

@@ -20,6 +20,7 @@ import {
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
 import { ActivateUserAccountUseCase } from './ActivateUserAccountUseCase';
+import { userFactory } from '../../../../test';
 
 describe('ActivateUserAccountUseCase', () => {
   let useCase: ActivateUserAccountUseCase;
@@ -33,7 +34,7 @@ describe('ActivateUserAccountUseCase', () => {
   const mockInvitationId = createInvitationId('invitation-123');
   const mockToken = createInvitationToken('valid-token-123');
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: mockUserId,
     email: 'test@example.com',
     passwordHash: null,
@@ -45,7 +46,7 @@ describe('ActivateUserAccountUseCase', () => {
         role: 'member',
       },
     ],
-  };
+  });
 
   const mockInvitation: Invitation = {
     id: mockInvitationId,

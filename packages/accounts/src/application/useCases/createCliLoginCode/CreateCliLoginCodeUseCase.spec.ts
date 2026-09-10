@@ -21,7 +21,7 @@ describe('CreateCliLoginCodeUseCase', () => {
       save: jest.fn(),
       delete: jest.fn(),
       deleteExpired: jest.fn(),
-    } as jest.Mocked<ICliLoginCodeRepository>;
+    } as unknown as jest.Mocked<ICliLoginCodeRepository>;
 
     useCase = new CreateCliLoginCodeUseCase(mockRepository);
   });

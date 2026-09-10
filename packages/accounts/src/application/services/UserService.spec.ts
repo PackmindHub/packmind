@@ -177,13 +177,12 @@ describe('UserService', () => {
           organizationId,
           role: 'admin',
         };
-        user = {
+        user = userFactory({
           id: existingMembership.userId,
           email: 'member@packmind.com',
           passwordHash: null,
-          active: true,
           memberships: [existingMembership],
-        };
+        });
         result = await userService.addOrganizationMembership(
           user,
           organizationId,
