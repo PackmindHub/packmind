@@ -93,7 +93,7 @@
     "jest-util": "^30.2.0",
     "jiti": "2.5.1",
     "jsdom": "~28.1.0",
-    "jsonc-eslint-parser": "^2.1.0",
+    "jsonc-eslint-parser": "^3.3.0",
     "nodemon": "^3.1.10",
     "nx": "23.1.0",
     "pg-mem": "^3.0.5",
