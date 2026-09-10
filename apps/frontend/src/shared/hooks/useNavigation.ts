@@ -101,12 +101,6 @@ export function useNavigation() {
         `/org/${currentOrgSlug}/space/${currentSpaceSlug}/standards/${standardId}`,
       );
     },
-    toStandardRules: (standardId: string) => {
-      if (!currentOrgSlug || !currentSpaceSlug) return;
-      navigate(
-        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/standards/${standardId}/rules`,
-      );
-    },
     toStandardEdit: (standardId: string) => {
       if (!currentOrgSlug || !currentSpaceSlug) return;
       navigate(

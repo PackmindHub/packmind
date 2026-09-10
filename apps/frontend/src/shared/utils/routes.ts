@@ -80,8 +80,6 @@ export const routes = {
       ruleId: string,
     ) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/rule/${ruleId}`,
-    toStandardRules: (orgSlug: string, spaceSlug: string, standardId: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/rules`,
     toStandardEdit: (orgSlug: string, spaceSlug: string, standardId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/edit`,
     toCreateStandard: (orgSlug: string, spaceSlug: string) =>
