@@ -7,7 +7,13 @@ import {
   PMPortal,
   PMText,
 } from '@packmind/ui';
-import { LuChevronDown, LuCircleCheck, LuCircleOff } from 'react-icons/lu';
+import {
+  LuChevronDown,
+  LuCircleCheck,
+  LuCircleOff,
+  LuOctagonAlert,
+  LuTriangleAlert,
+} from 'react-icons/lu';
 import { TiWarningOutline } from 'react-icons/ti';
 import type {
   ActiveDetectionProgramId,
@@ -90,11 +96,19 @@ export function RuleDetectionLanguages({
  * border now, which is what a flat design has left to say "this is pressable"
  * once colour is spoken for.
  *
- * The colour stays spoken for. `error` in red and `warning` in amber would put
- * a second semantic colour a centimetre from the mark that says whether the
- * language is enforced at all, and a reader would compare them. The two facts
- * are unrelated: one is whether anything checks the rule, the other is how
- * loudly it complains when it does.
+ * A mark carries the severity and the word stays neutral, which is the shape
+ * the rest of this line already uses: the language wears a coloured mark and a
+ * plain name, so the severity wearing one too makes the row two pairs of the
+ * same thing rather than a label with a tinted word in it.
+ *
+ * The mark is the rule table's own, icon and colour both: an octagon in
+ * `red.300` for error, a triangle in `yellow.500` for warning. Two shapes as
+ * well as two hues, so which severity it is survives a reader who does not see
+ * the difference between them. Tinting the word instead was tried and dropped:
+ * the theme's `text.error` and `text.warning` are #DD5151 and #C46652, two
+ * reds twelve degrees apart, indistinguishable at twelve pixels. The colours
+ * that distinguish severity in this product are the badge's, not the
+ * status ramp's.
  *
  * The words are the API's: `error` and `warning` are what `DetectionSeverity`
  * spells, and inventing softer ones here would be a third vocabulary for one
@@ -115,6 +129,7 @@ function RuleSeverityControl({
 }>) {
   const updateSeverity = useUpdateActiveDetectionProgramSeverityMutation();
   const languageName = getLanguageDisplayName(language);
+  const { Icon: SeverityIcon } = SEVERITY_MARKS[severity];
 
   return (
     <PMMenu.Root>
@@ -130,7 +145,8 @@ function RuleSeverityControl({
           aria-label={`Reported as ${severity} in ${languageName}`}
           display="inline-flex"
           alignItems="center"
-          gap="2px"
+          /* Three children now, so the mark does not crowd the word. */
+          gap={1}
           fontSize="xs"
           fontWeight="medium"
           /*
@@ -160,6 +176,14 @@ function RuleSeverityControl({
           }}
           transition="background-color 150ms ease-out, border-color 150ms ease-out"
         >
+          <PMIcon
+            as="span"
+            display="inline-flex"
+            fontSize="xs"
+            color={SEVERITY_MARKS[severity].color}
+          >
+            <SeverityIcon />
+          </PMIcon>
           {severity}
           <PMIcon
             as="span"
@@ -197,6 +221,19 @@ function RuleSeverityControl({
     </PMMenu.Root>
   );
 }
+
+/**
+ * The mark each severity wears, taken from the rule table's badge so one fact
+ * is not spelled two ways across two screens. Shape and colour together: the
+ * shape is what carries it for a reader who cannot tell the two hues apart.
+ */
+const SEVERITY_MARKS: Record<
+  DetectionSeverity,
+  { Icon: ComponentType; color: string }
+> = {
+  [DetectionSeverity.ERROR]: { Icon: LuOctagonAlert, color: 'red.300' },
+  [DetectionSeverity.WARNING]: { Icon: LuTriangleAlert, color: 'yellow.500' },
+};
 
 /** The table's own labels, in the table's own order. */
 const SEVERITY_CHOICES: readonly {
