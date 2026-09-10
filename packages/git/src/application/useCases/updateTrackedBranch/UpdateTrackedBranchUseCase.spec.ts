@@ -22,6 +22,7 @@ import {
   UserOrganizationRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { gitRepoFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { UpdateTrackedBranchUseCase } from './UpdateTrackedBranchUseCase';
@@ -131,14 +132,14 @@ describe('UpdateTrackedBranchUseCase', () => {
   describe('when the requested branch is already tracked', () => {
     beforeEach(() => {
       mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
-        {
+        gitRepoFactory({
           id: createGitRepoId(uuidv4()),
           owner: 'acme',
           repo: 'widgets',
           branch: 'dev',
           providerId,
           isTracked: true,
-        },
+        }),
       );
     });
 
@@ -157,22 +158,22 @@ describe('UpdateTrackedBranchUseCase', () => {
     let emittedEvent: RepositoryTrackingSetEvent;
 
     beforeEach(async () => {
-      oldRepo = {
+      oldRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'acme',
         repo: 'widgets',
         branch: 'main',
         providerId,
         isTracked: true,
-      };
-      newRepo = {
+      });
+      newRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'acme',
         repo: 'widgets',
         branch: 'dev',
         providerId,
         isTracked: false,
-      };
+      });
       trackedRepo = { ...newRepo, isTracked: true };
 
       mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(

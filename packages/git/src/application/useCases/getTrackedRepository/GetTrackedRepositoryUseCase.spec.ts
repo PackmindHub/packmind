@@ -11,6 +11,7 @@ import {
   User,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { gitRepoFactory } from '../../../../test';
 import { GitRepoService } from '../../GitRepoService';
 import { GetTrackedRepositoryUseCase } from './GetTrackedRepositoryUseCase';
 
@@ -29,14 +30,14 @@ describe('GetTrackedRepositoryUseCase', () => {
     repo: 'widgets',
   };
 
-  const trackedRepo: GitRepo = {
+  const trackedRepo: GitRepo = gitRepoFactory({
     id: createGitRepoId(uuidv4()),
     owner: 'acme',
     repo: 'widgets',
     branch: 'main',
     providerId: createGitProviderId(uuidv4()),
     isTracked: true,
-  };
+  });
 
   beforeEach(() => {
     mockGitRepoService = {

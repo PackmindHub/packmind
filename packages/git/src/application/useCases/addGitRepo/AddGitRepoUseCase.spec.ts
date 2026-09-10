@@ -23,8 +23,10 @@ import {
   createUserId,
 } from '@packmind/types';
 
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { gitProviderFactory, gitRepoFactory } from '../../../../test';
 
 describe('AddGitRepoUseCase', () => {
   let useCase: AddGitRepoUseCase;
@@ -53,7 +55,7 @@ describe('AddGitRepoUseCase', () => {
       addTarget: jest.fn(),
     } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
 
-    const adminUser: User = {
+    const adminUser: User = userFactory({
       id: userId,
       email: 'admin@example.com',
       displayName: 'admin',
@@ -66,13 +68,13 @@ describe('AddGitRepoUseCase', () => {
           role: 'admin',
         },
       ],
-    };
+    });
 
-    const organization: Organization = {
+    const organization: Organization = organizationFactory({
       id: organizationId,
       name: 'Test Org',
       slug: 'test-org',
-    };
+    });
 
     mockAccountsAdapter = {
       getUserById: jest.fn().mockResolvedValue(adminUser),
@@ -108,23 +110,23 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      mockProvider = {
+      mockProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: 'token',
         authMethod: 'token',
-      };
+      });
 
-      expectedResult = {
+      expectedResult = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -182,22 +184,22 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      mockProvider = {
+      mockProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: 'token',
-      };
+      });
 
-      expectedResult = {
+      expectedResult = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -235,23 +237,23 @@ describe('AddGitRepoUseCase', () => {
         branch: 'develop',
       };
 
-      mockProvider = {
+      mockProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: 'token',
         authMethod: 'token',
-      };
+      });
 
-      expectedResult = {
+      expectedResult = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'develop',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -306,23 +308,23 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      mockProvider = {
+      mockProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: 'token',
         authMethod: 'token',
-      };
+      });
 
-      expectedResult = {
+      expectedResult = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockTarget = {
         id: createTargetId(uuidv4()),
@@ -448,14 +450,14 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId: createOrganizationId(uuidv4()), // Different organization
         url: 'https://github.com',
         token: 'token',
         authMethod: 'token',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -476,14 +478,14 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: null,
         authMethod: 'token',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -506,7 +508,7 @@ describe('AddGitRepoUseCase', () => {
 
       // App-auth providers carry no token — the installation token is minted
       // on demand by GithubTokenResolverFactory downstream.
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
@@ -514,15 +516,15 @@ describe('AddGitRepoUseCase', () => {
         token: null,
         authMethod: 'app',
         appInstallationId: 12345,
-      };
+      });
 
-      const expectedResult: GitRepo = {
+      const expectedResult: GitRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -547,23 +549,23 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: 'token',
         authMethod: 'token',
-      };
+      });
 
-      const existingRepo: GitRepo = {
+      const existingRepo: GitRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -590,23 +592,23 @@ describe('AddGitRepoUseCase', () => {
         allowTokenlessProvider: true,
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: null,
         authMethod: 'token',
-      };
+      });
 
-      const expectedResult: GitRepo = {
+      const expectedResult: GitRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
         type: 'standard',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -632,14 +634,14 @@ describe('AddGitRepoUseCase', () => {
         allowTokenlessProvider: false,
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: null,
         authMethod: 'token',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,
@@ -660,14 +662,14 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         token: null,
         authMethod: 'token',
-      };
+      });
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         mockProvider,

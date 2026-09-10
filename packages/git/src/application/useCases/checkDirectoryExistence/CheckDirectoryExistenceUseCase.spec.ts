@@ -55,7 +55,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       getFileOnRepo: jest.fn(),
       commitFiles: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
-    } as jest.Mocked<IGitRepo>;
+    } as unknown as jest.Mocked<IGitRepo>;
 
     // Mock IGitRepoFactory
     mockGitRepoFactory = {

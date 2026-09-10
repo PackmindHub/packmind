@@ -14,6 +14,7 @@ import {
   User,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { gitRepoFactory } from '../../../../test';
 import { FindOrCreateGitRepoUseCase } from './FindOrCreateGitRepoUseCase';
 
 describe('FindOrCreateGitRepoUseCase', () => {
@@ -78,14 +79,14 @@ describe('FindOrCreateGitRepoUseCase', () => {
 
     beforeEach(async () => {
       const tokenProviderId = createGitProviderId(uuidv4());
-      existingRepo = {
+      existingRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'acme',
         repo: 'widgets',
         branch: 'dev',
         providerId: tokenProviderId,
         isTracked: false,
-      };
+      });
 
       mockGitPort.listProviders.mockResolvedValue({
         providers: [
@@ -135,14 +136,14 @@ describe('FindOrCreateGitRepoUseCase', () => {
         authMethod: 'token',
         displayName: '',
       };
-      createdRepo = {
+      createdRepo = gitRepoFactory({
         id: createGitRepoId(uuidv4()),
         owner: 'acme',
         repo: 'widgets',
         branch: 'dev',
         providerId: newProviderId,
         isTracked: false,
-      };
+      });
 
       mockGitPort.listProviders.mockResolvedValue({ providers: [] });
       mockGitPort.addGitProvider.mockResolvedValue(createdProvider);
