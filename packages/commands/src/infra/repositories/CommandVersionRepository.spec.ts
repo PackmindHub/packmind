@@ -11,6 +11,7 @@ import { commandVersionFactory } from '../../../test/commandVersionFactory';
 import { CommandRepository } from './CommandRepository';
 import {
   createCommandId,
+  createCommandVersionId,
   createSpaceId,
   Command,
   CommandVersion,
@@ -21,11 +22,10 @@ import { createGitCommit, gitCommitFactory } from '@packmind/git/test';
 import { GitCommitSchema } from '@packmind/git';
 
 describe('RecipeVersionRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    CommandSchema,
-    CommandVersionSchema,
-    GitCommitSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [CommandSchema, CommandVersionSchema, GitCommitSchema],
+    { recordQueries: true },
+  );
 
   let commandVersionRepository: CommandVersionRepository;
   let commandRepository: CommandRepository;
@@ -149,42 +149,164 @@ describe('RecipeVersionRepository', () => {
     );
   });
 
-  it('finds the latest recipe version by recipeId', async () => {
-    const recipe = commandFactory();
-    await commandRepository.add(recipe);
+  describe('findLatestByCommandIds', () => {
+    let firstCommand: Command;
+    let secondCommand: Command;
+    let firstLatestVersion: CommandVersion;
+    let secondLatestVersion: CommandVersion;
 
-    const commandVersion1 = commandVersionFactory({
-      recipeId: recipe.id,
-      version: 1,
-    });
-    const commandVersion2 = commandVersionFactory({
-      recipeId: recipe.id,
-      version: 2,
-    });
-    const commandVersion3 = commandVersionFactory({
-      recipeId: recipe.id,
-      version: 3,
+    beforeEach(async () => {
+      firstCommand = commandFactory();
+      secondCommand = commandFactory();
+      await commandRepository.add(firstCommand);
+      await commandRepository.add(secondCommand);
+
+      await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: firstCommand.id, version: 1 }),
+      );
+      await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: firstCommand.id, version: 2 }),
+      );
+      firstLatestVersion = await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: firstCommand.id, version: 3 }),
+      );
+      secondLatestVersion = await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: secondCommand.id, version: 1 }),
+      );
     });
 
-    await commandVersionRepository.add(commandVersion1);
-    await commandVersionRepository.add(commandVersion2);
-    await commandVersionRepository.add(commandVersion3);
+    it('returns the latest version of every command', async () => {
+      const versions = await commandVersionRepository.findLatestByCommandIds([
+        firstCommand.id,
+        secondCommand.id,
+      ]);
 
-    const latestVersion = await commandVersionRepository.findLatestByCommandId(
-      recipe.id,
-    );
-    expect(latestVersion).toEqual({ ...commandVersion3, gitCommit: null });
+      expect(versions.map((version) => version.id).sort()).toEqual(
+        [firstLatestVersion.id, secondLatestVersion.id].sort(),
+      );
+    });
+
+    it('omits a command that has no version', async () => {
+      const commandWithoutVersion = commandFactory();
+      await commandRepository.add(commandWithoutVersion);
+
+      const versions = await commandVersionRepository.findLatestByCommandIds([
+        firstCommand.id,
+        commandWithoutVersion.id,
+      ]);
+
+      expect(versions).toEqual([
+        expect.objectContaining({ id: firstLatestVersion.id }),
+      ]);
+    });
+
+    it('fetches every command in a single query', async () => {
+      fixture.queries.reset();
+
+      await commandVersionRepository.findLatestByCommandIds([
+        firstCommand.id,
+        secondCommand.id,
+      ]);
+
+      expect(fixture.queries.countMatching(/from "command_versions"/i)).toBe(1);
+    });
+
+    it('returns a repeated command once', async () => {
+      const versions = await commandVersionRepository.findLatestByCommandIds([
+        firstCommand.id,
+        firstCommand.id,
+      ]);
+
+      expect(versions).toHaveLength(1);
+    });
+
+    describe('when no command id is given', () => {
+      beforeEach(() => fixture.queries.reset());
+
+      it('returns nothing', async () => {
+        const versions = await commandVersionRepository.findLatestByCommandIds(
+          [],
+        );
+
+        expect(versions).toEqual([]);
+      });
+
+      it('issues no query', async () => {
+        await commandVersionRepository.findLatestByCommandIds([]);
+
+        expect(fixture.queries.countMatching(/from "command_versions"/i)).toBe(
+          0,
+        );
+      });
+    });
+  });
+
+  describe('findByIds', () => {
+    let firstVersion: CommandVersion;
+    let secondVersion: CommandVersion;
+
+    beforeEach(async () => {
+      firstVersion = await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: testCommand.id, version: 1 }),
+      );
+      secondVersion = await commandVersionRepository.add(
+        commandVersionFactory({ recipeId: testCommand.id, version: 2 }),
+      );
+    });
+
+    it('returns every requested version', async () => {
+      const versions = await commandVersionRepository.findByIds([
+        firstVersion.id,
+        secondVersion.id,
+      ]);
+
+      expect(versions.map((version) => version.id).sort()).toEqual(
+        [firstVersion.id, secondVersion.id].sort(),
+      );
+    });
+
+    it('omits an unknown version id', async () => {
+      const versions = await commandVersionRepository.findByIds([
+        firstVersion.id,
+        createCommandVersionId(uuidv4()),
+      ]);
+
+      expect(versions).toEqual([
+        expect.objectContaining({ id: firstVersion.id }),
+      ]);
+    });
+
+    it('fetches every version in a single query', async () => {
+      fixture.queries.reset();
+
+      await commandVersionRepository.findByIds([
+        firstVersion.id,
+        secondVersion.id,
+      ]);
+
+      expect(fixture.queries.countMatching(/from "command_versions"/i)).toBe(1);
+    });
+
+    describe('when no version id is given', () => {
+      beforeEach(() => fixture.queries.reset());
+
+      it('returns nothing', async () => {
+        const versions = await commandVersionRepository.findByIds([]);
+
+        expect(versions).toEqual([]);
+      });
+
+      it('issues no query', async () => {
+        await commandVersionRepository.findByIds([]);
+
+        expect(fixture.queries.countMatching(/from "command_versions"/i)).toBe(
+          0,
+        );
+      });
+    });
   });
 
   describe('when recipe does not exist', () => {
-    it('returns null for latest version', async () => {
-      const latestVersion =
-        await commandVersionRepository.findLatestByCommandId(
-          createCommandId(uuidv4()),
-        );
-      expect(latestVersion).toBeNull();
-    });
-
     it('returns null for findByRecipeIdAndVersion', async () => {
       const foundVersion =
         await commandVersionRepository.findByCommandIdAndVersion(

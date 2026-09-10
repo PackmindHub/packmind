@@ -47,11 +47,11 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     mockLogger = stubLogger();
 
     mockCommandsPort = {
-      listCommandVersions: jest.fn(),
+      getLatestCommandVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
-      getLatestStandardVersion: jest.fn(),
+      getLatestStandardVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
@@ -129,20 +129,22 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       };
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockCommandsPort.listCommandVersions.mockResolvedValue([
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         {
           id: createCommandVersionId(uuidv4()),
           recipeId,
           version: 1,
-        } as Awaited<ReturnType<ICommandsPort['listCommandVersions']>>[0],
+        } as Awaited<ReturnType<ICommandsPort['getLatestCommandVersions']>>[0],
       ]);
-      mockStandardsPort.getLatestStandardVersion.mockResolvedValue({
-        id: createStandardVersionId(uuidv4()),
-        standardId,
-        version: 1,
-      } as NonNullable<
-        Awaited<ReturnType<IStandardsPort['getLatestStandardVersion']>>
-      >);
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
+        {
+          id: createStandardVersionId(uuidv4()),
+          standardId,
+          version: 1,
+        } as Awaited<
+          ReturnType<IStandardsPort['getLatestStandardVersions']>
+        >[0],
+      ]);
 
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [distribution],

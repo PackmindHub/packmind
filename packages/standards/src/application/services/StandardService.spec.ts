@@ -55,6 +55,8 @@ describe('StandardService', () => {
       list: jest.fn(),
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
+      findLatestByStandardIds: jest.fn(),
+      findByIds: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
     };
 

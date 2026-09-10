@@ -298,6 +298,76 @@ export class StandardVersionService {
     }
   }
 
+  async getStandardVersionsByIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Getting standard versions by IDs', {
+      count: standardVersionIds.length,
+    });
+
+    try {
+      const versions =
+        await this.standardVersionRepository.findByIds(standardVersionIds);
+
+      if (versions.length === 0) {
+        this.logger.warn('No standard versions found for the given IDs', {
+          count: standardVersionIds.length,
+        });
+        return [];
+      }
+
+      const rules = await this.ruleRepository.findByStandardVersionIds(
+        versions.map((version) => version.id),
+      );
+      const rulesByVersionId = this.groupRulesByVersionId(rules);
+
+      this.logger.info('Standard versions retrieved by IDs successfully', {
+        requestedCount: standardVersionIds.length,
+        foundCount: versions.length,
+        rulesCount: rules.length,
+      });
+
+      return versions.map((version) => ({
+        ...version,
+        rules: rulesByVersionId.get(version.id) ?? [],
+      }));
+    } catch (error) {
+      this.logger.error('Failed to get standard versions by IDs', {
+        count: standardVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getLatestStandardVersions(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Getting latest standard versions', {
+      count: standardIds.length,
+    });
+
+    try {
+      const versions =
+        await this.standardVersionRepository.findLatestByStandardIds(
+          standardIds,
+        );
+
+      this.logger.info('Latest standard versions retrieved successfully', {
+        requestedCount: standardIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to get latest standard versions', {
+        count: standardIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
@@ -381,12 +451,7 @@ export class StandardVersionService {
         latestVersions.map((version) => version.id),
       );
 
-      const rulesByVersionId = new Map<StandardVersionId, Rule[]>();
-      for (const rule of rules) {
-        const versionRules = rulesByVersionId.get(rule.standardVersionId) ?? [];
-        versionRules.push(rule);
-        rulesByVersionId.set(rule.standardVersionId, versionRules);
-      }
+      const rulesByVersionId = this.groupRulesByVersionId(rules);
 
       this.logger.info(
         'Latest versions with rules retrieved by standard IDs successfully',
@@ -443,6 +508,16 @@ export class StandardVersionService {
       });
       throw error;
     }
+  }
+
+  private groupRulesByVersionId(rules: Rule[]): Map<StandardVersionId, Rule[]> {
+    const rulesByVersionId = new Map<StandardVersionId, Rule[]>();
+    for (const rule of rules) {
+      const versionRules = rulesByVersionId.get(rule.standardVersionId) ?? [];
+      versionRules.push(rule);
+      rulesByVersionId.set(rule.standardVersionId, versionRules);
+    }
+    return rulesByVersionId;
   }
 
   private generateStandardMarkdown(

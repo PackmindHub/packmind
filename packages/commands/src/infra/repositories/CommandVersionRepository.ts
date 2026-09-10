@@ -3,7 +3,12 @@ import { CommandVersionSchema } from '../schemas/CommandVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { CommandId, CommandVersion, SpaceId } from '@packmind/types';
+import {
+  CommandId,
+  CommandVersion,
+  CommandVersionId,
+  SpaceId,
+} from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
 
@@ -56,31 +61,77 @@ export class CommandVersionRepository
     }
   }
 
-  async findLatestByCommandId(
-    recipeId: CommandId,
-  ): Promise<CommandVersion | null> {
-    this.logger.info('Finding latest recipe version by recipe ID', {
-      recipeId,
+  async findLatestByCommandIds(
+    recipeIds: CommandId[],
+  ): Promise<CommandVersion[]> {
+    const uniqueCommandIds = [...new Set(recipeIds)];
+
+    if (uniqueCommandIds.length === 0) {
+      this.logger.info('No recipe IDs provided to findLatestByCommandIds');
+      return [];
+    }
+
+    this.logger.info('Finding latest recipe versions by recipe IDs', {
+      count: uniqueCommandIds.length,
     });
 
     try {
-      const versions = await this.findByCommandId(recipeId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const versions = await this.repository
+        .createQueryBuilder('recipeVersion')
+        .where('recipeVersion.recipeId IN (:...recipeIds)', {
+          recipeIds: uniqueCommandIds as string[],
+        })
+        .distinctOn(['recipeVersion.recipeId'])
+        .orderBy('recipeVersion.recipeId', 'ASC')
+        .addOrderBy('recipeVersion.version', 'DESC')
+        .getMany();
 
-      if (latestVersion) {
-        this.logger.info('Latest recipe version found', {
-          recipeId,
-          versionId: latestVersion.id,
-          version: latestVersion.version,
-        });
-      } else {
-        this.logger.warn('No recipe versions found for recipe', { recipeId });
-      }
+      this.logger.info('Latest recipe versions found by recipe IDs', {
+        requestedCount: uniqueCommandIds.length,
+        foundCount: versions.length,
+      });
 
-      return latestVersion;
+      return versions;
     } catch (error) {
-      this.logger.error('Failed to find latest recipe version by recipe ID', {
-        recipeId,
+      this.logger.error('Failed to find latest recipe versions by recipe IDs', {
+        count: uniqueCommandIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByIds(
+    commandVersionIds: CommandVersionId[],
+  ): Promise<CommandVersion[]> {
+    const uniqueVersionIds = [...new Set(commandVersionIds)];
+
+    if (uniqueVersionIds.length === 0) {
+      this.logger.info('No recipe version IDs provided to findByIds');
+      return [];
+    }
+
+    this.logger.info('Finding recipe versions by IDs', {
+      count: uniqueVersionIds.length,
+    });
+
+    try {
+      const versions = await this.repository
+        .createQueryBuilder('recipeVersion')
+        .where('recipeVersion.id IN (:...commandVersionIds)', {
+          commandVersionIds: uniqueVersionIds as string[],
+        })
+        .getMany();
+
+      this.logger.info('Recipe versions found by IDs', {
+        requestedCount: uniqueVersionIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find recipe versions by IDs', {
+        count: uniqueVersionIds.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

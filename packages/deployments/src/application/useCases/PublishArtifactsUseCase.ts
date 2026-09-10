@@ -19,9 +19,12 @@ import {
   Target,
   TargetId,
   CommandVersion,
+  CommandVersionId,
+  Rule,
   SkillFile,
   SkillVersion,
   SkillVersionId,
+  StandardId,
   StandardVersion,
   StandardVersionId,
   RenderMode,
@@ -268,22 +271,36 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         // Load rules for all standard versions that don't have them populated
         // This is critical for previously deployed standards which come from the database
         // without their rules relation loaded
-        const standardVersionsWithRules = await Promise.all(
-          filteredStandardVersions.map(async (sv) => {
-            if (sv.rules === undefined || sv.rules === null) {
-              this.logger.debug('Loading rules for standard version', {
-                standardVersionId: sv.id,
-                standardId: sv.standardId,
-                slug: sv.slug,
-              });
-              const rules = await this.standardsPort.getRulesByStandardId(
-                sv.standardId,
-              );
-              return { ...sv, rules };
-            }
-            return sv;
-          }),
-        );
+        const standardIdsMissingRules = [
+          ...new Set(
+            filteredStandardVersions
+              .filter((sv) => sv.rules === undefined || sv.rules === null)
+              .map((sv) => sv.standardId),
+          ),
+        ];
+        const missingRulesByStandardId = new Map<StandardId, Rule[]>();
+        if (standardIdsMissingRules.length > 0) {
+          this.logger.debug('Loading rules for standard versions', {
+            standardIdsCount: standardIdsMissingRules.length,
+          });
+          const latestVersions =
+            await this.standardsPort.getLatestStandardVersionsWithRules(
+              standardIdsMissingRules,
+            );
+          for (const latestVersion of latestVersions) {
+            missingRulesByStandardId.set(
+              latestVersion.standardId,
+              latestVersion.rules ?? [],
+            );
+          }
+        }
+        const standardVersionsWithRules = filteredStandardVersions.map((sv) => {
+          if (sv.rules !== undefined && sv.rules !== null) return sv;
+          return {
+            ...sv,
+            rules: missingRulesByStandardId.get(sv.standardId) ?? [],
+          };
+        });
 
         const versionIdsMissingFiles = filteredSkillVersions
           .filter((sv) => sv.files === undefined)
@@ -752,11 +769,18 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   private async fetchCommandVersions(
-    recipeVersionIds: string[],
+    recipeVersionIds: CommandVersionId[],
   ): Promise<CommandVersion[]> {
+    const fetchedVersions =
+      await this.commandsPort.getCommandVersionsByIds(recipeVersionIds);
+
+    const versionsById = new Map(
+      fetchedVersions.map((version) => [version.id, version]),
+    );
+
     const versions: CommandVersion[] = [];
     for (const id of recipeVersionIds) {
-      const version = await this.commandsPort.getCommandVersionById(id);
+      const version = versionsById.get(id);
       if (!version) {
         throw new Error(`Command version with ID ${id} not found`);
       }
@@ -768,9 +792,16 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async fetchStandardVersions(
     standardVersionIds: StandardVersionId[],
   ): Promise<StandardVersion[]> {
+    const fetchedVersions =
+      await this.standardsPort.getStandardVersionsByIds(standardVersionIds);
+
+    const versionsById = new Map(
+      fetchedVersions.map((version) => [version.id, version]),
+    );
+
     const versions: StandardVersion[] = [];
     for (const id of standardVersionIds) {
-      const version = await this.standardsPort.getStandardVersionById(id);
+      const version = versionsById.get(id);
       if (!version) {
         throw new Error(`Standard version with ID ${id} not found`);
       }

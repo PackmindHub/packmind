@@ -3,6 +3,7 @@ import {
   SpaceId,
   StandardId,
   StandardVersion,
+  StandardVersionId,
 } from '@packmind/types';
 
 export interface IStandardVersionRepository extends IRepository<StandardVersion> {
@@ -17,6 +18,9 @@ export interface IStandardVersionRepository extends IRepository<StandardVersion>
    */
   findLatestByStandardIds(
     standardIds: StandardId[],
+  ): Promise<StandardVersion[]>;
+  findByIds(
+    standardVersionIds: StandardVersionId[],
   ): Promise<StandardVersion[]>;
   findByStandardIdAndVersion(
     standardId: StandardId,

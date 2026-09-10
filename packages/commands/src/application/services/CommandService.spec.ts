@@ -47,7 +47,8 @@ describe('RecipeService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByCommandId: jest.fn(),
-      findLatestByCommandId: jest.fn(),
+      findLatestByCommandIds: jest.fn(),
+      findByIds: jest.fn(),
       findByCommandIdAndVersion: jest.fn(),
     };
 

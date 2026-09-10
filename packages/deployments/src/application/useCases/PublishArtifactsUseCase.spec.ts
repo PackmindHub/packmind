@@ -82,12 +82,12 @@ describe('PublishArtifactsUseCase', () => {
     mockLogger = stubLogger();
 
     mockCommandsPort = {
-      getCommandVersionById: jest.fn(),
+      getCommandVersionsByIds: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
-      getStandardVersionById: jest.fn(),
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+      getStandardVersionsByIds: jest.fn().mockResolvedValue([]),
+      getLatestStandardVersionsWithRules: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
@@ -235,10 +235,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -285,6 +287,18 @@ describe('PublishArtifactsUseCase', () => {
 
       it('returns exactly one distribution', () => {
         expect(result.distributions).toHaveLength(1);
+      });
+
+      it('fetches every command version in a single call', () => {
+        expect(mockCommandsPort.getCommandVersionsByIds).toHaveBeenCalledWith([
+          recipeVersion.id,
+        ]);
+      });
+
+      it('fetches every standard version in a single call', () => {
+        expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith(
+          [standardVersion.id],
+        );
       });
 
       it('returns distributions with empty distributedPackages', () => {
@@ -499,7 +513,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -584,9 +600,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -675,10 +691,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -775,10 +793,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -868,10 +888,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById
         .mockResolvedValueOnce(target1)
         .mockResolvedValueOnce(target2);
@@ -1020,12 +1042,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
         newCommandVersion,
-      );
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         newStandardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1156,7 +1178,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(null);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Command version with ID',
@@ -1188,7 +1210,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(null);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Standard version with ID',
@@ -1270,7 +1292,9 @@ describe('PublishArtifactsUseCase', () => {
       mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValueOnce(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1379,12 +1403,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
         newCommandVersion,
-      );
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         newStandardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1546,10 +1570,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1647,12 +1673,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         newStandardVersion,
-      );
-      mockStandardsPort.getRulesByStandardId = jest
-        .fn()
-        .mockResolvedValue(mockRules);
+      ]);
+      mockStandardsPort.getLatestStandardVersionsWithRules.mockResolvedValue([
+        { ...previousStandardVersion, rules: mockRules },
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1681,12 +1707,12 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('loads rules for previously deployed standards', async () => {
+    it('loads the rules of every rules-less standard in a single call', async () => {
       await useCase.execute(command);
 
-      expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        previousStandardVersion.standardId,
-      );
+      expect(
+        mockStandardsPort.getLatestStandardVersionsWithRules,
+      ).toHaveBeenCalledWith([previousStandardVersion.standardId]);
     });
 
     it('passes standards with loaded rules to renderArtifacts', async () => {
@@ -1904,7 +1930,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2036,7 +2064,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2182,7 +2212,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2268,7 +2300,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2394,7 +2428,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2796,7 +2832,9 @@ describe('PublishArtifactsUseCase', () => {
         },
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2928,7 +2966,9 @@ describe('PublishArtifactsUseCase', () => {
         },
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3097,7 +3137,9 @@ describe('PublishArtifactsUseCase', () => {
         },
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3537,7 +3579,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3623,7 +3667,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3818,10 +3864,12 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3946,7 +3994,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -4133,10 +4183,12 @@ describe('PublishArtifactsUseCase', () => {
         },
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -4336,7 +4388,9 @@ describe('PublishArtifactsUseCase', () => {
         },
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        recipeVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);

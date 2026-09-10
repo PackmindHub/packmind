@@ -7,7 +7,12 @@ import {
   AbstractRepository,
   getErrorMessage,
 } from '@packmind/node-utils';
-import { SpaceId, StandardId, StandardVersion } from '@packmind/types';
+import {
+  SpaceId,
+  StandardId,
+  StandardVersion,
+  StandardVersionId,
+} from '@packmind/types';
 
 const origin = 'StandardVersionRepository';
 
@@ -129,6 +134,43 @@ export class StandardVersionRepository
     }
   }
 
+  async findByIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<StandardVersion[]> {
+    const uniqueVersionIds = [...new Set(standardVersionIds)];
+
+    if (uniqueVersionIds.length === 0) {
+      this.logger.info('No standard version IDs provided to findByIds');
+      return [];
+    }
+
+    this.logger.info('Finding standard versions by IDs', {
+      count: uniqueVersionIds.length,
+    });
+
+    try {
+      const versions = await this.repository
+        .createQueryBuilder('standardVersion')
+        .where('standardVersion.id IN (:...standardVersionIds)', {
+          standardVersionIds: uniqueVersionIds as string[],
+        })
+        .getMany();
+
+      this.logger.info('Standard versions found by IDs', {
+        requestedCount: uniqueVersionIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find standard versions by IDs', {
+        count: uniqueVersionIds.length,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
   async findLatestByStandardId(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
@@ -137,8 +179,11 @@ export class StandardVersionRepository
     });
 
     try {
-      const versions = await this.findByStandardId(standardId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const latestVersion = await this.repository.findOne({
+        where: { standardId },
+        order: { version: 'DESC' },
+        relations: ['gitCommit', 'rules'],
+      });
 
       if (latestVersion) {
         this.logger.info('Latest standard version found', {
@@ -158,7 +203,7 @@ export class StandardVersionRepository
         'Failed to find latest standard version by standard ID',
         {
           standardId,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
