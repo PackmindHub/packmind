@@ -6,26 +6,14 @@ import {
   createSkillVersionId,
   createTargetId,
   DeleteItemType,
-  FileModification,
   GitRepo,
   IStandardsPort,
   SkillVersion,
   Target,
 } from '@packmind/types';
 import { skillVersionFactory } from '@packmind/skills/test';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { contentOf, gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
-
-/**
- * Narrows a file update to the content-carrying variant of `FileModification`;
- * the section-based variant has no `content`.
- */
-const contentOf = (fileUpdate: FileModification): string => {
-  if (fileUpdate.content === undefined) {
-    throw new Error(`Expected ${fileUpdate.path} to carry content`);
-  }
-  return fileUpdate.content;
-};
 
 describe('CopilotDeployer', () => {
   let deployer: CopilotDeployer;

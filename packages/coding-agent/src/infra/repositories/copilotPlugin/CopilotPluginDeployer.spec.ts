@@ -15,6 +15,7 @@ import {
   createUserId,
   FileUpdates,
 } from '@packmind/types';
+import { contentOf } from '@packmind/test-utils';
 
 function makeTarget(path: string): Target {
   return {
@@ -64,17 +65,12 @@ function makeSkill(overrides: Partial<SkillVersion> = {}): SkillVersion {
   };
 }
 
-/**
- * Parses the manifest emitted by `deployPluginManifest`, narrowing the file
- * update to the content-carrying variant of `FileModification`; the
- * section-based variant has no `content`.
- */
+/** Parses the manifest emitted by `deployPluginManifest`. */
 function manifestOf(updates: FileUpdates): Record<string, unknown> {
-  const [file] = updates.createOrUpdate;
-  if (file?.content === undefined) {
-    throw new Error('Expected the plugin manifest to carry content');
-  }
-  return JSON.parse(file.content) as Record<string, unknown>;
+  return JSON.parse(contentOf(updates.createOrUpdate[0])) as Record<
+    string,
+    unknown
+  >;
 }
 
 describe('CopilotPluginDeployer', () => {

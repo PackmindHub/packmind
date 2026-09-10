@@ -1,5 +1,6 @@
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
-import { DeleteItemType, FileModification, FileUpdates } from '@packmind/types';
+import { DeleteItemType, FileUpdates } from '@packmind/types';
+import { contentAt, contentOf } from '@packmind/test-utils';
 
 /**
  * CLI versions that only expose the legacy `packmind-cli` executable. The
@@ -48,23 +49,6 @@ describe('UpdatePlaybookDeployer', () => {
   const deploy = (
     options: { includeNext?: boolean; cliVersion?: string } = {},
   ): FileUpdates => deployer.deploy('TestAgent', '.test/skills/', options);
-
-  /**
-   * Narrows a file update to the content-carrying variant of
-   * `FileModification`; the section-based variant has no `content`.
-   */
-  const contentOf = (file: FileModification): string => {
-    if (file.content === undefined) {
-      throw new Error(`Emitted file carries no content: ${file.path}`);
-    }
-    return file.content;
-  };
-
-  const contentAt = (result: FileUpdates, path: string): string => {
-    const file = result.createOrUpdate.find((f) => f.path === path);
-    if (!file) throw new Error(`Missing emitted file: ${path}`);
-    return contentOf(file);
-  };
 
   /**
    * Files that reach every install at or above the skill's `minimumVersion`,
