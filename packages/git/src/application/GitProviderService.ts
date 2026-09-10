@@ -3,7 +3,7 @@ import {
   GitProviderCredentials,
   IGitProviderFactory,
 } from '../domain/repositories/IGitProviderFactory';
-import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { ResolvedGitRepoService } from './services/ResolvedGitRepoService';
 import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
@@ -21,7 +21,7 @@ export class GitProviderService {
   constructor(
     private readonly gitProviderRepository: IGitProviderRepository,
     private readonly gitProviderFactory: IGitProviderFactory,
-    private readonly gitRepoFactory: IGitRepoFactory,
+    private readonly resolvedGitRepoService: ResolvedGitRepoService,
   ) {}
 
   async addGitProvider(
@@ -154,7 +154,7 @@ export class GitProviderService {
     // only consumes owner/repo/branch from the GitRepo shape, so the synthetic
     // id/providerId/type fields are inert here.
     const gitProvider =
-      await this.gitProviderRepository.findById(gitProviderId);
+      await this.resolvedGitRepoService.getProvider(gitProviderId);
 
     if (!gitProvider) {
       throw new GitProviderNotFoundError(gitProviderId);
@@ -175,10 +175,8 @@ export class GitProviderService {
       trackingRemovedAt: null,
     };
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      syntheticGitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance =
+      await this.resolvedGitRepoService.resolve(syntheticGitRepo);
 
     await gitRepoInstance.createBranchFromBase(targetBranch);
   }
@@ -190,7 +188,7 @@ export class GitProviderService {
     targetBranch: string,
   ): Promise<void> {
     const gitProvider =
-      await this.gitProviderRepository.findById(gitProviderId);
+      await this.resolvedGitRepoService.getProvider(gitProviderId);
 
     if (!gitProvider) {
       throw new GitProviderNotFoundError(gitProviderId);
@@ -211,10 +209,8 @@ export class GitProviderService {
       trackingRemovedAt: null,
     };
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      syntheticGitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance =
+      await this.resolvedGitRepoService.resolve(syntheticGitRepo);
 
     await gitRepoInstance.deleteBranch(targetBranch);
   }
@@ -229,7 +225,7 @@ export class GitProviderService {
   ): Promise<{ url: string; number: number; wasCreated: boolean }> {
     // Resolve provider + token, then build an IGitRepo bound to the BASE
     // branch (the repo's configured `branch` field is the merge target).
-    const gitProvider = await this.gitProviderRepository.findById(
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
 
@@ -241,10 +237,7 @@ export class GitProviderService {
       throw new Error('Git provider token not configured');
     }
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.openOrUpdatePullRequest(command);
   }
@@ -253,7 +246,7 @@ export class GitProviderService {
     gitRepo: GitRepo,
     head: string,
   ): Promise<{ url: string; number: number } | null> {
-    const gitProvider = await this.gitProviderRepository.findById(
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
 
@@ -265,10 +258,7 @@ export class GitProviderService {
       throw new Error('Git provider token not configured');
     }
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.findOpenPullRequest(head);
   }
@@ -278,7 +268,7 @@ export class GitProviderService {
     base: string,
     head: string,
   ): Promise<GitBranchComparison> {
-    const gitProvider = await this.gitProviderRepository.findById(
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
 
@@ -290,10 +280,7 @@ export class GitProviderService {
       throw new Error('Git provider token not configured');
     }
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.compareBranches(base, head);
   }
@@ -302,7 +289,7 @@ export class GitProviderService {
     exists: boolean;
     reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
   }> {
-    const gitProvider = await this.gitProviderRepository.findById(
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
 
@@ -313,10 +300,7 @@ export class GitProviderService {
       return { exists: false, reason: 'auth_failed' };
     }
 
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.checkRepositoryExists();
   }
@@ -326,7 +310,7 @@ export class GitProviderService {
     path?: string,
   ): Promise<string[]> {
     // Find the specific git provider for this repository
-    const gitProvider = await this.gitProviderRepository.findById(
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
 
@@ -335,10 +319,7 @@ export class GitProviderService {
     }
 
     // Create an instance of IGitRepo using the factory (token validation delegated)
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
     return gitRepoInstance.listDirectoriesOnRepo(
       gitRepo.repo,
       gitRepo.owner,

@@ -22,22 +22,22 @@ export class GitServices {
   private readonly resolvedGitRepoService: ResolvedGitRepoService;
 
   constructor(private readonly gitRepositories: IGitRepositories) {
-    // Initialize all services with their respective repositories from the aggregator
+    // One per domain, so the reuse reaches across call sites. Built first:
+    // GitProviderService resolves through it.
+    this.resolvedGitRepoService = new ResolvedGitRepoService(
+      this.gitRepositories.getGitProviderRepository(),
+      this.gitRepositories.getGitRepoFactory(),
+    );
     this.gitProviderService = new GitProviderService(
       this.gitRepositories.getGitProviderRepository(),
       this.gitRepositories.getGitProviderFactory(),
-      this.gitRepositories.getGitRepoFactory(),
+      this.resolvedGitRepoService,
     );
     this.gitRepoService = new GitRepoService(
       this.gitRepositories.getGitRepoRepository(),
     );
     this.gitCommitService = new GitCommitService(
       this.gitRepositories.getGitCommitRepository(),
-    );
-    // One per domain, so the reuse reaches across call sites.
-    this.resolvedGitRepoService = new ResolvedGitRepoService(
-      this.gitProviderService,
-      this.gitRepositories.getGitRepoFactory(),
     );
 
     // Services are where the domain logic that is not a query lives, and they

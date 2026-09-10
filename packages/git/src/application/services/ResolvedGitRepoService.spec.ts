@@ -1,5 +1,5 @@
 import { ResolvedGitRepoService } from './ResolvedGitRepoService';
-import { GitProviderService } from '../GitProviderService';
+import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 import { IGitRepo } from '../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 import { GitRepoFactory } from '../../infra/repositories/GitRepoFactory';
@@ -21,7 +21,7 @@ const stubGitRepoInstance = (): jest.Mocked<IGitRepo> =>
   }) as unknown as jest.Mocked<IGitRepo>;
 
 describe('ResolvedGitRepoService', () => {
-  let gitProviderService: jest.Mocked<GitProviderService>;
+  let gitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let gitRepoFactoryPort: jest.Mocked<IGitRepoFactory>;
   let service: ResolvedGitRepoService;
   let provider: GitProvider;
@@ -29,9 +29,9 @@ describe('ResolvedGitRepoService', () => {
   beforeEach(() => {
     provider = gitProviderFactory();
 
-    gitProviderService = {
-      findGitProviderById: jest.fn().mockResolvedValue(provider),
-    } as unknown as jest.Mocked<GitProviderService>;
+    gitProviderRepository = {
+      findById: jest.fn().mockResolvedValue(provider),
+    } as unknown as jest.Mocked<IGitProviderRepository>;
 
     // A fresh instance per call, so "same instance" is a real assertion.
     gitRepoFactoryPort = {
@@ -41,7 +41,7 @@ describe('ResolvedGitRepoService', () => {
     } as jest.Mocked<IGitRepoFactory>;
 
     service = new ResolvedGitRepoService(
-      gitProviderService,
+      gitProviderRepository,
       gitRepoFactoryPort,
       stubLogger(),
     );
@@ -58,7 +58,7 @@ describe('ResolvedGitRepoService', () => {
 
     beforeEach(async () => {
       jest.useFakeTimers();
-      gitProviderService.findGitProviderById.mockResolvedValue(provider);
+      gitProviderRepository.findById.mockResolvedValue(provider);
 
       first = await service.resolve(gitRepo);
       jest.advanceTimersByTime(5_000);
@@ -74,7 +74,7 @@ describe('ResolvedGitRepoService', () => {
     });
 
     it('reads the provider only once', () => {
-      expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
+      expect(gitProviderRepository.findById).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -95,7 +95,7 @@ describe('ResolvedGitRepoService', () => {
     });
 
     it('reads the provider once rather than once per file per target', () => {
-      expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
+      expect(gitProviderRepository.findById).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -108,7 +108,7 @@ describe('ResolvedGitRepoService', () => {
     beforeEach(async () => {
       const gitRepo = gitRepoFactory();
       let resolveProvider: ((provider: GitProvider) => void) | undefined;
-      gitProviderService.findGitProviderById.mockReturnValue(
+      gitProviderRepository.findById.mockReturnValue(
         new Promise<GitProvider>((resolve) => {
           resolveProvider = resolve;
         }),
@@ -131,7 +131,7 @@ describe('ResolvedGitRepoService', () => {
     });
 
     it('reads the provider once', () => {
-      expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
+      expect(gitProviderRepository.findById).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -181,7 +181,7 @@ describe('ResolvedGitRepoService', () => {
       const otherProvider = gitProviderFactory();
 
       const first = await service.resolve(gitRepo);
-      gitProviderService.findGitProviderById.mockResolvedValue(otherProvider);
+      gitProviderRepository.findById.mockResolvedValue(otherProvider);
       const second = await service.resolve({
         ...gitRepo,
         providerId: otherProvider.id,
@@ -219,7 +219,7 @@ describe('ResolvedGitRepoService', () => {
 
   describe('when the provider is not found', () => {
     beforeEach(() => {
-      gitProviderService.findGitProviderById.mockResolvedValue(null);
+      gitProviderRepository.findById.mockResolvedValue(null);
     });
 
     it('throws GitProviderNotFoundError', async () => {
@@ -233,7 +233,7 @@ describe('ResolvedGitRepoService', () => {
 
       beforeEach(async () => {
         await service.resolve(gitRepo).catch(() => undefined);
-        gitProviderService.findGitProviderById.mockResolvedValue(provider);
+        gitProviderRepository.findById.mockResolvedValue(provider);
       });
 
       it('resolves the repository', async () => {
@@ -309,10 +309,10 @@ describe('ResolvedGitRepoService', () => {
         token: null,
       });
 
-      gitProviderService.findGitProviderById.mockResolvedValue(appProvider);
+      gitProviderRepository.findById.mockResolvedValue(appProvider);
 
       service = new ResolvedGitRepoService(
-        gitProviderService,
+        gitProviderRepository,
         new GitRepoFactory(
           new GithubTokenResolverFactory(config, 'shared', stubLogger()),
           stubLogger(),

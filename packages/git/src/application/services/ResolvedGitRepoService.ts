@@ -1,8 +1,13 @@
-import { GitProviderNotFoundError, GitRepo } from '@packmind/types';
+import {
+  GitProvider,
+  GitProviderId,
+  GitProviderNotFoundError,
+  GitRepo,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { IGitRepo } from '../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
-import { GitProviderService } from '../GitProviderService';
+import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 
 const origin = 'ResolvedGitRepoService';
 
@@ -12,81 +17,102 @@ const origin = 'ResolvedGitRepoService';
  */
 const RESOLVED_REPO_REUSE_MS = 10_000;
 
-type ResolvedGitRepo = {
-  /**
-   * The in-flight resolution, not its result. Stored before the first await so
-   * concurrent misses on one key share it: otherwise both resolve, and the one
-   * that finishes last wins — which can put a client built from just-rotated
-   * credentials behind one built from the old ones.
-   */
-  instance: Promise<IGitRepo>;
+type Windowed<V> = {
+  value: Promise<V>;
   expiresAt: number;
 };
 
 /**
- * The single "given a GitRepo, give me an IGitRepo" path for the read side.
- * Every file read goes through `IGitPort.getFileFromRepo`, so reuse here
- * covers all of them.
+ * The single "given a GitRepo, give me an IGitRepo" path.
+ *
+ * Depends on the repository rather than `GitProviderService` because most of
+ * its callers live inside that service.
  */
 export class ResolvedGitRepoService {
-  private readonly resolvedRepos = new Map<string, ResolvedGitRepo>();
+  private readonly providers = new Map<string, Windowed<GitProvider | null>>();
+  private readonly repos = new Map<string, Windowed<IGitRepo>>();
 
   constructor(
-    private readonly gitProviderService: GitProviderService,
+    private readonly gitProviderRepository: IGitProviderRepository,
     private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // `async` with no `await` on purpose: only native async methods are given a
-  // span, and the body must stay synchronous — see the cache write below.
-  async resolve(gitRepo: GitRepo): Promise<IGitRepo> {
-    const key = ResolvedGitRepoService.cacheKey(gitRepo);
+  /**
+   * The provider row. Exposed so a caller can run its own checks on it without
+   * paying for a second read — the checks differ per caller and are theirs.
+   */
+  async getProvider(providerId: GitProviderId): Promise<GitProvider | null> {
+    return this.reuse(
+      this.providers,
+      providerId,
+      () => this.gitProviderRepository.findById(providerId),
+      // A miss must stay a miss: a connection created inside the window has to
+      // be visible to the next read.
+      (provider) => provider !== null,
+    );
+  }
 
-    const cached = this.resolvedRepos.get(key);
+  async resolve(gitRepo: GitRepo): Promise<IGitRepo> {
+    return this.reuse(
+      this.repos,
+      ResolvedGitRepoService.cacheKey(gitRepo),
+      async () => {
+        const provider = await this.getProvider(gitRepo.providerId);
+
+        if (!provider) {
+          throw new GitProviderNotFoundError(gitRepo.providerId);
+        }
+
+        this.logger.debug('Resolving git repository', {
+          owner: gitRepo.owner,
+          repo: gitRepo.repo,
+          branch: gitRepo.branch,
+          providerId: gitRepo.providerId,
+        });
+
+        return this.gitRepoFactory.createGitRepo(gitRepo, provider);
+      },
+      () => true,
+    );
+  }
+
+  /**
+   * Holds the in-flight work, not its result, and writes it before the first
+   * await: concurrent misses on one key have to share it, or the slower one
+   * overwrites the faster and can put stale credentials back in front.
+   */
+  private reuse<V>(
+    store: Map<string, Windowed<V>>,
+    key: string,
+    start: () => Promise<V>,
+    keep: (value: V) => boolean,
+  ): Promise<V> {
+    const cached = store.get(key);
     if (cached && Date.now() < cached.expiresAt) {
-      return cached.instance;
+      return cached.value;
     }
 
-    this.evictExpired();
+    this.evictExpired(store);
 
-    const pending = this.build(gitRepo);
-
-    // Set synchronously — an await here would reopen the race this closes. The
-    // window therefore runs from when the credentials were read, not from when
-    // the client was built.
-    this.resolvedRepos.set(key, {
-      instance: pending,
+    const pending = start();
+    store.set(key, {
+      value: pending,
       expiresAt: Date.now() + RESOLVED_REPO_REUSE_MS,
     });
 
-    // Failures are deliberately not cached. Guarded on identity so a newer
-    // entry is left alone.
-    pending.catch(() => {
-      if (this.resolvedRepos.get(key)?.instance === pending) {
-        this.resolvedRepos.delete(key);
+    const forget = () => {
+      if (store.get(key)?.value === pending) {
+        store.delete(key);
       }
-    });
+    };
+    pending.then((value) => {
+      if (!keep(value)) {
+        forget();
+      }
+    }, forget);
 
     return pending;
-  }
-
-  private async build(gitRepo: GitRepo): Promise<IGitRepo> {
-    const provider = await this.gitProviderService.findGitProviderById(
-      gitRepo.providerId,
-    );
-
-    if (!provider) {
-      throw new GitProviderNotFoundError(gitRepo.providerId);
-    }
-
-    this.logger.debug('Resolving git repository', {
-      owner: gitRepo.owner,
-      repo: gitRepo.repo,
-      branch: gitRepo.branch,
-      providerId: gitRepo.providerId,
-    });
-
-    return this.gitRepoFactory.createGitRepo(gitRepo, provider);
   }
 
   /**
@@ -98,11 +124,11 @@ export class ResolvedGitRepoService {
     return `${gitRepo.providerId}|${gitRepo.owner}/${gitRepo.repo}@${gitRepo.branch ?? ''}`;
   }
 
-  private evictExpired(): void {
+  private evictExpired<V>(store: Map<string, Windowed<V>>): void {
     const now = Date.now();
-    for (const [key, resolved] of this.resolvedRepos) {
-      if (now >= resolved.expiresAt) {
-        this.resolvedRepos.delete(key);
+    for (const [key, entry] of store) {
+      if (now >= entry.expiresAt) {
+        store.delete(key);
       }
     }
   }

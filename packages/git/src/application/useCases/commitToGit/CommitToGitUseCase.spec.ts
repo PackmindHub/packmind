@@ -1,6 +1,7 @@
 import { CommitToGitUseCase } from './CommitToGitUseCase';
 import { GitCommitService } from '../../services/GitCommitService';
-import { GitProviderService } from '../../GitProviderService';
+import { IGitProviderRepository } from '../../../domain/repositories/IGitProviderRepository';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { createGitRepoId, GitRepo } from '@packmind/types';
 import {
   createGitProviderId,
@@ -20,7 +21,7 @@ import { createOrganizationId } from '@packmind/types';
 describe('CommitToGitUseCase', () => {
   let commitToGit: CommitToGitUseCase;
   let mockGitCommitService: jest.Mocked<GitCommitService>;
-  let mockGitProviderService: jest.Mocked<GitProviderService>;
+  let mockGitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockLogger: jest.Mocked<PackmindLogger>;
   let mockGithubRepository: jest.Mocked<IGitRepo>;
@@ -31,15 +32,9 @@ describe('CommitToGitUseCase', () => {
       getCommit: jest.fn(),
     } as unknown as jest.Mocked<GitCommitService>;
 
-    mockGitProviderService = {
-      findGitProviderById: jest.fn(),
-      addGitProvider: jest.fn(),
-      findGitProvidersByOrganizationId: jest.fn(),
-      updateGitProvider: jest.fn(),
-      deleteGitProvider: jest.fn(),
-      getAvailableRepos: jest.fn(),
-      checkBranchExists: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    mockGitProviderRepository = {
+      findById: jest.fn(),
+    } as unknown as jest.Mocked<IGitProviderRepository>;
 
     mockLogger = stubLogger();
 
@@ -67,8 +62,11 @@ describe('CommitToGitUseCase', () => {
 
     commitToGit = new CommitToGitUseCase(
       mockGitCommitService,
-      mockGitProviderService,
-      mockGitRepoFactory,
+      new ResolvedGitRepoService(
+        mockGitProviderRepository,
+        mockGitRepoFactory,
+        mockLogger,
+      ),
       mockLogger,
     );
   });
@@ -114,9 +112,7 @@ describe('CommitToGitUseCase', () => {
       beforeEach(async () => {
         expectedCommit = gitCommitFactory(commitDataFromGit);
 
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
         mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
 
@@ -160,9 +156,7 @@ describe('CommitToGitUseCase', () => {
       };
 
       // Mock provider service to return the unsupported provider
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        unsupportedProvider,
-      );
+      mockGitProviderRepository.findById.mockResolvedValue(unsupportedProvider);
 
       await expect(
         commitToGit.commitToGit(
@@ -180,7 +174,7 @@ describe('CommitToGitUseCase', () => {
       };
 
       // Mock provider service to return the provider without token
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
+      mockGitProviderRepository.findById.mockResolvedValue(
         providerWithoutToken,
       );
 
@@ -195,7 +189,7 @@ describe('CommitToGitUseCase', () => {
 
     it('throws error if provider is not found', async () => {
       // Mock provider service to return null (provider not found)
-      mockGitProviderService.findGitProviderById.mockResolvedValue(null);
+      mockGitProviderRepository.findById.mockResolvedValue(null);
 
       await expect(
         commitToGit.commitToGit(
@@ -208,9 +202,7 @@ describe('CommitToGitUseCase', () => {
 
     it('throws error if files array is empty', async () => {
       // Mock provider service to return the provider
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        mockGitProvider,
-      );
+      mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
 
       await expect(
         commitToGit.commitToGit(mockGitRepo, [], ''),
@@ -234,9 +226,7 @@ describe('CommitToGitUseCase', () => {
 
         const expectedCommit = gitCommitFactory(commitDataFromGit);
 
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
         mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
 
@@ -268,9 +258,7 @@ describe('CommitToGitUseCase', () => {
 
         const expectedCommit = gitCommitFactory(commitDataFromGit);
 
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
         mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
 
@@ -293,9 +281,7 @@ describe('CommitToGitUseCase', () => {
       };
 
       beforeEach(() => {
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
         mockGitCommitService.addCommit.mockResolvedValue(
           gitCommitFactory(commitDataFromGit),
@@ -467,9 +453,7 @@ Some content
       };
 
       beforeEach(() => {
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
         mockGitCommitService.addCommit.mockResolvedValue(
           gitCommitFactory(commitDataFromGit),
@@ -537,9 +521,7 @@ Some content
         }));
 
       const askCount = async (directoryCount: number) => {
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(gitCommitFactory());
         mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
 
@@ -565,9 +547,7 @@ Some content
       });
 
       it('hands every directory to that single call', async () => {
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubRepository.commitFiles.mockResolvedValue(gitCommitFactory());
         mockGitCommitService.addCommit.mockResolvedValue(gitCommitFactory());
 
@@ -588,9 +568,7 @@ Some content
 
       describe('when no directory is being deleted', () => {
         it('does not ask the provider at all', async () => {
-          mockGitProviderService.findGitProviderById.mockResolvedValue(
-            mockGitProvider,
-          );
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
           mockGithubRepository.commitFiles.mockResolvedValue(
             gitCommitFactory(),
           );
@@ -608,9 +586,7 @@ Some content
 
       describe('when a directory holds files', () => {
         it('passes the expanded file deletions on to the commit', async () => {
-          mockGitProviderService.findGitProviderById.mockResolvedValue(
-            mockGitProvider,
-          );
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
           mockGithubRepository.commitFiles.mockResolvedValue(
             gitCommitFactory(),
           );

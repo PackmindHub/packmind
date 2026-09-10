@@ -9,7 +9,8 @@ import {
   createUserId,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
-import { GitProviderService } from '../../GitProviderService';
+import { IGitProviderRepository } from '../../../domain/repositories/IGitProviderRepository';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { stubLogger } from '@packmind/test-utils';
@@ -19,7 +20,7 @@ import { gitRepoFactory, gitProviderFactory } from '../../../../test';
 describe('CheckDirectoryExistenceUseCase', () => {
   let useCase: CheckDirectoryExistenceUseCase;
   let mockGitRepoService: jest.Mocked<GitRepoService>;
-  let mockGitProviderService: jest.Mocked<GitProviderService>;
+  let mockGitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockGitRepoInstance: jest.Mocked<IGitRepo>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -39,16 +40,9 @@ describe('CheckDirectoryExistenceUseCase', () => {
     } as unknown as jest.Mocked<GitRepoService>;
 
     // Mock GitProviderService with its required methods
-    mockGitProviderService = {
-      findGitProviderById: jest.fn(),
-      addGitProvider: jest.fn(),
-      updateGitProvider: jest.fn(),
-      deleteGitProvider: jest.fn(),
-      listProviders: jest.fn(),
-      listAvailableRepositories: jest.fn(),
-      checkBranchExists: jest.fn(),
-      listAvailableTargets: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    mockGitProviderRepository = {
+      findById: jest.fn(),
+    } as unknown as jest.Mocked<IGitProviderRepository>;
 
     // Mock IGitRepo instance with checkDirectoryExists method
     mockGitRepoInstance = {
@@ -73,8 +67,11 @@ describe('CheckDirectoryExistenceUseCase', () => {
     // Initialize the UseCase with mocked dependencies
     useCase = new CheckDirectoryExistenceUseCase(
       mockGitRepoService,
-      mockGitProviderService,
-      mockGitRepoFactory,
+      new ResolvedGitRepoService(
+        mockGitProviderRepository,
+        mockGitRepoFactory,
+        stubbedLogger,
+      ),
       stubbedLogger,
     );
   });
@@ -116,9 +113,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       beforeEach(async () => {
         // Setup mocks for successful case
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGitRepoInstance.checkDirectoryExists.mockResolvedValue(true);
 
         result = await useCase.execute(validCommand);
@@ -139,7 +134,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       });
 
       it('calls git provider service with correct provider ID', () => {
-        expect(mockGitProviderService.findGitProviderById).toHaveBeenCalledWith(
+        expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           gitProviderId,
         );
       });
@@ -165,9 +160,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       beforeEach(async () => {
         // Setup mocks for directory not existing
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGitRepoInstance.checkDirectoryExists.mockResolvedValue(false);
 
         result = await useCase.execute(validCommand);
@@ -230,7 +223,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
     describe('when git provider not found', () => {
       it('throws error for non-existent provider', async () => {
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockResolvedValue(null);
+        mockGitProviderRepository.findById.mockResolvedValue(null);
 
         await expect(useCase.execute(validCommand)).rejects.toThrow(
           GitProviderNotFoundError,
@@ -247,7 +240,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
         });
 
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockGitProviderRepository.findById.mockResolvedValue(
           providerWithoutToken,
         );
 
@@ -272,7 +265,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       it('propagates git provider service errors', async () => {
         const error = new Error('Provider service error');
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockRejectedValue(error);
+        mockGitProviderRepository.findById.mockRejectedValue(error);
 
         await expect(useCase.execute(validCommand)).rejects.toThrow(
           'Provider service error',
@@ -284,9 +277,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       it('propagates repository instance errors with proper error message', async () => {
         const repositoryError = new Error('Git API rate limit exceeded');
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
-        mockGitProviderService.findGitProviderById.mockResolvedValue(
-          mockGitProvider,
-        );
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGitRepoInstance.checkDirectoryExists.mockRejectedValue(
           repositoryError,
         );

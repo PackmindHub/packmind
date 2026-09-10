@@ -2,15 +2,12 @@ import {
   GitRepo,
   FileModification,
   GitCommit,
-  GitProvider,
-  GitProviderNotFoundError,
   DeleteItem,
   DeleteItemType,
 } from '@packmind/types';
-import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
-import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
+import { CommitFile } from '../../../domain/repositories/IGitRepo';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { GitCommitService } from '../../services/GitCommitService';
-import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 
@@ -19,8 +16,7 @@ const origin = 'CommitToGitUseCase';
 export class CommitToGitUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
-    private readonly gitProviderService: GitProviderService,
-    private readonly gitRepoFactory: IGitRepoFactory,
+    private readonly resolvedGitRepoService: ResolvedGitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -42,17 +38,7 @@ export class CommitToGitUseCase {
       throw new Error('No files to commit');
     }
 
-    // Fetch the git provider by ID
-    const provider = await this.gitProviderService.findGitProviderById(
-      repo.providerId,
-    );
-
-    if (!provider) {
-      throw new GitProviderNotFoundError(repo.providerId);
-    }
-
-    // Create IGitRepo instance based on provider (token validation delegated to factory)
-    const gitRepoInstance = await this.createGitRepoInstance(repo, provider);
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(repo);
 
     // Process files to handle section-based updates
     const processedFiles: CommitFile[] = [];
@@ -171,12 +157,5 @@ export class CommitToGitUseCase {
 
     // Store the commit in the database
     return this.gitCommitService.addCommit(commitData);
-  }
-
-  private createGitRepoInstance(
-    repo: GitRepo,
-    provider: GitProvider,
-  ): Promise<IGitRepo> {
-    return this.gitRepoFactory.createGitRepo(repo, provider);
   }
 }

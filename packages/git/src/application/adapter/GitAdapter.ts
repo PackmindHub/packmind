@@ -225,8 +225,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._commitToGit = new CommitToGitUseCase(
       this.gitServices.getGitCommitService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     this._getFileFromRepo = new GetFileFromRepoUseCase(
@@ -272,8 +271,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._checkDirectoryExistence = new CheckDirectoryExistenceUseCase(
       this.gitServices.getGitRepoService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     // Repository-tracking use cases
