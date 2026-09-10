@@ -84,6 +84,18 @@ export function RuleDetectionLanguages({
  * word carries the setting in the neutral ramp, and the menu keeps the table's
  * own sentences, so nobody has to learn the mapping twice.
  *
+ * Neutral is not the same as faint, which is how it shipped: `text.secondary`
+ * inside a `border.tertiary` outline read as a label rather than a control,
+ * quieter than the language name next to it. It has a filled body and a real
+ * border now, which is what a flat design has left to say "this is pressable"
+ * once colour is spoken for.
+ *
+ * The colour stays spoken for. `error` in red and `warning` in amber would put
+ * a second semantic colour a centimetre from the mark that says whether the
+ * language is enforced at all, and a reader would compare them. The two facts
+ * are unrelated: one is whether anything checks the rule, the other is how
+ * loudly it complains when it does.
+ *
  * The words are the API's: `error` and `warning` are what `DetectionSeverity`
  * spells, and inventing softer ones here would be a third vocabulary for one
  * fact.
@@ -120,30 +132,40 @@ function RuleSeverityControl({
           alignItems="center"
           gap="2px"
           fontSize="xs"
-          color="text.secondary"
-          paddingX={1}
+          fontWeight="medium"
+          /*
+            A chip with a body, not a word with a hairline round it. Reading the
+            severity and reading that it can be changed are the same glance, and
+            at `text.secondary` inside a `border.tertiary` outline the second
+            half of that glance was missing: the control sat quieter than the
+            language name beside it, which is a label.
+          */
+          color="text.primary"
+          backgroundColor="background.secondary"
+          paddingX={1.5}
+          paddingY="1px"
           borderRadius="sm"
           borderWidth="1px"
-          borderColor="border.tertiary"
+          borderColor="border.primary"
           whiteSpace="nowrap"
           cursor={updateSeverity.isPending ? 'progress' : 'pointer'}
           _hover={{
-            borderColor: 'border.primary',
-            color: 'text.primary',
+            backgroundColor: 'background.tertiary',
+            borderColor: 'border.secondary',
           }}
           _focusVisible={{
             outline: '2px solid',
             outlineColor: 'branding.primary',
             outlineOffset: '1px',
           }}
-          transition="color 150ms ease-out, border-color 150ms ease-out"
+          transition="background-color 150ms ease-out, border-color 150ms ease-out"
         >
           {severity}
           <PMIcon
             as="span"
             display="inline-flex"
             fontSize="xs"
-            color="text.faded"
+            color="text.secondary"
           >
             <LuChevronDown />
           </PMIcon>
