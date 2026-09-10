@@ -4,12 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import type { Mock } from 'vitest';
 import {
+  DetectionSeverity,
   ProgrammingLanguage,
+  RuleLanguageDetectionStatus,
   createRuleId,
   createStandardId,
 } from '@packmind/types';
 import type { Rule } from '@packmind/types';
 import { useGetRuleExamplesQuery } from '../../../rules/api/queries';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import { EXAMPLES_TAB, LINTER_TAB } from './buildComponentDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
 
@@ -19,6 +22,35 @@ vi.mock('../../../rules/api/queries', () => ({
   useUpdateRuleExampleMutation: vi.fn(() => ({ isPending: false })),
   useDeleteRuleExampleMutation: vi.fn(() => ({ isPending: false })),
 }));
+
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
+  () => ({
+    useGetStandardRulesDetectionStatusQuery: vi.fn(),
+  }),
+);
+
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries',
+  () => ({
+    useUpdateActiveDetectionProgramSeverityMutation: vi.fn(() => ({
+      mutate: vi.fn(),
+      isPending: false,
+    })),
+  }),
+);
+
+/*
+  The language's display name lives behind the edition alias, so a case
+  asserting on "Java" would read it in one repository and read nothing in the
+  other.
+*/
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils',
+  () => ({
+    getLanguageDisplayName: (language: string) => language,
+  }),
+);
 
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({ organization: { id: 'org-1' } }),
@@ -46,6 +78,14 @@ const RULE: Rule = {
   id: createRuleId('rule-1'),
   content: 'Use timeouts on all blocking calls',
 } as Rule;
+
+function withNoDetection() {
+  (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+    data: [],
+    isLoading: false,
+    isError: false,
+  });
+}
 
 function withExamples(...languages: ProgrammingLanguage[]) {
   (useGetRuleExamplesQuery as Mock).mockReturnValue({
@@ -90,6 +130,7 @@ describe('ContextRuleDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     withExamples(ProgrammingLanguage.JAVA);
+    withNoDetection();
   });
 
   it('names the rule, which is what the depth is about', async () => {
@@ -132,6 +173,59 @@ describe('ContextRuleDetail', () => {
     await renderRule(LINTER_TAB);
 
     expect(screen.getByText('program editor')).toBeVisible();
+  });
+
+  describe('when a language reports on the rule', () => {
+    beforeEach(() => {
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: RULE.id,
+            languages: [
+              {
+                language: ProgrammingLanguage.JAVA,
+                status: RuleLanguageDetectionStatus.OK,
+                severity: DetectionSeverity.WARNING,
+                activeDetectionProgramId: 'program-1',
+              },
+            ],
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    /*
+      The state of the rule, above the two halves rather than inside one, and
+      the thing that decides whether the work below is needed. It is on the row
+      this depth was opened from too, and the two read one query.
+    */
+    it('says where the rule is enforced', async () => {
+      await renderRule();
+
+      expect(screen.getByText('Detected in')).toBeVisible();
+    });
+
+    it('offers the severity of that language', async () => {
+      await renderRule();
+
+      expect(
+        screen.getByRole('button', { name: /reported as warning in java/i }),
+      ).toBeVisible();
+    });
+  });
+
+  describe('when nothing has ever been pointed at the rule', () => {
+    /*
+      The same silence the row keeps. A line reading that no language detects it
+      would announce the state of a thing the reader is here to create.
+    */
+    it('says nothing about where it is enforced', async () => {
+      await renderRule();
+
+      expect(screen.queryByText('Detected in')).not.toBeInTheDocument();
+    });
   });
 
   describe('when the rule has examples in no language at all', () => {

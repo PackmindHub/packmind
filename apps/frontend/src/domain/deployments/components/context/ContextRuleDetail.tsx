@@ -18,12 +18,15 @@ import {
   type StandardId,
 } from '@packmind/types';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import { RuleExamplesManager } from '../../../rules/components/RuleExamplesManager';
 import { RuleLanguageSelect } from '../../../rules/components/RuleLanguageSelect';
 import { useGetRuleExamplesQuery } from '../../../rules/api/queries';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { EXAMPLES_TAB, LINTER_TAB } from './buildComponentDetail';
+import { ruleDetectionsById } from './ruleDetection';
+import { RuleDetectionLanguages } from './RuleDetectionLanguages';
 
 /**
  * One rule of a standard, set up in the pane the standard was read in.
@@ -76,6 +79,23 @@ export function ContextRuleDetail({
     spaceId as SpaceId,
     standardId,
     rule.id,
+  );
+
+  /*
+   * Where the rule is enforced today, and how loudly.
+   *
+   * Here as well as on the row it was opened from, and neither is redundant: a
+   * list of rules is where two of them are compared, a rule's own depth is
+   * where one is worked on, and this is the fact that decides whether the work
+   * below is needed at all. The same query the list runs, so the two cannot
+   * disagree about a state the reader is about to change.
+   */
+  const { data: detectionStatuses } =
+    useGetStandardRulesDetectionStatusQuery(standardId);
+
+  const detection = useMemo(
+    () => ruleDetectionsById(detectionStatuses).get(rule.id) ?? null,
+    [detectionStatuses, rule.id],
   );
 
   const configuredLanguages = useMemo(() => {
@@ -148,6 +168,26 @@ export function ContextRuleDetail({
           {rule.content}
         </PMHeading>
       </PMBox>
+
+      {/*
+        Above the tabs rather than inside one, because it is about the rule and
+        not about either half of it. Absent when nothing has ever been pointed
+        at this rule, which is the same silence the row keeps: a line reading
+        that no language detects it would announce the state of a thing the
+        reader is on this screen to create.
+      */}
+      {detection && (
+        <PMHStack gap={3} align="start" paddingTop={4}>
+          <PMText fontSize="xs" color="faded" flexShrink={0}>
+            Detected in
+          </PMText>
+          <RuleDetectionLanguages
+            standardId={standardId}
+            ruleId={rule.id}
+            detection={detection}
+          />
+        </PMHStack>
+      )}
 
       <PMBox paddingTop={5}>
         <PMTabsCompound.Root

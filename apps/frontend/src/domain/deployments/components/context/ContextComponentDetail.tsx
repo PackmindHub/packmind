@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
@@ -21,29 +21,22 @@ import {
 import {
   LuChevronDown,
   LuChevronLeft,
-  LuCircleCheck,
-  LuCircleOff,
   LuEllipsisVertical,
   LuExternalLink,
   LuMessageSquarePlus,
   LuPencil,
   LuTrash2,
 } from 'react-icons/lu';
-import { TiWarningOutline } from 'react-icons/ti';
 import type {
-  ActiveDetectionProgramId,
   Command,
   CommandId,
   OrganizationId,
-  PackageId,
-  ProgrammingLanguage,
   Rule,
   SkillId,
   SpaceId,
   StandardId,
   WithTimestamps,
 } from '@packmind/types';
-import { DetectionSeverity } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
@@ -93,8 +86,11 @@ import {
   ruleDetectionOpens,
   ruleDetectionsById,
   type RuleDetection,
-  type RuleDetectionState,
 } from './ruleDetection';
+import {
+  RuleDetectionLanguages,
+  RuleDetectionMark,
+} from './RuleDetectionLanguages';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import {
@@ -111,7 +107,6 @@ import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistribut
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { routes } from '../../../../shared/utils/routes';
-import { withPackageParam } from '../../hooks/useCreateIntoPackage';
 import { CopyMarkdownButton } from '../../../artifacts/components/CopyMarkdownButton';
 import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
 import {
@@ -121,7 +116,6 @@ import {
 } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { getLanguageDisplayName } from '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils';
 import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
-import { useUpdateActiveDetectionProgramSeverityMutation } from '@packmind/proprietary/frontend/domain/detection/api/queries/DetectionProgramQueries';
 
 /**
  * One component, read inside the package that carries it.
@@ -508,12 +502,7 @@ export function ContextComponentDetail({
         paddingX={6}
         paddingY={5}
       >
-        <ComponentBody
-          component={component}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
-          ruleHref={ruleHref}
-        />
+        <ComponentBody component={component} ruleHref={ruleHref} />
       </PMTabsCompound.Content>
 
       <PMTabsCompound.Content
@@ -547,13 +536,9 @@ export function ContextComponentDetail({
 
 function ComponentBody({
   component,
-  orgSlug,
-  spaceSlug,
   ruleHref,
 }: Readonly<{
   component: ContextComponent;
-  orgSlug: string;
-  spaceSlug: string;
   /** Where one rule of a standard opens, built by the pane. */
   ruleHref: (ruleId: Rule['id']) => string;
 }>) {
@@ -1814,174 +1799,14 @@ function RuleRow({
           <PMText fontSize="xs" color="faded" flexShrink={0} minWidth="72px">
             Languages
           </PMText>
-          <PMHStack gap={3} minWidth={0} flexWrap="wrap">
-            {detection.languages.map(
-              ({ language, state, severity, activeDetectionProgramId }) => (
-                <PMHStack key={language} gap={1.5}>
-                  <RuleDetectionMark state={state} />
-                  <PMText fontSize="xs" color="secondary" whiteSpace="nowrap">
-                    {getLanguageDisplayName(language)}
-                  </PMText>
-                  {severity && activeDetectionProgramId && (
-                    <RuleSeverityControl
-                      standardId={standardId}
-                      ruleId={rule.id}
-                      language={language}
-                      severity={severity}
-                      activeDetectionProgramId={activeDetectionProgramId}
-                    />
-                  )}
-                </PMHStack>
-              ),
-            )}
-          </PMHStack>
+          <RuleDetectionLanguages
+            standardId={standardId}
+            ruleId={rule.id}
+            detection={detection}
+          />
         </PMHStack>
       )}
     </PMBox>
-  );
-}
-
-/**
- * What a language reports a violation as, and the way to change it.
- *
- * The one thing on the Instructions tab a reader can set rather than read, and
- * it is here rather than in the row above because a severity belongs to a
- * language: the row's own label is about the rule, which is several languages
- * at once.
- *
- * Not `SeverityDropdownBadge`, which is what the standard's rule table uses.
- * That control is a filled red or yellow button a hundred pixels wide reading
- * "Report as error", sized for a table cell. Two of them inside a list of rules
- * would be the loudest thing on a tab whose subject is prose, and the mark
- * beside the language already spends this row's colour on the state. So the
- * word carries the setting in the neutral ramp, and the menu keeps the table's
- * own sentences, so nobody has to learn the mapping twice.
- *
- * The words are the API's: `error` and `warning` are what `DetectionSeverity`
- * spells, and inventing softer ones here would be a third vocabulary for one
- * fact.
- */
-function RuleSeverityControl({
-  standardId,
-  ruleId,
-  language,
-  severity,
-  activeDetectionProgramId,
-}: Readonly<{
-  standardId: StandardId;
-  ruleId: Rule['id'];
-  language: ProgrammingLanguage;
-  severity: DetectionSeverity;
-  activeDetectionProgramId: ActiveDetectionProgramId;
-}>) {
-  const updateSeverity = useUpdateActiveDetectionProgramSeverityMutation();
-  const languageName = getLanguageDisplayName(language);
-
-  return (
-    <PMMenu.Root>
-      <PMMenu.Trigger asChild>
-        <PMBox
-          as="button"
-          /*
-            Announced rather than set: `PMBox` takes no `disabled`, and the two
-            menu items below are what actually mutate, so that is where the
-            in-flight state is enforced.
-          */
-          aria-disabled={updateSeverity.isPending || undefined}
-          aria-label={`Reported as ${severity} in ${languageName}`}
-          display="inline-flex"
-          alignItems="center"
-          gap="2px"
-          fontSize="xs"
-          color="text.secondary"
-          paddingX={1}
-          borderRadius="sm"
-          borderWidth="1px"
-          borderColor="border.tertiary"
-          whiteSpace="nowrap"
-          cursor={updateSeverity.isPending ? 'progress' : 'pointer'}
-          _hover={{
-            borderColor: 'border.primary',
-            color: 'text.primary',
-          }}
-          _focusVisible={{
-            outline: '2px solid',
-            outlineColor: 'branding.primary',
-            outlineOffset: '1px',
-          }}
-          transition="color 150ms ease-out, border-color 150ms ease-out"
-        >
-          {severity}
-          <PMIcon
-            as="span"
-            display="inline-flex"
-            fontSize="xs"
-            color="text.faded"
-          >
-            <LuChevronDown />
-          </PMIcon>
-        </PMBox>
-      </PMMenu.Trigger>
-      <PMPortal>
-        <PMMenu.Positioner>
-          <PMMenu.Content>
-            {SEVERITY_CHOICES.map((choice) => (
-              <PMMenu.Item
-                key={choice.value}
-                value={choice.value}
-                disabled={choice.value === severity || updateSeverity.isPending}
-                onClick={() =>
-                  updateSeverity.mutate({
-                    standardId,
-                    ruleId,
-                    activeDetectionProgramId,
-                    severity: choice.value,
-                  })
-                }
-              >
-                {choice.label}
-              </PMMenu.Item>
-            ))}
-          </PMMenu.Content>
-        </PMMenu.Positioner>
-      </PMPortal>
-    </PMMenu.Root>
-  );
-}
-
-/** The table's own labels, in the table's own order. */
-const SEVERITY_CHOICES: readonly {
-  value: DetectionSeverity;
-  label: string;
-}[] = [
-  { value: DetectionSeverity.ERROR, label: 'Report as error' },
-  { value: DetectionSeverity.WARNING, label: 'Report as warning' },
-];
-
-/**
- * The mark beside a detection status. Three shapes, used by the rule's own
- * status and by each of its languages: the collapsed row and the languages it
- * opens onto have to agree, or the reader learns the mapping twice.
- *
- * The shapes are the ones the standard's rule summary already uses, so the two
- * screens do not disagree either for as long as both exist.
- */
-const RULE_DETECTION_MARKS: Record<
-  RuleDetectionState,
-  { Icon: ComponentType; color: string }
-> = {
-  active: { Icon: LuCircleCheck, color: 'text.success' },
-  'in-progress': { Icon: TiWarningOutline, color: 'text.warning' },
-  inactive: { Icon: LuCircleOff, color: 'text.tertiary' },
-};
-
-function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
-  const { Icon, color } = RULE_DETECTION_MARKS[state];
-
-  return (
-    <PMIcon as="span" display="inline-flex" fontSize="sm" color={color}>
-      <Icon />
-    </PMIcon>
   );
 }
 
