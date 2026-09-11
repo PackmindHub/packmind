@@ -84,7 +84,7 @@ describe('OpenCode Deployment Integration', () => {
         '---\ndescription: "Test recipe"\nagent: build\n---\nThis is test recipe content for OpenCode',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     standard = await testApp.standardsHexa.getAdapter().createStandard({
@@ -108,6 +108,7 @@ describe('OpenCode Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 

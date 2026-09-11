@@ -1,8 +1,10 @@
 import { PackmindListener } from '@packmind/node-utils';
-import { StandardUpdatedEvent, StandardUpdatedPayload } from '@packmind/types';
+import { StandardUpdatedEvent } from '@packmind/types';
 
+// UserEvent widens the declared payload with userId/organizationId/source, so
+// the stub takes the emitted payload rather than StandardUpdatedPayload alone.
 export interface StubStandardsAdapter {
-  onStandardUpdated(payload: StandardUpdatedPayload): void;
+  onStandardUpdated(payload: StandardUpdatedEvent['payload']): void;
 }
 
 export class StubStandardsListener extends PackmindListener<StubStandardsAdapter> {
