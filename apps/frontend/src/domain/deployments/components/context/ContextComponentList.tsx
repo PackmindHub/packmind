@@ -309,28 +309,20 @@ function SectionHeader({
     <PMHStack
       gap={2}
       align="center"
-      paddingLeft={2}
-      paddingRight={3}
+      paddingLeft={3}
+      paddingRight={2}
       paddingY="3px"
       bg="background.secondary"
       borderTopWidth={isFirst ? '0' : '1px'}
       borderColor="border.tertiary"
     >
-      <PMIconButton
-        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
-        aria-expanded={!isCollapsed}
-        variant="ghost"
-        size="2xs"
-        color="text.faded"
-        onClick={onToggle}
-      >
-        {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}
-      </PMIconButton>
       {selection && selection.total > 0 && (
         /*
-          Its own column, in line with the checkboxes of the rows it commands,
-          so the band reads as the head of that column rather than as a row
-          with a stray control on it.
+          First on the strip, under the same padding as the rows, so it sits in
+          the column of the checkboxes it commands. It was second for a while,
+          behind the fold chevron, and the band then read as a row with a stray
+          control on it: the eye runs down a column of checkboxes and this one
+          was the only one out of line.
 
           Half-ticked while part of the band is picked: the reader who ticked
           three of forty needs to be told that clicking here takes the other
@@ -378,6 +370,24 @@ function SectionHeader({
           collapsed
         </PMText>
       )}
+      {/*
+        At the far end of the strip, which is where the checkbox is not. The
+        two controls of a band cannot share its left edge: one of them has to
+        give the column up, and it is the one with nothing below it to line up
+        with. This is also the side an accordion is opened from, which is what
+        a full-width strip that folds is.
+      */}
+      <PMIconButton
+        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
+        aria-expanded={!isCollapsed}
+        variant="ghost"
+        size="2xs"
+        color="text.faded"
+        marginLeft={isCollapsed ? undefined : 'auto'}
+        onClick={onToggle}
+      >
+        {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}
+      </PMIconButton>
     </PMHStack>
   );
 }
