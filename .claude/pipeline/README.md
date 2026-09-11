@@ -13,6 +13,12 @@ verification plus localized retry. So: **a unit boundary without a
 machine-checkable gate is pure overhead**, and the gate is the load-bearing
 part of this directory.
 
+Units are neither planned nor split in advance. A unit is split only once it has
+exhausted the model tiers, because a unit the strongest model cannot do from a
+complete spec is evidence about the unit rather than about the executor. That is
+as-needed decomposition — it adapts to the task and to the executor at the same
+time, with no size threshold to tune.
+
 ## Phases
 
 | | Skill | Produces |
@@ -72,7 +78,11 @@ both run on purpose: a scope-filtered check cannot detect a signature change
 that breaks a caller the unit never touched, because the evidence was filtered
 out.
 
-Repo-wide costs about 2.6s warm here, so this is affordable per unit.
+Measured warm on this repo: about **12s** for a change to a leaf package, **30s**
+when a shared package like `types` rebuilds 23 of 32 projects, and **37s** for the
+frontend, which pays an extra `frontend:typecheck`. `scoped` is most of that. The
+repo-wide pass costs about **1.5s**, because `scoped` has just warmed the cache
+and the two stages never both pay. A cold cache roughly triples the leaf case.
 
 ## The invariant
 

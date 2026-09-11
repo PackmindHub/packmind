@@ -69,6 +69,9 @@ Sizing, in order of authority:
 - **If two consecutive units would share an exit command**, they are one unit.
 - Do not pre-decompose the feature. Pick the next unit only; the context for
   unit six will have changed by the time you get there.
+- **Decompose on failure, never in advance.** When a unit exhausts the tiers,
+  split it then and try the halves. That is step 7b, and it is the only place
+  a split ever happens.
 
 ### 3. Route — cheaply, before specifying
 
@@ -150,11 +153,13 @@ is the whole signal:
 
 | Stage | What it means | Do |
 |---|---|---|
-| `scope` | The spec was ambiguous about boundaries | Re-spec, same tier, tighter file list |
+| `scope`, 1st | The spec was ambiguous about boundaries | Re-spec, same tier, tighter file list |
+| `scope`, 2nd on one unit | The boundary is wrong, not the wording | **Split it** where the executor keeps crossing |
 | `scope` (guardrail) | It tried to change the rules | Re-spec, same tier, say so explicitly. Never relax the rule. |
 | `scoped` / `wide` / `typecheck`, 1st | Ordinary error | Re-spec, same tier, quote the error verbatim |
 | `scoped` / `wide` / `typecheck`, 2nd consecutive | **Capability** — the executor cannot hold the interface | Escalate one step up `escalation` |
-| `wide` only, scope clean | Action at a distance | Re-spec with the callers in context; consider the unit mis-sized |
+| `wide` only, scope clean | Action at a distance | Re-spec with the callers in context; if it recurs, **split it** |
+| Any stage, still failing at the top tier | Not capability. The unit is too big. | **Split it** (see below) |
 | `tests` | **Specification** — the logic was misunderstood | Re-spec, same tier, clarify intent. Do not escalate. |
 | `HALT` | Invariant violated | Stop. Human. |
 
@@ -163,7 +168,37 @@ are about capability, test failures are about specification.** Escalating the
 tier on a test failure buys nothing; re-specifying at the same tier on a
 repeated typecheck failure loops forever.
 
-At `haltAfterAttempts` on one unit, stop and take it to the human.
+### 7b. When the tiers run out, decompose
+
+The escalation ladder ends in a split, not in a human.
+
+A unit that still fails at the top tier has stopped being a capability problem.
+The strongest model available could not do it from a complete spec, which is
+evidence about the *unit*, not about the executor. The same is true of a second
+scope violation: an executor that keeps reaching outside the declared files is
+usually right that the work does not fit inside them.
+
+So: **split the unit into two, and send both back in at the bottom tier.**
+
+- Each half needs its own exit criterion. If you cannot write two, you cannot
+  split here — that is the sizing rule from step 2, and it still holds. Merge
+  the unit into its neighbour and re-spec the pair instead.
+- Number the halves after the parent: `U-014` becomes `U-014a` and `U-014b`.
+  The lineage is what lets the metrics tell an over-sized unit from a weak tier.
+- Attempt count and tier reset for each half. They are new units.
+- A half that has itself been split once and still fails goes to the human.
+  That is `haltAfterAttempts`, and it is the only path there.
+
+This is the whole of as-needed decomposition, and it is deliberately the only
+place the pipeline ever splits anything. Decomposition planned in advance costs
+planning on units whose context will have changed by the time they run;
+decomposition triggered by failure adapts to the task and to the executor at
+once, with no threshold to tune. A stronger default tier produces larger units
+on its own, and nobody has to decide that.
+
+Watch the ratio. Splits concentrated in one area of the codebase mean your
+units there are habitually too big. Splits everywhere mean the default tier is
+too low, and raising `tiers.executor` is cheaper than splitting every unit.
 
 ### 8. Blocked — walk the ladder
 
@@ -241,6 +276,9 @@ session reads them in a few thousand tokens.
 - **First-attempt pass rate** — the empirical hazard rate; see above.
 - **Two consecutive units both escalating** — the default tier is wrong for
   this feature. Raise `tiers.executor` rather than paying escalation every time.
+- **Split rate, and where.** Splits clustered in one area mean units there are
+  habitually too big. Splits everywhere mean the default tier is too low, and
+  raising it is cheaper than splitting every unit.
 - **Halts, counted separately.** They must never enter the pass rate.
 - **Your own token spend against the subagents'.** If it is climbing, you have
   started doing the work.

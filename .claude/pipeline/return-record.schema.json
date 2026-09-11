@@ -6,7 +6,11 @@
   "additionalProperties": false,
   "required": ["unit_id", "feature", "status", "files_touched", "deviations"],
   "properties": {
-    "unit_id": { "type": "string", "pattern": "^U-[0-9]{3}$" },
+    "unit_id": {
+      "description": "U-014, or U-014a / U-014b for the halves of a unit that was split after exhausting the tiers. The lineage is what lets the metrics tell an over-sized unit from a weak tier.",
+      "type": "string",
+      "pattern": "^U-[0-9]{3}[a-z]?$"
+    },
     "feature": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "status": { "enum": ["done", "blocked"] },
 
