@@ -19,12 +19,22 @@ complete spec is evidence about the unit rather than about the executor. That is
 as-needed decomposition — it adapts to the task and to the executor at the same
 time, with no size threshold to tune.
 
+So **nothing upfront is a spec**. Phase 1a settles scope, non-goals and
+acceptance criteria; phase 1b settles the design forks inside that scope and then
+sizes the result. The only specs are the inline ones the orchestrator writes, one
+at a time, for the unit about to run.
+
+What phase 1 does decide in advance is *how many orchestrator runs this takes* —
+one pass, or a cut into sessions that each end somewhere a human would want to
+look. That is a different question from unit decomposition and it is the reason
+both phase-1 conversations happen before anything is built.
+
 ## Phases
 
 | | Skill | Produces |
 |---|---|---|
 | 1a | `agentic-feature-framing` | `charter.md` — scope, non-goals, acceptance criteria |
-| 1b | `agentic-design-session` | `decisions.md` — decisions, rejected alternatives, constraints |
+| 1b | `agentic-design-session` | `decisions.md` — decisions, rejected alternatives, constraints; and the charter's `Size and sessions` |
 | 2 | `agentic-orchestrator` | units, records, commits |
 | — | `agentic-doc-ingest` | documentation, downstream and on demand |
 

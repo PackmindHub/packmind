@@ -37,6 +37,23 @@ re-centralising the expensive work.
 Read the charter and the decision log now, in full. Read them once. Everything
 after this is against that, plus the compact records.
 
+**Check the charter's `Size and sessions` before anything else.** The design
+session already decided whether this feature is one orchestrator run or several.
+
+- verdict `one session` — you own every AC.
+- verdict `split` — you own **one** session's ACs. Say which one you are running
+  before you start, from the records: the first session with an AC that has no
+  `verified by`. Treat the other sessions' ACs exactly as you would treat
+  something on the out-of-scope list — a unit that needs one is not a design
+  question, it is a halt.
+- section empty — phase 1b did not finish. Ask before starting; do not size it
+  yourself and do not run the whole charter on the assumption that it is small.
+
+At the end of your session's last AC, stop. Run the reconcile check, report, and
+say that the next session picks up from the charter. Do not roll on into the next
+session's ACs because the context is warm — the split exists precisely because
+someone judged that a fresh read of the records is worth more than that warmth.
+
 ## The loop, per unit
 
 ### 1. Baseline
@@ -265,6 +282,10 @@ The response is **not** to decompose more finely from inside that state. It is
 to start a fresh orchestrator session. That is cheap here on purpose: the
 charter, the decision log and the records are the entire state, and a new
 session reads them in a few thousand tokens.
+
+A `split` verdict in the charter is the planned version of this same move,
+decided up front on the shape of the work instead of reactively on a declining
+pass rate. Both end the same way: a fresh session reading the same three files.
 
 ## What to watch
 

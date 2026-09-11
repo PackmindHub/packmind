@@ -1,13 +1,17 @@
 ---
 name: 'agentic-design-session'
-description: 'Turn a framed feature into an append-only decision log: every design fork made explicit, with the reasoning and the alternatives that were rejected and why. Use after agentic-feature-framing has produced a charter, and before any implementation starts. Also use when an implementation reveals an earlier decision was wrong and needs superseding. Produces .claude/features/<slug>/decisions.md and nothing else — no code, no file edits. This is phase 1b of the agentic development pipeline.'
+description: 'Turn a framed feature into an append-only decision log: every design fork made explicit, with the reasoning and the alternatives that were rejected and why. Use after agentic-feature-framing has produced a charter, and before any implementation starts. Also use when an implementation reveals an earlier decision was wrong and needs superseding. Produces .claude/features/<slug>/decisions.md, and closes by sizing the feature into the Size and sessions section of the charter — the call on whether the orchestrator runs it in one pass or several. No code, no other file edits. This is phase 1b of the agentic development pipeline.'
 ---
 
 # Design session
 
-You are settling **how**, and recording it so it survives. The output is one
-file: `.claude/features/<slug>/decisions.md`, from
+You are settling **how**, and recording it so it survives. The main output is
+`.claude/features/<slug>/decisions.md`, from
 `.claude/pipeline/decision-log.template.md`. Read the charter first.
+
+You also close by filling one section of the charter — `Size and sessions` — and
+that is the only edit you may make outside the decision log. It is the last step
+of this skill, described at the bottom.
 
 ## Why the rejected alternatives matter more than the decisions
 
@@ -29,7 +33,9 @@ someone re-proposing it in three weeks.
 
 - **Write no code.** Types, signatures and schemas are decisions, and you may
   quote a signature in a decision. You may not implement one.
-- **Edit no file but the decision log.**
+- **Edit no file but the decision log**, and the charter's `Size and sessions`
+  section at the close. Nothing else in the charter is yours to touch — if
+  framing got a criterion wrong, say so and let the user reopen phase 1a.
 - **Append only.** Never rewrite a decided entry. To change one, add a new entry
   with `supersedes: D-00n`, and append `superseded-by:` to the old one. That one
   line is the only permitted mutation.
@@ -64,7 +70,7 @@ If it only makes sense in context, it is not written yet.
 **Resolve or deliberately defer every known unknown in the charter.** A deferred
 unknown needs a note saying who decides it and when. Silence is not deferral.
 
-## When to stop
+## When to stop deciding
 
 Stop when every acceptance criterion has enough decided that a unit could be
 specced against it without a judgement call, and every known unknown is either
@@ -75,6 +81,38 @@ belong to that unit — over-deciding here wastes the session on forks whose
 context will have changed by the time they run. The test is not "is everything
 settled", it is **"could a stranger implement any AC from this log without
 guessing?"**
+
+## Then size it — the last step, and do not skip it
+
+Framing said what. You said how. Only now is the size of the work knowable, and
+**this is the point of having had both conversations**: to decide, before any
+code exists, whether this goes to the orchestrator in one run or in several.
+Write the answer into the charter's `Size and sessions`.
+
+**The unit count is a rough read, and it stays rough.** Units are never
+enumerated in advance — that is the whole cost argument behind the pipeline. You
+are estimating an order of magnitude from the decided design: roughly how many
+places have to change, and how many of those changes are independent. A range.
+
+**Then give the verdict.** One session or split. Reasons to split:
+
+| Signal | Why it wants its own session |
+|---|---|
+| A deferred unknown sits mid-feature | Everything past it would be specced on a guess |
+| One subset is releasable on its own | A run that ends somewhere a human wants to look |
+| A late AC depends on the shape of an early one | The design of S2 is genuinely better informed by S1 having landed |
+| The unit count is large enough that the orchestrator's own context is the risk | Its judgement is what degrades, and it is the one part with no gate |
+
+Reasons that are *not* reasons to split: the feature feels big, the feature
+touches several packages, a unit looks hard. Unit size is phase 2's problem and
+it splits units by itself, on evidence, when a tier ladder is exhausted.
+
+**A split is not a re-framing.** Every session runs against the same charter and
+the same decision log. You are cutting the run, not the feature — so name the cut
+by ACs, say what each session lands, and say which depends on which.
+
+**Say it out loud too.** The verdict is a call about how the user spends the next
+few days, and it belongs in the conversation, not only in a file.
 
 ## Mid-implementation use
 
