@@ -10,6 +10,6 @@
   "exit_criterion": {
     "command": "./node_modules/.bin/nx test types --testNamePattern='isDomainError'",
     "kind": "behavioural",
-    "describes": "AC-6"
+    "describes": "prepares AC-6"
   }
 }

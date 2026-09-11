@@ -1,0 +1,13 @@
+{
+  "unit_id": "U-006",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.spec.ts",
+    "packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test commands --testNamePattern='when user is not found'",
+    "kind": "behavioural",
+    "describes": "AC-7 fallout"
+  }
+}
