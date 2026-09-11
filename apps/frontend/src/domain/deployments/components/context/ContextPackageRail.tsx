@@ -5,18 +5,11 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
-  PMInput,
   PMText,
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import {
-  LuLayers,
-  LuPackage,
-  LuPackageX,
-  LuPlus,
-  LuSearch,
-} from 'react-icons/lu';
+import { LuLayers, LuPackage, LuPackageX, LuPlus } from 'react-icons/lu';
 import type { PackageId, PackageResponse } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -27,6 +20,7 @@ import {
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
 import type { PackageAttention } from './buildPackageAttention';
 import { withPaneDetailHref } from './buildComponentDetail';
+import { ContextSearchField } from './ContextSearchField';
 import { searchPackages, type PackageSearchRow } from './searchPackages';
 import { packageActivity } from './packageActivity';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
@@ -241,42 +235,16 @@ export function ContextPackageRail({
           borderColor="border.tertiary"
           flexShrink={0}
         >
-          <PMBox position="relative" minW={0}>
-            <PMBox
-              position="absolute"
-              left="10px"
-              top="50%"
-              transform="translateY(-50%)"
-              // The step the placeholder beside it now uses. Left at
-              // `text.faded` the magnifier read as dimmer than the words it
-              // labels, and the two stopped looking like one control.
-              color="text.tertiary"
-              pointerEvents="none"
-              display="flex"
-              alignItems="center"
-              // PMInput is itself positioned and opaque, and it comes after this
-              // box in the DOM, so without a layer of its own the magnifier is
-              // painted over and the field looks like it lost its icon.
-              zIndex={1}
-            >
-              <PMIcon fontSize="sm">
-                <LuSearch />
-              </PMIcon>
-            </PMBox>
-            <PMInput
-              size="sm"
-              paddingLeft="32px"
-              /*
-               * Not "Search 12 packages". The count answers a question nobody
-               * asks and leaves the real one open: does this look inside a
-               * package? It does, so the placeholder names both levels.
-               */
-              placeholder="Search packages and components"
-              aria-label="Search packages and components"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </PMBox>
+          <ContextSearchField
+            /*
+             * Not "Search 12 packages". The count answers a question nobody
+             * asks and leaves the real one open: does this look inside a
+             * package? It does, so the label names both levels.
+             */
+            label="Search packages and components"
+            value={query}
+            onChange={setQuery}
+          />
 
           {isAttentionUnavailable ? (
             <AttentionUnavailableRow />

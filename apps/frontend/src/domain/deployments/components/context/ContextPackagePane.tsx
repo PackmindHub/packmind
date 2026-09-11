@@ -41,6 +41,7 @@ import {
   componentSelectionKey,
   componentSetSubject,
   type ContextComponent,
+  type ContextComponentType,
   type ContextGroup,
   type SpaceCatalogue,
 } from './buildPackageContext';
@@ -70,8 +71,12 @@ import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
 import {
   COMPONENT_ACTION_ICONS,
+  COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
+import { ContextChip } from './ContextChip';
+import { ContextSearchField } from './ContextSearchField';
+import { filterPackageGroups } from './filterPackageGroups';
 import { SPLIT_BUTTON_SEAM, splitButtonHalf } from '../splitButton';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
@@ -251,18 +256,43 @@ export function ContextPackagePane({
   const { getDeployedTargets, getDeployedMarketplaces } =
     usePackageDeploymentStatus(spaceId, organizationId);
   /*
-   * The picked components, resolved against what the package still holds. That
-   * is also what repairs the selection after a move: the components that left
-   * are no longer in the groups, so they drop out of it on their own.
+   * What narrows the list below, held here rather than in the address. The open
+   * package and the open component are in the URL because they are places worth
+   * sending to someone; a half-typed query and a type chip are a gesture in
+   * progress, and the pane is keyed by package in the surface, so both drop when
+   * the reader leaves for another package, which is what leaving should do.
+   */
+  const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
+    null,
+  );
+
+  /*
+   * The two compose, the type narrowing what the query left. The counts the
+   * chips carry come from `groups`, which is the whole package, so turning a
+   * filter on never renumbers the control that turned it on.
+   */
+  const shown = useMemo(
+    () => filterPackageGroups(groups, { query, type: typeFilter }),
+    [groups, query, typeFilter],
+  );
+
+  /*
+   * The picked components, resolved against what is on screen rather than
+   * against the whole package, which is the rule the space-wide inventory
+   * already follows: the bar cannot act on rows a filter is hiding.
+   *
+   * That is also what repairs the selection after a move: the components that
+   * left are no longer in the groups, so they drop out of it on their own.
    */
   const selection = useMemo(
     () =>
-      groups
+      shown.groups
         .flatMap((group) => group.components)
         .filter((component) =>
           selectedKeys.has(componentSelectionKey(component)),
         ),
-    [groups, selectedKeys],
+    [shown, selectedKeys],
   );
 
   /*
@@ -922,6 +952,43 @@ export function ContextPackagePane({
           />
         ) : (
           <PMVStack gap={5} align="stretch">
+            {/*
+              The filter row, above everything the list does. A package can hold
+              a hundred components, and until this existed the only way to reach
+              one of them was to scroll past the others.
+
+              Always present rather than appearing past some number of rows: a
+              control that comes and goes with the size of what it filters is a
+              control the reader has to find twice. The chips are the exception,
+              since with one type there is nothing for them to narrow.
+            */}
+            <PMVStack gap={2} align="stretch">
+              <ContextSearchField
+                label="Search components"
+                value={query}
+                onChange={setQuery}
+              />
+              {groups.length > 1 && (
+                <PMHStack gap={1} wrap="wrap">
+                  <ContextChip
+                    label="All"
+                    count={total}
+                    isActive={typeFilter === null}
+                    onClick={() => setTypeFilter(null)}
+                  />
+                  {groups.map((group) => (
+                    <ContextChip
+                      key={group.type}
+                      label={group.label}
+                      count={group.components.length}
+                      icon={COMPONENT_TYPE_ICONS[group.type]}
+                      isActive={typeFilter === group.type}
+                      onClick={() => setTypeFilter(group.type)}
+                    />
+                  ))}
+                </PMHStack>
+              )}
+            </PMVStack>
             {selection.length > 0 && (
               <SelectionBar
                 count={selection.length}
@@ -944,50 +1011,75 @@ export function ContextPackagePane({
                 onClear={clearSelection}
               />
             )}
-            {groups.map((group) => (
-              <PMBox key={group.type}>
-                <PMHStack gap={2} align="baseline">
-                  <PMText
-                    fontSize="10px"
-                    fontWeight="semibold"
-                    textTransform="uppercase"
-                    letterSpacing="wider"
-                    color="faded"
-                  >
-                    {group.label}
-                  </PMText>
-                  {/*
-                    The per-group count has no other home: there is no filter bar
-                    above the list, and it is what gives the breakdown of a
-                    package without opening every group.
+            {shown.groups.length === 0 ? (
+              /*
+                Only ever reachable with something typed: a chip exists per group
+                the package has, and a group the package has is not empty, so a
+                type alone always has rows to show.
+
+                It names the type when one is picked, because the reader who
+                searched "java" under the Skills chip is being told there is no
+                skill by that name, not that the word is absent from the package.
+                No button to clear: both controls that could have produced this
+                are one line above it.
+              */
+              <PMText fontSize="sm" color="secondary">
+                No{' '}
+                {typeFilter
+                  ? COMPONENT_TYPE_LABELS_SINGULAR[typeFilter].toLowerCase()
+                  : 'component'}{' '}
+                of this package matches "{query.trim()}".
+              </PMText>
+            ) : (
+              shown.groups.map((group) => (
+                <PMBox key={group.type}>
+                  <PMHStack gap={2} align="baseline">
+                    <PMText
+                      fontSize="10px"
+                      fontWeight="semibold"
+                      textTransform="uppercase"
+                      letterSpacing="wider"
+                      color="faded"
+                    >
+                      {group.label}
+                    </PMText>
+                    {/*
+                    The breakdown of a package without opening every group, and
+                    under a query the count of what is left over the count of
+                    what there was. Without the second number a group that went
+                    from forty to three reads as a group of three, and the
+                    reader has no way to tell the filter did that.
                   */}
-                  <PMText
-                    fontSize="10px"
-                    color="faded"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    {group.components.length}
-                  </PMText>
-                </PMHStack>
-                <PMBox paddingTop={1}>
-                  <ContextComponentList
-                    entries={group.components.map((component) => ({
-                      // Pointed at this pane for the types it can show, and at
-                      // the component's own page for the ones it cannot yet.
-                      component: withPaneDetailHref(
-                        component,
-                        searchParams,
-                        pkg.id,
-                      ),
-                    }))}
-                    onMove={(component) => setMoving([component])}
-                    onRemove={(component) => setRemoving([component])}
-                    selectedKeys={selectedKeys}
-                    onToggleSelect={toggleSelect}
-                  />
+                    <PMText
+                      fontSize="10px"
+                      color="faded"
+                      fontVariantNumeric="tabular-nums"
+                    >
+                      {group.components.length === group.total
+                        ? group.total
+                        : `${group.components.length} of ${group.total}`}
+                    </PMText>
+                  </PMHStack>
+                  <PMBox paddingTop={1}>
+                    <ContextComponentList
+                      entries={group.components.map((component) => ({
+                        // Pointed at this pane for the types it can show, and at
+                        // the component's own page for the ones it cannot yet.
+                        component: withPaneDetailHref(
+                          component,
+                          searchParams,
+                          pkg.id,
+                        ),
+                      }))}
+                      onMove={(component) => setMoving([component])}
+                      onRemove={(component) => setRemoving([component])}
+                      selectedKeys={selectedKeys}
+                      onToggleSelect={toggleSelect}
+                    />
+                  </PMBox>
                 </PMBox>
-              </PMBox>
-            ))}
+              ))
+            )}
           </PMVStack>
         )}
       </PMTabsCompound.Content>
