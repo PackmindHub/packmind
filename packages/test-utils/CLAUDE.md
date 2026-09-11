@@ -28,8 +28,23 @@ own — most of what a new spec needs already exists.
 | `randomIn` | pick a random value from a set, for factory defaults |
 | `stubLogger` | fully typed `PackmindLogger` stub |
 | `createMockInstance` | typed mock of a whole class |
+| `mockPort` | typed mock of an interface — the counterpart for ports, which have no class to walk |
 | `skipWhenRoot` | skip specs that cannot run as `root` (filesystem-permission tests) |
 | `src/repository/` | shared repository-test helpers |
+
+## Mocking a port
+
+Reach for `mockPort<IPort>()` rather than an object literal cast with
+`as unknown as jest.Mocked<IPort>`. The cast switches off the structural check the spec type check
+exists for: members the mock omits are invisible until the test blows up at runtime, and a value
+stubbed inside the literal (`findById: jest.fn().mockResolvedValue(…)`) is never compared to the
+contract, because a bare `jest.fn()` is typed `any`. `mockPort` backs every member with a
+`jest.fn()` lazily, so the mock is complete by construction, and stubs are typed:
+
+```ts
+const gitRepo = mockPort<IGitRepo>();
+gitRepo.getFileOnRepo.mockResolvedValue({ sha, content }); // checked against IGitRepo
+```
 
 `createTestDatasourceFixture` is the preferred shape for repository specs: `initialize()` in
 `beforeAll`, `cleanup()` in `afterEach`, `destroy()` in `afterAll`. Its own doc comment carries a
