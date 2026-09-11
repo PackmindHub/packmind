@@ -43,7 +43,7 @@ export class UserNotFoundError extends UserAccessError {
       'not_found',
       'user_not_found',
       context,
-      'Your user account could not be found.',
+      'The user account could not be found.',
     );
     this.name = 'UserNotFoundError';
   }
@@ -55,7 +55,7 @@ export class UserNotInOrganizationError extends UserAccessError {
       'forbidden',
       'user_not_in_organization',
       context,
-      'You are not a member of this organization.',
+      'That user is not a member of this organization.',
     );
     this.name = 'UserNotInOrganizationError';
   }

@@ -118,6 +118,10 @@ describe('access error messages', () => {
     it('keeps the user id on the context', () => {
       expect(error.context.userId).toBe(userId);
     });
+
+    it('does not address the reader as the subject', () => {
+      expect(error.message).not.toMatch(/\b(Your|You)\b/);
+    });
   });
 
   describe('when a UserNotInOrganizationError is constructed', () => {
@@ -137,6 +141,10 @@ describe('access error messages', () => {
 
     it('keeps the organization id on the context', () => {
       expect(error.context.organizationId).toBe(organizationId);
+    });
+
+    it('does not address the reader as the subject', () => {
+      expect(error.message).not.toMatch(/\b(Your|You)\b/);
     });
   });
 

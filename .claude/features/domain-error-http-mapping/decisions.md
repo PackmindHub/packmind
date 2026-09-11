@@ -687,3 +687,64 @@ compile; keeping `string` holds D-007's requirement that the constructors keep t
 Declare `SpaceContext = UserAccessErrorContext & Required<Pick<UserAccessErrorContext,
 'spaceId'>>` alongside `OrganizationContext`. Do not redeclare `context` as a class
 field in any subclass. Do not change the base class's `context` field type.
+
+---
+
+## D-016 — Two messages become subject-neutral, because the subject is not always the caller
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-11`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-006`, `D-008`, `AC-7`
+
+**Decision.** `UserNotFoundError`'s message becomes `The user account could not be
+found.` and `UserNotInOrganizationError`'s becomes `That user is not a member of this
+organization.` The other three access-error messages keep the second person unchanged.
+No call site in `packages/accounts` changes, and no new error class is introduced.
+
+**Reasoning.** The charter's premise — *"every authenticated use case funnels through
+`AbstractMemberUseCase`, that covers every authenticated endpoint at once"* — is false
+for two of the six classes, and the drift check found it. `packages/accounts` re-exports
+both classes and throws them about a **target** user at five sites:
+`UserService.ts:270`, `ChangeUserRoleUseCase.ts:57`,
+`RemoveUserFromOrganizationUseCase.ts:100`, `ActivateUserAccountUseCase.ts:68` and
+`ResetPasswordUseCase.ts:67` — the last two on unauthenticated flows.
+
+With the second-person wording, an organization admin changing the role of a user who
+does not exist would be told *"Your user account could not be found"*, and an admin
+removing a non-member would be told *"You are not a member of this organization"*. Both
+are false statements about the person reading them. That is worse than the UUID the
+rewording removed: the old message was at least about the right person.
+
+Subject-neutral wording is true in both readings — the caller whose own record is gone,
+and the target the caller named — and it costs two strings. D-008's mechanism is
+untouched: still no identifier, still written for the person reading it rather than for
+an operator. Only its literal "address the reader as you" yields, and only for the two
+classes where the reader is not reliably the subject.
+
+The `not_found` kind stands. D-006 justified it by the record being the caller's own,
+but its other argument — that the request is genuinely unresolvable and there is no
+resource to be forbidden from — holds for a target user too, and a missing target user
+is exactly what 404 means.
+
+**Rejected.**
+
+- Distinct `TargetUserNotFoundError` / `TargetUserNotInOrganizationError` classes for
+  the five `packages/accounts` sites — correct rather than merely true, and it would let
+  the caller-facing messages keep their second person. Rejected on scope: the charter
+  budgeted six one-line annotations, and this adds two classes, five call-site changes
+  and their spec fallout. It is the right follow-up if these routes ever need to say
+  something more specific.
+- Accepting the falsehood and recording it as a cost, as D-013 does for the frontend's
+  coarse 404 — cheapest, and the wrong message only surfaces on admin-manages-other-user
+  routes. Rejected because D-013 accepts an imprecision, whereas this would knowingly
+  ship a statement that is simply untrue, and the fix is two strings.
+
+**Constrains implementation.** Change only the message strings of `UserNotFoundError`
+and `UserNotInOrganizationError`. Do not change their `kind`, `reason`, `context` or
+constructor signatures. Do not edit any file under `packages/accounts`. Do not
+introduce a new error class. `OrganizationAdminRequiredError`,
+`SpaceMembershipRequiredError` and `SpaceAdminRequiredError` keep their current
+second-person messages, because they are only ever thrown about the caller.
