@@ -49,12 +49,6 @@ describe('mockPort', () => {
     jest.clearAllMocks();
   });
 
-  it('backs every member with a jest mock', () => {
-    const port = mockPort<ITestPort>();
-
-    expect(jest.isMockFunction(port.findById)).toBe(true);
-  });
-
   it('returns the same mock on every access', () => {
     const port = mockPort<ITestPort>();
 
@@ -114,10 +108,12 @@ describe('mockPort', () => {
       expect(port.name).toBe('a name');
     });
 
-    it('still mocks the methods around it', () => {
+    it('still records the calls made to the methods around it', async () => {
       const port = mockPort<IPortWithData>({ name: 'a name' });
 
-      expect(jest.isMockFunction(port.findById)).toBe(true);
+      await port.findById('id');
+
+      expect(port.findById).toHaveBeenCalledWith('id');
     });
   });
 
@@ -136,7 +132,9 @@ describe('mockPort', () => {
       it('mocks it anyway', () => {
         const port = mockPort<IPortWithOptionalMethod>();
 
-        expect(jest.isMockFunction(port.close)).toBe(true);
+        port.close?.();
+
+        expect(port.close).toHaveBeenCalled();
       });
     });
   });
