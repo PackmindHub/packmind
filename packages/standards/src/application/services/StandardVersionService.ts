@@ -306,31 +306,16 @@ export class StandardVersionService {
     });
 
     try {
-      const versions =
-        await this.standardVersionRepository.findByIds(standardVersionIds);
-
-      if (versions.length === 0) {
-        this.logger.warn('No standard versions found for the given IDs', {
-          count: standardVersionIds.length,
-        });
-        return [];
-      }
-
-      const rules = await this.ruleRepository.findByStandardVersionIds(
-        versions.map((version) => version.id),
+      const versions = await this.withRules(
+        await this.standardVersionRepository.findByIds(standardVersionIds),
       );
-      const rulesByVersionId = this.groupRulesByVersionId(rules);
 
       this.logger.info('Standard versions retrieved by IDs successfully', {
         requestedCount: standardVersionIds.length,
         foundCount: versions.length,
-        rulesCount: rules.length,
       });
 
-      return versions.map((version) => ({
-        ...version,
-        rules: rulesByVersionId.get(version.id) ?? [],
-      }));
+      return versions;
     } catch (error) {
       this.logger.error('Failed to get standard versions by IDs', {
         count: standardVersionIds.length,
@@ -435,37 +420,21 @@ export class StandardVersionService {
     });
 
     try {
-      const latestVersions =
+      const latestVersions = await this.withRules(
         await this.standardVersionRepository.findLatestByStandardIds(
           standardIds,
-        );
-
-      if (latestVersions.length === 0) {
-        this.logger.warn('No versions found for the given standards', {
-          count: standardIds.length,
-        });
-        return [];
-      }
-
-      const rules = await this.ruleRepository.findByStandardVersionIds(
-        latestVersions.map((version) => version.id),
+        ),
       );
-
-      const rulesByVersionId = this.groupRulesByVersionId(rules);
 
       this.logger.info(
         'Latest versions with rules retrieved by standard IDs successfully',
         {
           requestedCount: standardIds.length,
           foundCount: latestVersions.length,
-          rulesCount: rules.length,
         },
       );
 
-      return latestVersions.map((version) => ({
-        ...version,
-        rules: rulesByVersionId.get(version.id) ?? [],
-      }));
+      return latestVersions;
     } catch (error) {
       this.logger.error(
         'Failed to get latest versions with rules by standard IDs',
@@ -510,14 +479,30 @@ export class StandardVersionService {
     }
   }
 
-  private groupRulesByVersionId(rules: Rule[]): Map<StandardVersionId, Rule[]> {
+  /**
+   * The given versions with their rules attached, loaded in a single query.
+   */
+  private async withRules(
+    versions: StandardVersion[],
+  ): Promise<StandardVersion[]> {
+    if (versions.length === 0) {
+      return [];
+    }
+
+    const rules = await this.ruleRepository.findByStandardVersionIds(
+      versions.map((version) => version.id),
+    );
     const rulesByVersionId = new Map<StandardVersionId, Rule[]>();
     for (const rule of rules) {
       const versionRules = rulesByVersionId.get(rule.standardVersionId) ?? [];
       versionRules.push(rule);
       rulesByVersionId.set(rule.standardVersionId, versionRules);
     }
-    return rulesByVersionId;
+
+    return versions.map((version) => ({
+      ...version,
+      rules: rulesByVersionId.get(version.id) ?? [],
+    }));
   }
 
   private generateStandardMarkdown(

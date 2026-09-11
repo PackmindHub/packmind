@@ -7,12 +7,7 @@ import {
   AbstractRepository,
   getErrorMessage,
 } from '@packmind/node-utils';
-import {
-  SpaceId,
-  StandardId,
-  StandardVersion,
-  StandardVersionId,
-} from '@packmind/types';
+import { SpaceId, StandardId, StandardVersion } from '@packmind/types';
 
 const origin = 'StandardVersionRepository';
 
@@ -113,43 +108,6 @@ export class StandardVersionRepository
           error: getErrorMessage(error),
         },
       );
-      throw error;
-    }
-  }
-
-  async findByIds(
-    standardVersionIds: StandardVersionId[],
-  ): Promise<StandardVersion[]> {
-    const uniqueVersionIds = [...new Set(standardVersionIds)];
-
-    if (uniqueVersionIds.length === 0) {
-      this.logger.info('No standard version IDs provided to findByIds');
-      return [];
-    }
-
-    this.logger.info('Finding standard versions by IDs', {
-      count: uniqueVersionIds.length,
-    });
-
-    try {
-      const versions = await this.repository
-        .createQueryBuilder('standardVersion')
-        .where('standardVersion.id IN (:...standardVersionIds)', {
-          standardVersionIds: uniqueVersionIds as string[],
-        })
-        .getMany();
-
-      this.logger.info('Standard versions found by IDs', {
-        requestedCount: uniqueVersionIds.length,
-        foundCount: versions.length,
-      });
-
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to find standard versions by IDs', {
-        count: uniqueVersionIds.length,
-        error: getErrorMessage(error),
-      });
       throw error;
     }
   }

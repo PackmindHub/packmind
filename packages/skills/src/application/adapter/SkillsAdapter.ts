@@ -331,14 +331,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       .getSkillVersionsByIds(skillVersionIds);
   }
 
-  getSkillFilesByVersionIds(
-    skillVersionIds: SkillVersionId[],
-  ): Promise<Map<SkillVersionId, SkillFile[]>> {
-    return this.services
-      .getSkillFileService()
-      .findByVersionIds(skillVersionIds);
-  }
-
   async saveSkillVersion(
     command: SaveSkillVersionCommand,
   ): Promise<SkillVersion> {

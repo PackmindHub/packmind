@@ -92,7 +92,6 @@ describe('PublishArtifactsUseCase', () => {
 
     mockSkillsPort = {
       getSkillVersionsByIds: jest.fn().mockResolvedValue([]),
-      getSkillFilesByVersionIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockGitPort = {
@@ -117,6 +116,7 @@ describe('PublishArtifactsUseCase', () => {
       findActiveStandardVersionsByTargetAndPackages: jest.fn(),
       findActiveCommandVersionsByTargetAndPackages: jest.fn(),
       findActiveSkillVersionsByTargetAndPackages: jest.fn(),
+      findActiveVersionsByTarget: jest.fn(),
       findActiveRenderModesByTarget: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
@@ -129,6 +129,49 @@ describe('PublishArtifactsUseCase', () => {
     );
     mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
       [],
+    );
+
+    mockDistributionRepository.findActiveVersionsByTarget.mockImplementation(
+      async (orgId, tId, packageIds) => {
+        if (packageIds) {
+          const [standardVersions, commandVersions, skillVersions] =
+            await Promise.all([
+              mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+              mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+              mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+            ]);
+          return { standardVersions, commandVersions, skillVersions };
+        }
+
+        const [standardVersions, commandVersions, skillVersions] =
+          await Promise.all([
+            mockDistributionRepository.findActiveStandardVersionsByTarget(
+              orgId,
+              tId,
+            ),
+            mockDistributionRepository.findActiveCommandVersionsByTarget(
+              orgId,
+              tId,
+            ),
+            mockDistributionRepository.findActiveSkillVersionsByTarget(
+              orgId,
+              tId,
+            ),
+          ]);
+        return { standardVersions, commandVersions, skillVersions };
+      },
     );
 
     mockTargetService = {
@@ -973,6 +1016,16 @@ describe('PublishArtifactsUseCase', () => {
         expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
       });
 
+      it('fetches active versions via two batched calls per target instead of six', () => {
+        // One unfiltered call plus one packageIds-filtered call per target
+        // (2 targets x 2 calls), instead of the six per-target calls to the
+        // individual findActiveXVersionsByTarget[AndPackages] methods this
+        // replaced.
+        expect(
+          mockDistributionRepository.findActiveVersionsByTarget,
+        ).toHaveBeenCalledTimes(4);
+      });
+
       it('includes Production target name in commit message', () => {
         expect(jobInput.commitMessage).toContain('Production');
       });
@@ -1807,14 +1860,10 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([newSkillVersion]);
-      mockSkillsPort.getSkillFilesByVersionIds.mockImplementation(
-        async (ids) =>
-          new Map(
-            ids
-              .filter((id) => id === previousSkillVersionId)
-              .map((id) => [id, mockFiles]),
-          ),
+      mockSkillsPort.getSkillVersionsByIds.mockImplementation(async (ids) =>
+        [newSkillVersion, { ...previousSkillVersion, files: mockFiles }].filter(
+          (version) => ids.includes(version.id),
+        ),
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
@@ -1853,7 +1902,7 @@ describe('PublishArtifactsUseCase', () => {
     it('loads files for previously deployed skills', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFilesByVersionIds).toHaveBeenCalledWith([
+      expect(mockSkillsPort.getSkillVersionsByIds).toHaveBeenCalledWith([
         previousSkillVersion.id,
       ]);
     });
@@ -2484,6 +2533,8 @@ describe('PublishArtifactsUseCase', () => {
     let command: PublishArtifactsCommand;
     let skillVersion: ReturnType<typeof skillVersionFactory>;
     let skillFiles: SkillFile[];
+    let carriedSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let carriedSkillFiles: SkillFile[];
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
@@ -2515,6 +2566,32 @@ describe('PublishArtifactsUseCase', () => {
         },
       ];
 
+      // Carried over from a previous deployment (not part of this command's
+      // skillVersionIds): it reaches the installed list only through the
+      // unfiltered findActiveSkillVersionsByTarget history read, which never
+      // carries `files`. This is the only way to put a version into
+      // skillVersionIdsMissingFiles and exercise the batched hydration call,
+      // as opposed to the up-front fetch of skillVersion.id above.
+      const carriedSkillVersionId = createSkillVersionId(uuidv4());
+      carriedSkillVersion = skillVersionFactory({
+        id: carriedSkillVersionId,
+        name: 'Carried Skill',
+        slug: 'carried-skill',
+        version: 1,
+        files: undefined,
+      });
+
+      carriedSkillFiles = [
+        {
+          id: createSkillFileId(uuidv4()),
+          skillVersionId: carriedSkillVersionId,
+          path: 'carried.md',
+          content: 'Carried skill content',
+          permissions: '644',
+          isBase64: false,
+        },
+      ];
+
       gitRepo = {
         id: createGitRepoId(uuidv4()),
         owner: 'test-owner',
@@ -2541,9 +2618,11 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([skillVersion]);
-      mockSkillsPort.getSkillFilesByVersionIds.mockResolvedValue(
-        new Map([[skillVersion.id, skillFiles]]),
+      mockSkillsPort.getSkillVersionsByIds.mockImplementation(async (ids) =>
+        [
+          { ...skillVersion, files: skillFiles },
+          { ...carriedSkillVersion, files: carriedSkillFiles },
+        ].filter((version) => ids.includes(version.id)),
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
@@ -2555,7 +2634,7 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
+        [carriedSkillVersion],
       );
       mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
         [],
@@ -2586,11 +2665,11 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('fetches the skill files of every version in a single call', async () => {
+    it('fetches missing skill version files through a dedicated hydration call', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFilesByVersionIds).toHaveBeenCalledWith([
-        skillVersion.id,
+      expect(mockSkillsPort.getSkillVersionsByIds).toHaveBeenCalledWith([
+        carriedSkillVersion.id,
       ]);
     });
 
@@ -2604,6 +2683,10 @@ describe('PublishArtifactsUseCase', () => {
               expect.objectContaining({
                 id: skillVersion.id,
                 files: skillFiles,
+              }),
+              expect.objectContaining({
+                id: carriedSkillVersion.id,
+                files: carriedSkillFiles,
               }),
             ]),
           }),
@@ -2711,7 +2794,6 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([newSkillVersion]);
-      mockSkillsPort.getSkillFilesByVersionIds.mockResolvedValue(new Map());
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);

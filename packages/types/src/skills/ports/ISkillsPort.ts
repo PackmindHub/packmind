@@ -54,9 +54,6 @@ export interface ISkillsPort {
     organizationId: OrganizationId,
   ): Promise<Skill | null>;
   getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
-  getSkillFilesByVersionIds(
-    skillVersionIds: SkillVersionId[],
-  ): Promise<Map<SkillVersionId, SkillFile[]>>;
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
   updateSkillFileFromUI(
     command: UpdateSkillFileFromUICommand,

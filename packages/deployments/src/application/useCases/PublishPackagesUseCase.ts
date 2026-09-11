@@ -74,14 +74,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
       packages.push(pkg);
     }
 
-    // Build a map of recipeId -> latestVersionId for deduplication
-    const commandVersionCache = new Map<string, CommandVersionId>();
-    const standardVersionCache = new Map<string, StandardVersionId>();
-    const skillVersionCache = new Map<string, SkillVersionId>();
-
-    // Track per-package versions for distribution storage
-    const packageVersionsMap: PackageVersionsMap = new Map();
-
     const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
       await Promise.all([
         this.commandsPort.getLatestCommandVersions(
@@ -94,63 +86,39 @@ export class PublishPackagesUseCase implements IPublishPackages {
           packages.flatMap((pkg) => pkg.skills),
         ),
       ]);
-    for (const commandVersion of latestCommandVersions) {
-      commandVersionCache.set(
-        commandVersion.recipeId,
-        commandVersion.id as CommandVersionId,
-      );
-    }
-    for (const standardVersion of latestStandardVersions) {
-      standardVersionCache.set(
-        standardVersion.standardId,
-        standardVersion.id as StandardVersionId,
-      );
-    }
-    for (const skillVersion of latestSkillVersions) {
-      skillVersionCache.set(
-        skillVersion.skillId,
-        skillVersion.id as SkillVersionId,
-      );
-    }
+    const commandVersionIdByCommandId = new Map(
+      latestCommandVersions.map((version) => [version.recipeId, version.id]),
+    );
+    const standardVersionIdByStandardId = new Map(
+      latestStandardVersions.map((version) => [version.standardId, version.id]),
+    );
+    const skillVersionIdBySkillId = new Map(
+      latestSkillVersions.map((version) => [version.skillId, version.id]),
+    );
 
-    // Resolve versions per package and cache them
+    // Track per-package versions for distribution storage; an artifact without
+    // any version is skipped
+    const packageVersionsMap: PackageVersionsMap = new Map();
     for (const pkg of packages) {
-      const pkgCommandVersionIds: CommandVersionId[] = [];
-      const pkgStandardVersionIds: StandardVersionId[] = [];
-      const pkgSkillVersionIds: SkillVersionId[] = [];
-
-      for (const recipeId of pkg.recipes) {
-        const versionId = commandVersionCache.get(recipeId);
-        if (versionId) {
-          pkgCommandVersionIds.push(versionId);
-        }
-      }
-
-      for (const standardId of pkg.standards) {
-        const versionId = standardVersionCache.get(standardId);
-        if (versionId) {
-          pkgStandardVersionIds.push(versionId);
-        }
-      }
-
-      for (const skillId of pkg.skills) {
-        const versionId = skillVersionCache.get(skillId);
-        if (versionId) {
-          pkgSkillVersionIds.push(versionId);
-        }
-      }
-
       packageVersionsMap.set(pkg.id, {
-        recipeVersionIds: pkgCommandVersionIds,
-        standardVersionIds: pkgStandardVersionIds,
-        skillVersionIds: pkgSkillVersionIds,
+        recipeVersionIds: pkg.recipes.flatMap(
+          (recipeId) => commandVersionIdByCommandId.get(recipeId) ?? [],
+        ),
+        standardVersionIds: pkg.standards.flatMap(
+          (standardId) => standardVersionIdByStandardId.get(standardId) ?? [],
+        ),
+        skillVersionIds: pkg.skills.flatMap(
+          (skillId) => skillVersionIdBySkillId.get(skillId) ?? [],
+        ),
       });
     }
 
     // Collect unique version IDs for publishing
-    const recipeVersionIds = Array.from(commandVersionCache.values());
-    const standardVersionIds = Array.from(standardVersionCache.values());
-    const skillVersionIds = Array.from(skillVersionCache.values());
+    const recipeVersionIds = Array.from(commandVersionIdByCommandId.values());
+    const standardVersionIds = Array.from(
+      standardVersionIdByStandardId.values(),
+    );
+    const skillVersionIds = Array.from(skillVersionIdBySkillId.values());
 
     this.logger.info('Resolved package contents', {
       packagesCount: packages.length,

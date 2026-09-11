@@ -34,39 +34,6 @@ export class SkillFileService {
     }
   }
 
-  async findByVersionIds(
-    skillVersionIds: SkillVersionId[],
-  ): Promise<Map<SkillVersionId, SkillFile[]>> {
-    this.logger.info('Finding skill files by version IDs', {
-      count: skillVersionIds.length,
-    });
-
-    try {
-      const files =
-        await this.skillFileRepository.findBySkillVersionIds(skillVersionIds);
-
-      const filesByVersionId = new Map<SkillVersionId, SkillFile[]>();
-      for (const file of files) {
-        const versionFiles = filesByVersionId.get(file.skillVersionId) ?? [];
-        versionFiles.push(file);
-        filesByVersionId.set(file.skillVersionId, versionFiles);
-      }
-
-      this.logger.info('Skill files found by version IDs', {
-        requestedCount: skillVersionIds.length,
-        foundCount: files.length,
-      });
-
-      return filesByVersionId;
-    } catch (error) {
-      this.logger.error('Failed to find skill files by version IDs', {
-        count: skillVersionIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async addMany(files: SkillFile[]): Promise<SkillFile[]> {
     this.logger.info('Adding multiple skill files', { count: files.length });
 

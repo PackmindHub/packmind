@@ -713,39 +713,38 @@ describe('PublishPackagesUseCase', () => {
       });
     });
 
-    it('resolves every skill version in a single call', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        packageIds: [packageId, otherPackageId],
-        targetIds: [targetId],
+    describe('when publishing both packages', () => {
+      beforeEach(async () => {
+        await useCase.execute({
+          userId,
+          organizationId,
+          packageIds: [packageId, otherPackageId],
+          targetIds: [targetId],
+        });
       });
 
-      expect(mockSkillsPort.getLatestSkillVersions).toHaveBeenCalledTimes(1);
-    });
-
-    it('passes the deduplicated skill version ids to publishArtifacts', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        packageIds: [packageId, otherPackageId],
-        targetIds: [targetId],
+      it('resolves every skill version in a single call', () => {
+        expect(mockSkillsPort.getLatestSkillVersions).toHaveBeenCalledTimes(1);
       });
 
-      expect(
-        mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
-      ).toEqual([firstSkillVersion.id, secondSkillVersion.id]);
+      it('passes the deduplicated skill version ids to publishArtifacts', () => {
+        expect(
+          mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
+        ).toEqual([firstSkillVersion.id, secondSkillVersion.id]);
+      });
     });
 
     describe('when a skill has no version', () => {
-      it('omits it without failing the publish', async () => {
+      beforeEach(async () => {
         await useCase.execute({
           userId,
           organizationId,
           packageIds: [otherPackageId],
           targetIds: [targetId],
         });
+      });
 
+      it('omits it without failing the publish', () => {
         expect(
           mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
         ).toEqual([firstSkillVersion.id]);

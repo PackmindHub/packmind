@@ -1,8 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ISkillVersionRepository } from '../../domain/repositories/ISkillVersionRepository';
+import { ISkillFileRepository } from '../../domain/repositories/ISkillFileRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createSkillVersionId,
+  SkillFile,
   SkillId,
   SkillVersion,
   SkillVersionId,
@@ -30,6 +32,7 @@ export type CreateSkillVersionData = {
 export class SkillVersionService {
   constructor(
     private readonly skillVersionRepository: ISkillVersionRepository,
+    private readonly skillFileRepository: ISkillFileRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('SkillVersionService initialized');
@@ -167,15 +170,28 @@ export class SkillVersionService {
     });
 
     try {
-      const versions =
-        await this.skillVersionRepository.findByIds(skillVersionIds);
+      const [versions, files] = await Promise.all([
+        this.skillVersionRepository.findByIds(skillVersionIds),
+        this.skillFileRepository.findBySkillVersionIds(skillVersionIds),
+      ]);
+
+      const filesByVersionId = new Map<SkillVersionId, SkillFile[]>();
+      for (const file of files) {
+        const versionFiles = filesByVersionId.get(file.skillVersionId) ?? [];
+        versionFiles.push(file);
+        filesByVersionId.set(file.skillVersionId, versionFiles);
+      }
 
       this.logger.info('Skill versions retrieved by IDs successfully', {
         requestedCount: skillVersionIds.length,
         foundCount: versions.length,
+        filesCount: files.length,
       });
 
-      return versions;
+      return versions.map((version) => ({
+        ...version,
+        files: filesByVersionId.get(version.id) ?? [],
+      }));
     } catch (error) {
       this.logger.error('Failed to get skill versions by IDs', {
         count: skillVersionIds.length,

@@ -221,25 +221,34 @@ describe('StandardVersionRepository', () => {
     });
 
     it('issues a single query for several version ids', async () => {
-      const spy = jest.spyOn(fixture.datasource, 'createQueryRunner');
-      spy.mockClear();
+      fixture.queries.reset();
 
       await standardVersionRepository.findByIds([
         firstVersion.id,
         secondVersion.id,
       ]);
 
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(fixture.queries.countMatching(/from "standard_versions"/i)).toBe(
+        1,
+      );
     });
 
     describe('when no id is given', () => {
-      it('returns nothing without querying', async () => {
-        const spy = jest.spyOn(fixture.datasource, 'createQueryRunner');
-        spy.mockClear();
+      let versions: StandardVersion[];
 
-        await standardVersionRepository.findByIds([]);
+      beforeEach(async () => {
+        fixture.queries.reset();
+        versions = await standardVersionRepository.findByIds([]);
+      });
 
-        expect(spy).not.toHaveBeenCalled();
+      it('returns nothing', () => {
+        expect(versions).toEqual([]);
+      });
+
+      it('issues no query', () => {
+        expect(fixture.queries.countMatching(/from "standard_versions"/i)).toBe(
+          0,
+        );
       });
     });
   });

@@ -17,6 +17,7 @@ export class SkillsServices {
     );
     this.skillVersionService = new SkillVersionService(
       this.skillsRepositories.getSkillVersionRepository(),
+      this.skillsRepositories.getSkillFileRepository(),
     );
     this.skillFileService = new SkillFileService(
       this.skillsRepositories.getSkillFileRepository(),

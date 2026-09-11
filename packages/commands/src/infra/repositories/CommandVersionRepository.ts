@@ -2,13 +2,12 @@ import { ICommandVersionRepository } from '../../domain/repositories/ICommandVer
 import { CommandVersionSchema } from '../schemas/CommandVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import {
-  CommandId,
-  CommandVersion,
-  CommandVersionId,
-  SpaceId,
-} from '@packmind/types';
+  localDataSource,
+  AbstractRepository,
+  getErrorMessage,
+} from '@packmind/node-utils';
+import { CommandId, CommandVersion, SpaceId } from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
 
@@ -55,7 +54,7 @@ export class CommandVersionRepository
     } catch (error) {
       this.logger.error('Failed to find recipe versions by recipe ID', {
         recipeId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -95,44 +94,7 @@ export class CommandVersionRepository
     } catch (error) {
       this.logger.error('Failed to find latest recipe versions by recipe IDs', {
         count: uniqueCommandIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async findByIds(
-    commandVersionIds: CommandVersionId[],
-  ): Promise<CommandVersion[]> {
-    const uniqueVersionIds = [...new Set(commandVersionIds)];
-
-    if (uniqueVersionIds.length === 0) {
-      this.logger.info('No recipe version IDs provided to findByIds');
-      return [];
-    }
-
-    this.logger.info('Finding recipe versions by IDs', {
-      count: uniqueVersionIds.length,
-    });
-
-    try {
-      const versions = await this.repository
-        .createQueryBuilder('recipeVersion')
-        .where('recipeVersion.id IN (:...commandVersionIds)', {
-          commandVersionIds: uniqueVersionIds as string[],
-        })
-        .getMany();
-
-      this.logger.info('Recipe versions found by IDs', {
-        requestedCount: uniqueVersionIds.length,
-        foundCount: versions.length,
-      });
-
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to find recipe versions by IDs', {
-        count: uniqueVersionIds.length,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -188,7 +150,7 @@ export class CommandVersionRepository
         {
           recipeId,
           version,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
