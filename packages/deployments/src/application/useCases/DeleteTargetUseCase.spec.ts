@@ -3,7 +3,8 @@ import {
   DeleteTargetCommand,
   IGitPort,
   GitProviderMissingTokenError,
-  GitProviderWithoutToken,
+  GitProviderListItem,
+  GitProviderVendors,
   Target,
   createTargetId,
   createGitRepoId,
@@ -11,6 +12,7 @@ import {
   createUserId,
   createOrganizationId,
 } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/git/test';
 import { TargetService } from '../services/TargetService';
 
 describe('DeleteTargetUseCase', () => {
@@ -31,30 +33,34 @@ describe('DeleteTargetUseCase', () => {
     gitRepoId,
   };
 
-  const mockRepo = {
+  const mockRepo = gitRepoFactory({
     id: gitRepoId,
     owner: 'owner',
     repo: 'repo',
     branch: 'main',
     providerId,
-  };
+  });
 
-  const mockProviderWithToken: GitProviderWithoutToken = {
+  const mockProviderWithToken: GitProviderListItem = {
     id: providerId,
-    source: 'github',
+    source: GitProviderVendors.github,
     organizationId,
     url: 'https://github.com',
     authMethod: 'token',
+    displayName: 'github-provider',
     hasAuth: true,
+    lastDistributionAt: null,
   };
 
-  const mockProviderWithoutToken: GitProviderWithoutToken = {
+  const mockProviderWithoutToken: GitProviderListItem = {
     id: providerId,
-    source: 'github',
+    source: GitProviderVendors.github,
     organizationId,
     url: 'https://github.com',
     authMethod: 'token',
+    displayName: 'github-provider',
     hasAuth: false,
+    lastDistributionAt: null,
   };
 
   beforeEach(() => {

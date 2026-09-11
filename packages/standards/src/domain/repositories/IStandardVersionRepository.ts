@@ -6,7 +6,6 @@ import {
 } from '@packmind/types';
 
 export interface IStandardVersionRepository extends IRepository<StandardVersion> {
-  list(): Promise<StandardVersion[]>;
   findByStandardId(standardId: StandardId): Promise<StandardVersion[]>;
   findLatestByStandardId(
     standardId: StandardId,

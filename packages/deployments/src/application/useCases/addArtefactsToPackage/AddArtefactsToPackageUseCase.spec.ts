@@ -31,6 +31,7 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
 
 describe('AddArtefactsToPackageUseCase', () => {
   let useCase: AddArtefactsToPackageUseCase;
@@ -75,14 +76,15 @@ describe('AddArtefactsToPackageUseCase', () => {
     slug: 'test-org',
   });
 
-  const buildSpace = (): Space => ({
-    id: spaceId,
-    slug: 'test-space',
-    name: 'Test Space',
-    organizationId,
-    type: SpaceType.open,
-    isDefaultSpace: true,
-  });
+  const buildSpace = (): Space =>
+    spaceFactory({
+      id: spaceId,
+      slug: 'test-space',
+      name: 'Test Space',
+      organizationId,
+      type: SpaceType.open,
+      isDefaultSpace: true,
+    });
 
   const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command => ({
     id,
@@ -599,14 +601,14 @@ describe('AddArtefactsToPackageUseCase', () => {
       const differentOrgId = createOrganizationId(uuidv4());
 
       beforeEach(() => {
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId: differentOrgId,
           type: SpaceType.open,
           isDefaultSpace: true,
-        };
+        });
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 

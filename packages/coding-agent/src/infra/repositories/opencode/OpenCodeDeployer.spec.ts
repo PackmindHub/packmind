@@ -15,8 +15,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { commandFactory } from '@packmind/commands/test';
-import { standardFactory } from '@packmind/standards/test';
+import {
+  standardFactory,
+  standardVersionFactory,
+} from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('OpenCodeDeployer', () => {
@@ -34,13 +38,13 @@ describe('OpenCodeDeployer', () => {
       gitRepoId: createGitRepoId(uuidv4()),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   describe('deployRecipes', () => {
@@ -327,7 +331,7 @@ describe('OpenCodeDeployer', () => {
           name: 'My Standard',
           slug: 'my-standard',
         });
-        const standardVersion: StandardVersion = {
+        const standardVersion = standardVersionFactory({
           id: createStandardVersionId('sv-1'),
           standardId: standard.id,
           name: standard.name,
@@ -335,7 +339,7 @@ describe('OpenCodeDeployer', () => {
           description: 'Standard description',
           version: 1,
           userId: createUserId('user-1'),
-        };
+        });
 
         const skillVersion = skillVersionFactory({
           name: 'my-skill',

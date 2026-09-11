@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createUserId, createUserMetadataId } from '@packmind/types';
+import {
+  createUserId,
+  createUserMetadataId,
+  UserMetadata,
+} from '@packmind/types';
 import { IUserMetadataRepository } from '../../domain/repositories/IUserMetadataRepository';
 import { UserMetadataService } from './UserMetadataService';
 
@@ -47,7 +51,7 @@ describe('UserMetadataService', () => {
 
     describe('when user has metadata without this provider', () => {
       it('appends the provider', async () => {
-        const existing = {
+        const existing: UserMetadata = {
           id: createUserMetadataId('meta-1'),
           userId,
           onboardingCompleted: true,
@@ -68,7 +72,7 @@ describe('UserMetadataService', () => {
 
     describe('when user already has this provider', () => {
       it('does not duplicate the provider', async () => {
-        const existing = {
+        const existing: UserMetadata = {
           id: createUserMetadataId('meta-1'),
           userId,
           onboardingCompleted: true,

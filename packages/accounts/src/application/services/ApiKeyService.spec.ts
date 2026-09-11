@@ -2,6 +2,7 @@ import { ApiKeyService, IJwtService } from './ApiKeyService';
 import { User, createUserId } from '@packmind/types';
 import { Organization, createOrganizationId } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { organizationFactory, userFactory } from '../../../test';
 
 // Mock JWT service
 class MockJwtService implements IJwtService {
@@ -75,11 +76,9 @@ describe('ApiKeyService', () => {
 
     const userId = createUserId('user-123');
 
-    mockUser = {
+    mockUser = userFactory({
       id: userId,
-      email: 'testuser@packmind.com',
       passwordHash: 'hash',
-      active: true,
       memberships: [
         {
           userId,
@@ -87,13 +86,12 @@ describe('ApiKeyService', () => {
           role: 'admin',
         },
       ],
-    };
+    });
 
-    mockOrganization = {
+    mockOrganization = organizationFactory({
       id: createOrganizationId('org-456'),
-      name: 'Test Organization',
       slug: 'test-org',
-    };
+    });
   });
 
   describe('generateApiKey', () => {

@@ -12,6 +12,7 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   PackmindLockFile,
+  PackmindLockFileEntry,
   Command,
   CommandVersion,
   Skill,
@@ -43,24 +44,27 @@ import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 const createSpaceMembership = (
   userId: string,
@@ -105,23 +109,23 @@ describe('InstallPackagesUseCase', () => {
       slug: 'test-org',
     };
 
-    publicSpace = {
+    publicSpace = spaceFactory({
       id: createSpaceId('public-space-id'),
       name: 'Public Space',
       slug: 'public',
       type: SpaceType.open,
       organizationId,
       isDefaultSpace: false,
-    };
+    });
 
-    privateSpace = {
+    privateSpace = spaceFactory({
       id: createSpaceId('private-space-id'),
       name: 'Private Space',
       slug: 'private',
       type: SpaceType.restricted,
       organizationId,
       isDefaultSpace: false,
-    };
+    });
 
     publicPackage = {
       id: createPackageId(uuidv4()),
@@ -419,6 +423,7 @@ describe('InstallPackagesUseCase', () => {
       spaceId: 'private-space-id',
       packageIds: ['private-pkg-id'],
       files: [],
+      source: 'user' as const,
     };
 
     const publicArtifactEntry = {
@@ -429,6 +434,7 @@ describe('InstallPackagesUseCase', () => {
       spaceId: 'public-space-id',
       packageIds: ['public-pkg-id'],
       files: [],
+      source: 'user' as const,
     };
 
     beforeEach(() => {
@@ -546,6 +552,7 @@ describe('InstallPackagesUseCase', () => {
               spaceId: 'private-space-id',
               packageIds: ['private-pkg-id'],
               files: [],
+              source: 'user',
             },
           },
         },
@@ -586,9 +593,9 @@ describe('InstallPackagesUseCase', () => {
   });
 
   describe('when a package is removed', () => {
-    const removedArtifactEntry = {
+    const removedArtifactEntry: PackmindLockFileEntry = {
       name: 'Removed Standard',
-      type: 'standard' as const,
+      type: 'standard',
       id: 'removed-standard-id',
       version: 1,
       spaceId: 'public-space-id',
@@ -596,9 +603,10 @@ describe('InstallPackagesUseCase', () => {
       files: [
         {
           path: '.cursor/rules/removed-standard.mdc',
-          agent: CodingAgents.cursor,
+          agent: 'cursor',
         },
       ],
+      source: 'user',
     };
 
     beforeEach(() => {
@@ -633,9 +641,9 @@ describe('InstallPackagesUseCase', () => {
     });
 
     describe('when user has no access to the removed package space', () => {
-      const inaccessibleRemovedArtifact = {
+      const inaccessibleRemovedArtifact: PackmindLockFileEntry = {
         name: 'Inaccessible Removed Standard',
-        type: 'standard' as const,
+        type: 'standard',
         id: 'inaccessible-removed-standard-id',
         version: 1,
         spaceId: 'private-space-id',
@@ -643,9 +651,10 @@ describe('InstallPackagesUseCase', () => {
         files: [
           {
             path: '.cursor/rules/inaccessible-removed-standard.mdc',
-            agent: CodingAgents.cursor,
+            agent: 'cursor',
           },
         ],
+        source: 'user',
       };
 
       beforeEach(() => {

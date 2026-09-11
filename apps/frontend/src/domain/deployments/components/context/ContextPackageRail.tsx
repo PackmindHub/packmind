@@ -1017,9 +1017,11 @@ function AttentionMark({
 /**
  * A component the query reached, under the package that carries it.
  *
- * A link to its detail page, which is where the rows of the pane go too: the
- * same object reached from two places has to behave the same way, and until the
- * pane can show a component itself, that page is where one is read.
+ * Its href was rewritten to point at the pane, by the memo that built these
+ * rows, so a search result opens where a row of the pane opens: the same object
+ * reached from two places has to behave the same way. Rewritten there and not
+ * here because the rule is the surface's, and this row only renders what it is
+ * handed.
  */
 function ComponentMatchRow({
   component,

@@ -1,5 +1,10 @@
 import { useCallback, useMemo, type MouseEvent } from 'react';
-import { useNavigate, useOutletContext, useParams } from 'react-router';
+import {
+  useNavigate,
+  useOutletContext,
+  useParams,
+  type LoaderFunctionArgs,
+} from 'react-router';
 import { PMVStack } from '@packmind/ui';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
@@ -10,9 +15,27 @@ import {
   SKILL_MD_FILENAME,
 } from '../../src/domain/skills/utils/skillMdUtils';
 import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLinkUtils';
-import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { useGetSpaceMembersQuery } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { useCanEditSkillFiles } from '../../src/domain/skills/hooks/useCanEditSkillFiles';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
+import { redirectSkillToContextComponent } from '../../src/shared/data/redirectToContext';
+
+/**
+ * One file of a skill, which in the plugin-first navigation is read in the
+ * Context pane. This is the address people actually hold: the skill's index
+ * sends them here, so `/skills/x/files/setup.md` is what gets copied out of the
+ * address bar.
+ *
+ * SKILL.md carries across as no file at all, which is the same rule the pane
+ * follows and the mirror of the default below. It is not one of the skill's
+ * files, it is the skill, and the address that shows it is the one naming none.
+ */
+export async function clientLoader(args: LoaderFunctionArgs) {
+  const requested = args.params['*'];
+  return redirectSkillToContextComponent(
+    args,
+    !requested || requested === SKILL_MD_FILENAME ? null : requested,
+  );
+}
 
 export default function SkillFilesRouteModule() {
   const {
@@ -29,19 +52,7 @@ export default function SkillFilesRouteModule() {
   const navigate = useNavigate();
   const { skill, files, latestVersion } =
     useOutletContext<ISkillDetailsOutletContext>();
-  const { user, organization } = useAuthContext();
-  const { data: spaceMembersData } = useGetSpaceMembersQuery(skill.spaceId);
-
-  // Client-side gate for UX only — mirrors UpdateSkillFileFromUIUseCase's
-  // permission check (space admin, org admin, or the skill's creator). The
-  // server remains the source of truth and returns 403 if this is ever wrong.
-  const currentUserMember = spaceMembersData?.members?.find(
-    (member) => member.userId === user?.id,
-  );
-  const isSpaceAdmin = currentUserMember?.role === 'admin';
-  const isOrgAdmin = organization?.role === 'admin';
-  const isCreator = skill.userId === user?.id;
-  const canEditSkillFiles = isSpaceAdmin || isOrgAdmin || isCreator;
+  const canEditSkillFiles = useCanEditSkillFiles(skill);
 
   const skillMdFile = useMemo(
     () => buildVirtualSkillMdFile(latestVersion),

@@ -5,19 +5,22 @@ import {
 } from '@packmind/types';
 
 import { SkillsGatewayApi, UPLOAD_SKILL_TIMEOUT_MS } from './SkillsGatewayApi';
+import { PackmindError } from '../../../../services/api/errors/PackmindError';
 import type { Mock } from 'vitest';
 
 const mockApiPost = vi.fn();
+const mockApiGet = vi.fn();
 
 vi.mock('../../../../shared/PackmindGateway', () => {
   return {
     PackmindGateway: vi.fn().mockImplementation(function (
-      this: { _endpoint: string; _api: { post: Mock } },
+      this: { _endpoint: string; _api: { post: Mock; get: Mock } },
       endpoint: string,
     ) {
       this._endpoint = endpoint;
       this._api = {
         post: mockApiPost,
+        get: mockApiGet,
       };
     }),
   };
@@ -40,6 +43,8 @@ describe('SkillsGatewayApi', () => {
   beforeEach(() => {
     mockApiPost.mockReset();
     mockApiPost.mockResolvedValue({});
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValue({});
     gateway = new SkillsGatewayApi();
   });
 
@@ -58,6 +63,44 @@ describe('SkillsGatewayApi', () => {
 
     it('allows more time than a plain JSON round-trip', () => {
       expect(UPLOAD_SKILL_TIMEOUT_MS).toBeGreaterThan(10_000);
+    });
+  });
+
+  describe('getSkillBySlug', () => {
+    describe('when the slug names no skill in this space', () => {
+      beforeEach(() => {
+        mockApiGet.mockRejectedValue(
+          new PackmindError({
+            data: { message: 'Skill with slug "commit" not found' },
+            status: 404,
+            statusText: 'Not Found',
+          }),
+        );
+      });
+
+      it('answers null', async () => {
+        await expect(
+          gateway.getSkillBySlug(organizationId, spaceId, 'commit'),
+        ).resolves.toBeNull();
+      });
+    });
+
+    describe('when the request fails for any other reason', () => {
+      beforeEach(() => {
+        mockApiGet.mockRejectedValue(
+          new PackmindError({
+            data: { message: 'Something broke' },
+            status: 500,
+            statusText: 'Internal Server Error',
+          }),
+        );
+      });
+
+      it('lets the failure through', async () => {
+        await expect(
+          gateway.getSkillBySlug(organizationId, spaceId, 'commit'),
+        ).rejects.toBeInstanceOf(PackmindError);
+      });
     });
   });
 });

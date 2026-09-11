@@ -4,6 +4,7 @@ import { IRenderModeConfigurationRepository } from '../../domain/repositories/IR
 import { stubLogger } from '@packmind/test-utils';
 import { OrganizationId, createOrganizationId } from '@packmind/types';
 import {
+  CodingAgents,
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
   RenderModeConfiguration,

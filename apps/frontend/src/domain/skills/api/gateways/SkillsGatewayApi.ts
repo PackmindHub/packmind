@@ -12,6 +12,7 @@ import {
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISkillsGateway } from './ISkillsGateway';
+import { isPackmindNotFoundError } from '../../../../services/api/errors/PackmindError';
 
 /**
  * A skill upload carries every one of its files inline, so it is orders of
@@ -41,14 +42,30 @@ export class SkillsGatewayApi
     );
   }
 
+  /**
+   * A slug naming no skill in this space answers null, which is what the return
+   * type has always promised and what both callers already branch on.
+   *
+   * `skills` rows are per-space, so a link copied out of one space is a 404 in
+   * every other one. That is the answer to the question, not a failure to
+   * answer it: throwing sent the route's clientLoader past its own not-found
+   * branch and into the error boundary, which can only offer `Go Back`.
+   */
   async getSkillBySlug(
     organizationId: OrganizationId,
     spaceId: SpaceId,
     slug: string,
   ): Promise<SkillWithFiles | null> {
-    return this._api.get<SkillWithFiles | null>(
-      `/organizations/${organizationId}/spaces/${spaceId}/skills/${slug}`,
-    );
+    try {
+      return await this._api.get<SkillWithFiles>(
+        `/organizations/${organizationId}/spaces/${spaceId}/skills/${slug}`,
+      );
+    } catch (error) {
+      if (isPackmindNotFoundError(error)) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async getSkillWithFilesById(

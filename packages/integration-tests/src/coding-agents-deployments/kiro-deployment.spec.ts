@@ -103,7 +103,7 @@ describe('Kiro Deployment Integration', () => {
       content: 'This is test recipe content for Kiro deployment',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     scopedStandard = await testApp.standardsHexa.getAdapter().createStandard({
@@ -137,6 +137,7 @@ describe('Kiro Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 

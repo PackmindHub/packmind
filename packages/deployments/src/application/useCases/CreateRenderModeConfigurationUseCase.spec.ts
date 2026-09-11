@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
+import { userFactory } from '@packmind/accounts/test';
 
 const createMembership = (
   userId: string,
@@ -27,13 +28,14 @@ const createMembership = (
 const createUser = (
   userId: string,
   membership: UserOrganizationMembership,
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [membership],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [membership],
+  });
 
 describe('CreateRenderModeConfigurationUseCase', () => {
   let service: jest.Mocked<RenderModeConfigurationService>;

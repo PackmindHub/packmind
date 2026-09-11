@@ -28,13 +28,20 @@ import {
   componentEditHref,
   componentEntryHref,
   componentFileHref,
+  componentRuleHref,
+  contextComponentHref,
   contextPackageHref,
   packageDetailHref,
   packageDetailParams,
   selectDetailComponent,
+  selectRuleTab,
   selectSkillFile,
+  selectStandardRule,
   sortFilesByPath,
   isDefaultTab,
+  isRuleOnlyTab,
+  LINTER_TAB,
+  EXAMPLES_TAB,
   selectTab,
   sortRulesByContent,
   withPaneDetailHref,
@@ -203,6 +210,39 @@ describe('contextPackageHref', () => {
     it('escapes it', () => {
       expect(contextPackageHref(TARGET, PACKAGE, 'a b&c')).toBe(
         '/org/acme/space/core/context?package=pkg-1&component=a+b%26c',
+      );
+    });
+  });
+});
+
+describe('contextComponentHref', () => {
+  it('names the surface and the component', () => {
+    expect(contextComponentHref(TARGET, 'standard-1')).toBe(
+      '/org/acme/space/core/context?component=standard-1',
+    );
+  });
+
+  /*
+    The addresses this replaces name no package either, and the surface resolves
+    one from the component. Naming one here would pick a package for a reader
+    who never asked for it.
+  */
+  it('names no package', () => {
+    expect(contextComponentHref(TARGET, 'standard-1')).not.toContain('package');
+  });
+
+  describe('when a file is asked for', () => {
+    it('opens the component on that file', () => {
+      expect(contextComponentHref(TARGET, 'skill-1', 'setup/install.md')).toBe(
+        '/org/acme/space/core/context?component=skill-1&file=setup%2Finstall.md',
+      );
+    });
+  });
+
+  describe('when no file is asked for', () => {
+    it('leaves the file out of the address', () => {
+      expect(contextComponentHref(TARGET, 'skill-1', null)).toBe(
+        '/org/acme/space/core/context?component=skill-1',
       );
     });
   });
@@ -412,6 +452,26 @@ describe('componentFileHref', () => {
   });
 });
 
+describe('componentRuleHref', () => {
+  it('names the rule and leaves the rest alone', () => {
+    expect(
+      componentRuleHref(
+        new URLSearchParams('package=pkg-1&component=standard-1'),
+        'rule-1',
+      ),
+    ).toBe('?package=pkg-1&component=standard-1&rule=rule-1');
+  });
+
+  it('replaces the rule already open', () => {
+    expect(
+      componentRuleHref(
+        new URLSearchParams('component=standard-1&rule=rule-1'),
+        'rule-2',
+      ),
+    ).toBe('?component=standard-1&rule=rule-2');
+  });
+});
+
 describe('componentEntryHref', () => {
   it('keeps the component and drops the file', () => {
     expect(
@@ -419,6 +479,80 @@ describe('componentEntryHref', () => {
         new URLSearchParams('package=pkg-1&component=skill-1&file=a.md'),
       ),
     ).toBe('?package=pkg-1&component=skill-1');
+  });
+
+  it('drops the rule the same way', () => {
+    expect(
+      componentEntryHref(
+        new URLSearchParams('package=pkg-1&component=standard-1&rule=rule-1'),
+      ),
+    ).toBe('?package=pkg-1&component=standard-1');
+  });
+
+  describe('when the rule was being read on a tab only a rule has', () => {
+    it('drops that tab with it', () => {
+      expect(
+        componentEntryHref(
+          new URLSearchParams('component=standard-1&rule=rule-1&tab=linter'),
+        ),
+      ).toBe('?component=standard-1');
+    });
+  });
+
+  describe('when the tab belongs to the component rather than the rule', () => {
+    it('keeps it', () => {
+      expect(
+        componentEntryHref(
+          new URLSearchParams('component=skill-1&file=a.md&tab=distribution'),
+        ),
+      ).toBe('?component=skill-1&tab=distribution');
+    });
+  });
+});
+
+describe('isRuleOnlyTab', () => {
+  it('says so of the linter', () => {
+    expect(isRuleOnlyTab(LINTER_TAB)).toBe(true);
+  });
+
+  it('says otherwise of the examples, which are the default', () => {
+    expect(isRuleOnlyTab(EXAMPLES_TAB)).toBe(false);
+  });
+});
+
+describe('selectRuleTab', () => {
+  it('answers with the linter when the address asks for it', () => {
+    expect(selectRuleTab(LINTER_TAB)).toBe(LINTER_TAB);
+  });
+
+  it('answers with the examples when the address says nothing', () => {
+    expect(selectRuleTab(null)).toBe(EXAMPLES_TAB);
+  });
+
+  describe('when the address carries a tab of another depth', () => {
+    it('reads it as the examples rather than as an error', () => {
+      expect(selectRuleTab(DISTRIBUTION_TAB)).toBe(EXAMPLES_TAB);
+    });
+  });
+});
+
+describe('selectStandardRule', () => {
+  const rules = [{ id: 'rule-1' }, { id: 'rule-2' }];
+
+  it('answers with the rule the address names', () => {
+    expect(selectStandardRule(rules, 'rule-2')).toEqual({ id: 'rule-2' });
+  });
+
+  describe('when the address asks for nothing', () => {
+    it('answers with none, which shows the standard', () => {
+      expect(selectStandardRule(rules, null)).toBeNull();
+    });
+  });
+
+  describe('when the rule left the standard', () => {
+    it('falls back to the standard rather than to an empty frame', () => {
+      expect(selectStandardRule(rules, 'rule-9')).toBeNull();
+    });
   });
 });
 

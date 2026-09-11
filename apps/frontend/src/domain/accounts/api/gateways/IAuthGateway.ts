@@ -8,6 +8,7 @@ import {
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
   CreateCliLoginCodeResponse,
+  PackmindEdition,
 } from '@packmind/types';
 import {
   PublicGateway,
@@ -27,7 +28,7 @@ export interface SignOutResponse {
 export type GithubAppMode = 'on-prem' | 'shared';
 
 type EditionFlag = {
-  edition: 'cloud' | 'oss';
+  edition: PackmindEdition;
 };
 
 export type MeResponse =

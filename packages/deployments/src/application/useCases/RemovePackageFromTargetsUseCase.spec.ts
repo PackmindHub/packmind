@@ -8,6 +8,8 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { stubLogger } from '@packmind/test-utils';
+import { gitRepoFactory } from '@packmind/git/test';
+import { packageFactory } from '../../../test';
 import {
   createPackageId,
   createTargetId,
@@ -24,6 +26,7 @@ import {
   createStandardId,
   createSkillId,
   RemovePackageFromTargetsCommand,
+  DeleteItemType,
   Package,
   Target,
   Distribution,
@@ -61,7 +64,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
   const spaceId = createSpaceId('space-123');
   const gitRepoId = createGitRepoId('repo-123');
 
-  const mockPackage: Package = {
+  const mockPackage: Package = packageFactory({
     id: packageId,
     name: 'Test Package',
     slug: 'test-package',
@@ -70,7 +73,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
     createdBy: userId,
     recipes: [],
     standards: [],
-  };
+  });
 
   const mockTarget: Target = {
     id: targetIds[0],
@@ -86,13 +89,13 @@ describe('RemovePackageFromTargetsUseCase', () => {
     gitRepoId,
   };
 
-  const mockGitRepo: GitRepo = {
+  const mockGitRepo: GitRepo = gitRepoFactory({
     branch: '',
     id: gitRepoId,
     owner: 'test-owner',
     repo: 'test-repo',
     providerId: createGitProviderId('provider-123'),
-  };
+  });
 
   beforeEach(() => {
     mockPackageService = {
@@ -355,7 +358,12 @@ describe('RemovePackageFromTargetsUseCase', () => {
         });
 
         describe('when there are files to delete', () => {
-          const deleteFiles = [{ path: '.packmind/recipes/deleted-recipe.md' }];
+          const deleteFiles = [
+            {
+              path: '.packmind/recipes/deleted-recipe.md',
+              type: DeleteItemType.File,
+            },
+          ];
 
           beforeEach(() => {
             mockCodingAgentPort.renderArtifacts.mockResolvedValue({
@@ -372,7 +380,12 @@ describe('RemovePackageFromTargetsUseCase', () => {
               mockGitRepo,
               expect.any(Array),
               expect.any(String),
-              [{ path: 'src/.packmind/recipes/deleted-recipe.md' }],
+              [
+                {
+                  path: 'src/.packmind/recipes/deleted-recipe.md',
+                  type: DeleteItemType.File,
+                },
+              ],
             );
           });
         });

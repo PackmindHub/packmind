@@ -13,7 +13,11 @@ import {
 } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
-import { gitCommitFactory } from '../../../../test/gitCommitFactory';
+import {
+  gitCommitFactory,
+  gitProviderFactory,
+  gitRepoFactory,
+} from '../../../../test';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/types';
@@ -76,22 +80,22 @@ describe('CommitToGitUseCase', () => {
   });
 
   describe('commitToGit', () => {
-    const mockGitProvider: GitProvider = {
+    const mockGitProvider: GitProvider = gitProviderFactory({
       id: createGitProviderId('provider-id'),
       source: GitProviderVendors.github,
       organizationId: createOrganizationId('org-id'),
       url: null,
       token: 'github-token',
       authMethod: 'token',
-    };
+    });
 
-    const mockGitRepo: GitRepo = {
+    const mockGitRepo: GitRepo = gitRepoFactory({
       id: createGitRepoId('repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       branch: 'main',
       providerId: createGitProviderId('provider-id'),
-    };
+    });
 
     describe('when committing multiple files to git', () => {
       const files = [

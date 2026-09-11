@@ -1,3 +1,4 @@
+import { userFactory } from '@packmind/accounts/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -17,6 +18,7 @@ import {
 import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
+import { skillFactory } from '../../../../test/skillFactory';
 import { GetSkillWithFilesUseCase } from './GetSkillWithFilesUseCase';
 
 describe('GetSkillWithFilesUseCase', () => {
@@ -32,13 +34,11 @@ describe('GetSkillWithFilesUseCase', () => {
   const skillId = createSkillId('skill-123');
   const skillVersionId = createSkillVersionId('version-123');
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: userId,
     email: 'test@example.com',
-    passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
-    active: true,
-  };
+  });
 
   const mockOrganization: Organization = {
     id: organizationId,
@@ -46,7 +46,7 @@ describe('GetSkillWithFilesUseCase', () => {
     slug: 'test-org',
   };
 
-  const mockSkill: Skill = {
+  const mockSkill: Skill = skillFactory({
     id: skillId,
     name: 'test-skill',
     slug: 'test-skill',
@@ -55,7 +55,7 @@ describe('GetSkillWithFilesUseCase', () => {
     version: 1,
     userId,
     spaceId,
-  };
+  });
 
   const mockSkillVersion: SkillVersion = {
     id: skillVersionId,
@@ -75,6 +75,7 @@ describe('GetSkillWithFilesUseCase', () => {
       path: 'SKILL.md',
       content: '---\nname: test-skill\n---\n\n# Test Skill',
       permissions: 'rw-r--r--',
+      isBase64: false,
     },
     {
       id: createSkillFileId('file-2'),
@@ -82,6 +83,7 @@ describe('GetSkillWithFilesUseCase', () => {
       path: 'helpers/utils.md',
       content: '# Helper utilities',
       permissions: 'rw-r--r--',
+      isBase64: false,
     },
   ];
 

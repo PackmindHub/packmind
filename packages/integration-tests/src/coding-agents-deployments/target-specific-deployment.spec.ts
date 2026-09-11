@@ -2,6 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
+import { gitRepoFactory } from '@packmind/git/test';
 import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
@@ -103,13 +104,13 @@ describe('Target-Specific Deployment Integration', () => {
     space = foundSpace;
 
     // Create test git repository (ide-plugins)
-    gitRepo = {
+    gitRepo = gitRepoFactory({
       id: createGitRepoId(uuidv4()),
       owner: 'PackmindHub',
       repo: 'ide-plugins',
       branch: 'main',
       providerId: createGitProviderId('github-provider-id'),
-    };
+    });
 
     // Create test recipe about JetBrains services
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
@@ -137,7 +138,7 @@ class MyService {
 `,
       userId: user.id,
       organizationId: organization.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create test standard about code quality
@@ -960,7 +961,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
 `,
             userId: user.id,
             organizationId: organization.id,
-            spaceId: space.id.toString(),
+            spaceId: space.id,
           });
 
         const tddCommandVersions: CommandVersion[] = [

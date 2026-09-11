@@ -5,6 +5,7 @@ import {
   resolveSpaceNavMode,
   SpaceNavModeProvider,
   useSpaceNavMode,
+  withNavMode,
 } from './SpaceNavModeContext';
 
 const IN_BETA = 'someone@packmind.com';
@@ -133,6 +134,33 @@ describe('SpaceNavModeProvider', () => {
 
       expect(result.current.mode).toBe('plugin-first');
       expect(localStorage.getItem(CHOICE_KEY)).toBe('plugin-first');
+    });
+  });
+});
+
+describe('withNavMode', () => {
+  it('leaves an address alone when nothing was pinned', () => {
+    expect(withNavMode('/org/acme/space/core/context', '')).toBe(
+      '/org/acme/space/core/context',
+    );
+  });
+
+  describe('when a mode was pinned', () => {
+    it('carries it onto an address with no query of its own', () => {
+      expect(
+        withNavMode('/org/acme/space/core/context', '?nav=plugin-first'),
+      ).toBe('/org/acme/space/core/context?nav=plugin-first');
+    });
+
+    it('carries it onto an address that already has one', () => {
+      expect(
+        withNavMode(
+          '/org/acme/space/core/context?component=standard-1',
+          '?nav=plugin-first&tab=distribution',
+        ),
+      ).toBe(
+        '/org/acme/space/core/context?component=standard-1&nav=plugin-first',
+      );
     });
   });
 });

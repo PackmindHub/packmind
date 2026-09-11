@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const STEERING_DIR = '.kiro/steering/';
@@ -71,13 +72,13 @@ describe('KiroDeployer', () => {
       gitRepoId: createGitRepoId(uuidv4()),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   afterEach(() => {
@@ -92,7 +93,7 @@ describe('KiroDeployer', () => {
 
   describe('deployStandards', () => {
     describe('when the standard has a scope', () => {
-      let content: string;
+      let content: string | undefined;
       let path: string;
 
       beforeEach(async () => {
@@ -143,7 +144,7 @@ describe('KiroDeployer', () => {
     });
 
     describe('when the standard has no scope', () => {
-      let content: string;
+      let content: string | undefined;
 
       beforeEach(async () => {
         const result = await deployer.deployStandards(

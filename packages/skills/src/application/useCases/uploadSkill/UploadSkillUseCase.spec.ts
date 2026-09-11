@@ -1,3 +1,5 @@
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import { UploadSkillUseCase } from './UploadSkillUseCase';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
@@ -40,7 +42,7 @@ describe('UploadSkillUseCase', () => {
   const organizationId = createOrganizationId('org-123');
   const spaceId = createSpaceId('space-123');
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: userId,
     email: 'test@example.com',
     memberships: [
@@ -49,47 +51,40 @@ describe('UploadSkillUseCase', () => {
         role: 'member',
       } as UserOrganizationMembership,
     ],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  });
 
-  const mockOrganization: Organization = {
+  const mockOrganization: Organization = organizationFactory({
     id: organizationId,
     name: 'Test Org',
     slug: 'test-org',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  });
 
-  const mockSpace: Space = {
+  const mockSpace: Space = spaceFactory({
     id: spaceId,
     name: 'Test Space',
     slug: 'test-space',
     organizationId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    deletedAt: null,
-  };
+  });
 
   beforeEach(() => {
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(mockUser),
       getOrganizationById: jest.fn().mockResolvedValue(mockOrganization),
-    } as jest.Mocked<IAccountsPort>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     mockSpacesPort = {
       getSpaceById: jest.fn().mockResolvedValue(mockSpace),
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
-    } as jest.Mocked<ISpacesPort>;
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     mockSkillService = createMockInstance(SkillService);
     mockSkillVersionService = createMockInstance(SkillVersionService);
     mockSkillFileRepository = {
       findBySkillVersionId: jest.fn(),
       addMany: jest.fn(),
-    } as jest.Mocked<ISkillFileRepository>;
+    } as unknown as jest.Mocked<ISkillFileRepository>;
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     usecase = new UploadSkillUseCase(
@@ -121,6 +116,7 @@ description: A test skill
 
 This is the skill body.`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -140,12 +136,11 @@ This is the skill body.`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -163,9 +158,6 @@ This is the skill body.`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -191,6 +183,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -210,12 +203,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -233,9 +225,6 @@ Content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -261,6 +250,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -280,12 +270,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -303,9 +292,6 @@ Content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -344,6 +330,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -364,12 +351,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -387,9 +373,6 @@ Content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -419,6 +402,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -438,12 +422,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -461,9 +444,6 @@ Content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -493,16 +473,19 @@ description: Skill with multiple files
 
 Main content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'prompts/helper.md',
           content: 'Helper content',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'data/config.json',
           content: '{"key": "value"}',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -522,12 +505,11 @@ Main content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -545,9 +527,6 @@ Main content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -578,11 +557,13 @@ description: Skill with multiple files
 
 Main content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'prompts/helper.md',
           content: 'Helper content',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -602,12 +583,11 @@ Main content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -625,9 +605,6 @@ Main content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -658,11 +635,13 @@ description: Nested structure
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'deep/nested/file.txt',
           content: 'Nested file content',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -682,12 +661,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -705,9 +683,6 @@ Content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -738,16 +713,19 @@ description: Skill with multiple files
 
 Main content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'prompts/helper.md',
           content: 'Helper content',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'data/config.json',
           content: '{"key": "value"}',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -767,12 +745,11 @@ Main content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -790,9 +767,6 @@ Main content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -832,6 +806,7 @@ allowed-tools: Bash Read Write
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -851,7 +826,6 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: 'Bash Read Write',
         license: 'MIT',
         compatibility: 'Node 18+',
@@ -859,7 +833,7 @@ Content`,
           author: 'test-author',
           version: '1.0.0',
         },
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -880,9 +854,6 @@ Content`,
           author: 'test-author',
           version: '1.0.0',
         },
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -910,6 +881,7 @@ user-invocable: false
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -929,13 +901,12 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
         additionalProperties: { model: 'opus', userInvocable: false },
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -954,9 +925,6 @@ Content`,
         compatibility: undefined,
         metadata: undefined,
         additionalProperties: { model: 'opus', userInvocable: false },
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -988,6 +956,7 @@ user-invocable: false
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1007,13 +976,12 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
         additionalProperties: { model: 'opus', userInvocable: false },
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -1032,9 +1000,6 @@ Content`,
         compatibility: undefined,
         metadata: undefined,
         additionalProperties: { model: 'opus', userInvocable: false },
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.listSkillsBySpace.mockResolvedValue([]);
@@ -1066,12 +1031,11 @@ Content`,
       version: 1,
       userId,
       spaceId,
-      organizationId,
       allowedTools: undefined,
       license: undefined,
       compatibility: undefined,
       metadata: undefined,
-      deletedAt: null,
+      movedTo: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1086,6 +1050,7 @@ description: Updated description
 
 New content`,
         permissions: 'rw-r--r--',
+        isBase64: false,
       },
     ];
 
@@ -1109,9 +1074,6 @@ New content`,
       license: undefined,
       compatibility: undefined,
       metadata: undefined,
-      deletedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
     beforeEach(() => {
@@ -1128,6 +1090,7 @@ New content`,
         description: 'Updated description',
         prompt: 'New content',
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1143,9 +1106,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1170,6 +1130,7 @@ New content`,
       const updatedSkill: Skill = {
         ...existingSkill,
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1185,9 +1146,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1205,6 +1163,7 @@ New content`,
       const updatedSkill: Skill = {
         ...existingSkill,
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1220,9 +1179,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1245,6 +1201,7 @@ New content`,
       const updatedSkill: Skill = {
         ...existingSkill,
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1260,9 +1217,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1280,6 +1234,7 @@ New content`,
       const updatedSkill: Skill = {
         ...existingSkill,
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1295,9 +1250,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1317,6 +1269,7 @@ New content`,
       const updatedSkill: Skill = {
         ...existingSkill,
         version: 2,
+        movedTo: null,
       };
 
       const mockSkillVersion: SkillVersion = {
@@ -1332,9 +1285,6 @@ New content`,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1367,11 +1317,13 @@ description: Updated description
 
 New content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
         {
           path: 'helper.md',
           content: 'Helper content',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1386,6 +1338,7 @@ New content`,
         const updatedSkill: Skill = {
           ...existingSkill,
           version: 2,
+          movedTo: null,
         };
 
         const mockSkillVersion: SkillVersion = {
@@ -1401,9 +1354,6 @@ New content`,
           license: undefined,
           compatibility: undefined,
           metadata: undefined,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         };
 
         mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1426,6 +1376,7 @@ New content`,
         const updatedSkill: Skill = {
           ...existingSkill,
           version: 2,
+          movedTo: null,
         };
 
         const mockSkillVersion: SkillVersion = {
@@ -1441,9 +1392,6 @@ New content`,
           license: undefined,
           compatibility: undefined,
           metadata: undefined,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         };
 
         mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
@@ -1477,12 +1425,11 @@ New content`,
       version: 1,
       userId,
       spaceId,
-      organizationId,
       allowedTools: undefined,
       license: undefined,
       compatibility: undefined,
       metadata: undefined,
-      deletedAt: null,
+      movedTo: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1500,9 +1447,6 @@ New content`,
       license: undefined,
       compatibility: undefined,
       metadata: undefined,
-      deletedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
     const files: UploadSkillFileInput[] = [
@@ -1515,6 +1459,7 @@ description: A test skill
 
 Same content`,
         permissions: 'rw-r--r--',
+        isBase64: false,
       },
     ];
 
@@ -1674,6 +1619,7 @@ metadata:
 
 Same content`,
               permissions: 'rw-r--r--',
+              isBase64: false,
             },
           ];
 
@@ -1718,6 +1664,7 @@ metadata:
 
 Same content`,
               permissions: 'rw-r--r--',
+              isBase64: false,
             },
           ];
 
@@ -1773,6 +1720,7 @@ user-invocable: false
 
 Same content`,
               permissions: 'rw-r--r--',
+              isBase64: false,
             },
           ];
 
@@ -1816,6 +1764,7 @@ model: sonnet
 
 Same content`,
               permissions: 'rw-r--r--',
+              isBase64: false,
             },
           ];
 
@@ -1864,6 +1813,7 @@ Same content`,
           path: 'README.md',
           content: 'Just a readme',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1883,6 +1833,7 @@ Same content`,
           path: 'other.md',
           content: 'Not SKILL.md',
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1908,6 +1859,7 @@ name: [invalid yaml syntax
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1933,6 +1885,7 @@ description: Missing name field
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1960,6 +1913,7 @@ name: valid-name
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -1988,6 +1942,7 @@ description: Has uppercase
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2014,6 +1969,7 @@ description: Has spaces
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2040,6 +1996,7 @@ description: Starts with hyphen
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2081,6 +2038,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2100,12 +2058,11 @@ Content`,
         version: 1,
         userId,
         spaceId,
-        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
         metadata: undefined,
-        deletedAt: null,
+        movedTo: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -2157,6 +2114,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2187,6 +2145,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2213,6 +2172,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 
@@ -2246,6 +2206,7 @@ description: A test skill
 
 Content`,
           permissions: 'rw-r--r--',
+          isBase64: false,
         },
       ];
 

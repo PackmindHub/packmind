@@ -70,7 +70,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
               model: 'gpt-4',
               fastestModel: 'gpt-4-mini',
             },
-            configuredAt: new Date(),
           });
         });
 
@@ -90,7 +89,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
               model: 'claude-3-opus-20240229',
               fastestModel: 'claude-3-haiku-20240307',
             },
-            configuredAt: new Date(),
           });
         });
 
@@ -107,7 +105,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
             config: {
               provider: LLMProvider.PACKMIND,
             },
-            configuredAt: new Date(),
           });
         });
 
@@ -153,7 +150,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
             config: {
               provider: LLMProvider.PACKMIND,
             },
-            configuredAt: new Date(),
           });
         });
 
@@ -173,7 +169,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
               model: 'gpt-4',
               fastestModel: 'gpt-4-mini',
             },
-            configuredAt: new Date(),
           });
         });
 
@@ -193,7 +188,6 @@ describe('GetAiServiceForOrganizationUseCase', () => {
               model: 'claude-3-opus-20240229',
               fastestModel: 'claude-3-haiku-20240307',
             },
-            configuredAt: new Date(),
           });
         });
 

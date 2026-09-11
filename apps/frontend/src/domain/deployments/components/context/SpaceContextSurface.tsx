@@ -1,7 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
-import type { PackageId, SkillId } from '@packmind/types';
+import type {
+  OrganizationId,
+  PackageId,
+  SkillId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
@@ -13,7 +19,10 @@ import {
   buildVirtualSkillMdFile,
   SKILL_MD_FILENAME,
 } from '../../../skills/utils/skillMdUtils';
-import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import {
+  useGetRulesByStandardIdQuery,
+  useGetStandardsQuery,
+} from '../../../standards/api/queries/StandardsQueries';
 import { useSpaceOutdatedPlugins } from '@packmind/proprietary/frontend/domain/spaces/components/overview/useSpaceOutdatedPlugins';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
@@ -28,12 +37,14 @@ import {
   COMPONENT_PARAM,
   FILE_PARAM,
   INVENTORY_VALUE,
+  RULE_PARAM,
   findSpaceComponent,
   inventoryHref,
   packageDetailHref,
   selectContextPackage,
   selectDetailComponent,
   selectSkillFile,
+  selectStandardRule,
   sortFilesByPath,
 } from './buildComponentDetail';
 import { resolveContextView } from './resolveContextView';
@@ -297,6 +308,31 @@ export function SpaceContextSurface() {
     ? selectSkillFile(skillWithFiles.files, searchParams.get(FILE_PARAM))
     : null;
 
+  /*
+   * The rules of the open standard, when that is what is open, for the same
+   * reason the files above are resolved here: the address names one and the
+   * pane has to be handed the rule itself or the standard's own body, never an
+   * id it cannot render.
+   *
+   * The same query the standard's body in the pane runs, so the two read one
+   * cache entry. Disabled for the other two types, which have no rules.
+   */
+  const { data: standardRules } = useGetRulesByStandardIdQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    /*
+      Cast rather than narrowed, the way this file's other id arguments are: the
+      query is disabled on a falsy one, and its signature asks for the branded
+      type it would have had.
+    */
+    (detail?.type === 'standard' ? detail.key : undefined) as StandardId,
+  );
+
+  const selectedRule = selectStandardRule(
+    standardRules ?? [],
+    searchParams.get(RULE_PARAM),
+  );
+
   const show = useCallback(
     (value: string, coverage: InventoryCoverage = 'all') => {
       // Mutating the params we were handed, so `?nav=` and anything else the
@@ -310,6 +346,7 @@ export function SpaceContextSurface() {
           // in both.
           previous.delete(COMPONENT_PARAM);
           previous.delete(FILE_PARAM);
+          previous.delete(RULE_PARAM);
           // A rail click asks for the whole of what it names unless it names
           // the filtered part itself, so a filter left over from the previous
           // selection would answer a question the click did not ask. Clicking
@@ -376,6 +413,7 @@ export function SpaceContextSurface() {
         previous.delete(PACKAGE_PARAM);
         previous.delete(COMPONENT_PARAM);
         previous.delete(FILE_PARAM);
+        previous.delete(RULE_PARAM);
         previous.delete(COVERAGE_PARAM);
         return previous;
       },
@@ -567,6 +605,7 @@ export function SpaceContextSurface() {
               <ContextOrphanPane
                 component={detail}
                 file={selectedFile}
+                rule={selectedRule}
                 packages={packages}
                 spaceId={spaceId}
                 organizationId={organization.id}
@@ -597,6 +636,7 @@ export function SpaceContextSurface() {
                   total={total}
                   detail={detail}
                   detailFile={selectedFile}
+                  detailRule={selectedRule}
                   spaceId={spaceId}
                   organizationId={organization.id}
                   orgSlug={orgSlug}

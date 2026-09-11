@@ -6,6 +6,7 @@ export * from './coding-agent';
 export * from './commands';
 export * from './skills';
 export * from './deployments';
+export * from './edition';
 export * from './git';
 export * from './spaces';
 export * from './spaces-management';

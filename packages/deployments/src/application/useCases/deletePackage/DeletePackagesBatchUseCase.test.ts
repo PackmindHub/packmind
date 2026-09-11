@@ -10,7 +10,7 @@ import {
   createOrganizationId,
   PackagesDeletedEvent,
   DeletePackagesBatchCommand,
-  PackagesDeletedEvent,
+  DeletePackagesBatchResponse,
 } from '@packmind/types';
 
 describe('DeletePackagesBatchUseCase', () => {
@@ -114,7 +114,7 @@ describe('DeletePackagesBatchUseCase', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-789');
       const organizationId = createOrganizationId('org-999');
-      let result: Record<string, never>;
+      let result: DeletePackagesBatchResponse;
 
       beforeEach(async () => {
         const existingPackage = packageFactory({ id: packageId, spaceId });
@@ -154,7 +154,7 @@ describe('DeletePackagesBatchUseCase', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-789');
       const organizationId = createOrganizationId('org-999');
-      let executePromise: Promise<Record<string, never>>;
+      let executePromise: Promise<DeletePackagesBatchResponse>;
 
       beforeEach(() => {
         const package1 = packageFactory({ id: packageId1, spaceId });
@@ -201,7 +201,7 @@ describe('DeletePackagesBatchUseCase', () => {
       const wrongSpaceId = createSpaceId('space-wrong');
       const userId = createUserId('user-789');
       const organizationId = createOrganizationId('org-999');
-      let executePromise: Promise<Record<string, never>>;
+      let executePromise: Promise<DeletePackagesBatchResponse>;
 
       beforeEach(() => {
         const package1 = packageFactory({
@@ -254,7 +254,7 @@ describe('DeletePackagesBatchUseCase', () => {
       const spaceId = createSpaceId('space-999');
       const userId = createUserId('user-111');
       const organizationId = createOrganizationId('org-222');
-      let executePromise: Promise<Record<string, never>>;
+      let executePromise: Promise<DeletePackagesBatchResponse>;
 
       beforeEach(() => {
         const package1 = packageFactory({ id: packageId1, spaceId });
@@ -314,7 +314,7 @@ describe('DeletePackagesBatchUseCase', () => {
       const spaceId = createSpaceId('space-999');
       const userId = createUserId('user-111');
       const organizationId = createOrganizationId('org-222');
-      let executePromise: Promise<Record<string, never>>;
+      let executePromise: Promise<DeletePackagesBatchResponse>;
 
       beforeEach(() => {
         const package1 = packageFactory({ id: packageId1, spaceId });

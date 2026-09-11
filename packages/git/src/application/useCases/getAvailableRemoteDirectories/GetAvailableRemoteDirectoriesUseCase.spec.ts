@@ -8,6 +8,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { createGitProviderId } from '@packmind/types';
 import { GitRepo, createGitRepoId } from '@packmind/types';
+import { gitRepoFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
 import { GetAvailableRemoteDirectoriesUseCase } from './GetAvailableRemoteDirectoriesUseCase';
 
@@ -64,13 +65,13 @@ describe('GetAvailableTargetsUseCase', () => {
   describe('execute', () => {
     const organizationId = createOrganizationId(uuidv4());
     const userId = createUserId(uuidv4());
-    const mockGitRepo: GitRepo = {
+    const mockGitRepo: GitRepo = gitRepoFactory({
       id: createGitRepoId(uuidv4()),
       owner: 'test-owner',
       repo: 'test-repo',
       branch: 'main',
       providerId: createGitProviderId(uuidv4()),
-    };
+    });
     const validCommand: GetAvailableRemoteDirectoriesCommand = {
       userId,
       organizationId,

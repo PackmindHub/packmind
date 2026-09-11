@@ -970,11 +970,9 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
           mockRules = [
             ruleFactory({
-              id: uuidv4(),
               standardVersionId: mockStandardVersion.id,
             }),
             ruleFactory({
-              id: uuidv4(),
               standardVersionId: mockStandardVersion.id,
             }),
           ];
@@ -1062,7 +1060,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
           mockRules = [
             ruleFactory({
-              id: uuidv4(),
               standardVersionId: mockStandardVersion.id,
             }),
           ];
@@ -1118,7 +1115,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
           );
           ruleRepository.findByStandardVersionId.mockResolvedValue([
             ruleFactory({
-              id: uuidv4(),
               standardVersionId: mockStandardVersion.id,
             }),
           ]);
@@ -1161,7 +1157,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
           );
           ruleRepository.findByStandardVersionId.mockResolvedValue([
             ruleFactory({
-              id: uuidv4(),
               standardVersionId: mockStandardVersion.id,
             }),
           ]);

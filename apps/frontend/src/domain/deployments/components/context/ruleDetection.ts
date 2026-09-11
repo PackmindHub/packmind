@@ -1,5 +1,7 @@
 import {
   RuleLanguageDetectionStatus,
+  type ActiveDetectionProgramId,
+  type DetectionSeverity,
   type ProgrammingLanguage,
   type RuleDetectionStatusSummary,
   type RuleId,
@@ -24,6 +26,19 @@ export type RuleDetectionState = 'active' | 'in-progress' | 'inactive';
 export type RuleDetectionLanguage = {
   language: ProgrammingLanguage;
   state: RuleDetectionState;
+  /**
+   * What a violation is reported as, and the program it is set on.
+   *
+   * Together or not at all: changing a severity is a call about one program,
+   * and a severity with no program to set it on is a control with nowhere to
+   * write. The API answers with both or neither, and this keeps that true one
+   * step further in.
+   *
+   * Only an active language has them. A language whose program is still being
+   * worked on reports nothing yet, so there is nothing to choose.
+   */
+  severity?: DetectionSeverity;
+  activeDetectionProgramId?: ActiveDetectionProgramId;
 };
 
 export type RuleDetection = {
@@ -39,11 +54,30 @@ export type RuleDetection = {
 };
 
 /**
- * Keyed by rule, and only for the rules that have something to say: a rule with
- * no language entry at all is absent from the map rather than present with an
- * `inactive` state. The distinction is what the OSS edition rides on, where the
- * stubbed query answers with an empty array and every rule has to render as
- * plain content with no affordance suggesting there is more.
+ * What a rule says when the map has no entry for it: nothing has been written
+ * to check it in any language.
+ *
+ * A value rather than a null the row interprets, because the row is not the
+ * only reader and the two would drift. Its empty `languages` is the whole
+ * signal, and it is the same signal `ruleDetectionsById` refuses to produce:
+ * the map skips a summary with no languages, so an empty one here can only mean
+ * the API never answered for this rule.
+ *
+ * Not for the OSS edition, which has no detection at all and must say nothing
+ * rather than say a rule is unchecked by a linter it does not ship. That is
+ * what `HAS_RULE_DETECTION` is for, and it is the caller that asks.
+ */
+export const UNDETECTED_RULE: RuleDetection = {
+  state: 'inactive',
+  activeLanguages: [],
+  languages: [],
+};
+
+/**
+ * Keyed by rule, and only for the rules the API answered for: a rule with no
+ * language entry at all is absent from the map rather than present with an
+ * `inactive` state. What the caller does with the absence is its own call, and
+ * it is an edition question rather than a rendering one.
  */
 export function ruleDetectionsById(
   summaries: readonly RuleDetectionStatusSummary[] | undefined,
@@ -70,9 +104,16 @@ export function ruleDetectionsById(
       state: detectionState(activeLanguages.length, isInProgress),
       activeLanguages,
       languages: languages
-        .map(({ language, status }) => ({
+        .map(({ language, status, severity, activeDetectionProgramId }) => ({
           language,
           state: languageState(status),
+          /*
+           * Dropped unless the pair is complete, for the reason the type gives:
+           * half of it is a control with nowhere to write.
+           */
+          ...(severity && activeDetectionProgramId
+            ? { severity, activeDetectionProgramId }
+            : {}),
         }))
         .sort(byStateThenName),
     });
@@ -138,6 +179,17 @@ export function ruleDetectionLabel(
   detection: RuleDetection,
   displayName: (language: ProgrammingLanguage) => string,
 ): string {
+  /*
+   * Nothing has been written to check this rule, which is the cause and not
+   * the symptom: a program is generated from examples, so a rule with none
+   * cannot be detected in any language and "not active" would leave the reader
+   * looking for the setting that turns it on. The words are the rule table's,
+   * which is where this state has always had a sentence.
+   */
+  if (detection.languages.length === 0) {
+    return 'No examples';
+  }
+
   if (detection.state === 'in-progress') {
     return 'In progress';
   }
@@ -157,11 +209,29 @@ export function ruleDetectionLabel(
  * Whether the languages behind a rule say more than its label does.
  *
  * A rule active in its one and only language has a label that already names
- * that language, so opening it would show the same fact a second time: no
- * chevron there. Every other case has something to add, either the languages
- * the label only counted or the ones it never mentioned because nothing detects
- * them.
+ * that language, so opening it would show the same fact a second time. Every
+ * other case has something to add: the languages the label only counted, the
+ * ones it never mentioned because nothing detects them, or a severity, which
+ * the label never carries and which is the one thing in here a reader can
+ * change.
+ *
+ * Severity is asked of the data rather than assumed from the state, because an
+ * active language can arrive without one. No chevron opening onto nothing is
+ * the rule this whole affordance was built on.
  */
 export function ruleDetectionOpens(detection: RuleDetection): boolean {
-  return detection.state !== 'active' || detection.languages.length > 1;
+  /*
+   * Nothing answered for this rule, so there is no language to list. The label
+   * carries the whole of what is known, which is the condition every other
+   * branch below is testing for.
+   */
+  if (detection.languages.length === 0) {
+    return false;
+  }
+
+  return (
+    detection.state !== 'active' ||
+    detection.languages.length > 1 ||
+    detection.languages.some((language) => language.severity)
+  );
 }

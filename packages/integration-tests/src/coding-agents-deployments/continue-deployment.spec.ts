@@ -92,7 +92,7 @@ describe('Continue Deployment Integration', () => {
       content: 'This is test recipe content for Continue deployment',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create test standard
@@ -118,6 +118,7 @@ describe('Continue Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 
@@ -259,7 +260,7 @@ describe('Continue Deployment Integration', () => {
         content: 'This is the second recipe content',
         organizationId: organization.id,
         userId: user.id,
-        spaceId: space.id.toString(),
+        spaceId: space.id,
       });
 
       const recipeVersions: CommandVersion[] = [
@@ -415,7 +416,7 @@ describe('Continue Deployment Integration', () => {
       delete: { path: string }[];
     };
     let globalStandard: Standard;
-    let standardFile: FileModification | undefined;
+    let standardFile: FileModification;
 
     beforeEach(async () => {
       defaultTarget = {

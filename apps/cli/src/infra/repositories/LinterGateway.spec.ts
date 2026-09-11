@@ -1,0 +1,121 @@
+import { createRuleId } from '@packmind/types';
+
+import { LinterGateway } from './LinterGateway';
+import { createMockHttpClient } from '../../mocks/createMockHttpClient';
+import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+
+const SERVER_MESSAGE = 'API request failed: 404 Not Found';
+
+describe('LinterGateway', () => {
+  let gateway: LinterGateway;
+  let mockHttpClient: jest.Mocked<PackmindHttpClient>;
+
+  beforeEach(() => {
+    mockHttpClient = createMockHttpClient({
+      getAuthContext: jest.fn().mockReturnValue({
+        host: 'https://api.packmind.com',
+        jwt: 'mock-jwt',
+        organizationId: 'org-123',
+      }),
+    });
+
+    gateway = new LinterGateway(mockHttpClient);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Mirrors PackmindHttpClient: the resolved edition handed to onError, then
+  // the generic error built from the response. Drawing no conclusion from the
+  // edition surfaces the latter.
+  const respondWith = (
+    status: number,
+    edition: 'enterprise' | 'community' | null = null,
+  ): void => {
+    const response = new Response(null, { status });
+
+    mockHttpClient.request.mockImplementation(async (_path, options) => {
+      options?.onError?.(response, edition);
+
+      const error: Error & { statusCode?: number } = new Error(SERVER_MESSAGE);
+      error.statusCode = status;
+      throw error;
+    });
+  };
+
+  const routes = [
+    {
+      name: 'getDraftDetectionProgramsForRule',
+      call: () =>
+        gateway.getDraftDetectionProgramsForRule({
+          standardSlug: 'a-standard',
+          ruleId: createRuleId('rule-1'),
+        }),
+    },
+    {
+      name: 'getActiveDetectionProgramsForRule',
+      call: () =>
+        gateway.getActiveDetectionProgramsForRule({
+          standardSlug: 'a-standard',
+          ruleId: createRuleId('rule-1'),
+        }),
+    },
+    {
+      name: 'getDetectionProgramsForPackages',
+      call: () =>
+        gateway.getDetectionProgramsForPackages({
+          packagesSlugs: ['@a-space/a-package'],
+        }),
+    },
+  ];
+
+  describe.each(routes)('$name', ({ call }) => {
+    describe('when a Community Edition server does not mount the route', () => {
+      beforeEach(() => {
+        respondWith(404, 'community');
+      });
+
+      it('reports local linting with packages as unavailable', async () => {
+        await expect(call()).rejects.toThrow(CommunityEditionError);
+      });
+    });
+
+    describe('when an enterprise server answers 404', () => {
+      beforeEach(() => {
+        respondWith(404, 'enterprise');
+      });
+
+      it('surfaces the real error instead of blaming the edition', async () => {
+        await expect(call()).rejects.toThrow(SERVER_MESSAGE);
+      });
+    });
+
+    describe('when no edition could be established', () => {
+      beforeEach(() => {
+        respondWith(404, null);
+      });
+
+      it('does not claim the Community Edition', async () => {
+        await expect(call()).rejects.not.toThrow(CommunityEditionError);
+      });
+
+      it('names both possible causes', async () => {
+        await expect(call()).rejects.toThrow(
+          'does not state which edition it runs',
+        );
+      });
+    });
+
+    describe('when a Community Edition server fails for another reason', () => {
+      beforeEach(() => {
+        respondWith(500, 'community');
+      });
+
+      it('surfaces the real error instead of blaming the edition', async () => {
+        await expect(call()).rejects.toThrow(SERVER_MESSAGE);
+      });
+    });
+  });
+});

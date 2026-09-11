@@ -199,7 +199,7 @@
       "name": "Backend Tests Redaction",
       "type": "standard",
       "id": "dc85bede-2c91-45ec-8411-ca692f77f181",
-      "version": 7,
+      "version": 8,
       "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
       "packageIds": [
         "4ee06203-707f-4713-b124-a6a9280f2a46"
@@ -1354,5 +1354,5 @@
       ]
     }
   },
-  "cliVersion": "0.35.0"
+  "cliVersion": "0.35.1"
 }

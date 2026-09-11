@@ -7,6 +7,7 @@ export * from './factories/git';
 export * from './factories/commands';
 export * from './factories/standards';
 export * from './factories/deployments';
+export * from './fileUpdates/contentOf';
 export * from './logger/stubLogger';
 export * from './skipWhenRoot';
 export * from './repository';

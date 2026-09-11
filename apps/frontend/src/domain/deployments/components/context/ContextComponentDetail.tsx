@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
@@ -21,15 +21,12 @@ import {
 import {
   LuChevronDown,
   LuChevronLeft,
-  LuChevronRight,
-  LuCircleCheck,
-  LuCircleOff,
   LuEllipsisVertical,
   LuExternalLink,
   LuMessageSquarePlus,
+  LuPencil,
   LuTrash2,
 } from 'react-icons/lu';
-import { TiWarningOutline } from 'react-icons/ti';
 import type {
   Command,
   CommandId,
@@ -54,6 +51,9 @@ import {
   useGetSkillWithFilesByIdQuery,
 } from '../../../skills/api/queries/SkillsQueries';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
+import { SkillFileEditor } from '../../../skills/components/SkillFileEditor';
+import { SKILL_MD_FILENAME } from '../../../skills/utils/skillMdUtils';
+import { useCanEditSkillFiles } from '../../../skills/hooks/useCanEditSkillFiles';
 import { DownloadSkillPopover } from '../../../skills/components/DownloadSkillPopover';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
 import { parseCommandFrontmatter } from '../../../commands/utils/parseCommandFrontmatter';
@@ -82,12 +82,16 @@ import {
   reviewChangesLabel,
 } from './componentMaintenance';
 import {
+  UNDETECTED_RULE,
   ruleDetectionLabel,
   ruleDetectionOpens,
   ruleDetectionsById,
   type RuleDetection,
-  type RuleDetectionState,
 } from './ruleDetection';
+import {
+  RuleDetectionLanguages,
+  RuleDetectionMark,
+} from './RuleDetectionLanguages';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import {
@@ -104,13 +108,18 @@ import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistribut
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { routes } from '../../../../shared/utils/routes';
+import { CopyMarkdownButton } from '../../../artifacts/components/CopyMarkdownButton';
+import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
 import {
   useListChangeProposalsByCommandQuery,
   useListChangeProposalsBySkillQuery,
   useListChangeProposalsByStandardQuery,
 } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { getLanguageDisplayName } from '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils';
-import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import {
+  hasRuleDetection,
+  useGetStandardRulesDetectionStatusQuery,
+} from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 
 /**
  * One component, read inside the package that carries it.
@@ -131,6 +140,7 @@ export function ContextComponentDetail({
   component,
   backLabel,
   backHref,
+  ruleHref,
   editHref,
   tab,
   onTabChange,
@@ -151,6 +161,16 @@ export function ContextComponentDetail({
   backLabel: string;
   /** Where that link goes, tab and all. */
   backHref: string;
+  /**
+   * Where one rule of a standard opens in the pane.
+   *
+   * Built by the pane, like every other link on this frame, because it is an
+   * address of this surface: this component never touches the address, so it
+   * cannot drop a parameter the surface put there. It was a page route until
+   * the pane grew a depth for a rule, and the pane is what knows the
+   * difference.
+   */
+  ruleHref: (ruleId: Rule['id']) => string;
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
   /**
@@ -301,6 +321,21 @@ export function ContextComponentDetail({
                 skillId={component.key as SkillId}
                 organizationId={organization.id}
                 spaceId={spaceId}
+              />
+            )}
+            {/*
+              The same move for the type whose content is one file: taking the
+              standard away as the file an agent reads.
+
+              It was on the rules page until the prose block that carried it
+              went, and that block was the only place in the product that would
+              hand a standard over as text. The pane is where a standard is read
+              now, so this is where it belongs.
+            */}
+            {component.type === 'standard' && (
+              <CopyStandardMarkdown
+                standardId={component.key as StandardId}
+                name={component.name}
               />
             )}
             <PMButton variant="secondary" size="sm" onClick={onMove}>
@@ -471,7 +506,7 @@ export function ContextComponentDetail({
         paddingX={6}
         paddingY={5}
       >
-        <ComponentBody component={component} />
+        <ComponentBody component={component} ruleHref={ruleHref} />
       </PMTabsCompound.Content>
 
       <PMTabsCompound.Content
@@ -505,7 +540,12 @@ export function ContextComponentDetail({
 
 function ComponentBody({
   component,
-}: Readonly<{ component: ContextComponent }>) {
+  ruleHref,
+}: Readonly<{
+  component: ContextComponent;
+  /** Where one rule of a standard opens, built by the pane. */
+  ruleHref: (ruleId: Rule['id']) => string;
+}>) {
   switch (component.type) {
     case 'command':
       return <CommandBody commandId={component.key as CommandId} />;
@@ -513,13 +553,7 @@ function ComponentBody({
       return (
         <StandardBody
           standardId={component.key as StandardId}
-          /*
-            The row already carries the address of the standard's own page,
-            which is where its rules are set up. Handed down rather than rebuilt
-            from the slugs, so the pane has one answer to where a standard lives
-            and not two that can drift.
-          */
-          rulesHref={component.href}
+          ruleHref={ruleHref}
         />
       );
     case 'skill':
@@ -1376,10 +1410,55 @@ function CommandBody({ commandId }: Readonly<{ commandId: CommandId }>) {
  * standard body, but it is the line that says where the standard applies, and
  * the pane is on its way to being the only place a standard is read.
  */
+/**
+ * A standard as the markdown a coding agent reads, on the clipboard.
+ *
+ * Both queries are the ones the body below runs, with the same keys, so this
+ * asks for nothing: React Query answers it from the requests already in
+ * flight. Nothing renders until the standard is there, a copy control being a
+ * promise about content and not a placeholder.
+ */
+function CopyStandardMarkdown({
+  standardId,
+  name,
+}: Readonly<{
+  standardId: StandardId;
+  /** Off the frame, which is showing it, rather than out of the query again. */
+  name: string;
+}>) {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+  const { data } = useGetStandardByIdQuery(standardId);
+  const { data: rules } = useGetRulesByStandardIdQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standardId,
+  );
+
+  const standard = data?.standard ?? null;
+
+  if (!standard) return null;
+
+  return (
+    <CopyMarkdownButton
+      markdown={serializeStandardToMarkdown({
+        name,
+        scope: standard.scope ?? '',
+        description: standard.description,
+        rules: rules ?? [],
+      })}
+    />
+  );
+}
+
 function StandardBody({
   standardId,
-  rulesHref,
-}: Readonly<{ standardId: StandardId; rulesHref: string }>) {
+  ruleHref,
+}: Readonly<{
+  standardId: StandardId;
+  /** Where one rule is configured, built per rule by the caller. */
+  ruleHref: (ruleId: Rule['id']) => string;
+}>) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
@@ -1438,64 +1517,32 @@ function StandardBody({
       )}
 
       <PMBox>
-        <PMHStack justify="space-between" align="baseline" gap={4}>
-          {/*
-            The count only when there is one to give: loading, failed and empty
-            all read better as the plain heading, and "0 rules" above a line
-            that already says there is no rule was saying it twice.
-          */}
-          <BodySectionLabel>
-            {sortedRules.length > 0
-              ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
-              : 'Rules'}
-          </BodySectionLabel>
-          {/*
-            The one way out this surface keeps, and the reason the header's
-            "Open standard" can go.
-            
-            A standard's rules are set up on the standard's own page: the code
-            examples that decide which languages a rule can be detected in, the
-            linter program per language, and the severity it reports at. None of
-            that fits a reading pane, and none of it is what the pane shows.
-            
-            Which is exactly what made the header button surprising and this one
-            not. That button promised a page and delivered a second copy of what
-            was already on screen. This one is beside the list it is about, and
-            it names work the reader cannot do here.
-            
-            Not the accent. The proposal waiting on someone in the header is the
-            one thing on this surface worth interrupting for, and a second
-            periwinkle link would make that one a colour rather than a signal.
-          */}
-          <PMBox
-            /*
-              Sized to the label it shares the line with, not to the body. At
-              `xs` beside a 10px heading it read as the loudest thing in the
-              section, which is the wrong way round: the rules are what the
-              section is, and this is the way to go and set them up.
-            */
-            fontSize="11px"
-            color="text.secondary"
-            flexShrink={0}
-            display="inline-flex"
-            alignItems="center"
-            gap="2px"
-            _hover={{ color: 'text.primary' }}
-            transition="color 150ms ease-out"
-            asChild
-          >
-            <Link to={rulesHref}>
-              Manage rules
-              <PMIcon fontSize="11px">
-                <LuChevronRight />
-              </PMIcon>
-            </Link>
-          </PMBox>
-        </PMHStack>
+        {/*
+          The heading alone on its line again. It shared it with a link to the
+          standard's rules page, which was the way out this surface kept when
+          the header's "Open standard" went: the code examples and the linter
+          program are not in the pane and someone has to be able to reach them.
+
+          The rows are what carry it now, one door each. The list it led to was
+          the same rules a second time, with a name, a linter status and a
+          severity the pane prints itself, so as a stop on the way it cost a
+          click and answered nothing. A rule is what gets configured, and the
+          row for it is where the link belongs.
+
+          The count only when there is one to give: loading, failed and empty
+          all read better as the plain heading, and "0 rules" above a line that
+          already says there is no rule was saying it twice.
+        */}
+        <BodySectionLabel>
+          {sortedRules.length > 0
+            ? `${sortedRules.length} rule${sortedRules.length === 1 ? '' : 's'}`
+            : 'Rules'}
+        </BodySectionLabel>
         <PMBox paddingTop={1}>
           <RulesSection
             rules={sortedRules}
             standardId={standardId}
+            ruleHref={ruleHref}
             isLoading={rulesLoading}
             isError={rulesError}
           />
@@ -1522,11 +1569,13 @@ function StandardBody({
 function RulesSection({
   rules,
   standardId,
+  ruleHref,
   isLoading,
   isError,
 }: Readonly<{
   rules: readonly Rule[];
   standardId: StandardId;
+  ruleHref: (ruleId: Rule['id']) => string;
   isLoading: boolean;
   isError: boolean;
 }>) {
@@ -1602,7 +1651,19 @@ function RulesSection({
         <RuleRow
           key={rule.id}
           rule={rule}
-          detection={detections.get(rule.id) ?? null}
+          standardId={standardId}
+          configureHref={ruleHref(rule.id)}
+          /*
+            The absence of an answer is an answer in the edition that has a
+            linter: nothing has been written to check this rule. It was silence
+            until now, which read as a rendering gap next to a standard whose
+            every row carries a state, and left `Configure` beside a row with
+            no reason on it.
+          */
+          detection={
+            detections.get(rule.id) ??
+            (hasRuleDetection() ? UNDETECTED_RULE : null)
+          }
           isFirst={index === 0}
           isOpen={openRuleIds.has(rule.id)}
           onToggle={() => toggleRule(rule.id)}
@@ -1627,18 +1688,25 @@ function RulesSection({
  * have to stay in the same column: an alignment that moves by sixteen pixels
  * from row to row is read as a mistake long before it is read as a meaning.
  *
- * With no detection status at all the row is what it was before this increment,
- * down to the padding. That is the OSS rendering, and also a proprietary rule
- * the linter has never been pointed at.
+ * With no detection status at all the row keeps its way out and loses the rest.
+ * That is the OSS rendering, and also a proprietary rule the linter has never
+ * been pointed at, which is the row most worth opening: the way out is what
+ * makes it detectable at all, so it cannot be the one thing the row hides.
  */
 function RuleRow({
   rule,
+  standardId,
+  configureHref,
   detection,
   isFirst,
   isOpen,
   onToggle,
 }: Readonly<{
   rule: Rule;
+  /** Only for the severity, which is set on a program of this standard. */
+  standardId: StandardId;
+  /** The rule's own page, where its examples and its program are. */
+  configureHref: string;
   detection: RuleDetection | null;
   isFirst: boolean;
   isOpen: boolean;
@@ -1678,7 +1746,6 @@ function RuleRow({
             paddingX={1.5}
             paddingY={0.5}
             marginY="-2px"
-            marginRight="-6px"
             borderRadius="sm"
             _hover={
               opens ? { backgroundColor: 'background.secondary' } : undefined
@@ -1710,6 +1777,35 @@ function RuleRow({
             </PMIcon>
           </PMBox>
         )}
+
+        {/*
+          One word, on every row, in its own column at the right edge. The
+          heading above the list carried this for the whole standard and landed
+          on a list of the same rules; a rule is the thing that has examples and
+          a program, so the row is the honest place for the door and the list in
+          between stops being a step.
+
+          Faded, and at the size the heading's link was rather than the row's.
+          Thirty of these in a column is the loudest a list of prose can get if
+          they are allowed to be, and what they lead to is work nobody does
+          while reading.
+
+          Its own column, and always in it, so the labels of the chips to its
+          left end at one x down the whole list. That alignment is why the
+          chevron beside them is kept in the layout when it has nothing to do,
+          and a link that came and went by row would undo it.
+        */}
+        <PMBox
+          fontSize="11px"
+          color="text.faded"
+          flexShrink={0}
+          paddingTop="3px"
+          _hover={{ color: 'text.primary' }}
+          transition="color 150ms ease-out"
+          asChild
+        >
+          <Link to={configureHref}>Configure</Link>
+        </PMBox>
       </PMHStack>
 
       {detection && opens && isOpen && (
@@ -1717,46 +1813,14 @@ function RuleRow({
           <PMText fontSize="xs" color="faded" flexShrink={0} minWidth="72px">
             Languages
           </PMText>
-          <PMHStack gap={3} minWidth={0} flexWrap="wrap">
-            {detection.languages.map(({ language, state }) => (
-              <PMHStack key={language} gap={1.5}>
-                <RuleDetectionMark state={state} />
-                <PMText fontSize="xs" color="secondary" whiteSpace="nowrap">
-                  {getLanguageDisplayName(language)}
-                </PMText>
-              </PMHStack>
-            ))}
-          </PMHStack>
+          <RuleDetectionLanguages
+            standardId={standardId}
+            ruleId={rule.id}
+            detection={detection}
+          />
         </PMHStack>
       )}
     </PMBox>
-  );
-}
-
-/**
- * The mark beside a detection status. Three shapes, used by the rule's own
- * status and by each of its languages: the collapsed row and the languages it
- * opens onto have to agree, or the reader learns the mapping twice.
- *
- * The shapes are the ones the standard's rule summary already uses, so the two
- * screens do not disagree either for as long as both exist.
- */
-const RULE_DETECTION_MARKS: Record<
-  RuleDetectionState,
-  { Icon: ComponentType; color: string }
-> = {
-  active: { Icon: LuCircleCheck, color: 'text.success' },
-  'in-progress': { Icon: TiWarningOutline, color: 'text.warning' },
-  inactive: { Icon: LuCircleOff, color: 'text.tertiary' },
-};
-
-function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
-  const { Icon, color } = RULE_DETECTION_MARKS[state];
-
-  return (
-    <PMIcon as="span" display="inline-flex" fontSize="sm" color={color}>
-      <Icon />
-    </PMIcon>
   );
 }
 
@@ -1772,8 +1836,23 @@ function RuleDetectionMark({ state }: Readonly<{ state: RuleDetectionState }>) {
  * disagreement nobody notices until the agent behaves differently from what the
  * page showed.
  */
+/**
+ * A skill's instructions, and the one control that changes them.
+ *
+ * The pencil is here rather than in the header, unlike the `Edit` a standard
+ * and a command carry. Theirs leaves for a form and comes back; this one swaps
+ * the prose for an editor in place, which is what the skill's own page does
+ * too, and a trigger that far from what it changes would have to hand state
+ * back down through a frame that serves three types.
+ *
+ * Editable at all only since the plugin-first navigation stopped serving the
+ * page that used to carry this. See `ContextSkillFileDetail` for the other half
+ * and `useCanEditSkillFiles` for the rule both ask.
+ */
 function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
   const { data, isLoading, isError } = useGetSkillWithFilesByIdQuery(skillId);
+  const canEdit = useCanEditSkillFiles(data?.skill);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (isLoading) {
     return (
@@ -1794,21 +1873,74 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
 
   const { latestVersion } = data;
 
+  if (isEditing) {
+    return (
+      /*
+        No 72ch cap while editing, unlike the read view above. That measure is
+        for reading prose; an editor is a working surface, and capped it gave
+        four hundred pixels of writing room inside a twelve hundred pixel pane.
+        The same reason a file is shown full width here.
+      */
+      <PMVStack gap={6} align="stretch">
+        <SkillFrontmatterInfo skillVersion={latestVersion} />
+        {/*
+          The body alone, which is what `prompt` holds. The frontmatter above is
+          parsed into columns of the version and is not edited as text here, so
+          handing the editor the reassembled file would invite a change this
+          save cannot keep.
+        */}
+        <SkillFileEditor
+          skillId={skillId}
+          skillSlug={data.skill.slug}
+          filePath={SKILL_MD_FILENAME}
+          initialContent={latestVersion.prompt}
+          currentVersion={latestVersion.version}
+          onCancel={() => setIsEditing(false)}
+          onSaved={() => setIsEditing(false)}
+        />
+      </PMVStack>
+    );
+  }
+
   return (
     <PMVStack gap={6} align="stretch" maxWidth="72ch">
       <SkillFrontmatterInfo skillVersion={latestVersion} />
 
-      {latestVersion.prompt ? (
-        <PMBox>
+      {/*
+        The pencil is in the prose's own top-right corner, which is where the
+        same pencil sits on a file. It began on a line of its own above, and on
+        screen that line read as belonging to nothing: the stack's gap above it
+        and the first heading's own margin below it are close enough in size
+        that it centred itself between the frontmatter and the text. Inside the
+        block it edits, it cannot do that, and it costs no vertical space,
+        sitting in the margin the heading already leaves.
+
+        Outside the branch below, because a skill with no instructions is the
+        one that most needs the way to write some.
+      */}
+      <PMBox position="relative">
+        {canEdit && (
+          <PMBox position="absolute" top={0} right={0} zIndex={1}>
+            <PMIconButton
+              aria-label="Edit instructions"
+              size="sm"
+              variant="tertiary"
+              onClick={() => setIsEditing(true)}
+            >
+              <LuPencil />
+            </PMIconButton>
+          </PMBox>
+        )}
+        {latestVersion.prompt ? (
           <PMMarkdownViewer content={latestVersion.prompt} />
-        </PMBox>
-      ) : (
-        <PMText color="secondary">
-          This skill has no instructions yet. Its frontmatter tells a coding
-          agent when to reach for it, and nothing tells it what to do once it
-          has.
-        </PMText>
-      )}
+        ) : (
+          <PMText color="secondary">
+            This skill has no instructions yet. Its frontmatter tells a coding
+            agent when to reach for it, and nothing tells it what to do once it
+            has.
+          </PMText>
+        )}
+      </PMBox>
 
       {/*
         No list of files here. The surface reads the same query and turns the

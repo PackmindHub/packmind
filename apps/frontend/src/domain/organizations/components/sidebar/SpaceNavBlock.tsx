@@ -25,6 +25,7 @@ import type { UserSpaceWithRole } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
 import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
+import { contextPages } from './SpaceNavSections';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
 import { SpaceNavSections } from './SpaceNavSections';
 import { useSpaceNavMode } from '../SpaceNavModeContext';
@@ -123,6 +124,7 @@ function CollapsedSpaceNavItems({
           url={routes.space.toContext(orgSlug, space.slug)}
           label="Context"
           icon={<LuLayers />}
+          alsoOwns={contextPages(orgSlug, space.slug)}
         />
         <SidebarNavigationLink
           url={routes.space.toDistribution(orgSlug, space.slug)}

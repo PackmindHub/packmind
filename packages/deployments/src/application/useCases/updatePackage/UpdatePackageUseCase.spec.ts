@@ -34,6 +34,10 @@ import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
+import { commandFactory } from '@packmind/commands/test';
+import { standardFactory } from '@packmind/standards/test';
+import { skillFactory } from '@packmind/skills/test';
 
 describe('UpdatePackageUseCase', () => {
   let useCase: UpdatePackageUseCase;
@@ -75,44 +79,48 @@ describe('UpdatePackageUseCase', () => {
     slug: 'test-org',
   });
 
-  const buildSpace = (): Space => ({
-    id: spaceId,
-    slug: 'test-space',
-    name: 'Test Space',
-    organizationId,
-  });
+  const buildSpace = (): Space =>
+    spaceFactory({
+      id: spaceId,
+      slug: 'test-space',
+      name: 'Test Space',
+      organizationId,
+    });
 
-  const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command => ({
-    id,
-    name: `Recipe ${id}`,
-    slug: `recipe-${id}`,
-    content: 'Test recipe content',
-    version: 1,
-    userId,
-    spaceId: spaceIdParam,
-  });
+  const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command =>
+    commandFactory({
+      id,
+      name: `Recipe ${id}`,
+      slug: `recipe-${id}`,
+      content: 'Test recipe content',
+      version: 1,
+      userId,
+      spaceId: spaceIdParam,
+    });
 
-  const buildStandard = (id: StandardId, spaceIdParam: SpaceId): Standard => ({
-    id,
-    name: `Standard ${id}`,
-    slug: `standard-${id}`,
-    description: 'Test standard',
-    version: 1,
-    userId,
-    scope: null,
-    spaceId: spaceIdParam,
-  });
+  const buildStandard = (id: StandardId, spaceIdParam: SpaceId): Standard =>
+    standardFactory({
+      id,
+      name: `Standard ${id}`,
+      slug: `standard-${id}`,
+      description: 'Test standard',
+      version: 1,
+      userId,
+      scope: null,
+      spaceId: spaceIdParam,
+    });
 
-  const buildSkill = (id: SkillId, spaceIdParam: SpaceId): Skill => ({
-    id,
-    name: `Skill ${id}`,
-    slug: `skill-${id}`,
-    description: 'Test skill',
-    prompt: 'Test prompt',
-    version: 1,
-    userId,
-    spaceId: spaceIdParam,
-  });
+  const buildSkill = (id: SkillId, spaceIdParam: SpaceId): Skill =>
+    skillFactory({
+      id,
+      name: `Skill ${id}`,
+      slug: `skill-${id}`,
+      description: 'Test skill',
+      prompt: 'Test prompt',
+      version: 1,
+      userId,
+      spaceId: spaceIdParam,
+    });
 
   const buildExistingPackage = (pkgId: PackageId, pkgSpaceId: SpaceId) =>
     packageFactory({
@@ -356,12 +364,12 @@ describe('UpdatePackageUseCase', () => {
       it('throws error', async () => {
         const differentOrgId = createOrganizationId(uuidv4());
         const existingPackage = buildExistingPackage(packageId, spaceId);
-        const mockSpace: Space = {
+        const mockSpace: Space = spaceFactory({
           id: spaceId,
           slug: 'test-space',
           name: 'Test Space',
           organizationId: differentOrgId,
-        };
+        });
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);

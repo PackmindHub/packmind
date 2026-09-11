@@ -1,5 +1,6 @@
 import { OnboardDeployer } from './OnboardDeployer';
 import { DeleteItemType, FileUpdates } from '@packmind/types';
+import { contentAt, contentOf } from '@packmind/test-utils';
 
 /**
  * CLI versions that only expose the legacy `packmind-cli` executable. The
@@ -49,20 +50,16 @@ describe('OnboardDeployer', () => {
     options: { includeNext?: boolean; cliVersion?: string } = {},
   ): FileUpdates => deployer.deploy('TestAgent', '.test/skills/', options);
 
-  const contentAt = (result: FileUpdates, path: string): string => {
-    const file = result.createOrUpdate.find((f) => f.path === path);
-    if (!file) throw new Error(`Missing emitted file: ${path}`);
-    return file.content;
-  };
-
   /**
    * Files that reach every install at or above the skill's `minimumVersion`,
    * as opposed to the version-pinned ones under `packmind-versions/`.
    */
-  const unversionedFiles = (result: FileUpdates) =>
-    result.createOrUpdate.filter(
-      (file) => !file.path.includes('/packmind-versions/'),
-    );
+  const unversionedFiles = (
+    result: FileUpdates,
+  ): { path: string; content: string }[] =>
+    result.createOrUpdate
+      .filter((file) => !file.path.includes('/packmind-versions/'))
+      .map((file) => ({ path: file.path, content: contentOf(file) }));
 
   const versionedFileNames = [
     'create-items.md',

@@ -5,7 +5,14 @@
   "projectType": "application",
   "tags": ["env:node"],
   "implicitDependencies": ["packmind-cli"],
+  "// typecheck": "Spelled out rather than the '{}' the packages use: the shared definition in nx.json compiles tsconfig.lib.json, and this project has no lib — every file under src/ is test code. tsconfig.spec.json covers all of it, and is the only thing that type-checks the specs, since `test` runs them through @swc/jest, which strips types without checking them.",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project apps/cli-e2e-tests/tsconfig.spec.json"
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],

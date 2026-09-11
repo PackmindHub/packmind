@@ -5,6 +5,7 @@ import {
   LLMProvider,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { TestSavedLLMConfigurationUseCase } from './TestSavedLLMConfigurationUseCase';
@@ -30,39 +31,31 @@ describe('TestSavedLLMConfigurationUseCase', () => {
     typeof utils.isPackmindProviderAvailable
   >;
 
-  const adminUser = {
+  const adminUser = userFactory({
     id: userId,
     email: 'admin@example.com',
-    passwordHash: 'hashed-password',
-    active: true,
     memberships: [
       {
         userId,
         organizationId,
-        role: 'admin' as const,
+        role: 'admin',
       },
     ],
-  };
+  });
 
-  const memberUser = {
+  const memberUser = userFactory({
     id: userId,
     email: 'member@example.com',
-    passwordHash: 'hashed-password',
-    active: true,
     memberships: [
       {
         userId,
         organizationId,
-        role: 'member' as const,
+        role: 'member',
       },
     ],
-  };
+  });
 
-  const organization = {
-    id: organizationId,
-    name: 'Test Organization',
-    slug: 'test-org',
-  };
+  const organization = organizationFactory({ id: organizationId });
 
   beforeEach(() => {
     mockAccountsPort = {
@@ -224,8 +217,6 @@ describe('TestSavedLLMConfigurationUseCase', () => {
     });
 
     describe('when configuration exists', () => {
-      const configuredAt = new Date('2024-01-15T10:00:00Z');
-
       beforeEach(() => {
         mockConfigurationRepository.get.mockResolvedValue({
           config: {
@@ -234,7 +225,6 @@ describe('TestSavedLLMConfigurationUseCase', () => {
             model: 'gpt-4',
             fastestModel: 'gpt-4-mini',
           },
-          configuredAt,
         });
       });
 
@@ -358,7 +348,6 @@ describe('TestSavedLLMConfigurationUseCase', () => {
             model: 'gpt-4',
             fastestModel: 'gpt-4',
           },
-          configuredAt: new Date(),
         });
         mockExecutePrompt.mockResolvedValueOnce({
           success: true,

@@ -5,6 +5,7 @@ import {
   createGitRepoId,
   createGitProviderId,
 } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { getTargetPrefixedPath } from './FileUtils';
 
@@ -16,13 +17,13 @@ describe('SingleFileDeployer', () => {
   let nestedTarget: Target;
 
   beforeEach(() => {
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'testowner',
       repo: 'testrepo',
       branch: 'main',
       providerId: createGitProviderId('test-provider-id'),
-    };
+    });
 
     // Create various test targets
     rootTarget = {

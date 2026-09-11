@@ -34,7 +34,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
       findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
       findGitReposByProviderId: jest.fn(),
       findGitReposByOrganizationId: jest.fn(),
-      listGitRepos: jest.fn(),
       updateGitRepo: jest.fn(),
       deleteGitRepo: jest.fn(),
     } as unknown as jest.Mocked<GitRepoService>;
@@ -50,7 +49,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
       getFileOnRepo: jest.fn(),
       commitFiles: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
-    } as jest.Mocked<IGitRepo>;
+    } as unknown as jest.Mocked<IGitRepo>;
 
     // Mock IGitRepoFactory
     mockGitRepoFactory = {

@@ -9,11 +9,13 @@ import {
   StandardVersion,
   StandardVersionId,
   StandardId,
+  RuleId,
   SkillVersion,
   SkillVersionId,
   SkillId,
   UserId,
 } from '@packmind/types';
+import { ruleFactory } from '@packmind/standards/test';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
@@ -43,7 +45,13 @@ describe('PreviewArtifactRenderingUseCase', () => {
     description: 'A test standard',
     version: 1,
     scope: null,
-    rules: [{ id: 'r1', content: 'Rule 1', examples: [] }],
+    rules: [
+      ruleFactory({
+        id: 'r1' as RuleId,
+        content: 'Rule 1',
+        standardVersionId: 'sv-1' as StandardVersionId,
+      }),
+    ],
   };
 
   const skillVersion: SkillVersion = {
@@ -60,7 +68,7 @@ describe('PreviewArtifactRenderingUseCase', () => {
   beforeEach(() => {
     mockDeployer = {
       generateFileUpdatesForStandards: jest.fn(),
-      generateFileUpdatesForRecipes: jest.fn(),
+      generateFileUpdatesForCommands: jest.fn(),
       generateFileUpdatesForSkills: jest.fn(),
       deployCommands: jest.fn(),
       deployStandards: jest.fn(),
@@ -156,7 +164,7 @@ describe('PreviewArtifactRenderingUseCase', () => {
 
         describe('when slug is empty', () => {
           it('slugifies the artifact name', async () => {
-            const withEmptySlug: RecipeVersion = {
+            const withEmptySlug: CommandVersion = {
               ...recipeVersion,
               slug: '',
               name: 'My Cool Thing!',
@@ -175,7 +183,7 @@ describe('PreviewArtifactRenderingUseCase', () => {
 
         describe('when both slug and name are empty', () => {
           it('falls back to "preview"', async () => {
-            const emptyArtifact: RecipeVersion = {
+            const emptyArtifact: CommandVersion = {
               ...recipeVersion,
               slug: '',
               name: '',

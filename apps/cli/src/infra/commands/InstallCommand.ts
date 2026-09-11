@@ -154,7 +154,7 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
 }
 
 type TrackingLookup =
-  | { status: 'flag-off' }
+  | { status: 'tracking-unsupported' }
   | { status: 'resolved'; trackedGitRepo: { branch: string } | null }
   | { status: 'unavailable' };
 
@@ -182,7 +182,7 @@ export function decideDistributionTracking(params: {
   const { lookup, currentBranch, branchExists, detached } = params;
 
   switch (lookup.status) {
-    case 'flag-off':
+    case 'tracking-unsupported':
       return { action: 'record-legacy' };
     case 'unavailable':
       return { action: 'inform' };
@@ -276,7 +276,12 @@ async function resolveTrackingLookup(
   } catch (error) {
     const statusCode = (error as { statusCode?: number })?.statusCode;
     if (statusCode === 404) {
-      return { status: 'flag-off' };
+      // Not a feature flag, whatever this branch used to claim: none gates
+      // this route. A server that has it answers `gitRepo: null` for an
+      // untracked repo and maps refusals to 409 or 403, so a 404 means the
+      // route is absent — the server predates repository tracking. Keep
+      // recording rather than dropping the distribution.
+      return { status: 'tracking-unsupported' };
     }
     return { status: 'unavailable' };
   }

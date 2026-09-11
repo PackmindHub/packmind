@@ -1,4 +1,4 @@
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema } from '@packmind/git/schemas';
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';

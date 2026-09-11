@@ -58,6 +58,7 @@ describe('CreateStandardUseCase', () => {
     const user: User = {
       id: testUserId,
       email: 'test@example.com',
+      displayName: null,
       passwordHash: 'hashed_password',
       memberships: [
         {

@@ -59,18 +59,17 @@ describe('GetModelsUseCase', () => {
     };
 
     const createValidCommand = (
-      configOverrides?: Partial<GetModelsCommand['config']>,
+      config: GetModelsCommand['config'] = {
+        provider: LLMProvider.OPENAI,
+        apiKey: 'test-key',
+      },
     ): GetModelsCommand & MemberContext => ({
       userId: String(userId),
       organizationId,
       user,
       organization,
       membership,
-      config: {
-        provider: LLMProvider.OPENAI,
-        apiKey: 'test-key',
-        ...configOverrides,
-      },
+      config,
     });
 
     describe('when models are successfully retrieved', () => {
@@ -117,7 +116,10 @@ describe('GetModelsUseCase', () => {
       beforeEach(async () => {
         mockGetModels.mockResolvedValue([]);
         result = await useCase.executeForMembers(
-          createValidCommand({ provider: LLMProvider.ANTHROPIC }),
+          createValidCommand({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-key',
+          }),
         );
       });
 
@@ -188,7 +190,10 @@ describe('GetModelsUseCase', () => {
 
       it('classifies error as rate limit', async () => {
         const result = await useCase.executeForMembers(
-          createValidCommand({ provider: LLMProvider.GEMINI }),
+          createValidCommand({
+            provider: LLMProvider.GEMINI,
+            apiKey: 'test-key',
+          }),
         );
 
         expect(result.error?.type).toBe('RATE_LIMIT');

@@ -42,7 +42,7 @@ describe('GetFileFromRepoUseCase', () => {
       commitFiles: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
       checkDirectoryExists: jest.fn(),
-    } as jest.Mocked<IGitRepo>;
+    } as unknown as jest.Mocked<IGitRepo>;
 
     gitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {

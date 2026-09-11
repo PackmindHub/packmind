@@ -1,4 +1,5 @@
 import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   createOrganizationId,
   createUserId,
@@ -19,7 +20,7 @@ describe('CheckProviderAuthUseCase', () => {
   const organizationId = createOrganizationId('org-123');
   const userId = createUserId('user-123');
 
-  const user: User = {
+  const user: User = userFactory({
     id: userId,
     email: 'test@example.com',
     passwordHash: null,
@@ -31,13 +32,13 @@ describe('CheckProviderAuthUseCase', () => {
         role: 'member',
       },
     ],
-  };
+  });
 
-  const organization: Organization = {
+  const organization: Organization = organizationFactory({
     id: organizationId,
     name: 'Test Organization',
     slug: 'test-org',
-  };
+  });
 
   beforeEach(() => {
     mockGitProviderService = {

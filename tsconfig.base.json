@@ -34,6 +34,7 @@
       "@packmind/feature-flags": ["packages/feature-flags/src/index.ts"],
       "@packmind/frontend": ["packages/frontend/src/index.ts"],
       "@packmind/git": ["packages/git/src/index.ts"],
+      "@packmind/git/schemas": ["packages/git/src/infra/schemas/index.ts"],
       "@packmind/integration-tests": [
         "packages/integration-tests/src/index.ts"
       ],
@@ -54,6 +55,8 @@
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/standards/test": ["packages/standards/test/index.ts"],
+      "@packmind/standards/test/*": ["packages/standards/test/*"],
       "@packmind/test-utils": ["packages/test-utils/src/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
