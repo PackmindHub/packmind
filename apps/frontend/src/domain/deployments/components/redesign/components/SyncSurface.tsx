@@ -741,11 +741,11 @@ export function SyncSurface({
 
 /** What the footer says while both halves are in flight. */
 function syncingLine(installCount: number, pluginCount: number): string {
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
   if (installCount === 0) return `Distributing ${plugins}…`;
-  if (pluginCount === 0) return `Distributing to ${distributions}…`;
-  return `Distributing to ${distributions}, and ${plugins}…`;
+  if (pluginCount === 0) return `Distributing to ${destinations}…`;
+  return `Distributing to ${destinations}, and ${plugins}…`;
 }
 
 /**
@@ -764,20 +764,20 @@ function confirmLabel(
 ): string {
   const { installCount, packageCount } = stats;
   const { pluginCount, marketplaceCount } = marketplaceStats;
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
 
   if (pluginCount === 0) {
     return `Distribute ${packageCount} package${
       packageCount === 1 ? '' : 's'
-    } to ${distributions}`;
+    } to ${destinations}`;
   }
   if (installCount === 0) {
     return `Distribute ${plugins} to ${marketplaceCount} marketplace${
       marketplaceCount === 1 ? '' : 's'
     }`;
   }
-  return `Distribute to ${distributions} and ${plugins}`;
+  return `Distribute to ${destinations} and ${plugins}`;
 }
 
 function titleForScope(

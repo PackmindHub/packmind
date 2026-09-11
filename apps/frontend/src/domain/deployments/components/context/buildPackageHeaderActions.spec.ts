@@ -93,7 +93,7 @@ describe('buildPackageHeaderActions', () => {
     const pkg = drift([{ repo: 'r1', target: 't1', driftReason: 'behind' }]);
 
     it('names it in the singular', () => {
-      expect(build(pkg).update?.label).toBe('Distribute to 1 distribution');
+      expect(build(pkg).update?.label).toBe('Update 1 destination');
     });
 
     it('carries the count for the caller to scope the push with', () => {
@@ -112,8 +112,8 @@ describe('buildPackageHeaderActions', () => {
       { repo: 'r3', target: 't3', driftReason: 'behind' },
     ]);
 
-    it('counts distributions rather than artifacts', () => {
-      expect(build(pkg).update?.label).toBe('Distribute to 3 distributions');
+    it('counts destinations rather than artifacts', () => {
+      expect(build(pkg).update?.label).toBe('Update 3 destinations');
     });
   });
 
