@@ -70,12 +70,38 @@ export type PortStubs<T> = Partial<{
   Pick<T, ExcludedMethodKeys<T>> &
   Required<Pick<T, DataKeys<T>>>;
 
+export type MockPortOptions = {
+  /**
+   * Make a member that was never stubbed throw when it is called, rather than
+   * answer `undefined`.
+   *
+   * A complete mock is quiet by default: the day the code under test starts
+   * calling a member this spec never set up, the call returns `undefined` and
+   * the test may well still pass. Strict mode trades that for a loud failure
+   * naming the member - at the cost of having to stub every member the run
+   * actually reaches.
+   *
+   * Beware `jest.resetAllMocks()` and `resetMocks` in a jest config: both drop
+   * the implementation behind a mock, the refusal included, which puts the
+   * member back to answering `undefined`.
+   */
+  strict?: boolean;
+};
+
 type PortStubsArgs<T> =
   Record<never, never> extends PortStubs<T>
-    ? [stubs?: PortStubs<T>]
-    : [stubs: PortStubs<T>];
+    ? [stubs?: PortStubs<T>, options?: MockPortOptions]
+    : [stubs: PortStubs<T>, options?: MockPortOptions];
 
 type UnknownFunction = (...args: unknown[]) => unknown;
+
+function refuseUnstubbedCall(member: string): UnknownFunction {
+  return () => {
+    throw new Error(
+      `mockPort: '${member}' was called but was never stubbed. Stub it, or drop the strict option if answering undefined is what this test wants.`,
+    );
+  };
+}
 
 function isJestMock(value: unknown): boolean {
   return (
@@ -108,11 +134,18 @@ function isJestMock(value: unknown): boolean {
  * cannot conjure - a data member such as an `AxiosInstance`'s `defaults`, a
  * symbol-keyed method, a method named after one of the probes above - has to be
  * supplied, and a type whose shape is mostly data is better mocked by hand.
+ *
+ * Pass `{ strict: true }` to make an unstubbed member refuse the call instead of
+ * answering `undefined`:
+ *
+ * ```ts
+ * const gitRepo = mockPort<IGitRepo>({}, { strict: true });
+ * ```
  */
 export function mockPort<T extends object>(
   ...args: PortStubsArgs<T>
 ): jest.Mocked<T> {
-  const [stubs = {} as PortStubs<T>] = args;
+  const [stubs = {} as PortStubs<T>, options = {}] = args;
   const members = new Map<string | symbol, unknown>();
 
   const isAutoMocked = (member: string | symbol): boolean =>
@@ -136,7 +169,12 @@ export function mockPort<T extends object>(
       if (!isAutoMocked(member)) {
         return undefined;
       }
-      members.set(member, jest.fn());
+      members.set(
+        member,
+        options.strict
+          ? jest.fn(refuseUnstubbedCall(member as string))
+          : jest.fn(),
+      );
       return members.get(member);
     },
     set(_target, member, value) {

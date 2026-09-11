@@ -46,6 +46,21 @@ const gitRepo = mockPort<IGitRepo>();
 gitRepo.getFileOnRepo.mockResolvedValue({ sha, content }); // checked against IGitRepo
 ```
 
+A complete mock is a quiet one: a member nobody stubbed answers `undefined`, so the day the code
+under test starts calling one this spec never set up, the call goes through and the test may still
+pass — where a hand-written partial mock would have thrown `is not a function`. Pass
+`{ strict: true }` where that silence would hide something, and the call is refused by name instead:
+
+```ts
+const gitRepo = mockPort<IGitRepo>({}, { strict: true });
+gitRepo.commitFiles(files, 'message');
+// Error: mockPort: 'commitFiles' was called but was never stubbed
+```
+
+The price is that every member the run reaches has to be stubbed, so it suits a spec asserting on a
+narrow interaction rather than one driving a whole use case. Note that `jest.resetAllMocks()` and
+`resetMocks` in a jest config drop the refusal along with every other implementation.
+
 `createTestDatasourceFixture` is the preferred shape for repository specs: `initialize()` in
 `beforeAll`, `cleanup()` in `afterEach`, `destroy()` in `afterAll`. Its own doc comment carries a
 worked example.

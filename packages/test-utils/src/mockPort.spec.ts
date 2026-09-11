@@ -163,6 +163,44 @@ describe('mockPort', () => {
     });
   });
 
+  describe('when the mock is strict', () => {
+    it('refuses a call to a member that was never stubbed', () => {
+      const port = mockPort<ITestPort>({}, { strict: true });
+
+      expect(() => port.findById('id')).toThrow(
+        /was called but was never stubbed/,
+      );
+    });
+
+    it('names the member it refused', () => {
+      const port = mockPort<ITestPort>({}, { strict: true });
+
+      expect(() => port.findById('id')).toThrow(/findById/);
+    });
+
+    it('lets a member seeded up front through', async () => {
+      const port = mockPort<ITestPort>(
+        { findById: async () => ({ id: 'seeded' }) },
+        { strict: true },
+      );
+
+      await expect(port.findById('id')).resolves.toEqual({ id: 'seeded' });
+    });
+
+    it('lets a member stubbed afterwards through', async () => {
+      const port = mockPort<ITestPort>({}, { strict: true });
+      port.findById.mockResolvedValue({ id: 'stubbed' });
+
+      await expect(port.findById('id')).resolves.toEqual({ id: 'stubbed' });
+    });
+
+    it('still lets an unstubbed member be asserted on', () => {
+      const port = mockPort<ITestPort>({}, { strict: true });
+
+      expect(port.findById).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when the mock is awaited', () => {
     it('does not behave as a thenable', async () => {
       const port = mockPort<ITestPort>();
