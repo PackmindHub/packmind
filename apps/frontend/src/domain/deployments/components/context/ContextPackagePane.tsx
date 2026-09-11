@@ -65,7 +65,7 @@ import {
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
-import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
+import { RelativeDate } from '../RelativeDate';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
 import {
@@ -1149,7 +1149,9 @@ function EmptyPackageBody({
  * description so a long one cannot push it out of sight.
  *
  * Relative, as every other date on the surrounding surfaces is: the question a
- * reader brings here is how long it has been, not which Tuesday it was.
+ * reader brings here is how long it has been, not which Tuesday it was. Which
+ * Tuesday it was is on the hover, because a reader comparing a package against
+ * a release does eventually need it.
  *
  * The second half is dropped when the package has not changed since it was
  * created, which is the common case for one made and filled in a single
@@ -1163,7 +1165,8 @@ function PackageActivity({ pkg }: Readonly<{ pkg: PackageResponse }>) {
   return (
     <PMHStack gap={1.5} paddingTop={1} align="center">
       <PMText fontSize="xs" color="faded">
-        Created {formatRelativeDate(activity.createdAt)}
+        Created{' '}
+        <RelativeDate iso={activity.createdAt} testId="package-created" />
       </PMText>
       {activity.changedAt && (
         <>
@@ -1171,7 +1174,8 @@ function PackageActivity({ pkg }: Readonly<{ pkg: PackageResponse }>) {
             &middot;
           </PMText>
           <PMText fontSize="xs" color="faded">
-            Updated {formatRelativeDate(activity.changedAt)}
+            Updated{' '}
+            <RelativeDate iso={activity.changedAt} testId="package-updated" />
           </PMText>
         </>
       )}

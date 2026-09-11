@@ -14,6 +14,7 @@ import {
   CommandVersion,
   Skill,
   Space,
+  SpaceType,
   Standard,
   StandardVersion,
   User,
@@ -52,6 +53,7 @@ describe('ApplyPlaybookUseCase', () => {
   const user: User = {
     id: userId,
     email: 'bob@example.com',
+    displayName: null,
     passwordHash: 'hashed',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
@@ -65,13 +67,19 @@ describe('ApplyPlaybookUseCase', () => {
     id: spaceId,
     name: 'Default Space',
     slug: 'default-space',
+    type: SpaceType.open,
     organizationId,
+    isDefaultSpace: true,
+    color: 'blue',
   };
   const space2: Space = {
     id: spaceId2,
     name: 'Second Space',
     slug: 'second-space',
+    type: SpaceType.open,
     organizationId,
+    isDefaultSpace: false,
+    color: 'green',
   };
 
   beforeEach(() => {
@@ -160,6 +168,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'my-skill',
                 description: 'A skill',
@@ -171,6 +180,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'my-standard',
                 description: 'A standard',
@@ -182,6 +192,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'my-command', content: 'Do this' },
               targetId: createTargetId('target-1'),
             },
@@ -220,7 +231,7 @@ describe('ApplyPlaybookUseCase', () => {
         const skillMdFile = callArgs.files.find(
           (f: { path: string }) => f.path === 'SKILL.md',
         );
-        expect(skillMdFile.content).toContain('name: my-skill');
+        expect(skillMdFile?.content).toContain('name: my-skill');
       });
     });
 
@@ -231,6 +242,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'full-skill',
                 description: 'A complete skill',
@@ -246,6 +258,7 @@ describe('ApplyPlaybookUseCase', () => {
                     path: 'helper.ts',
                     content: 'export const x = 1;',
                     permissions: 'rw-r--r--',
+                    isBase64: false,
                   },
                 ],
               },
@@ -266,7 +279,7 @@ describe('ApplyPlaybookUseCase', () => {
         const skillMdFile = callArgs.files.find(
           (f: { path: string }) => f.path === 'SKILL.md',
         );
-        expect(skillMdFile.content).toContain('license: MIT');
+        expect(skillMdFile?.content).toContain('license: MIT');
       });
 
       it('includes allowed-tools in SKILL.md frontmatter', () => {
@@ -274,7 +287,7 @@ describe('ApplyPlaybookUseCase', () => {
         const skillMdFile = callArgs.files.find(
           (f: { path: string }) => f.path === 'SKILL.md',
         );
-        expect(skillMdFile.content).toContain('allowed-tools: Read,Write');
+        expect(skillMdFile?.content).toContain('allowed-tools: Read,Write');
       });
 
       it('passes supporting files alongside SKILL.md', () => {
@@ -313,6 +326,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std-1',
                 description: 'desc',
@@ -324,6 +338,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId: spaceId2,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std-2',
                 description: 'desc',
@@ -360,6 +375,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',
@@ -371,6 +387,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'cmd', content: 'content' },
               targetId: createTargetId('target-1'),
             },
@@ -408,6 +425,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -448,6 +466,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',
@@ -459,6 +478,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -470,6 +490,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'cmd', content: 'content' },
               targetId: createTargetId('target-1'),
             },
@@ -503,6 +524,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',
@@ -514,6 +536,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -525,6 +548,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'cmd', content: 'content' },
               targetId: createTargetId('target-1'),
             },
@@ -567,6 +591,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',
@@ -578,6 +603,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'cmd', content: 'content' },
               targetId: createTargetId('target-1'),
             },
@@ -601,7 +627,10 @@ describe('ApplyPlaybookUseCase', () => {
           id: spaceId,
           name: 'Wrong',
           slug: 'wrong',
+          type: SpaceType.open,
           organizationId: otherOrgId,
+          isDefaultSpace: false,
+          color: 'red',
         };
         spacesPort.getSpaceById.mockResolvedValueOnce(wrongSpace);
 
@@ -610,6 +639,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -649,6 +679,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId: missingSpaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -713,10 +744,12 @@ describe('ApplyPlaybookUseCase', () => {
       id: recipeId,
       name: 'My Command',
       slug: 'my-command',
+      content: 'Do this',
       version: 1,
+      userId,
       spaceId,
-      organizationId,
-    } as Command;
+      movedTo: null,
+    };
 
     const recipeVersion: CommandVersion = {
       id: recipeVersionId,
@@ -1366,19 +1399,19 @@ describe('ApplyPlaybookUseCase', () => {
                 spaceId,
                 type: ChangeProposalType.removeStandard,
                 artefactId: stdId,
-                payload: {},
+                payload: { packageIds: [] },
               },
               {
                 spaceId,
                 type: ChangeProposalType.removeCommand,
                 artefactId: recipeId,
-                payload: {},
+                payload: { packageIds: [] },
               },
               {
                 spaceId,
                 type: ChangeProposalType.removeSkill,
                 artefactId: skillId,
-                payload: {},
+                payload: { packageIds: [] },
               },
             ],
           }),
@@ -1429,11 +1462,12 @@ describe('ApplyPlaybookUseCase', () => {
                 spaceId,
                 type: ChangeProposalType.removeStandard,
                 artefactId: stdId,
-                payload: {},
+                payload: { packageIds: [] },
               },
               {
                 spaceId,
                 type: ChangeProposalType.createSkill,
+                artefactId: null,
                 payload: {
                   name: 'new-skill',
                   description: 'A skill',
@@ -1470,6 +1504,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',
@@ -1481,6 +1516,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createStandard,
+              artefactId: null,
               payload: {
                 name: 'std',
                 description: 'desc',
@@ -1492,6 +1528,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createCommand,
+              artefactId: null,
               payload: { name: 'cmd', content: 'content' },
               targetId: createTargetId('target-1'),
             },
@@ -1529,6 +1566,7 @@ describe('ApplyPlaybookUseCase', () => {
             {
               spaceId,
               type: ChangeProposalType.createSkill,
+              artefactId: null,
               payload: {
                 name: 'skill',
                 description: 'desc',

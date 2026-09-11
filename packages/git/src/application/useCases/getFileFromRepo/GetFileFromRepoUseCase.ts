@@ -1,16 +1,12 @@
 import { GitRepo } from '@packmind/types';
-import { GitProvider, GitProviderNotFoundError } from '@packmind/types';
-import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
-import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 
 const origin = 'GetFileFromRepoUseCase';
 
 export class GetFileFromRepoUseCase {
   constructor(
-    private readonly gitProviderService: GitProviderService,
-    private readonly gitRepoFactory: IGitRepoFactory,
+    private readonly resolvedGitRepoService: ResolvedGitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -35,24 +31,11 @@ export class GetFileFromRepoUseCase {
       branch,
     });
 
-    // Fetch the git provider by ID
-    const provider = await this.gitProviderService.findGitProviderById(
-      gitRepo.providerId,
-    );
-
-    if (!provider) {
-      throw new GitProviderNotFoundError(gitRepo.providerId);
-    }
-
-    // Create IGitRepo instance based on provider (token validation delegated to factory)
-    const gitRepoInstance = await this.createGitRepoInstance(gitRepo, provider);
-
-    // Get file content from repository
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
     const fileData = await gitRepoInstance.getFileOnRepo(filePath, branch);
 
     if (fileData) {
-      // Decode base64 content to readable string
-      // Git providers (like GitHub API) return content in base64 encoding
+      // Git providers return content base64-encoded.
       const decodedContent = Buffer.from(fileData.content, 'base64').toString(
         'utf-8',
       );
@@ -79,12 +62,5 @@ export class GetFileFromRepoUseCase {
     }
 
     return fileData;
-  }
-
-  private createGitRepoInstance(
-    gitRepo: GitRepo,
-    provider: GitProvider,
-  ): Promise<IGitRepo> {
-    return this.gitRepoFactory.createGitRepo(gitRepo, provider);
   }
 }

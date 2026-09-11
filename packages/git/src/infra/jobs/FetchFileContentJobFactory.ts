@@ -5,12 +5,11 @@ import {
   instrumentUseCase,
   queueFactory,
 } from '@packmind/node-utils';
-import { GitProviderService } from '../../application/GitProviderService';
 import { GitRepoService } from '../../application/GitRepoService';
+import { ResolvedGitRepoService } from '../../application/services/ResolvedGitRepoService';
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
 import { GetFileFromRepoUseCase } from '../../application/useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
-import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 
 const origin = 'FetchFileContentJobFactory';
 
@@ -19,8 +18,7 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
 
   constructor(
     private readonly gitRepoService: GitRepoService,
-    private readonly gitProviderService: GitProviderService,
-    private readonly gitRepoFactory: IGitRepoFactory,
+    private readonly resolvedGitRepoService: ResolvedGitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -30,7 +28,7 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
     // The one use case built outside an adapter, so it opts itself in rather
     // than being picked up by instrumentUseCases(this) - see docker/otel/README.md.
     const getFileFromRepo = instrumentUseCase(
-      new GetFileFromRepoUseCase(this.gitProviderService, this.gitRepoFactory),
+      new GetFileFromRepoUseCase(this.resolvedGitRepoService),
     );
 
     this._delayedJob = new FetchFileContentDelayedJob(

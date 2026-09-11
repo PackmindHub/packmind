@@ -516,7 +516,7 @@ export function PackageDetailPane({
               selectedDriftedCount > 0
                 ? [
                     {
-                      label: `Distribute to ${selectedDriftedCount} distribution${selectedDriftedCount === 1 ? '' : 's'}`,
+                      label: `Update ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
                       icon: <LuRotateCw />,
                       onAct: () => onSyncPackage(pkg.id, selectedDriftedKeys),
                     },
