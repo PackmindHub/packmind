@@ -361,21 +361,16 @@ function SectionHeader({
         {section.count}
       </PMText>
       {/*
-        What is behind a shut band, said in the band's own quiet register. The
-        count to its left is the answer to "how many", and this is the answer to
-        "why can I not see them".
-      */}
-      {isCollapsed && (
-        <PMText fontSize="10px" color="faded" marginLeft="auto">
-          collapsed
-        </PMText>
-      )}
-      {/*
         At the far end of the strip, which is where the checkbox is not. The
         two controls of a band cannot share its left edge: one of them has to
         give the column up, and it is the one with nothing below it to line up
         with. This is also the side an accordion is opened from, which is what
         a full-width strip that folds is.
+
+        No word beside it saying "collapsed". The glyph turns, and a label that
+        only ever repeats what the control next to it is already showing is a
+        second thing to read for nothing. What a shut band does need to keep is
+        its count, and that is to the left, where it always is.
       */}
       <PMIconButton
         aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
@@ -383,7 +378,7 @@ function SectionHeader({
         variant="ghost"
         size="2xs"
         color="text.faded"
-        marginLeft={isCollapsed ? undefined : 'auto'}
+        marginLeft="auto"
         onClick={onToggle}
       >
         {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}

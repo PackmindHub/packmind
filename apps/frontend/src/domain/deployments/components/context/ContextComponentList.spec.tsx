@@ -294,7 +294,7 @@ describe('ContextComponentList', () => {
         expect(screen.getByText('Release checklist')).toBeVisible();
       });
 
-      it('keeps saying how many it holds, and that it is shut', async () => {
+      it('keeps saying how many it holds', async () => {
         await renderBands();
 
         await userEvent.click(
@@ -302,7 +302,19 @@ describe('ContextComponentList', () => {
         );
 
         expect(screen.getByText('2 of 40')).toBeVisible();
-        expect(screen.getByText('collapsed')).toBeVisible();
+      });
+
+      it('says it is shut on the control that shut it, and nowhere else', async () => {
+        await renderBands();
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Collapse Standards' }),
+        );
+
+        expect(
+          screen.getByRole('button', { name: 'Expand Standards' }),
+        ).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByText('collapsed')).toBeNull();
       });
 
       it('gives them back when it is opened again', async () => {
