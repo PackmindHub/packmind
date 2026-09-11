@@ -99,11 +99,16 @@ are worse specs. A `split` verdict is the same move, decided in advance.
 
 ### Before the first run
 
-- `nvm use` — the repo needs the version in `.nvmrc`, and the gate halts on the
-  wrong one rather than producing confusing failures.
-- `export PACKMIND_EDITION=oss`.
-- Work from a clean tree. The scope check's only input is `git status`, so an
-  unrelated edit of yours registers as the executor's scope violation.
+- **Work from a clean tree.** The scope check's only input is `git status`, so
+  an unrelated edit of yours registers as the executor's scope violation, and
+  the baseline halts on a dirty tree rather than guessing whose change it is.
+- **Node must be the major version in `.nvmrc`.** The gate halts on the wrong
+  one instead of letting every check below fail for the wrong reason. Rather
+  than remembering `nvm use`, set it once per machine — `nvm alias default 24`
+  makes every new shell right by default, and the gate only compares the major
+  version so a patch bump in `.nvmrc` does not invalidate it.
+- `PACKMIND_EDITION=oss` needs no setup: `.claude/settings.json` sets it for
+  every session in this repo.
 
 ## Pieces
 
