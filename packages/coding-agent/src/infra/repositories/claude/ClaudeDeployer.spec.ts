@@ -21,7 +21,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
-import { skillVersionFactory } from '@packmind/skills/test';
+import { skillFileFactory, skillVersionFactory } from '@packmind/skills/test';
+import { contentOf, gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('ClaudeDeployer', () => {
@@ -44,13 +45,13 @@ describe('ClaudeDeployer', () => {
       gitRepoId: createGitRepoId(uuidv4()),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   afterEach(() => {
@@ -3217,21 +3218,21 @@ describe('ClaudeDeployer', () => {
           description: 'A skill with multiple files',
           prompt: 'See reference.md and forms.md for more information.',
           files: [
-            {
+            skillFileFactory({
               id: createSkillFileId('file-1'),
               skillVersionId: createSkillVersionId('skill-version-1'),
               path: 'reference.md',
               content:
                 '# Reference\n\nThis is additional reference documentation.',
               permissions: 'rw-r--r--',
-            },
-            {
+            }),
+            skillFileFactory({
               id: createSkillFileId('file-2'),
               skillVersionId: createSkillVersionId('skill-version-1'),
               path: 'forms.md',
               content: '# Forms\n\nInstructions for working with forms.',
               permissions: 'rw-r--r--',
-            },
+            }),
           ],
         });
       });
@@ -3370,20 +3371,20 @@ describe('ClaudeDeployer', () => {
           skillVersionsWithFiles = [
             skillVersionFactory({
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'utils/formatter.ts',
                   content: 'export const format = (s: string) => s',
                   permissions: '644',
-                },
+                }),
               ],
             }),
           ];
@@ -3523,7 +3524,7 @@ describe('ClaudeDeployer', () => {
           const imageFile = fileUpdates.createOrUpdate.find((file) =>
             file.path.includes('image.png'),
           );
-          expect(imageFile?.isBase64).toBe(true);
+          expect(imageFile).toMatchObject({ isBase64: true });
         });
       });
 
@@ -3551,7 +3552,7 @@ describe('ClaudeDeployer', () => {
           const helperFile = fileUpdates.createOrUpdate.find((file) =>
             file.path.includes('helper.ts'),
           );
-          expect(helperFile?.isBase64).toBe(false);
+          expect(helperFile).toMatchObject({ isBase64: false });
         });
       });
 
@@ -3562,20 +3563,20 @@ describe('ClaudeDeployer', () => {
           const skillVersionsWithFiles = [
             skillVersionFactory({
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-0'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'SKILL.md',
                   content: 'This should be ignored',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
+                }),
               ],
             }),
           ];
@@ -3638,25 +3639,25 @@ describe('ClaudeDeployer', () => {
             skillVersionFactory({
               slug: 'first-skill',
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'helper1.ts',
                   content: 'export const helper1 = () => {}',
                   permissions: '644',
-                },
+                }),
               ],
             }),
             skillVersionFactory({
               slug: 'second-skill',
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: createSkillVersionId('skill-version-2'),
                   path: 'helper2.ts',
                   content: 'export const helper2 = () => {}',
                   permissions: '644',
-                },
+                }),
               ],
             }),
           ];
@@ -3831,20 +3832,20 @@ describe('ClaudeDeployer', () => {
           const skillVersionsWithFiles = [
             skillVersionFactory({
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: createSkillVersionId('skill-version-1'),
                   path: 'README.md',
                   content: '# Helper Documentation',
                   permissions: '644',
-                },
+                }),
               ],
             }),
           ];
@@ -4331,21 +4332,21 @@ describe('ClaudeDeployer', () => {
       });
 
       it('renders argument-hint before arguments', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('argument-hint:')).toBeLessThan(
           content.indexOf('arguments:'),
         );
       });
 
       it('renders arguments before model', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('arguments:')).toBeLessThan(
           content.indexOf('model:'),
         );
       });
 
       it('renders model before hooks', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('model:')).toBeLessThan(
           content.indexOf('hooks:'),
         );
@@ -4370,14 +4371,14 @@ describe('ClaudeDeployer', () => {
       });
 
       it('renders known properties before unknown ones', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('model:')).toBeLessThan(
           content.indexOf('alpha:'),
         );
       });
 
       it('renders unknown properties in alphabetical order', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('alpha:')).toBeLessThan(
           content.indexOf('zebra:'),
         );
@@ -4400,14 +4401,14 @@ describe('ClaudeDeployer', () => {
       });
 
       it('renders nested alpha before middle', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('alpha:')).toBeLessThan(
           content.indexOf('middle:'),
         );
       });
 
       it('renders nested middle before zebra', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('middle:')).toBeLessThan(
           content.indexOf('zebra:'),
         );

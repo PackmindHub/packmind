@@ -12,6 +12,7 @@ import {
   createTargetId,
   createUserId,
   DeleteItemType,
+  FileModification,
   FileUpdates,
   GitRepo,
   IStandardsPort,
@@ -22,6 +23,7 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { PackmindDeployer } from './PackmindDeployer';
 
 describe('PackmindDeployer', () => {
@@ -43,13 +45,13 @@ describe('PackmindDeployer', () => {
       gitRepoId: createGitRepoId('test-repo-id'),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   describe('deployRecipes', () => {
@@ -309,7 +311,7 @@ describe('PackmindDeployer', () => {
     });
 
     describe('when deploying standard with rules', () => {
-      let standardFile: { path: string; content: string } | undefined;
+      let standardFile: FileModification | undefined;
 
       beforeEach(async () => {
         const standard: Standard = standardFactory({
@@ -513,7 +515,7 @@ describe('PackmindDeployer', () => {
       let localMockStandardsPort: { getRulesByStandardId: jest.Mock };
       let result: FileUpdates;
       let standard: Standard;
-      let standardFile: { path: string; content: string } | undefined;
+      let standardFile: FileModification | undefined;
 
       beforeEach(async () => {
         localMockStandardsPort = {

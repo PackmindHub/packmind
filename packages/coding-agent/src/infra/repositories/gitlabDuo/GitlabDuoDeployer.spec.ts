@@ -20,6 +20,7 @@ import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericSta
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('GitlabDuoDeployer', () => {
@@ -38,13 +39,13 @@ describe('GitlabDuoDeployer', () => {
       gitRepoId: createGitRepoId(uuidv4()),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   describe('deployRecipes', () => {
@@ -498,7 +499,7 @@ describe('GitlabDuoDeployer', () => {
         const helperFile = result.createOrUpdate.find((f) =>
           f.path.includes('helper.py'),
         );
-        expect(helperFile?.isBase64).toBe(false);
+        expect(helperFile).toMatchObject({ isBase64: false });
       });
 
       it('includes skillFileId on additional files', () => {

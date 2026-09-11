@@ -13,8 +13,9 @@ import {
   DeleteItemType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { skillVersionFactory } from '@packmind/skills/test';
+import { skillFileFactory, skillVersionFactory } from '@packmind/skills/test';
 import { commandVersionFactory } from '@packmind/commands/test';
+import { gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CursorDeployer', () => {
@@ -37,13 +38,13 @@ describe('CursorDeployer', () => {
       gitRepoId: createGitRepoId(uuidv4()),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   afterEach(() => {
@@ -250,21 +251,21 @@ describe('CursorDeployer', () => {
           description: 'A skill with multiple files',
           prompt: 'See reference.md and forms.md for more information.',
           files: [
-            {
+            skillFileFactory({
               id: createSkillFileId('file-1'),
               skillVersionId: createSkillVersionId('skill-version-1'),
               path: 'reference.md',
               content:
                 '# Reference\n\nThis is additional reference documentation.',
               permissions: 'rw-r--r--',
-            },
-            {
+            }),
+            skillFileFactory({
               id: createSkillFileId('file-2'),
               skillVersionId: createSkillVersionId('skill-version-1'),
               path: 'forms.md',
               content: '# Forms\n\nInstructions for working with forms.',
               permissions: 'rw-r--r--',
-            },
+            }),
           ],
         });
       });
@@ -406,7 +407,7 @@ describe('CursorDeployer', () => {
         const imageFile = fileUpdates.createOrUpdate.find((f) =>
           f.path.endsWith('image.png'),
         );
-        expect(imageFile?.isBase64).toBe(true);
+        expect(imageFile).toMatchObject({ isBase64: true });
       });
     });
   });
@@ -476,13 +477,13 @@ describe('CursorDeployer', () => {
         const skillVersionsWithFiles = [
           skillVersionFactory({
             files: [
-              {
+              skillFileFactory({
                 id: createSkillFileId('file-1'),
                 skillVersionId: createSkillVersionId('skill-version-1'),
                 path: 'helper.ts',
                 content: 'export const helper = () => {}',
                 permissions: 'rw-r--r--',
-              },
+              }),
             ],
           }),
         ];
@@ -534,20 +535,20 @@ describe('CursorDeployer', () => {
         const skillVersionsWithFiles = [
           skillVersionFactory({
             files: [
-              {
+              skillFileFactory({
                 id: createSkillFileId('file-1'),
                 skillVersionId: createSkillVersionId('skill-version-1'),
                 path: 'SKILL.MD',
                 content: 'This should be ignored',
                 permissions: 'rw-r--r--',
-              },
-              {
+              }),
+              skillFileFactory({
                 id: createSkillFileId('file-2'),
                 skillVersionId: createSkillVersionId('skill-version-1'),
                 path: 'reference.md',
                 content: 'Reference content',
                 permissions: 'rw-r--r--',
-              },
+              }),
             ],
           }),
         ];
@@ -1022,13 +1023,13 @@ describe('CursorDeployer', () => {
         const skillVersionsWithFiles = [
           skillVersionFactory({
             files: [
-              {
+              skillFileFactory({
                 id: createSkillFileId('file-1'),
                 skillVersionId: createSkillVersionId('skill-version-1'),
                 path: 'helper.ts',
                 content: 'export const helper = () => {}',
                 permissions: 'rw-r--r--',
-              },
+              }),
             ],
           }),
         ];
