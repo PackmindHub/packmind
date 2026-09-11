@@ -44,6 +44,9 @@
     ".gitignore"
   ],
 
+  "$comment_test_files": "A `characterization` unit must not rewrite these. Used only by that check; a behavioural unit's test file is in scope like any other.",
+  "testFiles": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+
   "$comment_always": "Pipeline bookkeeping the gate itself writes. Never a scope violation.",
   "alwaysInScope": [
     ".claude/features/**/units/*.json",

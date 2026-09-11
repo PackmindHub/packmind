@@ -173,6 +173,22 @@ function distillJest(raw) {
   return cap(at === -1 ? raw : raw.slice(at + 1));
 }
 
+/**
+ * Jest's summary line, as `23 skipped, 22 passed, 45 total`.
+ *
+ * Exit 0 is not evidence that the criterion asserted anything. A
+ * `--testNamePattern` that matches nothing skips every test and still exits 0,
+ * and so does a criterion naming a test the executor never wrote. That is the
+ * exact failure the gate exists to prevent, so the count is read rather than
+ * assumed. Returns null when the output carries no jest summary at all.
+ */
+function assertionsRun(raw) {
+  const m = raw.match(/^\s*Tests:\s+(.+)$/m);
+  if (!m) return null;
+  const passed = m[1].match(/(\d+)\s+passed/);
+  return { passed: passed ? Number(passed[1]) : 0, summary: m[1].trim() };
+}
+
 // ------------------------------------------------------------------ reporting
 
 const steps = [];
@@ -238,6 +254,28 @@ function halt(spec, args, reason, output) {
 function stepScope(cfg, spec, args) {
   const started = Date.now();
   const changed = changedFiles();
+
+  // A unit that changed nothing passes every remaining stage: an empty diff is
+  // inside any declared scope, `nx affected` with no files is a no-op, and the
+  // named test still goes green off the existing suite. Green alone is not
+  // enough — a unit that does nothing is green — so the absence of work is a
+  // failure here rather than a pass three stages later.
+  const substantive = changed.filter((f) => !matchesAny(f, cfg.alwaysInScope));
+  if (substantive.length === 0) {
+    record('scope', false, (Date.now() - started) / 1000);
+    fail(
+      spec,
+      args,
+      'scope',
+      'git status --porcelain=v1 --untracked-files=all',
+      'The unit changed no files. Nothing was implemented, so nothing can be\n' +
+        'verified: the exit criterion would pass off the existing suite.\n\n' +
+        'If the work was already done by an earlier unit, the unit is redundant\n' +
+        'and should be dropped rather than recorded as done.',
+      { no_op: true },
+    );
+  }
+
   const guardrail = changed.filter((f) => matchesAny(f, cfg.guardrails));
   const outside = changed.filter(
     (f) =>
@@ -325,7 +363,7 @@ function stepWide(cfg, spec, args, changed, env) {
   }
 }
 
-function stepTests(spec, args, env) {
+function stepTests(cfg, spec, args, env) {
   const cmd = spec.exit_criterion?.command;
   if (!cmd) {
     halt(
@@ -337,9 +375,72 @@ function stepTests(spec, args, env) {
         'adjacent one that has a criterion, or split a characterization test out first.',
     );
   }
+
+  const kind = spec.exit_criterion?.kind ?? 'behavioural';
+  if (!['behavioural', 'characterization'].includes(kind)) {
+    halt(
+      spec,
+      args,
+      'bad-exit-criterion',
+      `exit_criterion.kind must be "behavioural" or "characterization", got ` +
+        `${JSON.stringify(kind)}.`,
+    );
+  }
+
   const r = run(cmd, env);
   record('tests', r.code === 0, r.seconds);
   if (r.code !== 0) fail(spec, args, 'tests', cmd, distillJest(r.stdout));
+
+  const ran = assertionsRun(r.stdout);
+  if (!ran) {
+    fail(
+      spec,
+      args,
+      'tests',
+      cmd,
+      'The criterion exited 0 but printed no test summary, so there is no\n' +
+        "evidence it asserted anything. The gate reads jest's `Tests:` line.\n" +
+        'Point the criterion at a jest run.',
+      { assertions: null },
+    );
+  }
+  if (ran.passed === 0) {
+    fail(
+      spec,
+      args,
+      'tests',
+      cmd,
+      'The criterion exited 0 but ran no assertion.\n' +
+        `  Tests: ${ran.summary}\n\n` +
+        'A test name that matches nothing is skipped, not failed, and jest still\n' +
+        'exits 0. Write the named test, check the name in the criterion matches\n' +
+        'it, or declare `"kind": "characterization"` if this unit is a refactor\n' +
+        'with no observable delta.',
+      { assertions: 0 },
+    );
+  }
+
+  // A refactor has no new assertion to make; what it must show instead is that
+  // the existing ones still hold and were not rewritten to fit the new code.
+  if (kind === 'characterization') {
+    const rewritten = changedFiles().filter((f) =>
+      matchesAny(f, cfg.testFiles),
+    );
+    if (rewritten.length) {
+      fail(
+        spec,
+        args,
+        'tests',
+        'git diff --name-only',
+        'This unit declares `kind: characterization`, so it must not change\n' +
+          'behaviour — but it modified test files:\n\n' +
+          rewritten.map((f) => `  ${f}`).join('\n') +
+          '\n\nA refactor that edits its own tests proves nothing. Either revert the\n' +
+          'test changes, or this is a behavioural unit and needs a named test.',
+        { characterization_touched_tests: rewritten },
+      );
+    }
+  }
 }
 
 // ------------------------------------------------------------------- baseline
@@ -440,5 +541,5 @@ const changed = stepScope(cfg, spec, args);
 stepAutofix(cfg, changed, env);
 stepScoped(cfg, spec, args, changedFiles(), env);
 stepWide(cfg, spec, args, changed, env);
-stepTests(spec, args, env);
+stepTests(cfg, spec, args, env);
 pass(spec, args);
