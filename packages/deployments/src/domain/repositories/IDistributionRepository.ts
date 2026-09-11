@@ -125,6 +125,25 @@ export interface IDistributionRepository {
   ): Promise<SkillVersion[]>;
 
   /**
+   * Batched equivalent of findActive{Standard,Command,Skill}VersionsByTarget
+   * (packageIds omitted) or the ByTargetAndPackages variants (packageIds
+   * given): fetches the active distributed packages for the target ONCE and
+   * hydrates all three artifact types from those same rows, instead of
+   * running the identical underlying query once per artifact type.
+   * Byte-identical results to calling the three single-artifact methods with
+   * the same arguments.
+   */
+  findActiveVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds?: PackageId[],
+  ): Promise<{
+    standardVersions: StandardVersion[];
+    commandVersions: CommandVersion[];
+    skillVersions: SkillVersion[];
+  }>;
+
+  /**
    * Get all currently active (not removed) package IDs for a specific target.
    * This looks at the latest distribution operation for each package
    * and returns packages where the latest operation is NOT 'remove'.

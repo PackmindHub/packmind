@@ -93,6 +93,35 @@ export abstract class AbstractRepository<
     }
   }
 
+  async findByIds(ids: Entity['id'][]): Promise<Entity[]> {
+    const uniqueIds = [...new Set(ids)];
+
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    this.logger.info(`Finding ${this.entityName}(s) by IDs`, {
+      count: uniqueIds.length,
+    });
+
+    try {
+      const where = { id: In(uniqueIds) } as FindOptionsWhere<Entity>;
+      const entities = await this.repository.find({ where });
+
+      this.logger.info(`Found ${this.entityName}(s) by IDs`, {
+        requestedCount: uniqueIds.length,
+        foundCount: entities.length,
+      });
+      return entities;
+    } catch (error) {
+      this.logger.error(`Failed to find ${this.entityName}(s) by IDs`, {
+        count: uniqueIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findById(id: Entity['id'], opts?: QueryOption): Promise<Entity | null> {
     this.logger.info(`Finding ${this.entityName} by ID`, { id });
 

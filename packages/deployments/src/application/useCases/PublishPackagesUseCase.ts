@@ -4,9 +4,6 @@ import {
   PackagesDeployment,
   Package,
   PackageId,
-  CommandId,
-  StandardId,
-  SkillId,
   CommandVersionId,
   StandardVersionId,
   SkillVersionId,
@@ -77,89 +74,51 @@ export class PublishPackagesUseCase implements IPublishPackages {
       packages.push(pkg);
     }
 
-    // Build a map of recipeId -> latestVersionId for deduplication
-    const commandVersionCache = new Map<string, CommandVersionId>();
-    const standardVersionCache = new Map<string, StandardVersionId>();
-    const skillVersionCache = new Map<string, SkillVersionId>();
+    const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
+      await Promise.all([
+        this.commandsPort.getLatestCommandVersions(
+          packages.flatMap((pkg) => pkg.recipes),
+        ),
+        this.standardsPort.getLatestStandardVersions(
+          packages.flatMap((pkg) => pkg.standards),
+        ),
+        this.skillsPort.getLatestSkillVersions(
+          packages.flatMap((pkg) => pkg.skills),
+        ),
+      ]);
+    const commandVersionIdByCommandId = new Map(
+      latestCommandVersions.map((version) => [version.recipeId, version.id]),
+    );
+    const standardVersionIdByStandardId = new Map(
+      latestStandardVersions.map((version) => [version.standardId, version.id]),
+    );
+    const skillVersionIdBySkillId = new Map(
+      latestSkillVersions.map((version) => [version.skillId, version.id]),
+    );
 
-    // Track per-package versions for distribution storage
+    // Track per-package versions for distribution storage; an artifact without
+    // any version is skipped
     const packageVersionsMap: PackageVersionsMap = new Map();
-
-    // Resolve versions per package and cache them
     for (const pkg of packages) {
-      const pkgCommandVersionIds: CommandVersionId[] = [];
-      const pkgStandardVersionIds: StandardVersionId[] = [];
-      const pkgSkillVersionIds: SkillVersionId[] = [];
-
-      // Resolve recipe versions
-      for (const recipeId of pkg.recipes) {
-        if (!commandVersionCache.has(recipeId)) {
-          const versions = await this.commandsPort.listCommandVersions(
-            recipeId as CommandId,
-          );
-          if (versions.length > 0) {
-            const latestVersion = versions.sort(
-              (a, b) => b.version - a.version,
-            )[0];
-            commandVersionCache.set(
-              recipeId,
-              latestVersion.id as CommandVersionId,
-            );
-          }
-        }
-        const versionId = commandVersionCache.get(recipeId);
-        if (versionId) {
-          pkgCommandVersionIds.push(versionId);
-        }
-      }
-
-      // Resolve standard versions
-      for (const standardId of pkg.standards) {
-        if (!standardVersionCache.has(standardId)) {
-          const latestVersion =
-            await this.standardsPort.getLatestStandardVersion(
-              standardId as StandardId,
-            );
-          if (latestVersion) {
-            standardVersionCache.set(
-              standardId,
-              latestVersion.id as StandardVersionId,
-            );
-          }
-        }
-        const versionId = standardVersionCache.get(standardId);
-        if (versionId) {
-          pkgStandardVersionIds.push(versionId);
-        }
-      }
-
-      // Resolve skill versions
-      for (const skillId of pkg.skills) {
-        if (!skillVersionCache.has(skillId)) {
-          const latestVersion = await this.skillsPort.getLatestSkillVersion(
-            skillId as SkillId,
-          );
-          if (latestVersion) {
-            skillVersionCache.set(skillId, latestVersion.id as SkillVersionId);
-          }
-        }
-        const versionId = skillVersionCache.get(skillId);
-        if (versionId) {
-          pkgSkillVersionIds.push(versionId);
-        }
-      }
-
       packageVersionsMap.set(pkg.id, {
-        recipeVersionIds: pkgCommandVersionIds,
-        standardVersionIds: pkgStandardVersionIds,
-        skillVersionIds: pkgSkillVersionIds,
+        recipeVersionIds: pkg.recipes.flatMap(
+          (recipeId) => commandVersionIdByCommandId.get(recipeId) ?? [],
+        ),
+        standardVersionIds: pkg.standards.flatMap(
+          (standardId) => standardVersionIdByStandardId.get(standardId) ?? [],
+        ),
+        skillVersionIds: pkg.skills.flatMap(
+          (skillId) => skillVersionIdBySkillId.get(skillId) ?? [],
+        ),
       });
     }
 
     // Collect unique version IDs for publishing
-    const recipeVersionIds = Array.from(commandVersionCache.values());
-    const standardVersionIds = Array.from(standardVersionCache.values());
-    const skillVersionIds = Array.from(skillVersionCache.values());
+    const recipeVersionIds = Array.from(commandVersionIdByCommandId.values());
+    const standardVersionIds = Array.from(
+      standardVersionIdByStandardId.values(),
+    );
+    const skillVersionIds = Array.from(skillVersionIdBySkillId.values());
 
     this.logger.info('Resolved package contents', {
       packagesCount: packages.length,

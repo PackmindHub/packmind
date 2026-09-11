@@ -32,9 +32,15 @@ export interface IStandardsPort {
   getStandardVersionById(
     versionId: StandardVersionId,
   ): Promise<StandardVersion | null>;
+  getStandardVersionsByIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<StandardVersion[]>;
   getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null>;
+  getLatestStandardVersions(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]>;
   getStandardVersionByNumber(
     standardId: StandardId,
     version: number,

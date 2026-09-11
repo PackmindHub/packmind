@@ -1,8 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource } from '@packmind/node-utils';
+import { localDataSource, getErrorMessage } from '@packmind/node-utils';
 import {
   Distribution,
+  DistributedPackage,
   DistributionId,
+  DistributionOperation,
   DistributionStatus,
   GitCommit,
   GitProviderId,
@@ -42,18 +44,18 @@ function toIsoString(value: unknown): string {
   return value == null ? '' : String(value);
 }
 
-// A SkillVersion is "orphaned" when its parent Skill row has been soft-deleted.
-// TypeORM's leftJoinAndSelect does not auto-apply soft-delete filtering on
-// joined entities, so we filter explicitly to avoid surfacing versions of
-// deleted skills through historical distribution rows.
-function isSkillVersionOrphaned(skillVersion: SkillVersion): boolean {
-  const skill = (
-    skillVersion as SkillVersion & {
-      skill?: { deletedAt?: Date | null } | null;
-    }
-  ).skill;
-  return skill?.deletedAt != null;
-}
+type LatestDistributedPackageRow = {
+  distributedPackageId: string;
+  packageId: PackageId;
+  operation: DistributionOperation | null;
+  renderModes: RenderMode[] | string | null;
+  distributedAt: Date | string;
+};
+
+type VersionRelationName = keyof Pick<
+  DistributedPackage,
+  'standardVersions' | 'recipeVersions' | 'skillVersions'
+>;
 
 export class DistributionRepository implements IDistributionRepository {
   constructor(
@@ -74,6 +76,37 @@ export class DistributionRepository implements IDistributionRepository {
     };
   }
 
+  private toRenderModes(value: unknown): RenderMode[] {
+    if (Array.isArray(value)) {
+      return value as RenderMode[];
+    }
+
+    if (typeof value === 'string' && value.length > 0) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(value);
+      } catch (error) {
+        this.logger.warn(
+          'Failed to parse distribution render_modes as JSON; treating as no render modes',
+          { value, error: getErrorMessage(error) },
+        );
+        return [];
+      }
+
+      if (!Array.isArray(parsed)) {
+        this.logger.warn(
+          'Distribution render_modes parsed to a non-array value; treating as no render modes',
+          { value },
+        );
+        return [];
+      }
+
+      return parsed as RenderMode[];
+    }
+
+    return [];
+  }
+
   async add(distribution: Distribution): Promise<Distribution> {
     this.logger.info('Adding distribution to database', {
       id: distribution.id,
@@ -88,7 +121,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to save distribution to database', {
         id: distribution.id,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -130,7 +163,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by organization ID', {
         organizationId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -189,7 +222,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by package ID', {
         packageId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -248,7 +281,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by recipe ID', {
         recipeId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -308,7 +341,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by standard ID', {
         standardId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -366,7 +399,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           targetIds,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -444,7 +477,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           status,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -484,10 +517,124 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to find distribution by ID', {
         distributionId: id,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
+  }
+
+  private async findActiveDistributedPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds?: PackageId[],
+  ): Promise<LatestDistributedPackageRow[]> {
+    if (packageIds && packageIds.length === 0) {
+      return [];
+    }
+
+    const queryBuilder = this.repository
+      .createQueryBuilder('distribution')
+      .innerJoin('distribution.distributedPackages', 'distributedPackage')
+      .where('distribution.organizationId = :organizationId', {
+        organizationId,
+      })
+      .andWhere('distribution.target_id = :targetId', { targetId })
+      .andWhere('distribution.status = :status', {
+        status: DistributionStatus.success,
+      });
+
+    if (packageIds) {
+      queryBuilder.andWhere(
+        'distributedPackage.packageId IN (:...packageIds)',
+        {
+          packageIds: packageIds as string[],
+        },
+      );
+    }
+
+    const rows = await queryBuilder
+      .distinctOn(['distributedPackage.package_id'])
+      .orderBy('distributedPackage.package_id')
+      .addOrderBy('distribution.createdAt', 'DESC')
+      .addOrderBy('distribution.id', 'DESC')
+      .select('distributedPackage.id', 'distributedPackageId')
+      .addSelect('distributedPackage.package_id', 'packageId')
+      .addSelect('distributedPackage.operation', 'operation')
+      .addSelect('distribution.render_modes', 'renderModes')
+      .addSelect('distribution.createdAt', 'distributedAt')
+      .getRawMany<LatestDistributedPackageRow>();
+
+    return rows.filter((row) => (row.operation ?? 'add') !== 'remove');
+  }
+
+  private async findActiveVersionsForDistributedPackages<
+    R extends VersionRelationName,
+  >(
+    activePackages: LatestDistributedPackageRow[],
+    relation: R,
+    artifactIdOf: (version: DistributedPackage[R][number]) => string,
+  ): Promise<DistributedPackage[R]> {
+    type V = DistributedPackage[R][number];
+
+    if (activePackages.length === 0) {
+      return [] as DistributedPackage[R];
+    }
+
+    const queryBuilder = this.repository
+      .createQueryBuilder('distribution')
+      .select(['distribution.id', 'distributedPackage.id', 'version'])
+      .innerJoin('distribution.distributedPackages', 'distributedPackage')
+      .innerJoin(`distributedPackage.${relation}`, 'version')
+      .where('distributedPackage.id IN (:...distributedPackageIds)', {
+        distributedPackageIds: activePackages.map(
+          (row) => row.distributedPackageId,
+        ),
+      });
+
+    if (relation === 'skillVersions') {
+      queryBuilder.innerJoin('version.skill', 'skill');
+    }
+
+    const distributions = await queryBuilder.getMany();
+
+    const versionsByDistributedPackageId = new Map<string, V[]>();
+    for (const distribution of distributions) {
+      for (const distributedPackage of distribution.distributedPackages) {
+        versionsByDistributedPackageId.set(
+          distributedPackage.id,
+          distributedPackage[relation] as V[],
+        );
+      }
+    }
+
+    const packagesByRecency = [...activePackages].sort((a, b) => {
+      const delta =
+        new Date(b.distributedAt).getTime() -
+        new Date(a.distributedAt).getTime();
+      return delta !== 0
+        ? delta
+        : b.distributedPackageId.localeCompare(a.distributedPackageId);
+    });
+
+    const versionByArtifactId = new Map<string, V>();
+
+    for (const row of packagesByRecency) {
+      const versions = versionsByDistributedPackageId.get(
+        row.distributedPackageId,
+      );
+      if (!versions) {
+        continue;
+      }
+
+      for (const version of versions) {
+        const artifactId = artifactIdOf(version);
+        if (!versionByArtifactId.has(artifactId)) {
+          versionByArtifactId.set(artifactId, version);
+        }
+      }
+    }
+
+    return Array.from(versionByArtifactId.values()) as DistributedPackage[R];
   }
 
   async findActiveStandardVersionsByTarget(
@@ -500,71 +647,22 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .leftJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+      );
 
-      // First pass: Track the latest distribution for each package
-      // This is needed to handle package removals correctly
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          standardVersions: StandardVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              standardVersions: distributedPackage.standardVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract standard versions only from packages whose latest operation is NOT 'remove'
-      const standardVersionMap = new Map<string, StandardVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        // Skip packages whose latest distribution was a removal
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const standardVersion of data.standardVersions) {
-          // Only keep the first (most recent) version of each standard
-          if (!standardVersionMap.has(standardVersion.standardId)) {
-            standardVersionMap.set(standardVersion.standardId, standardVersion);
-          }
-        }
-      }
-
-      const activeStandardVersions = Array.from(standardVersionMap.values());
+      const activeStandardVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'standardVersions',
+          (standardVersion) => standardVersion.standardId,
+        );
 
       this.logger.info('Active standard versions found by target', {
         organizationId,
         targetId,
-        totalSuccessfulDistributions: distributions.length,
+        activePackageCount: activePackages.length,
         activeStandardVersionsCount: activeStandardVersions.length,
         standardIds: activeStandardVersions.map((sv) => sv.standardId),
       });
@@ -574,7 +672,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find active standard versions by target', {
         organizationId,
         targetId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -590,68 +688,22 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .leftJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+      );
 
-      // First pass: Track the latest distribution for each package
-      // This is needed to handle package removals correctly
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          recipeVersions: CommandVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              recipeVersions: distributedPackage.recipeVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
-      const commandVersionMap = new Map<string, CommandVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        // Skip packages whose latest distribution was a removal
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const recipeVersion of data.recipeVersions) {
-          // Only keep the first (most recent) version of each recipe
-          if (!commandVersionMap.has(recipeVersion.recipeId)) {
-            commandVersionMap.set(recipeVersion.recipeId, recipeVersion);
-          }
-        }
-      }
-
-      const activeCommandVersions = Array.from(commandVersionMap.values());
+      const activeCommandVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'recipeVersions',
+          (recipeVersion) => recipeVersion.recipeId,
+        );
 
       this.logger.info('Active recipe versions found by target', {
         organizationId,
         targetId,
-        totalSuccessfulDistributions: distributions.length,
+        activePackageCount: activePackages.length,
         activeRecipeVersionsCount: activeCommandVersions.length,
         recipeIds: activeCommandVersions.map((rv) => rv.recipeId),
       });
@@ -661,7 +713,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find active recipe versions by target', {
         organizationId,
         targetId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -686,70 +738,18 @@ export class DistributionRepository implements IDistributionRepository {
     }
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
-          packageIds: packageIds as string[],
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+        packageIds,
+      );
 
-      // First pass: Track the latest distribution for each package
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          standardVersions: StandardVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only process packages that are in the filter list
-          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
-            continue;
-          }
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              standardVersions: distributedPackage.standardVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract standard versions only from packages whose latest operation is NOT 'remove'
-      const standardVersionMap = new Map<string, StandardVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const standardVersion of data.standardVersions) {
-          if (!standardVersionMap.has(standardVersion.standardId)) {
-            standardVersionMap.set(standardVersion.standardId, standardVersion);
-          }
-        }
-      }
-
-      const activeStandardVersions = Array.from(standardVersionMap.values());
+      const activeStandardVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'standardVersions',
+          (standardVersion) => standardVersion.standardId,
+        );
 
       this.logger.info(
         'Active standard versions found by target and packages',
@@ -768,7 +768,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           targetId,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -791,67 +791,18 @@ export class DistributionRepository implements IDistributionRepository {
     }
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
-          packageIds: packageIds as string[],
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+        packageIds,
+      );
 
-      // First pass: Track the latest distribution for each package
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          recipeVersions: CommandVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only process packages that are in the filter list
-          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
-            continue;
-          }
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              recipeVersions: distributedPackage.recipeVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
-      const commandVersionMap = new Map<string, CommandVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const recipeVersion of data.recipeVersions) {
-          if (!commandVersionMap.has(recipeVersion.recipeId)) {
-            commandVersionMap.set(recipeVersion.recipeId, recipeVersion);
-          }
-        }
-      }
-
-      const activeCommandVersions = Array.from(commandVersionMap.values());
+      const activeCommandVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'recipeVersions',
+          (recipeVersion) => recipeVersion.recipeId,
+        );
 
       this.logger.info('Active recipe versions found by target and packages', {
         organizationId,
@@ -867,9 +818,75 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           targetId,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async findActiveVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds?: PackageId[],
+  ): Promise<{
+    standardVersions: StandardVersion[];
+    commandVersions: CommandVersion[];
+    skillVersions: SkillVersion[];
+  }> {
+    this.logger.info('Finding active versions by target', {
+      organizationId,
+      targetId,
+      packageIdsCount: packageIds?.length,
+    });
+
+    if (packageIds && packageIds.length === 0) {
+      return { standardVersions: [], commandVersions: [], skillVersions: [] };
+    }
+
+    try {
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+        packageIds,
+      );
+
+      const [standardVersions, commandVersions, skillVersions] =
+        await Promise.all([
+          this.findActiveVersionsForDistributedPackages(
+            activePackages,
+            'standardVersions',
+            (standardVersion) => standardVersion.standardId,
+          ),
+          this.findActiveVersionsForDistributedPackages(
+            activePackages,
+            'recipeVersions',
+            (recipeVersion) => recipeVersion.recipeId,
+          ),
+          this.findActiveVersionsForDistributedPackages(
+            activePackages,
+            'skillVersions',
+            (skillVersion) => skillVersion.skillId,
+          ),
+        ]);
+
+      this.logger.info('Active versions found by target', {
+        organizationId,
+        targetId,
+        packageIdsCount: packageIds?.length,
+        activePackageCount: activePackages.length,
+        standardVersionsCount: standardVersions.length,
+        commandVersionsCount: commandVersions.length,
+        skillVersionsCount: skillVersions.length,
+      });
+
+      return { standardVersions, commandVersions, skillVersions };
+    } catch (error) {
+      this.logger.error('Failed to find active versions by target', {
+        organizationId,
+        targetId,
+        error: getErrorMessage(error),
+      });
       throw error;
     }
   }
@@ -925,7 +942,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by skill ID', {
         skillId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -941,49 +958,16 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+      );
 
-      // Track the latest operation for each package
-      const latestOperationPerPackage = new Map<string, string>();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only keep the first (latest) occurrence of each package
-          if (!latestOperationPerPackage.has(distributedPackage.packageId)) {
-            latestOperationPerPackage.set(
-              distributedPackage.packageId,
-              distributedPackage.operation ?? 'add',
-            );
-          }
-        }
-      }
-
-      // Return package IDs where latest operation is NOT 'remove'
-      const activePackageIds: PackageId[] = [];
-      for (const [packageId, operation] of latestOperationPerPackage) {
-        if (operation !== 'remove') {
-          activePackageIds.push(packageId as PackageId);
-        }
-      }
+      const activePackageIds = activePackages.map((row) => row.packageId);
 
       this.logger.info('Active package IDs found by target', {
         organizationId,
         targetId,
-        totalPackagesTracked: latestOperationPerPackage.size,
         activePackageCount: activePackageIds.length,
       });
 
@@ -992,7 +976,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find active package IDs by target', {
         organizationId,
         targetId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1008,56 +992,15 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const activePackageIds = await this.findActivePackageIdsByTarget(
+      const activePackages = await this.findActiveDistributedPackages(
         organizationId,
         targetId,
       );
 
-      if (activePackageIds.length === 0) {
-        this.logger.info('No active packages found for render modes lookup', {
-          organizationId,
-          targetId,
-        });
-        return [];
-      }
-
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
-
-      const remainingPackageIds = new Set<string>(
-        activePackageIds.map((id) => id as string),
-      );
       const renderModes = new Set<RenderMode>();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          const packageId = distributedPackage.packageId as string;
-          if (!remainingPackageIds.has(packageId)) {
-            continue;
-          }
-
-          remainingPackageIds.delete(packageId);
-
-          for (const mode of distribution.renderModes ?? []) {
-            renderModes.add(mode);
-          }
-        }
-
-        if (remainingPackageIds.size === 0) {
-          break;
+      for (const row of activePackages) {
+        for (const mode of this.toRenderModes(row.renderModes)) {
+          renderModes.add(mode);
         }
       }
 
@@ -1066,7 +1009,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.info('Active render modes found by target', {
         organizationId,
         targetId,
-        activePackageCount: activePackageIds.length,
+        activePackageCount: activePackages.length,
         renderModesCount: activeRenderModes.length,
       });
 
@@ -1075,7 +1018,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find active render modes by target', {
         organizationId,
         targetId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1091,72 +1034,22 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .leftJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
-        .leftJoinAndSelect('skillVersion.skill', 'skill')
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+      );
 
-      // First pass: Track the latest distribution for each package
-      // This is needed to handle package removals correctly
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          skillVersions: SkillVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              skillVersions: distributedPackage.skillVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract skill versions only from packages whose latest operation is NOT 'remove'
-      const skillVersionMap = new Map<string, SkillVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        // Skip packages whose latest distribution was a removal
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const skillVersion of data.skillVersions) {
-          if (isSkillVersionOrphaned(skillVersion)) {
-            continue;
-          }
-          // Only keep the first (most recent) version of each skill
-          if (!skillVersionMap.has(skillVersion.skillId)) {
-            skillVersionMap.set(skillVersion.skillId, skillVersion);
-          }
-        }
-      }
-
-      const activeSkillVersions = Array.from(skillVersionMap.values());
+      const activeSkillVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'skillVersions',
+          (skillVersion) => skillVersion.skillId,
+        );
 
       this.logger.info('Active skill versions found by target', {
         organizationId,
         targetId,
-        totalSuccessfulDistributions: distributions.length,
+        activePackageCount: activePackages.length,
         activeSkillVersionsCount: activeSkillVersions.length,
         skillIds: activeSkillVersions.map((sv) => sv.skillId),
       });
@@ -1166,7 +1059,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find active skill versions by target', {
         organizationId,
         targetId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1188,71 +1081,18 @@ export class DistributionRepository implements IDistributionRepository {
     }
 
     try {
-      const distributions = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
-        .leftJoinAndSelect('skillVersion.skill', 'skill')
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.target_id = :targetId', { targetId })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
-          packageIds: packageIds as string[],
-        })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        targetId,
+        packageIds,
+      );
 
-      // First pass: Track the latest distribution for each package
-      const latestDistributionPerPackage = new Map<
-        string,
-        {
-          operation: string;
-          skillVersions: SkillVersion[];
-        }
-      >();
-
-      for (const distribution of distributions) {
-        for (const distributedPackage of distribution.distributedPackages) {
-          // Only process packages that are in the filter list
-          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
-            continue;
-          }
-          // Only keep the first (latest) occurrence of each package
-          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
-            latestDistributionPerPackage.set(distributedPackage.packageId, {
-              operation: distributedPackage.operation ?? 'add',
-              skillVersions: distributedPackage.skillVersions,
-            });
-          }
-        }
-      }
-
-      // Second pass: Extract skill versions only from packages whose latest operation is NOT 'remove'
-      const skillVersionMap = new Map<string, SkillVersion>();
-
-      for (const [, data] of latestDistributionPerPackage) {
-        if (data.operation === 'remove') {
-          continue;
-        }
-
-        for (const skillVersion of data.skillVersions) {
-          if (isSkillVersionOrphaned(skillVersion)) {
-            continue;
-          }
-          if (!skillVersionMap.has(skillVersion.skillId)) {
-            skillVersionMap.set(skillVersion.skillId, skillVersion);
-          }
-        }
-      }
-
-      const activeSkillVersions = Array.from(skillVersionMap.values());
+      const activeSkillVersions =
+        await this.findActiveVersionsForDistributedPackages(
+          activePackages,
+          'skillVersions',
+          (skillVersion) => skillVersion.skillId,
+        );
 
       this.logger.info('Active skill versions found by target and packages', {
         organizationId,
@@ -1268,7 +1108,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           targetId,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -1420,7 +1260,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to list deployed artifact IDs by space', {
         organizationId,
         spaceId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1471,7 +1311,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to update distribution status', {
         distributionId: id,
         status,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1498,6 +1338,10 @@ export class DistributionRepository implements IDistributionRepository {
       // Latest successful 'add' distribution per (target, package) within the space.
       // DISTINCT ON collapses history to one row per pair at the SQL layer, so we
       // never hydrate the heavy version content for older distributions.
+      // Correctness relies on DISTINCT ON, which TypeORM only emits when
+      // driver.options.type === 'postgres' (silently dropped otherwise,
+      // degrading this to "every historical row"). This repository is
+      // Postgres-only.
       const latestRows = await this.repository
         .createQueryBuilder('distribution')
         .innerJoin('distribution.distributedPackages', 'distributedPackage')
@@ -1517,6 +1361,7 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.target_id')
         .addOrderBy('distributedPackage.package_id')
         .addOrderBy('distribution.createdAt', 'DESC')
+        .addOrderBy('distribution.id', 'DESC')
         .select('distributedPackage.id', 'distributedPackageId')
         .addSelect('distribution.target_id', 'targetId')
         .addSelect('target.name', 'targetName')
@@ -1713,7 +1558,7 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to find outdated deployments by space', {
         organizationId,
         spaceId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1743,6 +1588,7 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.target_id')
         .addOrderBy('distributedPackage.package_id')
         .addOrderBy('distribution.createdAt', 'DESC')
+        .addOrderBy('distribution.id', 'DESC')
         .select('distribution.target_id', 'targetId')
         .addSelect('distributedPackage.package_id', 'packageId')
         .addSelect('distributedPackage.operation', 'operation')
@@ -1772,7 +1618,7 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list active package operations by space', {
         spaceId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -1836,7 +1682,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           organizationId,
           providerCount: providerIds.length,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;

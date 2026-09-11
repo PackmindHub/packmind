@@ -11,6 +11,8 @@ import {
   createCommandVersionId,
   createStandardVersionId,
   createDistributionId,
+  createSkillId,
+  SkillVersion,
   PublishPackagesCommand,
   Package,
   CommandVersion,
@@ -26,6 +28,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { commandVersionFactory } from '@packmind/commands/test/commandVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
+import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
@@ -72,15 +75,15 @@ describe('PublishPackagesUseCase', () => {
     mockLogger = stubLogger();
 
     mockCommandsPort = {
-      listCommandVersions: jest.fn(),
+      getLatestCommandVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
-      getLatestStandardVersion: jest.fn(),
+      getLatestStandardVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
-      getLatestSkillVersion: jest.fn(),
+      getLatestSkillVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockDeploymentPort = {
@@ -162,13 +165,12 @@ describe('PublishPackagesUseCase', () => {
       };
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockCommandsPort.listCommandVersions.mockResolvedValue([
-        commandVersionFactory({ version: 1, recipeId }),
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         recipeVersion,
       ]);
-      mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [],
       });
@@ -209,17 +211,17 @@ describe('PublishPackagesUseCase', () => {
     it('resolves recipes to latest version', async () => {
       await useCase.execute(command);
 
-      expect(mockCommandsPort.listCommandVersions).toHaveBeenCalledWith(
+      expect(mockCommandsPort.getLatestCommandVersions).toHaveBeenCalledWith([
         recipeId,
-      );
+      ]);
     });
 
     it('resolves standards to latest version', async () => {
       await useCase.execute(command);
 
-      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
+      expect(mockStandardsPort.getLatestStandardVersions).toHaveBeenCalledWith([
         standardId,
-      );
+      ]);
     });
 
     it('calls publishArtifacts with correct command', async () => {
@@ -347,7 +349,7 @@ describe('PublishPackagesUseCase', () => {
       });
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockCommandsPort.listCommandVersions.mockResolvedValue([
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         commandVersionForCommandOnly,
       ]);
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
@@ -364,8 +366,10 @@ describe('PublishPackagesUseCase', () => {
       await useCase.execute(command);
     });
 
-    it('does not call getLatestStandardVersion', () => {
-      expect(mockStandardsPort.getLatestStandardVersion).not.toHaveBeenCalled();
+    it('asks for no standard version', () => {
+      expect(mockStandardsPort.getLatestStandardVersions).toHaveBeenCalledWith(
+        [],
+      );
     });
 
     it('calls publishArtifacts with empty standardVersionIds', () => {
@@ -405,9 +409,9 @@ describe('PublishPackagesUseCase', () => {
       });
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
         standardVersionForStandardOnly,
-      );
+      ]);
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [],
       });
@@ -422,8 +426,10 @@ describe('PublishPackagesUseCase', () => {
       await useCase.execute(command);
     });
 
-    it('does not call listRecipeVersions', () => {
-      expect(mockCommandsPort.listCommandVersions).not.toHaveBeenCalled();
+    it('asks for no command version', () => {
+      expect(mockCommandsPort.getLatestCommandVersions).toHaveBeenCalledWith(
+        [],
+      );
     });
 
     it('calls publishArtifacts with empty recipeVersionIds', () => {
@@ -559,28 +565,18 @@ describe('PublishPackagesUseCase', () => {
         .mockResolvedValueOnce(package1)
         .mockResolvedValueOnce(package2);
 
-      mockCommandsPort.listCommandVersions.mockImplementation(
-        async (commandIdParam) => {
-          if (commandIdParam === sharedCommandId) {
-            return [sharedCommandVersion];
-          }
-          if (commandIdParam === uniqueCommandId) {
-            return [uniqueCommandVersion];
-          }
-          return [];
-        },
+      mockCommandsPort.getLatestCommandVersions.mockImplementation(
+        async (commandIds) =>
+          [sharedCommandVersion, uniqueCommandVersion].filter((version) =>
+            commandIds.includes(version.recipeId),
+          ),
       );
 
-      mockStandardsPort.getLatestStandardVersion.mockImplementation(
-        async (standardIdParam) => {
-          if (standardIdParam === sharedStandardId) {
-            return sharedStandardVersion;
-          }
-          if (standardIdParam === uniqueStandardId) {
-            return uniqueStandardVersion;
-          }
-          return null;
-        },
+      mockStandardsPort.getLatestStandardVersions.mockImplementation(
+        async (standardIds) =>
+          [sharedStandardVersion, uniqueStandardVersion].filter((version) =>
+            standardIds.includes(version.standardId),
+          ),
       );
 
       const mockDistribution = createMockDistribution();
@@ -598,38 +594,32 @@ describe('PublishPackagesUseCase', () => {
       result = await useCase.execute(command);
     });
 
-    it('calls listRecipeVersions twice for deduplicated recipes', () => {
-      expect(mockCommandsPort.listCommandVersions).toHaveBeenCalledTimes(2);
+    it('resolves every command version in a single call', () => {
+      expect(mockCommandsPort.getLatestCommandVersions).toHaveBeenCalledTimes(
+        1,
+      );
     });
 
-    it('calls listRecipeVersions with shared recipe id', () => {
-      expect(mockCommandsPort.listCommandVersions).toHaveBeenCalledWith(
+    it('asks for the command ids of both packages at once', () => {
+      expect(mockCommandsPort.getLatestCommandVersions).toHaveBeenCalledWith([
         sharedCommandId,
-      );
-    });
-
-    it('calls listRecipeVersions with unique recipe id', () => {
-      expect(mockCommandsPort.listCommandVersions).toHaveBeenCalledWith(
         uniqueCommandId,
+        sharedCommandId,
+      ]);
+    });
+
+    it('resolves every standard version in a single call', () => {
+      expect(mockStandardsPort.getLatestStandardVersions).toHaveBeenCalledTimes(
+        1,
       );
     });
 
-    it('calls getLatestStandardVersion twice for deduplicated standards', () => {
-      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledTimes(
-        2,
-      );
-    });
-
-    it('calls getLatestStandardVersion with shared standard id', () => {
-      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
+    it('asks for the standard ids of both packages at once', () => {
+      expect(mockStandardsPort.getLatestStandardVersions).toHaveBeenCalledWith([
         sharedStandardId,
-      );
-    });
-
-    it('calls getLatestStandardVersion with unique standard id', () => {
-      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
+        sharedStandardId,
         uniqueStandardId,
-      );
+      ]);
     });
 
     it('calls publishArtifacts once', () => {
@@ -684,6 +674,81 @@ describe('PublishPackagesUseCase', () => {
 
     it('returns one distribution', () => {
       expect(result).toHaveLength(1);
+    });
+  });
+  describe('when packages contain skills', () => {
+    const firstSkillId = createSkillId(uuidv4());
+    const secondSkillId = createSkillId(uuidv4());
+    const skillWithoutVersionId = createSkillId(uuidv4());
+    const otherPackageId = createPackageId(uuidv4());
+
+    let firstSkillVersion: SkillVersion;
+    let secondSkillVersion: SkillVersion;
+
+    beforeEach(() => {
+      firstSkillVersion = skillVersionFactory({ skillId: firstSkillId });
+      secondSkillVersion = skillVersionFactory({ skillId: secondSkillId });
+
+      // The first skill is shared by both packages, so it must be resolved once.
+      const firstPackage = packageFactory({
+        id: packageId,
+        skills: [firstSkillId, secondSkillId],
+      });
+      const otherPackage = packageFactory({
+        id: otherPackageId,
+        skills: [firstSkillId, skillWithoutVersionId],
+      });
+
+      mockPackageService.findById.mockImplementation(async (id) =>
+        id === packageId ? firstPackage : otherPackage,
+      );
+      mockSkillsPort.getLatestSkillVersions.mockImplementation(
+        async (skillIds) =>
+          [firstSkillVersion, secondSkillVersion].filter((version) =>
+            skillIds.includes(version.skillId),
+          ),
+      );
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        distributions: [],
+      });
+    });
+
+    describe('when publishing both packages', () => {
+      beforeEach(async () => {
+        await useCase.execute({
+          userId,
+          organizationId,
+          packageIds: [packageId, otherPackageId],
+          targetIds: [targetId],
+        });
+      });
+
+      it('resolves every skill version in a single call', () => {
+        expect(mockSkillsPort.getLatestSkillVersions).toHaveBeenCalledTimes(1);
+      });
+
+      it('passes the deduplicated skill version ids to publishArtifacts', () => {
+        expect(
+          mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
+        ).toEqual([firstSkillVersion.id, secondSkillVersion.id]);
+      });
+    });
+
+    describe('when a skill has no version', () => {
+      beforeEach(async () => {
+        await useCase.execute({
+          userId,
+          organizationId,
+          packageIds: [otherPackageId],
+          targetIds: [targetId],
+        });
+      });
+
+      it('omits it without failing the publish', () => {
+        expect(
+          mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
+        ).toEqual([firstSkillVersion.id]);
+      });
     });
   });
 });

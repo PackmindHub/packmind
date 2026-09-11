@@ -2,7 +2,11 @@ import { ICommandVersionRepository } from '../../domain/repositories/ICommandVer
 import { CommandVersionSchema } from '../schemas/CommandVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
+import {
+  localDataSource,
+  AbstractRepository,
+  getErrorMessage,
+} from '@packmind/node-utils';
 import { CommandId, CommandVersion, SpaceId } from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
@@ -50,38 +54,47 @@ export class CommandVersionRepository
     } catch (error) {
       this.logger.error('Failed to find recipe versions by recipe ID', {
         recipeId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
   }
 
-  async findLatestByCommandId(
-    recipeId: CommandId,
-  ): Promise<CommandVersion | null> {
-    this.logger.info('Finding latest recipe version by recipe ID', {
-      recipeId,
+  async findLatestByCommandIds(
+    recipeIds: CommandId[],
+  ): Promise<CommandVersion[]> {
+    const uniqueCommandIds = [...new Set(recipeIds)];
+
+    if (uniqueCommandIds.length === 0) {
+      this.logger.info('No recipe IDs provided to findLatestByCommandIds');
+      return [];
+    }
+
+    this.logger.info('Finding latest recipe versions by recipe IDs', {
+      count: uniqueCommandIds.length,
     });
 
     try {
-      const versions = await this.findByCommandId(recipeId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const versions = await this.repository
+        .createQueryBuilder('recipeVersion')
+        .where('recipeVersion.recipeId IN (:...recipeIds)', {
+          recipeIds: uniqueCommandIds as string[],
+        })
+        .distinctOn(['recipeVersion.recipeId'])
+        .orderBy('recipeVersion.recipeId', 'ASC')
+        .addOrderBy('recipeVersion.version', 'DESC')
+        .getMany();
 
-      if (latestVersion) {
-        this.logger.info('Latest recipe version found', {
-          recipeId,
-          versionId: latestVersion.id,
-          version: latestVersion.version,
-        });
-      } else {
-        this.logger.warn('No recipe versions found for recipe', { recipeId });
-      }
+      this.logger.info('Latest recipe versions found by recipe IDs', {
+        requestedCount: uniqueCommandIds.length,
+        foundCount: versions.length,
+      });
 
-      return latestVersion;
+      return versions;
     } catch (error) {
-      this.logger.error('Failed to find latest recipe version by recipe ID', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
+      this.logger.error('Failed to find latest recipe versions by recipe IDs', {
+        count: uniqueCommandIds.length,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -137,7 +150,7 @@ export class CommandVersionRepository
         {
           recipeId,
           version,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;

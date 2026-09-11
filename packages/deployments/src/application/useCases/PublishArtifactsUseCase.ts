@@ -18,11 +18,10 @@ import {
   GitRepo,
   Target,
   TargetId,
+  PackageId,
   CommandVersion,
   SkillVersion,
-  SkillVersionId,
   StandardVersion,
-  StandardVersionId,
   RenderMode,
   FileUpdates,
   CodingAgent,
@@ -45,6 +44,22 @@ import { v4 as uuidv4 } from 'uuid';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
 const origin = 'PublishArtifactsUseCase';
+
+export class ArtifactVersionNotFoundError extends Error {
+  constructor(
+    public readonly artifactLabel: 'Command' | 'Standard' | 'Skill',
+    public readonly versionId: string,
+  ) {
+    super(`${artifactLabel} version with ID ${versionId} not found`);
+    this.name = 'ArtifactVersionNotFoundError';
+  }
+}
+
+type ActiveVersionsByTarget = {
+  standardVersions: StandardVersion[];
+  commandVersions: CommandVersion[];
+  skillVersions: SkillVersion[];
+};
 
 /**
  * Unified usecase for publishing recipes, standards, and skills together
@@ -110,16 +125,28 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.targetIds,
     );
 
-    // Fetch recipe, standard, and skill versions
-    const recipeVersions = await this.fetchCommandVersions(
-      command.recipeVersionIds,
-    );
-    const standardVersions = await this.fetchStandardVersions(
-      command.standardVersionIds,
-    );
-    const skillVersions = await this.fetchSkillVersions(
-      command.skillVersionIds ?? [],
-    );
+    const [recipeVersionsResult, standardVersionsResult, skillVersionsResult] =
+      await Promise.allSettled([
+        this.fetchVersions(
+          command.recipeVersionIds,
+          (ids) => this.commandsPort.getCommandVersionsByIds(ids),
+          'Command',
+        ),
+        this.fetchVersions(
+          command.standardVersionIds,
+          (ids) => this.standardsPort.getStandardVersionsByIds(ids),
+          'Standard',
+        ),
+        this.fetchVersions(
+          command.skillVersionIds ?? [],
+          (ids) => this.skillsPort.getSkillVersionsByIds(ids),
+          'Skill',
+        ),
+      ]);
+
+    const recipeVersions = this.unwrapVersionsResult(recipeVersionsResult);
+    const standardVersions = this.unwrapVersionsResult(standardVersionsResult);
+    const skillVersions = this.unwrapVersionsResult(skillVersionsResult);
 
     const distributions: Distribution[] = [];
 
@@ -139,30 +166,47 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           skillsCount: skillVersions.length,
         });
 
-        // Get previous deployments for all targets in this repo
+        const activeVersionsByTargetId = await this.fetchActiveVersionsByTarget(
+          command.organizationId as OrganizationId,
+          targets,
+        );
+        const activeVersionsFromPackagesByTargetId =
+          await this.fetchActiveVersionsByTarget(
+            command.organizationId as OrganizationId,
+            targets,
+            command.packageIds,
+          );
+
         const {
           previous: previousCommandVersions,
           previousFromPackages: previousCommandVersionsFromPackages,
           combined: allCommandVersions,
-        } = await this.collectAllCommandVersions(
-          command,
+        } = this.collectAllCommandVersions(
           targets,
           recipeVersions,
+          activeVersionsByTargetId,
+          activeVersionsFromPackagesByTargetId,
         );
         const {
           previous: previousStandardVersions,
           previousFromPackages: previousStandardVersionsFromPackages,
           combined: allStandardVersions,
-        } = await this.collectAllStandardVersions(
-          command,
+        } = this.collectAllStandardVersions(
           targets,
           standardVersions,
+          activeVersionsByTargetId,
+          activeVersionsFromPackagesByTargetId,
         );
         const {
           previous: previousSkillVersions,
           previousFromPackages: previousSkillVersionsFromPackages,
           combined: allSkillVersions,
-        } = await this.collectAllSkillVersions(command, targets, skillVersions);
+        } = this.collectAllSkillVersions(
+          targets,
+          skillVersions,
+          activeVersionsByTargetId,
+          activeVersionsFromPackagesByTargetId,
+        );
 
         // Compute removed artifacts (previously deployed from the same packages but not in new deployment command)
         // Only compare against artifacts from the packages being deployed to avoid removing artifacts from other packages
@@ -264,35 +308,50 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           (rv) => !removedCommandIds.has(rv.recipeId),
         );
 
-        // Load rules for all standard versions that don't have them populated
-        // This is critical for previously deployed standards which come from the database
-        // without their rules relation loaded
-        const standardVersionsWithRules = await Promise.all(
-          filteredStandardVersions.map(async (sv) => {
-            if (sv.rules === undefined || sv.rules === null) {
-              this.logger.debug('Loading rules for standard version', {
-                standardVersionId: sv.id,
-                standardId: sv.standardId,
-                slug: sv.slug,
-              });
-              const rules = await this.standardsPort.getRulesByStandardId(
-                sv.standardId,
-              );
-              return { ...sv, rules };
-            }
-            return sv;
-          }),
+        const standardIdsMissingRules = [
+          ...new Set(
+            filteredStandardVersions
+              .filter((sv) => sv.rules == null)
+              .map((sv) => sv.standardId),
+          ),
+        ];
+        const skillVersionIdsMissingFiles = filteredSkillVersions
+          .filter((sv) => sv.files === undefined)
+          .map((sv) => sv.id);
+        const [latestStandardVersionsWithRules, hydratedSkillVersions] =
+          await Promise.all([
+            standardIdsMissingRules.length > 0
+              ? this.standardsPort.getLatestStandardVersionsWithRules(
+                  standardIdsMissingRules,
+                )
+              : Promise.resolve<StandardVersion[]>([]),
+            skillVersionIdsMissingFiles.length > 0
+              ? this.skillsPort.getSkillVersionsByIds(
+                  skillVersionIdsMissingFiles,
+                )
+              : Promise.resolve<SkillVersion[]>([]),
+          ]);
+        const missingRulesByStandardId = new Map(
+          latestStandardVersionsWithRules.map((sv) => [
+            sv.standardId,
+            sv.rules ?? [],
+          ]),
         );
-
-        // Load files for all skill versions that don't have them populated
-        // This is critical for previously deployed skills which come from the database
-        // without their files relation loaded
-        const skillVersionsWithFiles = await Promise.all(
-          filteredSkillVersions.map(async (sv) => {
-            if (sv.files !== undefined) return sv;
-            const files = await this.skillsPort.getSkillFiles(sv.id);
-            return { ...sv, files };
-          }),
+        const missingFilesByVersionId = new Map(
+          hydratedSkillVersions.map((sv) => [sv.id, sv.files ?? []]),
+        );
+        const standardVersionsWithRules = filteredStandardVersions.map((sv) =>
+          sv.rules != null
+            ? sv
+            : {
+                ...sv,
+                rules: missingRulesByStandardId.get(sv.standardId) ?? [],
+              },
+        );
+        const skillVersionsWithFiles = filteredSkillVersions.map((sv) =>
+          sv.files !== undefined
+            ? sv
+            : { ...sv, files: missingFilesByVersionId.get(sv.id) ?? [] },
         );
 
         // Prepare unified deployment using renderArtifacts for ALL targets
@@ -747,69 +806,78 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return map;
   }
 
-  private async fetchCommandVersions(
-    recipeVersionIds: string[],
-  ): Promise<CommandVersion[]> {
-    const versions: CommandVersion[] = [];
-    for (const id of recipeVersionIds) {
-      const version = await this.commandsPort.getCommandVersionById(id);
-      if (!version) {
-        throw new Error(`Command version with ID ${id} not found`);
-      }
-      versions.push(version);
+  private unwrapVersionsResult<V>(result: PromiseSettledResult<V[]>): V[] {
+    if (result.status === 'rejected') {
+      throw result.reason;
     }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
+    return result.value;
   }
 
-  private async fetchStandardVersions(
-    standardVersionIds: StandardVersionId[],
-  ): Promise<StandardVersion[]> {
-    const versions: StandardVersion[] = [];
-    for (const id of standardVersionIds) {
-      const version = await this.standardsPort.getStandardVersionById(id);
-      if (!version) {
-        throw new Error(`Standard version with ID ${id} not found`);
-      }
-      versions.push(version);
-    }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
+  private async fetchVersions<
+    Id extends string,
+    V extends { id: Id; name: string },
+  >(
+    requestedIds: Id[],
+    fetchByIds: (ids: Id[]) => Promise<V[]>,
+    artifactLabel: 'Command' | 'Standard' | 'Skill',
+  ): Promise<V[]> {
+    const fetchedVersions = await fetchByIds(requestedIds);
+    const versionsById = new Map(
+      fetchedVersions.map((version) => [version.id, version]),
+    );
+
+    return requestedIds
+      .map((id) => {
+        const version = versionsById.get(id);
+        if (!version) {
+          throw new ArtifactVersionNotFoundError(artifactLabel, id);
+        }
+        return version;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private async fetchSkillVersions(
-    skillVersionIds: SkillVersionId[],
-  ): Promise<SkillVersion[]> {
-    const versions: SkillVersion[] = [];
-    for (const id of skillVersionIds) {
-      const version = await this.skillsPort.getSkillVersion(id);
-      if (!version) {
-        throw new Error(`Skill version with ID ${id} not found`);
-      }
-      // Fetch skill files for this version
-      const files = await this.skillsPort.getSkillFiles(id);
-      versions.push({ ...version, files });
+  private async fetchActiveVersionsByTarget(
+    organizationId: OrganizationId,
+    targets: Target[],
+    packageIds?: PackageId[],
+  ): Promise<Map<TargetId, ActiveVersionsByTarget>> {
+    const activeVersionsByTargetId = new Map<
+      TargetId,
+      ActiveVersionsByTarget
+    >();
+
+    for (const target of targets) {
+      activeVersionsByTargetId.set(
+        target.id,
+        await this.distributionRepository.findActiveVersionsByTarget(
+          organizationId,
+          target.id,
+          packageIds,
+        ),
+      );
     }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
+
+    return activeVersionsByTargetId;
   }
 
-  private async collectAllCommandVersions(
-    command: PublishArtifactsCommand,
+  private collectAllCommandVersions(
     targets: Target[],
     newCommandVersions: CommandVersion[],
-  ): Promise<{
+    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+  ): {
     previous: CommandVersion[];
     previousFromPackages: CommandVersion[];
     combined: CommandVersion[];
-  }> {
+  } {
     const allPreviousCommandVersions = new Map<string, CommandVersion>();
     const previousFromPackagesMap = new Map<string, CommandVersion>();
 
     for (const target of targets) {
       // Get all previous recipe versions (for combining)
       const previousCommandVersions =
-        await this.distributionRepository.findActiveCommandVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
+        activeVersionsByTargetId.get(target.id)?.commandVersions ?? [];
 
       for (const recipeVersion of previousCommandVersions) {
         const existing = allPreviousCommandVersions.get(recipeVersion.recipeId);
@@ -820,11 +888,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       // Get previous recipe versions filtered by packages being deployed (for removal calculation)
       const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveCommandVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
+        activeVersionsFromPackagesByTargetId.get(target.id)?.commandVersions ??
+        [];
 
       for (const recipeVersion of previousFromPackagesVersions) {
         const existing = previousFromPackagesMap.get(recipeVersion.recipeId);
@@ -840,25 +905,23 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return { previous, previousFromPackages, combined };
   }
 
-  private async collectAllStandardVersions(
-    command: PublishArtifactsCommand,
+  private collectAllStandardVersions(
     targets: Target[],
     newStandardVersions: StandardVersion[],
-  ): Promise<{
+    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+  ): {
     previous: StandardVersion[];
     previousFromPackages: StandardVersion[];
     combined: StandardVersion[];
-  }> {
+  } {
     const allPreviousStandardVersions = new Map<string, StandardVersion>();
     const previousFromPackagesMap = new Map<string, StandardVersion>();
 
     for (const target of targets) {
       // Get all previous standard versions (for combining)
       const previousStandardVersions =
-        await this.distributionRepository.findActiveStandardVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
+        activeVersionsByTargetId.get(target.id)?.standardVersions ?? [];
 
       for (const standardVersion of previousStandardVersions) {
         const existing = allPreviousStandardVersions.get(
@@ -874,11 +937,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       // Get previous standard versions filtered by packages being deployed (for removal calculation)
       const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveStandardVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
+        activeVersionsFromPackagesByTargetId.get(target.id)?.standardVersions ??
+        [];
 
       for (const standardVersion of previousFromPackagesVersions) {
         const existing = previousFromPackagesMap.get(
@@ -902,25 +962,23 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return { previous, previousFromPackages, combined };
   }
 
-  private async collectAllSkillVersions(
-    command: PublishArtifactsCommand,
+  private collectAllSkillVersions(
     targets: Target[],
     newSkillVersions: SkillVersion[],
-  ): Promise<{
+    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+  ): {
     previous: SkillVersion[];
     previousFromPackages: SkillVersion[];
     combined: SkillVersion[];
-  }> {
+  } {
     const allPreviousSkillVersions = new Map<string, SkillVersion>();
     const previousFromPackagesMap = new Map<string, SkillVersion>();
 
     for (const target of targets) {
       // Get all previous skill versions (for combining)
       const previousSkillVersions =
-        await this.distributionRepository.findActiveSkillVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
+        activeVersionsByTargetId.get(target.id)?.skillVersions ?? [];
 
       for (const skillVersion of previousSkillVersions) {
         const existing = allPreviousSkillVersions.get(skillVersion.skillId);
@@ -931,11 +989,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       // Get previous skill versions filtered by packages being deployed (for removal calculation)
       const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
+        activeVersionsFromPackagesByTargetId.get(target.id)?.skillVersions ??
+        [];
 
       for (const skillVersion of previousFromPackagesVersions) {
         const existing = previousFromPackagesMap.get(skillVersion.skillId);
