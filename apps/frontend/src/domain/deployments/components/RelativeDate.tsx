@@ -1,6 +1,25 @@
 import { PMBox, PMTooltip } from '@packmind/ui';
-import { formatDateTime } from '../../../shared/utils/dateUtils';
 import { formatRelativeDate } from './redesign/selectors/installDriftEntries';
+
+/**
+ * The instant in full, in the format the app prints dates in: short month, the
+ * year, and the time to the minute.
+ *
+ * Written here rather than taken from `shared/utils/dateUtils`, which is one
+ * of the files the two editions do not share: this repo exports
+ * `formatDateTime` from it and the Open Source one exports a `formatDate` that
+ * does the same thing under the other name. Importing either would have made
+ * this component unbuildable in one of the two repos, which is what happened.
+ */
+function absoluteDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 /**
  * A date as the distance a reader thinks in, with the date itself one hover
@@ -32,7 +51,7 @@ export function RelativeDate({
   if (Number.isNaN(new Date(iso).getTime())) return iso;
 
   return (
-    <PMTooltip label={formatDateTime(iso)} showArrow>
+    <PMTooltip label={absoluteDate(iso)} showArrow>
       <PMBox as="span" data-testid={testId}>
         {formatRelativeDate(iso)}
       </PMBox>
