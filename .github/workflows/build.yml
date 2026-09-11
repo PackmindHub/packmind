@@ -183,6 +183,17 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
+      # The two e2e suites are typechecked here rather than in e2e.yml. Nothing
+      # else compiles their specs — Playwright and @swc/jest both strip types
+      # per file without checking them — so without this step a spec that does
+      # not compile is only found when the suite runs, minutes into a job that
+      # first has to stand up Docker. This costs seconds and fails early. They
+      # are a separate step from the one above because that one is `-p
+      # packages/*` and these are apps.
+      - name: Typecheck e2e suites
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t typecheck -p e2e-tests,cli-e2e-tests --parallel=100%
       # @packmind/integration-tests runs in its own job (test-integration) so it
       # does not sit on this job's critical path.
       #
