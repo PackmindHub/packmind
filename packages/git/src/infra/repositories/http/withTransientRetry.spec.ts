@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -7,6 +7,7 @@ import {
 } from './withTransientRetry';
 
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const axiosError = (status?: number) => ({
@@ -19,12 +20,7 @@ describe('withTransientRetry', () => {
 
   beforeEach(() => {
     logger = stubLogger();
-    mockedAxios.isAxiosError.mockImplementation(
-      (payload): payload is AxiosError =>
-        typeof payload === 'object' &&
-        payload !== null &&
-        (payload as { isAxiosError?: boolean }).isAxiosError === true,
-    );
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
   });
 
   afterEach(() => {

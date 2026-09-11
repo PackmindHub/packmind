@@ -1,12 +1,13 @@
 import { GitlabProvider } from './GitlabProvider';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
-import { AxiosError, AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 
 // Mock axios
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
 // than with mockPort: only the verbs this suite drives are stubbed.
@@ -24,12 +25,7 @@ describe('GitlabProvider', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    mockedAxios.isAxiosError.mockImplementation(
-      (payload): payload is AxiosError =>
-        typeof payload === 'object' &&
-        payload !== null &&
-        (payload as { isAxiosError?: boolean }).isAxiosError === true,
-    );
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
     gitlabProvider = new GitlabProvider('test-token', '', mockLogger);
   });
 
