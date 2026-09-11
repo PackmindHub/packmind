@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { invalidInput, mockPort, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   createOrganizationId,
@@ -46,10 +46,9 @@ describe('ListProvidersUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockPort<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(user);
+    mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new ListProvidersUseCase(
       mockAccountsPort,
@@ -186,7 +185,7 @@ describe('ListProvidersUseCase', () => {
             organizationId,
             token: null,
             authMethod: 'app',
-            appInstallationId: '42' as unknown as number,
+            appInstallationId: invalidInput<number>('42'),
           });
           mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
             [provider],

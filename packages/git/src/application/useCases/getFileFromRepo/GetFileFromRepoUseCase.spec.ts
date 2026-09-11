@@ -9,7 +9,11 @@ import {
   GitProviderNotFoundError,
   GitProviderVendors,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
+import {
+  gitProviderFactory,
+  gitRepoFactory as gitRepoEntityFactory,
+} from '../../../../test';
 
 describe('GetFileFromRepoUseCase', () => {
   let useCase: GetFileFromRepoUseCase;
@@ -17,32 +21,22 @@ describe('GetFileFromRepoUseCase', () => {
   let gitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockGitRepoInstance: jest.Mocked<IGitRepo>;
 
-  const mockGitRepoEntity: GitRepo = {
-    id: 'repo-123',
+  const mockGitRepoEntity: GitRepo = gitRepoEntityFactory({
     owner: 'test-owner',
     repo: 'test-repo',
     branch: 'main',
-    providerId: 'provider-123',
-  } as unknown as GitRepo;
+  });
 
-  const mockProvider: GitProvider = {
-    id: 'provider-123',
+  const mockProvider: GitProvider = gitProviderFactory({
     source: GitProviderVendors.github,
     token: 'test-token',
     authMethod: 'token',
-  } as unknown as GitProvider;
+  });
 
   beforeEach(() => {
-    gitProviderRepository = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<IGitProviderRepository>;
+    gitProviderRepository = mockPort<IGitProviderRepository>();
 
-    mockGitRepoInstance = {
-      getFileOnRepo: jest.fn(),
-      commitFiles: jest.fn(),
-      listDirectoriesOnRepo: jest.fn(),
-      checkDirectoryExists: jest.fn(),
-    } as unknown as jest.Mocked<IGitRepo>;
+    mockGitRepoInstance = mockPort<IGitRepo>();
 
     gitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {
@@ -151,10 +145,8 @@ describe('GetFileFromRepoUseCase', () => {
 
   describe('when git provider token is not configured', () => {
     it('throws error', async () => {
-      const providerWithoutToken = { ...mockProvider, token: undefined };
-      gitProviderRepository.findById.mockResolvedValue(
-        providerWithoutToken as unknown as GitProvider,
-      );
+      const providerWithoutToken = gitProviderFactory({ token: null });
+      gitProviderRepository.findById.mockResolvedValue(providerWithoutToken);
 
       await expect(
         useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),

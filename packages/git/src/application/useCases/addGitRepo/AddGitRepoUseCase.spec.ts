@@ -24,7 +24,7 @@ import {
 } from '@packmind/types';
 
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { gitProviderFactory, gitRepoFactory } from '../../../../test';
 
@@ -76,10 +76,9 @@ describe('AddGitRepoUseCase', () => {
       slug: 'test-org',
     });
 
-    mockAccountsAdapter = {
-      getUserById: jest.fn().mockResolvedValue(adminUser),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter.getUserById.mockResolvedValue(adminUser);
+    mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new AddGitRepoUseCase(
       mockGitProviderService,

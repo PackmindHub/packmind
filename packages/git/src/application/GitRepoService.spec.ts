@@ -1,3 +1,4 @@
+import { mockPort } from '@packmind/test-utils';
 import { GitRepoService } from './GitRepoService';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
 import { createOrganizationId, createUserId } from '@packmind/types';
@@ -18,18 +19,7 @@ describe('GitRepoService', () => {
   });
 
   beforeEach(() => {
-    mockGitRepoRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByOwnerAndRepo: jest.fn(),
-      findByOwnerAndRepoInOrganization: jest.fn(),
-      findByProviderId: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      list: jest.fn(),
-      findByOwnerRepoAndBranchInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<IGitRepoRepository>;
+    mockGitRepoRepository = mockPort<IGitRepoRepository>();
 
     gitRepoService = new GitRepoService(mockGitRepoRepository);
   });

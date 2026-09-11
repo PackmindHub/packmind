@@ -1,5 +1,5 @@
 import { Cache } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockPort, stubLogger } from '@packmind/test-utils';
 import {
   GitRepo,
   createGitProviderId,
@@ -18,11 +18,7 @@ jest.mock('@packmind/node-utils', () => ({
   },
 }));
 
-const mockCacheInstance = {
-  get: jest.fn(),
-  set: jest.fn(),
-  invalidate: jest.fn(),
-} as jest.Mocked<Pick<Cache, 'get' | 'set' | 'invalidate'>>;
+const mockCacheInstance = mockPort<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 const repositoryId = createGitRepoId('repo-1');
@@ -42,22 +38,22 @@ const gitRepo = {
 
 describe('CheckTrackedBranchExistsUseCase', () => {
   let useCase: CheckTrackedBranchExistsUseCase;
-  let gitRepoService: jest.Mocked<Pick<GitRepoService, 'findGitRepoById'>>;
-  let checkBranchExists: jest.Mocked<Pick<CheckBranchExistsUseCase, 'execute'>>;
+  let gitRepoService: jest.Mocked<GitRepoService>;
+  let checkBranchExists: jest.Mocked<CheckBranchExistsUseCase>;
 
   beforeEach(() => {
-    gitRepoService = { findGitRepoById: jest.fn().mockResolvedValue(gitRepo) };
-    checkBranchExists = { execute: jest.fn().mockResolvedValue(true) };
+    gitRepoService = mockPort<GitRepoService>();
+    gitRepoService.findGitRepoById.mockResolvedValue(gitRepo);
+    checkBranchExists = mockPort<CheckBranchExistsUseCase>();
+    checkBranchExists.execute.mockResolvedValue(true);
 
-    MockedCache.getInstance.mockReturnValue(
-      mockCacheInstance as unknown as Cache,
-    );
+    MockedCache.getInstance.mockReturnValue(mockCacheInstance);
     mockCacheInstance.get.mockResolvedValue(null);
     mockCacheInstance.set.mockResolvedValue(undefined);
 
     useCase = new CheckTrackedBranchExistsUseCase(
-      gitRepoService as unknown as GitRepoService,
-      checkBranchExists as unknown as CheckBranchExistsUseCase,
+      gitRepoService,
+      checkBranchExists,
       stubLogger(),
     );
   });

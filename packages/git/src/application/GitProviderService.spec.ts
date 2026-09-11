@@ -1,3 +1,4 @@
+import { mockPort } from '@packmind/test-utils';
 import { GitProviderService } from './GitProviderService';
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
@@ -42,15 +43,7 @@ describe('GitProviderService', () => {
   });
 
   beforeEach(() => {
-    mockGitProviderRepository = {
-      findById: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      list: jest.fn(),
-      update: jest.fn(),
-    } as unknown as jest.Mocked<IGitProviderRepository>;
+    mockGitProviderRepository = mockPort<IGitProviderRepository>();
 
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
@@ -83,12 +76,11 @@ describe('GitProviderService', () => {
       }),
     } as jest.Mocked<IGitProviderFactory>;
 
-    mockResolvedGitRepoService = {
+    mockResolvedGitRepoService = mockPort<ResolvedGitRepoService>({
       // Reads through the same repository mock, so every existing
       // findById.mockResolvedValue setup still drives these tests.
-      getProvider: jest.fn((id) => mockGitProviderRepository.findById(id)),
-      resolve: jest.fn(),
-    } as unknown as jest.Mocked<ResolvedGitRepoService>;
+      getProvider: (id) => mockGitProviderRepository.findById(id),
+    });
 
     gitProviderService = new GitProviderService(
       mockGitProviderRepository,

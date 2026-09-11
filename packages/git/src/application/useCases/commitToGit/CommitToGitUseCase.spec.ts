@@ -19,7 +19,7 @@ import {
   gitRepoFactory,
 } from '../../../../test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/types';
 
 describe('CommitToGitUseCase', () => {
@@ -31,24 +31,14 @@ describe('CommitToGitUseCase', () => {
   let mockGithubRepository: jest.Mocked<IGitRepo>;
 
   beforeEach(() => {
-    mockGitCommitService = {
-      addCommit: jest.fn(),
-      getCommit: jest.fn(),
-    } as unknown as jest.Mocked<GitCommitService>;
+    mockGitCommitService = mockPort<GitCommitService>();
 
-    mockGitProviderRepository = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<IGitProviderRepository>;
+    mockGitProviderRepository = mockPort<IGitProviderRepository>();
 
     mockLogger = stubLogger();
 
-    mockGithubRepository = {
-      commitFiles: jest.fn(),
-      getFileOnRepo: jest.fn(),
-      listDirectoriesOnRepo: jest.fn(),
-      checkDirectoryExists: jest.fn(),
-      listFilesInDirectories: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IGitRepo>;
+    mockGithubRepository = mockPort<IGitRepo>();
+    mockGithubRepository.listFilesInDirectories.mockResolvedValue([]);
 
     mockGitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((gitRepo, provider) => {

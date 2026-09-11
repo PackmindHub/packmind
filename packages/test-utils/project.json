@@ -5,7 +5,11 @@
   "projectType": "library",
   "tags": ["type:util", "scope:test", "env:node"],
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/test-utils/tsconfig.lib.json && tsc --noEmit --project packages/test-utils/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

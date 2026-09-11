@@ -5,14 +5,13 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
+import { invalidInput, mockPort } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { CheckBranchExistsUseCase } from './CheckBranchExistsUseCase';
 
 describe('CheckBranchExistsUseCase', () => {
   let useCase: CheckBranchExistsUseCase;
-  let mockGitProviderService: jest.Mocked<
-    Pick<GitProviderService, 'findGitProviderById' | 'checkBranchExists'>
-  >;
+  let mockGitProviderService: jest.Mocked<GitProviderService>;
 
   const providerId: GitProviderId = createGitProviderId(
     'de754fed-7659-4816-95c6-12e3a0b9e3c9',
@@ -43,14 +42,9 @@ describe('CheckBranchExistsUseCase', () => {
   const args = { owner: 'acme', repo: 'repo-a', branch: 'main' };
 
   beforeEach(() => {
-    mockGitProviderService = {
-      findGitProviderById: jest.fn(),
-      checkBranchExists: jest.fn(),
-    };
+    mockGitProviderService = mockPort<GitProviderService>();
 
-    useCase = new CheckBranchExistsUseCase(
-      mockGitProviderService as unknown as GitProviderService,
-    );
+    useCase = new CheckBranchExistsUseCase(mockGitProviderService);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -144,7 +138,7 @@ describe('CheckBranchExistsUseCase', () => {
       it('rejects', async () => {
         await expect(
           useCase.execute({
-            gitProviderId: undefined as unknown as GitProviderId,
+            gitProviderId: invalidInput<GitProviderId>(undefined),
             ...args,
           }),
         ).rejects.toThrow('Git provider ID is required');

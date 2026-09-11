@@ -1,5 +1,5 @@
 import { Cache } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import {
   GetAvailableRemoteDirectoriesCommand,
   createOrganizationId,
@@ -21,11 +21,7 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 // Get the mocked Cache after the mock
-const mockCacheInstance = {
-  get: jest.fn(),
-  set: jest.fn(),
-  invalidate: jest.fn(),
-} as jest.Mocked<Pick<Cache, 'get' | 'set' | 'invalidate'>>;
+const mockCacheInstance = mockPort<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 describe('GetAvailableTargetsUseCase', () => {
@@ -33,21 +29,10 @@ describe('GetAvailableTargetsUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
 
   beforeEach(() => {
-    mockGitProviderService = {
-      addGitProvider: jest.fn(),
-      findGitProviderById: jest.fn(),
-      findGitProvidersByOrganizationId: jest.fn(),
-      updateGitProvider: jest.fn(),
-      deleteGitProvider: jest.fn(),
-      getAvailableRepos: jest.fn(),
-      checkBranchExists: jest.fn(),
-      listAvailableTargets: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    mockGitProviderService = mockPort<GitProviderService>();
 
     // Setup cache mock
-    MockedCache.getInstance.mockReturnValue(
-      mockCacheInstance as unknown as Cache,
-    );
+    MockedCache.getInstance.mockReturnValue(mockCacheInstance);
     mockCacheInstance.get.mockResolvedValue(null); // Default to cache miss
     mockCacheInstance.set.mockResolvedValue(undefined);
     mockCacheInstance.invalidate.mockResolvedValue(undefined);

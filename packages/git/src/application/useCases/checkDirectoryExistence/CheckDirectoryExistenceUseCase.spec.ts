@@ -13,7 +13,7 @@ import { IGitProviderRepository } from '../../../domain/repositories/IGitProvide
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
 
@@ -27,29 +27,12 @@ describe('CheckDirectoryExistenceUseCase', () => {
 
   beforeEach(() => {
     // Mock GitRepoService with its required methods
-    mockGitRepoService = {
-      findGitRepoById: jest.fn(),
-      addGitRepo: jest.fn(),
-      findGitRepoByOwnerAndRepo: jest.fn(),
-      findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
-      findGitReposByProviderId: jest.fn(),
-      findGitReposByOrganizationId: jest.fn(),
-      updateGitRepo: jest.fn(),
-      deleteGitRepo: jest.fn(),
-    } as unknown as jest.Mocked<GitRepoService>;
+    mockGitRepoService = mockPort<GitRepoService>();
 
-    // Mock GitProviderService with its required methods
-    mockGitProviderRepository = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<IGitProviderRepository>;
+    mockGitProviderRepository = mockPort<IGitProviderRepository>();
 
     // Mock IGitRepo instance with checkDirectoryExists method
-    mockGitRepoInstance = {
-      checkDirectoryExists: jest.fn(),
-      getFileOnRepo: jest.fn(),
-      commitFiles: jest.fn(),
-      listDirectoriesOnRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitRepo>;
+    mockGitRepoInstance = mockPort<IGitRepo>();
 
     // Mock IGitRepoFactory
     mockGitRepoFactory = {
