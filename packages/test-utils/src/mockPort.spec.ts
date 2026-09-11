@@ -1,4 +1,4 @@
-import { mockPort } from './mockPort';
+import { mockPort, UnstubbedPortCallError } from './mockPort';
 
 interface ITestPort {
   findById(id: string): Promise<{ id: string } | null>;
@@ -167,15 +167,15 @@ describe('mockPort', () => {
     it('refuses a call to a member that was never stubbed', () => {
       const port = mockPort<ITestPort>({}, { strict: true });
 
-      expect(() => port.findById('id')).toThrow(
-        /was called but was never stubbed/,
-      );
+      expect(() => port.findById('id')).toThrow(UnstubbedPortCallError);
     });
 
     it('names the member it refused', () => {
       const port = mockPort<ITestPort>({}, { strict: true });
 
-      expect(() => port.findById('id')).toThrow(/findById/);
+      expect(() => port.findById('id')).toThrow(
+        new UnstubbedPortCallError('findById'),
+      );
     });
 
     it('lets a member seeded up front through', async () => {

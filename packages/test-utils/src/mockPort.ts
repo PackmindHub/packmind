@@ -95,11 +95,23 @@ type PortStubsArgs<T> =
 
 type UnknownFunction = (...args: unknown[]) => unknown;
 
-function refuseUnstubbedCall(member: string): UnknownFunction {
-  return () => {
-    throw new Error(
+/**
+ * Thrown by a strict mock when the code under test reaches for a member the
+ * spec never set up. Carries the member's name, so a test can assert on which
+ * one it was rather than on the wording of a message.
+ */
+export class UnstubbedPortCallError extends Error {
+  constructor(public readonly member: string) {
+    super(
       `mockPort: '${member}' was called but was never stubbed. Stub it, or drop the strict option if answering undefined is what this test wants.`,
     );
+    this.name = 'UnstubbedPortCallError';
+  }
+}
+
+function refuseUnstubbedCall(member: string): UnknownFunction {
+  return () => {
+    throw new UnstubbedPortCallError(member);
   };
 }
 
