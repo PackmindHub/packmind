@@ -8,7 +8,7 @@ import {
   GitProviderNotFoundError,
   GitProviderVendors,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 
 describe('GetFileFromRepoUseCase', () => {
   let useCase: GetFileFromRepoUseCase;
@@ -32,16 +32,9 @@ describe('GetFileFromRepoUseCase', () => {
   } as unknown as GitProvider;
 
   beforeEach(() => {
-    gitProviderService = {
-      findGitProviderById: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    gitProviderService = mockPort<GitProviderService>();
 
-    mockGitRepoInstance = {
-      getFileOnRepo: jest.fn(),
-      commitFiles: jest.fn(),
-      listDirectoriesOnRepo: jest.fn(),
-      checkDirectoryExists: jest.fn(),
-    } as unknown as jest.Mocked<IGitRepo>;
+    mockGitRepoInstance = mockPort<IGitRepo>();
 
     gitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {

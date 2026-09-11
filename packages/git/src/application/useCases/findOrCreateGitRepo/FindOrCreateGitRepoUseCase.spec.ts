@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -36,13 +36,7 @@ describe('FindOrCreateGitRepoUseCase', () => {
   };
 
   beforeEach(() => {
-    mockGitPort = {
-      listProviders: jest.fn(),
-      listRepos: jest.fn(),
-      listAvailableRepos: jest.fn(),
-      addGitProvider: jest.fn(),
-      addGitRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockPort<IGitPort>();
 
     const user: User = {
       id: userId,
@@ -57,10 +51,9 @@ describe('FindOrCreateGitRepoUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    mockAccountsAdapter = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter.getUserById.mockResolvedValue(user);
+    mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new FindOrCreateGitRepoUseCase(
       mockGitPort,

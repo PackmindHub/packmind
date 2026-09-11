@@ -1,5 +1,5 @@
 import { Cache } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import {
   GetAvailableRemoteDirectoriesCommand,
   createOrganizationId,
@@ -33,16 +33,7 @@ describe('GetAvailableTargetsUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
 
   beforeEach(() => {
-    mockGitProviderService = {
-      addGitProvider: jest.fn(),
-      findGitProviderById: jest.fn(),
-      findGitProvidersByOrganizationId: jest.fn(),
-      updateGitProvider: jest.fn(),
-      deleteGitProvider: jest.fn(),
-      getAvailableRepos: jest.fn(),
-      checkBranchExists: jest.fn(),
-      listAvailableTargets: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    mockGitProviderService = mockPort<GitProviderService>();
 
     // Setup cache mock
     MockedCache.getInstance.mockReturnValue(

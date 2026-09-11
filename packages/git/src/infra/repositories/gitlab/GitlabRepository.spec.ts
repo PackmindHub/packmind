@@ -1,19 +1,14 @@
 import { GitlabRepository } from './GitlabRepository';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
 
 // Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-const mockAxiosInstance = {
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  patch: jest.fn(),
-} as unknown as jest.Mocked<AxiosInstance>;
+const mockAxiosInstance = mockPort<AxiosInstance>();
 
 describe('GitlabRepository', () => {
   let gitlabRepository: GitlabRepository;

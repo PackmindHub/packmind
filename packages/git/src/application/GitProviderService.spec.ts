@@ -1,3 +1,4 @@
+import { mockPort } from '@packmind/test-utils';
 import { GitProviderService } from './GitProviderService';
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
@@ -42,15 +43,7 @@ describe('GitProviderService', () => {
   });
 
   beforeEach(() => {
-    mockGitProviderRepository = {
-      findById: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      list: jest.fn(),
-      update: jest.fn(),
-    } as unknown as jest.Mocked<IGitProviderRepository>;
+    mockGitProviderRepository = mockPort<IGitProviderRepository>();
 
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),

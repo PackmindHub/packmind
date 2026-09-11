@@ -17,7 +17,7 @@ import {
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { gitProviderFactory } from '../../../../test';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
@@ -51,10 +51,9 @@ describe('AddGitProviderUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    accountsAdapter = {
-      getUserById: jest.fn().mockResolvedValue(memberUser),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockPort<IAccountsPort>();
+    accountsAdapter.getUserById.mockResolvedValue(memberUser);
+    accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new AddGitProviderUseCase(
       mockGitProviderService,

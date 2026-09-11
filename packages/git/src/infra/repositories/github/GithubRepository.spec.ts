@@ -3,7 +3,7 @@ import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockPort } from '@packmind/test-utils';
 import { gitBlobSha } from '@packmind/node-utils';
 import {
   PROVIDER_MAX_SOCKETS,
@@ -31,12 +31,12 @@ describe('GithubRepository', () => {
   };
 
   beforeEach(() => {
-    mockAxiosInstance = {
+    mockAxiosInstance = mockPort<typeof axios>({
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
+        request: { use: jest.fn(), eject: jest.fn(), clear: jest.fn() },
+        response: { use: jest.fn(), eject: jest.fn(), clear: jest.fn() },
       },
-    } as unknown as jest.Mocked<typeof axios>;
+    });
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
     stubbedLogger = stubLogger();
