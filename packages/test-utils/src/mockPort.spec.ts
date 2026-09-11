@@ -10,10 +10,25 @@ interface IPortWithData {
   name: string;
 }
 
+interface IPortWithOptionalMethod {
+  close?(): void;
+}
+
+const iterate = Symbol('iterate');
+
+interface IPortWithSymbolMethod {
+  [iterate](): string[];
+}
+
 // A data member has no mock to fall back on, so the signature demands it.
 // @ts-expect-error 'name' is missing
 const rejectsAMissingDataMember = () => mockPort<IPortWithData>({});
 void rejectsAMissingDataMember;
+
+// A symbol-keyed member is never auto-mocked, so it is demanded the same way.
+// @ts-expect-error the symbol member is missing
+const rejectsAMissingSymbolMember = () => mockPort<IPortWithSymbolMethod>({});
+void rejectsAMissingSymbolMember;
 
 describe('mockPort', () => {
   afterEach(() => {
@@ -89,6 +104,34 @@ describe('mockPort', () => {
       const port = mockPort<IPortWithData>({ name: 'a name' });
 
       expect(jest.isMockFunction(port.findById)).toBe(true);
+    });
+  });
+
+  describe('when the port declares an optional method', () => {
+    it('takes an implementation for it', () => {
+      const port = mockPort<IPortWithOptionalMethod>({
+        close: () => undefined,
+      });
+
+      port.close?.();
+
+      expect(port.close).toHaveBeenCalled();
+    });
+
+    it('mocks it even when it is left out', () => {
+      const port = mockPort<IPortWithOptionalMethod>();
+
+      expect(jest.isMockFunction(port.close)).toBe(true);
+    });
+  });
+
+  describe('when the port declares a symbol-keyed method', () => {
+    it('records the calls made through the member it was given', () => {
+      const port = mockPort<IPortWithSymbolMethod>({ [iterate]: () => [] });
+
+      port[iterate]();
+
+      expect(port[iterate]).toHaveBeenCalled();
     });
   });
 

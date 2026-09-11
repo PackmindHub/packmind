@@ -5,7 +5,7 @@
  * `asymmetricMatch` - and a mock answering them makes the port look like a
  * thenable or breaks the failure output.
  */
-const NEVER_MOCKED: ReadonlySet<string> = new Set([
+const NEVER_MOCKED = [
   'then',
   'catch',
   'finally',
@@ -20,7 +20,11 @@ const NEVER_MOCKED: ReadonlySet<string> = new Set([
   'hasOwnProperty',
   'isPrototypeOf',
   'propertyIsEnumerable',
-]);
+] as const;
+
+type NeverMockedName = (typeof NEVER_MOCKED)[number];
+
+const neverMocked: ReadonlySet<string> = new Set(NEVER_MOCKED);
 
 type MethodKeys<T> = {
   [K in keyof T]-?: NonNullable<T[K]> extends (...args: never[]) => unknown
@@ -28,24 +32,36 @@ type MethodKeys<T> = {
     : never;
 }[keyof T];
 
-type DataKeys<T> = Exclude<keyof T, MethodKeys<T>>;
+/**
+ * The members a `jest.fn()` can stand in for without being asked: the methods
+ * the proxy is free to answer. A symbol-keyed member is not one of them - the
+ * runtime probes symbols such as `Symbol.iterator` on any object, so answering
+ * them would make the mock claim behaviour the port never declared - and nor is
+ * a member named after one of the probes above.
+ */
+type AutoMockedKeys<T> = Exclude<MethodKeys<T> & string, NeverMockedName>;
+
+type GivenKeys<T> = Exclude<keyof T, AutoMockedKeys<T>>;
 
 /**
- * A method can be seeded either with a real implementation - which is type
- * checked against the port and wrapped in a `jest.fn()` - or with a mock built
- * by hand, and may be left out entirely.
+ * An auto-mocked method can be seeded either with a real implementation - which
+ * is type checked against the port and wrapped in a `jest.fn()` - or with a mock
+ * built by hand, and may be left out entirely.
  *
- * A member that is *not* a method has to be given: nothing sensible can be
- * conjured for it, since the proxy cannot tell a data member from a method at
- * runtime and would hand out a `jest.fn()` where the port declares a value.
+ * Every other member has to be given, because nothing sensible can be conjured
+ * for it: a data member would come back as a `jest.fn()` standing where the port
+ * declares a value, and a symbol-keyed or probe-named method would come back
+ * `undefined`.
  */
 export type PortStubs<T> = Partial<{
-  [K in MethodKeys<T>]: T[K] extends (...args: infer A) => infer R
-    ? T[K] | jest.Mock<R, A>
+  [K in AutoMockedKeys<T>]: NonNullable<T[K]> extends (
+    ...args: infer A
+  ) => infer R
+    ? NonNullable<T[K]> | jest.Mock<R, A>
     : never;
-}> & { [K in DataKeys<T>]: T[K] };
+}> & { [K in GivenKeys<T>]: T[K] };
 
-type PortStubsArgs<T> = [DataKeys<T>] extends [never]
+type PortStubsArgs<T> = [GivenKeys<T>] extends [never]
   ? [stubs?: PortStubs<T>]
   : [stubs: PortStubs<T>];
 
@@ -78,20 +94,22 @@ function isJestMock(value: unknown): boolean {
  * });
  * ```
  *
- * It fits ports whose members are all methods. A type that also carries data -
- * an `AxiosInstance` and its `defaults`, say - has to have those members
- * supplied, and one whose shape is mostly data is better mocked by hand.
+ * It fits ports whose members are all plainly named methods. Anything the proxy
+ * cannot conjure - a data member such as an `AxiosInstance`'s `defaults`, a
+ * symbol-keyed method, a method named after one of the probes above - has to be
+ * supplied, and a type whose shape is mostly data is better mocked by hand.
  */
 export function mockPort<T extends object>(
   ...args: PortStubsArgs<T>
 ): jest.Mocked<T> {
   const [stubs = {} as PortStubs<T>] = args;
-  const members = new Map<string, unknown>();
+  const members = new Map<string | symbol, unknown>();
 
-  const isMockable = (member: string | symbol): member is string =>
-    typeof member === 'string' && !NEVER_MOCKED.has(member);
+  const isAutoMocked = (member: string | symbol): boolean =>
+    typeof member === 'string' && !neverMocked.has(member);
 
-  for (const [name, stub] of Object.entries(stubs)) {
+  for (const name of Reflect.ownKeys(stubs)) {
+    const stub = (stubs as Record<string | symbol, unknown>)[name];
     members.set(
       name,
       typeof stub === 'function' && !isJestMock(stub)
@@ -102,28 +120,27 @@ export function mockPort<T extends object>(
 
   return new Proxy({} as jest.Mocked<T>, {
     get(_target, member) {
-      if (!isMockable(member)) {
+      if (members.has(member)) {
+        return members.get(member);
+      }
+      if (!isAutoMocked(member)) {
         return undefined;
       }
-      if (!members.has(member)) {
-        members.set(member, jest.fn());
-      }
+      members.set(member, jest.fn());
       return members.get(member);
     },
     set(_target, member, value) {
-      if (isMockable(member)) {
-        members.set(member, value);
-      }
+      members.set(member, value);
       return true;
     },
     has(_target, member) {
-      return isMockable(member);
+      return members.has(member) || isAutoMocked(member);
     },
     ownKeys() {
       return [...members.keys()];
     },
     getOwnPropertyDescriptor(_target, member) {
-      if (!isMockable(member)) {
+      if (!members.has(member)) {
         return undefined;
       }
       return {
