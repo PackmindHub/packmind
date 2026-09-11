@@ -38,6 +38,73 @@ both phase-1 conversations happen before anything is built.
 | 2 | `agentic-orchestrator` | units, records, commits |
 | — | `agentic-doc-ingest` | documentation, downstream and on demand |
 
+## Running it
+
+Nothing here is a command you have to remember. Each phase is a skill that
+triggers on what you say; what follows is the shape of the conversation and
+where it stops.
+
+### 1a · frame — say what you want to build
+
+"I want to build X", a ticket, or a rough idea. The session settles scope,
+non-goals and acceptance criteria, and writes `charter.md`. It will push on
+non-goals harder than feels necessary: the orchestrator halts to you when a unit
+needs something on that list, and an empty non-goals section means a cheap model
+decides instead.
+
+It ends before any design. If it offers to start implementing, something has
+gone wrong.
+
+### 1b · decide — "let us do the design session"
+
+Every fork made explicit, each with the alternative that lost and why it lost.
+Writes `decisions.md`, append-only. The rejected reasoning is the load-bearing
+part: without it the orchestrator either re-opens a settled question weeks later
+or contradicts it without noticing.
+
+It closes by filling `Size and sessions` in the charter — a rough unit count,
+and the verdict of **one orchestrator run or several**. That verdict is the
+reason both of these conversations happen before any code exists. It is not
+unit decomposition; units are still never planned in advance.
+
+### 2 · build — "start building"
+
+The orchestrator reads the charter and the log once, then loops. Per unit:
+baseline, choose the unit, retrieve context, write an inline spec, dispatch one
+`unit-executor`, gate, route on which stage failed, record, commit.
+
+You see a line per unit, not a transcript. What you act on:
+
+| What you see | What it means |
+|---|---|
+| `OK` | the unit landed and was committed |
+| `FAIL <stage>` | it is routing on its own — no action |
+| `HALT` | it needs you |
+
+A `HALT` is the escalation ladder having run out: the answer was not in an
+acceptance criterion, not in the decision log, and not a new decision inside
+scope. Rung 4 is you. That is the mechanism working, not a failure.
+
+### Ending, and re-entering
+
+At the feature boundary the orchestrator runs the reconcile check — tests catch
+"did it wrong", not "did the wrong thing correctly". Documentation is separate
+and can be run months later from the records alone.
+
+**Starting a fresh orchestrator session is cheap and is often correct.** The
+charter, the log and the records are the entire state, and a new session reads
+them in a few thousand tokens. Do that when first-attempt pass rate slides —
+that is the orchestrator degrading, and specs written from a degraded session
+are worse specs. A `split` verdict is the same move, decided in advance.
+
+### Before the first run
+
+- `nvm use` — the repo needs the version in `.nvmrc`, and the gate halts on the
+  wrong one rather than producing confusing failures.
+- `export PACKMIND_EDITION=oss`.
+- Work from a clean tree. The scope check's only input is `git status`, so an
+  unrelated edit of yours registers as the executor's scope violation.
+
 ## Pieces
 
 ```
