@@ -41,17 +41,24 @@ type MethodKeys<T> = {
  */
 type AutoMockedKeys<T> = Exclude<MethodKeys<T> & string, NeverMockedName>;
 
-type GivenKeys<T> = Exclude<keyof T, AutoMockedKeys<T>>;
+/** Methods the proxy leaves alone: the symbol-keyed and probe-named ones. */
+type ExcludedMethodKeys<T> = Exclude<MethodKeys<T>, AutoMockedKeys<T>>;
+
+type DataKeys<T> = Exclude<keyof T, MethodKeys<T>>;
 
 /**
  * An auto-mocked method can be seeded either with a real implementation - which
  * is type checked against the port and wrapped in a `jest.fn()` - or with a mock
  * built by hand, and may be left out entirely.
  *
- * Every other member has to be given, because nothing sensible can be conjured
- * for it: a data member would come back as a `jest.fn()` standing where the port
- * declares a value, and a symbol-keyed or probe-named method would come back
- * `undefined`.
+ * An excluded method may be left out too when the port declares it optional -
+ * `Pick` carries that optionality over, and the `undefined` the proxy answers
+ * with is exactly what such a port allows.
+ *
+ * A data member is always demanded, optional on the port or not. The proxy has
+ * only the member's name to go on, so an absent one would be answered with a
+ * `jest.fn()` - a function standing where the port declares a value, which is
+ * the very lie this helper exists to avoid.
  */
 export type PortStubs<T> = Partial<{
   [K in AutoMockedKeys<T>]: NonNullable<T[K]> extends (
@@ -59,11 +66,14 @@ export type PortStubs<T> = Partial<{
   ) => infer R
     ? NonNullable<T[K]> | jest.Mock<R, A>
     : never;
-}> & { [K in GivenKeys<T>]: T[K] };
+}> &
+  Pick<T, ExcludedMethodKeys<T>> &
+  Required<Pick<T, DataKeys<T>>>;
 
-type PortStubsArgs<T> = [GivenKeys<T>] extends [never]
-  ? [stubs?: PortStubs<T>]
-  : [stubs: PortStubs<T>];
+type PortStubsArgs<T> =
+  Record<never, never> extends PortStubs<T>
+    ? [stubs?: PortStubs<T>]
+    : [stubs: PortStubs<T>];
 
 type UnknownFunction = (...args: unknown[]) => unknown;
 

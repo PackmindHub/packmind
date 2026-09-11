@@ -20,10 +20,24 @@ interface IPortWithSymbolMethod {
   [iterate](): string[];
 }
 
+interface IPortWithOptionalExcludedMethods {
+  [iterate]?(): string[];
+  toJSON?(): unknown;
+}
+
+interface IPortWithOptionalData {
+  name?: string;
+}
+
 // A data member has no mock to fall back on, so the signature demands it.
 // @ts-expect-error 'name' is missing
 const rejectsAMissingDataMember = () => mockPort<IPortWithData>({});
 void rejectsAMissingDataMember;
+
+// Even an optional one: the proxy would answer the name with a jest.fn().
+// @ts-expect-error 'name' is missing
+const rejectsMissingOptionalData = () => mockPort<IPortWithOptionalData>({});
+void rejectsMissingOptionalData;
 
 // A symbol-keyed member is never auto-mocked, so it is demanded the same way.
 // @ts-expect-error the symbol member is missing
@@ -134,6 +148,20 @@ describe('mockPort', () => {
       port[iterate]();
 
       expect(port[iterate]).toHaveBeenCalled();
+    });
+  });
+
+  describe('when the methods it leaves alone are optional on the port', () => {
+    it('asks for nothing', () => {
+      const port = mockPort<IPortWithOptionalExcludedMethods>();
+
+      expect(port[iterate]).toBeUndefined();
+    });
+
+    it('leaves the probe-named one alone too', () => {
+      const port = mockPort<IPortWithOptionalExcludedMethods>();
+
+      expect(port.toJSON).toBeUndefined();
     });
   });
 
