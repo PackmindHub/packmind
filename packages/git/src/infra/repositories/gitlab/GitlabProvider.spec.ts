@@ -2,13 +2,20 @@ import { GitlabProvider } from './GitlabProvider';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
 import { AxiosInstance } from 'axios';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 
 // Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-const mockAxiosInstance = mockPort<AxiosInstance>();
+// An AxiosInstance is callable and mostly data, so it is mocked by hand rather
+// than with mockPort: only the verbs this suite drives are stubbed.
+const mockAxiosInstance = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+} as Partial<jest.Mocked<AxiosInstance>> as jest.Mocked<AxiosInstance>;
 
 describe('GitlabProvider', () => {
   let gitlabProvider: GitlabProvider;

@@ -22,16 +22,32 @@ const NEVER_MOCKED: ReadonlySet<string> = new Set([
   'propertyIsEnumerable',
 ]);
 
+type MethodKeys<T> = {
+  [K in keyof T]-?: NonNullable<T[K]> extends (...args: never[]) => unknown
+    ? K
+    : never;
+}[keyof T];
+
+type DataKeys<T> = Exclude<keyof T, MethodKeys<T>>;
+
 /**
- * A member of `T` can be seeded either with a real implementation - which is
- * type checked against the port and wrapped in a `jest.fn()` - or with a mock
- * built by hand.
+ * A method can be seeded either with a real implementation - which is type
+ * checked against the port and wrapped in a `jest.fn()` - or with a mock built
+ * by hand, and may be left out entirely.
+ *
+ * A member that is *not* a method has to be given: nothing sensible can be
+ * conjured for it, since the proxy cannot tell a data member from a method at
+ * runtime and would hand out a `jest.fn()` where the port declares a value.
  */
 export type PortStubs<T> = Partial<{
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+  [K in MethodKeys<T>]: T[K] extends (...args: infer A) => infer R
     ? T[K] | jest.Mock<R, A>
-    : T[K];
-}>;
+    : never;
+}> & { [K in DataKeys<T>]: T[K] };
+
+type PortStubsArgs<T> = [DataKeys<T>] extends [never]
+  ? [stubs?: PortStubs<T>]
+  : [stubs: PortStubs<T>];
 
 type UnknownFunction = (...args: unknown[]) => unknown;
 
@@ -61,10 +77,15 @@ function isJestMock(value: unknown): boolean {
  *   getUserById: async () => user,
  * });
  * ```
+ *
+ * It fits ports whose members are all methods. A type that also carries data -
+ * an `AxiosInstance` and its `defaults`, say - has to have those members
+ * supplied, and one whose shape is mostly data is better mocked by hand.
  */
 export function mockPort<T extends object>(
-  stubs: PortStubs<T> = {},
+  ...args: PortStubsArgs<T>
 ): jest.Mocked<T> {
+  const [stubs = {} as PortStubs<T>] = args;
   const members = new Map<string, unknown>();
 
   const isMockable = (member: string | symbol): member is string =>

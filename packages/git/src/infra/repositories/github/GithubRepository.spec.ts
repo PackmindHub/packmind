@@ -3,7 +3,7 @@ import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { gitBlobSha } from '@packmind/node-utils';
 import {
   PROVIDER_MAX_SOCKETS,
@@ -31,12 +31,14 @@ describe('GithubRepository', () => {
   };
 
   beforeEach(() => {
-    mockAxiosInstance = mockPort<typeof axios>({
+    // An AxiosInstance is callable and mostly data, so it is mocked by hand
+    // rather than with mockPort: only what this suite drives is stubbed.
+    mockAxiosInstance = {
       interceptors: {
         request: { use: jest.fn(), eject: jest.fn(), clear: jest.fn() },
         response: { use: jest.fn(), eject: jest.fn(), clear: jest.fn() },
       },
-    });
+    } as Partial<jest.Mocked<typeof axios>> as jest.Mocked<typeof axios>;
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
     stubbedLogger = stubLogger();

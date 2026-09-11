@@ -3,8 +3,17 @@ import { mockPort } from './mockPort';
 interface ITestPort {
   findById(id: string): Promise<{ id: string } | null>;
   save(value: { id: string }): Promise<void>;
+}
+
+interface IPortWithData {
+  findById(id: string): Promise<{ id: string } | null>;
   name: string;
 }
+
+// A data member has no mock to fall back on, so the signature demands it.
+// @ts-expect-error 'name' is missing
+const rejectsAMissingDataMember = () => mockPort<IPortWithData>({});
+void rejectsAMissingDataMember;
 
 describe('mockPort', () => {
   afterEach(() => {
@@ -66,6 +75,20 @@ describe('mockPort', () => {
       port.findById.mockResolvedValue({ id: 'configured' });
 
       await expect(port.findById('id')).resolves.toEqual({ id: 'configured' });
+    });
+  });
+
+  describe('when the port carries a member that is not a method', () => {
+    it('keeps the value it was given', () => {
+      const port = mockPort<IPortWithData>({ name: 'a name' });
+
+      expect(port.name).toBe('a name');
+    });
+
+    it('still mocks the methods around it', () => {
+      const port = mockPort<IPortWithData>({ name: 'a name' });
+
+      expect(jest.isMockFunction(port.findById)).toBe(true);
     });
   });
 
