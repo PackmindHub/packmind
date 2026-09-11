@@ -80,9 +80,13 @@ Sizing, in order of authority:
   buys nothing at all, and every fresh subagent pays the startup cost again.
 - **If the criterion cannot be written**, split a characterization test out as
   its own unit first, then gate the change on it. For a pure refactor with no
-  observable delta, gate on *no test file modified* plus the existing tests
-  green. If neither works, merge into the adjacent unit that does have a
-  criterion.
+  observable delta, declare `"kind": "characterization"` on the exit criterion:
+  the gate then requires the existing tests green and **no test file modified**,
+  because a refactor that edits its own tests proves nothing. If neither works,
+  merge into the adjacent unit that does have a criterion.
+- **Write the criterion with `--testNamePattern`, not `-t`.** Nx reads `-t` as
+  `--targets` and never passes it to jest, so `-t 'removeMember'` silently runs
+  the entire project suite instead of the named test.
 - **If two consecutive units would share an exit command**, they are one unit.
 - Do not pre-decompose the feature. Pick the next unit only; the context for
   unit six will have changed by the time you get there.
@@ -136,7 +140,8 @@ Then write the gate's four fields:
 ```json
 .claude/features/<slug>/units/U-014.json
 { "unit_id": "U-014", "feature": "<slug>",
-  "files_in_scope": [...], "exit_criterion": { "command": "...", "describes": "AC-3" } }
+  "files_in_scope": [...],
+  "exit_criterion": { "command": "...", "kind": "behavioural", "describes": "AC-3" } }
 ```
 
 ### 6. Dispatch, one at a time

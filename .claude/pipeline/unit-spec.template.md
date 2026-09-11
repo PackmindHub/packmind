@@ -61,11 +61,22 @@ by the list above; this section is for the near misses.>
 This command must pass, and it is how the unit is judged:
 
 ```
-<./node_modules/.bin/nx test spaces -t 'removeMember'>
+<./node_modules/.bin/nx test spaces --testNamePattern='removeMember'>
 ```
+
+**Use `--testNamePattern`, never `-t`.** Under Nx, `-t` is `--targets`: it is
+swallowed before jest ever sees it, so `nx test spaces -t 'removeMember'` runs
+the whole project suite and the unit is judged by tests that already passed
+before it started. The gate now fails a criterion that ran no assertion, so this
+mistake shows up as a failure rather than as a false green, but it costs a round
+trip.
 
 <If the test does not exist yet, say so explicitly and say that writing it is
 part of the unit. If it does exist, say that it must not be modified.>
+
+The gate reads jest's `Tests:` line and fails a criterion that exited 0 having
+run nothing, so a test that was never written, or whose name does not match the
+pattern, fails here rather than passing quietly.
 
 ## What not to do
 

@@ -83,7 +83,15 @@ because the orchestrator reads this output as tokens.
 
 Stages run cheapest-first and fail fast: scope check, autofix (not a gate —
 never something the executor is asked to satisfy), `nx affected` on the changed
-files, `nx run-many` repo-wide, then the unit's named test. Scoped and repo-wide
+files, `nx run-many` repo-wide, then the unit's named test.
+
+Two things the last two stages check that an exit code alone does not. `scope`
+fails a unit that changed **no files**, because an empty diff is inside any
+declared scope and would sail through every later stage. `tests` reads jest's
+`Tests:` line and fails a criterion that exited 0 having run **no assertion** —
+a `--testNamePattern` matching nothing skips every test and still exits 0. A
+refactor declares `"kind": "characterization"` on its exit criterion instead,
+and is then gated on the existing tests passing with no test file modified. Scoped and repo-wide
 both run on purpose: a scope-filtered check cannot detect a signature change
 that breaks a caller the unit never touched, because the evidence was filtered
 out.
