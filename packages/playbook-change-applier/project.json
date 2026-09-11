@@ -4,8 +4,13 @@
   "sourceRoot": "packages/playbook-change-applier/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command to also gate tsconfig.spec.json: the shared one covers tsconfig.lib.json only, which excludes specs.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/playbook-change-applier/tsconfig.lib.json && tsc --noEmit --project packages/playbook-change-applier/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

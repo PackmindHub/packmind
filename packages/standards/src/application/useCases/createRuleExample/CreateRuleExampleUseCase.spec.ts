@@ -44,6 +44,7 @@ describe('CreateRuleExampleUseCase', () => {
   const user: User = {
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,

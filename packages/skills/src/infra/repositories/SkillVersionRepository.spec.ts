@@ -159,7 +159,7 @@ describe('SkillVersionRepository', () => {
 
       it('fetches a single row instead of the whole history', () => {
         expect(
-          fixture.queries.countMatching(/from "skill_versions".*limit 1/is),
+          fixture.queries.countMatching(/from "skill_versions"[\s\S]*limit 1/i),
         ).toBe(1);
       });
     });

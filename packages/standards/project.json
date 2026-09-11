@@ -4,8 +4,13 @@
   "sourceRoot": "packages/standards/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command instead of inheriting it with '{}': that one checks tsconfig.lib.json only, which excludes the specs and test/, so @swc/jest left them unchecked. Both projects are checked here.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/standards/tsconfig.lib.json && tsc --noEmit --project packages/standards/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

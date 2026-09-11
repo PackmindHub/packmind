@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Global setup for integration tests to mock Redis connections
 
 class SyncJob<Input, Output> implements IQueue<Input, Output> {
-  private runner: Runner<Input, Output>;
+  private runner?: Runner<Input, Output>;
 
   async addJob(
     name: string,
@@ -38,6 +38,11 @@ class SyncJob<Input, Output> implements IQueue<Input, Output> {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   async cancelJob(_jobId: string): Promise<void> {}
+
+  // Nothing schedules repeatable jobs here, so removing one is a no-op.
+  async removeRepeatable(): Promise<void> {
+    return;
+  }
 }
 
 // Mock the queueFactory, Configuration, and SSEEventPublisher from @packmind/node-utils

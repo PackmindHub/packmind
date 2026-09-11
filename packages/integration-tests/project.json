@@ -4,8 +4,13 @@
   "sourceRoot": "packages/integration-tests/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command to also check the spec files: this package is almost entirely specs, which tsconfig.lib.json excludes.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/integration-tests/tsconfig.lib.json && tsc --noEmit --project packages/integration-tests/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

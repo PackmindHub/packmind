@@ -23,6 +23,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
+import { distributionFactory } from '../../../test/distributionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
@@ -117,7 +118,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         standards: [standardId],
       });
 
-      const distribution: Distribution = {
+      const distribution: Distribution = distributionFactory({
         id: createDistributionId(uuidv4()),
         distributedPackages: [],
         createdAt: new Date().toISOString(),
@@ -126,7 +127,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         target,
         status: DistributionStatus.no_changes,
         renderModes: [],
-      };
+      });
 
       mockPackageService.findById.mockResolvedValue(pkg);
       mockCommandsPort.getLatestCommandVersions.mockResolvedValue([

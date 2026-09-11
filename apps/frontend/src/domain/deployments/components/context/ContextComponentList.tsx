@@ -1,4 +1,10 @@
-import { useMemo, type ReactNode } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -13,6 +19,7 @@ import {
 } from '@packmind/ui';
 import {
   LuBookCheck,
+  LuChevronDown,
   LuChevronRight,
   LuEllipsisVertical,
   LuFolderInput,
@@ -72,20 +79,44 @@ export type ComponentListEntry = {
 };
 
 /**
+ * One band of the list: the rows of a single component type, under a header
+ * that names it.
+ *
+ * The header is a row of the list rather than a heading above it. Both panes
+ * group by type, and a package of a hundred components is read by running down
+ * one continuous column: a bordered box per type turns that column into three,
+ * each with its own edges to cross, and the eye loses the line it was following.
+ */
+export type ComponentListSection = {
+  /** The React key, and what the header names: a component type. */
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  /**
+   * What the header prints beside the label. A node rather than a number, so a
+   * band narrowed by a filter can say "2 of 44" without this file having to
+   * know what a filter is.
+   */
+  count: ReactNode;
+  entries: readonly ComponentListEntry[];
+};
+
+/**
  * The list of components, shared by a package's own content and by the
  * space-wide inventory. Extracted the day the second one appeared: two lists of
  * the same objects would have grown two row heights and two ideas of what a
  * version looks like.
  */
 export function ContextComponentList({
-  entries,
+  sections,
   showPackages = false,
   onMove,
   onRemove,
   selectedKeys,
   onToggleSelect,
+  onSelectMany,
 }: Readonly<{
-  entries: readonly ComponentListEntry[];
+  sections: readonly ComponentListSection[];
   showPackages?: boolean;
   /**
    * Offered per list rather than per row, and only by a list that is scoped to
@@ -101,6 +132,17 @@ export function ContextComponentList({
   onRemove?: (component: ContextComponent) => void;
   /** Which rows are picked, by `componentSelectionKey`. */
   selectedKeys?: ReadonlySet<string>;
+  /**
+   * Picking or dropping a whole band at once, which the header offers.
+   *
+   * Separate from `onToggleSelect` rather than a loop over it: ticking ninety
+   * rows one call at a time would run ninety state updates for one gesture, and
+   * the caller is the only one that can say what "all of them" resolves to.
+   */
+  onSelectMany?: (
+    components: readonly ContextComponent[],
+    select: boolean,
+  ) => void;
   /**
    * Picking a row, which is what turns the per-row move into a bulk one. Comes
    * with `selectedKeys` and under the same condition as `onMove`: the selection
@@ -141,6 +183,44 @@ export function ContextComponentList({
    */
   const showReviews = pendingReviews.size > 0;
 
+  /*
+   * Which bands are folded, by section key.
+   *
+   * Held here rather than by the panes: it is a way of reading this list and
+   * nothing outside it can act on a folded band, so handing it up would give
+   * both callers a piece of state neither has a use for. Not in the address
+   * either, for the reason the filter above is not: it is a gesture, not a
+   * place.
+   *
+   * Folding survives a query on purpose. Someone who folded Commands to read
+   * the skills has said what they are not interested in, and reopening it
+   * under every search would undo that decision on their behalf; the header
+   * keeps saying how many the band holds while it is shut.
+   */
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  /*
+   * Whether a batch is being assembled, which is what keeps every checkbox on
+   * the list out at once.
+   *
+   * Without it the pattern eats its own gesture: the checkboxes appear under
+   * the pointer, so picking a second row means leaving the first one, and the
+   * reader who ticked one row would watch the column they are working in go
+   * blank between every click. One pick is the signal that the next few rows
+   * are about to be picked too.
+   */
+  const isSelecting = (selectedKeys?.size ?? 0) > 0;
+
+  const toggleSection = useCallback((key: string) => {
+    setCollapsed((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }, []);
+
   return (
     <PMBox
       borderWidth="1px"
@@ -148,41 +228,233 @@ export function ContextComponentList({
       borderRadius="sm"
       overflow="hidden"
     >
-      {entries.map((entry, index) => (
-        <ComponentRow
-          key={componentSelectionKey(entry.component)}
-          entry={entry}
-          isFirst={index === 0}
-          showPackages={showPackages}
-          showReviews={showReviews}
-          pendingReviews={
-            pendingReviews.get(componentSelectionKey(entry.component)) ?? 0
-          }
-          onMove={onMove}
-          onRemove={onRemove}
-          isSelected={
-            selectedKeys?.has(componentSelectionKey(entry.component)) ?? false
-          }
-          onToggleSelect={onToggleSelect}
-        />
+      {sections.map((section, sectionIndex) => (
+        <Fragment key={section.key}>
+          <SectionHeader
+            section={section}
+            isFirst={sectionIndex === 0}
+            isCollapsed={collapsed.has(section.key)}
+            isSelecting={isSelecting}
+            onToggle={() => toggleSection(section.key)}
+            selection={
+              onSelectMany && onToggleSelect
+                ? {
+                    selected: section.entries.filter((entry) =>
+                      selectedKeys?.has(componentSelectionKey(entry.component)),
+                    ).length,
+                    total: section.entries.length,
+                    onSelectAll: (select) =>
+                      onSelectMany(
+                        section.entries.map((entry) => entry.component),
+                        select,
+                      ),
+                  }
+                : undefined
+            }
+          />
+          {!collapsed.has(section.key) &&
+            section.entries.map((entry) => (
+              <ComponentRow
+                key={componentSelectionKey(entry.component)}
+                entry={entry}
+                showPackages={showPackages}
+                showReviews={showReviews}
+                pendingReviews={
+                  pendingReviews.get(componentSelectionKey(entry.component)) ??
+                  0
+                }
+                onMove={onMove}
+                onRemove={onRemove}
+                isSelected={
+                  selectedKeys?.has(componentSelectionKey(entry.component)) ??
+                  false
+                }
+                isSelecting={isSelecting}
+                onToggleSelect={onToggleSelect}
+              />
+            ))}
+        </Fragment>
       ))}
     </PMBox>
   );
 }
 
+/**
+ * A checkbox that is only there when it is wanted: under the pointer, under the
+ * keyboard, or once a selection has started.
+ *
+ * A hundred components is a hundred empty boxes down the left edge, and reading
+ * a package is what this list is for nine times out of ten; picking things out
+ * of it is the tenth. The destinations rail settled this for the surface
+ * already and this is the same behaviour, with the focus case added: a checkbox
+ * at zero opacity still takes the keyboard, so without `_focusWithin` tabbing
+ * into the list would move an invisible focus ring down an empty column.
+ *
+ * Faded rather than unmounted, which is what keeps the column steady. A row
+ * that renders its checkbox only on hover shifts its name sideways under the
+ * pointer, and the eye is running down that name.
+ */
+function PickBox({
+  shown,
+  children,
+}: Readonly<{ shown: boolean; children: ReactNode }>) {
+  return (
+    <PMBox
+      display="inline-flex"
+      alignItems="center"
+      opacity={shown ? 1 : 0}
+      transition="opacity 100ms ease-out"
+      _groupHover={{ opacity: 1 }}
+      _focusWithin={{ opacity: 1 }}
+    >
+      {children}
+    </PMBox>
+  );
+}
+
+/**
+ * The band header. Quieter than the rows it heads and tinted, so a long list
+ * reads as runs of components separated by labels rather than as one table with
+ * odd lines in it.
+ */
+/**
+ * What a band's header can do with the band: fold it, and pick all of it.
+ */
+type SectionSelection = {
+  /** How many of this band's rows are already picked. */
+  selected: number;
+  total: number;
+  onSelectAll: (select: boolean) => void;
+};
+
+function SectionHeader({
+  section,
+  isFirst,
+  isCollapsed,
+  isSelecting,
+  onToggle,
+  selection,
+}: Readonly<{
+  section: ComponentListSection;
+  isFirst: boolean;
+  isCollapsed: boolean;
+  /** A batch is being assembled, so every checkbox that can be shown is. */
+  isSelecting: boolean;
+  onToggle: () => void;
+  selection?: SectionSelection;
+}>) {
+  const allSelected =
+    selection !== undefined &&
+    selection.total > 0 &&
+    selection.selected === selection.total;
+
+  return (
+    /*
+     * The strip is a row of controls rather than one control. It was the fold
+     * button in full while it had nothing else on it; a strip carrying a
+     * checkbox cannot also be one, because a click landing anywhere on it would
+     * have to choose between folding the band and picking it, and the reader has
+     * no way to know which they will get.
+     */
+    <PMHStack
+      gap={2}
+      align="center"
+      paddingLeft={3}
+      paddingRight={2}
+      paddingY="3px"
+      bg="background.secondary"
+      borderTopWidth={isFirst ? '0' : '1px'}
+      borderColor="border.tertiary"
+      // Chakra's `_groupHover` keys off this class, not `role="group"`. The
+      // strip is its own group: a band is picked from its own header, not by
+      // pointing at one of its rows.
+      className="group"
+    >
+      {selection && selection.total > 0 && (
+        /*
+          First on the strip, under the same padding as the rows, so it sits in
+          the column of the checkboxes it commands. It was second for a while,
+          behind the fold chevron, and the band then read as a row with a stray
+          control on it: the eye runs down a column of checkboxes and this one
+          was the only one out of line.
+
+          Half-ticked while part of the band is picked: the reader who ticked
+          three of forty needs to be told that clicking here takes the other
+          thirty-seven, not that nothing is picked.
+        */
+        <PickBox shown={isSelecting || selection.selected > 0}>
+          <PMCheckbox
+            size="sm"
+            checked={
+              allSelected
+                ? true
+                : selection.selected > 0
+                  ? 'indeterminate'
+                  : false
+            }
+            onCheckedChange={() => selection.onSelectAll(!allSelected)}
+            inputProps={{
+              'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
+            }}
+          />
+        </PickBox>
+      )}
+      {section.icon && (
+        <PMIcon fontSize="xs" color="text.faded">
+          {section.icon}
+        </PMIcon>
+      )}
+      <PMText
+        fontSize="10px"
+        fontWeight="semibold"
+        textTransform="uppercase"
+        letterSpacing="wider"
+        color="faded"
+      >
+        {section.label}
+      </PMText>
+      <PMText fontSize="10px" color="faded" fontVariantNumeric="tabular-nums">
+        {section.count}
+      </PMText>
+      {/*
+        At the far end of the strip, which is where the checkbox is not. The
+        two controls of a band cannot share its left edge: one of them has to
+        give the column up, and it is the one with nothing below it to line up
+        with. This is also the side an accordion is opened from, which is what
+        a full-width strip that folds is.
+
+        No word beside it saying "collapsed". The glyph turns, and a label that
+        only ever repeats what the control next to it is already showing is a
+        second thing to read for nothing. What a shut band does need to keep is
+        its count, and that is to the left, where it always is.
+      */}
+      <PMIconButton
+        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
+        aria-expanded={!isCollapsed}
+        variant="ghost"
+        size="2xs"
+        color="text.faded"
+        marginLeft="auto"
+        onClick={onToggle}
+      >
+        {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}
+      </PMIconButton>
+    </PMHStack>
+  );
+}
+
 function ComponentRow({
   entry,
-  isFirst,
   showPackages,
   showReviews,
   pendingReviews,
   onMove,
   onRemove,
   isSelected,
+  isSelecting,
   onToggleSelect,
 }: Readonly<{
   entry: ComponentListEntry;
-  isFirst: boolean;
   showPackages: boolean;
   /** Whether any row of this list is waiting on someone. */
   showReviews: boolean;
@@ -191,6 +463,8 @@ function ComponentRow({
   onMove?: (component: ContextComponent) => void;
   onRemove?: (component: ContextComponent) => void;
   isSelected: boolean;
+  /** A batch is being assembled, so every checkbox that can be shown is. */
+  isSelecting: boolean;
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
   const { component, packageNames = [] } = entry;
@@ -205,13 +479,15 @@ function ComponentRow({
     <PMHStack
       gap={0}
       align="stretch"
-      borderTopWidth={isFirst ? '0' : '1px'}
+      borderTopWidth="1px"
       borderColor="border.tertiary"
       _hover={{ bg: 'background.secondary' }}
       // The picked row stays legible once the pointer has left it: the hover
       // tint alone would make the selection disappear the moment it is read.
       bg={isSelected ? 'background.secondary' : undefined}
       transition="background-color 150ms ease-out"
+      // Chakra's `_groupHover` keys off this class, not `role="group"`.
+      className="group"
     >
       {onToggleSelect && (
         /*
@@ -219,28 +495,15 @@ function ComponentRow({
           a control nested in an anchor is activated by the anchor, so ticking a
           row would open it.
         */
-        <PMBox
-          display="flex"
-          alignItems="flex-start"
-          paddingLeft={3}
-          /*
-            On the name's line, not centred on the row: the same rule the type
-            icon two elements to the right already follows, and the offsets are
-            the link's own vertical padding plus the nudge that puts a control
-            of this size on a line of that size.
-
-            Centred, it sat between the name and the summary while the icon sat
-            on the name, so the row opened with two marks on two baselines and
-            neither read as belonging to the title.
-          */
-          paddingTop="calc(10px + 0.14em)"
-        >
-          <PMCheckbox
-            size="sm"
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelect(component)}
-            inputProps={{ 'aria-label': `Select ${component.name}` }}
-          />
+        <PMBox display="flex" alignItems="center" paddingLeft={3}>
+          <PickBox shown={isSelected || isSelecting}>
+            <PMCheckbox
+              size="sm"
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(component)}
+              inputProps={{ 'aria-label': `Select ${component.name}` }}
+            />
+          </PickBox>
         </PMBox>
       )}
       {/*
@@ -258,22 +521,32 @@ function ComponentRow({
             gap={3}
             textAlign="left"
             paddingX={3}
-            paddingY="10px"
+            paddingY="7px"
           >
-            {/* On the name, not on the pair: the rule the rail beside it follows. */}
-            <PMIcon
+            {/*
+              One line, name then summary, where the two were stacked. A package
+              of a hundred components was four screens of scrolling, and the
+              second line was the half of each row nobody was scanning for.
+
+              No type icon on the row: the band header above it already says
+              what these are, and repeating the glyph on every line spends the
+              width the summary now needs.
+            */}
+            <PMText
               fontSize="sm"
-              color="text.faded"
+              fontWeight="medium"
+              truncate
               flexShrink={0}
-              alignSelf="flex-start"
-              marginTop="0.25em"
+              maxWidth="45%"
             >
-              {COMPONENT_TYPE_ICONS[component.type]}
-            </PMIcon>
+              {component.name}
+            </PMText>
+            {/*
+              Takes the room left over, and is the first thing to give it back:
+              the name is what the reader came for, and a component with a long
+              description must not push its own version off the row.
+            */}
             <PMBox flex={1} minW={0}>
-              <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
-                {component.name}
-              </PMText>
               {component.summary && (
                 <PMText as="div" fontSize="xs" color="faded" truncate>
                   {component.summary}

@@ -1,4 +1,5 @@
 import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   GitProviderDisplayNameAlreadyUsedError,
   GitProviderDisplayNameNotEditableError,
@@ -24,7 +25,7 @@ describe('UpdateGitProviderUseCase', () => {
   let accountsAdapter: jest.Mocked<IAccountsPort>;
 
   const organizationId = createOrganizationId('org-123');
-  const adminUser: User = {
+  const adminUser: User = userFactory({
     id: createUserId('admin-123'),
     email: 'admin@example.com',
     passwordHash: null,
@@ -36,12 +37,12 @@ describe('UpdateGitProviderUseCase', () => {
         role: 'admin',
       },
     ],
-  };
-  const organization: Organization = {
+  });
+  const organization: Organization = organizationFactory({
     id: organizationId,
     name: 'Test Org',
     slug: 'test-org',
-  };
+  });
 
   const makeUseCase = (mode: 'shared' | 'on-prem' = 'on-prem') =>
     new UpdateGitProviderUseCase(

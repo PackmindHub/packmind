@@ -26,10 +26,12 @@ describe('CommandChangesApplier', () => {
     id: recipeId,
     name: 'My Command',
     slug: 'my-command',
+    content: 'Do this thing',
     version: 1,
+    userId,
     spaceId,
-    organizationId: orgId,
-  } as Command;
+    movedTo: null,
+  };
 
   const version: CommandVersion = {
     id: versionId,

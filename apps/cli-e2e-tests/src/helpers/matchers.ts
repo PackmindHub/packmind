@@ -31,7 +31,7 @@ expect.extend({
       );
       return {
         pass: true,
-        message: 'Output matches',
+        message: () => 'Output matches',
       };
     } catch (err) {
       return {
@@ -41,3 +41,5 @@ expect.extend({
     }
   },
 });
+
+export {};

@@ -1,17 +1,23 @@
 import { PackmindLogger } from '@packmind/logger';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSkillId,
   createSpaceId,
   createUserId,
   GetSkillByIdCommand,
   IAccountsPort,
   ISpacesPort,
   Organization,
+  OrganizationId,
+  SkillId,
   Space,
+  SpaceId,
   User,
-  createSkillId,
+  UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -47,7 +53,7 @@ describe('GetSkillByIdUseCase', () => {
         createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
         updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
       }),
-    } as jest.Mocked<ISpacesPort>;
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     stubbedLogger = stubLogger();
 
@@ -64,10 +70,10 @@ describe('GetSkillByIdUseCase', () => {
   });
 
   describe('retrieve skill by ID', () => {
-    let userId: string;
-    let organizationId: string;
-    let spaceId: string;
-    let skillId: string;
+    let userId: UserId;
+    let organizationId: OrganizationId;
+    let spaceId: SpaceId;
+    let skillId: SkillId;
     let user: User;
     let organization: Organization;
     let space: Space;
@@ -80,24 +86,20 @@ describe('GetSkillByIdUseCase', () => {
       spaceId = createSpaceId(uuidv4());
       skillId = createSkillId(uuidv4());
 
-      user = {
+      user = userFactory({
         id: userId,
         email: 'test@example.com',
-        passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
-        active: true,
-      };
+      });
       organization = {
         id: organizationId,
         name: 'Test Org',
         slug: 'test-org',
       };
-      space = {
+      space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       command = {
         userId,
@@ -171,10 +173,10 @@ describe('GetSkillByIdUseCase', () => {
 
   describe('authorization validation', () => {
     describe('when space not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let command: GetSkillByIdCommand;
@@ -185,13 +187,11 @@ describe('GetSkillByIdUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -218,11 +218,11 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when space does not belong to organization', () => {
-      let userId: string;
-      let organizationId: string;
-      let otherOrganizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let otherOrganizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -235,24 +235,20 @@ describe('GetSkillByIdUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId: otherOrganizationId,
-        };
+        });
 
         command = {
           userId,
@@ -274,11 +270,11 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when skill does not belong to space', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let otherSpaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let otherSpaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -292,24 +288,20 @@ describe('GetSkillByIdUseCase', () => {
         otherSpaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
 
         command = {
           userId,
@@ -338,10 +330,10 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when user not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let command: GetSkillByIdCommand;
 
       beforeEach(() => {
@@ -368,10 +360,10 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when organization not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let command: GetSkillByIdCommand;
 
@@ -381,13 +373,11 @@ describe('GetSkillByIdUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
 
         command = {
           userId,
@@ -408,11 +398,11 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when user is not member of organization', () => {
-      let userId: string;
-      let organizationId: string;
-      let otherOrganizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let otherOrganizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let command: GetSkillByIdCommand;
@@ -424,15 +414,13 @@ describe('GetSkillByIdUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [
             { organizationId: otherOrganizationId, role: 'member', userId },
           ],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -458,10 +446,10 @@ describe('GetSkillByIdUseCase', () => {
     });
 
     describe('when user is not a member of the space', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -473,24 +461,20 @@ describe('GetSkillByIdUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
 
         command = {
           userId,

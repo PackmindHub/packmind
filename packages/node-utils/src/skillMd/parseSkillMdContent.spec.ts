@@ -44,7 +44,7 @@ describe('parseSkillMdContent', () => {
     it('normalises allowed-tools to allowedTools', () => {
       const result = parseSkillMdContent(content);
 
-      expect(result?.properties.allowedTools).toBe('Read, Write');
+      expect(result?.properties['allowedTools']).toBe('Read, Write');
     });
 
     it('does not include the original allowed-tools key', () => {
@@ -92,7 +92,7 @@ describe('parseSkillMdContent', () => {
     it('trims content before parsing', () => {
       const result = parseSkillMdContent(content);
 
-      expect(result?.properties.name).toBe('Trimmed');
+      expect(result?.properties['name']).toBe('Trimmed');
     });
   });
 

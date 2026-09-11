@@ -4,8 +4,13 @@
   "sourceRoot": "packages/skills/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the shared nx.json command (which only covers tsconfig.lib.json) so the spec files are type checked too. Without the second tsc, everything under src/**/*.spec.ts and test/ has no type gate at all.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/skills/tsconfig.lib.json && tsc --noEmit --project packages/skills/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

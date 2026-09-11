@@ -3,9 +3,11 @@ import {
   createUserId,
   IAccountsPort,
   LLMProvider,
+  UserOrganizationMembership,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { TestLLMConnectionUseCase } from './TestLLMConnectionUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
 
@@ -22,28 +24,19 @@ describe('TestLLMConnectionUseCase', () => {
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-456');
+  const membership: UserOrganizationMembership = {
+    userId,
+    organizationId,
+    role: 'member',
+  };
   const memberContext: MemberContext = {
-    user: {
+    user: userFactory({
       id: userId,
       email: 'test@example.com',
-      memberships: [
-        {
-          userId: String(userId),
-          organizationId,
-          role: 'member',
-        },
-      ],
-    },
-    organization: {
-      id: organizationId,
-      name: 'Test Organization',
-      slug: 'test-org',
-    },
-    membership: {
-      userId: String(userId),
-      organizationId,
-      role: 'member',
-    },
+      memberships: [membership],
+    }),
+    organization: organizationFactory({ id: organizationId }),
+    membership,
   };
 
   beforeEach(() => {
@@ -59,6 +52,7 @@ describe('TestLLMConnectionUseCase', () => {
       executePrompt: mockExecutePrompt,
       isConfigured: jest.fn().mockResolvedValue(true),
       executePromptWithHistory: jest.fn(),
+      getModels: jest.fn(),
     });
   });
 

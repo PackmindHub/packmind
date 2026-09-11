@@ -13,7 +13,9 @@ import {
   createSkillVersionId,
   createTargetId,
   createUserId,
+  FileUpdates,
 } from '@packmind/types';
+import { contentOf } from '@packmind/test-utils';
 
 function makeTarget(path: string): Target {
   return {
@@ -61,6 +63,14 @@ function makeSkill(overrides: Partial<SkillVersion> = {}): SkillVersion {
     prompt: '# prompt\n',
     ...overrides,
   };
+}
+
+/** Parses the manifest emitted by `deployPluginManifest`. */
+function manifestOf(updates: FileUpdates): Record<string, unknown> {
+  return JSON.parse(contentOf(updates.createOrUpdate[0])) as Record<
+    string,
+    unknown
+  >;
 }
 
 describe('CopilotPluginDeployer', () => {
@@ -437,7 +447,7 @@ describe('CopilotPluginDeployer', () => {
           makeTarget('plugins/security'),
         );
 
-        expect(JSON.parse(updates.createOrUpdate[0].content)).toEqual({
+        expect(manifestOf(updates)).toEqual({
           name: 'security',
           version: '0.1.0',
           hooks: 'hooks/hooks.json',
@@ -454,9 +464,7 @@ describe('CopilotPluginDeployer', () => {
           makeTarget('plugins/security'),
         );
 
-        expect(
-          Object.keys(JSON.parse(updates.createOrUpdate[0].content)),
-        ).not.toContain('hooks');
+        expect(Object.keys(manifestOf(updates))).not.toContain('hooks');
       });
     });
   });

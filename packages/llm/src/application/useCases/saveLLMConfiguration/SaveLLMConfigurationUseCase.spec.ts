@@ -6,6 +6,7 @@ import {
   SaveLLMConfigurationCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { SaveLLMConfigurationUseCase } from './SaveLLMConfigurationUseCase';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
@@ -18,39 +19,31 @@ describe('SaveLLMConfigurationUseCase', () => {
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockConfigurationRepository: jest.Mocked<IAIProviderRepository>;
 
-  const adminUser = {
+  const adminUser = userFactory({
     id: userId,
     email: 'admin@example.com',
-    passwordHash: 'hashed-password',
-    active: true,
     memberships: [
       {
         userId,
         organizationId,
-        role: 'admin' as const,
+        role: 'admin',
       },
     ],
-  };
+  });
 
-  const memberUser = {
+  const memberUser = userFactory({
     id: userId,
     email: 'member@example.com',
-    passwordHash: 'hashed-password',
-    active: true,
     memberships: [
       {
         userId,
         organizationId,
-        role: 'member' as const,
+        role: 'member',
       },
     ],
-  };
+  });
 
-  const organization = {
-    id: organizationId,
-    name: 'Test Organization',
-    slug: 'test-org',
-  };
+  const organization = organizationFactory({ id: organizationId });
 
   beforeEach(() => {
     mockAccountsPort = {

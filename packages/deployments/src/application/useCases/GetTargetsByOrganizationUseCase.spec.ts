@@ -1,6 +1,7 @@
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 import { TargetService } from '../services/TargetService';
 import {
+  GitRepo,
   Target,
   TargetWithRepository,
   GetTargetsByOrganizationCommand,
@@ -11,6 +12,7 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/git/test';
 
 describe('GetTargetsByOrganizationUseCase', () => {
   let useCase: GetTargetsByOrganizationUseCase;
@@ -42,32 +44,26 @@ describe('GetTargetsByOrganizationUseCase', () => {
 
     describe('when organization has multiple repositories with targets', () => {
       let result: TargetWithRepository[];
-      let mockRepositories: {
-        id: ReturnType<typeof createGitRepoId>;
-        owner: string;
-        repo: string;
-        branch: string;
-        providerId: ReturnType<typeof createGitProviderId>;
-      }[];
+      let mockRepositories: GitRepo[];
       let mockTargetsRepo1: Target[];
       let mockTargetsRepo2: Target[];
 
       beforeEach(async () => {
         mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-1'),
             owner: 'owner1',
             repo: 'repo1',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
-          {
+          }),
+          gitRepoFactory({
             id: createGitRepoId('repo-2'),
             owner: 'owner2',
             repo: 'repo2',
             branch: 'main',
             providerId: createGitProviderId('provider-2'),
-          },
+          }),
         ];
 
         mockTargetsRepo1 = [
@@ -186,23 +182,17 @@ describe('GetTargetsByOrganizationUseCase', () => {
 
     describe('when repositories have no targets', () => {
       let result: TargetWithRepository[];
-      let mockRepositories: {
-        id: ReturnType<typeof createGitRepoId>;
-        owner: string;
-        repo: string;
-        branch: string;
-        providerId: ReturnType<typeof createGitProviderId>;
-      }[];
+      let mockRepositories: GitRepo[];
 
       beforeEach(async () => {
         mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-1'),
             owner: 'owner1',
             repo: 'repo1',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
+          }),
         ];
 
         mockGitPort.getOrganizationRepositories.mockResolvedValue(
@@ -252,23 +242,17 @@ describe('GetTargetsByOrganizationUseCase', () => {
     });
 
     describe('when target service errors occur', () => {
-      let mockRepositories: {
-        id: ReturnType<typeof createGitRepoId>;
-        owner: string;
-        repo: string;
-        branch: string;
-        providerId: ReturnType<typeof createGitProviderId>;
-      }[];
+      let mockRepositories: GitRepo[];
 
       beforeEach(() => {
         mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-1'),
             owner: 'owner1',
             repo: 'repo1',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
+          }),
         ];
 
         const error = new Error('Database connection failed');

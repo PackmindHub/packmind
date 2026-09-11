@@ -4,8 +4,13 @@
   "sourceRoot": "packages/accounts/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the shared nx.json command to add tsconfig.spec.json: @swc/jest strips types without checking them, so the specs and the test/ factories are otherwise unchecked.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/accounts/tsconfig.lib.json && tsc --noEmit --project packages/accounts/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

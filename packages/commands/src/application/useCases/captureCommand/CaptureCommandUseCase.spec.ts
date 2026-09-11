@@ -1,9 +1,7 @@
-import { PackmindLogger } from '@packmind/logger';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
 import {
   CaptureCommandCommand,
   CommandCreatedEvent,
@@ -20,10 +18,10 @@ import {
   CommandSlugAlreadyExistsError,
   Space,
   SpaceId,
-  SpaceType,
   User,
   UserId,
 } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '../../../../test/commandFactory';
@@ -44,7 +42,6 @@ describe('CaptureRecipeUseCase', () => {
   let commandService: jest.Mocked<CommandService>;
   let commandVersionService: jest.Mocked<CommandVersionService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
-  let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
     accountsPort = {
@@ -58,7 +55,7 @@ describe('CaptureRecipeUseCase', () => {
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
-    } as jest.Mocked<ISpacesPort>;
+    } as Partial<jest.Mocked<ISpacesPort>> as jest.Mocked<ISpacesPort>;
 
     // Mock RecipeService
     commandService = {
@@ -84,8 +81,6 @@ describe('CaptureRecipeUseCase', () => {
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
-    stubbedLogger = stubLogger();
-
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -99,7 +94,6 @@ describe('CaptureRecipeUseCase', () => {
       commandService,
       commandVersionService,
       eventEmitterService,
-      stubbedLogger,
     );
   });
 
@@ -427,6 +421,7 @@ describe('CaptureRecipeUseCase', () => {
       user = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -436,14 +431,11 @@ describe('CaptureRecipeUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      space = {
+      space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-        type: SpaceType.open,
         isDefaultSpace: true,
-      };
+      });
 
       accountsPort.getUserById.mockResolvedValue(user);
       accountsPort.getOrganizationById.mockResolvedValue(organization);

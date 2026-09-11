@@ -17,6 +17,7 @@ import {
 import { SingleFileDeployer, DeployerConfig } from './SingleFileDeployer';
 import { v4 as uuidv4 } from 'uuid';
 import { IStandardsPort, IGitPort } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/test-utils';
 
 // Create a concrete test implementation of the abstract SingleFileDeployer
 class TestSingleFileDeployer extends SingleFileDeployer {
@@ -42,13 +43,13 @@ describe('SingleFileDeployer', () => {
 
     deployer = new TestSingleFileDeployer(mockStandardsPort, mockGitPort);
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'testowner',
       repo: 'testrepo',
       branch: 'main',
       providerId: createGitProviderId('test-provider-id'),
-    };
+    });
 
     jetbrainsTarget = {
       id: createTargetId(uuidv4()),

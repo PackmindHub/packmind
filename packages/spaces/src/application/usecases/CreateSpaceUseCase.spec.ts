@@ -11,7 +11,7 @@ import {
 } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { stubLogger } from '@packmind/test-utils';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
 import { SpaceService } from '../services/SpaceService';

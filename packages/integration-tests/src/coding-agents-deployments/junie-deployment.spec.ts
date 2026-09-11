@@ -93,7 +93,7 @@ describe('Junie Deployment Integration', () => {
       content: 'This is test recipe content for deployment',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create test standard
@@ -119,6 +119,7 @@ describe('Junie Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 
@@ -256,34 +257,34 @@ describe('Junie Deployment Integration', () => {
       });
 
       it('contains Packmind Standards header', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).toContain('# Packmind Standards');
       });
 
       it('contains standard description', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).toContain(`${standard.description} :`);
       });
 
       it('contains first rule content', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).toContain('* Use meaningful variable names');
       });
 
       it('contains second rule content', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).toContain('* Write comprehensive tests');
       });
 
       it('contains link to full standard', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).toContain(
           'Full standard is available here for further request: [Test Standard](../.packmind/standards/test-standard.md)',
         );
       });
 
       it('does not contain recipes content', () => {
-        const sectionContent = guidelinesFile?.sections[0].content;
+        const sectionContent = guidelinesFile?.sections?.[0].content;
         expect(sectionContent).not.toContain('# Packmind Recipes');
       });
     });
@@ -469,6 +470,10 @@ describe('Junie Deployment Integration', () => {
         );
 
         guidelinesFile = fileUpdates.createOrUpdate[0];
+        assert(
+          guidelinesFile.sections,
+          'Junie renders guidelines.md as sections',
+        );
         sectionContent = guidelinesFile.sections[0].content;
       });
 

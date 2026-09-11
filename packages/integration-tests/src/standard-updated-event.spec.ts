@@ -3,7 +3,7 @@ import { gitSchemas } from '@packmind/git';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { Standard, StandardUpdatedPayload } from '@packmind/types';
+import { Standard, StandardUpdatedEvent } from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import {
@@ -72,7 +72,7 @@ describe('StandardUpdatedEvent integration', () => {
   afterAll(() => fixture.destroy());
 
   describe('when a standard is updated', () => {
-    let payload: StandardUpdatedPayload;
+    let payload: StandardUpdatedEvent['payload'];
 
     beforeEach(async () => {
       await testApp.standardsHexa.getAdapter().updateStandard({

@@ -13,6 +13,7 @@ import {
   User,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
 import { standardFactory } from '../../../../test/standardFactory';
 import { StandardService } from '../../services/StandardService';
 import { ListStandardsBySpaceUseCase } from './ListStandardsBySpaceUseCase';
@@ -46,7 +47,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
-    } as jest.Mocked<ISpacesPort>;
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     stubbedLogger = stubLogger();
 
@@ -76,6 +77,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -85,12 +87,10 @@ describe('ListStandardsBySpaceUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      const space: Space = {
+      const space: Space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       const command: ListStandardsBySpaceCommand = {
         userId,
@@ -145,6 +145,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -154,12 +155,10 @@ describe('ListStandardsBySpaceUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      const space: Space = {
+      const space: Space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       const command: ListStandardsBySpaceCommand = {
         userId,
@@ -187,6 +186,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -221,6 +221,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -230,12 +231,10 @@ describe('ListStandardsBySpaceUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      const space: Space = {
+      const space: Space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId: otherOrganizationId, // Different organization
-      };
+      });
 
       const command: ListStandardsBySpaceCommand = {
         userId,
@@ -267,6 +266,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -276,12 +276,10 @@ describe('ListStandardsBySpaceUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      const space: Space = {
+      const space: Space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       const command: ListStandardsBySpaceCommand = {
         userId,
@@ -331,6 +329,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       const user: User = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -340,12 +339,10 @@ describe('ListStandardsBySpaceUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      const space: Space = {
+      const space: Space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       const command: ListStandardsBySpaceCommand = {
         userId,

@@ -9,6 +9,7 @@ import {
   createSpaceId,
   createUserId,
 } from '@packmind/types';
+import { userFactory } from '@packmind/accounts/test';
 import { skillFactory } from '@packmind/skills/test';
 import { v4 as uuidv4 } from 'uuid';
 import { packageFactory } from '../../../../test';
@@ -36,12 +37,24 @@ function makeMembership(userId: string): UserOrganizationMembership {
 }
 
 function makeUser(userId: string): User {
-  return {
+  return userFactory({
     id: createUserId(userId),
     email: `${userId}@test.com`,
     passwordHash: null,
     active: true,
     memberships: [makeMembership(userId)],
+  });
+}
+
+function makePackageWithArtefacts(
+  overrides: Partial<PackageWithArtefacts> = {},
+): PackageWithArtefacts {
+  return {
+    ...packageFactory(),
+    recipes: [],
+    standards: [],
+    skills: [],
+    ...overrides,
   };
 }
 
@@ -91,7 +104,7 @@ describe('GetPackageSummaryUseCase', () => {
   describe('when spaceId is not provided', () => {
     beforeEach(() => {
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        packageFactory({ slug: 'backend', spaceId: SPACE_ID }),
+        makePackageWithArtefacts({ slug: 'backend', spaceId: SPACE_ID }),
       ]);
     });
 
@@ -150,7 +163,7 @@ describe('GetPackageSummaryUseCase', () => {
   describe('when spaceId is provided', () => {
     beforeEach(() => {
       packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
-        packageFactory({ slug: 'backend', spaceId: SPACE_ID }),
+        makePackageWithArtefacts({ slug: 'backend', spaceId: SPACE_ID }),
       ]);
     });
 

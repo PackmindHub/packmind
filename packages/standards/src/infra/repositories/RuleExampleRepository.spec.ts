@@ -1,4 +1,4 @@
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema } from '@packmind/git/schemas';
 import { PackmindLogger } from '@packmind/logger';
 import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import {

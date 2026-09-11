@@ -1,6 +1,7 @@
 import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
+import { ResolvedGitRepoService } from './services/ResolvedGitRepoService';
 import { instrumentComponents } from '@packmind/node-utils';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
@@ -18,13 +19,19 @@ export class GitServices {
   private readonly gitProviderService: GitProviderService;
   private readonly gitRepoService: GitRepoService;
   private readonly gitCommitService: GitCommitService;
+  private readonly resolvedGitRepoService: ResolvedGitRepoService;
 
   constructor(private readonly gitRepositories: IGitRepositories) {
-    // Initialize all services with their respective repositories from the aggregator
+    // One per domain, so the reuse reaches across call sites. Built first:
+    // GitProviderService resolves through it.
+    this.resolvedGitRepoService = new ResolvedGitRepoService(
+      this.gitRepositories.getGitProviderRepository(),
+      this.gitRepositories.getGitRepoFactory(),
+    );
     this.gitProviderService = new GitProviderService(
       this.gitRepositories.getGitProviderRepository(),
       this.gitRepositories.getGitProviderFactory(),
-      this.gitRepositories.getGitRepoFactory(),
+      this.resolvedGitRepoService,
     );
     this.gitRepoService = new GitRepoService(
       this.gitRepositories.getGitRepoRepository(),
@@ -39,6 +46,7 @@ export class GitServices {
       this.gitProviderService,
       this.gitRepoService,
       this.gitCommitService,
+      this.resolvedGitRepoService,
     ]);
   }
 
@@ -52,6 +60,10 @@ export class GitServices {
 
   getGitCommitService(): GitCommitService {
     return this.gitCommitService;
+  }
+
+  getResolvedGitRepoService(): ResolvedGitRepoService {
+    return this.resolvedGitRepoService;
   }
 
   getGitRepoFactory(): IGitRepoFactory {

@@ -130,7 +130,7 @@ export function ContextPackageDistribution({
             hideIdentityHeader
             /*
              * The header above this pane carries both `Distribute` and, when
-             * something is behind, `Update N destinations`, so the pane does not
+             * something is behind, `Update N distributions`, so the pane does not
              * need a package-wide push of its own. What it keeps acts on a
              * selection, which is a different question.
              */

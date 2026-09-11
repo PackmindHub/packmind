@@ -46,24 +46,27 @@ import { IDistributionRepository } from '../../../domain/repositories/IDistribut
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 import { RenderPackageAsPluginUseCase } from './RenderPackageAsPluginUseCase';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('RenderPackageAsPluginUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
@@ -189,14 +192,14 @@ describe('RenderPackageAsPluginUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    defaultSpace = {
+    defaultSpace = spaceFactory({
       id: createSpaceId('default-space-id'),
       name: 'Default Space',
       slug: 'default',
       type: SpaceType.open,
       organizationId,
       isDefaultSpace: true,
-    };
+    });
 
     packageService = {
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn().mockResolvedValue([]),

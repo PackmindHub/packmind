@@ -4,8 +4,13 @@
   "sourceRoot": "packages/coding-agent/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command to also check the specs: tsconfig.lib.json excludes them, so @swc/jest was the only thing reading those files and it strips types without checking them.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/coding-agent/tsconfig.lib.json && tsc --noEmit --project packages/coding-agent/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

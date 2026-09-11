@@ -10,6 +10,7 @@ import {
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { FindActiveStandardVersionsByTargetUseCase } from './FindActiveStandardVersionsByTargetUseCase';
+import { standardVersionFactory } from '@packmind/standards/test';
 
 describe('FindActiveStandardVersionsByTargetUseCase', () => {
   let useCase: FindActiveStandardVersionsByTargetUseCase;
@@ -51,19 +52,19 @@ describe('FindActiveStandardVersionsByTargetUseCase', () => {
 
     const createStandardVersion = (
       overrides?: Partial<StandardVersion>,
-    ): StandardVersion => ({
-      id: createStandardVersionId('sv-1'),
-      standardId: createStandardId('std-1'),
-      name: 'Test Standard',
-      slug: 'test-standard',
-      description: 'Test description',
-      version: 1,
-      summary: null,
-      gitCommit: undefined,
-      userId: createUserId('author-1'),
-      scope: null,
-      ...overrides,
-    });
+    ): StandardVersion =>
+      standardVersionFactory({
+        id: createStandardVersionId('sv-1'),
+        standardId: createStandardId('std-1'),
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test description',
+        version: 1,
+        gitCommit: undefined,
+        userId: createUserId('author-1'),
+        scope: null,
+        ...overrides,
+      });
 
     describe('when active standard versions exist', () => {
       let result: StandardVersion[];

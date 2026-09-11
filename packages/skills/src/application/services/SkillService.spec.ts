@@ -36,7 +36,9 @@ describe('SkillService', () => {
       restoreById: jest.fn(),
       findBySpaceId: jest.fn(),
       findByUserId: jest.fn(),
+      countBySpaceIds: jest.fn(),
       markAsMoved: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     skillVersionRepository = {
@@ -51,6 +53,7 @@ describe('SkillService', () => {
       findByIds: jest.fn(),
       findBySkillIdAndVersion: jest.fn(),
       updateMetadata: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     skillFileRepository = {
@@ -61,6 +64,7 @@ describe('SkillService', () => {
       findBySkillVersionId: jest.fn(),
       findBySkillVersionIds: jest.fn(),
       addMany: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

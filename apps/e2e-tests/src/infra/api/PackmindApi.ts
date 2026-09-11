@@ -8,6 +8,7 @@ import {
   IListUserSpaces,
   IListSkillVersionsUseCase,
   SkillVersion,
+  Standard,
 } from '@packmind/types';
 import { IPackmindApi } from '../../domain/api/IPackmindApi';
 import { APIRequestContext, expect } from '@playwright/test';
@@ -100,8 +101,21 @@ export class PackmindApi implements IPackmindApi {
     return this.get(`/spaces`);
   };
 
+  /*
+   * The endpoint answers with a bare Standard, not the use case's
+   * { standard }: StandardsAdapter.createStandard already unwraps the use
+   * case result, and the controller returns that. Wrap it back here so this
+   * Gateway<ICreateStandardUseCase> signature is honest, the way
+   * listSkillVersions does. createPackage below needs no such adaptation —
+   * that controller really does return the wrapped response.
+   */
   createStandard: Gateway<ICreateStandardUseCase> = async (command) => {
-    return this.post(`/spaces/${command.spaceId}/standards`, command, 201);
+    const standard = await this.post<Standard>(
+      `/spaces/${command.spaceId}/standards`,
+      command,
+      201,
+    );
+    return { standard };
   };
 
   createPackage: Gateway<ICreatePackageUseCase> = async (command) => {

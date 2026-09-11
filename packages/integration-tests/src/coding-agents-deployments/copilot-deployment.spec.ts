@@ -4,10 +4,12 @@ import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
+import { skillFileFactory } from '@packmind/skills/test';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import {
   DeleteItemType,
+  FileModification,
   FileUpdates,
   GitProviderVendors,
   GitRepo,
@@ -99,7 +101,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       content: 'This is test recipe content for GitHub Copilot deployment',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create test standard
@@ -127,7 +129,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       allowedTools: 'read,write,execute',
       organizationId: organization.id,
       userId: user.id,
-      spaceId: space.id.toString(),
+      spaceId: space.id,
     });
 
     // Create git provider and repository
@@ -139,6 +141,7 @@ describe('GitHub Copilot Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 
@@ -243,7 +246,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     describe('when deploying standards', () => {
       let fileUpdates: FileUpdates;
-      let copilotStandardFile: { path: string; content: string } | undefined;
+      let copilotStandardFile: FileModification | undefined;
 
       beforeEach(async () => {
         const standardVersions: StandardVersion[] = [
@@ -322,7 +325,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     describe('when standard has no scope', () => {
       let fileUpdates: FileUpdates;
-      let copilotStandardFile: { path: string; content: string };
+      let copilotStandardFile: FileModification;
       let globalStandard: Standard;
 
       beforeEach(async () => {
@@ -597,7 +600,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     describe('when GitHexa throws an error', () => {
       let fileUpdates: FileUpdates;
-      let copilotFile: { path: string; content: string };
+      let copilotFile: FileModification;
 
       beforeEach(async () => {
         jest
@@ -653,8 +656,8 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     describe('when generating multiple standard files', () => {
       let fileUpdates: FileUpdates;
-      let frontendFile: { path: string; content: string } | undefined;
-      let backendFile: { path: string; content: string } | undefined;
+      let frontendFile: FileModification | undefined;
+      let backendFile: FileModification | undefined;
       let standard1: Standard;
       let standard2: Standard;
 
@@ -918,7 +921,7 @@ describe('GitHub Copilot Deployment Integration', () => {
             prompt: 'Second skill prompt',
             organizationId: organization.id,
             userId: user.id,
-            spaceId: space.id.toString(),
+            spaceId: space.id,
           });
 
           multipleSkillVersions = [
@@ -975,7 +978,7 @@ describe('GitHub Copilot Deployment Integration', () => {
             prompt: 'Test prompt',
             organizationId: organization.id,
             userId: user.id,
-            spaceId: space.id.toString(),
+            spaceId: space.id,
           });
         });
 
@@ -1024,17 +1027,20 @@ description: A skill with multiple files
 
 See reference.md and forms.md for more information.`,
                   permissions: 'rw-r--r--',
+                  isBase64: false,
                 },
                 {
                   path: 'reference.md',
                   content:
                     '# Reference\n\nThis is additional reference documentation.',
                   permissions: 'rw-r--r--',
+                  isBase64: false,
                 },
                 {
                   path: 'forms.md',
                   content: '# Forms\n\nInstructions for working with forms.',
                   permissions: 'rw-r--r--',
+                  isBase64: false,
                 },
               ],
               organizationId: organization.id,
@@ -1065,8 +1071,8 @@ See reference.md and forms.md for more information.`,
         describe('when deploying skill with files', () => {
           let fileUpdates: FileUpdates;
           let paths: string[];
-          let referenceFile: { path: string; content: string } | undefined;
-          let formsFile: { path: string; content: string } | undefined;
+          let referenceFile: FileModification | undefined;
+          let formsFile: FileModification | undefined;
 
           beforeEach(async () => {
             fileUpdates = await copilotDeployer.deploySkills(
@@ -1254,20 +1260,20 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: skillVersions[0].id,
                   path: 'utils/formatter.ts',
                   content: 'export const format = (s: string) => s',
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1285,13 +1291,13 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1314,20 +1320,20 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: skillVersions[0].id,
                   path: 'utils/formatter.ts',
                   content: 'export const format = (s: string) => s',
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1350,20 +1356,20 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: 'export const helper = () => {}',
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: skillVersions[0].id,
                   path: 'utils/formatter.ts',
                   content: 'export const format = (s: string) => s',
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1389,20 +1395,20 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: helperContent,
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: skillVersions[0].id,
                   path: 'utils/formatter.ts',
                   content: formatterContent,
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1426,20 +1432,20 @@ See reference.md and forms.md for more information.`,
             {
               ...skillVersions[0],
               files: [
-                {
+                skillFileFactory({
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
                   path: 'helper.ts',
                   content: helperContent,
                   permissions: '644',
-                },
-                {
+                }),
+                skillFileFactory({
                   id: createSkillFileId('file-2'),
                   skillVersionId: skillVersions[0].id,
                   path: 'utils/formatter.ts',
                   content: formatterContent,
                   permissions: '644',
-                },
+                }),
               ],
             },
           ];
@@ -1463,20 +1469,20 @@ See reference.md and forms.md for more information.`,
               {
                 ...skillVersions[0],
                 files: [
-                  {
+                  skillFileFactory({
                     id: createSkillFileId('file-0'),
                     skillVersionId: skillVersions[0].id,
                     path: 'SKILL.md',
                     content: 'This should be ignored',
                     permissions: '644',
-                  },
-                  {
+                  }),
+                  skillFileFactory({
                     id: createSkillFileId('file-1'),
                     skillVersionId: skillVersions[0].id,
                     path: 'helper.ts',
                     content: 'export const helper = () => {}',
                     permissions: '644',
-                  },
+                  }),
                 ],
               },
             ];
@@ -1545,7 +1551,7 @@ See reference.md and forms.md for more information.`,
               prompt: 'Second skill prompt',
               organizationId: organization.id,
               userId: user.id,
-              spaceId: space.id.toString(),
+              spaceId: space.id,
             });
 
             const skillVersion2 = {
@@ -1563,25 +1569,25 @@ See reference.md and forms.md for more information.`,
               {
                 ...skillVersions[0],
                 files: [
-                  {
+                  skillFileFactory({
                     id: createSkillFileId('file-1'),
                     skillVersionId: skillVersions[0].id,
                     path: 'helper1.ts',
                     content: 'export const helper1 = () => {}',
                     permissions: '644',
-                  },
+                  }),
                 ],
               },
               {
                 ...skillVersion2,
                 files: [
-                  {
+                  skillFileFactory({
                     id: createSkillFileId('file-2'),
                     skillVersionId: skillVersion2.id,
                     path: 'helper2.ts',
                     content: 'export const helper2 = () => {}',
                     permissions: '644',
-                  },
+                  }),
                 ],
               },
             ];
@@ -1646,20 +1652,20 @@ See reference.md and forms.md for more information.`,
               {
                 ...skillVersions[0],
                 files: [
-                  {
+                  skillFileFactory({
                     id: createSkillFileId('file-1'),
                     skillVersionId: skillVersions[0].id,
                     path: 'helper.ts',
                     content: 'export const helper = () => {}',
                     permissions: '644',
-                  },
-                  {
+                  }),
+                  skillFileFactory({
                     id: createSkillFileId('file-2'),
                     skillVersionId: skillVersions[0].id,
                     path: 'README.md',
                     content: '# Helper Documentation',
                     permissions: '644',
-                  },
+                  }),
                 ],
               },
             ];

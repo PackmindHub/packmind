@@ -1,14 +1,25 @@
-import { UserEvent } from '@packmind/types';
+import {
+  createOrganizationId,
+  createUserId,
+  UserEvent,
+  UserEventPayload,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { PackmindEventEmitterService } from './PackmindEventEmitterService';
 
-class TestUserCreatedEvent extends UserEvent<{ userId: string }> {
+class TestUserCreatedEvent extends UserEvent {
   static override readonly eventName = 'test.user.created';
 }
 
-class TestUserDeletedEvent extends UserEvent<{ userId: string }> {
+class TestUserDeletedEvent extends UserEvent {
   static override readonly eventName = 'test.user.deleted';
 }
+
+const buildPayload = (userId: string): UserEventPayload => ({
+  userId: createUserId(userId),
+  organizationId: createOrganizationId('organization-id'),
+  source: 'ui',
+});
 
 describe('PackmindEventEmitterService', () => {
   let service: PackmindEventEmitterService;
@@ -33,7 +44,7 @@ describe('PackmindEventEmitterService', () => {
         service.on(TestUserCreatedEvent, jest.fn());
 
         const result = service.emit(
-          new TestUserCreatedEvent({ userId: 'user-123' }),
+          new TestUserCreatedEvent(buildPayload('user-123')),
         );
 
         expect(result).toBe(true);
@@ -43,7 +54,7 @@ describe('PackmindEventEmitterService', () => {
     describe('when event has no listeners', () => {
       it('returns false', () => {
         const result = service.emit(
-          new TestUserCreatedEvent({ userId: 'user-123' }),
+          new TestUserCreatedEvent(buildPayload('user-123')),
         );
 
         expect(result).toBe(false);
@@ -54,21 +65,22 @@ describe('PackmindEventEmitterService', () => {
       const handler = jest.fn();
       service.on(TestUserCreatedEvent, handler);
 
-      const event = new TestUserCreatedEvent({ userId: 'user-123' });
+      const event = new TestUserCreatedEvent(buildPayload('user-123'));
       service.emit(event);
 
       expect(handler).toHaveBeenCalledWith(event);
     });
 
     it('provides access to payload in handler', () => {
-      let receivedPayload: { userId: string } | undefined;
+      const payload = buildPayload('user-456');
+      let receivedPayload: UserEventPayload | undefined;
       service.on(TestUserCreatedEvent, (event) => {
         receivedPayload = event.payload;
       });
 
-      service.emit(new TestUserCreatedEvent({ userId: 'user-456' }));
+      service.emit(new TestUserCreatedEvent(payload));
 
-      expect(receivedPayload).toEqual({ userId: 'user-456' });
+      expect(receivedPayload).toEqual(payload);
     });
   });
 
@@ -77,7 +89,7 @@ describe('PackmindEventEmitterService', () => {
       const handler = jest.fn();
 
       service.on(TestUserCreatedEvent, handler);
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
@@ -91,7 +103,7 @@ describe('PackmindEventEmitterService', () => {
         handler2 = jest.fn();
         service.on(TestUserCreatedEvent, handler1);
         service.on(TestUserCreatedEvent, handler2);
-        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+        service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
       });
 
       it('calls first handler once', () => {
@@ -112,7 +124,7 @@ describe('PackmindEventEmitterService', () => {
         deletedHandler = jest.fn();
         service.on(TestUserCreatedEvent, createdHandler);
         service.on(TestUserDeletedEvent, deletedHandler);
-        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+        service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
       });
 
       it('calls handler for emitted event type', () => {
@@ -184,8 +196,8 @@ describe('PackmindEventEmitterService', () => {
         service.on(TestUserCreatedEvent, handler1);
         service.on(TestUserDeletedEvent, handler2);
         service.removeAllListeners();
-        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
-        service.emit(new TestUserDeletedEvent({ userId: 'user-456' }));
+        service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
+        service.emit(new TestUserDeletedEvent(buildPayload('user-456')));
       });
 
       it('does not call first event handler', () => {
@@ -210,7 +222,7 @@ describe('PackmindEventEmitterService', () => {
       service.on(TestUserCreatedEvent, handler);
 
       service.destroy();
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
 
       expect(handler).not.toHaveBeenCalled();
     });
@@ -225,7 +237,7 @@ describe('PackmindEventEmitterService', () => {
         results.push(event.payload.userId);
       });
 
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      service.emit(new TestUserCreatedEvent(buildPayload('user-123')));
 
       await new Promise((resolve) => setTimeout(resolve, 20));
 

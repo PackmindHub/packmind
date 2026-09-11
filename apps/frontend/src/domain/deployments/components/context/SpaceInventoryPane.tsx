@@ -185,6 +185,22 @@ export function SpaceInventoryPane({
     });
   }, []);
 
+  /* One update for a whole run, for the reason the package pane's copy is. */
+  const selectMany = useCallback(
+    (components: readonly ContextComponent[], select: boolean) => {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        for (const component of components) {
+          const key = componentSelectionKey(component);
+          if (select) next.add(key);
+          else next.delete(key);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
 
   return (
@@ -295,6 +311,18 @@ export function SpaceInventoryPane({
             {selection.length > 0 && (
               <SelectionBar
                 count={selection.length}
+                total={shownGroups.reduce(
+                  (count, group) => count + group.entries.length,
+                  0,
+                )}
+                onSelectAll={() =>
+                  selectMany(
+                    shownGroups.flatMap((group) =>
+                      group.entries.map((entry) => entry.component),
+                    ),
+                    true,
+                  )
+                }
                 actions={[
                   {
                     label: 'Add to a package',
@@ -305,41 +333,33 @@ export function SpaceInventoryPane({
                 onClear={clearSelection}
               />
             )}
-            {shownGroups.map((group) => (
-              <PMBox key={group.type}>
-                {/*
-                  The heading stays when a single type is shown: it is what says
-                  the list is complete for that type rather than truncated.
-                */}
-                <PMText
-                  fontSize="10px"
-                  fontWeight="semibold"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  color="faded"
-                >
-                  {group.label}
-                </PMText>
-                <PMBox paddingTop={1}>
-                  <ContextComponentList
-                    entries={group.entries}
-                    /*
-                      Dropped under the filter: every row of it would read "No
-                      package", which is what the filter already said, and the
-                      column it sits in is 180px the descriptions can use.
+            <ContextComponentList
+              /*
+                The band header stays when a single type is shown: it is what
+                says the list is complete for that type rather than truncated.
+              */
+              sections={shownGroups.map((group) => ({
+                key: group.type,
+                label: group.label,
+                icon: COMPONENT_TYPE_ICONS[group.type],
+                count: group.entries.length,
+                entries: group.entries,
+              }))}
+              /*
+                Dropped under the filter: every row of it would read "No
+                package", which is what the filter already said, and the column
+                it sits in is 180px the descriptions can use.
 
-                      Dropped for the same reason in a space with no package,
-                      where the filter is not on because there is nothing to
-                      filter and the line under the heading has already said
-                      that nothing carries any of this.
-                    */
-                    showPackages={!showingOrphans && packages.length > 0}
-                    selectedKeys={selectedKeys}
-                    onToggleSelect={toggleSelect}
-                  />
-                </PMBox>
-              </PMBox>
-            ))}
+                Dropped for the same reason in a space with no package, where
+                the filter is not on because there is nothing to filter and the
+                line under the heading has already said that nothing carries any
+                of this.
+              */
+              showPackages={!showingOrphans && packages.length > 0}
+              selectedKeys={selectedKeys}
+              onToggleSelect={toggleSelect}
+              onSelectMany={selectMany}
+            />
           </PMVStack>
         )}
       </PMBox>

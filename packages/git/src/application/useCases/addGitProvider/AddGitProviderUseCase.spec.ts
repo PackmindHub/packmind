@@ -15,6 +15,7 @@ import {
   User,
   Organization,
 } from '@packmind/types';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { gitProviderFactory } from '../../../../test';
 import { stubLogger } from '@packmind/test-utils';
 
@@ -23,11 +24,10 @@ describe('AddGitProviderUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   const organizationId = createOrganizationId('org-123');
-  const memberUser: User = {
+  const memberUser: User = userFactory({
     id: createUserId('user-123'),
     email: 'member@example.com',
     passwordHash: null,
-    active: true,
     memberships: [
       {
         userId: createUserId('user-123'),
@@ -35,12 +35,12 @@ describe('AddGitProviderUseCase', () => {
         role: 'member',
       },
     ],
-  };
-  const organization: Organization = {
+  });
+  const organization: Organization = organizationFactory({
     id: organizationId,
     name: 'Test Org',
     slug: 'test-org',
-  };
+  });
 
   beforeEach(() => {
     mockGitProviderService = {
@@ -71,6 +71,7 @@ describe('AddGitProviderUseCase', () => {
         url: 'https://github.com',
         token: 'test-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
       organizationId: organizationId,
       userId: memberUser.id,
@@ -115,6 +116,7 @@ describe('AddGitProviderUseCase', () => {
         url: 'https://github.com',
         token: '',
         authMethod: 'token' as const,
+        displayName: '',
       },
       organizationId: organizationId,
       userId: memberUser.id,
@@ -147,6 +149,7 @@ describe('AddGitProviderUseCase', () => {
         url: 'https://github.com',
         token: 'test-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
       organizationId: organizationId,
       userId: memberUser.id,
@@ -200,6 +203,7 @@ describe('AddGitProviderUseCase', () => {
               url: 'https://github.com',
               token: 'my-token',
               authMethod: 'token',
+              displayName: '',
             },
             organizationId,
             userId: memberUser.id,
@@ -220,6 +224,7 @@ describe('AddGitProviderUseCase', () => {
                 url: 'https://github.com',
                 token: '',
                 authMethod: 'token',
+                displayName: '',
               },
               organizationId,
               userId: memberUser.id,
@@ -255,6 +260,7 @@ describe('AddGitProviderUseCase', () => {
               token: null,
               authMethod: 'app',
               appInstallationId: 42,
+              displayName: '',
             },
             organizationId,
             userId: memberUser.id,
@@ -275,6 +281,7 @@ describe('AddGitProviderUseCase', () => {
                 url: 'https://github.com',
                 token: null,
                 authMethod: 'app',
+                displayName: '',
               },
               organizationId,
               userId: memberUser.id,
@@ -307,6 +314,7 @@ describe('AddGitProviderUseCase', () => {
               authMethod: 'app',
               appInstallationId: 42,
               organizationGitHubAppId: orgGitHubAppId,
+              displayName: '',
             },
             organizationId,
             userId: memberUser.id,
@@ -328,6 +336,7 @@ describe('AddGitProviderUseCase', () => {
                 token: null,
                 authMethod: 'app' as const,
                 organizationGitHubAppId: orgGitHubAppId,
+                displayName: '',
               },
               organizationId,
               userId: memberUser.id,
@@ -348,6 +357,7 @@ describe('AddGitProviderUseCase', () => {
                 token: null,
                 authMethod: 'app',
                 appInstallationId: 42,
+                displayName: '',
               },
               organizationId,
               userId: memberUser.id,
@@ -371,6 +381,7 @@ describe('AddGitProviderUseCase', () => {
                 authMethod: 'app',
                 appInstallationId: 42,
                 organizationGitHubAppId: orgGitHubAppId,
+                displayName: '',
               },
               organizationId,
               userId: memberUser.id,
@@ -389,6 +400,7 @@ describe('AddGitProviderUseCase', () => {
           url: 'https://github.com',
           token: null,
           authMethod: 'token' as const,
+          displayName: '',
         },
         organizationId: organizationId,
         userId: memberUser.id,
@@ -434,6 +446,7 @@ describe('AddGitProviderUseCase', () => {
           url: 'https://github.com',
           token: null,
           authMethod: 'token' as const,
+          displayName: '',
         },
         organizationId: organizationId,
         userId: memberUser.id,
@@ -467,6 +480,7 @@ describe('AddGitProviderUseCase', () => {
           url: 'https://github.com',
           token: null,
           authMethod: 'token' as const,
+          displayName: '',
         },
         organizationId: organizationId,
         userId: memberUser.id,
@@ -500,6 +514,10 @@ describe('AddGitProviderUseCase', () => {
         url: 'https://github.com',
         token: 'test-token',
         authMethod: 'token' as const,
+        // The route has no runtime DTO validation, so displayName can genuinely
+        // be absent even though the command type declares it - that absence is
+        // exactly what the cases below exercise.
+        displayName: undefined as unknown as string,
       },
       organizationId,
       userId: memberUser.id,

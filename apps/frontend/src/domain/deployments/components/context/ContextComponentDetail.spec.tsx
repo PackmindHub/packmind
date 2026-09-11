@@ -598,7 +598,9 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('command', COMMAND_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
     });
 
     it('says how long ago, off a standard', async () => {
@@ -607,7 +609,9 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('standard', STANDARD_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
     });
 
     /* Off the skill and not off the version the Distribution tab reads. */
@@ -621,7 +625,28 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('skill', SKILL_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
+    });
+  });
+
+  describe('when a reader needs the date itself', () => {
+    it('puts it on the hover, leaving the distance on the line', async () => {
+      (useGetCommandByIdQuery as Mock).mockReturnValue({
+        data: {
+          slug: 'run-migrations',
+          content: '',
+          updatedAt: '2026-06-10T12:00:00.000Z',
+        },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      await userEvent.hover(screen.getByTestId('component-updated'));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Jun 10, 2026',
+      );
     });
   });
 
@@ -796,6 +821,56 @@ describe('the distribution body', () => {
       expect(
         screen.queryByRole('link', { name: /^open skill$/i }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("reading a standard's scope", () => {
+    const withScope = (scope: string) => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '', scope } },
+      });
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({ data: [] });
+    };
+
+    it('says nothing about a scope of globs', async () => {
+      withScope('src/**/*.{ts,tsx}');
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(screen.getByText('src/**/*.{ts,tsx}')).toBeVisible();
+      expect(screen.queryByText(/not a file pattern/)).not.toBeInTheDocument();
+    });
+
+    describe('when the scope is a sentence rather than a pattern', () => {
+      it('says nothing will match it, naming the part at fault', async () => {
+        withScope('All typescript rules in the spec folder');
+        await renderDetail(
+          componentOfType('standard', STANDARD_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByText(
+            /"All typescript rules in the spec folder" is not a file pattern/,
+          ),
+        ).toBeVisible();
+      });
+
+      it('still shows the scope, which is what the author has to fix', async () => {
+        withScope('All typescript rules in the spec folder');
+        await renderDetail(
+          componentOfType('standard', STANDARD_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByText('All typescript rules in the spec folder', {
+            selector: 'div',
+          }),
+        ).toBeVisible();
+      });
     });
   });
 

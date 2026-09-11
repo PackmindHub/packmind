@@ -1,4 +1,4 @@
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema } from '@packmind/git/schemas';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/node-utils';
 import {
@@ -177,7 +177,9 @@ describe('StandardVersionRepository', () => {
 
     it('fetches a single row instead of the whole history', () => {
       expect(
-        fixture.queries.countMatching(/from "standard_versions".*limit 1/is),
+        fixture.queries.countMatching(
+          /from "standard_versions"[\s\S]*limit 1/i,
+        ),
       ).toBe(1);
     });
   });

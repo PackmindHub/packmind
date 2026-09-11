@@ -12,6 +12,7 @@ import {
   Target,
 } from '@packmind/types';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { contentOf, gitRepoFactory } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CopilotDeployer', () => {
@@ -34,13 +35,13 @@ describe('CopilotDeployer', () => {
       gitRepoId: createGitRepoId('test-repo-id'),
     };
 
-    mockGitRepo = {
+    mockGitRepo = gitRepoFactory({
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
       providerId: createGitProviderId('provider-id'),
       branch: 'main',
-    };
+    });
   });
 
   afterEach(() => {
@@ -78,7 +79,7 @@ describe('CopilotDeployer', () => {
         const binaryFile = fileUpdates.createOrUpdate.find((f) =>
           f.path.endsWith('image.png'),
         );
-        expect(binaryFile?.isBase64).toBe(true);
+        expect(binaryFile).toMatchObject({ isBase64: true });
       });
 
       it('propagates skillFileId for skill file', async () => {
@@ -145,7 +146,7 @@ describe('CopilotDeployer', () => {
         const textFile = fileUpdates.createOrUpdate.find((f) =>
           f.path.endsWith('reference.md'),
         );
-        expect(textFile?.isBase64).toBe(false);
+        expect(textFile).toMatchObject({ isBase64: false });
       });
     });
   });
@@ -183,7 +184,7 @@ describe('CopilotDeployer', () => {
         const binaryFile = fileUpdates.createOrUpdate.find((f) =>
           f.path.endsWith('image.png'),
         );
-        expect(binaryFile?.isBase64).toBe(true);
+        expect(binaryFile).toMatchObject({ isBase64: true });
       });
     });
 
@@ -219,7 +220,7 @@ describe('CopilotDeployer', () => {
         const textFile = fileUpdates.createOrUpdate.find((f) =>
           f.path.endsWith('reference.md'),
         );
-        expect(textFile?.isBase64).toBe(false);
+        expect(textFile).toMatchObject({ isBase64: false });
       });
     });
   });
@@ -524,14 +525,14 @@ describe('CopilotDeployer', () => {
       });
 
       it('renders argument-hint before disable-model-invocation', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('argument-hint:')).toBeLessThan(
           content.indexOf('disable-model-invocation:'),
         );
       });
 
       it('renders disable-model-invocation before user-invocable', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
+        const content = contentOf(fileUpdates.createOrUpdate[0]);
         expect(content.indexOf('disable-model-invocation:')).toBeLessThan(
           content.indexOf('user-invocable:'),
         );

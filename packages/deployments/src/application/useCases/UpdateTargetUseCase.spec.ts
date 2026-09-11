@@ -10,8 +10,10 @@ import {
   createUserId,
   IGitPort,
   TargetPathUpdateForbiddenError,
-  GitProviderWithoutToken,
+  GitProviderListItem,
+  GitProviderVendors,
 } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/git/test';
 
 describe('UpdateTargetUseCase', () => {
   let useCase: UpdateTargetUseCase;
@@ -106,21 +108,23 @@ describe('UpdateTargetUseCase', () => {
         organizationId,
       };
 
-      const mockRepo = {
+      const mockRepo = gitRepoFactory({
         id: gitRepoId,
         owner: 'owner',
         repo: 'repo',
         branch: 'main',
         providerId,
-      };
+      });
 
-      const mockProviderWithToken: GitProviderWithoutToken = {
+      const mockProviderWithToken: GitProviderListItem = {
         id: providerId,
-        source: 'github',
+        source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         authMethod: 'token',
+        displayName: 'github-provider',
         hasAuth: true,
+        lastDistributionAt: null,
       };
 
       const updatedTarget: Target = {
@@ -173,21 +177,23 @@ describe('UpdateTargetUseCase', () => {
         organizationId,
       };
 
-      const mockRepo = {
+      const mockRepo = gitRepoFactory({
         id: gitRepoId,
         owner: 'owner',
         repo: 'repo',
         branch: 'main',
         providerId,
-      };
+      });
 
-      const mockProviderWithoutToken: GitProviderWithoutToken = {
+      const mockProviderWithoutToken: GitProviderListItem = {
         id: providerId,
-        source: 'github',
+        source: GitProviderVendors.github,
         organizationId,
         url: 'https://github.com',
         authMethod: 'token',
+        displayName: 'github-provider',
         hasAuth: false,
+        lastDistributionAt: null,
       };
 
       let thrownError: Error;
@@ -401,22 +407,26 @@ describe('UpdateTargetUseCase', () => {
 
         beforeEach(async () => {
           mockTargetService.findById.mockResolvedValue(existingTarget);
-          mockGitPort.getRepositoryById.mockResolvedValue({
-            id: createGitRepoId('some-git-repo-id'),
-            owner: 'some-company',
-            repo: 'my-repo',
-            branch: 'main',
-            providerId: localProviderId,
-          });
+          mockGitPort.getRepositoryById.mockResolvedValue(
+            gitRepoFactory({
+              id: createGitRepoId('some-git-repo-id'),
+              owner: 'some-company',
+              repo: 'my-repo',
+              branch: 'main',
+              providerId: localProviderId,
+            }),
+          );
           mockGitPort.listProviders.mockResolvedValue({
             providers: [
               {
                 id: localProviderId,
-                source: 'github',
+                source: GitProviderVendors.github,
                 authMethod: 'token',
+                displayName: 'github-provider',
                 hasAuth: false,
                 organizationId,
                 url: 'https://github.com',
+                lastDistributionAt: null,
               },
             ],
           });
@@ -450,21 +460,23 @@ describe('UpdateTargetUseCase', () => {
       organizationId,
     };
 
-    const mockRepo = {
+    const mockRepo = gitRepoFactory({
       id: gitRepoId,
       owner: 'owner',
       repo: 'repo',
       branch: 'main',
       providerId,
-    };
+    });
 
-    const mockProviderWithToken: GitProviderWithoutToken = {
+    const mockProviderWithToken: GitProviderListItem = {
       id: providerId,
-      source: 'github',
+      source: GitProviderVendors.github,
       organizationId,
       url: 'https://github.com',
       authMethod: 'token',
+      displayName: 'github-provider',
       hasAuth: true,
+      lastDistributionAt: null,
     };
 
     const updatedTarget: Target = {

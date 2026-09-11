@@ -10,6 +10,7 @@ import {
 import { createUserId, User } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { userFactory } from '../../../../test';
 
 describe('ValidateInvitationTokenUseCase', () => {
   let useCase: ValidateInvitationTokenUseCase;
@@ -22,7 +23,7 @@ describe('ValidateInvitationTokenUseCase', () => {
   const mockInvitationId = createInvitationId('invitation-123');
   const mockToken = createInvitationToken('valid-token-123');
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: mockUserId,
     email: 'test@example.com',
     passwordHash: null,
@@ -34,7 +35,7 @@ describe('ValidateInvitationTokenUseCase', () => {
         role: 'member',
       },
     ],
-  };
+  });
 
   const mockInvitation: Invitation = {
     id: mockInvitationId,

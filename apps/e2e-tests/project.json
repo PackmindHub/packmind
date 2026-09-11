@@ -6,5 +6,13 @@
   "tags": ["env:node"],
   "implicitDependencies": ["frontend"],
   "// targets": "to see all targets run: nx show project e2e-tests --web",
-  "targets": {}
+  "// typecheck": "Spelled out rather than the '{}' the packages use: the shared definition in nx.json compiles tsconfig.lib.json, which a Playwright suite has no reason to have. The project's single tsconfig.json covers every spec, page object and fixture, and is the only thing that type-checks them — Playwright transpiles each file at run time without checking it.",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project apps/e2e-tests/tsconfig.json"
+      }
+    }
+  }
 }

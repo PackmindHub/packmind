@@ -85,6 +85,7 @@ describe('AbstractSpaceMemberUseCase', () => {
   const buildUser = (overrides?: Partial<User>): User => ({
     id: userId,
     email: 'user@test.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [buildOrgMembership()],

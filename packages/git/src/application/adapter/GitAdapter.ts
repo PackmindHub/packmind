@@ -225,13 +225,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._commitToGit = new CommitToGitUseCase(
       this.gitServices.getGitCommitService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     this._getFileFromRepo = new GetFileFromRepoUseCase(
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
@@ -273,8 +271,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._checkDirectoryExistence = new CheckDirectoryExistenceUseCase(
       this.gitServices.getGitRepoService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     // Repository-tracking use cases
@@ -328,8 +325,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     const fetchFileContentJobFactory = new FetchFileContentJobFactory(
       this.gitServices.getGitRepoService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoFactory(),
+      this.gitServices.getResolvedGitRepoService(),
     );
 
     jobsService.registerJobQueue(

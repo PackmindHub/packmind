@@ -25,7 +25,7 @@ const TEST_JWT_SECRET = 'test-jwt-secret-for-integration-tests';
 const testJwtService = {
   sign: (
     payload: Record<string, unknown>,
-    options?: { expiresIn?: string | number },
+    options?: jwt.SignOptions,
   ): string => {
     return jwt.sign(payload, TEST_JWT_SECRET, options);
   },

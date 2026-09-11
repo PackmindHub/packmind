@@ -31,6 +31,9 @@ import { IDistributedPackageRepository } from '../../../domain/repositories/IDis
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { v4 as uuidv4 } from 'uuid';
+import { commandVersionFactory } from '@packmind/commands/test';
+import { standardVersionFactory } from '@packmind/standards/test';
+import { skillVersionFactory } from '@packmind/skills/test';
 
 describe('NotifyArtefactsDistributionUseCase', () => {
   let useCase: NotifyArtefactsDistributionUseCase;
@@ -76,39 +79,40 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     gitRepoId,
   });
 
-  const buildStandardVersion = (): StandardVersion => ({
-    id: createStandardVersionId(uuidv4()),
-    standardId,
-    version: 1,
-    description: 'Test standard description',
-    name: 'Test Standard',
-    summary: 'Test summary',
-    rules: [],
-    slug: 'test-standard',
-    scope: null,
-  });
+  const buildStandardVersion = (): StandardVersion =>
+    standardVersionFactory({
+      id: createStandardVersionId(uuidv4()),
+      standardId,
+      version: 1,
+      description: 'Test standard description',
+      name: 'Test Standard',
+      rules: [],
+      slug: 'test-standard',
+      scope: null,
+    });
 
-  const buildCommandVersion = (): CommandVersion => ({
-    id: createCommandVersionId(uuidv4()),
-    recipeId,
-    version: 1,
-    name: 'Test Recipe',
-    slug: 'test-recipe',
-    summary: 'Test summary',
-    content: 'Test step',
-    userId,
-  });
+  const buildCommandVersion = (): CommandVersion =>
+    commandVersionFactory({
+      id: createCommandVersionId(uuidv4()),
+      recipeId,
+      version: 1,
+      name: 'Test Recipe',
+      slug: 'test-recipe',
+      content: 'Test step',
+      userId,
+    });
 
-  const buildSkillVersion = (): SkillVersion => ({
-    id: createSkillVersionId(uuidv4()),
-    skillId,
-    version: 1,
-    name: 'Test Skill',
-    slug: 'test-skill',
-    description: 'Test skill description',
-    prompt: 'Test prompt',
-    userId,
-  });
+  const buildSkillVersion = (): SkillVersion =>
+    skillVersionFactory({
+      id: createSkillVersionId(uuidv4()),
+      skillId,
+      version: 1,
+      name: 'Test Skill',
+      slug: 'test-skill',
+      description: 'Test skill description',
+      prompt: 'Test prompt',
+      userId,
+    });
 
   const buildLockFile = (
     overrides: Partial<PackmindLockFile> = {},
@@ -126,6 +130,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         spaceId: String(spaceId),
         packageIds: [String(packageId)],
         files: [],
+        source: 'user',
       },
       [`command:test-recipe`]: {
         name: 'Test Recipe',
@@ -135,6 +140,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         spaceId: String(spaceId),
         packageIds: [String(packageId)],
         files: [],
+        source: 'user',
       },
       [`skill:test-skill`]: {
         name: 'Test Skill',
@@ -144,6 +150,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         spaceId: String(spaceId),
         packageIds: [String(packageId)],
         files: [],
+        source: 'user',
       },
     },
     ...overrides,
@@ -309,7 +316,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         await useCase.execute(
           buildCommand({
             packmindLockFile: buildLockFile({
-              agents: ['cursor', 'claude-code'],
+              agents: ['cursor', 'claude'],
             }),
           }),
         );
@@ -318,7 +325,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       it('maps lock file agents to render modes', () => {
         expect(
           mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
-        ).toHaveBeenCalledWith(['cursor', 'claude-code']);
+        ).toHaveBeenCalledWith(['cursor', 'claude']);
       });
     });
 
@@ -392,6 +399,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
               spaceId: String(spaceId),
               packageIds: [String(packageId), String(secondPackageId)],
               files: [],
+              source: 'user',
             },
           },
         });

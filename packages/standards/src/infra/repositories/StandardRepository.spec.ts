@@ -1,4 +1,4 @@
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema } from '@packmind/git/schemas';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/node-utils';
 import { SpaceSchema } from '@packmind/spaces';

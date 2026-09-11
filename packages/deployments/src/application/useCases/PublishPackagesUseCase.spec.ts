@@ -1,6 +1,7 @@
 import { PublishPackagesUseCase } from './PublishPackagesUseCase';
 import { PackageService } from '../services/PackageService';
 import {
+  PackagesDeployment,
   createUserId,
   createOrganizationId,
   createPackageId,
@@ -31,6 +32,7 @@ import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
+import { distributionFactory } from '../../../test/distributionFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
@@ -56,20 +58,18 @@ describe('PublishPackagesUseCase', () => {
 
   const createMockDistribution = (
     overrides: Partial<Distribution> = {},
-  ): Distribution => {
-    const target = targetFactory({ id: targetId });
-    return {
+  ): Distribution =>
+    distributionFactory({
       id: createDistributionId(uuidv4()),
       distributedPackages: [],
       createdAt: new Date().toISOString(),
       authorId: userId,
       organizationId,
-      target,
+      target: targetFactory({ id: targetId }),
       status: DistributionStatus.success,
       renderModes: [],
       ...overrides,
-    };
-  };
+    });
 
   beforeEach(() => {
     mockLogger = stubLogger();
@@ -177,7 +177,7 @@ describe('PublishPackagesUseCase', () => {
     });
 
     describe('when publishing artifacts', () => {
-      let result: Distribution[];
+      let result: PackagesDeployment[];
 
       beforeEach(async () => {
         const mockDistributions = [createMockDistribution()];
@@ -512,7 +512,7 @@ describe('PublishPackagesUseCase', () => {
     let uniqueCommandVersion: CommandVersion;
     let sharedStandardVersion: StandardVersion;
     let uniqueStandardVersion: StandardVersion;
-    let result: Distribution[];
+    let result: PackagesDeployment[];
 
     beforeEach(async () => {
       sharedCommandId = createCommandId(uuidv4());

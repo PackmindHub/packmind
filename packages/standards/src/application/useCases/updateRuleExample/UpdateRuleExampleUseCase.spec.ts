@@ -45,6 +45,7 @@ describe('UpdateRuleExampleUseCase', () => {
   const user: User = {
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
@@ -79,10 +80,12 @@ describe('UpdateRuleExampleUseCase', () => {
 
     ruleExampleRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       findByIdInSpace: jest.fn(),
       updateById: jest.fn(),
       findByRuleId: jest.fn(),
+      findByRuleIds: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       hardDeleteById: jest.fn(),

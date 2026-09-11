@@ -98,6 +98,7 @@ describe('Claude Deployment Integration', () => {
         url: 'https://api.github.com',
         token: 'test-github-token',
         authMethod: 'token' as const,
+        displayName: '',
       },
     });
 
