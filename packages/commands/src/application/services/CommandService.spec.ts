@@ -35,8 +35,10 @@ describe('RecipeService', () => {
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByUserId: jest.fn(),
       findBySpaceId: jest.fn(),
+      countBySpaceIds: jest.fn(),
       markAsMoved: jest.fn(),
     };
 
@@ -46,6 +48,7 @@ describe('RecipeService', () => {
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByCommandId: jest.fn(),
       findLatestByCommandId: jest.fn(),
       findByCommandIdAndVersion: jest.fn(),

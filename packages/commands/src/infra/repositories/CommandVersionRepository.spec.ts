@@ -18,7 +18,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { createGitCommit, gitCommitFactory } from '@packmind/git/test';
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema } from '@packmind/git/schemas';
 
 describe('RecipeVersionRepository', () => {
   const fixture = createTestDatasourceFixture([

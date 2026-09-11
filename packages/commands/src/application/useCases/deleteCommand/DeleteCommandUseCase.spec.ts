@@ -21,7 +21,9 @@ import {
   User,
   UserId,
 } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 import { v4 as uuidv4 } from 'uuid';
+import { commandFactory } from '../../../../test/commandFactory';
 import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { DeleteCommandUseCase } from './DeleteCommandUseCase';
@@ -103,6 +105,7 @@ describe('DeleteRecipeUseCase', () => {
       user = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hashed_password',
         memberships: [{ organizationId, role: 'member', userId }],
         active: true,
@@ -112,22 +115,9 @@ describe('DeleteRecipeUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      space = spaceFactory({ id: spaceId, organizationId });
 
-      mockCommand = {
-        id: recipeId,
-        slug: 'test-recipe',
-        name: 'Test Recipe',
-        content: 'Test content',
-        userId,
-        version: 1,
-        spaceId,
-      };
+      mockCommand = commandFactory({ id: recipeId, userId, spaceId });
       command = {
         recipeId,
         spaceId,

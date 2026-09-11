@@ -4,8 +4,13 @@
   "sourceRoot": "packages/commands/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command to also gate tsconfig.spec.json, so spec files and test/ factories are type checked instead of only src/.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/commands/tsconfig.lib.json && tsc --noEmit --project packages/commands/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

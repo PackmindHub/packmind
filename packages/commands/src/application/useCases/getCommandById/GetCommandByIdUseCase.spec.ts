@@ -4,12 +4,15 @@ import { commandFactory } from '../../../../test/commandFactory';
 import {
   IAccountsPort,
   ISpacesPort,
+  Organization,
   Space,
+  User,
   createCommandId,
   createSpaceId,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 
@@ -59,22 +62,8 @@ describe('GetRecipeByIdUseCase', () => {
       const userId = createUserId('user-1');
       const recipeId = createCommandId('recipe-1');
 
-      let organization: {
-        id: typeof organizationId;
-        name: string;
-        slug: string;
-      };
-      let user: {
-        id: typeof userId;
-        email: string;
-        passwordHash: string;
-        active: boolean;
-        memberships: {
-          userId: typeof userId;
-          organizationId: typeof organizationId;
-          role: 'member';
-        }[];
-      };
+      let organization: Organization;
+      let user: User;
       let space: Space;
       let recipe: ReturnType<typeof commandFactory>;
       let result: { recipe: ReturnType<typeof commandFactory> | null };
@@ -88,6 +77,7 @@ describe('GetRecipeByIdUseCase', () => {
         user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -98,12 +88,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
+        space = spaceFactory({ id: spaceId, organizationId });
         recipe = commandFactory({
           id: recipeId,
           spaceId: createSpaceId('space-1'),
@@ -162,6 +147,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -172,12 +158,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
+        const space = spaceFactory({ id: spaceId, organizationId });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
@@ -231,6 +212,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -271,6 +253,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -313,6 +296,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -323,12 +307,10 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        const space: Space = {
+        const space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
           organizationId: differentOrgId,
-          slug: 'test-space',
-        };
+        });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
@@ -362,6 +344,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -373,12 +356,7 @@ describe('GetRecipeByIdUseCase', () => {
           ],
         };
         // Space belongs to the correct organization
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
+        const space = spaceFactory({ id: spaceId, organizationId });
         // But recipe's spaceId doesn't match the requested spaceId
         const differentSpaceId = createSpaceId('space-2');
         const recipe = commandFactory({
@@ -423,6 +401,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -433,12 +412,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
+        const space = spaceFactory({ id: spaceId, organizationId });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
@@ -471,6 +445,7 @@ describe('GetRecipeByIdUseCase', () => {
         const user = {
           id: userId,
           email: 'test@example.com',
+          displayName: null,
           passwordHash: 'hash',
           active: true,
           memberships: [
@@ -481,12 +456,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
+        const space = spaceFactory({ id: spaceId, organizationId });
         const recipe = commandFactory({
           id: recipeId,
           spaceId: differentSpaceId,
@@ -524,6 +494,7 @@ describe('GetRecipeByIdUseCase', () => {
       const user = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hash',
         active: true,
         memberships: [
@@ -534,12 +505,7 @@ describe('GetRecipeByIdUseCase', () => {
           },
         ],
       };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      const space = spaceFactory({ id: spaceId, organizationId });
       const recipe = commandFactory({
         id: recipeId,
         spaceId,
@@ -574,6 +540,7 @@ describe('GetRecipeByIdUseCase', () => {
       const user = {
         id: userId,
         email: 'test@example.com',
+        displayName: null,
         passwordHash: 'hash',
         active: true,
         memberships: [
@@ -584,12 +551,7 @@ describe('GetRecipeByIdUseCase', () => {
           },
         ],
       };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      const space = spaceFactory({ id: spaceId, organizationId });
       const recipe = commandFactory({
         id: recipeId,
         spaceId: createSpaceId('space-1'),
