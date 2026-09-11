@@ -201,6 +201,18 @@ export function ContextComponentList({
     () => new Set(),
   );
 
+  /*
+   * Whether a batch is being assembled, which is what keeps every checkbox on
+   * the list out at once.
+   *
+   * Without it the pattern eats its own gesture: the checkboxes appear under
+   * the pointer, so picking a second row means leaving the first one, and the
+   * reader who ticked one row would watch the column they are working in go
+   * blank between every click. One pick is the signal that the next few rows
+   * are about to be picked too.
+   */
+  const isSelecting = (selectedKeys?.size ?? 0) > 0;
+
   const toggleSection = useCallback((key: string) => {
     setCollapsed((previous) => {
       const next = new Set(previous);
@@ -222,6 +234,7 @@ export function ContextComponentList({
             section={section}
             isFirst={sectionIndex === 0}
             isCollapsed={collapsed.has(section.key)}
+            isSelecting={isSelecting}
             onToggle={() => toggleSection(section.key)}
             selection={
               onSelectMany && onToggleSelect
@@ -256,11 +269,45 @@ export function ContextComponentList({
                   selectedKeys?.has(componentSelectionKey(entry.component)) ??
                   false
                 }
+                isSelecting={isSelecting}
                 onToggleSelect={onToggleSelect}
               />
             ))}
         </Fragment>
       ))}
+    </PMBox>
+  );
+}
+
+/**
+ * A checkbox that is only there when it is wanted: under the pointer, under the
+ * keyboard, or once a selection has started.
+ *
+ * A hundred components is a hundred empty boxes down the left edge, and reading
+ * a package is what this list is for nine times out of ten; picking things out
+ * of it is the tenth. The destinations rail settled this for the surface
+ * already and this is the same behaviour, with the focus case added: a checkbox
+ * at zero opacity still takes the keyboard, so without `_focusWithin` tabbing
+ * into the list would move an invisible focus ring down an empty column.
+ *
+ * Faded rather than unmounted, which is what keeps the column steady. A row
+ * that renders its checkbox only on hover shifts its name sideways under the
+ * pointer, and the eye is running down that name.
+ */
+function PickBox({
+  shown,
+  children,
+}: Readonly<{ shown: boolean; children: ReactNode }>) {
+  return (
+    <PMBox
+      display="inline-flex"
+      alignItems="center"
+      opacity={shown ? 1 : 0}
+      transition="opacity 100ms ease-out"
+      _groupHover={{ opacity: 1 }}
+      _focusWithin={{ opacity: 1 }}
+    >
+      {children}
     </PMBox>
   );
 }
@@ -284,12 +331,15 @@ function SectionHeader({
   section,
   isFirst,
   isCollapsed,
+  isSelecting,
   onToggle,
   selection,
 }: Readonly<{
   section: ComponentListSection;
   isFirst: boolean;
   isCollapsed: boolean;
+  /** A batch is being assembled, so every checkbox that can be shown is. */
+  isSelecting: boolean;
   onToggle: () => void;
   selection?: SectionSelection;
 }>) {
@@ -315,6 +365,10 @@ function SectionHeader({
       bg="background.secondary"
       borderTopWidth={isFirst ? '0' : '1px'}
       borderColor="border.tertiary"
+      // Chakra's `_groupHover` keys off this class, not `role="group"`. The
+      // strip is its own group: a band is picked from its own header, not by
+      // pointing at one of its rows.
+      className="group"
     >
       {selection && selection.total > 0 && (
         /*
@@ -328,20 +382,22 @@ function SectionHeader({
           three of forty needs to be told that clicking here takes the other
           thirty-seven, not that nothing is picked.
         */
-        <PMCheckbox
-          size="sm"
-          checked={
-            allSelected
-              ? true
-              : selection.selected > 0
-                ? 'indeterminate'
-                : false
-          }
-          onCheckedChange={() => selection.onSelectAll(!allSelected)}
-          inputProps={{
-            'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
-          }}
-        />
+        <PickBox shown={isSelecting || selection.selected > 0}>
+          <PMCheckbox
+            size="sm"
+            checked={
+              allSelected
+                ? true
+                : selection.selected > 0
+                  ? 'indeterminate'
+                  : false
+            }
+            onCheckedChange={() => selection.onSelectAll(!allSelected)}
+            inputProps={{
+              'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
+            }}
+          />
+        </PickBox>
       )}
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
@@ -395,6 +451,7 @@ function ComponentRow({
   onMove,
   onRemove,
   isSelected,
+  isSelecting,
   onToggleSelect,
 }: Readonly<{
   entry: ComponentListEntry;
@@ -406,6 +463,8 @@ function ComponentRow({
   onMove?: (component: ContextComponent) => void;
   onRemove?: (component: ContextComponent) => void;
   isSelected: boolean;
+  /** A batch is being assembled, so every checkbox that can be shown is. */
+  isSelecting: boolean;
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
   const { component, packageNames = [] } = entry;
@@ -427,6 +486,8 @@ function ComponentRow({
       // tint alone would make the selection disappear the moment it is read.
       bg={isSelected ? 'background.secondary' : undefined}
       transition="background-color 150ms ease-out"
+      // Chakra's `_groupHover` keys off this class, not `role="group"`.
+      className="group"
     >
       {onToggleSelect && (
         /*
@@ -435,12 +496,14 @@ function ComponentRow({
           row would open it.
         */
         <PMBox display="flex" alignItems="center" paddingLeft={3}>
-          <PMCheckbox
-            size="sm"
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelect(component)}
-            inputProps={{ 'aria-label': `Select ${component.name}` }}
-          />
+          <PickBox shown={isSelected || isSelecting}>
+            <PMCheckbox
+              size="sm"
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(component)}
+              inputProps={{ 'aria-label': `Select ${component.name}` }}
+            />
+          </PickBox>
         </PMBox>
       )}
       {/*
