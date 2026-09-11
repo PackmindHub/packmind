@@ -43,7 +43,7 @@ export class UserNotFoundError extends UserAccessError {
       'not_found',
       'user_not_found',
       context,
-      `User not found: ${String(context.userId)}`,
+      'Your user account could not be found.',
     );
     this.name = 'UserNotFoundError';
   }
@@ -55,9 +55,7 @@ export class UserNotInOrganizationError extends UserAccessError {
       'forbidden',
       'user_not_in_organization',
       context,
-      `User ${String(context.userId)} is not a member of organization ${String(
-        context.organizationId,
-      )}`,
+      'You are not a member of this organization.',
     );
     this.name = 'UserNotInOrganizationError';
   }
@@ -69,9 +67,7 @@ export class OrganizationAdminRequiredError extends UserAccessError {
       'forbidden',
       'user_not_an_admin',
       context,
-      `User ${String(context.userId)} must be an admin of organization ${String(
-        context.organizationId,
-      )} to perform this action`,
+      'You must be an admin of this organization to perform this action.',
     );
     this.name = 'OrganizationAdminRequiredError';
   }

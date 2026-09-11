@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import {
+  SpaceMembershipRequiredError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -435,8 +439,8 @@ describe('GetStandardByIdUseCase', () => {
 
       accountsAdapter.getUserById.mockResolvedValue(null);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User not found: ${userId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        UserNotFoundError,
       );
     });
 
@@ -503,8 +507,8 @@ describe('GetStandardByIdUseCase', () => {
       accountsAdapter.getUserById.mockResolvedValue(user);
       accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User ${userId} is not a member of organization ${organizationId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        UserNotInOrganizationError,
       );
     });
   });
