@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { Fragment, useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -72,20 +72,43 @@ export type ComponentListEntry = {
 };
 
 /**
+ * One band of the list: the rows of a single component type, under a header
+ * that names it.
+ *
+ * The header is a row of the list rather than a heading above it. Both panes
+ * group by type, and a package of a hundred components is read by running down
+ * one continuous column: a bordered box per type turns that column into three,
+ * each with its own edges to cross, and the eye loses the line it was following.
+ */
+export type ComponentListSection = {
+  /** The React key, and what the header names: a component type. */
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  /**
+   * What the header prints beside the label. A node rather than a number, so a
+   * band narrowed by a filter can say "2 of 44" without this file having to
+   * know what a filter is.
+   */
+  count: ReactNode;
+  entries: readonly ComponentListEntry[];
+};
+
+/**
  * The list of components, shared by a package's own content and by the
  * space-wide inventory. Extracted the day the second one appeared: two lists of
  * the same objects would have grown two row heights and two ideas of what a
  * version looks like.
  */
 export function ContextComponentList({
-  entries,
+  sections,
   showPackages = false,
   onMove,
   onRemove,
   selectedKeys,
   onToggleSelect,
 }: Readonly<{
-  entries: readonly ComponentListEntry[];
+  sections: readonly ComponentListSection[];
   showPackages?: boolean;
   /**
    * Offered per list rather than per row, and only by a list that is scoped to
@@ -148,31 +171,75 @@ export function ContextComponentList({
       borderRadius="sm"
       overflow="hidden"
     >
-      {entries.map((entry, index) => (
-        <ComponentRow
-          key={componentSelectionKey(entry.component)}
-          entry={entry}
-          isFirst={index === 0}
-          showPackages={showPackages}
-          showReviews={showReviews}
-          pendingReviews={
-            pendingReviews.get(componentSelectionKey(entry.component)) ?? 0
-          }
-          onMove={onMove}
-          onRemove={onRemove}
-          isSelected={
-            selectedKeys?.has(componentSelectionKey(entry.component)) ?? false
-          }
-          onToggleSelect={onToggleSelect}
-        />
+      {sections.map((section, sectionIndex) => (
+        <Fragment key={section.key}>
+          <SectionHeader section={section} isFirst={sectionIndex === 0} />
+          {section.entries.map((entry) => (
+            <ComponentRow
+              key={componentSelectionKey(entry.component)}
+              entry={entry}
+              showPackages={showPackages}
+              showReviews={showReviews}
+              pendingReviews={
+                pendingReviews.get(componentSelectionKey(entry.component)) ?? 0
+              }
+              onMove={onMove}
+              onRemove={onRemove}
+              isSelected={
+                selectedKeys?.has(componentSelectionKey(entry.component)) ??
+                false
+              }
+              onToggleSelect={onToggleSelect}
+            />
+          ))}
+        </Fragment>
       ))}
     </PMBox>
   );
 }
 
+/**
+ * The band header. Quieter than the rows it heads and tinted, so a long list
+ * reads as runs of components separated by labels rather than as one table with
+ * odd lines in it.
+ */
+function SectionHeader({
+  section,
+  isFirst,
+}: Readonly<{ section: ComponentListSection; isFirst: boolean }>) {
+  return (
+    <PMHStack
+      gap={2}
+      align="center"
+      paddingX={3}
+      paddingY="5px"
+      bg="background.secondary"
+      borderTopWidth={isFirst ? '0' : '1px'}
+      borderColor="border.tertiary"
+    >
+      {section.icon && (
+        <PMIcon fontSize="xs" color="text.faded">
+          {section.icon}
+        </PMIcon>
+      )}
+      <PMText
+        fontSize="10px"
+        fontWeight="semibold"
+        textTransform="uppercase"
+        letterSpacing="wider"
+        color="faded"
+      >
+        {section.label}
+      </PMText>
+      <PMText fontSize="10px" color="faded" fontVariantNumeric="tabular-nums">
+        {section.count}
+      </PMText>
+    </PMHStack>
+  );
+}
+
 function ComponentRow({
   entry,
-  isFirst,
   showPackages,
   showReviews,
   pendingReviews,
@@ -182,7 +249,6 @@ function ComponentRow({
   onToggleSelect,
 }: Readonly<{
   entry: ComponentListEntry;
-  isFirst: boolean;
   showPackages: boolean;
   /** Whether any row of this list is waiting on someone. */
   showReviews: boolean;
@@ -205,7 +271,7 @@ function ComponentRow({
     <PMHStack
       gap={0}
       align="stretch"
-      borderTopWidth={isFirst ? '0' : '1px'}
+      borderTopWidth="1px"
       borderColor="border.tertiary"
       _hover={{ bg: 'background.secondary' }}
       // The picked row stays legible once the pointer has left it: the hover
@@ -219,22 +285,7 @@ function ComponentRow({
           a control nested in an anchor is activated by the anchor, so ticking a
           row would open it.
         */
-        <PMBox
-          display="flex"
-          alignItems="flex-start"
-          paddingLeft={3}
-          /*
-            On the name's line, not centred on the row: the same rule the type
-            icon two elements to the right already follows, and the offsets are
-            the link's own vertical padding plus the nudge that puts a control
-            of this size on a line of that size.
-
-            Centred, it sat between the name and the summary while the icon sat
-            on the name, so the row opened with two marks on two baselines and
-            neither read as belonging to the title.
-          */
-          paddingTop="calc(10px + 0.14em)"
-        >
+        <PMBox display="flex" alignItems="center" paddingLeft={3}>
           <PMCheckbox
             size="sm"
             checked={isSelected}
@@ -258,22 +309,32 @@ function ComponentRow({
             gap={3}
             textAlign="left"
             paddingX={3}
-            paddingY="10px"
+            paddingY="7px"
           >
-            {/* On the name, not on the pair: the rule the rail beside it follows. */}
-            <PMIcon
+            {/*
+              One line, name then summary, where the two were stacked. A package
+              of a hundred components was four screens of scrolling, and the
+              second line was the half of each row nobody was scanning for.
+
+              No type icon on the row: the band header above it already says
+              what these are, and repeating the glyph on every line spends the
+              width the summary now needs.
+            */}
+            <PMText
               fontSize="sm"
-              color="text.faded"
+              fontWeight="medium"
+              truncate
               flexShrink={0}
-              alignSelf="flex-start"
-              marginTop="0.25em"
+              maxWidth="45%"
             >
-              {COMPONENT_TYPE_ICONS[component.type]}
-            </PMIcon>
+              {component.name}
+            </PMText>
+            {/*
+              Takes the room left over, and is the first thing to give it back:
+              the name is what the reader came for, and a component with a long
+              description must not push its own version off the row.
+            */}
             <PMBox flex={1} minW={0}>
-              <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
-                {component.name}
-              </PMText>
               {component.summary && (
                 <PMText as="div" fontSize="xs" color="faded" truncate>
                   {component.summary}

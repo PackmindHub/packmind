@@ -42,7 +42,14 @@ async function renderList(
       <UIProvider>
         <MemoryRouter>
           <ContextComponentList
-            entries={entries.map((entry) => ({ component: entry }))}
+            sections={[
+              {
+                key: 'standard',
+                label: 'Standards',
+                count: entries.length,
+                entries: entries.map((entry) => ({ component: entry })),
+              },
+            ]}
           />
         </MemoryRouter>
       </UIProvider>,
@@ -130,6 +137,78 @@ describe('ContextComponentList', () => {
       await renderList([component('std-1')]);
 
       expect(screen.getByText('Standard std-1')).toBeVisible();
+    });
+  });
+
+  describe('when the list has several bands', () => {
+    async function renderBands() {
+      (useGetGroupedChangeProposalsQuery as Mock).mockReturnValue({
+        data: undefined,
+      });
+
+      await act(async () => {
+        render(
+          <UIProvider>
+            <MemoryRouter>
+              <ContextComponentList
+                sections={[
+                  {
+                    key: 'standard',
+                    label: 'Standards',
+                    count: '2 of 40',
+                    entries: [
+                      { component: component('std-1') },
+                      { component: component('std-2') },
+                    ],
+                  },
+                  {
+                    key: 'skill',
+                    label: 'Skills',
+                    count: 1,
+                    entries: [
+                      {
+                        component: component('skill-1', {
+                          type: 'skill',
+                          name: 'Release checklist',
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            </MemoryRouter>
+          </UIProvider>,
+        );
+      });
+    }
+
+    it('heads each band with what it holds', async () => {
+      await renderBands();
+
+      expect(screen.getByText('Standards')).toBeVisible();
+      expect(screen.getByText('Skills')).toBeVisible();
+    });
+
+    it('prints the count the caller phrased, filtered or not', async () => {
+      await renderBands();
+
+      expect(screen.getByText('2 of 40')).toBeVisible();
+      expect(screen.getByText('1')).toBeVisible();
+    });
+
+    it('lists the rows of every band', async () => {
+      await renderBands();
+
+      expect(screen.getByText('Standard std-1')).toBeVisible();
+      expect(screen.getByText('Release checklist')).toBeVisible();
+    });
+  });
+
+  describe('when a component has a summary', () => {
+    it('reads it on the row, which is one line now', async () => {
+      await renderList([component('std-1', { summary: 'How we name things' })]);
+
+      expect(screen.getByText('How we name things')).toBeVisible();
     });
   });
 });

@@ -1031,54 +1031,37 @@ export function ContextPackagePane({
                 of this package matches "{query.trim()}".
               </PMText>
             ) : (
-              shown.groups.map((group) => (
-                <PMBox key={group.type}>
-                  <PMHStack gap={2} align="baseline">
-                    <PMText
-                      fontSize="10px"
-                      fontWeight="semibold"
-                      textTransform="uppercase"
-                      letterSpacing="wider"
-                      color="faded"
-                    >
-                      {group.label}
-                    </PMText>
-                    {/*
-                    The breakdown of a package without opening every group, and
+              <ContextComponentList
+                sections={shown.groups.map((group) => ({
+                  key: group.type,
+                  label: group.label,
+                  icon: COMPONENT_TYPE_ICONS[group.type],
+                  /*
+                    The breakdown of a package without opening every band, and
                     under a query the count of what is left over the count of
-                    what there was. Without the second number a group that went
-                    from forty to three reads as a group of three, and the
-                    reader has no way to tell the filter did that.
-                  */}
-                    <PMText
-                      fontSize="10px"
-                      color="faded"
-                      fontVariantNumeric="tabular-nums"
-                    >
-                      {group.components.length === group.total
-                        ? group.total
-                        : `${group.components.length} of ${group.total}`}
-                    </PMText>
-                  </PMHStack>
-                  <PMBox paddingTop={1}>
-                    <ContextComponentList
-                      entries={group.components.map((component) => ({
-                        // Pointed at this pane for the types it can show, and at
-                        // the component's own page for the ones it cannot yet.
-                        component: withPaneDetailHref(
-                          component,
-                          searchParams,
-                          pkg.id,
-                        ),
-                      }))}
-                      onMove={(component) => setMoving([component])}
-                      onRemove={(component) => setRemoving([component])}
-                      selectedKeys={selectedKeys}
-                      onToggleSelect={toggleSelect}
-                    />
-                  </PMBox>
-                </PMBox>
-              ))
+                    what there was. Without the second number a band that went
+                    from forty to three reads as a band of three, and the reader
+                    has no way to tell the filter did that.
+                  */
+                  count:
+                    group.components.length === group.total
+                      ? group.total
+                      : `${group.components.length} of ${group.total}`,
+                  entries: group.components.map((component) => ({
+                    // Pointed at this pane for the types it can show, and at
+                    // the component's own page for the ones it cannot yet.
+                    component: withPaneDetailHref(
+                      component,
+                      searchParams,
+                      pkg.id,
+                    ),
+                  })),
+                }))}
+                onMove={(component) => setMoving([component])}
+                onRemove={(component) => setRemoving([component])}
+                selectedKeys={selectedKeys}
+                onToggleSelect={toggleSelect}
+              />
             )}
           </PMVStack>
         )}
