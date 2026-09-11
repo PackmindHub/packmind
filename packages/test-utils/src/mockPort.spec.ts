@@ -118,10 +118,12 @@ describe('mockPort', () => {
       expect(port.close).toHaveBeenCalled();
     });
 
-    it('mocks it even when it is left out', () => {
-      const port = mockPort<IPortWithOptionalMethod>();
+    describe('when it is left out', () => {
+      it('mocks it anyway', () => {
+        const port = mockPort<IPortWithOptionalMethod>();
 
-      expect(jest.isMockFunction(port.close)).toBe(true);
+        expect(jest.isMockFunction(port.close)).toBe(true);
+      });
     });
   });
 
