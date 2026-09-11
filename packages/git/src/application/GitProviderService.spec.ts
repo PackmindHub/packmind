@@ -11,8 +11,6 @@ import {
   createGitProviderId,
 } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 import {
   gitProviderFactory,
   gitlabProviderFactory,
@@ -24,7 +22,6 @@ describe('GitProviderService', () => {
   let mockGitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let mockGitProviderFactory: jest.Mocked<IGitProviderFactory>;
   let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
-  let stubbedLogger: jest.Mocked<PackmindLogger>;
   let mockGithubProviderInstance: jest.Mocked<IGitProvider>;
   let mockGitlabProviderInstance: jest.Mocked<IGitProvider>;
 
@@ -54,8 +51,6 @@ describe('GitProviderService', () => {
       list: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<IGitProviderRepository>;
-
-    stubbedLogger = stubLogger();
 
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
@@ -96,7 +91,6 @@ describe('GitProviderService', () => {
       mockGitProviderRepository,
       mockGitProviderFactory,
       mockGitRepoFactory,
-      stubbedLogger,
     );
   });
 
@@ -111,6 +105,7 @@ describe('GitProviderService', () => {
       organizationId: createOrganizationId('org-1'),
       url: 'https://api.github.com',
       authMethod: 'token' as const,
+      displayName: '',
     };
     let result: GitProvider;
 

@@ -45,6 +45,8 @@ describe('GitRepoService', () => {
       branch: 'main',
       providerId: createGitProviderId('provider-1'),
       type: 'standard',
+      isTracked: false,
+      trackingRemovedAt: null,
     };
     let result: GitRepo;
 

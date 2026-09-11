@@ -1230,8 +1230,8 @@ describe('GitlabRepository', () => {
 
           await gitlabRepository.commitFiles(files, 'Mixed test');
 
-          const commitCall = mockAxiosInstance.post.mock.calls[0];
-          actions = commitCall[1].actions;
+          const [, commitPayload] = mockAxiosInstance.post.mock.calls[0];
+          actions = (commitPayload as { actions: typeof actions }).actions;
         });
 
         it('uses update action for existing files', () => {
