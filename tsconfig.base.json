@@ -55,6 +55,8 @@
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/standards/test": ["packages/standards/test/index.ts"],
+      "@packmind/standards/test/*": ["packages/standards/test/*"],
       "@packmind/test-utils": ["packages/test-utils/src/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],

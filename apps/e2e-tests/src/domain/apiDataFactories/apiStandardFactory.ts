@@ -29,6 +29,5 @@ export async function apiStandardFactory(
 
   console.log('CreateStandard response:', response);
 
-  // Return the response directly as it appears to be the standard object itself
-  return response;
+  return response.standard;
 }
