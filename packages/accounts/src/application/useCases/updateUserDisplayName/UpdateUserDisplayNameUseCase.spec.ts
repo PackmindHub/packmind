@@ -1,5 +1,4 @@
 import { PackmindLogger } from '@packmind/logger';
-import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   IAccountsPort,
@@ -45,26 +44,28 @@ describe('UpdateUserDisplayNameUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('executeForMembers', () => {
-    const user = userFactory({ id: userId });
-    const organization = organizationFactory({ id: organizationId });
+  describe('execute', () => {
     const membership = {
       userId,
       organizationId,
       role: 'member' as const,
     };
+    const user = userFactory({ id: userId, memberships: [membership] });
+    const organization = organizationFactory({ id: organizationId });
+
+    beforeEach(() => {
+      mockAccountsPort.getUserById.mockResolvedValue(user);
+      mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
+    });
 
     describe('when setting a display name', () => {
       let result: UpdateUserDisplayNameResponse;
 
       beforeEach(async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: 'Joan Racenet',
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -72,7 +73,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: 'Joan Racenet',
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       it('calls updateUser with the new display name', () => {
@@ -91,13 +92,10 @@ describe('UpdateUserDisplayNameUseCase', () => {
       let result: UpdateUserDisplayNameResponse;
 
       beforeEach(async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: null,
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -105,7 +103,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: null,
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       it('calls updateUser with null display name', () => {
@@ -124,13 +122,10 @@ describe('UpdateUserDisplayNameUseCase', () => {
       let result: UpdateUserDisplayNameResponse;
 
       beforeEach(async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: '  Joan Racenet  ',
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -138,7 +133,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: 'Joan Racenet',
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       it('trims the display name before saving', () => {
@@ -157,13 +152,10 @@ describe('UpdateUserDisplayNameUseCase', () => {
       let result: UpdateUserDisplayNameResponse;
 
       beforeEach(async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: 'Joan    Racenet',
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -171,7 +163,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: 'Joan Racenet',
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       it('normalizes consecutive spaces to single space', () => {
@@ -190,16 +182,13 @@ describe('UpdateUserDisplayNameUseCase', () => {
       let executePromise: Promise<UpdateUserDisplayNameResponse>;
 
       beforeEach(() => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: 'a'.repeat(256),
-          user,
-          organization,
-          membership,
         };
 
-        executePromise = useCase.executeForMembers(command);
+        executePromise = useCase.execute(command);
       });
 
       it('throws InvalidDisplayNameError', async () => {
@@ -217,13 +206,10 @@ describe('UpdateUserDisplayNameUseCase', () => {
 
       beforeEach(async () => {
         const name = 'a'.repeat(255);
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: name,
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -231,7 +217,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: name,
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       it('accepts the display name', () => {
@@ -247,13 +233,10 @@ describe('UpdateUserDisplayNameUseCase', () => {
       let result: UpdateUserDisplayNameResponse;
 
       beforeEach(async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
+        const command: UpdateUserDisplayNameCommand = {
           userId: String(userId),
           organizationId,
           displayName: '   ',
-          user,
-          organization,
-          membership,
         };
 
         mockUserService.updateUser.mockResolvedValue({
@@ -261,7 +244,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
           displayName: null,
         });
 
-        result = await useCase.executeForMembers(command);
+        result = await useCase.execute(command);
       });
 
       describe('when only whitespace', () => {

@@ -14,6 +14,7 @@ import {
   UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { userFactory } from '../../../../test';
 
 describe('CreateOrganizationUseCase', () => {
   let createOrganizationUseCase: CreateOrganizationUseCase;
@@ -74,13 +75,12 @@ describe('CreateOrganizationUseCase', () => {
       let mockUser: User;
 
       beforeEach(() => {
-        mockUser = {
+        mockUser = userFactory({
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
-          active: true,
           memberships: [],
-        };
+        });
       });
 
       describe('when user exists', () => {
@@ -247,13 +247,12 @@ describe('CreateOrganizationUseCase', () => {
       let mockUser: User;
 
       beforeEach(() => {
-        mockUser = {
+        mockUser = userFactory({
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
-          active: true,
           memberships: [],
-        };
+        });
 
         mockUserService.getUserById.mockResolvedValue(mockUser);
         mockOrganizationService.createOrganization.mockResolvedValue(
@@ -432,13 +431,12 @@ describe('CreateOrganizationUseCase', () => {
       let mockUser: User;
 
       beforeEach(async () => {
-        mockUser = {
+        mockUser = userFactory({
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
-          active: true,
           memberships: [],
-        };
+        });
 
         mockUserService.getUserById.mockResolvedValue(mockUser);
         const serviceError = new Error('Organization already exists');
@@ -478,13 +476,12 @@ describe('CreateOrganizationUseCase', () => {
 
     describe('with non-Error exception', () => {
       beforeEach(() => {
-        const mockUser: User = {
+        const mockUser: User = userFactory({
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
-          active: true,
           memberships: [],
-        };
+        });
 
         mockUserService.getUserById.mockResolvedValue(mockUser);
         const serviceError = 'Database connection failed';
@@ -505,13 +502,12 @@ describe('CreateOrganizationUseCase', () => {
       let minimalOrganization: Organization;
 
       beforeEach(() => {
-        mockUser = {
+        mockUser = userFactory({
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
-          active: true,
           memberships: [],
-        };
+        });
         minimalOrganization = {
           ...mockOrganization,
           name: 'A',
