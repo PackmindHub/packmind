@@ -67,6 +67,7 @@ describe('AbstractMemberUseCase', () => {
   const buildUser = (overrides?: Partial<User>): User => ({
     id: userId,
     email: 'member@test.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [

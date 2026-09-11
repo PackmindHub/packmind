@@ -1,10 +1,15 @@
-import { UserEvent, SystemEvent } from '@packmind/types';
+import {
+  createOrganizationId,
+  createUserId,
+  UserEvent,
+  UserEventPayload,
+  SystemEvent,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { PackmindEventEmitterService } from './PackmindEventEmitterService';
 import { PackmindListener } from './PackmindListener';
 
 class TestUserCreatedEvent extends UserEvent<{
-  userId: string;
   email: string;
 }> {
   static override readonly eventName = 'test.user.created';
@@ -16,6 +21,16 @@ class TestSyncCompletedEvent extends SystemEvent<{
 }> {
   static override readonly eventName = 'test.sync.completed';
 }
+
+const buildUserCreatedPayload = (
+  userId: string,
+  email: string,
+): UserEventPayload & { email: string } => ({
+  userId: createUserId(userId),
+  organizationId: createOrganizationId('organization-id'),
+  source: 'ui',
+  email,
+});
 
 interface StubAdapter {
   handleUserCreated(userId: string, email: string): void;
@@ -91,10 +106,9 @@ describe('PackmindListener', () => {
       listener.initialize(eventService);
 
       eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-123',
-          email: 'test@example.com',
-        }),
+        new TestUserCreatedEvent(
+          buildUserCreatedPayload('user-123', 'test@example.com'),
+        ),
       );
 
       expect(stubAdapter.handleUserCreated).toHaveBeenCalledWith(
@@ -108,10 +122,9 @@ describe('PackmindListener', () => {
       listener.initialize(eventService);
 
       eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-456',
-          email: 'another@example.com',
-        }),
+        new TestUserCreatedEvent(
+          buildUserCreatedPayload('user-456', 'another@example.com'),
+        ),
       );
 
       expect(stubAdapter.handleUserCreated).toHaveBeenCalledTimes(1);
@@ -123,10 +136,9 @@ describe('PackmindListener', () => {
         listener.initialize(eventService);
 
         eventService.emit(
-          new TestUserCreatedEvent({
-            userId: 'user-123',
-            email: 'test@example.com',
-          }),
+          new TestUserCreatedEvent(
+            buildUserCreatedPayload('user-123', 'test@example.com'),
+          ),
         );
         eventService.emit(
           new TestSyncCompletedEvent({
@@ -158,10 +170,9 @@ describe('PackmindListener', () => {
       listener.initialize(eventService);
 
       eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-789',
-          email: 'user@test.com',
-        }),
+        new TestUserCreatedEvent(
+          buildUserCreatedPayload('user-789', 'user@test.com'),
+        ),
       );
 
       expect(stubAdapter.handleUserCreated).toHaveBeenCalledWith(
@@ -211,10 +222,9 @@ describe('PackmindListener', () => {
       listener2.initialize(eventService);
 
       eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-shared',
-          email: 'shared@example.com',
-        }),
+        new TestUserCreatedEvent(
+          buildUserCreatedPayload('user-shared', 'shared@example.com'),
+        ),
       );
     });
 
@@ -240,10 +250,9 @@ describe('PackmindListener', () => {
         listener.initialize(eventService);
 
         eventService.emit(
-          new TestUserCreatedEvent({
-            userId: 'user-123',
-            email: 'test@example.com',
-          }),
+          new TestUserCreatedEvent(
+            buildUserCreatedPayload('user-123', 'test@example.com'),
+          ),
         );
       });
 
