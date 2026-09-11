@@ -1,12 +1,10 @@
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
-  GitProviderNotFoundError,
   ICheckDirectoryExistenceUseCase,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
-import { GitProviderService } from '../../GitProviderService';
-import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CheckDirectoryExistenceUseCase';
@@ -14,8 +12,7 @@ const origin = 'CheckDirectoryExistenceUseCase';
 export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceUseCase {
   constructor(
     private readonly gitRepoService: GitRepoService,
-    private readonly gitProviderService: GitProviderService,
-    private readonly gitRepoFactory: IGitRepoFactory,
+    private readonly resolvedGitRepoService: ResolvedGitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -47,19 +44,7 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       throw new Error(`Git repository with ID ${gitRepoId} not found`);
     }
 
-    // Business rule: git provider must exist and be accessible
-    const gitProvider = await this.gitProviderService.findGitProviderById(
-      gitRepo.providerId,
-    );
-    if (!gitProvider) {
-      throw new GitProviderNotFoundError(gitRepo.providerId);
-    }
-
-    // Create git repository instance for technical operations (token validation delegated to factory)
-    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
-      gitRepo,
-      gitProvider,
-    );
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     try {
       // Delegate to repository layer for technical directory existence check

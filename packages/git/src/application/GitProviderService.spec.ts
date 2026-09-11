@@ -1,7 +1,7 @@
 import { GitProviderService } from './GitProviderService';
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
-import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { ResolvedGitRepoService } from './services/ResolvedGitRepoService';
 import { IGitProvider } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
@@ -21,7 +21,7 @@ describe('GitProviderService', () => {
   let gitProviderService: GitProviderService;
   let mockGitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let mockGitProviderFactory: jest.Mocked<IGitProviderFactory>;
-  let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
+  let mockResolvedGitRepoService: jest.Mocked<ResolvedGitRepoService>;
   let mockGithubProviderInstance: jest.Mocked<IGitProvider>;
   let mockGitlabProviderInstance: jest.Mocked<IGitProvider>;
 
@@ -83,14 +83,17 @@ describe('GitProviderService', () => {
       }),
     } as jest.Mocked<IGitProviderFactory>;
 
-    mockGitRepoFactory = {
-      createGitRepo: jest.fn(),
-    } as jest.Mocked<IGitRepoFactory>;
+    mockResolvedGitRepoService = {
+      // Reads through the same repository mock, so every existing
+      // findById.mockResolvedValue setup still drives these tests.
+      getProvider: jest.fn((id) => mockGitProviderRepository.findById(id)),
+      resolve: jest.fn(),
+    } as unknown as jest.Mocked<ResolvedGitRepoService>;
 
     gitProviderService = new GitProviderService(
       mockGitProviderRepository,
       mockGitProviderFactory,
-      mockGitRepoFactory,
+      mockResolvedGitRepoService,
     );
   });
 
@@ -757,7 +760,7 @@ describe('GitProviderService', () => {
       it('never builds a git repo instance', async () => {
         await gitProviderService.checkMarketplaceRepoExists(marketplaceRepo);
 
-        expect(mockGitRepoFactory.createGitRepo).not.toHaveBeenCalled();
+        expect(mockResolvedGitRepoService.resolve).not.toHaveBeenCalled();
       });
     });
 
@@ -784,7 +787,7 @@ describe('GitProviderService', () => {
             .fn()
             .mockResolvedValue({ exists: false, reason: 'repo_not_found' }),
         };
-        mockGitRepoFactory.createGitRepo.mockResolvedValue(
+        mockResolvedGitRepoService.resolve.mockResolvedValue(
           mockRepoInstance as never,
         );
 
@@ -839,7 +842,7 @@ describe('GitProviderService', () => {
         const mockRepoInstance = {
           findOpenPullRequest: jest.fn().mockResolvedValue(openPr),
         };
-        mockGitRepoFactory.createGitRepo.mockResolvedValue(
+        mockResolvedGitRepoService.resolve.mockResolvedValue(
           mockRepoInstance as never,
         );
 

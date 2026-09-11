@@ -1,5 +1,6 @@
 import { GetFileFromRepoUseCase } from './GetFileFromRepoUseCase';
-import { GitProviderService } from '../../GitProviderService';
+import { IGitProviderRepository } from '../../../domain/repositories/IGitProviderRepository';
+import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { GitRepo } from '@packmind/types';
@@ -12,7 +13,7 @@ import { stubLogger } from '@packmind/test-utils';
 
 describe('GetFileFromRepoUseCase', () => {
   let useCase: GetFileFromRepoUseCase;
-  let gitProviderService: jest.Mocked<GitProviderService>;
+  let gitProviderRepository: jest.Mocked<IGitProviderRepository>;
   let gitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockGitRepoInstance: jest.Mocked<IGitRepo>;
 
@@ -32,9 +33,9 @@ describe('GetFileFromRepoUseCase', () => {
   } as unknown as GitProvider;
 
   beforeEach(() => {
-    gitProviderService = {
-      findGitProviderById: jest.fn(),
-    } as unknown as jest.Mocked<GitProviderService>;
+    gitProviderRepository = {
+      findById: jest.fn(),
+    } as unknown as jest.Mocked<IGitProviderRepository>;
 
     mockGitRepoInstance = {
       getFileOnRepo: jest.fn(),
@@ -52,9 +53,13 @@ describe('GetFileFromRepoUseCase', () => {
       }),
     } as jest.Mocked<IGitRepoFactory>;
 
+    // The real resolver, not a stub: how often a read resolves is the point.
     useCase = new GetFileFromRepoUseCase(
-      gitProviderService,
-      gitRepoFactory,
+      new ResolvedGitRepoService(
+        gitProviderRepository,
+        gitRepoFactory,
+        stubLogger(),
+      ),
       stubLogger(),
     );
   });
@@ -70,7 +75,7 @@ describe('GetFileFromRepoUseCase', () => {
     let result: { sha: string; content: string } | null;
 
     beforeEach(async () => {
-      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      gitProviderRepository.findById.mockResolvedValue(mockProvider);
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: base64Content,
@@ -97,7 +102,7 @@ describe('GetFileFromRepoUseCase', () => {
     let result: { sha: string; content: string } | null;
 
     beforeEach(async () => {
-      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      gitProviderRepository.findById.mockResolvedValue(mockProvider);
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: garbageBase64Content,
@@ -122,7 +127,7 @@ describe('GetFileFromRepoUseCase', () => {
 
   describe('when file does not exist', () => {
     it('returns null', async () => {
-      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      gitProviderRepository.findById.mockResolvedValue(mockProvider);
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue(null);
 
       const result = await useCase.getFileFromRepo(
@@ -136,7 +141,7 @@ describe('GetFileFromRepoUseCase', () => {
 
   describe('when git provider is not found', () => {
     it('throws error', async () => {
-      gitProviderService.findGitProviderById.mockResolvedValue(null);
+      gitProviderRepository.findById.mockResolvedValue(null);
 
       await expect(
         useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),
@@ -147,7 +152,7 @@ describe('GetFileFromRepoUseCase', () => {
   describe('when git provider token is not configured', () => {
     it('throws error', async () => {
       const providerWithoutToken = { ...mockProvider, token: undefined };
-      gitProviderService.findGitProviderById.mockResolvedValue(
+      gitProviderRepository.findById.mockResolvedValue(
         providerWithoutToken as unknown as GitProvider,
       );
 
@@ -164,7 +169,7 @@ describe('GetFileFromRepoUseCase', () => {
     let result: { sha: string; content: string } | null;
 
     beforeEach(async () => {
-      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      gitProviderRepository.findById.mockResolvedValue(mockProvider);
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: 'branch-sha',
         content: base64Content,
@@ -189,6 +194,45 @@ describe('GetFileFromRepoUseCase', () => {
         'test-file.txt',
         customBranch,
       );
+    });
+  });
+
+  describe('when a deployment reads many files across many targets', () => {
+    const targets = ['/', 'apps/api', 'apps/frontend', 'packages/git'];
+    const agentFiles = [
+      'CLAUDE.md',
+      'AGENTS.md',
+      '.github/copilot-instructions.md',
+      '.cursor/rules/packmind/recipes-index.mdc',
+      '.junie/guidelines.md',
+    ];
+
+    beforeEach(async () => {
+      gitProviderRepository.findById.mockResolvedValue(mockProvider);
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue(null);
+
+      for (const target of targets) {
+        for (const agentFile of agentFiles) {
+          await useCase.getFileFromRepo(
+            mockGitRepoEntity,
+            `${target}/${agentFile}`,
+          );
+        }
+      }
+    });
+
+    it('reads every file', () => {
+      expect(mockGitRepoInstance.getFileOnRepo).toHaveBeenCalledTimes(
+        targets.length * agentFiles.length,
+      );
+    });
+
+    it('builds the git repository once per (repository, provider)', () => {
+      expect(gitRepoFactory.createGitRepo).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads the git provider once per (repository, provider)', () => {
+      expect(gitProviderRepository.findById).toHaveBeenCalledTimes(1);
     });
   });
 });
