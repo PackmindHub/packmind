@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -19,8 +19,8 @@ describe('withTransientRetry', () => {
 
   beforeEach(() => {
     logger = stubLogger();
-    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
-      (payload) =>
+    mockedAxios.isAxiosError.mockImplementation(
+      (payload): payload is AxiosError =>
         typeof payload === 'object' &&
         payload !== null &&
         (payload as { isAxiosError?: boolean }).isAxiosError === true,

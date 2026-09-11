@@ -12,6 +12,7 @@ import {
   createOrganizationId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
+import { mockPort } from '@packmind/test-utils';
 import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 
 const makeProvider = (overrides: Partial<GitProvider> = {}): GitProvider =>
@@ -49,23 +50,14 @@ class StubConfig implements IConfigProvider {
   }
 }
 
-class StubOrgGitHubAppRepository implements Pick<
-  IOrganizationGitHubAppRepository,
-  'findActiveByOrganizationId' | 'findById'
-> {
-  constructor(
-    private readonly result: OrganizationGitHubApp | null,
-    private readonly findByIdResult: OrganizationGitHubApp | null = result,
-  ) {}
-
-  async findActiveByOrganizationId(): Promise<OrganizationGitHubApp | null> {
-    return this.result;
-  }
-
-  async findById(): Promise<OrganizationGitHubApp | null> {
-    return this.findByIdResult;
-  }
-}
+const stubOrgGitHubAppRepository = (
+  result: OrganizationGitHubApp | null,
+  findByIdResult: OrganizationGitHubApp | null = result,
+): jest.Mocked<IOrganizationGitHubAppRepository> =>
+  mockPort<IOrganizationGitHubAppRepository>({
+    findActiveByOrganizationId: async () => result,
+    findById: async () => findByIdResult,
+  });
 
 describe('GithubTokenResolverFactory', () => {
   afterEach(() => jest.clearAllMocks());
@@ -185,12 +177,12 @@ describe('GithubTokenResolverFactory', () => {
   describe('authMethod = "app", mode = "on-prem"', () => {
     it('looks up OrganizationGitHubApp by the provider FK and returns AppInstallationTokenResolver', async () => {
       const orgApp = makeOrgApp();
-      const repo = new StubOrgGitHubAppRepository(null, orgApp);
+      const repo = stubOrgGitHubAppRepository(null, orgApp);
       const factory = new GithubTokenResolverFactory(
         new StubConfig({}),
         'on-prem',
         undefined,
-        repo as unknown as IOrganizationGitHubAppRepository,
+        repo,
       );
       const provider = makeProvider({
         authMethod: 'app',
@@ -208,12 +200,12 @@ describe('GithubTokenResolverFactory', () => {
         const orgApp = makeOrgApp({
           revokedAt: new Date('2026-05-01T00:00:00Z'),
         });
-        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const repo = stubOrgGitHubAppRepository(null, orgApp);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
           'on-prem',
           undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
+          repo,
         );
         const provider = makeProvider({
           authMethod: 'app',
@@ -229,12 +221,12 @@ describe('GithubTokenResolverFactory', () => {
 
     describe('when the referenced OrganizationGitHubApp does not exist', () => {
       it('throws', async () => {
-        const repo = new StubOrgGitHubAppRepository(null, null);
+        const repo = stubOrgGitHubAppRepository(null, null);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
           'on-prem',
           undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
+          repo,
         );
         const provider = makeProvider({
           authMethod: 'app',
@@ -251,12 +243,12 @@ describe('GithubTokenResolverFactory', () => {
     describe('when the GitProvider has no organizationGitHubAppId FK', () => {
       it('throws', async () => {
         const orgApp = makeOrgApp();
-        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const repo = stubOrgGitHubAppRepository(null, orgApp);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
           'on-prem',
           undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
+          repo,
         );
         const provider = makeProvider({
           authMethod: 'app',
@@ -413,12 +405,12 @@ describe('GithubTokenResolverFactory', () => {
     describe('when GITHUB_APP_SLUG is not set', () => {
       it('uses on-prem mode and reads OrganizationGitHubApp via FK', async () => {
         const orgApp = makeOrgApp();
-        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const repo = stubOrgGitHubAppRepository(null, orgApp);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
           undefined,
           undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
+          repo,
         );
         const provider = makeProvider({
           authMethod: 'app',

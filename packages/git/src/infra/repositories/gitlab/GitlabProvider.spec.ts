@@ -1,7 +1,7 @@
 import { GitlabProvider } from './GitlabProvider';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
-import { AxiosInstance } from 'axios';
+import { AxiosError, AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 
@@ -24,8 +24,8 @@ describe('GitlabProvider', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
-      (payload) =>
+    mockedAxios.isAxiosError.mockImplementation(
+      (payload): payload is AxiosError =>
         typeof payload === 'object' &&
         payload !== null &&
         (payload as { isAxiosError?: boolean }).isAxiosError === true,

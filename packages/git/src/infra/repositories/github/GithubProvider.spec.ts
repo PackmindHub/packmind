@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { GithubProvider } from './GithubProvider';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
@@ -33,8 +33,8 @@ describe('GithubProvider', () => {
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
-      (payload) =>
+    mockedAxios.isAxiosError.mockImplementation(
+      (payload): payload is AxiosError =>
         typeof payload === 'object' &&
         payload !== null &&
         (payload as { isAxiosError?: boolean }).isAxiosError === true,

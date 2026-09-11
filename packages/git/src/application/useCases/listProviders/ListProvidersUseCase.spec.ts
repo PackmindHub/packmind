@@ -1,4 +1,4 @@
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { invalidInput, mockPort, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   createOrganizationId,
@@ -185,7 +185,7 @@ describe('ListProvidersUseCase', () => {
             organizationId,
             token: null,
             authMethod: 'app',
-            appInstallationId: '42' as unknown as number,
+            appInstallationId: invalidInput<number>('42'),
           });
           mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
             [provider],

@@ -6,14 +6,13 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
+import { invalidInput, mockPort } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
 
 describe('ListAvailableReposUseCase', () => {
   let useCase: ListAvailableReposUseCase;
-  let mockGitProviderService: jest.Mocked<
-    Pick<GitProviderService, 'findGitProviderById' | 'getAvailableRepos'>
-  >;
+  let mockGitProviderService: jest.Mocked<GitProviderService>;
 
   const providerId: GitProviderId = createGitProviderId(
     'de754fed-7659-4816-95c6-12e3a0b9e3c9',
@@ -55,14 +54,9 @@ describe('ListAvailableReposUseCase', () => {
   } as GitProvider;
 
   beforeEach(() => {
-    mockGitProviderService = {
-      findGitProviderById: jest.fn(),
-      getAvailableRepos: jest.fn(),
-    };
+    mockGitProviderService = mockPort<GitProviderService>();
 
-    useCase = new ListAvailableReposUseCase(
-      mockGitProviderService as unknown as GitProviderService,
-    );
+    useCase = new ListAvailableReposUseCase(mockGitProviderService);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -182,7 +176,7 @@ describe('ListAvailableReposUseCase', () => {
         await expect(
           useCase.execute({
             ...baseCommand,
-            gitProviderId: undefined as unknown as GitProviderId,
+            gitProviderId: invalidInput<GitProviderId>(undefined),
           }),
         ).rejects.toThrow('Git provider ID is required');
       });
@@ -202,7 +196,7 @@ describe('ListAvailableReposUseCase', () => {
       it('rejects', async () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue({
           ...tokenProvider,
-          source: undefined as unknown as GitProvider['source'],
+          source: invalidInput<GitProvider['source']>(undefined),
         });
 
         await expect(

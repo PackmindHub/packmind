@@ -21,11 +21,7 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 // Get the mocked Cache after the mock
-const mockCacheInstance = {
-  get: jest.fn(),
-  set: jest.fn(),
-  invalidate: jest.fn(),
-} as jest.Mocked<Pick<Cache, 'get' | 'set' | 'invalidate'>>;
+const mockCacheInstance = mockPort<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 describe('GetAvailableTargetsUseCase', () => {
@@ -36,9 +32,7 @@ describe('GetAvailableTargetsUseCase', () => {
     mockGitProviderService = mockPort<GitProviderService>();
 
     // Setup cache mock
-    MockedCache.getInstance.mockReturnValue(
-      mockCacheInstance as unknown as Cache,
-    );
+    MockedCache.getInstance.mockReturnValue(mockCacheInstance);
     mockCacheInstance.get.mockResolvedValue(null); // Default to cache miss
     mockCacheInstance.set.mockResolvedValue(undefined);
     mockCacheInstance.invalidate.mockResolvedValue(undefined);

@@ -17,7 +17,7 @@ import {
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { gitProviderFactory } from '../../../../test';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { invalidInput, mockPort, stubLogger } from '@packmind/test-utils';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
@@ -144,7 +144,7 @@ describe('AddGitProviderUseCase', () => {
   describe('when git provider source is missing', () => {
     const input = {
       gitProvider: {
-        source: undefined as unknown as GitProviderVendor,
+        source: invalidInput<GitProviderVendor>(undefined),
         url: 'https://github.com',
         token: 'test-token',
         authMethod: 'token' as const,
@@ -516,7 +516,7 @@ describe('AddGitProviderUseCase', () => {
         // The route has no runtime DTO validation, so displayName can genuinely
         // be absent even though the command type declares it - that absence is
         // exactly what the cases below exercise.
-        displayName: undefined as unknown as string,
+        displayName: invalidInput<string>(undefined),
       },
       organizationId,
       userId: memberUser.id,
@@ -677,12 +677,12 @@ describe('AddGitProviderUseCase', () => {
           gitProviderFactory(),
         );
         await useCase.execute({
-          gitProvider: {
+          gitProvider: invalidInput<(typeof tokenInput)['gitProvider']>({
             source: GitProviderVendors.github,
             url: 'https://github.com',
             token: 'ghp_candidate',
             displayName: '',
-          } as unknown as (typeof tokenInput)['gitProvider'],
+          }),
           organizationId,
           userId: memberUser.id,
           verifyCredentials: true,
