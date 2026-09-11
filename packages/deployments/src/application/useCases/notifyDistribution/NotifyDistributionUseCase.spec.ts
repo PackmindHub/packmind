@@ -37,6 +37,9 @@ import { IDistributedPackageRepository } from '../../../domain/repositories/IDis
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { v4 as uuidv4 } from 'uuid';
+import { spaceFactory } from '@packmind/spaces/test';
+import { commandVersionFactory } from '@packmind/commands/test';
+import { standardVersionFactory } from '@packmind/standards/test';
 
 describe('NotifyDistributionUseCase', () => {
   let useCase: NotifyDistributionUseCase;
@@ -82,24 +85,26 @@ describe('NotifyDistributionUseCase', () => {
 
   const globalSpaceId = createSpaceId(uuidv4());
 
-  const buildGlobalSpace = (): Space => ({
-    id: globalSpaceId,
-    name: 'Global',
-    slug: 'global',
-    type: SpaceType.open,
-    organizationId,
-    isDefaultSpace: true,
-  });
+  const buildGlobalSpace = (): Space =>
+    spaceFactory({
+      id: globalSpaceId,
+      name: 'Global',
+      slug: 'global',
+      type: SpaceType.open,
+      organizationId,
+      isDefaultSpace: true,
+    });
 
-  const buildSpace = (overrides: Partial<Space> = {}): Space => ({
-    id: createSpaceId(uuidv4()),
-    name: 'Custom Space',
-    slug: 'custom-space',
-    type: SpaceType.open,
-    organizationId,
-    isDefaultSpace: false,
-    ...overrides,
-  });
+  const buildSpace = (overrides: Partial<Space> = {}): Space =>
+    spaceFactory({
+      id: createSpaceId(uuidv4()),
+      name: 'Custom Space',
+      slug: 'custom-space',
+      type: SpaceType.open,
+      organizationId,
+      isDefaultSpace: false,
+      ...overrides,
+    });
 
   const buildPackage = (
     slug = 'my-package',
@@ -123,28 +128,28 @@ describe('NotifyDistributionUseCase', () => {
     gitRepoId,
   });
 
-  const buildCommandVersion = (): CommandVersion => ({
-    id: createCommandVersionId(uuidv4()),
-    recipeId,
-    version: 1,
-    name: 'Test Recipe',
-    slug: 'test-recipe',
-    summary: 'Test summary',
-    content: 'Test step',
-    userId,
-  });
+  const buildCommandVersion = (): CommandVersion =>
+    commandVersionFactory({
+      id: createCommandVersionId(uuidv4()),
+      recipeId,
+      version: 1,
+      name: 'Test Recipe',
+      slug: 'test-recipe',
+      content: 'Test step',
+      userId,
+    });
 
-  const buildStandardVersion = (): StandardVersion => ({
-    id: createStandardVersionId(uuidv4()),
-    standardId,
-    version: 1,
-    description: 'Test standard description',
-    name: 'Test Standard',
-    summary: 'Test summary',
-    rules: [],
-    slug: 'test-standard',
-    scope: null,
-  });
+  const buildStandardVersion = (): StandardVersion =>
+    standardVersionFactory({
+      id: createStandardVersionId(uuidv4()),
+      standardId,
+      version: 1,
+      description: 'Test standard description',
+      name: 'Test Standard',
+      rules: [],
+      slug: 'test-standard',
+      scope: null,
+    });
 
   const buildSkillVersion = (): SkillVersion => ({
     id: createSkillVersionId(uuidv4()),

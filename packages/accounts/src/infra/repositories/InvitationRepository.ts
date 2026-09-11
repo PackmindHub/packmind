@@ -50,7 +50,7 @@ export class InvitationRepository
     return this.decryptInvitation(saved);
   }
 
-  async addMany(invitations: Invitation[]): Promise<Invitation[]> {
+  override async addMany(invitations: Invitation[]): Promise<Invitation[]> {
     if (invitations.length === 0) {
       this.logger.warn('No invitations provided for bulk insert');
       return [];

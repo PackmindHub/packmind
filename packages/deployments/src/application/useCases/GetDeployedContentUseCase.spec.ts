@@ -1,5 +1,6 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  CodingAgent,
   CodingAgents,
   FileUpdates,
   GetDeployedContentCommand,
@@ -37,24 +38,30 @@ import { RenderModeConfigurationService } from '../services/RenderModeConfigurat
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { GetDeployedContentUseCase } from './GetDeployedContentUseCase';
+import { userFactory } from '@packmind/accounts/test';
+import { targetFactory } from '../../../test';
+import { commandFactory } from '@packmind/commands/test';
+import { standardFactory } from '@packmind/standards/test';
+import { skillFactory } from '@packmind/skills/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('GetDeployedContentUseCase', () => {
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
@@ -161,11 +168,11 @@ describe('GetDeployedContentUseCase', () => {
     const standardId = createStandardId(uuidv4());
     const skillId = createSkillId(uuidv4());
 
-    const target: Target = {
+    const target: Target = targetFactory({
       id: targetId,
       name: 'Root',
       path: '/',
-    };
+    });
 
     const recipeVersion: CommandVersion = {
       id: createCommandVersionId(uuidv4()),
@@ -199,7 +206,7 @@ describe('GetDeployedContentUseCase', () => {
       userId: createUserId(uuidv4()),
     };
 
-    const recipe: Command = {
+    const recipe: Command = commandFactory({
       id: recipeId,
       name: 'test-recipe',
       slug: 'test-recipe',
@@ -207,9 +214,9 @@ describe('GetDeployedContentUseCase', () => {
       version: 1,
       userId: createUserId(uuidv4()),
       spaceId,
-    };
+    });
 
-    const standard: Standard = {
+    const standard: Standard = standardFactory({
       id: standardId,
       name: 'test-standard',
       slug: 'test-standard',
@@ -218,9 +225,9 @@ describe('GetDeployedContentUseCase', () => {
       userId: createUserId(uuidv4()),
       spaceId,
       scope: null,
-    };
+    });
 
-    const skill: Skill = {
+    const skill: Skill = skillFactory({
       id: skillId,
       name: 'test-skill',
       slug: 'test-skill',
@@ -229,7 +236,7 @@ describe('GetDeployedContentUseCase', () => {
       version: 1,
       userId: createUserId(uuidv4()),
       spaceId,
-    };
+    });
 
     const packageWithArtefacts: PackageWithArtefacts = {
       id: createPackageId(uuidv4()),
@@ -280,7 +287,7 @@ describe('GetDeployedContentUseCase', () => {
 
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue(fileUpdates);
 
-      const skillFolderMap = new Map<string, string | undefined>();
+      const skillFolderMap = new Map<CodingAgent, string | undefined>();
       skillFolderMap.set('packmind', '.packmind/skills/');
       skillFolderMap.set('claude', '.claude/skills/');
       codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
@@ -416,11 +423,11 @@ describe('GetDeployedContentUseCase', () => {
   });
 
   describe('when target exists but has no deployed versions', () => {
-    const target: Target = {
+    const target: Target = targetFactory({
       id: createTargetId(uuidv4()),
       name: 'Root',
       path: '/',
-    };
+    });
 
     beforeEach(() => {
       targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);

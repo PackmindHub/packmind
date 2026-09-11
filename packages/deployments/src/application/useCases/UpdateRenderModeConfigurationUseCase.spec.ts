@@ -15,24 +15,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
+import { userFactory } from '@packmind/accounts/test';
 
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
   role: UserOrganizationMembership['role'],
-): User => ({
-  id: createUserId(userId),
-  email: `${userId}@packmind.test`,
-  passwordHash: null,
-  active: true,
-  memberships: [
-    {
-      userId: createUserId(userId),
-      organizationId: organization.id,
-      role,
-    },
-  ],
-});
+): User =>
+  userFactory({
+    id: createUserId(userId),
+    email: `${userId}@packmind.test`,
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        role,
+      },
+    ],
+  });
 
 describe('UpdateRenderModeConfigurationUseCase', () => {
   let service: jest.Mocked<RenderModeConfigurationService>;

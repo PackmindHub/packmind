@@ -3,7 +3,8 @@ import {
   AddTargetCommand,
   IGitPort,
   GitProviderMissingTokenError,
-  GitProviderWithoutToken,
+  GitProviderListItem,
+  GitProviderVendors,
   Target,
   createTargetId,
   createGitRepoId,
@@ -11,6 +12,7 @@ import {
   createUserId,
   createOrganizationId,
 } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/git/test';
 import { TargetService } from '../services/TargetService';
 
 describe('AddTargetUseCase', () => {
@@ -23,30 +25,34 @@ describe('AddTargetUseCase', () => {
   const gitRepoId = createGitRepoId('repo-123');
   const providerId = createGitProviderId('provider-123');
 
-  const mockRepo = {
+  const mockRepo = gitRepoFactory({
     id: gitRepoId,
     owner: 'owner',
     repo: 'repo',
     branch: 'main',
     providerId,
-  };
+  });
 
-  const mockProviderWithToken: GitProviderWithoutToken = {
+  const mockProviderWithToken: GitProviderListItem = {
     id: providerId,
-    source: 'github',
+    source: GitProviderVendors.github,
     organizationId,
     url: 'https://github.com',
     authMethod: 'token',
+    displayName: 'github-provider',
     hasAuth: true,
+    lastDistributionAt: null,
   };
 
-  const mockProviderWithoutToken: GitProviderWithoutToken = {
+  const mockProviderWithoutToken: GitProviderListItem = {
     id: providerId,
-    source: 'github',
+    source: GitProviderVendors.github,
     organizationId,
     url: 'https://github.com',
     authMethod: 'token',
+    displayName: 'github-provider',
     hasAuth: false,
+    lastDistributionAt: null,
   };
 
   beforeEach(() => {

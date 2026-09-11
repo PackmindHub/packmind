@@ -11,6 +11,7 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/types';
+import { gitRepoFactory } from '@packmind/git/test';
 
 describe('GetTargetsByRepositoryUseCase', () => {
   let useCase: GetTargetsByRepositoryUseCase;
@@ -49,27 +50,27 @@ describe('GetTargetsByRepositoryUseCase', () => {
 
       beforeEach(async () => {
         const mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-main'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
-          {
+          }),
+          gitRepoFactory({
             id: createGitRepoId('repo-develop'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'develop',
             providerId: createGitProviderId('provider-1'),
-          },
-          {
+          }),
+          gitRepoFactory({
             id: createGitRepoId('repo-other'),
             owner: 'otherowner',
             repo: 'otherrepo',
             branch: 'main',
             providerId: createGitProviderId('provider-2'),
-          },
+          }),
         ];
 
         mockTargetsMain = [
@@ -153,13 +154,13 @@ describe('GetTargetsByRepositoryUseCase', () => {
 
       beforeEach(async () => {
         const mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-other'),
             owner: 'otherowner',
             repo: 'otherrepo',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
+          }),
         ];
 
         mockGitPort.getOrganizationRepositories.mockResolvedValue(
@@ -189,13 +190,13 @@ describe('GetTargetsByRepositoryUseCase', () => {
 
       beforeEach(async () => {
         const mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-main'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
+          }),
         ];
 
         mockGitPort.getOrganizationRepositories.mockResolvedValue(
@@ -239,13 +240,13 @@ describe('GetTargetsByRepositoryUseCase', () => {
 
       beforeEach(() => {
         const mockRepositories = [
-          {
+          gitRepoFactory({
             id: createGitRepoId('repo-main'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'main',
             providerId: createGitProviderId('provider-1'),
-          },
+          }),
         ];
 
         const error = new Error('Target retrieval failed');

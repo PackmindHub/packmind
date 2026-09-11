@@ -4,8 +4,13 @@
   "sourceRoot": "packages/deployments/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Extends the nx.json command so the spec program (specs plus test/ fixtures) is type-checked too; the shared one only covers tsconfig.lib.json.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/deployments/tsconfig.lib.json && tsc --noEmit --project packages/deployments/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

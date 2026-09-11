@@ -1,12 +1,13 @@
 import {
   RenderPackageAsPluginCommand,
+  RenderPackageAsPluginResponse,
   TrackPluginDeletedCommand,
 } from '@packmind/types';
 import { DeploymentsAdapter } from './DeploymentsAdapter';
 
 describe('DeploymentsAdapter', () => {
   describe('renderPackageAsPlugin', () => {
-    const response = {
+    const response: RenderPackageAsPluginResponse = {
       files: [],
       skippedStandardsCount: 0,
       pluginName: 'security',

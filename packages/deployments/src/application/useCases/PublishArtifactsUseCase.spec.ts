@@ -20,8 +20,6 @@ import {
   createCommandId,
   createStandardId,
   createTargetId,
-  createGitRepoId,
-  createGitProviderId,
   createGitCommitId,
   createRuleId,
   GitRepo,
@@ -35,13 +33,16 @@ import {
   Rule,
   SkillFile,
   CodingAgents,
+  DeleteItemType,
   PackmindLockFile,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { commandVersionFactory } from '@packmind/commands/test/commandVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
+import { skillFileFactory } from '@packmind/skills/test/skillFileFactory';
 import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
+import { gitRepoFactory } from '@packmind/git/test';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
@@ -210,13 +211,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -479,13 +474,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createCommandVersionId(uuidv4()),
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -564,13 +553,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createStandardVersionId(uuidv4()),
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -655,13 +638,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createStandardVersionId(uuidv4()),
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -755,13 +732,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createStandardVersionId(uuidv4()),
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -837,13 +808,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createStandardVersionId(uuidv4()),
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target1 = targetFactory({
         id: targetId1,
@@ -1000,13 +965,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -1135,13 +1094,7 @@ describe('PublishArtifactsUseCase', () => {
   describe('when recipe version does not exist', () => {
     it('throws error', async () => {
       const target = targetFactory({ id: targetId });
-      const gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      const gitRepo = gitRepoFactory();
 
       const command: PublishArtifactsCommand = {
         userId,
@@ -1167,13 +1120,7 @@ describe('PublishArtifactsUseCase', () => {
   describe('when standard version does not exist', () => {
     it('throws error', async () => {
       const target = targetFactory({ id: targetId });
-      const gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      const gitRepo = gitRepoFactory();
 
       const command: PublishArtifactsCommand = {
         userId,
@@ -1246,13 +1193,7 @@ describe('PublishArtifactsUseCase', () => {
         id: createCommandVersionId(uuidv4()),
       });
       const target = targetFactory({ id: targetId });
-      const gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      const gitRepo = gitRepoFactory();
 
       const command: PublishArtifactsCommand = {
         userId,
@@ -1358,13 +1299,7 @@ describe('PublishArtifactsUseCase', () => {
         rules: [],
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -1526,13 +1461,7 @@ describe('PublishArtifactsUseCase', () => {
         rules: [],
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -1627,13 +1556,7 @@ describe('PublishArtifactsUseCase', () => {
         rules: undefined, // Rules not populated from database
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -1732,12 +1655,12 @@ describe('PublishArtifactsUseCase', () => {
     const newSkillVersionId = createSkillVersionId(uuidv4());
     const previousSkillVersionId = createSkillVersionId(uuidv4());
     const mockFiles: SkillFile[] = [
-      {
+      skillFileFactory({
         id: createSkillFileId(uuidv4()),
         skillVersionId: previousSkillVersionId,
         path: 'references/guide.md',
         content: 'Reference guide content',
-      },
+      }),
     ];
 
     beforeEach(() => {
@@ -1760,13 +1683,7 @@ describe('PublishArtifactsUseCase', () => {
         files: undefined,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -1875,13 +1792,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2007,13 +1918,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2153,13 +2058,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2239,13 +2138,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2365,13 +2258,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2475,13 +2362,7 @@ describe('PublishArtifactsUseCase', () => {
         },
       ];
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2581,13 +2462,7 @@ describe('PublishArtifactsUseCase', () => {
   describe('when skill version does not exist', () => {
     it('throws error', async () => {
       const target = targetFactory({ id: targetId });
-      const gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      const gitRepo = gitRepoFactory();
 
       const command: PublishArtifactsCommand = {
         userId,
@@ -2639,13 +2514,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -2753,13 +2622,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2788,6 +2651,8 @@ describe('PublishArtifactsUseCase', () => {
           ],
           delete: [],
         },
+        skippedSkillsCount: 0,
+        lockFileSlice: {},
       });
 
       mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
@@ -2885,13 +2750,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -2920,6 +2779,8 @@ describe('PublishArtifactsUseCase', () => {
           ],
           delete: [],
         },
+        skippedSkillsCount: 0,
+        lockFileSlice: {},
       });
 
       mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
@@ -3054,13 +2915,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -3089,6 +2944,8 @@ describe('PublishArtifactsUseCase', () => {
           ],
           delete: [],
         },
+        skippedSkillsCount: 0,
+        lockFileSlice: {},
       });
 
       mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
@@ -3212,13 +3069,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -3312,13 +3163,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -3412,13 +3257,7 @@ describe('PublishArtifactsUseCase', () => {
         rules: [],
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
@@ -3506,13 +3345,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -3592,13 +3425,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -3787,13 +3614,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -3857,8 +3678,9 @@ describe('PublishArtifactsUseCase', () => {
     describe('when per-target agents override org-level agents', () => {
       beforeEach(() => {
         mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind-json-sha',
           content: JSON.stringify({ agents: [CodingAgents.claude] }),
-        } as GitCommit);
+        });
       });
 
       it('generates cleanup only for removed agents', async () => {
@@ -3882,7 +3704,7 @@ describe('PublishArtifactsUseCase', () => {
             delete: [
               {
                 path: '.cursor/rules/packmind/recipes-index.mdc',
-                type: 'file',
+                type: DeleteItemType.File,
               },
             ],
           },
@@ -3915,13 +3737,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -4094,13 +3910,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 2,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,
@@ -4301,13 +4111,7 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
+      gitRepo = gitRepoFactory();
 
       target = targetFactory({
         id: targetId,

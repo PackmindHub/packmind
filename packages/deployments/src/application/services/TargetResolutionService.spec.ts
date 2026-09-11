@@ -1,5 +1,7 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  GitProviderListItem,
+  GitProviderVendors,
   IGitPort,
   Target,
   CommandVersion,
@@ -19,6 +21,11 @@ import {
   createPackageId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { gitRepoFactory } from '@packmind/git/test';
+import { commandVersionFactory } from '@packmind/commands/test';
+import { standardVersionFactory } from '@packmind/standards/test';
+import { skillVersionFactory } from '@packmind/skills/test';
+import { targetFactory } from '../../../test';
 import { TargetResolutionService } from './TargetResolutionService';
 import { TargetService } from './TargetService';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -33,16 +40,26 @@ describe('TargetResolutionService', () => {
   const userId = uuidv4();
   const gitRemoteUrl = 'https://github.com/test-owner/test-repo.git';
   const gitBranch = 'main';
-  const providerId = uuidv4();
+  const providerId = createGitProviderId(uuidv4());
   const gitRepoId = createGitRepoId(uuidv4());
+  const githubProvider: GitProviderListItem = {
+    id: providerId,
+    source: GitProviderVendors.github,
+    organizationId,
+    url: 'https://github.com',
+    authMethod: 'token',
+    displayName: 'github-provider',
+    hasAuth: true,
+    lastDistributionAt: null,
+  };
   const targetId = createTargetId(uuidv4());
 
-  const target: Target = {
+  const target: Target = targetFactory({
     id: targetId,
     name: 'production',
     path: '/',
     gitRepoId,
-  };
+  });
 
   beforeEach(() => {
     gitPort = {
@@ -79,15 +96,15 @@ describe('TargetResolutionService', () => {
     describe('when matching repo and target exist', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          },
+          }),
         ]);
         targetService.getTargetsByGitRepoId.mockResolvedValue([target]);
       });
@@ -108,15 +125,15 @@ describe('TargetResolutionService', () => {
     describe('when no matching repo exists', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'other-owner',
             repo: 'other-repo',
             branch: 'main',
-          },
+          }),
         ]);
       });
 
@@ -136,15 +153,15 @@ describe('TargetResolutionService', () => {
     describe('when repo exists but no matching target', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          },
+          }),
         ]);
         targetService.getTargetsByGitRepoId.mockResolvedValue([
           { ...target, path: '/other-path/' },
@@ -167,15 +184,15 @@ describe('TargetResolutionService', () => {
     describe('when relativePath needs normalization', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          },
+          }),
         ]);
       });
 
@@ -263,15 +280,15 @@ describe('TargetResolutionService', () => {
     describe('when target already exists', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          },
+          }),
         ]);
         targetService.getTargetsByGitRepoId.mockResolvedValue([target]);
       });
@@ -326,13 +343,9 @@ describe('TargetResolutionService', () => {
         // findTargetFromGitInfo finds no matching repo -> returns null,
         // so findOrCreateTargetFromGitInfo delegates to findOrCreateGitRepo.
         gitPort.listProviders.mockResolvedValue({ providers: [] });
-        gitPort.findOrCreateGitRepo.mockResolvedValue({
-          id: newRepoId as unknown as string,
-          owner: 'test-owner',
-          repo: 'test-repo',
-          branch: 'main',
-          providerId: createGitProviderId(uuidv4()),
-        });
+        gitPort.findOrCreateGitRepo.mockResolvedValue(
+          gitRepoFactory({ id: newRepoId }),
+        );
         targetService.getTargetsByGitRepoId.mockResolvedValue([]);
         targetService.addTarget.mockResolvedValue(newTarget);
       });
@@ -419,7 +432,7 @@ describe('TargetResolutionService', () => {
   describe('findPreviouslyDeployedVersions', () => {
     const packageIds = [createPackageId(uuidv4())];
 
-    const standardVersion: StandardVersion = {
+    const standardVersion: StandardVersion = standardVersionFactory({
       id: createStandardVersionId(uuidv4()),
       standardId: createStandardId(uuidv4()),
       name: 'Test Standard',
@@ -427,18 +440,18 @@ describe('TargetResolutionService', () => {
       version: 1,
       rules: [],
       userId: createUserId(uuidv4()),
-    };
+    });
 
-    const recipeVersion: CommandVersion = {
+    const recipeVersion: CommandVersion = commandVersionFactory({
       id: createCommandVersionId(uuidv4()),
       recipeId: createCommandId(uuidv4()),
       name: 'Test Recipe',
       slug: 'test-recipe',
       version: 1,
       userId: createUserId(uuidv4()),
-    };
+    });
 
-    const skillVersion: SkillVersion = {
+    const skillVersion: SkillVersion = skillVersionFactory({
       id: createSkillVersionId(uuidv4()),
       skillId: createSkillId(uuidv4()),
       name: 'Test Skill',
@@ -447,20 +460,20 @@ describe('TargetResolutionService', () => {
       prompt: 'Test prompt',
       version: 1,
       userId: createUserId(uuidv4()),
-    };
+    });
 
     describe('when target exists', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({
-          providers: [{ id: providerId, name: 'github', type: 'github' }],
+          providers: [githubProvider],
         });
         gitPort.listRepos.mockResolvedValue([
-          {
+          gitRepoFactory({
             id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          },
+          }),
         ]);
         targetService.getTargetsByGitRepoId.mockResolvedValue([target]);
         distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
