@@ -268,14 +268,44 @@ export function ContextPackagePane({
   );
 
   /*
-   * The two compose, the type narrowing what the query left. The counts the
-   * chips carry come from `groups`, which is the whole package, so turning a
-   * filter on never renumbers the control that turned it on.
+   * What the query left, every type of it. This is what the chips are labelled
+   * with: under `audit` they read "Standards 2, Skills 6", which says where the
+   * eight results are rather than restating the size of the package.
+   *
+   * The type is deliberately not applied here. Feeding the chips a count that
+   * the chips themselves narrow would make each of them renumber the moment it
+   * was clicked, and a control that changes what it says when you use it cannot
+   * be used to compare.
+   */
+  const matched = useMemo(
+    () => filterPackageGroups(groups, { query, type: null }),
+    [groups, query],
+  );
+
+  /*
+   * The two compose, the type narrowing what the query left.
    */
   const shown = useMemo(
-    () => filterPackageGroups(groups, { query, type: typeFilter }),
-    [groups, query, typeFilter],
+    () =>
+      typeFilter
+        ? {
+            ...matched,
+            groups: matched.groups.filter((group) => group.type === typeFilter),
+          }
+        : matched,
+    [matched, typeFilter],
   );
+
+  /** How many of each type the query reached, zero included. */
+  const matchedByType = useMemo(
+    () =>
+      new Map(
+        matched.groups.map((group) => [group.type, group.components.length]),
+      ),
+    [matched],
+  );
+
+  const isSearching = query.trim().length > 0;
 
   /*
    * The picked components, resolved against what is on screen rather than
@@ -972,20 +1002,54 @@ export function ContextPackagePane({
                 <PMHStack gap={1} wrap="wrap">
                   <ContextChip
                     label="All"
-                    count={total}
+                    count={matched.shownCount}
                     isActive={typeFilter === null}
                     onClick={() => setTypeFilter(null)}
                   />
+                  {/*
+                    One chip per type the package has, not per type the query
+                    reached: a type that drops to zero says so in place, where
+                    disappearing would leave the reader to work out whether it
+                    has none or never existed.
+                  */}
                   {groups.map((group) => (
                     <ContextChip
                       key={group.type}
                       label={group.label}
-                      count={group.components.length}
+                      count={matchedByType.get(group.type) ?? 0}
                       icon={COMPONENT_TYPE_ICONS[group.type]}
                       isActive={typeFilter === group.type}
                       onClick={() => setTypeFilter(group.type)}
                     />
                   ))}
+                </PMHStack>
+              )}
+              {/*
+                What the query did to the package, in the one place that can say
+                it: the chips count the result and the bands count their own
+                type, so without this line nothing states how much of the whole
+                is left.
+
+                Only while something is typed. The type chips need no such line,
+                since the active chip is itself the sentence.
+              */}
+              {isSearching && (
+                <PMHStack gap={2} fontSize="xs" color="secondary">
+                  <PMText fontSize="xs" color="secondary">
+                    {matched.shownCount} of {matched.totalCount} component
+                    {matched.totalCount === 1 ? '' : 's'} match "{query.trim()}
+                    ".
+                  </PMText>
+                  <PMBox
+                    as="button"
+                    fontSize="xs"
+                    color="text.secondary"
+                    textDecoration="underline"
+                    cursor="pointer"
+                    onClick={() => setQuery('')}
+                  >
+                    Clear
+                  </PMBox>
                 </PMHStack>
               )}
             </PMVStack>

@@ -1,4 +1,10 @@
-import { Fragment, useMemo, type ReactNode } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -13,6 +19,7 @@ import {
 } from '@packmind/ui';
 import {
   LuBookCheck,
+  LuChevronDown,
   LuChevronRight,
   LuEllipsisVertical,
   LuFolderInput,
@@ -164,6 +171,32 @@ export function ContextComponentList({
    */
   const showReviews = pendingReviews.size > 0;
 
+  /*
+   * Which bands are folded, by section key.
+   *
+   * Held here rather than by the panes: it is a way of reading this list and
+   * nothing outside it can act on a folded band, so handing it up would give
+   * both callers a piece of state neither has a use for. Not in the address
+   * either, for the reason the filter above is not: it is a gesture, not a
+   * place.
+   *
+   * Folding survives a query on purpose. Someone who folded Commands to read
+   * the skills has said what they are not interested in, and reopening it
+   * under every search would undo that decision on their behalf; the header
+   * keeps saying how many the band holds while it is shut.
+   */
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  const toggleSection = useCallback((key: string) => {
+    setCollapsed((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }, []);
+
   return (
     <PMBox
       borderWidth="1px"
@@ -173,25 +206,32 @@ export function ContextComponentList({
     >
       {sections.map((section, sectionIndex) => (
         <Fragment key={section.key}>
-          <SectionHeader section={section} isFirst={sectionIndex === 0} />
-          {section.entries.map((entry) => (
-            <ComponentRow
-              key={componentSelectionKey(entry.component)}
-              entry={entry}
-              showPackages={showPackages}
-              showReviews={showReviews}
-              pendingReviews={
-                pendingReviews.get(componentSelectionKey(entry.component)) ?? 0
-              }
-              onMove={onMove}
-              onRemove={onRemove}
-              isSelected={
-                selectedKeys?.has(componentSelectionKey(entry.component)) ??
-                false
-              }
-              onToggleSelect={onToggleSelect}
-            />
-          ))}
+          <SectionHeader
+            section={section}
+            isFirst={sectionIndex === 0}
+            isCollapsed={collapsed.has(section.key)}
+            onToggle={() => toggleSection(section.key)}
+          />
+          {!collapsed.has(section.key) &&
+            section.entries.map((entry) => (
+              <ComponentRow
+                key={componentSelectionKey(entry.component)}
+                entry={entry}
+                showPackages={showPackages}
+                showReviews={showReviews}
+                pendingReviews={
+                  pendingReviews.get(componentSelectionKey(entry.component)) ??
+                  0
+                }
+                onMove={onMove}
+                onRemove={onRemove}
+                isSelected={
+                  selectedKeys?.has(componentSelectionKey(entry.component)) ??
+                  false
+                }
+                onToggleSelect={onToggleSelect}
+              />
+            ))}
         </Fragment>
       ))}
     </PMBox>
@@ -206,17 +246,43 @@ export function ContextComponentList({
 function SectionHeader({
   section,
   isFirst,
-}: Readonly<{ section: ComponentListSection; isFirst: boolean }>) {
+  isCollapsed,
+  onToggle,
+}: Readonly<{
+  section: ComponentListSection;
+  isFirst: boolean;
+  isCollapsed: boolean;
+  onToggle: () => void;
+}>) {
   return (
-    <PMHStack
+    /*
+     * The whole header is the control, not a chevron beside a label. A band of
+     * ninety rows is folded by someone who wants it out of the way, and asking
+     * them to hit a 12px glyph to say so is a target that misses more often
+     * than it lands.
+     */
+    <PMBox
+      as="button"
+      display="flex"
+      width="full"
       gap={2}
-      align="center"
+      alignItems="center"
       paddingX={3}
       paddingY="5px"
       bg="background.secondary"
       borderTopWidth={isFirst ? '0' : '1px'}
       borderColor="border.tertiary"
+      cursor="pointer"
+      textAlign="left"
+      _hover={{ bg: 'background.tertiary' }}
+      transition="background-color 150ms ease-out"
+      onClick={onToggle}
+      aria-expanded={!isCollapsed}
+      aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
     >
+      <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+        {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}
+      </PMIcon>
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
           {section.icon}
@@ -234,7 +300,17 @@ function SectionHeader({
       <PMText fontSize="10px" color="faded" fontVariantNumeric="tabular-nums">
         {section.count}
       </PMText>
-    </PMHStack>
+      {/*
+        What is behind a shut band, said in the band's own quiet register. The
+        count to its left is the answer to "how many", and this is the answer to
+        "why can I not see them".
+      */}
+      {isCollapsed && (
+        <PMText fontSize="10px" color="faded" marginLeft="auto">
+          collapsed
+        </PMText>
+      )}
+    </PMBox>
   );
 }
 

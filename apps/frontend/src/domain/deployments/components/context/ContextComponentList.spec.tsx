@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import type { Mock } from 'vitest';
@@ -201,6 +202,43 @@ describe('ContextComponentList', () => {
 
       expect(screen.getByText('Standard std-1')).toBeVisible();
       expect(screen.getByText('Release checklist')).toBeVisible();
+    });
+
+    describe('when a band is folded', () => {
+      it('takes its rows off the list', async () => {
+        await renderBands();
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Collapse Standards' }),
+        );
+
+        expect(screen.queryByText('Standard std-1')).toBeNull();
+        expect(screen.getByText('Release checklist')).toBeVisible();
+      });
+
+      it('keeps saying how many it holds, and that it is shut', async () => {
+        await renderBands();
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Collapse Standards' }),
+        );
+
+        expect(screen.getByText('2 of 40')).toBeVisible();
+        expect(screen.getByText('collapsed')).toBeVisible();
+      });
+
+      it('gives them back when it is opened again', async () => {
+        await renderBands();
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Collapse Standards' }),
+        );
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Expand Standards' }),
+        );
+
+        expect(screen.getByText('Standard std-1')).toBeVisible();
+      });
     });
   });
 
