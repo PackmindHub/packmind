@@ -49,10 +49,24 @@ export type SelectionAction = {
  */
 export function SelectionBar({
   count,
+  total,
+  onSelectAll,
   actions,
   onClear,
 }: Readonly<{
   count: number;
+  /**
+   * How many the list is showing, when the bar is allowed to offer all of them.
+   * Comes with `onSelectAll` and means nothing without it.
+   */
+  total?: number;
+  /**
+   * Picking everything on screen. Offered beside the count rather than as an
+   * action on the right: it changes what is picked, where those act on what is
+   * picked already, and a reader scanning the right-hand group for "what can I
+   * do with these" must not find "pick more" among them.
+   */
+  onSelectAll?: () => void;
   /**
    * What can be done with the picked components, in the order it is offered.
    * A list rather than one action because a package's own list has two, and the
@@ -76,9 +90,22 @@ export function SelectionBar({
       borderRadius="sm"
       bg="background.secondary"
     >
-      <PMText fontSize="sm" fontWeight="medium">
-        {count} selected
-      </PMText>
+      <PMHStack gap={3} align="baseline">
+        <PMText fontSize="sm" fontWeight="medium">
+          {count} selected
+        </PMText>
+        {/*
+          Absent once everything shown is picked, rather than sitting there
+          disabled: a control whose only message is that it has nothing left to
+          do is a sentence written as a button, and the count beside it already
+          says so.
+        */}
+        {onSelectAll !== undefined && total !== undefined && count < total && (
+          <PMButton variant="tertiary" size="xs" onClick={onSelectAll}>
+            Select all {total}
+          </PMButton>
+        )}
+      </PMHStack>
       <PMHStack gap={2}>
         {actions.map((action) => (
           <PMButton

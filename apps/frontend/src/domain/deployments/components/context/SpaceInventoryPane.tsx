@@ -185,6 +185,22 @@ export function SpaceInventoryPane({
     });
   }, []);
 
+  /* One update for a whole run, for the reason the package pane's copy is. */
+  const selectMany = useCallback(
+    (components: readonly ContextComponent[], select: boolean) => {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        for (const component of components) {
+          const key = componentSelectionKey(component);
+          if (select) next.add(key);
+          else next.delete(key);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
 
   return (
@@ -295,6 +311,18 @@ export function SpaceInventoryPane({
             {selection.length > 0 && (
               <SelectionBar
                 count={selection.length}
+                total={shownGroups.reduce(
+                  (count, group) => count + group.entries.length,
+                  0,
+                )}
+                onSelectAll={() =>
+                  selectMany(
+                    shownGroups.flatMap((group) =>
+                      group.entries.map((entry) => entry.component),
+                    ),
+                    true,
+                  )
+                }
                 actions={[
                   {
                     label: 'Add to a package',
@@ -330,6 +358,7 @@ export function SpaceInventoryPane({
               showPackages={!showingOrphans && packages.length > 0}
               selectedKeys={selectedKeys}
               onToggleSelect={toggleSelect}
+              onSelectMany={selectMany}
             />
           </PMVStack>
         )}

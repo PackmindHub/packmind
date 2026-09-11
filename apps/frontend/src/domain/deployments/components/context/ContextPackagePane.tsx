@@ -357,6 +357,28 @@ export function ContextPackagePane({
     });
   }, []);
 
+  /*
+   * Picking or dropping a run of components at once, which the band headers and
+   * the bar's `Select all` both ask for. One update for the whole run: a loop
+   * over `toggleSelect` would run ninety of them for one click, and a toggle
+   * cannot express "make these all picked" anyway, since a run that is already
+   * half picked would come back inverted rather than whole.
+   */
+  const selectMany = useCallback(
+    (components: readonly ContextComponent[], select: boolean) => {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        for (const component of components) {
+          const key = componentSelectionKey(component);
+          if (select) next.add(key);
+          else next.delete(key);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
 
   /*
@@ -1056,6 +1078,19 @@ export function ContextPackagePane({
             {selection.length > 0 && (
               <SelectionBar
                 count={selection.length}
+                /*
+                  What is on screen, not what the package holds. Everything this
+                  surface does with a selection acts on the rows the filter left,
+                  so an offer to pick beyond it would be an offer to act on rows
+                  the reader cannot see.
+                */
+                total={shown.shownCount}
+                onSelectAll={() =>
+                  selectMany(
+                    shown.groups.flatMap((group) => group.components),
+                    true,
+                  )
+                }
                 actions={[
                   {
                     label: 'Move to another package',
@@ -1125,6 +1160,7 @@ export function ContextPackagePane({
                 onRemove={(component) => setRemoving([component])}
                 selectedKeys={selectedKeys}
                 onToggleSelect={toggleSelect}
+                onSelectMany={selectMany}
               />
             )}
           </PMVStack>

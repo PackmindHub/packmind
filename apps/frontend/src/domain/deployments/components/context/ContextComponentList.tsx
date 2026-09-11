@@ -114,6 +114,7 @@ export function ContextComponentList({
   onRemove,
   selectedKeys,
   onToggleSelect,
+  onSelectMany,
 }: Readonly<{
   sections: readonly ComponentListSection[];
   showPackages?: boolean;
@@ -131,6 +132,17 @@ export function ContextComponentList({
   onRemove?: (component: ContextComponent) => void;
   /** Which rows are picked, by `componentSelectionKey`. */
   selectedKeys?: ReadonlySet<string>;
+  /**
+   * Picking or dropping a whole band at once, which the header offers.
+   *
+   * Separate from `onToggleSelect` rather than a loop over it: ticking ninety
+   * rows one call at a time would run ninety state updates for one gesture, and
+   * the caller is the only one that can say what "all of them" resolves to.
+   */
+  onSelectMany?: (
+    components: readonly ContextComponent[],
+    select: boolean,
+  ) => void;
   /**
    * Picking a row, which is what turns the per-row move into a bulk one. Comes
    * with `selectedKeys` and under the same condition as `onMove`: the selection
@@ -211,6 +223,21 @@ export function ContextComponentList({
             isFirst={sectionIndex === 0}
             isCollapsed={collapsed.has(section.key)}
             onToggle={() => toggleSection(section.key)}
+            selection={
+              onSelectMany && onToggleSelect
+                ? {
+                    selected: section.entries.filter((entry) =>
+                      selectedKeys?.has(componentSelectionKey(entry.component)),
+                    ).length,
+                    total: section.entries.length,
+                    onSelectAll: (select) =>
+                      onSelectMany(
+                        section.entries.map((entry) => entry.component),
+                        select,
+                      ),
+                  }
+                : undefined
+            }
           />
           {!collapsed.has(section.key) &&
             section.entries.map((entry) => (
@@ -243,46 +270,87 @@ export function ContextComponentList({
  * reads as runs of components separated by labels rather than as one table with
  * odd lines in it.
  */
+/**
+ * What a band's header can do with the band: fold it, and pick all of it.
+ */
+type SectionSelection = {
+  /** How many of this band's rows are already picked. */
+  selected: number;
+  total: number;
+  onSelectAll: (select: boolean) => void;
+};
+
 function SectionHeader({
   section,
   isFirst,
   isCollapsed,
   onToggle,
+  selection,
 }: Readonly<{
   section: ComponentListSection;
   isFirst: boolean;
   isCollapsed: boolean;
   onToggle: () => void;
+  selection?: SectionSelection;
 }>) {
+  const allSelected =
+    selection !== undefined &&
+    selection.total > 0 &&
+    selection.selected === selection.total;
+
   return (
     /*
-     * The whole header is the control, not a chevron beside a label. A band of
-     * ninety rows is folded by someone who wants it out of the way, and asking
-     * them to hit a 12px glyph to say so is a target that misses more often
-     * than it lands.
+     * The strip is a row of controls rather than one control. It was the fold
+     * button in full while it had nothing else on it; a strip carrying a
+     * checkbox cannot also be one, because a click landing anywhere on it would
+     * have to choose between folding the band and picking it, and the reader has
+     * no way to know which they will get.
      */
-    <PMBox
-      as="button"
-      display="flex"
-      width="full"
+    <PMHStack
       gap={2}
-      alignItems="center"
-      paddingX={3}
-      paddingY="5px"
+      align="center"
+      paddingLeft={2}
+      paddingRight={3}
+      paddingY="3px"
       bg="background.secondary"
       borderTopWidth={isFirst ? '0' : '1px'}
       borderColor="border.tertiary"
-      cursor="pointer"
-      textAlign="left"
-      _hover={{ bg: 'background.tertiary' }}
-      transition="background-color 150ms ease-out"
-      onClick={onToggle}
-      aria-expanded={!isCollapsed}
-      aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
     >
-      <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+      <PMIconButton
+        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${section.label}`}
+        aria-expanded={!isCollapsed}
+        variant="ghost"
+        size="2xs"
+        color="text.faded"
+        onClick={onToggle}
+      >
         {isCollapsed ? <LuChevronRight /> : <LuChevronDown />}
-      </PMIcon>
+      </PMIconButton>
+      {selection && selection.total > 0 && (
+        /*
+          Its own column, in line with the checkboxes of the rows it commands,
+          so the band reads as the head of that column rather than as a row
+          with a stray control on it.
+
+          Half-ticked while part of the band is picked: the reader who ticked
+          three of forty needs to be told that clicking here takes the other
+          thirty-seven, not that nothing is picked.
+        */
+        <PMCheckbox
+          size="sm"
+          checked={
+            allSelected
+              ? true
+              : selection.selected > 0
+                ? 'indeterminate'
+                : false
+          }
+          onCheckedChange={() => selection.onSelectAll(!allSelected)}
+          inputProps={{
+            'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
+          }}
+        />
+      )}
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
           {section.icon}
@@ -310,7 +378,7 @@ function SectionHeader({
           collapsed
         </PMText>
       )}
-    </PMBox>
+    </PMHStack>
   );
 }
 

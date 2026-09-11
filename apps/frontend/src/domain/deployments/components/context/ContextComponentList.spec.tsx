@@ -204,6 +204,84 @@ describe('ContextComponentList', () => {
       expect(screen.getByText('Release checklist')).toBeVisible();
     });
 
+    describe('when the band can be picked whole', () => {
+      async function renderPickable(
+        selectedKeys: ReadonlySet<string>,
+        onSelectMany = vi.fn(),
+      ) {
+        (useGetGroupedChangeProposalsQuery as Mock).mockReturnValue({
+          data: undefined,
+        });
+
+        await act(async () => {
+          render(
+            <UIProvider>
+              <MemoryRouter>
+                <ContextComponentList
+                  sections={[
+                    {
+                      key: 'standard',
+                      label: 'Standards',
+                      count: 2,
+                      entries: [
+                        { component: component('std-1') },
+                        { component: component('std-2') },
+                      ],
+                    },
+                  ]}
+                  selectedKeys={selectedKeys}
+                  onToggleSelect={vi.fn()}
+                  onSelectMany={onSelectMany}
+                />
+              </MemoryRouter>
+            </UIProvider>,
+          );
+        });
+
+        return onSelectMany;
+      }
+
+      it('takes the whole band in one call', async () => {
+        const onSelectMany = await renderPickable(new Set());
+
+        await userEvent.click(
+          screen.getByRole('checkbox', { name: 'Select all standards' }),
+        );
+
+        expect(onSelectMany).toHaveBeenCalledTimes(1);
+        expect(onSelectMany.mock.calls[0][0]).toHaveLength(2);
+        expect(onSelectMany.mock.calls[0][1]).toBe(true);
+      });
+
+      describe('when the band is already picked whole', () => {
+        it('offers to drop it rather than to pick it again', async () => {
+          const onSelectMany = await renderPickable(
+            new Set(['standard:std-1', 'standard:std-2']),
+          );
+
+          await userEvent.click(
+            screen.getByRole('checkbox', { name: 'Clear all standards' }),
+          );
+
+          expect(onSelectMany.mock.calls[0][1]).toBe(false);
+        });
+      });
+
+      describe('when part of the band is picked', () => {
+        it('still offers to take the rest', async () => {
+          const onSelectMany = await renderPickable(
+            new Set(['standard:std-1']),
+          );
+
+          await userEvent.click(
+            screen.getByRole('checkbox', { name: 'Select all standards' }),
+          );
+
+          expect(onSelectMany.mock.calls[0][1]).toBe(true);
+        });
+      });
+    });
+
     describe('when a band is folded', () => {
       it('takes its rows off the list', async () => {
         await renderBands();
