@@ -40,11 +40,10 @@ describe('PackmindService', () => {
     describe('when PACKMIND_DEFAULT_PROVIDER is not set', () => {
       it('returns configured status', async () => {
         mockGetConfig.mockImplementation((key: string) => {
-          if (key === 'PACKMIND_DEFAULT_PROVIDER')
-            return Promise.resolve(undefined);
+          if (key === 'PACKMIND_DEFAULT_PROVIDER') return Promise.resolve(null);
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -66,11 +65,10 @@ describe('PackmindService', () => {
 
       it('uses OpenAI as default provider', async () => {
         mockGetConfig.mockImplementation((key: string) => {
-          if (key === 'PACKMIND_DEFAULT_PROVIDER')
-            return Promise.resolve(undefined);
+          if (key === 'PACKMIND_DEFAULT_PROVIDER') return Promise.resolve(null);
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -101,7 +99,7 @@ describe('PackmindService', () => {
             return Promise.resolve('openai');
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -132,7 +130,7 @@ describe('PackmindService', () => {
             return Promise.resolve('anthropic');
           if (key === 'ANTHROPIC_API_KEY')
             return Promise.resolve('test-anthropic-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockAnthropicService = {
@@ -163,7 +161,7 @@ describe('PackmindService', () => {
             return Promise.resolve('gemini');
           if (key === 'GEMINI_API_KEY')
             return Promise.resolve('test-gemini-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockGeminiService = {
@@ -194,7 +192,7 @@ describe('PackmindService', () => {
             return Promise.resolve('packmind');
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -225,7 +223,7 @@ describe('PackmindService', () => {
             return Promise.resolve('invalid-provider');
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -256,7 +254,7 @@ describe('PackmindService', () => {
             return Promise.reject(new Error('Config error'));
           if (key === 'OPENAI_API_KEY')
             return Promise.resolve('test-openai-key');
-          return Promise.resolve(undefined);
+          return Promise.resolve(null);
         });
 
         const mockOpenAIService = {
@@ -621,7 +619,7 @@ describe('PackmindService', () => {
         if (key === 'PACKMIND_DEFAULT_PROVIDER')
           return Promise.resolve('openai');
         if (key === 'OPENAI_API_KEY') return Promise.resolve('test-openai-key');
-        return Promise.resolve(undefined);
+        return Promise.resolve(null);
       });
 
       const mockOpenAIService = {
@@ -641,7 +639,7 @@ describe('PackmindService', () => {
         if (key === 'PACKMIND_DEFAULT_PROVIDER')
           return Promise.resolve('openai');
         if (key === 'OPENAI_API_KEY') return Promise.resolve('test-openai-key');
-        return Promise.resolve(undefined);
+        return Promise.resolve(null);
       });
 
       const mockOpenAIService = {
