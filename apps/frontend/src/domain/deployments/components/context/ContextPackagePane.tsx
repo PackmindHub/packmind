@@ -749,7 +749,7 @@ export function ContextPackagePane({
               One send control, whatever the state. Catching up where the
               package already is and reaching somewhere new are two questions,
               and the header used to ask both out loud, side by side: a
-              `Distribute` menu and a primary `Update N destinations`. Two
+              `Distribute` menu and a primary `Update N distributions`. Two
               buttons, one verb as far as the reader is concerned, and no room
               up here to explain which one is theirs.
 
