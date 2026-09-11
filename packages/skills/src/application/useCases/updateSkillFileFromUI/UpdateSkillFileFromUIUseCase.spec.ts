@@ -1,4 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
@@ -109,22 +111,18 @@ describe('UpdateSkillFileFromUIUseCase', () => {
       spaceId = createSpaceId(uuidv4());
       skillId = createSkillId(uuidv4());
 
-      user = {
+      user = userFactory({
         id: userId,
         email: 'test@example.com',
         displayName: 'Test User',
         passwordHash: null,
-        active: true,
-        trial: false,
         memberships: [{ organizationId, role: 'member', userId }],
-      };
+      });
       organization = { id: organizationId, name: 'Test Org', slug: 'test-org' };
-      space = {
+      space = spaceFactory({
         id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
         organizationId,
-      };
+      });
 
       skill = skillFactory({
         id: skillId,
@@ -482,26 +480,22 @@ describe('UpdateSkillFileFromUIUseCase', () => {
         otherSpaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        const user: User = {
+        const user: User = userFactory({
           id: userId,
           email: 'test@example.com',
           displayName: 'Test User',
           passwordHash: null,
-          active: true,
-          trial: false,
           memberships: [{ organizationId, role: 'member', userId }],
-        };
+        });
         const organization: Organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        const space: Space = {
+        const space: Space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
         const skill = skillFactory({ id: skillId, spaceId: otherSpaceId });
 
         command = {
@@ -545,26 +539,22 @@ describe('UpdateSkillFileFromUIUseCase', () => {
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
 
-        const user: User = {
+        const user: User = userFactory({
           id: userId,
           email: 'test@example.com',
           displayName: 'Test User',
           passwordHash: null,
-          active: true,
-          trial: false,
           memberships: [{ organizationId, role: 'member', userId }],
-        };
+        });
         const organization: Organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        const space: Space = {
+        const space: Space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
 
         command = {
           userId,
