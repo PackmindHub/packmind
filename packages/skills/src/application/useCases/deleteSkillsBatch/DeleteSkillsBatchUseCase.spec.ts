@@ -1,20 +1,26 @@
 import { PackmindLogger } from '@packmind/logger';
+import { userFactory } from '@packmind/accounts/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
-  DeleteSkillsBatchCommand,
-  IAccountsPort,
-  ISpacesPort,
-  Organization,
-  Space,
-  User,
   createOrganizationId,
   createSkillId,
   createSpaceId,
   createUserId,
+  DeleteSkillsBatchCommand,
+  IAccountsPort,
+  ISpacesPort,
+  Organization,
+  OrganizationId,
+  SkillId,
+  Space,
+  SpaceId,
+  User,
+  UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -38,7 +44,7 @@ describe('DeleteSkillsBatchUseCase', () => {
     spacesPort = {
       getSpaceById: jest.fn(),
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
-    } as jest.Mocked<ISpacesPort>;
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     skillService = {
       getSkillById: jest.fn(),
@@ -66,9 +72,9 @@ describe('DeleteSkillsBatchUseCase', () => {
 
   describe('delete skills batch', () => {
     describe('with valid skills', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -81,24 +87,20 @@ describe('DeleteSkillsBatchUseCase', () => {
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId,
-        };
+        });
 
         skill1 = skillFactory({ spaceId });
         skill2 = skillFactory({ spaceId });
@@ -171,9 +173,9 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('with empty skill list', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -183,13 +185,11 @@ describe('DeleteSkillsBatchUseCase', () => {
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -235,10 +235,10 @@ describe('DeleteSkillsBatchUseCase', () => {
 
   describe('authorization validation', () => {
     describe('when skill not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -249,13 +249,11 @@ describe('DeleteSkillsBatchUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -292,9 +290,9 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when space not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -305,13 +303,11 @@ describe('DeleteSkillsBatchUseCase', () => {
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -351,10 +347,10 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when space does not belong to organization', () => {
-      let userId: string;
-      let organizationId: string;
-      let otherOrganizationId: string;
-      let spaceId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let otherOrganizationId: OrganizationId;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -367,24 +363,20 @@ describe('DeleteSkillsBatchUseCase', () => {
         otherOrganizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        space = {
+        space = spaceFactory({
           id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
           organizationId: otherOrganizationId,
-        };
+        });
 
         skill = skillFactory({ spaceId });
 
@@ -419,10 +411,10 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when user not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let command: DeleteSkillsBatchCommand;
 
       beforeEach(() => {
@@ -469,10 +461,10 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when organization not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let command: DeleteSkillsBatchCommand;
 
@@ -482,13 +474,11 @@ describe('DeleteSkillsBatchUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
 
         command = {
           userId,
@@ -529,11 +519,11 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when user is not member of organization', () => {
-      let userId: string;
-      let organizationId: string;
-      let otherOrganizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let otherOrganizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -545,15 +535,13 @@ describe('DeleteSkillsBatchUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [
             { organizationId: otherOrganizationId, role: 'member', userId },
           ],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',
@@ -599,10 +587,10 @@ describe('DeleteSkillsBatchUseCase', () => {
     });
 
     describe('when user is not a member of the space', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let userId: UserId;
+      let organizationId: OrganizationId;
+      let spaceId: SpaceId;
+      let skillId: SkillId;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -613,13 +601,11 @@ describe('DeleteSkillsBatchUseCase', () => {
         spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
-        user = {
+        user = userFactory({
           id: userId,
           email: 'test@example.com',
-          passwordHash: 'hashed_password',
           memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
+        });
         organization = {
           id: organizationId,
           name: 'Test Org',

@@ -6,7 +6,7 @@ import {
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { stubLogger } from '@packmind/test-utils';
 import { DefaultSpaceNotFoundError } from '../../domain/errors/DefaultSpaceNotFoundError';
 import { SpaceService } from '../services/SpaceService';

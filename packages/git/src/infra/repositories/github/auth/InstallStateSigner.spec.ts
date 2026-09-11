@@ -20,7 +20,11 @@ describe('InstallStateSigner', () => {
 
       beforeEach(() => {
         const signer = signerWithFixedNow();
-        const state = signer.sign({ orgId: 'org-123', userId: 'user-456' });
+        const state = signer.sign({
+          orgId: 'org-123',
+          userId: 'user-456',
+          kind: 'install',
+        });
         payload = signer.verify(state);
       });
 
@@ -39,8 +43,16 @@ describe('InstallStateSigner', () => {
 
       beforeEach(() => {
         const signer = signerWithFixedNow();
-        const state1 = signer.sign({ orgId: 'org-1', userId: 'user-1' });
-        const state2 = signer.sign({ orgId: 'org-1', userId: 'user-1' });
+        const state1 = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
+        const state2 = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
         payload1 = signer.verify(state1);
         payload2 = signer.verify(state2);
       });
@@ -63,7 +75,11 @@ describe('InstallStateSigner', () => {
 
       beforeEach(() => {
         const signer = signerWithFixedNow();
-        const state = signer.sign({ orgId: 'org-1', userId: 'user-1' });
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
         payload = signer.verify(state);
       });
 
@@ -90,12 +106,14 @@ describe('InstallStateSigner', () => {
         userId: 'user-1',
         nonce: fixedNonce,
         exp: fixedExp,
+        kind: 'install',
       });
       const state2 = signer.sign({
         orgId: 'org-1',
         userId: 'user-1',
         nonce: fixedNonce,
         exp: fixedExp,
+        kind: 'install',
       });
 
       expect(state1).toBe(state2);
@@ -112,6 +130,7 @@ describe('InstallStateSigner', () => {
           orgId: 'org-1',
           userId: 'user-1',
           nonce: 'aabbccddeeff00112233445566778899',
+          kind: 'install',
         });
         const [payload, sig] = state.split('.');
         // Tamper a character in the middle of the payload (position 10) so the
@@ -142,6 +161,7 @@ describe('InstallStateSigner', () => {
           orgId: 'org-1',
           userId: 'user-1',
           exp: FIXED_NOW - 1,
+          kind: 'install',
         });
 
         // Verify using same "now" — exp is already past
@@ -356,7 +376,11 @@ describe('InstallStateSigner', () => {
           () => FIXED_NOW,
         );
 
-        const state = signerA.sign({ orgId: 'org-1', userId: 'user-1' });
+        const state = signerA.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
         expect(() => signerB.verify(state)).toThrow(InvalidInstallStateError);
       });
     });

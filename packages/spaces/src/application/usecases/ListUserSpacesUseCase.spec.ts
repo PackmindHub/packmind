@@ -5,7 +5,10 @@ import {
   UserSpaceMembership,
   UserSpaceRole,
 } from '@packmind/types';
-import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import {
+  spaceFactory,
+  userSpaceMembershipFactory,
+} from '@packmind/spaces/test';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { ListUserSpacesUseCase } from './ListUserSpacesUseCase';
 
@@ -39,20 +42,20 @@ describe('ListUserSpacesUseCase', () => {
       const space1 = spaceFactory({ organizationId });
       const space2 = spaceFactory({ organizationId });
       const memberships: UserSpaceMembership[] = [
-        {
+        userSpaceMembershipFactory({
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
           pinned: false,
           space: space1,
-        },
-        {
+        }),
+        userSpaceMembershipFactory({
           userId,
           spaceId: space2.id,
           role: UserSpaceRole.ADMIN,
           pinned: true,
           space: space2,
-        },
+        }),
       ];
 
       beforeEach(() => {
@@ -98,20 +101,20 @@ describe('ListUserSpacesUseCase', () => {
     describe('when memberships have undefined space', () => {
       const space1 = spaceFactory({ organizationId });
       const memberships: UserSpaceMembership[] = [
-        {
+        userSpaceMembershipFactory({
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
           pinned: false,
           space: space1,
-        },
-        {
+        }),
+        userSpaceMembershipFactory({
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
           pinned: false,
           space: undefined,
-        },
+        }),
       ];
 
       beforeEach(() => {
