@@ -26,6 +26,7 @@ import {
   LuMessageSquarePlus,
   LuPencil,
   LuTrash2,
+  LuTriangleAlert,
 } from 'react-icons/lu';
 import type {
   Command,
@@ -53,6 +54,7 @@ import {
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { SkillFileEditor } from '../../../skills/components/SkillFileEditor';
 import { SKILL_MD_FILENAME } from '../../../skills/utils/skillMdUtils';
+import { unmatchableScopeGlobs } from '../../../standards/utils/scopeGlobs';
 import { useCanEditSkillFiles } from '../../../skills/hooks/useCanEditSkillFiles';
 import { DownloadSkillPopover } from '../../../skills/components/DownloadSkillPopover';
 import { CommandFrontmatterInfo } from '../../../commands/components/CommandFrontmatterInfo';
@@ -1451,6 +1453,51 @@ function CopyStandardMarkdown({
   );
 }
 
+/**
+ * Said where the scope is read, when the scope cannot match a file.
+ *
+ * The failure this reports is invisible everywhere else: the standard
+ * distributes, the rule file lands, its `globs` frontmatter holds a sentence,
+ * and the agent applies it to nothing. Several standards generated before the
+ * generator was fixed are in exactly that state, which is what was reported.
+ *
+ * A note and not a block. The reader of this pane may not be the author, the
+ * scope may be deliberate in a way this cannot know, and a warning that
+ * cannot be dismissed is still cheaper than a standard nobody applies.
+ */
+function ScopeWarning({ scope }: Readonly<{ scope: string }>) {
+  const unmatchable = unmatchableScopeGlobs(scope);
+  if (unmatchable.length === 0) return null;
+
+  const quoted = unmatchable.map((glob) => `"${glob}"`).join(', ');
+  const subject =
+    unmatchable.length === 1
+      ? `${quoted} is not a file pattern, so nothing matches it`
+      : `${quoted} are not file patterns, so nothing matches them`;
+
+  return (
+    <PMHStack gap={1.5} align="flex-start" paddingTop={2}>
+      {/*
+        Yellow and an octagon-free triangle, the pair the rule table uses for a
+        warning. `text.warning` is the token for this and renders the same red
+        as `text.error`, which would report a broken standard as a broken
+        distribution.
+      */}
+      <PMIcon fontSize="xs" color="yellow.500" marginTop="0.2em" aria-hidden>
+        <LuTriangleAlert />
+      </PMIcon>
+      <PMText as="div" fontSize="xs" color="faded">
+        {subject}. A scope is a comma-separated list of globs, like{' '}
+        {/* Inherits nothing: a nested PMText falls back to its own size. */}
+        <PMText as="span" fontSize="xs" fontFamily="mono">
+          src/**/*.&#123;ts,tsx&#125;
+        </PMText>
+        .
+      </PMText>
+    </PMHStack>
+  );
+}
+
 function StandardBody({
   standardId,
   ruleHref,
@@ -1507,6 +1554,7 @@ function StandardBody({
           <PMText as="div" fontSize="sm" fontFamily="mono" paddingTop={1}>
             {standard.scope}
           </PMText>
+          <ScopeWarning scope={standard.scope} />
         </PMBox>
       )}
 

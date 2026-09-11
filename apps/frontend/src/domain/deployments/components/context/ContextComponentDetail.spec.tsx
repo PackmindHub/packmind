@@ -824,6 +824,56 @@ describe('the distribution body', () => {
     });
   });
 
+  describe("reading a standard's scope", () => {
+    const withScope = (scope: string) => {
+      (useGetStandardByIdQuery as Mock).mockReturnValue({
+        data: { standard: { slug: 'naming', description: '', scope } },
+      });
+      (useGetRulesByStandardIdQuery as Mock).mockReturnValue({ data: [] });
+    };
+
+    it('says nothing about a scope of globs', async () => {
+      withScope('src/**/*.{ts,tsx}');
+      await renderDetail(
+        componentOfType('standard', STANDARD_ID),
+        INSTRUCTIONS_TAB,
+      );
+
+      expect(screen.getByText('src/**/*.{ts,tsx}')).toBeVisible();
+      expect(screen.queryByText(/not a file pattern/)).not.toBeInTheDocument();
+    });
+
+    describe('when the scope is a sentence rather than a pattern', () => {
+      it('says nothing will match it, naming the part at fault', async () => {
+        withScope('All typescript rules in the spec folder');
+        await renderDetail(
+          componentOfType('standard', STANDARD_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByText(
+            /"All typescript rules in the spec folder" is not a file pattern/,
+          ),
+        ).toBeVisible();
+      });
+
+      it('still shows the scope, which is what the author has to fix', async () => {
+        withScope('All typescript rules in the spec folder');
+        await renderDetail(
+          componentOfType('standard', STANDARD_ID),
+          INSTRUCTIONS_TAB,
+        );
+
+        expect(
+          screen.getByText('All typescript rules in the spec folder', {
+            selector: 'div',
+          }),
+        ).toBeVisible();
+      });
+    });
+  });
+
   describe("setting up a standard's rules", () => {
     /*
       The one thing the pane cannot carry: the code examples that decide which
