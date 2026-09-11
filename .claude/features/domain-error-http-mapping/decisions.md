@@ -583,3 +583,48 @@ If a unit believes a client must adapt, that is out of scope — halt rather tha
 it.
 
 ---
+
+## D-014 — `kind` is a required parameter, not one defaulting to `forbidden`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-11`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-003`, `D-006`, `AC-1`..`AC-5`
+
+**Decision.** The `kind` parameter on `UserAccessError`'s constructor is required and
+has no default value. Every subclass states its kind explicitly at its `super(...)`
+call. The `forbidden` on the base class's row in D-006's table describes what a
+directly-constructed `UserAccessError` is given, not a fallback the language applies.
+
+**Reasoning.** D-003 and D-006 pull in opposite directions on one point, and this
+records which way it was resolved rather than leaving the next reader to guess.
+
+D-003 says *"Add `kind` as a required constructor parameter on the base error class"*.
+D-006's reasoning for giving the base `forbidden` is that *"a subclass that forgets to
+state a kind should degrade to the safe, non-disclosing answer"* — which only has
+meaning if forgetting is possible, i.e. if the parameter carries a default.
+
+A required parameter is the stronger form of the same safety argument. D-006 wants a
+subclass that forgets to fail safe; a required parameter means it cannot compile at all,
+which is safer than failing safe at runtime, and it is the identical argument D-003
+makes against the class-field form — prefer the shape that cannot be written wrong over
+the convention a reviewer has to enforce. A default value would also re-open a quieter
+version of D-003's hazard: a subclass that omits the argument would silently inherit
+`forbidden`, turning what should be a 404 into a 403 with nothing to notice it.
+
+**Rejected.**
+
+- `kind: DomainErrorKind = 'forbidden'` as a defaulted parameter — literally honours
+  D-006's sentence and is what a reader of D-006 alone would write. Rejected because it
+  makes an omission silent, and D-003's entire argument is that a silently wrong `kind`
+  is the failure mode this contract exists to remove. The cost is that D-006's base row
+  becomes descriptive rather than enforced, which is the cheaper loss.
+- Dropping the base row from D-006's table — tidier, but the base class is constructible
+  and something has to say what a direct construction means.
+
+**Constrains implementation.** `UserAccessError`'s constructor signature is
+`(kind: DomainErrorKind, reason: UserAccessErrorReason, context, message)` with no
+default on `kind`. Each of the three subclasses passes its kind from D-006's table as
+the first argument to `super(...)`. Do not give `kind` a default value.
