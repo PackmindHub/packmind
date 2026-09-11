@@ -4,8 +4,13 @@
   "sourceRoot": "packages/spaces/src",
   "projectType": "library",
   "tags": ["env:node"],
+  "// typecheck": "Overrides the nx.json command to also gate tsconfig.spec.json: the shared one covers tsconfig.lib.json only, which excludes specs and test/.",
   "targets": {
-    "typecheck": {},
+    "typecheck": {
+      "options": {
+        "command": "tsc --noEmit --project packages/spaces/tsconfig.lib.json && tsc --noEmit --project packages/spaces/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
