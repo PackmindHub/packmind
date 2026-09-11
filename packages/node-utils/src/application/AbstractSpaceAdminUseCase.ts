@@ -7,14 +7,21 @@ import {
   UserSpaceRole,
 } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
+import { SpaceContext, UserAccessError } from './UserAccessErrors';
 
 const defaultOrigin = 'AbstractSpaceAdminUseCase';
 
 export type SpaceAdminContext = MemberContext;
 
-export class SpaceAdminRequiredError extends Error {
+export class SpaceAdminRequiredError extends UserAccessError {
   constructor(userId: string, spaceId: string) {
-    super(`User ${userId} is not an admin of space ${spaceId}`);
+    const context: SpaceContext = { userId, spaceId };
+    super(
+      'forbidden',
+      'space_admin_required',
+      context,
+      'You must be an admin of this space to perform this action.',
+    );
     this.name = 'SpaceAdminRequiredError';
   }
 }

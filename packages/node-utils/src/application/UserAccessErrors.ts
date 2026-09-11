@@ -3,13 +3,20 @@ import { DomainError, DomainErrorKind, PackmindCommand } from '@packmind/types';
 export type UserAccessErrorReason =
   | 'user_not_found'
   | 'user_not_in_organization'
-  | 'user_not_an_admin';
+  | 'user_not_an_admin'
+  | 'space_membership_required'
+  | 'space_admin_required';
 
 export type UserAccessErrorContext = Pick<PackmindCommand, 'userId'> &
-  Partial<Pick<PackmindCommand, 'organizationId'>>;
+  Partial<Pick<PackmindCommand, 'organizationId'>> & {
+    spaceId?: string;
+  };
 
 export type OrganizationContext = UserAccessErrorContext &
   Required<Pick<UserAccessErrorContext, 'organizationId'>>;
+
+export type SpaceContext = UserAccessErrorContext &
+  Required<Pick<UserAccessErrorContext, 'spaceId'>>;
 
 export class UserAccessError extends Error implements DomainError {
   readonly kind: DomainErrorKind;

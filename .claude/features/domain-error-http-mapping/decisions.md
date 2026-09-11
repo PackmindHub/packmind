@@ -628,3 +628,62 @@ version of D-003's hazard: a subclass that omits the argument would silently inh
 `(kind: DomainErrorKind, reason: UserAccessErrorReason, context, message)` with no
 default on `kind`. Each of the three subclasses passes its kind from D-006's table as
 the first argument to `super(...)`. Do not give `kind` a default value.
+
+---
+
+## D-015 — `spaceId` joins `UserAccessErrorContext` as optional, mirroring `organizationId`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-11`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-007`, `D-008`, `AC-4`, `AC-5`
+
+**Decision.** `UserAccessErrorContext` gains `spaceId?: string`, and a `SpaceContext`
+type is declared exactly as `OrganizationContext` already is — the base context plus
+`Required<Pick<…, 'spaceId'>>`. The two space error classes build a `SpaceContext` from
+their `(userId, spaceId)` arguments and pass it to `super(...)`. The base class's
+`context` field keeps its single type; no subclass redeclares it.
+
+**Reasoning.** D-007 requires the two space errors to extend `UserAccessError` and D-008
+requires their ids to live on `.context`, but `.context` has nowhere to put a space id:
+`UserAccessErrorContext` is built from `Pick<PackmindCommand, …>`, and `PackmindCommand`
+has no `spaceId` field at all. It is added separately on `SpaceMemberCommand` /
+`SpaceAdminCommand`. So `Pick<PackmindCommand, 'spaceId'>` is inexpressible and a context
+type has to be written by hand either way — the only question is where the field lands.
+
+Widening the shared context type is the option that avoids re-opening D-003's hazard. The
+alternative — a narrower `context` on the subclasses — requires redeclaring
+`readonly context: SpaceContext` as a class field in a subclass, and that is precisely
+the construct D-003 measured as compiling to `undefined` under the swc transform most of
+this monorepo's suites use. Choosing it would silently erase the whole context, not just
+the space id.
+
+Optional rather than required because the three organization errors have no space id, and
+`organizationId` already establishes the idiom: optional on the base, narrowed to
+required by a derived type for the classes that guarantee it.
+
+`spaceId` is typed plain `string` even though `SpaceId` is branded, because
+`Branded<T> = string & { __brand: T }` is a structural subtype of `string`. The existing
+call sites already pass a branded `command.spaceId` into a plain `string` parameter and
+compile; keeping `string` holds D-007's requirement that the constructors keep their
+`(userId: string, spaceId: string)` signatures.
+
+**Rejected.**
+
+- `readonly context: SpaceContext` redeclared on each space subclass — the precise
+  shape D-003 exists to forbid. Under `swcTransform` the declaration re-defines the
+  property as `undefined` after `super()` has set it, so `.context` would be empty in
+  most packages while the author's own suite passed.
+- A separate `SpaceAccessError` base carrying its own context — a second hierarchy for
+  one optional field, and it would need its own `kind` plumbing, which is the
+  one-mechanism-not-two argument D-007 already settled.
+- Typing `spaceId` as `SpaceId` — would force the constructors to take a branded id,
+  changing the `(userId: string, spaceId: string)` signatures D-007 explicitly preserves,
+  and rippling into the throw sites and specs.
+
+**Constrains implementation.** Add `spaceId?: string` to `UserAccessErrorContext`.
+Declare `SpaceContext = UserAccessErrorContext & Required<Pick<UserAccessErrorContext,
+'spaceId'>>` alongside `OrganizationContext`. Do not redeclare `context` as a class
+field in any subclass. Do not change the base class's `context` field type.
