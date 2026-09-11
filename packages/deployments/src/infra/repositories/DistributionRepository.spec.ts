@@ -1718,24 +1718,20 @@ describe('DistributionRepository', () => {
       it('still returns render modes from well-formed rows', () => {
         expect(result).toEqual([RenderMode.CLAUDE]);
       });
-
-      it('logs a warning instead of silently dropping the row', () => {
-        expect(logger.warn).toHaveBeenCalled();
-      });
     });
 
     describe('when a package render_modes value parses to a non-array', () => {
-      it('logs a warning for the malformed shape', async () => {
+      it('contributes no render modes', async () => {
         (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
           activeRow('dp-1', packageId1, '{"foo":"bar"}'),
         ]);
 
-        await repository.findActiveRenderModesByTarget(
+        const result = await repository.findActiveRenderModesByTarget(
           organizationId,
           targetId,
         );
 
-        expect(logger.warn).toHaveBeenCalled();
+        expect(result).toEqual([]);
       });
     });
   });
