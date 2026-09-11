@@ -598,7 +598,9 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('command', COMMAND_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
     });
 
     it('says how long ago, off a standard', async () => {
@@ -607,7 +609,9 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('standard', STANDARD_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
     });
 
     /* Off the skill and not off the version the Distribution tab reads. */
@@ -621,7 +625,28 @@ describe('the distribution body', () => {
       });
       await renderDetail(componentOfType('skill', SKILL_ID));
 
-      expect(screen.getByText('updated 3 days ago')).toBeVisible();
+      expect(
+        screen.getByTestId('component-updated').parentElement,
+      ).toHaveTextContent('updated 3 days ago');
+    });
+  });
+
+  describe('when a reader needs the date itself', () => {
+    it('puts it on the hover, leaving the distance on the line', async () => {
+      (useGetCommandByIdQuery as Mock).mockReturnValue({
+        data: {
+          slug: 'run-migrations',
+          content: '',
+          updatedAt: '2026-06-10T12:00:00.000Z',
+        },
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      await userEvent.hover(screen.getByTestId('component-updated'));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Jun 10, 2026',
+      );
     });
   });
 

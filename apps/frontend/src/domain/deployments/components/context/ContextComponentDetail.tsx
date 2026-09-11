@@ -106,7 +106,7 @@ import {
 import { CommandDistributionsList } from '../CommandDistributionsList/CommandDistributionsList';
 import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistributionsList';
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
-import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
+import { RelativeDate } from '../RelativeDate';
 import { routes } from '../../../../shared/utils/routes';
 import { CopyMarkdownButton } from '../../../artifacts/components/CopyMarkdownButton';
 import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
@@ -735,7 +735,7 @@ function MaintenanceMeta({
         <>
           <MetaSeparator />
           <PMText fontSize="sm" color="faded">
-            {`updated ${formatRelativeDate(updatedAt)}`}
+            updated <RelativeDate iso={updatedAt} testId="component-updated" />
           </PMText>
         </>
       )}
@@ -1280,7 +1280,7 @@ function HistoryRow({
       <PMVStack gap={0} align="end" flexShrink={0}>
         {entry.createdAt && (
           <PMText fontSize="xs" color="faded" whiteSpace="nowrap">
-            {formatRelativeDate(entry.createdAt)}
+            <RelativeDate iso={entry.createdAt} />
           </PMText>
         )}
         {author && (
