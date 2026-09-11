@@ -47,6 +47,7 @@ describe('CreateStandardSamplesUseCase', () => {
     const user: User = {
       id: testUserId,
       email: 'test@example.com',
+      displayName: null,
       passwordHash: 'hashed_password',
       memberships: [
         {
@@ -305,6 +306,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [{ type: 'language', id: 'nonexistent' }],
         };
 
@@ -347,6 +349,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [{ type: 'framework', id: 'broken' }],
         };
 
@@ -408,6 +411,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [{ type: 'language', id: 'java' }],
         };
 
@@ -471,6 +475,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [
             { type: 'language', id: 'java' },
             { type: 'framework', id: 'nonexistent' },
@@ -501,6 +506,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [],
         };
 
@@ -554,6 +560,7 @@ describe('CreateStandardSamplesUseCase', () => {
         command = {
           userId: testUserId.toString(),
           organizationId: testOrganizationId,
+          spaceId: testSpaceId,
           samples: [{ type: 'language', id: 'java' }],
         };
 

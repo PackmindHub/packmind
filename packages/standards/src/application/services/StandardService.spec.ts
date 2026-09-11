@@ -41,8 +41,10 @@ describe('StandardService', () => {
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findBySpaceId: jest.fn(),
       findByUserId: jest.fn(),
+      countBySpaceIds: jest.fn(),
       markAsMoved: jest.fn(),
     };
 
@@ -52,9 +54,10 @@ describe('StandardService', () => {
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
-      list: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
+      findLatestByStandardIds: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
     };
 
@@ -64,8 +67,10 @@ describe('StandardService', () => {
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByStandardVersionId: jest.fn(),
       findByStandardVersionIds: jest.fn(),
+      findByIdInSpace: jest.fn(),
     };
 
     ruleExampleRepository = {
@@ -74,8 +79,10 @@ describe('StandardService', () => {
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
       findByRuleId: jest.fn(),
       findByRuleIds: jest.fn(),
+      findByIdInSpace: jest.fn(),
       updateById: jest.fn(),
     };
 
