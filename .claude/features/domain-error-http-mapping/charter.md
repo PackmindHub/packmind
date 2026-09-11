@@ -109,10 +109,10 @@ correctly and still never be selected by Nest, and no unit test would notice.
 | AC-4 | A request scoped to a space the caller is not a member of is answered `404`, and is byte-identical to the answer for a space that does not exist | yes | |
 | AC-5 | A request on a space-admin-only route from a space member who is not a space admin is answered `403` | yes | |
 | AC-6 | The response body for AC-1..AC-5 carries a stable snake_case `reason` a client can branch on without parsing prose | yes | |
-| AC-7 | None of the five reworded access-error messages that reach a client contains a UUID or any other identifier | yes | |
+| AC-7 | None of the five reworded access-error messages that reach a client contains a UUID or any other identifier | yes | `nx test node-utils --testNamePattern='access error messages'` |
 | AC-8 | An error class that has not declared a kind is still answered `500` with today's body and today's ERROR-level log | no | |
 | AC-9 | An `HttpException` thrown by a controller reaches the client with its own status and its own body, untouched by the filter | no | |
-| AC-10 | A domain error passing through `withSpan` does not set the span status to ERROR; a non-domain error still does, and both are still recorded as exceptions | no | |
+| AC-10 | A domain error passing through `withSpan` does not set the span status to ERROR; a non-domain error still does, and both are still recorded as exceptions | no | `nx test node-utils --testNamePattern='withSpan'` |
 | AC-11 | An access denial is logged at `warn` without a stack trace, as `ExpectedAuthError`'s docstring has always asked | no | |
 
 ## Known unknowns

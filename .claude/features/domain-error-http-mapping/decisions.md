@@ -748,3 +748,66 @@ constructor signatures. Do not edit any file under `packages/accounts`. Do not
 introduce a new error class. `OrganizationAdminRequiredError`,
 `SpaceMembershipRequiredError` and `SpaceAdminRequiredError` keep their current
 second-person messages, because they are only ever thrown about the caller.
+
+---
+
+## D-017 — Prove selection by booting, prove installation by reading `AppModule`'s metadata
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-11`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-011`, `D-012`, `AC-1`..`AC-5`, `AC-8`, `AC-9`
+
+**Decision.** The integration spec boots a **minimal** Nest application — a throwaway
+module with a test controller that throws each error, and the filter registered exactly
+as `AppModule` registers it, `{ provide: APP_FILTER, useClass: DomainExceptionFilter }` —
+on port 0, driven with `fetch`. Separately, and in the same spec, it asserts that
+`AppModule`'s own provider metadata contains that `APP_FILTER` entry, by reading the
+module's Nest metadata without instantiating it.
+
+**Reasoning.** D-012 requires proving the filter is *installed*, not merely correct, and
+explicitly rejects asserting metadata *instead of* booting. Both halves are kept here;
+neither replaces the other.
+
+The obvious reading of D-012 — boot the real `AppModule` — turns out to have no
+precedent and a real cost. `apps/api`'s one full-boot spec
+(`shared/middleware/editionHeader.integration.spec.ts`) deliberately uses an ad-hoc
+module with a single controller. Booting `AppModule` instead pulls its entire dependency
+graph: TypeORM, JWT, and every domain hexa. That needs a database and a Redis to come up,
+which makes it an integration test of the whole application rather than of this filter,
+and makes it fail for reasons that have nothing to do with the thing under test.
+
+Splitting the claim is what keeps both halves cheap and honest. Booting a minimal module
+proves everything about the filter that can go wrong in Nest: that `@Catch()` wrote the
+metadata, that Nest selects it for a thrown domain error, that the mapping produces the
+right status and body, that an `HttpException` passes through, and that an unannotated
+error still yields today's 500. Reading `AppModule`'s provider metadata proves the one
+remaining thing a minimal module cannot — that the real application graph actually lists
+the provider. Together they cover D-012's concern more completely than a full boot would,
+because a full boot that failed on a missing database would prove nothing at all.
+
+**Rejected.**
+
+- Booting the real `AppModule` — the literal reading of D-012, and the strongest
+  possible evidence if it ran. Rejected because it requires the full infrastructure to
+  stand up inside a unit-test run, has no precedent in this repo to copy, and would
+  couple this feature's verification to the health of every unrelated module.
+- Booting the minimal module only, and trusting the registration — this is exactly the
+  failure D-012 was written about: every AC would report green while the deployed app
+  returned 500 for every endpoint, because nothing checked that `AppModule` lists the
+  provider.
+- Asserting `AppModule`'s metadata only, without booting — D-012 already rejected this:
+  it proves the provider is declared, not that Nest selects the filter for a real
+  request.
+
+**Constrains implementation.** Write the spec in `apps/api`. Boot a throwaway testing
+module containing a test controller and the `APP_FILTER` provider, call `listen(0)`,
+read the port from `getHttpServer().address()`, drive it with global `fetch`, and close
+the app in `afterAll` — the shape `editionHeader.integration.spec.ts` already uses. Add
+no new package to `package.json`. Assert status, `message` and `reason` for each mapped
+kind. Then assert separately that `AppModule` declares the `APP_FILTER` provider for
+`DomainExceptionFilter`. If importing `AppModule` into the spec proves infeasible —
+because module-load side effects require infrastructure — that is a `blocked`, not a
+reason to drop the assertion silently.
