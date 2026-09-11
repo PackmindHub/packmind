@@ -13,3 +13,4 @@ export * from './skipWhenRoot';
 export * from './repository';
 export * from './createMockInstance';
 export * from './mockPort';
+export * from './invalidInput';
