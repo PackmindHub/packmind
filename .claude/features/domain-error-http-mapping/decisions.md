@@ -879,3 +879,65 @@ import and use of `swcTransform` with `swcTransformWithDecoratorsOnly` from
 `jest-utils.ts`. Change nothing else in that file — not `moduleNameMapper`, not the
 preset, not `testEnvironment`. Do not use `swcTransformWithDecorators`. Do not edit
 `jest-utils.ts` itself.
+
+---
+
+## D-019 — A subpath needs an entry in every resolver, and this monorepo has four
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-13`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-004`, `D-018`, `D-011`
+
+**Decision.** `apps/api/webpack.paths.base.js` gains
+`'@packmind/node-utils/filters'` mapped to `packages/node-utils/src/nest/filters`,
+placed **before** the existing `'@packmind/node-utils'` key.
+
+**Reasoning.** D-004 named one resolver and there are four. Each is independent, each has
+its own configuration file, and a subpath that is absent from any one of them fails only
+in that context — which is why this surfaced one unit at a time rather than all at once.
+
+| resolver | configured in | who needs it |
+|---|---|---|
+| TypeScript paths | `tsconfig.base.json` | `typecheck` in every project |
+| Jest module mapping | `tsconfig.base.effective.json`, generated | every project's suite |
+| swc build | `packages/node-utils/.swcrc` | `nx build node-utils` |
+| webpack aliases | `apps/api/webpack.paths.base.js` | `nx build api` |
+
+D-004 covered the first and third. D-018 was the second gap — node-utils' own Jest, where
+`@swc/jest` ignores `.swcrc` when given explicit options. This is the fourth: webpack
+keeps an alias map entirely independent of `tsconfig`, and `'@packmind/node-utils'` maps
+to a *directory*, so `@packmind/node-utils/filters` resolved to
+`packages/node-utils/src/filters`, which does not exist. Every suite and every typecheck
+passed; only `nx build api` failed.
+
+Ordering matters because webpack matches a plain string alias as a prefix, so the more
+specific key has to come first or the directory alias swallows it. The blocked unit
+verified this exact edit makes `nx build api` succeed and then reverted it, so the fix is
+measured rather than assumed.
+
+The base paths file is shared by the OSS and proprietary webpack configs, so one entry
+covers both editions; no change is needed in `webpack.paths.oss.js` or
+`webpack.paths.proprietary.js`.
+
+**Rejected.**
+
+- An `exports` map in `packages/node-utils/package.json` — the standard Node mechanism
+  for exactly this, and the right answer in a package that was consumed as a built
+  artifact. Useless here: every resolver in the table above is configured to bypass it
+  and alias straight to source, so the alias shadows the `exports` map entirely. It would
+  also mean editing `package.json`, a gate guardrail.
+- Importing the filter by relative path from `app.module.ts` — resolves everywhere with
+  no configuration at all, and defeats the point: the subpath exists so that `apps/api`
+  is the only project that can reach the file, and a relative path into another package's
+  `src` is exactly the coupling the path entry makes explicit.
+- Leaving the build broken and relying on the suites — the feature would be green in
+  every test and unshippable.
+
+**Constrains implementation.** Add `'@packmind/node-utils/filters': join(__dirname,
+'../../packages/node-utils/src/nest/filters')` to the object returned by
+`getBaseWebpackPaths` in `apps/api/webpack.paths.base.js`, positioned before the
+`'@packmind/node-utils'` entry. Change nothing else in that file, and do not touch
+`webpack.paths.oss.js` or `webpack.paths.proprietary.js`.

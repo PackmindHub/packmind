@@ -6,6 +6,10 @@ module.exports = function getBaseWebpackPaths(__dirname) {
   return {
     '@packmind/accounts': join(__dirname, '../../packages/accounts/src'),
     '@packmind/commands': join(__dirname, '../../packages/commands/src'),
+    '@packmind/node-utils/filters': join(
+      __dirname,
+      '../../packages/node-utils/src/nest/filters',
+    ),
     '@packmind/node-utils': join(__dirname, '../../packages/node-utils/src'),
     '@packmind/feature-flags': join(
       __dirname,
