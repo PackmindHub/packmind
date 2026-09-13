@@ -811,3 +811,71 @@ kind. Then assert separately that `AppModule` declares the `APP_FILTER` provider
 `DomainExceptionFilter`. If importing `AppModule` into the spec proves infeasible —
 because module-load side effects require infrastructure — that is a `blocked`, not a
 reason to drop the assertion silently.
+
+---
+
+## D-018 — node-utils' own Jest gets decorator parsing and nothing else
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-13`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-003`, `D-004`, `AC-1`..`AC-5`
+
+**Decision.** `packages/node-utils/jest.config.ts` switches from `swcTransform` to
+`swcTransformWithDecoratorsOnly`. Not to `swcTransformWithDecorators`, and the filter's
+unit spec stays colocated with the filter.
+
+**Reasoning.** D-004 reasoned about two transforms and missed a third. It covered what
+*consuming* packages' Jest does with node-utils source, and what `nx build node-utils`
+does via `.swcrc`. It did not cover node-utils' **own** Jest, which uses `swcTransform`
+with explicit options — and `@swc/jest` ignores `.swcrc` entirely when given explicit
+options. So the package that owns the filter is the one package that cannot parse it,
+and `@Catch()` fails with `Expression expected` in node-utils' own suite while the build
+and every consumer are fine.
+
+The choice of *which* decorator transform is the whole decision, and the two available
+ones are not interchangeable:
+
+| transform | decorators | `useDefineForClassFields` |
+|---|---|---|
+| `swcTransform` (today) | off | unset — defaults to true |
+| `swcTransformWithDecoratorsOnly` | on | unset — defaults to true |
+| `swcTransformWithDecorators` | on | **false** |
+
+`swcTransformWithDecorators` would flip class-field semantics for all 31 suites in the
+package — the exact axis D-003 measured, where the same source yields `kind === undefined`
+under one setting and the right value under the other. Changing it to make one file parse
+would silently alter how every class in node-utils compiles under test, including the
+five access-error classes whose `kind` this feature depends on. That the suite happens to
+pass today is not reassurance; D-003's whole point is that this failure is invisible in
+the package that introduces it.
+
+`swcTransformWithDecoratorsOnly` adds decorator parsing and changes nothing else, so the
+class-field semantics of every existing node-utils suite stay bit-for-bit what they are
+now. It is the smallest change that unblocks the file.
+
+**Rejected.**
+
+- `swcTransformWithDecorators` — what the blocked unit had verified green across all 31
+  suites and 501 tests. Rejected because green is not the property at issue: it sets
+  `useDefineForClassFields: false` across the package, which is precisely the setting
+  D-003 identified as producing silently different runtime values for class fields. Using
+  it here would undermine D-003 in the very package D-003 was written to protect.
+- Moving the filter's unit spec to `apps/api`, which already parses decorators, and
+  changing no transform at all — genuinely tempting, and the minimal-config option. It
+  also mirrors D-004's own instinct that removing the reason beats guarding the symptom.
+  Rejected because it puts a unit spec in a different project from its subject, and it
+  makes every future decorator-bearing file in `src/nest/` untestable from its own
+  package — a standing tax to avoid a one-word config change.
+- Leaving node-utils' Jest alone and testing the filter only through the booted-app
+  integration spec — D-012 explicitly wants unit specs for the mapping alongside the
+  booted test, because the integration spec proves installation and would be a poor place
+  to enumerate every kind.
+
+**Constrains implementation.** In `packages/node-utils/jest.config.ts`, replace the
+import and use of `swcTransform` with `swcTransformWithDecoratorsOnly` from
+`jest-utils.ts`. Change nothing else in that file — not `moduleNameMapper`, not the
+preset, not `testEnvironment`. Do not use `swcTransformWithDecorators`. Do not edit
+`jest-utils.ts` itself.
