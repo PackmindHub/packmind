@@ -2,7 +2,9 @@ import {
   ArgumentsHost,
   BadRequestException,
   HttpException,
+  HttpServer,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { stubLogger } from '@packmind/test-utils';
 import { DomainError, DomainErrorKind } from '@packmind/types';
@@ -32,21 +34,54 @@ describe('DomainExceptionFilter', () => {
   let logger: ReturnType<typeof stubLogger>;
   let json: jest.Mock;
   let status: jest.Mock;
+  let reply: jest.Mock;
+  let end: jest.Mock;
+  let isHeadersSent: jest.Mock;
+  let nestErrorLog: jest.SpyInstance;
   let host: ArgumentsHost;
 
   const capturedStatus = (): number => status.mock.calls[0][0];
   const capturedBody = (): Record<string, unknown> => json.mock.calls[0][0];
 
+  // Everything the filter does not handle itself goes through Nest's own
+  // `BaseExceptionFilter`, which writes through the application ref rather than
+  // through `switchToHttp()`.
+  const repliedStatus = (): number => reply.mock.calls[0][2];
+  const repliedBody = (): Record<string, unknown> => reply.mock.calls[0][1];
+
+  const warnPayload = (): Record<string, unknown> =>
+    logger.warn.mock.calls[0][1] as Record<string, unknown>;
+
   beforeEach(() => {
     json = jest.fn();
     status = jest.fn().mockReturnValue({ json });
+    reply = jest.fn();
+    end = jest.fn();
+    isHeadersSent = jest.fn().mockReturnValue(false);
+
+    const response = { status };
+
     host = {
-      switchToHttp: () => ({ getResponse: () => ({ status }) }),
+      switchToHttp: () => ({ getResponse: () => response }),
+      getArgByIndex: (index: number) => (index === 1 ? response : undefined),
     } as unknown as ArgumentsHost;
+
+    // Nest's `ExceptionsHandler` logger, which `super.catch` writes to. Spied
+    // rather than asserted through the injected logger, because delegation
+    // means the injected one is no longer what reports unhandled exceptions.
+    nestErrorLog = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
     logger = stubLogger();
 
-    filter = new DomainExceptionFilter(logger);
+    filter = new DomainExceptionFilter(logger, {
+      isHeadersSent,
+      reply,
+      end,
+    } as unknown as HttpServer);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('when the exception is a forbidden domain error', () => {
@@ -88,8 +123,16 @@ describe('DomainExceptionFilter', () => {
       );
     });
 
+    it('keeps the stack out of the warn payload', () => {
+      expect(Object.keys(warnPayload())).not.toContain('stack');
+    });
+
     it('does not log at error', () => {
       expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it("does not reach Nest's unhandled-exception log", () => {
+      expect(nestErrorLog).not.toHaveBeenCalled();
     });
   });
 
@@ -150,6 +193,10 @@ describe('DomainExceptionFilter', () => {
         expect.objectContaining({ context }),
       );
     });
+
+    it('still keeps the stack out of the warn payload', () => {
+      expect(Object.keys(warnPayload())).not.toContain('stack');
+    });
   });
 
   describe('when the exception is an HttpException', () => {
@@ -158,11 +205,11 @@ describe('DomainExceptionFilter', () => {
     });
 
     it('keeps its own status', () => {
-      expect(capturedStatus()).toBe(HttpStatus.BAD_REQUEST);
+      expect(repliedStatus()).toBe(HttpStatus.BAD_REQUEST);
     });
 
     it('keeps its own body', () => {
-      expect(capturedBody()).toEqual({
+      expect(repliedBody()).toEqual({
         statusCode: 400,
         message: 'Nope',
         error: 'Bad Request',
@@ -176,36 +223,80 @@ describe('DomainExceptionFilter', () => {
     });
 
     it('keeps its own status', () => {
-      expect(capturedStatus()).toBe(HttpStatus.I_AM_A_TEAPOT);
+      expect(repliedStatus()).toBe(HttpStatus.I_AM_A_TEAPOT);
     });
 
     it('wraps the payload the way Nest does', () => {
-      expect(capturedBody()).toEqual({ statusCode: 418, message: 'Teapot' });
+      expect(repliedBody()).toEqual({ statusCode: 418, message: 'Teapot' });
     });
   });
 
   describe('when the exception is a plain Error', () => {
+    let thrown: Error;
+
     beforeEach(() => {
-      filter.catch(new Error('boom'), host);
+      thrown = new Error('boom');
+      filter.catch(thrown, host);
     });
 
     it('responds with 500', () => {
-      expect(capturedStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(repliedStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
     });
 
     it("keeps Nest's own internal server error body", () => {
-      expect(capturedBody()).toEqual({
+      expect(repliedBody()).toEqual({
         statusCode: 500,
         message: 'Internal server error',
       });
     });
 
-    it('logs at error', () => {
-      expect(logger.error).toHaveBeenCalled();
+    it('logs at error, with the stack, through Nest', () => {
+      expect(nestErrorLog).toHaveBeenCalledWith(thrown);
+    });
+
+    it('does not log through the injected logger', () => {
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('does not log at warn', () => {
       expect(logger.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the exception comes from the http-errors library', () => {
+    beforeEach(() => {
+      filter.catch(
+        Object.assign(new Error('request entity too large'), {
+          statusCode: 413,
+        }),
+        host,
+      );
+    });
+
+    it('keeps the http-errors status', () => {
+      expect(repliedStatus()).toBe(413);
+    });
+
+    it('keeps the http-errors message', () => {
+      expect(repliedBody()).toEqual({
+        statusCode: 413,
+        message: 'request entity too large',
+      });
+    });
+  });
+
+  describe('when the response headers are already sent', () => {
+    beforeEach(() => {
+      isHeadersSent.mockReturnValue(true);
+      filter.catch(new Error('boom'), host);
+    });
+
+    it('ends the response instead of writing to it', () => {
+      expect(end).toHaveBeenCalled();
+    });
+
+    it('writes no body', () => {
+      expect(reply).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,20 +1,15 @@
 import {
   ArgumentsHost,
   Catch,
-  ExceptionFilter,
-  HttpException,
+  HttpServer,
   HttpStatus,
+  Optional,
 } from '@nestjs/common';
+import { BaseExceptionFilter } from '@nestjs/core';
 import { PackmindLogger } from '@packmind/logger';
 import { DomainErrorKind, isDomainError } from '@packmind/types';
 
 const origin = 'DomainExceptionFilter';
-
-/**
- * Nest's own body for an exception it does not recognise. Reproduced here so an
- * unannotated error keeps producing exactly what it produces today.
- */
-const UNKNOWN_EXCEPTION_MESSAGE = 'Internal server error';
 
 /**
  * Total by construction: a `Record` keyed by the union means a new
@@ -41,8 +36,11 @@ function hasContext(value: unknown): value is { context: unknown } {
 }
 
 /**
- * Answers a domain error with the HTTP status its `kind` implies, and leaves
- * everything else exactly as Nest handles it today.
+ * Answers a domain error with the HTTP status its `kind` implies, and hands
+ * every other exception to Nest's own `BaseExceptionFilter` rather than
+ * reproducing it — so `http-errors` statuses (a 413 from body-parser's size
+ * limit, say), the already-sent-headers guard a streamed response needs, and
+ * the `ExceptionsHandler` log all stay Nest's, whatever Nest makes of them next.
  *
  * Deliberately not re-exported from `src/nest/index.ts` nor from the package
  * barrel: consumers compile node-utils from source with transforms that do not
@@ -50,25 +48,21 @@ function hasContext(value: unknown): value is { context: unknown } {
  * `@packmind/node-utils/filters` subpath.
  */
 @Catch()
-export class DomainExceptionFilter implements ExceptionFilter {
+export class DomainExceptionFilter extends BaseExceptionFilter {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    /**
+     * `BaseExceptionFilter` takes the application ref here and falls back to the
+     * `httpAdapterHost` it has injected as a property when it is absent, which
+     * is what happens under Nest DI. Optional so DI leaves it undefined, and
+     * settable so a unit spec can construct the filter directly.
+     */
+    @Optional() applicationRef?: HttpServer,
+  ) {
+    super(applicationRef);
+  }
 
-  catch(exception: unknown, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<HttpResponse>();
-
-    if (exception instanceof HttpException) {
-      const nestBody = exception.getResponse();
-      const body =
-        typeof nestBody === 'object' && nestBody !== null
-          ? nestBody
-          : { statusCode: exception.getStatus(), message: nestBody };
-
-      response.status(exception.getStatus()).json(body);
-      return;
-    }
-
+  override catch(exception: unknown, host: ArgumentsHost): void {
     if (isDomainError(exception)) {
       const statusCode = KIND_TO_STATUS[exception.kind];
       const body: ErrorResponseBody = {
@@ -85,18 +79,14 @@ export class DomainExceptionFilter implements ExceptionFilter {
         ...(hasContext(exception) ? { context: exception.context } : {}),
       });
 
-      response.status(statusCode).json(body);
+      host
+        .switchToHttp()
+        .getResponse<HttpResponse>()
+        .status(statusCode)
+        .json(body);
       return;
     }
 
-    this.logger.error('Unhandled exception', {
-      stack: exception instanceof Error ? exception.stack : undefined,
-      message: exception instanceof Error ? exception.message : undefined,
-    });
-
-    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: UNKNOWN_EXCEPTION_MESSAGE,
-    });
+    super.catch(exception, host);
   }
 }

@@ -941,3 +941,79 @@ covers both editions; no change is needed in `webpack.paths.oss.js` or
 `getBaseWebpackPaths` in `apps/api/webpack.paths.base.js`, positioned before the
 `'@packmind/node-utils'` entry. Change nothing else in that file, and do not touch
 `webpack.paths.oss.js` or `webpack.paths.proprietary.js`.
+
+---
+
+## D-020 — Delegate the non-domain path to `BaseExceptionFilter` instead of reproducing it
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-13`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-009`, `D-011`, `AC-8`, `AC-9`, `AC-11`
+
+**Decision.** `DomainExceptionFilter` extends `BaseExceptionFilter` from `@nestjs/core`.
+It handles exactly one case itself — a value satisfying `isDomainError` — and hands
+everything else to `super.catch(exception, host)`. It no longer writes a 500 body of its
+own, and no longer logs non-domain errors itself.
+
+**Reasoning.** D-009 said *"leave the handling of unrecognised exceptions exactly as it
+is today"* and AC-8 said *"today's body"*, and the filter reproduced that handling rather
+than delegating to it. The reproduction was incomplete, and the gap is live in this
+application.
+
+Nest's `handleUnknownError` has two branches, not one:
+
+```js
+const body = this.isHttpError(exception)
+  ? { statusCode: exception.statusCode, message: exception.message }
+  : { statusCode: 500, message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE };
+```
+
+The first exists for the `http-errors` library, which is what body-parser and raw-body
+throw. `apps/api/src/main.ts` sets `bodyParser.json({ limit: '15mb' })` for bulk imports
+and skill uploads, so an oversized upload today answers `413 request entity too large`.
+A global `@Catch()` filter that reproduces only the second branch turns that into a
+`500 Internal Server Error` with an ERROR-level page for on-call — which is precisely the
+failure this feature exists to remove, reintroduced at a different door. `415
+charset.unsupported` and `request.aborted` are the same shape.
+
+Nest also guards its write with `isHeadersSent` and ends the response instead when
+headers are already committed. `apps/api/src/app/sse/sse.controller.ts` streams through
+`@Res()`, so an error after headers are sent is reachable, and an unguarded write throws
+`ERR_HTTP_HEADERS_SENT` inside the filter.
+
+Delegation removes the whole class of divergence rather than patching the two instances
+of it that were found. It is also what makes AC-8 and AC-9 true by construction instead
+of by a test that has to be kept in sync with a dependency's internals — and reproducing
+a framework's default is a standing obligation to track its changes, which nobody will.
+
+It resolves an observability surprise too. The filter takes `PackmindLogger` by DI, and
+`AppModule` provides it with origin `AppController`, so every unhandled 500 had begun
+logging under that origin instead of Nest's `ExceptionsHandler`. Delegating the log to
+`super.catch` restores the original origin with no extra provider.
+
+**Rejected.**
+
+- Adding the missing `isHttpError` branch and `isHeadersSent` guard inline — three lines,
+  and it fixes both findings. Rejected because it leaves the filter a copy of a
+  dependency's private behaviour: `IntrinsicException` suppression is a third divergence
+  already present, and the next Nest upgrade can add a fourth silently. The bug was not
+  those two branches; it was choosing to reproduce at all.
+- Catching only the domain kinds with `@Catch(SomeBase)` instead of a catch-all, so
+  non-domain exceptions never reach the filter — genuinely tempting and it would sidestep
+  all of this. Rejected because the contract is structural: any class may declare a
+  `kind` without sharing a base class, which is the whole of the opt-in mechanism. A
+  narrowed `@Catch` would silently stop honouring kinds on classes outside that base.
+
+**Constrains implementation.** `DomainExceptionFilter extends BaseExceptionFilter`, keeps
+the bare `@Catch()`, and its `catch` handles only `isDomainError(exception)` before
+returning; every other exception goes to `super.catch(exception, host)`. Do not write a
+500 body, do not log non-domain exceptions, and do not keep an `HttpException` branch —
+`super.catch` already handles it exactly as Nest does. The filter must work both under
+Nest DI in the booted application and when constructed directly in a unit spec; if
+`BaseExceptionFilter` cannot be made to work in the unit spec, say so rather than
+abandoning delegation. Additionally, the unit spec must assert that the `warn` payload
+for a domain error has **no** `stack` key, and that the non-domain path still produces
+today's ERROR-level log — `expect.objectContaining` does not test absence.

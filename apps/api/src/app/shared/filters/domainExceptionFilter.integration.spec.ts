@@ -71,6 +71,21 @@ class ThrowingController {
   httpException(): never {
     throw new BadRequestException('nope');
   }
+
+  /**
+   * The shape the `http-errors` library throws — what body-parser raises for an
+   * upload over `main.ts`'s 15mb limit, and what raw-body raises for
+   * `charset.unsupported` or `request.aborted`. Not an `HttpException`, so it
+   * only keeps its status if the filter leaves unrecognised exceptions to Nest.
+   */
+  @Get('http-errors-shaped')
+  httpErrorsShaped(): never {
+    throw Object.assign(new Error('request entity too large'), {
+      statusCode: 413,
+      status: 413,
+      expose: true,
+    });
+  }
 }
 
 type Captured = {
@@ -254,6 +269,25 @@ describe('the domain exception filter over HTTP', () => {
         statusCode: 400,
         message: 'nope',
         error: 'Bad Request',
+      });
+    });
+  });
+
+  describe('when an http-errors-shaped error is thrown', () => {
+    let captured: Captured;
+
+    beforeAll(async () => {
+      captured = await call('http-errors-shaped');
+    });
+
+    it('answers the status the error carries', () => {
+      expect(captured.status).toBe(413);
+    });
+
+    it('answers the body Nest builds for it', () => {
+      expect(captured.body).toEqual({
+        statusCode: 413,
+        message: 'request entity too large',
       });
     });
   });
