@@ -44,6 +44,9 @@
       "@packmind/logger": ["packages/logger/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
+      "@packmind/node-utils/filters": [
+        "packages/node-utils/src/nest/filters/index.ts"
+      ],
       "@packmind/commands": ["packages/commands/src/index.ts"],
       "@packmind/commands/test": ["packages/commands/test/index.ts"],
       "@packmind/commands/test/*": ["packages/commands/test/*"],
