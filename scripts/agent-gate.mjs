@@ -335,7 +335,11 @@ const q = (s) => `'${s.replace(/'/g, `'\\''`)}'`;
 function stepScoped(cfg, spec, args, changed, env) {
   const files = changed.filter((f) => fs.existsSync(path.join(ROOT, f)));
   if (!files.length) return;
-  const cmd = cfg.commands.scoped + files.join(',');
+  // Quoted for the same reason stepAutofix quotes: these paths are whatever the
+  // executor created, the run below is `shell: true`, and scope validation is
+  // glob-only — `packages/x/$(...).ts` satisfies `packages/x/**/*.ts`. One
+  // argument, so the joined list is quoted whole rather than file by file.
+  const cmd = cfg.commands.scoped + q(files.join(','));
   const r = run(cmd, env);
   record('scoped', r.code === 0, r.seconds);
   if (r.code !== 0) {
