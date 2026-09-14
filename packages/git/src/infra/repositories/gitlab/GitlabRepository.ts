@@ -9,6 +9,7 @@ import {
   withTransientRetry,
 } from '../http/withTransientRetry';
 import { gitBlobSha } from '@packmind/node-utils';
+import { providerHttpsAgent } from '../http/providerHttpAgent';
 
 const origin = 'GitlabRepository';
 
@@ -92,6 +93,7 @@ export class GitlabRepository implements IGitRepo {
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab docs
       },
       // Note: GitLab API docs show PRIVATE-TOKEN header authentication
+      httpsAgent: providerHttpsAgent,
     });
 
     this.logger.debug('GitlabRepository initialized successfully', {

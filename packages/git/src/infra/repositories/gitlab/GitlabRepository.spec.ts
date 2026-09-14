@@ -3,6 +3,10 @@ import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { gitBlobSha } from '@packmind/node-utils';
+import {
+  PROVIDER_MAX_SOCKETS,
+  providerHttpsAgent,
+} from '../http/providerHttpAgent';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
 
@@ -49,6 +53,25 @@ describe('GitlabRepository', () => {
           'Content-Type': 'application/json',
           'PRIVATE-TOKEN': 'test-token',
         },
+        httpsAgent: providerHttpsAgent,
+      });
+    });
+
+    describe('the agent it is given', () => {
+      // Asserting `keepAlive` alone would pass with no code change at all -
+      // Node has defaulted it to true since v19. The finite socket ceiling is
+      // the part that actually changes behaviour, because reuse only happens
+      // when a request finds a free socket instead of opening its own.
+      it('caps how many sockets may be open at once', () => {
+        expect(providerHttpsAgent.maxSockets).toBe(PROVIDER_MAX_SOCKETS);
+      });
+
+      it('caps them at a finite number', () => {
+        expect(Number.isFinite(providerHttpsAgent.maxSockets)).toBe(true);
+      });
+
+      it('keeps sockets alive so the cap can be reused against', () => {
+        expect(providerHttpsAgent.options.keepAlive).toBe(true);
       });
     });
 
@@ -69,6 +92,7 @@ describe('GitlabRepository', () => {
             'Content-Type': 'application/json',
             'PRIVATE-TOKEN': 'test-token',
           },
+          httpsAgent: providerHttpsAgent,
         });
       });
     });
@@ -90,6 +114,7 @@ describe('GitlabRepository', () => {
             'Content-Type': 'application/json',
             'PRIVATE-TOKEN': 'test-token',
           },
+          httpsAgent: providerHttpsAgent,
         });
       });
     });
