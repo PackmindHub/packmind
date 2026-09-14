@@ -83,7 +83,7 @@ exported through `packages/types/src/deployments/index.ts`. Put the schema in
 - user-visible: `no`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-026 (partial — the aggregate's relation fields, not the write surface)
 - relates to: `AC-16`, `AC-21`
 
 **Decision.** A release pins `CommandVersionId[]`, `StandardVersionId[]` and
@@ -690,7 +690,7 @@ rows are written in one transaction or not at all.
 - user-visible: `yes`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-029 (partial — the payload carries `verdict` and no `reason`)
 - relates to: `AC-4`, `AC-11`
 
 **Decision.** The readiness read returns
@@ -1186,7 +1186,7 @@ None deferred.
 - status: `active`
 - user-visible: `no`
 - decided: `2026-09-14`
-- supersedes: —
+- supersedes: D-002 (partial)
 - superseded-by: —
 - relates to: `AC-16`, `AC-18`, `D-002`, `D-003`
 
@@ -1347,9 +1347,9 @@ a comment naming pg-mem's no-op rollback so the next reader does not add one.
 ## D-029 — Readiness carries one tri-state verdict; there is no separate `reason` field
 
 - status: `active`
-- user-visible: `no`
+- user-visible: `yes`
 - decided: `2026-09-14`
-- supersedes: —
+- supersedes: D-015 (partial)
 - superseded-by: —
 - relates to: `AC-2`, `AC-3`, `AC-9`, `D-007`, `D-011`, `D-015`
 
@@ -1399,3 +1399,214 @@ changes them.
 nothing else. The readiness payload has no `reason` key. The frontend enables the action
 on `verdict === 'ready'` and maps any other value to its sentence through the single
 messages file of D-011.
+
+---
+
+## D-030 — A release read defeats soft-delete with `withDeleted()` on its own relations, and AC-18 is tested by deleting a command or a standard
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-18`, `AC-21`, `D-004`, `D-026`
+
+**Decision.** The mechanism D-004 named no longer applies as written, and this is the
+replacement. `PackageReleaseRepository` hydrates its three version relations itself and
+never calls `SkillRepository`, `CommandRepository` or `StandardRepository`, so there is
+no `includeDeleted: true` option to pass. The release read defeats the soft-delete
+filter with `withDeleted()` on its own query, which is the same intent expressed in the
+idiom the read actually uses.
+
+The AC-18 test **deletes a command or a standard, not a skill.**
+
+**Reasoning.** D-004 was written before D-026 settled that the aggregate hydrates its own
+relations. Its *intent* — a release stays browsable after a component is deleted, because
+deletion is soft and version rows survive — is untouched and still correct. Only its
+named mechanism was made obsolete, and an obsolete mechanism in a constraint is worse
+than none: an implementer would go looking for a repository option that this read does
+not have, and the likeliest exits are to drop the requirement or to route the read
+through three repositories it has no reason to touch.
+
+The choice of which component to delete is not arbitrary and is the part most likely to
+be got wrong by picking the issue's own example. Every scenario in the issue uses a
+skill. AC-21 exists precisely because a skill-shaped test can pass while two families are
+broken, and here the asymmetry is concrete rather than hypothetical: the soft-delete
+columns that would hide a pinned version live on the command and standard version
+schemas. A test that deletes a skill may never exercise a filter at all, and would then
+prove nothing while appearing to cover the criterion.
+
+**Rejected.**
+
+- Routing the release's component reads back through `ICommandsPort`, `IStandardsPort`
+  and `ISkillsPort` so that D-004's `includeDeleted: true` applies literally — three
+  extra fan-out reads per release browsed, to honour the letter of a constraint whose
+  substance `withDeleted()` already delivers, and it re-introduces the per-read
+  fetch-then-`In(...)` that D-003 rejected JSONB for.
+- Dropping the soft-delete concern because version rows might not be soft-deleted at all
+  — that is an assumption about three schemas this feature does not own, and if it is
+  ever false AC-18 breaks silently, which is the failure the criterion was written to
+  prevent.
+- Testing AC-18 by deleting a skill, following the issue's examples — the criterion
+  would pass without ever exercising a soft-delete filter.
+
+**Constrains implementation.** Use `withDeleted()` on the relation hydration in
+`PackageReleaseRepository`'s read methods. The AC-18 test deletes a **command or a
+standard** that a release pins, then reads that release back and asserts the component is
+still present at its pinned version; it then cuts a later release and asserts the
+component is absent from that one. Do not change any deletion use case in
+`packages/skills`, `packages/commands` or `packages/standards`.
+
+---
+
+## D-031 — The refusal codes are their own union, `PackageReleaseRefusal`, beside the verdict
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-12`, `AC-13`, `AC-14`, `AC-15`, `AC-20`, `D-011`, `D-029`
+
+**Decision.** D-029 split D-011's five-code union in two. The gate half landed as
+`PackageReleaseVerdict`. The refusal half is declared alongside it, in
+`packages/types/src/deployments/PackageRelease.ts`:
+
+```ts
+export type PackageReleaseRefusal =
+  | 'malformed'
+  | 'not_greater'
+  | 'not_an_increment';
+```
+
+Exactly those three members, in that file, under that name.
+
+**Reasoning.** D-011 listed five codes as one union because the gate reason and the
+refusal reason were one channel. D-029 separated them for a good reason — a successful
+read and a rejected write are different answers — but it named only the half it kept,
+which leaves the other half homeless. Two places will need it next: the cut use case
+that raises these codes, and S2's messages file that turns them into the sentences the
+criteria quote. Unnamed, each invents its own spelling, and the mismatch surfaces as a
+sentence that never renders.
+
+Three members, not four: D-012 already decided that "lower", "equal" and "already taken"
+are one code, `not_greater`, because once releases are monotonic they are the same
+statement. There is no `version_taken`.
+
+`no_components` and `no_change` are deliberately **not** here. They are gate verdicts,
+not refusals — a package that cannot be released yet is a successful read with an answer,
+and nothing was submitted to refuse.
+
+**Rejected.**
+
+- One five-member union spanning both channels, as D-011 first wrote it — makes a type
+  that can express `{ verdict: 'malformed' }` and `{ refusal: 'no_change' }`, neither of
+  which is a thing, and it is what D-029 separated.
+- A separate contracts file for three string literals — the verdict lives in
+  `PackageRelease.ts` and these are its counterpart; splitting them across two files
+  makes the pair harder to find than either alone.
+- Reusing the frontend's message keys as the wire codes — D-011 put the sentences in one
+  frontend file precisely so the wire carries codes; this would invert that.
+
+**Constrains implementation.** Declare `PackageReleaseRefusal` in
+`packages/types/src/deployments/PackageRelease.ts` with exactly the three members above.
+The cut use case's refusals carry one of these plus the `currentVersion` the sentence
+needs (D-011, D-012). No fourth member is added without a new decision.
+
+---
+
+## D-032 — The unique violation is detected by Postgres error code `23505`, with the constraint name as a secondary check
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-20`, `D-013`, `D-027`
+
+**Decision.** The catch around the insert tests the driver error's `code` field for
+`'23505'` — Postgres's `unique_violation` — and, when the constraint name is available,
+that it is `idx_package_releases_unique`. Any error that is not a `23505` is rethrown
+untouched.
+
+**Reasoning.** D-013 and D-027 both say to catch the unique violation "specifically" and
+neither says by what. That is the gap where an implementer reaches for the nearest thing
+to hand — and the nearest thing to hand is whatever shape pg-mem happens to throw,
+because D-027 fixed pg-mem as the only harness that will ever run this path. Detection
+written against pg-mem's error and never against the driver's would pass every test here
+and fail in production, on the one code path that exists to be correct under a race. That
+is the worst failure this pipeline can produce: green, plausible, and wrong where nobody
+looks.
+
+`23505` is the standard, driver-independent identifier, stable across `pg` versions and
+independent of message wording or locale. The constraint name narrows it further, so that
+a future second unique index on the table cannot be silently translated into "that
+version already exists" — but it is secondary, because pg-mem may not populate it, and a
+detection that *requires* the name would fail open in the only harness available.
+
+If pg-mem turns out not to surface `code: '23505'` either, the test asserts the refusal
+through the repository's public behaviour rather than the error's internals, and the
+`23505` check stays in the production path regardless. What must not happen is the
+predicate being weakened to match pg-mem.
+
+**Rejected.**
+
+- Matching on the error message text — locale- and version-dependent, and exactly the
+  string-matching that error codes exist to replace.
+- Catching every error from the insert and calling it a duplicate — turns a connection
+  failure into "Version must be greater than 1.2.0", which is a lie the user cannot act
+  on. D-013 says catch the unique violation *specifically* for this reason.
+- Requiring the constraint name as the primary test — fails open where the name is absent,
+  including possibly the only harness that runs it.
+- Pre-checking only and dropping the catch — the bug AC-20 was written to catch.
+
+**Constrains implementation.** Test `error.code === '23505'` on the caught error; treat
+anything else as unrelated and rethrow it. Translate a confirmed violation into the
+`not_greater` refusal of D-012, re-reading `currentVersion` from the database at refusal
+time. Do not weaken this predicate to match what pg-mem throws; if the harness cannot
+reach it, say so in the record rather than changing the production path.
+
+---
+
+## D-033 — Release timestamps stay out of the wire contracts
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-18`, `D-016`, `UK-9`
+
+**Decision.** `PackageReleaseSummary` and the release-content response carry no
+`createdAt` and no `updatedAt`. The columns exist on the table and the entity keeps
+`createdAt?: Date`; neither crosses the controller boundary.
+
+**Reasoning.** UK-9 already decided the substance: a release carries `createdAt` through
+`timestampsMigrationColumns`, there is no `createdBy`, and **nothing is rendered**. AC-19
+says any member can release, so "who cut it, and when" answers no question the criteria
+ask.
+
+What made this worth writing down is a type divergence that would otherwise surface at
+the S1/S2 seam. The entity declares `createdAt?: Date`, while sibling wire types in this
+area — `Distribution`, `PackagesDeployment` — declare `createdAt: string`, because JSON
+has no date. A `PackageReleaseSummary` that carried the entity's field forward would
+declare a `Date` that is a string at runtime, and optional besides, so S2 would branch on
+a field it should never have been handed. Keeping timestamps off the wire removes the
+divergence rather than resolving it, and costs nothing, because no criterion reads them.
+
+A later story that wants "released 3 days ago" adds the field then, in the shape the wire
+actually needs, and decides the format once.
+
+**Rejected.**
+
+- Carrying `createdAt` as an ISO string "since it is free" — it is not free: it is a
+  field S2 must decide whether to render, and a format decision nobody has made.
+- Changing the entity to `createdAt: string` to match the siblings — the entity is what
+  TypeORM hydrates, and it hydrates a `Date`; lying about that to suit a wire shape is
+  backwards.
+- Making the entity's `createdAt` required — it is absent on the object handed to
+  `createWithVersions` before the database fills it, which is why U-002 made it optional.
+
+**Constrains implementation.** No `createdAt` or `updatedAt` key on any release response
+contract in `packages/types/src/deployments/contracts/`. Do not map them in the
+controller. The entity's optional `createdAt?: Date` stays as it is.
