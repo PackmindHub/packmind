@@ -3,6 +3,7 @@ import { IRenderModeConfigurationRepository } from './IRenderModeConfigurationRe
 import { IPackageRepository } from './IPackageRepository';
 import { IDistributionRepository } from './IDistributionRepository';
 import { IDistributedPackageRepository } from './IDistributedPackageRepository';
+import { IPackageReleaseRepository } from './IPackageReleaseRepository';
 
 /**
  * IDeploymentsRepositories - Repository aggregator interface for the Deployments domain
@@ -36,4 +37,9 @@ export interface IDeploymentsRepositories {
    * Get the distributed package repository instance
    */
   getDistributedPackageRepository(): IDistributedPackageRepository;
+
+  /**
+   * Get the package release repository instance
+   */
+  getPackageReleaseRepository(): IPackageReleaseRepository;
 }

@@ -1178,3 +1178,166 @@ was called with the right name and payload, against a mocked provider, the way
 | UK-10 | decided — D-018 |
 
 None deferred.
+
+---
+
+## D-026 — The `PackageRelease` aggregate holds hydrated version entities; only the write surface speaks in ids
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-18`, `D-002`, `D-003`
+
+**Decision.** `PackageRelease` declares `recipeVersions: CommandVersion[]`,
+`standardVersions: StandardVersion[]` and `skillVersions: SkillVersion[]` — the three
+many-to-many relations, hydrated, exactly as `DistributedPackage` declares them. The
+**write** surface keeps D-002's names: the repository's `add*Versions` methods and the
+create-a-release command take `recipeVersionIds`, `standardVersionIds` and
+`skillVersionIds`.
+
+**Reasoning.** D-002 and D-003 pull against each other once the storage is settled, and
+the contradiction is only visible with the schema in front of you. D-002 says the
+aggregate "carries three separate arrays, named `recipeVersionIds`,
+`standardVersionIds` and `skillVersionIds`". D-003 says store it the way
+`DistributedPackageSchema` does — and that means TypeORM `many-to-many` relations,
+where the entity property *is* the relation. Declaring `skillVersionIds: SkillVersionId[]`
+while mapping that same property `many-to-many` to `SkillVersion` makes the type lie
+about what TypeORM puts there on every read.
+
+Reading decides it. AC-18 requires browsing a release to show a deleted component *at
+its pinned version* — its name and its version number, which is content, not an id. So
+the read type must be entities; an id array would force a second fetch-then-`In(...)`
+in application code, which is precisely the cost D-003 rejected JSONB storage for.
+
+D-002's intent is fully preserved, because that intent was about the write: it cites
+`PublishPackagesUseCase`'s `PackageVersionsMap` naming, and that map is a map of ids
+being written. The existing `DistributedPackage` does exactly this split already — the
+type holds entity arrays, while `addStandardVersions(ids)` raw-inserts ids into the
+join table — so this is the neighbour's shape, not a new one.
+
+**Rejected.**
+
+- Id arrays on the aggregate, hydrated separately at read time — honours D-002's letter
+  and reintroduces the per-read fan-out D-003 rejected, three times over, for every
+  release browsed.
+- Both on the type (`skillVersions` *and* `skillVersionIds`) — two sources of truth for
+  one relation, and every writer has to decide which one it is responsible for filling.
+  The first reader to trust the empty one has a bug that typechecks.
+- Renaming the write surface to `...Versions` for symmetry — loses the one thing D-002
+  was pinning down, which is that the three families are written as three separate id
+  arrays and never as a polymorphic list.
+
+**Constrains implementation.** The `PackageRelease` type's relation fields are named
+`recipeVersions`, `standardVersions` and `skillVersions`. Any parameter, command or
+repository method that *writes* them takes id arrays named `recipeVersionIds`,
+`standardVersionIds` and `skillVersionIds`. Do not declare both shapes on the type.
+
+---
+
+## D-027 — AC-20 is proven against pg-mem's unique index, not a real Postgres race
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-20`, `D-013`
+
+**Decision.** The AC-20 test uses `createTestDatasourceFixture` from
+`@packmind/test-utils` — the pg-mem-backed fixture that
+`packages/deployments/src/infra/repositories/PackageRepository.spec.ts` already uses —
+declares the unique index on the `EntitySchema` so `synchronize()` materialises it, and
+asserts that the second insert of the same `(package_id, version)` is refused by the
+database. No new test infrastructure is added.
+
+**Reasoning.** D-013 says a mock-only test "does not exercise the constraint and does
+not satisfy the criterion", and that is the requirement this honours: pg-mem is a real
+SQL engine, not a stub, and it enforces unique indices at the SQL layer. The test fails
+if the index is missing from the schema, which is the regression D-013 exists to catch.
+
+What it does **not** prove is stated here so that nobody later reads the test as
+stronger than it is: pg-mem is single-threaded and in-process, so two "concurrent" cuts
+execute strictly in call order. The test demonstrates that the constraint is the
+arbiter; it does not demonstrate behaviour under genuine overlapping transactions with
+real MVCC. Nothing in this repository can: there is no `testcontainers`, no
+`better-sqlite3`, no live-Postgres Jest harness, and no CI workflow that starts one —
+every repository and integration spec in the monorepo runs on pg-mem.
+
+Building a real-Postgres harness is new shared test infrastructure that every package
+would then be expected to adopt. That is a larger change than the feature that
+provoked it, it is not in the charter, and the marginal assurance is small: the
+constraint either exists in the schema and the migration or it does not, and the
+pg-mem test answers exactly that.
+
+The corollary that matters for the code: the refusal path must be driven by catching
+the database's unique-violation, not by a pre-check that happens to run first. A test
+that passes only because application code checked first would pass on a real Postgres
+race too — and then fail in production.
+
+**Rejected.**
+
+- Adding `testcontainers` and a real Postgres for this one criterion — new
+  infrastructure for the whole monorepo, introduced by a feature that does not own it,
+  and it would make this package's suite need Docker where nothing else does.
+- Asserting the race with mocks and a spy on the pre-check — exactly what D-013 forbids;
+  it tests the code's intention rather than the constraint.
+- Dropping AC-20 to a unit test of the error translation only — that half is worth
+  testing and is not sufficient: it never proves an index exists.
+
+**Constrains implementation.** Declare the unique index on `(packageId, version)` in
+the `EntitySchema`'s `indices` array **as well as** in the migration — the fixture
+builds tables with `synchronize()` from the schema and never runs migrations, so an
+index declared only in the migration is invisible to every test. Catch the
+unique-violation from the insert specifically and translate it per D-012; do not let a
+pre-check be the only thing standing between two cuts.
+
+---
+
+## D-028 — The write is transactional, and that transaction is unverifiable here; do not test it
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-20`, `D-003`, `D-027`
+
+**Decision.** `createWithVersions` writes the release row and all three sets of join
+rows inside `this.repository.manager.transaction(...)`, per D-003's "one transaction or
+not at all". **No test asserts the rollback**, in this unit or any later one. A test
+that drives a failing write asserts only that the write is refused, never that nothing
+was left behind.
+
+**Reasoning.** Found during U-002, not designed. pg-mem's TypeORM/pg adapter treats
+`ROLLBACK` as a no-op: an insert issued inside a `BEGIN` survives an explicit rollback.
+This was verified standalone, and it showed up first as a failing assertion — the
+release row and two of its three join rows were still there after the transaction threw.
+
+So the harness cannot distinguish a correctly-rolled-back write from one that was never
+transactional at all. An assertion of the form "leaves no release row behind" would pass
+against code with no transaction whatsoever, which makes it worse than no test: it is a
+green check that certifies nothing, in the exact place a reader would most trust it.
+
+The transaction stays in the code, because it is right against real PostgreSQL, which is
+what production runs. What cannot happen is a test pretending to prove it. This pairs
+with D-027: pg-mem is a real SQL engine for constraints and a fiction for transaction
+semantics, and the two halves of that sentence have to be held at once.
+
+**Rejected.**
+
+- Asserting row-absence after a failed write anyway — passes on pg-mem whether or not
+  the code is transactional; certifies nothing while looking like assurance.
+- Dropping the transaction because it cannot be tested here — it is correct against the
+  database the product actually runs on, and testability of the harness is not the
+  standard for correctness of the code.
+- Adding a real-Postgres harness to test it — the same new shared infrastructure D-027
+  rejected, for the same reasons, now for a second criterion.
+- Hand-rolling compensating deletes instead of a transaction — more code, a second
+  failure mode when the compensation fails, and still untestable here.
+
+**Constrains implementation.** Keep the `manager.transaction(...)` wrapper on any write
+that touches the release row and its join rows together. Do not write a test asserting
+what a rollback left behind; where the temptation arises, assert the rejection and leave
+a comment naming pg-mem's no-op rollback so the next reader does not add one.
