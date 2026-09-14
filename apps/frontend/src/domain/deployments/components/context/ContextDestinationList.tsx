@@ -522,9 +522,6 @@ function DestinationRow({
             )}
           </PMBox>
         )}
-        <PMIcon fontSize="sm" color="text.faded" flexShrink={0}>
-          {destination.kind === 'repository' ? <LuFolderGit2 /> : <LuStore />}
-        </PMIcon>
         {/*
           The identity and the state are one target, so the whole left of the
           row opens it rather than a chevron the reader has to hit. A row that
@@ -551,28 +548,58 @@ function DestinationRow({
               }
             : {})}
         >
-          <PMHStack gap={2} align="baseline" minW={0}>
-            {canExpand && (
-              <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-                {expanded ? <LuChevronDown /> : <LuChevronRight />}
-              </PMIcon>
-            )}
-            <PMText fontSize="sm" fontWeight="medium" truncate>
-              {destination.name}
-            </PMText>
-            {destination.details.length > 0 && (
-              <PMText fontSize="xs" color="faded" truncate flexShrink={0}>
-                {destination.details.join(' · ')}
+          {/*
+            The three marks a row carries, in one run at its vertical middle.
+            They were at three heights and three columns: the kind centred on
+            the two lines, the chevron hung off the first line's baseline, and
+            the state dot inside the second. None of the three belongs to a
+            line — what a destination is, how it stands and whether it opens
+            are all facts about the whole row — so they read as one cluster
+            and the text beside them keeps a single left edge.
+          */}
+          <PMHStack gap={2} align="center" minW={0}>
+            <StateDot state={destination.state} />
+            <GutterIcon>
+              {destination.kind === 'repository' ? (
+                <LuFolderGit2 />
+              ) : (
+                <LuStore />
+              )}
+            </GutterIcon>
+            {/*
+              Held whether or not this row opens, for the reason the selection
+              column is: a landing whose line is the whole story is not a
+              landing that should be indented differently from its neighbours.
+            */}
+            <GutterIcon>
+              {canExpand && (expanded ? <LuChevronDown /> : <LuChevronRight />)}
+            </GutterIcon>
+            <PMBox flex={1} minW={0}>
+              <PMHStack gap={2} align="baseline" minW={0}>
+                <PMText fontSize="sm" fontWeight="medium" truncate>
+                  {destination.name}
+                </PMText>
+                {destination.details.length > 0 && (
+                  <PMText fontSize="xs" color="faded" truncate flexShrink={0}>
+                    {destination.details.join(' · ')}
+                  </PMText>
+                )}
+              </PMHStack>
+              <PMText fontSize="xs" color="faded" truncate>
+                {stateSentence(destination)}
               </PMText>
-            )}
+            </PMBox>
           </PMHStack>
-          <StateLine destination={destination} />
         </PMBox>
         <RowAction destination={destination} onUpdate={onUpdate} />
       </PMHStack>
 
       {expanded && (
-        <PMBox paddingLeft="44px" paddingRight={3} paddingBottom={3}>
+        <PMBox
+          paddingLeft={`${textIndentPx(selection !== undefined)}px`}
+          paddingRight={3}
+          paddingBottom={3}
+        >
           {/*
             The same row the drift pane and a repository's detail already print
             for this, rather than a third spelling of "v2 became v5". What it
@@ -593,6 +620,39 @@ function DestinationRow({
   );
 }
 
+/*
+ * The fixed columns down the left of every row, in pixels.
+ *
+ * Numbers rather than spacing tokens because the indent the expansion needs is
+ * their sum, and a sum of tokens is not a token. They mirror `gap={2}` on the
+ * run and `gap={3}` / `paddingX={3}` on the row, so a change to either has to
+ * come here too; the alternative was the literal `44px` this replaces, which
+ * lined up with nothing and moved with nothing.
+ */
+const STATE_DOT_PX = 6;
+const GUTTER_ICON_PX = 16;
+const GUTTER_GAP_PX = 8;
+const SELECTION_COLUMN_PX = 16;
+const ROW_GAP_PX = 12;
+const ROW_PADDING_PX = 12;
+
+/**
+ * Where a row's text begins, which is where everything it unfolds lines up.
+ *
+ * The drift rows under an opened landing used to start at a fixed indent that
+ * matched neither the name above them nor each other across the two widths
+ * this list has: a selection column is either there or it is not, and it moves
+ * every row by its own width plus the gap after it.
+ */
+function textIndentPx(hasSelection: boolean): number {
+  const gutters = STATE_DOT_PX + GUTTER_ICON_PX * 2 + GUTTER_GAP_PX * 3;
+  return (
+    ROW_PADDING_PX +
+    (hasSelection ? SELECTION_COLUMN_PX + ROW_GAP_PX : 0) +
+    gutters
+  );
+}
+
 /** The colour of each state, in one place, so a dot and a band agree. */
 const STATE_TONE: Record<PackageDestinationState, string> = {
   failed: 'red.300',
@@ -601,23 +661,52 @@ const STATE_TONE: Record<PackageDestinationState, string> = {
   aligned: 'green.500',
 };
 
-function StateLine({
-  destination,
-}: Readonly<{ destination: PackageDestination }>) {
+/**
+ * How this destination stands, as a mark rather than a word.
+ *
+ * At the row's left edge and no longer in front of its sentence, which is
+ * where it could not be compared: three hundred rows made three hundred dots
+ * at as many abscissas, one per sentence. In a column it is a stripe of colour
+ * the eye runs down, which is the reading a long list is entered for.
+ *
+ * Kept even though the bands already sort by state, because `Behind or
+ * waiting` holds two of them and this is what tells them apart. The day that
+ * band splits, the column can go.
+ */
+function StateDot({ state }: Readonly<{ state: PackageDestinationState }>) {
   return (
-    <PMHStack gap={2} align="center" minW={0}>
-      <PMBox
-        width="6px"
-        height="6px"
-        borderRadius="full"
-        bg={STATE_TONE[destination.state]}
-        flexShrink={0}
-        aria-hidden
-      />
-      <PMText fontSize="xs" color="faded" truncate>
-        {stateSentence(destination)}
-      </PMText>
-    </PMHStack>
+    <PMBox
+      width={`${STATE_DOT_PX}px`}
+      height={`${STATE_DOT_PX}px`}
+      borderRadius="full"
+      bg={STATE_TONE[state]}
+      flexShrink={0}
+      aria-hidden
+    />
+  );
+}
+
+/**
+ * One of the row's fixed columns, filled or not.
+ *
+ * A box of its own rather than a bare `PMIcon`, so the column keeps its width
+ * when there is nothing to put in it and the text beside it does not move.
+ * Centred both ways, which is what stops an icon hanging off the text baseline
+ * it has no business sharing.
+ */
+function GutterIcon({ children }: Readonly<{ children?: ReactNode }>) {
+  return (
+    <PMBox
+      width={`${GUTTER_ICON_PX}px`}
+      flexShrink={0}
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      fontSize="sm"
+      color="text.faded"
+    >
+      {children}
+    </PMBox>
   );
 }
 
