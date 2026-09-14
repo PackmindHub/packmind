@@ -30,3 +30,5 @@ export type PackageRelease = {
   createdAt?: Date;
   updatedAt?: Date;
 };
+
+export type PackageReleaseVerdict = 'ready' | 'no_components' | 'no_change';

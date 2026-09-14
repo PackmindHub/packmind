@@ -1341,3 +1341,61 @@ semantics, and the two halves of that sentence have to be held at once.
 that touches the release row and its join rows together. Do not write a test asserting
 what a rollback left behind; where the temptation arises, assert the rejection and leave
 a comment naming pg-mem's no-op rollback so the next reader does not add one.
+
+---
+
+## D-029 — Readiness carries one tri-state verdict; there is no separate `reason` field
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-9`, `D-007`, `D-011`, `D-015`
+
+**Decision.** The gate's answer is one field:
+
+```ts
+type PackageReleaseVerdict = 'ready' | 'no_components' | 'no_change';
+```
+
+`ready` means the action is enabled. Any other value means it is disabled, and that
+value *is* the message key D-011 maps to a sentence. The readiness payload of D-015
+therefore carries `verdict` and **not** a separate `reason`.
+
+**Reasoning.** D-007 fixes the verdict values as exactly these three, and D-015 — written
+in the same session — lists `verdict` and `reason` as two fields. Read together they
+would put the same code in the payload twice, and two fields carrying one fact can
+disagree.
+
+That is not a theoretical worry here, because of which fact it is. AC-9 is a precedence
+rule: removing the last component is *both* an empty package and a change to the
+component list, and the criterion says the user must be told "Add at least one
+component". D-007 exists to make that precedence unloseable by resolving it in one
+ordered function. A payload with both `verdict` and `reason` hands the renderer two
+values and an implicit question about which one to believe — which is precisely the
+decision D-007 took away from the renderer. One field cannot be inconsistent with
+itself.
+
+`reason` also has no reader. The frontend needs two things: whether to enable the
+action, and which sentence to show. A tri-state answers both, because `verdict !==
+'ready'` is the first and the value is the second.
+
+Refusals are a different channel and keep their own codes (D-011, D-012): they travel as
+errors from a submitted release, not as a field of a successful read. Nothing here
+changes them.
+
+**Rejected.**
+
+- `verdict: 'ready' | 'blocked'` plus `reason: code | null` — the shape D-015's wording
+  suggests. Two fields, one fact, and the renderer inherits the AC-9 precedence question
+  that D-007 was written to settle centrally.
+- Keeping both and defining `reason` as "equal to `verdict` unless ready" — redundancy
+  with a rule attached, which is a rule someone will eventually break.
+- A boolean `canRelease` plus a nullable code — same as the first, and it loses the
+  ability to add a fourth blocking reason without changing the field's type.
+
+**Constrains implementation.** The pure gate function returns the tri-state above and
+nothing else. The readiness payload has no `reason` key. The frontend enables the action
+on `verdict === 'ready'` and maps any other value to its sentence through the single
+messages file of D-011.

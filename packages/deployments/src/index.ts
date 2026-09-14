@@ -18,3 +18,4 @@ export * from './domain/errors/PackagesNotFoundError';
 export * from './domain/errors/TargetNotFoundError';
 
 export { parsePackageSlug } from './application/services/packageSlugHelpers';
+export { evaluatePackageReleaseGate } from './application/services/packageReleaseGateHelpers';
