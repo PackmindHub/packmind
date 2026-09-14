@@ -15,6 +15,7 @@ import {
   LuFolderGit2,
   LuStore,
 } from 'react-icons/lu';
+import { DriftArtifactRow } from '../redesign/components/DriftArtifactRow';
 import { ContextChip } from './ContextChip';
 import { ContextSearchField } from './ContextSearchField';
 import {
@@ -379,35 +380,92 @@ function DestinationRow({
   destination: PackageDestination;
   onUpdate?: (destination: PackageDestination) => void;
 }>) {
+  const [expanded, setExpanded] = useState(false);
+  /*
+   * Only a row that knows what is late under it. The state line names two
+   * components and says how many more; opening it is how the reader gets the
+   * rest, so a row whose line is the whole story has nothing to open. That
+   * includes a drifted marketplace, whose copy is known to be behind and not
+   * by what.
+   */
+  const canExpand = destination.behindArtifacts.length > 0;
+
   return (
-    <PMHStack
-      gap={3}
-      align="center"
-      paddingX={3}
-      paddingY={2}
+    <PMBox
       borderTopWidth="1px"
       borderColor="border.tertiary"
-      _hover={{ bg: 'background.secondary' }}
       transition="background-color 150ms ease-out"
+      _hover={{ bg: 'background.secondary' }}
     >
-      <PMIcon fontSize="sm" color="text.faded" flexShrink={0}>
-        {destination.kind === 'repository' ? <LuFolderGit2 /> : <LuStore />}
-      </PMIcon>
-      <PMBox flex={1} minW={0}>
-        <PMHStack gap={2} align="baseline" minW={0}>
-          <PMText fontSize="sm" fontWeight="medium" truncate>
-            {destination.name}
-          </PMText>
-          {destination.details.length > 0 && (
-            <PMText fontSize="xs" color="faded" truncate flexShrink={0}>
-              {destination.details.join(' · ')}
+      <PMHStack gap={3} align="center" paddingX={3} paddingY={2}>
+        <PMIcon fontSize="sm" color="text.faded" flexShrink={0}>
+          {destination.kind === 'repository' ? <LuFolderGit2 /> : <LuStore />}
+        </PMIcon>
+        {/*
+          The identity and the state are one target, so the whole left of the
+          row opens it rather than a chevron the reader has to hit. A row that
+          cannot open is a plain box: a button that does nothing still says it
+          is one, through its pointer and its focus ring.
+        */}
+        <PMBox
+          flex={1}
+          minW={0}
+          {...(canExpand
+            ? {
+                as: 'button' as const,
+                onClick: () => setExpanded((previous) => !previous),
+                textAlign: 'left' as const,
+                cursor: 'pointer',
+                'aria-expanded': expanded,
+                'aria-label': `${expanded ? 'Hide' : 'Show'} what is behind on ${destination.name}`,
+                _focusVisible: {
+                  outline: '2px solid',
+                  outlineColor: 'branding.primary',
+                  outlineOffset: '2px',
+                  borderRadius: 'sm',
+                },
+              }
+            : {})}
+        >
+          <PMHStack gap={2} align="baseline" minW={0}>
+            {canExpand && (
+              <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            )}
+            <PMText fontSize="sm" fontWeight="medium" truncate>
+              {destination.name}
             </PMText>
-          )}
-        </PMHStack>
-        <StateLine destination={destination} />
-      </PMBox>
-      <RowAction destination={destination} onUpdate={onUpdate} />
-    </PMHStack>
+            {destination.details.length > 0 && (
+              <PMText fontSize="xs" color="faded" truncate flexShrink={0}>
+                {destination.details.join(' · ')}
+              </PMText>
+            )}
+          </PMHStack>
+          <StateLine destination={destination} />
+        </PMBox>
+        <RowAction destination={destination} onUpdate={onUpdate} />
+      </PMHStack>
+
+      {expanded && (
+        <PMBox paddingLeft="44px" paddingRight={3} paddingBottom={3}>
+          {/*
+            The same row the drift pane and a repository's detail already print
+            for this, rather than a third spelling of "v2 became v5". What it
+            adds over the line above is the whole list, the kind of each
+            component, and the two states a version cannot express: a component
+            waiting to be written for the first time, and one waiting to be
+            taken away.
+          */}
+          {destination.behindArtifacts.map((entry) => (
+            <DriftArtifactRow
+              key={`${entry.artifact.id}-${entry.reason}`}
+              entry={entry}
+            />
+          ))}
+        </PMBox>
+      )}
+    </PMBox>
   );
 }
 
@@ -450,9 +508,22 @@ function StateLine({
  */
 function stateSentence(destination: PackageDestination): string {
   if (destination.state === 'failed') {
-    return destination.kind === 'repository'
-      ? 'The last distribution failed'
-      : 'The last publish failed';
+    const what =
+      destination.kind === 'repository'
+        ? 'The last distribution failed'
+        : 'The last publish failed';
+    /*
+     * A failure and a drift hold at once, and the failure alone was the whole
+     * sentence until a row on screen showed what that costs: a landing whose
+     * push was rejected reported nothing about the four components still
+     * waiting on it, while the row below it, drifted in exactly the same way,
+     * named them. The state says what happened; this says what it left.
+     */
+    return destination.behindCount > 0
+      ? `${what}, ${destination.behindCount} component${
+          destination.behindCount === 1 ? '' : 's'
+        } still behind`
+      : what;
   }
 
   if (destination.state === 'waiting') {
@@ -515,10 +586,22 @@ function RowAction({
     );
   }
 
+  /*
+   * Offered wherever there is something to send, which includes a landing whose
+   * last push failed: pushing again is exactly how a rejected push is retried,
+   * and the row that stops short of saying so leaves the reader to find the
+   * gesture on the package-wide button, which would touch the other two hundred
+   * landings as well.
+   *
+   * What it needs is something behind, not a particular state. A failure with
+   * nothing outstanding has already been repaired by whoever repaired it, and
+   * pushing a package nothing is waiting for writes nothing anywhere.
+   */
   if (
     !onUpdate ||
     destination.installKey === null ||
-    destination.state !== 'behind'
+    destination.behindCount === 0 ||
+    destination.state === 'waiting'
   ) {
     return null;
   }

@@ -9,7 +9,12 @@ import type { PackageDestination } from './buildPackageDestinations';
 
 function behind(name: string, version: number): DriftArtifactEntry {
   return {
-    artifact: { name, packmindVersion: version } as unknown as ArtifactDrift,
+    artifact: {
+      id: `art-${name}`,
+      kind: 'standard',
+      name,
+      packmindVersion: version,
+    } as unknown as ArtifactDrift,
     reason: 'behind',
     deployedVersion: version - 1,
     lastDeployedAt: '2026-09-01T10:00:00.000Z',
@@ -361,6 +366,69 @@ describe('ContextDestinationList', () => {
     });
   });
 
+  describe('opening a drifted row', () => {
+    const late = () =>
+      destination({
+        name: 'acme/checkout-api',
+        state: 'behind',
+        behindCount: 3,
+        behindArtifacts: [
+          behind('feature-flags-audit', 5),
+          behind('datadog-analysis', 3),
+          behind('release-checklist', 2),
+        ],
+      });
+
+    it('lists everything the line could only count', async () => {
+      renderList([late()]);
+
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show what is behind on acme/checkout-api',
+        }),
+      );
+
+      expect(screen.getByText('release-checklist')).toBeInTheDocument();
+      expect(screen.getByText('v5')).toBeInTheDocument();
+    });
+
+    it('shuts again on the control that opened it', async () => {
+      renderList([late()]);
+
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show what is behind on acme/checkout-api',
+        }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Hide what is behind on acme/checkout-api',
+        }),
+      );
+
+      expect(screen.queryByText('release-checklist')).not.toBeInTheDocument();
+    });
+
+    describe('when the line is already the whole story', () => {
+      it('does not offer to open a row that knows nothing more', () => {
+        renderList([
+          destination({
+            key: 'm:mkt-1',
+            kind: 'marketplace',
+            name: 'acme-marketplace',
+            details: [],
+            state: 'behind',
+            installKey: null,
+          }),
+        ]);
+
+        expect(
+          screen.queryByRole('button', { name: /what is behind/ }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe('the action on a row', () => {
     it('pushes this landing again, and hands back the row it was asked from', async () => {
       const onUpdate = vi.fn();
@@ -380,6 +448,51 @@ describe('ContextDestinationList', () => {
       expect(onUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ installKey: 'repo-1::target-1' }),
       );
+    });
+
+    describe('when the last push failed and left components behind', () => {
+      it('says what the failure left', () => {
+        renderList([
+          destination({
+            state: 'failed',
+            behindCount: 4,
+            behindArtifacts: [behind('a', 2)],
+          }),
+        ]);
+
+        expect(
+          screen.getByText(
+            'The last distribution failed, 4 components still behind',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('offers the push that retries it, rather than the package-wide one', () => {
+        renderList(
+          [
+            destination({
+              state: 'failed',
+              behindCount: 1,
+              behindArtifacts: [behind('a', 2)],
+            }),
+          ],
+          vi.fn(),
+        );
+
+        expect(
+          screen.getByRole('button', { name: 'Update' }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when a failure left nothing outstanding', () => {
+      it('offers no push, since there would be nothing to send', () => {
+        renderList([destination({ state: 'failed' })], vi.fn());
+
+        expect(
+          screen.queryByRole('button', { name: 'Update' }),
+        ).not.toBeInTheDocument();
+      });
     });
 
     it('offers nothing on a row that is up to date', () => {
