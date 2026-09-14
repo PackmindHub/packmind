@@ -46,3 +46,6 @@ export type PackageReleaseRefusal =
  * does not refuse the cut server-side.
  */
 export type PackageReleaseRefusalCode = PackageReleaseRefusal | 'no_components';
+
+/** The three component families a package holds. */
+export type PackageComponentFamily = 'recipe' | 'standard' | 'skill';

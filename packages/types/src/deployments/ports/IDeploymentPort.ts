@@ -8,6 +8,8 @@ import {
   CreatePackageResponse,
   CreatePackageReleaseCommand,
   CreatePackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
@@ -421,6 +423,18 @@ export interface IDeploymentPort {
   createPackageRelease(
     command: CreatePackageReleaseCommand,
   ): Promise<CreatePackageReleaseResponse>;
+
+  /**
+   * Lists a package's releases, newest first, together with everything the
+   * release panel needs: whether a cut is possible and why not, the three
+   * versions it may be offered, and which pinned components have fallen
+   * behind.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   */
+  listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse>;
 
   /**
    * System-level package lookup by id, bypassing membership validation.
