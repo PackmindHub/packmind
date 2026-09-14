@@ -16,6 +16,7 @@ export * from './FileUpdates';
 export * from './Package';
 export * from './PackageRelease';
 export * from './packageReleaseVersion';
+export * from './packageReleaseVersionRules';
 export * from './PackmindFileConfig';
 export * from './PackmindLockFile';
 export * from './DistributionId';

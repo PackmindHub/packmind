@@ -32,3 +32,8 @@ export type PackageRelease = {
 };
 
 export type PackageReleaseVerdict = 'ready' | 'no_components' | 'no_change';
+
+export type PackageReleaseRefusal =
+  | 'malformed'
+  | 'not_greater'
+  | 'not_an_increment';
