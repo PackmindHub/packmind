@@ -14,6 +14,7 @@ export * from './StandardDeploymentOverview';
 export * from './SkillDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
+export * from './packageReleaseVersion';
 export * from './PackmindFileConfig';
 export * from './PackmindLockFile';
 export * from './DistributionId';
