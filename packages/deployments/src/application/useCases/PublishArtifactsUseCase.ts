@@ -91,7 +91,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     this.logger.info(
       'Publishing artifacts (unified commands + standards + skills)',
       {
-        commandVersionIdsCount: command.recipeVersionIds.length,
+        commandVersionIdsCount: command.commandVersionIds.length,
         standardVersionIdsCount: command.standardVersionIds.length,
         skillVersionIdsCount: command.skillVersionIds?.length ?? 0,
         targetIdsCount: command.targetIds.length,
@@ -128,7 +128,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const [commandVersionsResult, standardVersionsResult, skillVersionsResult] =
       await Promise.allSettled([
         this.fetchVersions(
-          command.recipeVersionIds,
+          command.commandVersionIds,
           (ids) => this.commandsPort.getCommandVersionsByIds(ids),
           'Command',
         ),

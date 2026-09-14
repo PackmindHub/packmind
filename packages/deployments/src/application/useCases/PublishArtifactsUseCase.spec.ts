@@ -266,7 +266,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -538,7 +538,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -619,7 +619,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -704,7 +704,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -800,7 +800,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -889,7 +889,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId1, targetId2],
         packagesSlugs: [],
@@ -1047,7 +1047,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [newCommandVersion.id],
+        commandVersionIds: [newCommandVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1126,7 +1126,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [nonExistentTargetId],
         packagesSlugs: [],
@@ -1149,7 +1149,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1174,7 +1174,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [createCommandVersionId(uuidv4())],
+        commandVersionIds: [createCommandVersionId(uuidv4())],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1200,7 +1200,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [createStandardVersionId(uuidv4())],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1223,7 +1223,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [],
         packagesSlugs: [],
@@ -1247,7 +1247,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [createCommandVersionId(uuidv4())],
+        commandVersionIds: [createCommandVersionId(uuidv4())],
         standardVersionIds: [],
         targetIds: [crossOrgTargetId],
         packagesSlugs: [],
@@ -1273,7 +1273,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1384,7 +1384,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [newCommandVersion.id],
+        commandVersionIds: [newCommandVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1545,7 +1545,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1642,7 +1642,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1769,7 +1769,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [newSkillVersion.id],
         targetIds: [targetId],
@@ -1883,7 +1883,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-one', 'package-two'],
@@ -2011,7 +2011,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
@@ -2153,7 +2153,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
@@ -2235,7 +2235,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
@@ -2357,7 +2357,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
@@ -2491,7 +2491,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [skillVersion.id],
         targetIds: [targetId],
@@ -2592,7 +2592,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [createSkillVersionId(uuidv4())],
         targetIds: [targetId],
@@ -2654,7 +2654,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [newSkillVersion.id],
         targetIds: [targetId],
@@ -2758,7 +2758,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -2888,7 +2888,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -3055,7 +3055,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -3207,7 +3207,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -3301,7 +3301,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
@@ -3395,7 +3395,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
@@ -3487,7 +3487,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -3569,7 +3569,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
@@ -3760,7 +3760,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -3885,7 +3885,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
@@ -4060,7 +4060,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
@@ -4263,7 +4263,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['@team-a/pkg-a'],

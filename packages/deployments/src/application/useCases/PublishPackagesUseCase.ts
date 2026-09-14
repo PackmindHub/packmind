@@ -114,7 +114,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     }
 
     // Collect unique version IDs for publishing
-    const recipeVersionIds = Array.from(commandVersionIdByCommandId.values());
+    const commandVersionIds = Array.from(commandVersionIdByCommandId.values());
     const standardVersionIds = Array.from(
       standardVersionIdByStandardId.values(),
     );
@@ -122,7 +122,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
 
     this.logger.info('Resolved package contents', {
       packagesCount: packages.length,
-      recipeVersionsCount: recipeVersionIds.length,
+      commandVersionsCount: commandVersionIds.length,
       standardVersionsCount: standardVersionIds.length,
       skillVersionsCount: skillVersionIds.length,
     });
@@ -179,7 +179,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     const { distributions } = await this.deploymentPort.publishArtifacts({
       userId: command.userId,
       organizationId: command.organizationId,
-      recipeVersionIds,
+      commandVersionIds,
       standardVersionIds,
       skillVersionIds,
       targetIds: command.targetIds,

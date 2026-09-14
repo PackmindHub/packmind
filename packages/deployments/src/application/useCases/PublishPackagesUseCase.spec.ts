@@ -230,7 +230,7 @@ describe('PublishPackagesUseCase', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -376,7 +376,7 @@ describe('PublishPackagesUseCase', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
-        recipeVersionIds: [commandVersionForCommandOnly.id],
+        commandVersionIds: [commandVersionForCommandOnly.id],
         standardVersionIds: [],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -432,11 +432,11 @@ describe('PublishPackagesUseCase', () => {
       );
     });
 
-    it('calls publishArtifacts with empty recipeVersionIds', () => {
+    it('calls publishArtifacts with empty commandVersionIds', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [standardVersionForStandardOnly.id],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -630,7 +630,7 @@ describe('PublishPackagesUseCase', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
-        recipeVersionIds: expect.arrayContaining([
+        commandVersionIds: expect.arrayContaining([
           sharedCommandVersion.id,
           uniqueCommandVersion.id,
         ]),
@@ -662,7 +662,7 @@ describe('PublishPackagesUseCase', () => {
 
     it('publishes exactly two recipe versions', () => {
       expect(
-        mockDeploymentPort.publishArtifacts.mock.calls[0][0].recipeVersionIds,
+        mockDeploymentPort.publishArtifacts.mock.calls[0][0].commandVersionIds,
       ).toHaveLength(2);
     });
 
