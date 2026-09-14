@@ -1244,67 +1244,43 @@ export class GitlabRepository implements IGitRepo {
     path: string,
     branch: string,
   ): Promise<{ path: string }[]> {
+    return this.listFilesInDirectories([path], branch);
+  }
+
+  /**
+   * The files under every requested directory, from one tree walk.
+   *
+   * This used to be a loop over the singular form, and the singular form ran
+   * the whole paginated walk for itself - so expanding 112 directory
+   * deletions downloaded a listing of the entire repository 112 times, one
+   * after another, to answer what a single listing already holds. GitLab's
+   * tree endpoint paginating is what made collapsing this a ticket of its
+   * own; it changes nothing about the answer.
+   */
+  async listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    if (paths.length === 0) {
+      return [];
+    }
+
     try {
-      // Normalize path to ensure it ends with /
-      const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+      const blobs = await this.walkRepositoryTree(branch);
 
-      // Fetch the repository tree recursively
-      const allTreeItems: Array<{ path: string; type: string }> = [];
-      let nextPage: string | null = null;
-      let pageNumber = 1;
-      const perPage = 100;
+      // Filtered per path rather than once against all prefixes, so the
+      // result is ordered and duplicated exactly as looping the singular form
+      // over these paths produced.
+      const files = paths.flatMap((path) => {
+        const normalizedPath = path.endsWith('/') ? path : `${path}/`;
 
-      do {
-        const url =
-          nextPage || `/projects/${this.encodedProjectPath}/repository/tree`;
+        return blobs
+          .filter((item) => item.path.startsWith(normalizedPath))
+          .map((item) => ({ path: item.path }));
+      });
 
-        const params: Record<string, string | number> = {
-          ref: branch,
-          recursive: 'true',
-          per_page: perPage,
-        };
-
-        if (!nextPage) {
-          params['page'] = pageNumber;
-        }
-
-        const response = await this.axiosInstance.get(url, {
-          params: nextPage ? undefined : params,
-        });
-
-        if (Array.isArray(response.data)) {
-          allTreeItems.push(...response.data);
-        }
-
-        // Check for pagination
-        const headers = response.headers as Record<string, string>;
-        nextPage = null;
-
-        const xNextPage = headers['x-next-page'];
-        if (xNextPage && xNextPage.trim() !== '') {
-          nextPage = `/projects/${this.encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
-        } else {
-          const linkHeader = headers['link'];
-          if (linkHeader) {
-            const nextUrl = extractNextPageUrl(linkHeader);
-            if (nextUrl) {
-              nextPage = nextUrl;
-            }
-          }
-        }
-
-        pageNumber++;
-      } while (nextPage);
-
-      const files = allTreeItems
-        .filter(
-          (item) =>
-            item.type === 'blob' && item.path.startsWith(normalizedPath),
-        )
-        .map((item) => ({ path: item.path }));
-
-      this.logger.debug('Listed files in directory', {
-        path,
+      this.logger.debug('Listed files in directories', {
+        directoryCount: paths.length,
         branch,
         fileCount: files.length,
       });
@@ -1313,36 +1289,16 @@ export class GitlabRepository implements IGitRepo {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to list files in directory', {
-        path,
+      this.logger.error('Failed to list files in directories', {
+        directoryCount: paths.length,
         owner: this.options.owner,
         repo: this.options.repo,
         branch,
         error: errorMessage,
       });
-      // Return empty array if directory doesn't exist
+      // Matches what the per-directory form did: an unreachable or missing
+      // tree means "nothing to expand", not a failed publish.
       return [];
     }
-  }
-
-  /**
-   * Sequential on purpose. GitLab's tree endpoint paginates, so serving every
-   * path from one listing is a larger change than the GitHub side needed, and
-   * collapsing it here was deliberately left out of the fan-out fix so that
-   * one ticket touched one provider. GitLab therefore keeps exactly the
-   * behaviour it had when the caller looped: one paginated tree walk per
-   * directory. It needs its own ticket.
-   */
-  async listFilesInDirectories(
-    paths: string[],
-    branch: string,
-  ): Promise<{ path: string }[]> {
-    const files: { path: string }[] = [];
-
-    for (const path of paths) {
-      files.push(...(await this.listFilesInDirectory(path, branch)));
-    }
-
-    return files;
   }
 }

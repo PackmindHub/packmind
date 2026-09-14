@@ -1844,4 +1844,157 @@ describe('GitlabRepository', () => {
       });
     });
   });
+  describe('listFilesInDirectories', () => {
+    const treeCalls = () =>
+      (mockAxiosInstance.get as jest.Mock).mock.calls.filter(([url]) =>
+        String(url).includes('/repository/tree'),
+      ).length;
+
+    beforeEach(() => {
+      mockAxiosInstance.get.mockImplementation((url: string) => {
+        if (url.includes('/repository/tree')) {
+          return Promise.resolve({
+            data: [
+              { path: 'packmind/a/one.md', type: 'blob' },
+              { path: 'packmind/a/two.md', type: 'blob' },
+              { path: 'packmind/b/three.md', type: 'blob' },
+              { path: 'packmind/c', type: 'tree' },
+              { path: 'other/four.md', type: 'blob' },
+            ],
+            headers: {},
+          });
+        }
+        return Promise.reject(new Error(`Unexpected GET: ${url}`));
+      });
+    });
+
+    it('returns the files under every requested directory', async () => {
+      const files = await gitlabRepository.listFilesInDirectories(
+        ['packmind/a', 'packmind/b'],
+        'main',
+      );
+
+      expect(files).toEqual([
+        { path: 'packmind/a/one.md' },
+        { path: 'packmind/a/two.md' },
+        { path: 'packmind/b/three.md' },
+      ]);
+    });
+
+    it('leaves out directories that were not asked for', async () => {
+      const files = await gitlabRepository.listFilesInDirectories(
+        ['packmind/b'],
+        'main',
+      );
+
+      expect(files).toEqual([{ path: 'packmind/b/three.md' }]);
+    });
+
+    it('walks the tree once for one directory', async () => {
+      await gitlabRepository.listFilesInDirectories(['packmind/a'], 'main');
+
+      expect(treeCalls()).toBe(1);
+    });
+
+    describe('when many directories are requested', () => {
+      it('still walks the tree once', async () => {
+        // The whole point of the batched form: the request count must not
+        // scale with the number of directories being deleted.
+        await gitlabRepository.listFilesInDirectories(
+          Array.from({ length: 50 }, (_, i) => `packmind/dir-${i}`),
+          'main',
+        );
+
+        expect(treeCalls()).toBe(1);
+      });
+    });
+
+    describe('when the tree is paginated', () => {
+      it('walks every page once and returns files from all of them', async () => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('page=2')) {
+            return Promise.resolve({
+              data: [{ path: 'packmind/a/two.md', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'packmind/a/one.md', type: 'blob' }],
+              headers: { 'x-next-page': '2' },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+
+        const files = await gitlabRepository.listFilesInDirectories(
+          ['packmind/a', 'packmind/b'],
+          'main',
+        );
+
+        expect(files).toEqual([
+          { path: 'packmind/a/one.md' },
+          { path: 'packmind/a/two.md' },
+        ]);
+      });
+    });
+
+    describe('when no directory is requested', () => {
+      it('issues no request at all', async () => {
+        await gitlabRepository.listFilesInDirectories([], 'main');
+
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the tree cannot be read', () => {
+      it('reports no files rather than failing the publish', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('boom'));
+
+        const files = await gitlabRepository.listFilesInDirectories(
+          ['packmind/a'],
+          'main',
+        );
+
+        expect(files).toEqual([]);
+      });
+    });
+  });
+
+  describe('listFilesInDirectory', () => {
+    beforeEach(() => {
+      mockAxiosInstance.get.mockImplementation((url: string) => {
+        if (url.includes('/repository/tree')) {
+          return Promise.resolve({
+            data: [
+              { path: 'packmind/a/one.md', type: 'blob' },
+              { path: 'packmind/b/three.md', type: 'blob' },
+            ],
+            headers: {},
+          });
+        }
+        return Promise.reject(new Error(`Unexpected GET: ${url}`));
+      });
+    });
+
+    it('returns the files under the directory', async () => {
+      const files = await gitlabRepository.listFilesInDirectory(
+        'packmind/a',
+        'main',
+      );
+
+      expect(files).toEqual([{ path: 'packmind/a/one.md' }]);
+    });
+
+    describe('when the path already ends with a slash', () => {
+      it('returns the same files', async () => {
+        const files = await gitlabRepository.listFilesInDirectory(
+          'packmind/a/',
+          'main',
+        );
+
+        expect(files).toEqual([{ path: 'packmind/a/one.md' }]);
+      });
+    });
+  });
 });
