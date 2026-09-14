@@ -235,4 +235,50 @@ describe('PackageReleaseRepository', () => {
       ).rejects.toThrow();
     });
   });
+
+  describe('when a pinned component version has been deleted', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('2.0.0'), pinnedVersions());
+    });
+
+    it('hydrates a deleted command version when found by package id and version', async () => {
+      await fixture.datasource
+        .getRepository(CommandVersionSchema)
+        .softDelete({ id: commandVersion.id });
+
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '2.0.0');
+
+      expect(found?.recipeVersions).toHaveLength(1);
+      expect(found?.recipeVersions[0].id).toEqual(commandVersion.id);
+      expect(found?.recipeVersions[0].version).toEqual(3);
+    });
+
+    it('hydrates a deleted standard version when found by package id and version', async () => {
+      await fixture.datasource
+        .getRepository(StandardVersionSchema)
+        .softDelete({ id: standardVersion.id });
+
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '2.0.0');
+
+      expect(found?.standardVersions).toHaveLength(1);
+      expect(found?.standardVersions[0].id).toEqual(standardVersion.id);
+      expect(found?.standardVersions[0].version).toEqual(2);
+    });
+
+    it('hydrates deleted versions when found by package id', async () => {
+      await fixture.datasource
+        .getRepository(CommandVersionSchema)
+        .softDelete({ id: commandVersion.id });
+      await fixture.datasource
+        .getRepository(StandardVersionSchema)
+        .softDelete({ id: standardVersion.id });
+
+      const [found] = await repository.findByPackageId(pkg.id);
+
+      expect(found.recipeVersions).toHaveLength(1);
+      expect(found.recipeVersions[0].id).toEqual(commandVersion.id);
+      expect(found.standardVersions).toHaveLength(1);
+      expect(found.standardVersions[0].id).toEqual(standardVersion.id);
+    });
+  });
 });

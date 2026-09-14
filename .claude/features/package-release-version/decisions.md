@@ -1408,7 +1408,7 @@ messages file of D-011.
 - user-visible: `yes`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-037 (partial — which object the AC-18 test deletes, and why)
 - relates to: `AC-18`, `AC-21`, `D-004`, `D-026`
 
 **Decision.** The mechanism D-004 named no longer applies as written, and this is the
@@ -1801,3 +1801,144 @@ the descending `version` sort for commands (`ICommandsPort` still has no
 `getLatestCommandVersion`, and adding one is still out of scope). `CreatePackageReleaseUseCase`
 must call both and keep no private copy. Its existing tests must pass unchanged — this
 extraction changes no behaviour.
+
+---
+
+## D-037 — AC-18 is proven by soft-deleting the pinned **version row**, not its parent
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-15`
+- supersedes: D-030 (partial — the premise about which schemas carry soft-delete, and which object the test deletes)
+- superseded-by: —
+- relates to: `AC-18`, `AC-21`, `D-004`, `D-030`
+
+**Decision.** The AC-18 test soft-deletes a pinned `CommandVersion` or `StandardVersion`
+row directly, through that repository's `deleteById`, and then reads the release back.
+It does **not** delete the parent `Command`/`Standard`/`Skill`, and it does not use a
+skill for this case at all.
+
+**Reasoning.** D-030 required "a command or a standard, not a skill" on the stated
+grounds that those are the two version schemas carrying soft-delete columns. The
+grounds were wrong; the conclusion happens to be right, for a different reason, and the
+difference decides whether the test proves anything.
+
+The facts, checked: `CommandSchema`, `CommandVersionSchema`, `StandardSchema`,
+`StandardVersionSchema` and `SkillSchema` all spread `softDeleteSchemas`. Only
+`SkillVersionSchema` has none — no `deletedAt`, no `deletedBy`. So a skill *version*
+cannot be soft-deleted at all, and `withDeleted()` has nothing to filter for it. That is
+why the skill leg cannot carry this criterion, and it is the one real asymmetry among
+the three families.
+
+The sharper point is which object to delete. **Soft delete is an `UPDATE`, so the
+`onDelete: 'CASCADE'` on the version relations never fires.** Deleting a parent
+`Command` sets `deleted_at` on that row and leaves every `CommandVersion` row untouched
+— `CommandVersionService` soft-deletes versions in an explicit loop precisely because
+nothing cascades. A release's hydration joins the **version** tables, so a test that
+deletes the parent would pass identically with or without `withDeleted()`: it would
+assert a filter that was never engaged. That is the green-and-meaningless shape this
+feature has now avoided three times (D-027, D-028, D-032), and it would be the worst
+instance of it, because AC-18 is the criterion the mechanism exists for.
+
+`withDeleted()` is already unconditional in `PackageReleaseRepository.hydratedQuery()`,
+landed with the repository. This test is therefore a regression test on behaviour that
+already works, and it is expected to pass on first run. That is the right shape: it
+fails if anyone ever makes the hydration conditional.
+
+**On AC-18's second half.** "A release cut afterwards excludes it" is not a repository
+behaviour and is not covered here. Whether a deleted component leaves the package's
+component list is owned by the artefact-removal path, which this feature does not touch
+(D-022); and if a package still lists a component whose versions are all soft-deleted,
+D-014 makes the next cut refuse outright rather than silently exclude it. That is a
+consequence worth knowing and is not a gap in this unit.
+
+**Rejected.**
+
+- Deleting the parent `Command`, as the most natural reading of "a component deleted" —
+  proves nothing, because the join reads version rows the parent's deletion never
+  touched.
+- Using a skill, following every example in the issue — `SkillVersionSchema` has no
+  soft-delete columns, so there is no filter to defeat and the assertion is vacuous.
+- Adding soft-delete columns to `SkillVersionSchema` for symmetry — a schema change in
+  another package to make one test shapelier, and squarely outside this charter.
+- Skipping the test because the behaviour already works — the value is the regression,
+  and an unconditional `withDeleted()` with nothing asserting it is one refactor away
+  from silently becoming conditional.
+
+**Constrains implementation.** Soft-delete the pinned `CommandVersion` **and** the
+pinned `StandardVersion` rows via their repositories' `deleteById`, then assert the
+release still hydrates both at their pinned versions. Do not delete the parent entities.
+Do not assert anything about a deleted skill version. Do not change
+`PackageReleaseRepository`'s reads — they already pass `withDeleted()`; if the new test
+fails, that is a real regression and the fix belongs in the repository, not the test.
+
+---
+
+## D-038 — `withDeleted()` must be called before the joins, not after
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-18`, `D-004`, `D-030`, `D-037`
+
+**Decision.** In `PackageReleaseRepository.hydratedQuery()`, `.withDeleted()` is called
+immediately after `createQueryBuilder(...)` and **before** the three `leftJoinAndSelect`
+calls, with a comment saying why the order matters.
+
+**Reasoning.** This was landed wrong and shipped green. The original spelling —
+three joins, then `.withDeleted()` — produced SQL carrying
+`AND ("recipeVersion"."deleted_at" IS NULL)` on the joined aliases, so a release stopped
+showing any command or standard version that had been soft-deleted. That is AC-18
+failing outright: the promise a release makes about what was shipped, broken by the
+deletion the criterion is specifically about.
+
+The cause is that TypeORM reads the flag at two different times. In
+`SelectQueryBuilder.join()` it is read **eagerly**, while the join is registered, and the
+predicate is written permanently into that join's condition:
+
+```js
+if (joinAttributeMetadata.deleteDateColumn && !this.expressionMap.withDeleted) {
+    const conditionDeleteColumn = `${aliasName}.${...deleteDateColumn.propertyName} IS NULL`;
+    joinAttribute.condition = joinAttribute.condition
+        ? ` ${joinAttribute.condition} AND ${conditionDeleteColumn}`
+        : `${conditionDeleteColumn}`;
+}
+```
+
+For the **root** alias the same flag is read late, in `createWhereExpression`, so the root
+is unaffected by call order. That asymmetry is the whole trap: the two spellings are
+indistinguishable at a glance, both compile, both read as obviously equivalent, and the
+wrong one behaves correctly for the root entity — which is where most uses of
+`withDeleted()` in this codebase live.
+
+**Why it survived until now.** Nothing asserted it. The method carried a comment
+declaring the behaviour and no test exercised it, so the claim and the code were never
+compared. It took a test that soft-deletes the pinned **version row** to expose it —
+deleting the parent `Command`, which is the natural reading of "a component was deleted",
+leaves the version row untouched and passes either way (D-037). The feature came within
+one plausible test of shipping the bug behind a green check.
+
+**Rejected.**
+
+- Overriding the condition per join with an explicit
+  `leftJoinAndSelect(Entity, 'alias', 'alias.id = …')` — hand-maintained SQL for every
+  relation, to buy what one reordered line already gives.
+- Loading the relations separately and merging in application code — reintroduces the
+  per-read fan-out D-003 rejected JSONB storage for.
+- Treating the empty arrays as a pg-mem limitation and recording it as untestable, the
+  way D-027 and D-028 record genuine harness limits — it was checked, and it is not:
+  pg-mem executes the join correctly, and a hand-written raw join over the same tables
+  returns the soft-deleted row. The harness proved the defect rather than fabricating it.
+
+**Constrains implementation.** `.withDeleted()` precedes every `leftJoinAndSelect` in
+`hydratedQuery()`. Keep a comment at the call site stating that the order is load-bearing,
+because the two spellings look interchangeable and a later tidy-up would silently
+reintroduce the bug. The three AC-18 tests stay exactly as written — they are correct and
+they are what makes the ordering permanent.
+
+**Noted for elsewhere, not fixed here.** This shape is likely repeated: the repository's
+own TypeORM standard tells authors to "handle soft-deleted entities properly using
+`withDeleted()`" without mentioning that placement matters. Auditing other repositories
+is outside this charter (D-022) and belongs in its own story.

@@ -161,14 +161,19 @@ export class PackageReleaseRepository
   /**
    * All three families, with the deleted ones: a release keeps showing what it
    * pinned even once the command, standard or skill has been soft deleted.
+   *
+   * The order is critical: .withDeleted() must be called before the joins.
+   * TypeORM bakes the soft-delete predicate into each join at the moment the
+   * join is registered. If .withDeleted() is called after the joins, it has
+   * no effect on them, and they will filter out deleted versions.
    */
   private hydratedQuery() {
     return this.repository
       .createQueryBuilder('packageRelease')
+      .withDeleted()
       .leftJoinAndSelect('packageRelease.recipeVersions', 'recipeVersion')
       .leftJoinAndSelect('packageRelease.standardVersions', 'standardVersion')
-      .leftJoinAndSelect('packageRelease.skillVersions', 'skillVersion')
-      .withDeleted();
+      .leftJoinAndSelect('packageRelease.skillVersions', 'skillVersion');
   }
 
   private async insertJoinRows(
