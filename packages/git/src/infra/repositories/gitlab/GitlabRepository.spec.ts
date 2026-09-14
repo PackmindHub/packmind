@@ -2,6 +2,7 @@ import { GitlabRepository } from './GitlabRepository';
 import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import { gitBlobSha } from '@packmind/node-utils';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
 
@@ -164,19 +165,18 @@ describe('GitlabRepository', () => {
       beforeEach(async () => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
-            // Tree shows file exists
+            // The tree reports the path and the SHA of what it holds, which
+            // is everything the diff needs.
             return Promise.resolve({
-              data: [{ path: 'existing-file.txt', type: 'blob' }],
+              data: [
+                {
+                  path: 'existing-file.txt',
+                  type: 'blob',
+                  id: gitBlobSha('old-content'),
+                  mode: '100644',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            // getFileOnRepo returns content for diff check
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-blob-id',
-                content: Buffer.from('old-content').toString('base64'),
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -202,13 +202,16 @@ describe('GitlabRepository', () => {
         expect(treeCalls.length).toBeGreaterThanOrEqual(1);
       });
 
-      it('calls getFileOnRepo to check content changes', () => {
+      it('downloads no file to work out what changed', () => {
+        // The tree already carries a SHA per path, so the diff is a local
+        // hash comparison. A `GET /repository/files/<path>` per existing file
+        // is the fan-out this replaced.
         const fileCalls = mockAxiosInstance.get.mock.calls.filter(
           (call) =>
             typeof call[0] === 'string' &&
             call[0].includes('/repository/files/'),
         );
-        expect(fileCalls).toHaveLength(1);
+        expect(fileCalls).toHaveLength(0);
       });
 
       it('calls API with update action for existing files', () => {
@@ -246,16 +249,15 @@ describe('GitlabRepository', () => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: [{ path: 'file1.txt', type: 'blob' }],
+              data: [
+                {
+                  path: 'file1.txt',
+                  type: 'blob',
+                  id: gitBlobSha('existing-content'),
+                  mode: '100644',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-blob-id',
-                content: Buffer.from('existing-content').toString('base64'),
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -864,20 +866,19 @@ describe('GitlabRepository', () => {
       const existingContent = 'existing script content';
 
       beforeEach(() => {
-        // File exists in tree and has identical content
+        // File exists in tree with identical content and no execute bit
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              data: [
+                {
+                  path: 'scripts/run.sh',
+                  type: 'blob',
+                  id: gitBlobSha(existingContent),
+                  mode: '100644',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-sha',
-                content: Buffer.from(existingContent).toString('base64'),
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -952,17 +953,15 @@ describe('GitlabRepository', () => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              data: [
+                {
+                  path: 'scripts/run.sh',
+                  type: 'blob',
+                  id: gitBlobSha(existingContent),
+                  mode: '100755',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-sha',
-                content: Buffer.from(existingContent).toString('base64'),
-                execute_filemode: true,
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -1030,16 +1029,15 @@ describe('GitlabRepository', () => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              data: [
+                {
+                  path: 'scripts/run.sh',
+                  type: 'blob',
+                  id: gitBlobSha(existingContent),
+                  mode: '100644',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-sha',
-                content: Buffer.from(existingContent).toString('base64'),
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -1090,17 +1088,15 @@ describe('GitlabRepository', () => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              data: [
+                {
+                  path: 'scripts/run.sh',
+                  type: 'blob',
+                  id: gitBlobSha(existingContent),
+                  mode: '100755',
+                },
+              ],
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            return Promise.resolve({
-              data: {
-                blob_id: 'existing-sha',
-                content: Buffer.from(existingContent).toString('base64'),
-                execute_filemode: true,
-              },
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -1140,37 +1136,25 @@ describe('GitlabRepository', () => {
     });
 
     describe('when committing many existing files', () => {
-      it('processes file content checks in batches', async () => {
-        // Create 25 files to exceed the batch size of 10
-        const files = Array.from({ length: 25 }, (_, i) => ({
-          path: `file-${i}.txt`,
-          content: `new-content-${i}`,
-        }));
+      // This used to assert that the per-file downloads were batched ten at a
+      // time. There are no per-file downloads left to batch, so what is worth
+      // pinning is that the request count no longer follows the file count.
+      const manyFiles = Array.from({ length: 25 }, (_, i) => ({
+        path: `file-${i}.txt`,
+        content: `new-content-${i}`,
+      }));
 
-        // Track concurrent getFileOnRepo calls
-        let maxConcurrent = 0;
-        let currentConcurrent = 0;
-
+      beforeEach(() => {
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
-              data: files.map((f) => ({ path: f.path, type: 'blob' })),
+              data: manyFiles.map((f) => ({
+                path: f.path,
+                type: 'blob',
+                id: gitBlobSha('old-content'),
+                mode: '100644',
+              })),
               headers: {},
-            });
-          }
-          if (url.includes('/repository/files/')) {
-            currentConcurrent++;
-            maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                currentConcurrent--;
-                resolve({
-                  data: {
-                    blob_id: 'blob-id',
-                    content: Buffer.from('old-content').toString('base64'),
-                  },
-                });
-              }, 1);
             });
           }
           return Promise.reject({ response: { status: 404 } });
@@ -1183,10 +1167,147 @@ describe('GitlabRepository', () => {
             web_url: 'https://gitlab.com/test/-/commit/commit-sha',
           },
         });
+      });
 
-        await gitlabRepository.commitFiles(files, 'Batch test');
+      it('downloads no file to work out what changed', async () => {
+        await gitlabRepository.commitFiles(manyFiles, 'Batch test');
 
-        expect(maxConcurrent).toBeLessThanOrEqual(10);
+        const fileCalls = mockAxiosInstance.get.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('/repository/files/'),
+        );
+        expect(fileCalls).toHaveLength(0);
+      });
+
+      it('reads the tree once however many files are committed', async () => {
+        await gitlabRepository.commitFiles(manyFiles, 'Batch test');
+
+        const treeCalls = mockAxiosInstance.get.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('/repository/tree'),
+        );
+        expect(treeCalls).toHaveLength(1);
+      });
+
+      it('still commits every changed file', async () => {
+        await gitlabRepository.commitFiles(manyFiles, 'Batch test');
+
+        const [, commitPayload] = mockAxiosInstance.post.mock.calls[0];
+        expect((commitPayload as { actions: unknown[] }).actions).toHaveLength(
+          25,
+        );
+      });
+
+      describe('when a file differs from the repository copy only by line endings', () => {
+        // The hash covers the exact bytes that would be written, with no
+        // normalisation, so CRLF and LF are two different files. That is also
+        // what decoding and string-comparing concluded, so this pins a verdict
+        // being preserved rather than a new one.
+        const lfContent = 'line one\nline two\n';
+        const crlfContent = 'line one\r\nline two\r\n';
+
+        beforeEach(() => {
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              return Promise.resolve({
+                data: [
+                  {
+                    path: 'notes.txt',
+                    type: 'blob',
+                    id: gitBlobSha(lfContent),
+                    mode: '100644',
+                  },
+                ],
+                headers: {},
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha-line-endings',
+              author_email: 'test@example.com',
+              web_url:
+                'https://gitlab.com/test/-/commit/commit-sha-line-endings',
+            },
+          });
+        });
+
+        it('counts the file as changed', async () => {
+          await gitlabRepository.commitFiles(
+            [{ path: 'notes.txt', content: crlfContent }],
+            'Rewrite with CRLF',
+          );
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            expect.objectContaining({
+              actions: [
+                {
+                  action: 'update',
+                  file_path: 'notes.txt',
+                  content: crlfContent,
+                },
+              ],
+            }),
+          );
+        });
+
+        it('counts the same line endings as unchanged', async () => {
+          const result = await gitlabRepository.commitFiles(
+            [{ path: 'notes.txt', content: lfContent }],
+            'No change',
+          );
+
+          expect(result.sha).toBe('no-changes');
+        });
+      });
+
+      describe('when the tree reports no SHA for an existing path', () => {
+        // Nothing in the response guarantees the field. Committing a file that
+        // turns out to be identical costs one action; skipping one that changed
+        // loses the change, so the unknown case commits.
+        beforeEach(() => {
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              return Promise.resolve({
+                data: [{ path: 'notes.txt', type: 'blob', mode: '100644' }],
+                headers: {},
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha-unknown',
+              author_email: 'test@example.com',
+              web_url: 'https://gitlab.com/test/-/commit/commit-sha-unknown',
+            },
+          });
+        });
+
+        it('updates the file rather than skipping it', async () => {
+          await gitlabRepository.commitFiles(
+            [{ path: 'notes.txt', content: 'some content' }],
+            'Unknown SHA',
+          );
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            expect.objectContaining({
+              actions: [
+                {
+                  action: 'update',
+                  file_path: 'notes.txt',
+                  content: 'some content',
+                },
+              ],
+            }),
+          );
+        });
       });
 
       describe('when committing a mix of existing and new files', () => {
@@ -1203,18 +1324,20 @@ describe('GitlabRepository', () => {
             if (url.includes('/repository/tree')) {
               return Promise.resolve({
                 data: [
-                  { path: 'existing-1.txt', type: 'blob' },
-                  { path: 'existing-2.txt', type: 'blob' },
+                  {
+                    path: 'existing-1.txt',
+                    type: 'blob',
+                    id: gitBlobSha('old-content'),
+                    mode: '100644',
+                  },
+                  {
+                    path: 'existing-2.txt',
+                    type: 'blob',
+                    id: gitBlobSha('old-content'),
+                    mode: '100644',
+                  },
                 ],
                 headers: {},
-              });
-            }
-            if (url.includes('/repository/files/')) {
-              return Promise.resolve({
-                data: {
-                  blob_id: 'blob-id',
-                  content: Buffer.from('old-content').toString('base64'),
-                },
               });
             }
             return Promise.reject({ response: { status: 404 } });
