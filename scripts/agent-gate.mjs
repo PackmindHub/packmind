@@ -350,6 +350,44 @@ function stepScoped(cfg, spec, args, changed, env) {
   }
 }
 
+// The Packmind CLI enforces this repo's own coding standards, which ESLint knows
+// nothing about — a unit can be green under `scoped` and `wide` and still break
+// CI on a rule none of them check. Changed files only, so a violation names the
+// unit that introduced it rather than inheriting one from a file nobody touched.
+//
+// The awkward part is that the CLI exits 1 for two unrelated reasons: it found
+// violations, and it could not run at all (no key, an expired key, no network,
+// not built). Treating the second as a unit failure would blame the executor for
+// the environment and turn the metrics into noise — the same reason `baseline`
+// exists. So an unavailable checker is recorded as skipped and the unit proceeds;
+// CI runs the identical lint with a valid key and remains the backstop for
+// violations. The skip is written to metrics, never silent.
+const STANDARDS_UNAVAILABLE =
+  /invalid or expired api key|api key is not set|api key is missing|unauthorized|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|socket hang up/i;
+
+function stepStandards(cfg, spec, args, env) {
+  const cmd = cfg.commands?.packmindLint;
+  if (!cmd) return;
+
+  const bin = cfg.packmindLintBinary;
+  if (bin && !fs.existsSync(path.join(ROOT, bin))) {
+    record('standards-skipped:not-built', true, 0);
+    return;
+  }
+
+  const r = run(cmd, env);
+  if (r.code !== 0 && STANDARDS_UNAVAILABLE.test(r.stdout)) {
+    record('standards-skipped:unavailable', true, r.seconds);
+    return;
+  }
+
+  record('standards', r.code === 0, r.seconds);
+  // A standards violation is a specification failure, not a capability one: the
+  // executor wrote valid code against a house rule it was never told about. It
+  // re-specs at the same tier with the rule quoted, like `tests`.
+  if (r.code !== 0) fail(spec, args, 'standards', cmd, r.stdout);
+}
+
 // Scoped and repo-wide detect different things. The orchestrator never reads code,
 // so the dangerous failure is action at a distance: a signature change that is
 // green everywhere inside the declared scope and red in a caller it never touched.
@@ -535,6 +573,7 @@ if (args.mode === 'sweep') {
   const changed = changedFiles();
   stepAutofix(cfg, changed, env);
   stepWide(cfg, null, args, changed, env);
+  stepStandards(cfg, null, args, env);
   writeMetrics(null, args, 'pass', null, { files_changed: changed.length });
   process.stdout.write('OK\n');
   process.exit(PASS);
@@ -544,6 +583,7 @@ const spec = readJson(path.resolve(args.spec));
 const changed = stepScope(cfg, spec, args);
 stepAutofix(cfg, changed, env);
 stepScoped(cfg, spec, args, changedFiles(), env);
+stepStandards(cfg, spec, args, env);
 stepWide(cfg, spec, args, changed, env);
 stepTests(cfg, spec, args, env);
 pass(spec, args);

@@ -17,8 +17,14 @@
     "formatCheck": "./node_modules/.bin/prettier -c .",
     "formatFix": "./node_modules/.bin/prettier -w",
     "lintFix": "./node_modules/.bin/eslint --fix",
-    "scoped": "./node_modules/.bin/nx affected -t lint build --nxBail --parallel=6 --tuiAutoExit --files="
+    "scoped": "./node_modules/.bin/nx affected -t lint build --nxBail --parallel=6 --tuiAutoExit --files=",
+
+    "$comment_packmindLint": "The Packmind CLI enforces this repo's own coding standards, which ESLint knows nothing about, so a unit can be green under `wide` and still break CI. Changed files only, so a violation names the unit that introduced it rather than inheriting someone else's.",
+    "packmindLint": "node ./dist/apps/cli/main.cjs lint --changed-files --continue-on-missing-key"
   },
+
+  "$comment_packmindLintBinary": "Checked for existence before the standards step runs. The CLI is a build artifact, and requiring `nx build packmind-cli` before every unit would cost more than the check; when it is absent the step is skipped and recorded as skipped, never silently passed.",
+  "packmindLintBinary": "dist/apps/cli/main.cjs",
 
   "frontendTypecheckWhen": ["apps/frontend/**", "packages/ui/**", "packages/frontend-lib/**"],
 
