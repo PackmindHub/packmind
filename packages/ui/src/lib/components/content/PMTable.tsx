@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table } from '@chakra-ui/react';
+import { Box, Table } from '@chakra-ui/react';
 import { LuArrowUp, LuArrowDown, LuArrowUpDown } from 'react-icons/lu';
 import { PMCheckbox } from '../form/PMCheckbox';
 
@@ -163,6 +163,19 @@ export function PMTable<T extends object = object>({
     selectedRows.size === rowIds.length &&
     rowIds.every((id) => selectedRows.has(id));
 
+  /**
+   * Screen-reader announcement of the column's sort state, on the `th` where
+   * the spec expects it. Without it the arrow icon is the only signal, and it
+   * is a picture.
+   */
+  const getAriaSort = (
+    sortDirection?: 'asc' | 'desc' | null,
+  ): 'ascending' | 'descending' | 'none' => {
+    if (sortDirection === 'asc') return 'ascending';
+    if (sortDirection === 'desc') return 'descending';
+    return 'none';
+  };
+
   const getSortIcon = (sortDirection?: 'asc' | 'desc' | null) => {
     switch (sortDirection) {
       case 'asc':
@@ -217,22 +230,43 @@ export function PMTable<T extends object = object>({
               key={column.key}
               {...stickyHeaderProps}
               textAlign={getTextAlign(column.align)}
-              cursor={column.sortable ? 'pointer' : undefined}
-              onClick={column.sortable ? () => onSort?.(column.key) : undefined}
-              userSelect={column.sortable ? 'none' : undefined}
+              aria-sort={
+                column.sortable ? getAriaSort(column.sortDirection) : undefined
+              }
             >
+              {/*
+               * The control is a real button inside the header cell rather than
+               * a click handler on the `th`: a `th` is not focusable and does
+               * not respond to Enter or Space, so sorting was mouse-only. The
+               * button stretches to the cell so the hit area is unchanged.
+               */}
               {column.sortable ? (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap',
+                <Box
+                  as="button"
+                  onClick={() => onSort?.(column.key)}
+                  display="inline-flex"
+                  alignItems="center"
+                  gap="4px"
+                  whiteSpace="nowrap"
+                  width="100%"
+                  justifyContent={getTextAlign(column.align)}
+                  background="none"
+                  border="none"
+                  padding={0}
+                  font="inherit"
+                  color="inherit"
+                  cursor="pointer"
+                  userSelect="none"
+                  borderRadius="sm"
+                  _focusVisible={{
+                    outline: '2px solid',
+                    outlineColor: 'branding.primary',
+                    outlineOffset: '2px',
                   }}
                 >
                   {column.header}
                   {getSortIcon(column.sortDirection)}
-                </span>
+                </Box>
               ) : (
                 column.header
               )}
