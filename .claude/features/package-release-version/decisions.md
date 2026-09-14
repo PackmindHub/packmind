@@ -1,0 +1,1078 @@
+# Decisions — Release a numbered version of a package
+
+Append-only. A decided entry is never edited and never deleted.
+
+**When implementation reveals a decision was wrong** — not merely ambiguous —
+append a new entry carrying `supersedes: D-00n`, and append `superseded-by: D-0nn`
+to the old one. That single line is the only permitted mutation of a decided entry.
+
+---
+
+## Inherited assumptions, surfaced before anything was decided
+
+The charter takes five things for granted. Each is named here so that a reader can
+see it was examined rather than absorbed, and each is settled by an entry below.
+
+1. *That a release is a new thing, and not a reuse of `DistributedPackage`* — which
+   already pins the three version families. → D-001, D-003.
+2. *That "component" means exactly the three arrays on `Package`* — `recipes`,
+   `standards`, `skills` — and nothing else a package might grow. → D-002.
+3. *That the gate is a question asked about a package, not a state a package is in.*
+   → D-006.
+4. *That the version string is the identity of a release*, rather than an ordinal
+   with a label. → D-009, D-012.
+5. *That the release is written by, and read from, `packages/deployments`* — the
+   package that owns `Package` and already owns every version-pinning read. → D-001.
+
+---
+
+## D-001 — A release is a new aggregate in `packages/deployments`, named `PackageRelease`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-17`, `UK-3`
+
+**Decision.** A new entity `PackageRelease` — types in
+`packages/types/src/deployments/PackageRelease.ts`, schema, repository, service and
+use cases in `packages/deployments`. Not `PackageVersion`, and not a new Nx package.
+
+**Reasoning.** *Why `packages/deployments`.* The change gate (D-006) has to read a
+package's components, its title and its description, all owned by `PackageService`,
+and has to read the latest version of each component through `ICommandsPort`,
+`IStandardsPort` and `ISkillsPort` — three ports `packages/deployments` already
+injects, in `PublishPackagesUseCase`. A separate `packages/releases` would need a port
+back into deployments for the first read and would re-declare the other three, to buy
+a boundary nothing is pushing against.
+
+*Why not `PackageVersion`.* Three sibling types already carry that suffix —
+`SkillVersion`, `CommandVersion`, `StandardVersion` — and all three mean the same
+thing: one immutable revision of one artefact's content, numbered with
+`version: number`. A `PackageVersion` would sit in that family and break its two
+rules at once: its version is a string, `0.1.0`, and it holds no content of its own,
+only pointers to other versions. The reader who assumes the family idiom would write
+`release.version + 1`. `PackageRelease` costs one word and removes that reading.
+
+**Rejected.**
+
+- `PackageVersion` — consistency with the version family is exactly the trap; see
+  above. The name also makes `packageVersion.version` mean two different kinds of
+  thing one keystroke apart.
+- A new `packages/releases` — needs a port into deployments for the package read and
+  copies three existing port injections, for no boundary anyone is defending.
+- Storing the release on `Package` itself (a `currentVersion` column) — a package has
+  *many* releases (AC-16 asks for both 0.1.0 and 0.2.0 to be listed) and they are
+  immutable; a column would hold the latest and lose the rest.
+
+**Constrains implementation.** Declare `PackageRelease`, `PackageReleaseId` and
+`createPackageReleaseId` in `packages/types/src/deployments/PackageRelease.ts`,
+exported through `packages/types/src/deployments/index.ts`. Put the schema in
+`packages/deployments/src/infra/schemas/`, the repository in
+`packages/deployments/src/infra/repositories/`, and register both in
+`DeploymentsRepositories` / `DeploymentsServices` the way `PackageRepository` and
+`PackageService` are registered. Do not create a new Nx project. Do not name any type
+`PackageVersion`.
+
+---
+
+## D-002 — A release pins the three component families and nothing else
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-21`
+
+**Decision.** A release pins `CommandVersionId[]`, `StandardVersionId[]` and
+`SkillVersionId[]` — the three arrays `Package` carries, no more. "Component" in every
+criterion means one of those three, and `recipes`/`commands` are one family under two
+names, as everywhere else in this codebase.
+
+**Reasoning.** `Package` has exactly three artefact arrays and the whole distribution
+path is written three times over them; there is no fourth kind to be forward-compatible
+with, and a generic `{ type, id }[]` would be the first place in the tree to model them
+uniformly — a refactor wearing a feature's clothes. The recipes/commands duality is
+already handled at the controller boundary by the `PackageResponse` superset
+(`commands` is a twin of `recipes`, same value), and a release contract that invented a
+third spelling would be the only one that had to be explained.
+
+AC-21 is the reason this is a decision and not an assumption: every example in the
+issue uses a skill, and three parallel arrays are exactly the shape where a
+skill-shaped implementation compiles and ships with two empty branches.
+
+**Rejected.**
+
+- A polymorphic `components: { type, id, versionId }[]` — uniform and tempting, but it
+  would be the only place in the codebase that models the three as one, so every read
+  would fan back out into three anyway to join against three tables.
+- Pinning component ids plus a version *number* rather than a version id — the number
+  is scoped to its artefact, so every read would need `(skillId, 4) → SkillVersion`, a
+  lookup the version id already is.
+
+**Constrains implementation.** A `PackageRelease` carries three separate arrays, named
+`recipeVersionIds`, `standardVersionIds` and `skillVersionIds` — matching
+`PublishPackagesUseCase`'s existing `PackageVersionsMap` naming exactly. Every test
+that exercises the gate or the pinning must use a package holding at least one command,
+one standard and one skill; a test fixture holding only skills is not acceptable
+coverage for any criterion.
+
+---
+
+## D-003 — Store the release like `DistributedPackage` does: one row, three many-to-many join tables
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-17`, `AC-18`, `UK-3`
+
+**Decision.** A `package_releases` table (uuid pk, `package_id`, `version`, `name`,
+`description`, timestamps), plus `package_release_command_versions`,
+`package_release_standard_versions` and `package_release_skill_versions` — the exact
+shape `DistributedPackageSchema` declares, with the same `many-to-many` + `joinTable`
+idiom and the same column naming.
+
+**Reasoning.** The problem — pin a set of artefact versions to one row, immutably — was
+solved in this package already, for distributions, and the solution is four tables and
+a schema file a reader of `DistributedPackageSchema` recognises on sight. Copying it
+means the release repository's hydration code has a working model twenty lines away,
+and means a future reader comparing "what a distribution pinned" with "what a release
+pinned" is comparing like with like.
+
+It also gives AC-17 for free without any code: immutability is not enforced by a flag
+or a trigger, it is the absence of any write path. The release rows are inserted once,
+and nothing in this feature updates them. A newer skill version is a new row in
+`skill_versions`; the join row in `package_release_skill_versions` still points at the
+old one.
+
+**Rejected.**
+
+- JSONB columns holding the three id arrays on the release row — one table instead of
+  four, and the insert is trivial. Rejected because the join to the version tables is
+  the only read anyone performs (browsing a release means showing its components), and
+  a JSONB array cannot be joined; every read would become fetch-then-`In(...)` in
+  application code, three times, which is the hydration `DistributedPackageRepository`
+  gets from TypeORM.
+- Copying the rendered content of each component into the release — bulletproof against
+  anything happening to the version rows, and the only design that survives a *hard*
+  delete. Rejected because component deletion is soft everywhere (D-004) so the version
+  rows do not go away, and because it would duplicate every skill prompt and every
+  standard's rules once per release, making a release cost megabytes and making
+  "0.1.0 pins v4" a claim the data could no longer prove.
+- Adding `deletedAt` / `softDeleteSchemas` to `package_releases` — a release is
+  immutable and undeletable by this feature (charter non-goal); a soft-delete column
+  nothing writes is an invitation.
+
+**Constrains implementation.** Write one TypeORM migration under
+`packages/migrations/src/migrations/`, created with
+`npx typeorm migration:create packages/migrations/src/migrations/CreatePackageReleases`,
+following the `how-to-write-typeorm-migrations-in-packmind` skill — `PackmindLogger`,
+try/catch, and a `down` that drops all four tables. Use `uuidMigrationColumn` and
+`timestampsMigrationColumns`. Model the schema file on
+`packages/deployments/src/infra/schemas/DistributedPackageSchema.ts`. The
+`package_id` FK is `onDelete: 'CASCADE'`, matching `DistributedPackageSchema`. Add a
+unique index on `(package_id, version)` — D-013 depends on it. Never write an `UPDATE`
+against `package_releases` or any of its join tables.
+
+---
+
+## D-004 — Deleted components stay browsable because deletion is soft and versions are never deleted
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-18`, `UK-3`
+
+**Decision.** AC-18 needs no mechanism of its own. `SkillSchema`, `CommandSchema` and
+`StandardSchema` all carry `softDeleteSchemas`, and deleting a skill sets `deletedAt`
+rather than removing rows — so the pinned version rows survive, and the join rows still
+resolve. Reading a release passes `includeDeleted: true` (the option
+`AbstractRepository` already exposes, and `SkillRepository`, `StandardRepository` and
+`CommandRepository` all honour) so the soft-delete filter does not hide them.
+
+**Reasoning.** This was found, not designed. `DeleteSkillUseCase` logs "Perform soft
+delete"; `AbstractRepository.findById` already takes `opts?.includeDeleted`; three
+repositories already pass `withDeleted` through. The feature that looked like it needed
+content copying (rejected in D-003) needs one boolean.
+
+The consequence is worth stating because it is user-visible and slightly surprising: a
+component deleted from the space is still *readable* through an old release, by name
+and by content, forever. That is the intent — a release is a promise about what was
+shipped — but it means "delete" stops meaning "gone" for anyone browsing history.
+
+**Rejected.**
+
+- Rendering deleted components as a tombstone ("this component no longer exists") —
+  AC-18 says browsing 0.1.0 "still shows 'Work with Jest' v4", which is the content,
+  not a headstone. A tombstone also makes the release a worse record than the
+  distribution that shipped it, which shows the real thing.
+- Blocking component deletion once it is pinned by a release — turns every release into
+  a lock on the space's content; nobody asked for that and it would make releasing feel
+  dangerous.
+
+**Constrains implementation.** Every read that hydrates a release's components must
+pass `includeDeleted: true` (or `withDeleted()`, per the repository's own idiom). Do
+not filter deleted components out of a release's content. Do not change any deletion
+use case in `packages/skills`, `packages/commands` or `packages/standards`. Cover this
+with a test that deletes the component and then reads the release — asserting on the
+repository option is not the criterion.
+
+---
+
+## D-005 — The release snapshots the package's name and description too
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-5`, `AC-6`, `AC-7`, `AC-18`
+
+**Decision.** `package_releases` carries `name` and `description`, copied from the
+package at the moment of the cut. The change gate compares against these columns, and
+browsing a release shows the title and description as they were.
+
+**Reasoning.** AC-5 and AC-6 make details a *change source*, which means the gate needs
+a prior value to compare against, and the only honest place for it is the release
+itself. The alternative — reading the package's `updatedAt` against the release's
+`createdAt` — is wrong twice over: it fires on a component being added (a different
+change source), and it cannot satisfy AC-5's "renaming it back disables it again",
+since a revert bumps `updatedAt` like any other write.
+
+Storing them also makes the release a complete snapshot rather than a partial one,
+which is what makes AC-18's browsing readable: 0.1.0 of a package since renamed shows
+the name it had.
+
+The slug is deliberately not stored. It is derived from the name
+(`packageSlugHelpers`), and a release is addressed by its package and its version, not
+by a slug of its own.
+
+**Rejected.**
+
+- Comparing `package.updatedAt` against `release.createdAt` — cheap, and wrong for
+  AC-5, AC-7, AC-8's revert cases and AC-10. Any edit-and-revert would read as a
+  change.
+- Storing a hash of the details instead of the values — the same gate answer, one
+  column, but it cannot render AC-18's released title, and a hash mismatch can never be
+  explained to anyone.
+- Storing the slug as well — derived, and unused by any read here.
+
+**Constrains implementation.** `name` and `description` are `NOT NULL` columns on
+`package_releases`, written from the package at cut time and never updated. Do not
+reference `packages.updated_at` anywhere in the gate.
+
+---
+
+## D-006 — The gate is computed on read, never stored
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-2`..`AC-10`, `UK-4`
+
+**Decision.** "Can this package be released, and why not" is computed each time it is
+asked, by comparing the package's current state against its latest release. No column,
+no cached flag, no event.
+
+**Reasoning.** Three of the four change sources happen outside `packages/deployments`
+entirely: publishing a new version of a skill, a command or a standard is
+`packages/skills`, `packages/commands`, `packages/standards`, and none of them knows a
+package exists. A stored flag would need every one of those publish paths to notify
+deployments — a new outbound dependency in three packages, in a direction that does not
+currently exist, to maintain a boolean that can then be wrong.
+
+The computation is small and bounded: one release row, its three join arrays, and one
+latest-version lookup per component of the package. That is the same fan-out
+`PublishPackagesUseCase` already performs on every distribution, and a package holds
+components in the tens.
+
+**Rejected.**
+
+- A `hasChangesSinceRelease` column maintained by the write paths — needs three
+  packages to learn about a fourth's concern, and is a cache with four invalidation
+  sources and no way to notice when it is stale.
+- Recomputing on a schedule / in a BullMQ job — same staleness, plus a job.
+- Computing it in the frontend from what it already has — it has none of it:
+  `PackageResponse` carries component **ids** only, never their latest versions.
+
+**Constrains implementation.** Implement the gate as a read. Do not add a column to
+`packages`, do not emit or consume an event, and do not modify any use case in
+`packages/skills`, `packages/commands` or `packages/standards`.
+
+---
+
+## D-007 — One ordered verdict function, with `no_components` evaluated first
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-9`, `AC-10`
+
+**Decision.** The gate is one function returning one verdict, in this order:
+
+1. the package holds no component → `no_components`
+2. it has never been released → `ready`
+3. nothing differs from the latest release → `no_change`
+4. otherwise → `ready`
+
+Three change sources, one gate — component versions, details, component list are
+inputs to step 3, not three independent checks.
+
+**Reasoning.** AC-9 is the whole reason the order is written down: removing the last
+component *is* a change to the component list and *is* an empty package, and the issue
+says the reason shown must be "Add at least one component". Two independent checks
+would race to produce the message; an ordered function cannot.
+
+AC-10 is the mirror image — one change of any kind suffices — and it is what makes
+step 3 an `OR` over three comparisons rather than three separately reportable states.
+The user is never told *which* source changed, only that something did, so the verdict
+does not carry a breakdown.
+
+**Rejected.**
+
+- Three independent booleans surfaced to the UI (`detailsChanged`, `listChanged`,
+  `versionsChanged`) — richer, and nothing in the issue asks for it; it would put the
+  precedence decision in the renderer, where AC-9 would be got wrong.
+- Reporting `no_change` for an empty never-released package — reads as "nothing has
+  changed since —", which is not a sentence.
+
+**Constrains implementation.** Write the verdict as a single pure function with the
+four branches above, in that order, and test each branch by name. An empty package
+returns `no_components` whether or not it has ever been released and whether or not its
+content differs.
+
+---
+
+## D-008 — Comparison rules: names are trimmed and case-folded, descriptions are trimmed only, component lists are unordered sets, versions compare by id
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-4`, `AC-5`, `AC-6`, `AC-7`, `AC-8`, `UK-2`
+
+**Decision.** Four comparisons, each stated exactly:
+
+- **name** — `trim()` then case-insensitive compare.
+- **description** — `trim()` then exact compare. *Case-sensitive.*
+- **component list** — compare as an unordered set of `(family, id)` pairs; order and
+  arrival sequence are invisible.
+- **component versions** — compare the pinned `…VersionId` against the component's
+  current latest `…VersionId`. Not the version *number*.
+
+**Reasoning.** *Name.* AC-7 asks for both, and the issue's own justification —
+"the package name is trimmed anyway", "a case-only edit is not a change" — is the
+identity argument: the slug is derived from the name and is unmoved by case, so
+`My-Package` and `my-package` are the same package wearing the same slug.
+
+*Description, and why it differs.* UK-2 asked whether the title's rules transfer. They
+do not. A description is prose, and capitalising a sentence or lower-casing a product
+name is an edit a writer meant; refusing to release it would be refusing to publish a
+correction. Trim survives the transfer because trailing whitespace is never meaningful
+and a textarea produces it by accident. The asymmetry is deliberate and is the kind of
+thing that gets "fixed" into symmetry by a later reader, which is why it is here.
+
+*Component list.* AC-8's "added then removed" is only disabled if the comparison is a
+set. Array equality would report a change for a reordering that no user performed.
+
+*Component versions.* AC-4 needs "v4 pinned, v5 available" for display, but the
+*comparison* must be on ids: the version number is scoped to its artefact, and two
+components at v4 say nothing about each other. Comparing ids also means "latest" is
+whatever the port returns, with no arithmetic of ours in between.
+
+**Rejected.**
+
+- Case-folding the description too — symmetric, and silently refuses a real editorial
+  change. See above.
+- Normalising whitespace *inside* the name or description (collapsing double spaces) —
+  not asked for, and it would make the gate disagree with what the edit form shows.
+- Comparing component lists by a sorted-and-joined string — works, and turns a set
+  comparison into a string bug waiting for an id containing the separator.
+- Comparing version *numbers* — breaks the moment a component is removed and re-added,
+  and is meaningless across families.
+
+**Constrains implementation.** Implement these four comparisons as pure functions with
+no I/O, in `packages/deployments`, and test them directly. Use `trim()` and
+`toLowerCase()` for the name, `trim()` alone for the description. Build the component
+comparison over a `Set` of `${family}:${id}` keys. Never compare `SkillVersion.version`,
+`CommandVersion.version` or `StandardVersion.version` numerically to decide the gate.
+
+---
+
+## D-009 — `X.Y.Z` is validated by one regex and one increment function, both in `packages/types`, with no semver dependency
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-11`..`AC-15`, `UK-1`
+
+**Decision.** A pure module `packages/types/src/deployments/packageReleaseVersion.ts`
+holding: a parser over `^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$`, a comparator on
+the parsed triple, and `nextVersions(current)` returning the three increments in the
+order patch, minor, major. Both the release form and the server validation call the
+same functions. No `semver` package is added.
+
+**Reasoning.** *Why one module, shared.* AC-15 exists precisely because the form's
+choices and the server's check can disagree, and the issue says so in prose: "Narrowing
+the choices a user can pick from does not remove the check." One module called from
+both ends is the only version of that sentence that cannot rot. `packages/types` is
+`env:shared`, which is what makes it reachable from `apps/frontend` (`env:browser`) and
+from the API at once; and it already hosts a pure function next to a type —
+`isPackagePublishableAsPlugin` lives in `Package.ts` — so this is an established idiom,
+not a new one.
+
+*Why no `semver`.* The library's job is accepting the full grammar: prereleases, build
+metadata, ranges, `v` prefixes, loose mode. AC-12 refuses `1.2.0-beta-2`, so we would
+parse with semver and then re-reject most of what it accepted. The grammar we do accept
+is one regex, and the leading-zero rule comes with it for free — `01.2.3` is refused,
+which is right, because accepting it would make two distinct strings mean one version
+and break the unique constraint's job.
+
+*Why the triple and not the string.* `0.10.0` sorts before `0.9.0` lexically. Any
+ordering anywhere — the version list, "current version", the greater-than check — goes
+through the parsed triple.
+
+**Rejected.**
+
+- `semver` from npm — accepts a grammar we then have to narrow, and adds a dependency
+  to `packages/types`, which today imports nothing.
+- Validating only on the server and letting the form offer three buttons — AC-12 needs
+  the form to refuse `1,2,3` and keep it, which is client-side behaviour; and the two
+  would drift.
+- Duplicating the regex in the frontend — the same drift, written down twice.
+- Storing major/minor/patch as integer columns to order in SQL — three columns that can
+  disagree with the string, bought to order a list of a few dozen rows that is already
+  fully loaded in memory.
+
+**Constrains implementation.** Put the parser, the comparator and `nextVersions` in
+`packages/types/src/deployments/packageReleaseVersion.ts`, exported through the
+deployments barrel. That file must import nothing. Do not add `semver` to
+`package.json`. Never order releases by the `version` string in SQL or with a plain
+string comparison — parse, then compare the triple.
+
+---
+
+## D-010 — A never-released package is treated as `0.0.0`, and the first release defaults to `0.1.0`
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-1`, `AC-11`, `UK-1`
+
+**Decision.** With no release, the current version is `0.0.0`, so `nextVersions` offers
+`0.0.1`, `0.1.0` and `1.0.0` — the same three increments as anywhere else. The
+pre-filled default is the **patch** increment everywhere except the first release,
+where it is the **minor**, `0.1.0`.
+
+**Reasoning.** UK-1 asked what the increment rule means with nothing to increment from.
+Treating "never released" as `0.0.0` keeps one code path: the form, the server check
+and the suggestion all keep calling the same `nextVersions`, and no branch anywhere
+says "unless this is the first".
+
+The default is the one exception, and it is worth the exception. Every example in the
+issue starts a package's life at `0.1.0` — "released in 0.1.0" appears in eleven
+scenarios and `0.0.1` in none — and a playbook's first public version reading `0.0.1`
+looks like a mistake rather than a choice. The three options are all still offered, so a
+team that wants `1.0.0` is one click away.
+
+**Rejected.**
+
+- A free-form first version — destroys the single-source-of-truth argument of D-009 at
+  the one moment it is easiest to get wrong, and makes "only the three increments" a
+  rule with an exception rather than a rule.
+- `0.1.0` fixed, no choice, for the first release — refuses a team that considers its
+  playbook production-ready, and the increments rule already permits `1.0.0`.
+- Patch (`0.0.1`) as the first default, for consistency — consistent, and wrong in the
+  only direction that matters: the default is what most releases will actually be
+  named.
+
+**Constrains implementation.** When a package has no release, use `0.0.0` as the
+current version for every computation. Do not special-case the first release anywhere
+except the choice of pre-filled default. The version area for such a package reads
+"Not released yet", not "0.0.0" — `0.0.0` is an internal sentinel and must never be
+rendered.
+
+---
+
+## D-011 — Refusals and gate reasons are codes; the sentences live in one frontend file
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-12`, `AC-13`, `AC-14`, `AC-15`, `AC-20`
+
+**Decision.** The server answers with a code and the values the sentence needs —
+`{ code: 'no_components' | 'no_change' | 'not_greater' | 'malformed' | 'not_an_increment', currentVersion }`
+— and never with prose. The four sentences the criteria quote are built in
+`apps/frontend/src/domain/deployments/constants/messages.ts`, beside the existing
+`PACKAGE_MESSAGES`:
+
+- `no_components` → "Add at least one component"
+- `no_change` → `Nothing has changed since ${currentVersion}`
+- `not_greater` → `Version must be greater than ${currentVersion}`
+- `malformed`, `not_an_increment` → "Version must follow X.Y.Z"
+
+**Reasoning.** Two of the four sentences interpolate the current version, which the
+client already holds — so a server-rendered string would be the server formatting data
+the client has, in a language the server does not know is the user's. And two of the
+five codes are raised on the client (the form validates before it submits) while the
+same two are raised on the server (AC-15, and the race in AC-20); codes let both ends
+produce the identical sentence from the identical function, which is what makes a
+frontend test asserting on that sentence meaningful.
+
+`PACKAGE_MESSAGES` already exists and already does exactly this for the package domain,
+including interpolating functions (`confirmation.deletePackage(name)`). This is one
+more section in it, not a new idea.
+
+**Rejected.**
+
+- Server-rendered messages — puts copy in `packages/deployments`, splits the four
+  sentences across two repositories' worth of concerns, and makes changing a word a
+  backend deploy.
+- A single `refused` boolean with a free-text `message` — the form has to branch on the
+  code anyway (AC-12 keeps the field's value, AC-13 does not necessarily), and matching
+  on message text is what `reason` fields exist to prevent.
+- Reusing the existing `ServerErrorResponse.reason` channel for the *gate* reason — the
+  gate is a successful read, not an error; only the refusals (D-013) travel as errors.
+
+**Constrains implementation.** The four sentences above must appear exactly as written,
+in `apps/frontend/src/domain/deployments/constants/messages.ts` only. No string
+literal containing user-facing release copy may appear in `packages/deployments` or
+`packages/types`. The codes are a TypeScript union in `packages/types`.
+
+---
+
+## D-012 — `not_greater` covers both "lower", "equal" and "already taken"
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-13`, `AC-14`, `AC-20`, `UK-5`
+
+**Decision.** One code, one sentence, for three criteria. AC-13 (lower), AC-14 (equal)
+and AC-20 (lost the race) are all "not greater than the current version", refused with
+`Version must be greater than ${currentVersion}`, where `currentVersion` is re-read at
+the moment of refusal.
+
+**Reasoning.** This is not a simplification, it is the same rule seen three times. The
+issue says AC-14 is refused "because that version already exists" and AC-20 is refused
+"because 1.2.1 already exists" — and once releases are monotonic (which the
+greater-than rule itself guarantees), "already exists" and "not greater than the
+current version" are the same statement. Concretely: current is 1.2.0, Alice cuts
+1.2.1, current becomes 1.2.1, Bob submits 1.2.1 → not greater than 1.2.1. Bob is told
+"Version must be greater than 1.2.1", which is both true and immediately actionable —
+better than "already exists", which does not say what to do next.
+
+The re-read at refusal time is what makes the sentence correct in the race: refusing
+with the version Bob's form was holding would tell him to beat 1.2.0, which he did.
+
+**Rejected.**
+
+- A distinct `version_taken` code and sentence — a fourth sentence saying the same
+  thing, and it would have to explain what to try instead.
+- Refusing with the version the client sent as `currentVersion` — in AC-20 that is
+  stale by exactly the amount that matters.
+
+**Constrains implementation.** Compute `currentVersion` for the refusal from the
+database at refusal time, not from the request. There is no `version_taken` code.
+
+---
+
+## D-013 — The unique constraint is the arbiter of the race; the pre-check is only for the message
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-20`, `UK-6`
+
+**Decision.** The use case validates, then inserts. The unique index on
+`(package_id, version)` is what actually decides AC-20: a unique-violation on insert is
+caught and translated into the same refusal D-012 produces, after re-reading the current
+version.
+
+**Reasoning.** The check-then-insert window is exactly the race in AC-20 — both
+curators are offered 1.2.1 because both pre-checks passed. Any design in which
+application code is the arbiter has that window; the only question is what closes it.
+The database constraint closes it for free, is the honest statement of the invariant
+("a package has at most one release per version") and stays true against any future
+writer, including a CLI path this feature explicitly does not build (charter non-goal)
+and a migration or a script.
+
+The pre-check stays because it produces the good message in the overwhelmingly common
+non-racing case, and because AC-13/AC-14/AC-15 are refusals that never reach an insert.
+
+**Rejected.**
+
+- A `SERIALIZABLE` transaction or a row lock on the package — heavier, serialises
+  unrelated releases of different packages if the lock is coarse, and still needs the
+  constraint to be correct against anything outside the transaction.
+- A Postgres advisory lock keyed on the package — same, plus a lock nobody else in this
+  codebase takes, so nobody else will know to take it.
+- Pre-check only — is the bug AC-20 was written to catch.
+
+**Constrains implementation.** The unique index on `(package_id, version)` is created
+in the migration (D-003) and is not optional. Catch the unique-violation from the
+insert specifically — do not catch every error from the insert — and turn it into the
+`not_greater` refusal of D-012. Cover AC-20 with a test that drives two cuts of the
+same version against the real repository; a mock-only test does not exercise the
+constraint and does not satisfy the criterion.
+
+---
+
+## D-014 — Pinning reads the latest version per component at cut time, and refuses rather than skipping a component that has none
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-17`
+
+**Decision.** Cutting a release resolves each component to its latest version through
+`ICommandsPort.listCommandVersions` (sorted, as `PublishPackagesUseCase` does),
+`IStandardsPort.getLatestStandardVersion` and `ISkillsPort.getLatestSkillVersion`. A
+component with no version at all refuses the whole release. It is never silently
+skipped.
+
+**Reasoning.** `PublishPackagesUseCase` skips such a component — `if (latestVersion)`,
+no else — and that is defensible for a distribution, which is a best-effort push. It is
+not defensible for a release, which is a claim: "0.2.0 contains these components". A
+release that quietly contains four of five components makes AC-17's immutability
+promise a lie about a set nobody can see. Refusing is loud, and the case is close to
+impossible in practice — the three services create a version alongside the artefact —
+which is precisely why silent skipping would never be noticed if it happened.
+
+The port asymmetry (commands has no `getLatest`) is inherited, not fixed here: adding
+`getLatestCommandVersion` to `ICommandsPort` is a change in another package's contract
+for one caller's convenience, and this feature's non-goals say it does not reach into
+the distribution path.
+
+**Rejected.**
+
+- Skipping versionless components, matching `PublishPackagesUseCase` — consistent with
+  the neighbour and wrong for the reason above.
+- Adding `getLatestCommandVersion` to `ICommandsPort` — tidier, and it edits a contract
+  in `packages/commands` for one caller; out of scope, and a separate cleanup.
+- Pinning from the package's *distributed* versions rather than the latest — the issue
+  is explicit: "a release always points to the latest version of each component".
+
+**Constrains implementation.** Resolve latest versions inside the cut, in one pass,
+caching per component id the way `PublishPackagesUseCase` does. If any component
+resolves to no version, throw before writing anything — the release row and its join
+rows are written in one transaction or not at all.
+
+---
+
+## D-015 — The readiness payload carries the outdated components, computed server-side
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-4`, `AC-11`
+
+**Decision.** The readiness read returns
+`{ currentVersion: string | null, verdict, reason, nextVersions: [patch, minor, major], outdatedComponents: { family, id, name, pinnedVersion, latestVersion }[] }`.
+`outdatedComponents` is the "0.1.0 is behind on Work with Jest (v4 pinned, v5
+available)" of AC-4, and it is computed where the version reads already happen.
+
+**Reasoning.** The frontend cannot compute this: `PackageResponse` carries component
+**ids** and nothing else, and there is no endpoint that returns the latest version of
+an arbitrary set of components. The server is already resolving exactly these versions
+to answer the gate (D-006), so returning them costs one mapping and saves a second
+round of reads.
+
+`nextVersions` travels with it for the same reason it is computed at all (D-009): the
+form's three choices and the server's accepted set must be the same list, and shipping
+the list from the server that will validate against it removes the possibility of the
+two being computed from different current versions.
+
+`currentVersion` is `null`, not `"0.0.0"`, for a never-released package — the sentinel
+of D-010 is internal and the wire must not carry it, or "Not released yet" becomes a
+frontend guess.
+
+**Rejected.**
+
+- Returning only a count of outdated components — AC-4 names the component and both
+  versions; a count cannot render it.
+- Returning the full latest version entity per component — sends prompts and rule sets
+  to render two integers and a name.
+- Computing `nextVersions` on the client from `currentVersion` — possible, and it
+  reintroduces exactly the two-implementations problem D-009 exists to close.
+
+**Constrains implementation.** `currentVersion` is `null` when there is no release.
+`outdatedComponents` is empty, not absent, when nothing is behind. `pinnedVersion` and
+`latestVersion` are the integer `version` fields of the respective version entities.
+
+---
+
+## D-016 — Three endpoints on the existing space-scoped packages controller
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-1`, `AC-16`, `AC-18`
+
+**Decision.** On `OrganizationsSpacesPackagesController`
+(`/organizations/:orgId/spaces/:spaceId/packages`):
+
+- `GET  /:packageId/releases` → `{ releases: PackageReleaseSummary[], readiness }`
+- `POST /:packageId/releases` → `{ version }` in, the created release out
+- `GET  /:packageId/releases/:version` → that release's pinned components, hydrated
+
+Three use cases behind them, all extending `AbstractMemberUseCase`.
+
+**Reasoning.** The controller, its `OrganizationAccessGuard`, its path inheritance
+through `RouterModule` and its `DeploymentsService` wiring all already exist for this
+exact resource; releases are a sub-resource of a package and belong under it.
+
+*Why readiness rides on the list read rather than on `GET /packages/:id`.* The package
+read is on the app's hottest path — the rail, the pane, every navigation — and
+readiness costs a latest-version lookup per component. Bundling it would make every
+package read pay for a panel most readers do not look at. Its own key also means the
+release mutation invalidates exactly one cache entry.
+
+*Why the content read is separate.* Hydrating every release's components to list the
+versions would fetch the whole history's content to render a list of numbers.
+
+*Addressing a release by `version` rather than by id.* The version is the user-facing
+identity, it is unique per package by construction (D-013), and it makes the URL
+readable. The id stays the primary key.
+
+**Rejected.**
+
+- Folding readiness into `GetPackageByIdUseCase` — makes the hottest read pay for the
+  rarest panel, and couples two cache lifetimes.
+- One fat `GET /releases` returning history *and* content — sends every past release's
+  components to render a version list.
+- A top-level `/releases` resource — loses the guard and the space scoping the existing
+  controller provides for free.
+
+**Constrains implementation.** Add the routes to
+`apps/api/src/app/organizations/spaces/packages/packages.controller.ts`. Declare the
+commands and responses in `packages/types/src/deployments/contracts/`, one file per use
+case, following `IGetPackageByIdUseCase.ts`. Add the three use cases to
+`IDeploymentPort` and to `DeploymentsService`. Do not create a new controller or a new
+Nest module.
+
+---
+
+## D-017 — Any member can release: `AbstractMemberUseCase`, and no role check anywhere
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-19`
+
+**Decision.** All three use cases extend `AbstractMemberUseCase` and implement
+`executeForMembers`. Neither `AbstractSpaceAdminUseCase` nor `createdBy` is consulted.
+
+**Reasoning.** AC-19 is explicit — "there is no ownership or role check" — and this is
+written down as a decision rather than left as an absence because the absence is
+invisible. `AbstractSpaceAdminUseCase` and `AbstractSpaceMemberUseCase` both exist and
+are both used nearby; "cutting a release" reads like a privileged act, and a subagent
+reaching for the admin base class would be making a reasonable-looking choice that
+fails a criterion. The space membership check that `AbstractMemberUseCase` performs is
+the only authorisation this feature has.
+
+**Rejected.**
+
+- `AbstractSpaceAdminUseCase` — refuses Bob in AC-19.
+- A `createdBy` check — the package's creator is recorded and is not an owner in any
+  sense the product uses.
+
+**Constrains implementation.** Extend `AbstractMemberUseCase`. Do not read
+`package.createdBy` for any purpose. Do not add a guard beyond the controller's
+existing `OrganizationAccessGuard`.
+
+---
+
+## D-018 — The version area lives in the package pane header; the history opens in a drawer
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-1`, `AC-2`, `AC-3`, `AC-4`, `AC-18`, `UK-10`
+
+**Decision.** In `ContextPackagePane`'s header: a badge reading the current version or
+"Not released yet", the "Create a release" action beside it (disabled with its reason
+as a tooltip), and the AC-4 behind-signal on the same line. Selecting the badge opens a
+**drawer** listing every release, and selecting one shows what it pins. The release
+form is a drawer too. No new tab, no new route.
+
+**Reasoning.** *Why not a third tab.* The pane's two tabs are a documented pairing —
+its own docstring says the package is "read from two sides: what it holds, and where it
+landed", one question asked twice. A version is neither side; it is the package's
+identity, which is what the header is for.
+
+*Why a drawer.* The pane already answers every secondary question this way —
+`EditPackageDetailsDrawer`, `AddComponentsDrawer`, `MoveComponentDrawer` — so the
+history and the form cost a reader nothing new, and the pane keeps its place behind
+them.
+
+*Why not a route.* `ContextPackagePane` receives its package already resolved rather
+than reading it from the address, deliberately; a `/releases/:version` route would
+reintroduce the resolution it was built to avoid.
+
+**Rejected.**
+
+- A third tab — breaks the two-sided sentence the pane is built around, and buries a
+  one-line fact behind a click.
+- A panel always expanded under `PackageReachStrip` — the strip is deliberately "a
+  sentence rather than a panel", per its own docstring; a second panel undoes the
+  argument the first one won.
+- A dedicated route — duplicates package resolution; see above.
+
+**Constrains implementation.** Put the version area in `ContextPackagePane`'s header
+region, not inside either tab's body. Model the drawers on the existing
+`EditPackageDetailsDrawer`. Build the UI from `@packmind/ui` PM-prefixed components
+only (`working-with-pm-design-kit`). Do not add a route and do not touch
+`buildComponentDetail`'s tab constants.
+
+---
+
+## D-019 — The release form keeps invalid input and validates on submit
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-11`, `AC-12`
+
+**Decision.** The version field is a free-text input pre-filled per D-010, with the
+three offered increments presented as one-click fills beside it. It never rewrites or
+filters what is typed. Validation runs on submit; on refusal the field keeps its value
+and the message appears beside it.
+
+**Reasoning.** AC-12 is the whole decision: `1,2,3` typed on a French keyboard must be
+refused *and kept*, so the user fixes two separators instead of retyping. That rules
+out every input that sanitises as you type — masked inputs, number steppers, a
+select — because each would either eat the commas or refuse the keystroke, and the
+criterion describes a submit that happened.
+
+The three increments still have to be offered (AC-11), hence the one-click fills: they
+fill the field, they do not replace it. A pure `<select>` of three options would satisfy
+AC-11 and make AC-12 unreachable — and AC-15 (a well-formed, greater, non-increment
+version submitted "anyway") describes a user who got past the offered set, which a
+select does not permit.
+
+**Rejected.**
+
+- A select or segmented control of the three increments — makes AC-12 and AC-15
+  unreachable through the UI, and the issue insists the check survives whatever the
+  form offers.
+- A masked or numeric-only input — eats the commas AC-12 requires to survive.
+- Validating on every keystroke — turns "1" into a refusal while the user is typing
+  "1.3.0".
+
+**Constrains implementation.** The version input is an uncontrolled-value text field
+whose content is never transformed. Do not clear it on refusal. The three increment
+buttons set the field's value and nothing else.
+
+---
+
+## D-020 — No feature flag
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `UK-7`
+
+**Decision.** The feature ships unflagged. Nothing is added to
+`packages/feature-flags/src/registry.ts`.
+
+**Reasoning.** The issue marked the flag *(inferred — confirm)*, so it is a proposal,
+not a requirement. The registry holds three keys and every one of them is mapped to
+`['@packmind.com', '@promyze.com']` — it is a mechanism for pinning a demo to staff, not
+a rollout or a kill switch, and it has no per-organization audience that a real
+progressive rollout would need.
+
+Against that: this lands on the most-used surface in the product, and a flag would let
+it be merged half-built. But the pipeline does not merge half-built features — the
+orchestrator ships a feature green at its boundary or not at all — and the feature is
+purely additive: new tables, new endpoints, a new header element. Nothing that exists
+today changes behaviour, so the rollback is a revert, and the blast radius of a bug is
+a panel not rendering.
+
+Recorded rather than assumed because the issue asked for it, and because reversing this
+is cheap and disturbs nothing else: one `*_FEATURE_KEY` constant, one entry in
+`DEFAULT_FEATURE_DOMAIN_MAP`, one addition to the `FeatureFlagKey` union, and one gate
+around the version area (D-018). No other decision in this log depends on the answer.
+
+**Rejected.**
+
+- A `package-releases` flag gated to `@packmind.com` / `@promyze.com` — pins the
+  feature to staff, which is a demo strategy, not a rollout; and it would have to be
+  removed in a follow-up nobody schedules.
+
+**Constrains implementation.** Do not edit `packages/feature-flags`. Do not wrap the
+version area in a `useFeatureFlag` gate.
+
+---
+
+## D-021 — Amplitude events are emitted from the frontend, via the proprietary `useAnalytics`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `UK-8`
+
+**Decision.** `package_version_released` and `package_release_refused` are tracked in
+the frontend, in the release form's success and failure handlers, through
+`useAnalytics` from
+`@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider` —
+`analytics.track('package_version_released', { … })`, the call shape every existing
+site uses. Nothing is emitted server-side.
+
+**Reasoning.** UK-8 asked whether this is possible on OSS at all. It is, and only this
+way: `packages/amplitude` contains nothing but `node_modules` here, while
+`apps/frontend` already imports the proprietary `useAnalytics` from six places
+(`ContextCreateMenu`, `DownloadSkillPopover`, `SkillFileEditor`, …). There is no
+server-side analytics port to call.
+
+That settles the second half of UK-8 by consequence: `package_release_refused` fires
+wherever the refusal is *seen*, which covers both a client-side rejection and a
+server-side one surfaced to the form. That is also the product's meaning of "refused" —
+a user tried and was told no — rather than "the API returned 4xx".
+
+**Rejected.**
+
+- Emitting from the use case in `packages/deployments` — no analytics dependency
+  reaches it, and adding one would put a proprietary import into an OSS domain package.
+- Emitting only on server refusals — misses AC-12's `1,2,3`, which is the refusal most
+  likely to be common and most likely to be a usability signal.
+
+**Constrains implementation.** Track `package_version_released` with `packageId`,
+`version`, `componentsCount` and `changeSources`; track `package_release_refused` with
+`packageId`, `attemptedVersion` and `refusalReason` (the D-011 code). Both calls live
+in the release form component. Mock the analytics provider in the component's tests the
+way `SkillFileEditor.test.tsx` does.
+
+---
+
+## D-022 — Releases are inert: nothing else in the product reads them
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: every AC
+
+**Decision.** No existing read or write path learns about releases. Distribution,
+installation, drift and marketplace publishing keep operating on the package's current
+content, exactly as today.
+
+**Reasoning.** The charter says this in its non-goals; it is repeated here as a
+decision because non-goals are read once and constraints are quoted into every spec.
+The temptation is concrete and will arrive mid-feature: a subagent implementing AC-4's
+"behind" signal will find `buildPackageDriftOverview` computing a strikingly similar
+thing for destinations, and "reuse" will look like the right instinct. It is not — the
+two answer different questions (is this *destination* behind the package, versus is
+this *release* behind the package's content), and merging them would silently change
+what every existing drift surface means.
+
+The consumer side — installing or pinning a released version — is the sibling story
+that makes releases do something. Until it exists, a release is a record.
+
+**Rejected.**
+
+- Teaching `PublishPackagesUseCase` to distribute the latest release instead of current
+  content — changes the behaviour of every existing distribution, and is the
+  out-of-scope consumer story.
+- Reusing `PackageDrift` / `installDriftEntries` for AC-4 — different question, shared
+  cache, and the existing surfaces would inherit the change.
+
+**Constrains implementation.** Do not modify `PublishPackagesUseCase`,
+`InstallPackagesUseCase`, `PullContentUseCase`, `DistributedPackage`,
+`ListActiveDistributedPackagesBySpaceUseCase`, `renderPackageAsPlugin`, or any selector
+under `apps/frontend/src/domain/deployments/components/redesign/selectors/`. If a unit
+believes it must, that is rung 4 — halt.
+
+---
+
+## D-023 — Documentation goes to `apps/doc/concepts/packages-management.mdx`, CHANGELOG to `Unreleased / Added`
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: charter `In scope`
+
+**Decision.** The release flow is documented as a section of the existing
+`apps/doc/concepts/packages-management.mdx`, not as a new page. One CHANGELOG entry
+under `# [Unreleased]` → `## Added`, in `CHANGELOG.MD` at the repository root.
+
+**Reasoning.** A release is a property of a package, and a reader looking for it will
+be on the page that explains what a package is. `apps/doc/playbook-maintenance/` is the
+other candidate and is about keeping artefacts current — auto-update, change proposals,
+external sources — which is what a release is measured *against*, not what it is.
+
+CHANGELOG at the OSS root is the only correct side: shared files are edited here and
+the proprietary repository picks them up by merge, never the reverse.
+
+**Rejected.**
+
+- A new `apps/doc/concepts/package-releases.mdx` — splits one concept across two pages
+  and needs a `docs.json` navigation entry to be found at all.
+- `playbook-maintenance/` — that section is about artefacts drifting; a release is about
+  naming a state.
+
+**Constrains implementation.** Follow the
+`creating-end-user-documentation-for-packmind` skill: task-oriented, no implementation
+detail. Write the CHANGELOG entry in the voice the existing `Added` entries use — one
+paragraph, present tense, describing what a user can now do. Do not edit `CHANGELOG.MD`
+in any repository but this one.
+
+---
+
+## Known unknowns — disposition
+
+| id | disposition |
+|----|-------------|
+| UK-1 | decided — D-010 |
+| UK-2 | decided — D-008 (descriptions are trimmed, not case-folded; deliberately asymmetric with the name) |
+| UK-3 | decided — D-003 + D-004 |
+| UK-4 | decided — D-006 |
+| UK-5 | decided — D-009 (ordering by parsed triple) + D-012 |
+| UK-6 | decided — D-013 |
+| UK-7 | decided — D-020 (no flag). Reversible in one unit if the user wants one; no other decision depends on it |
+| UK-8 | decided — D-021 |
+| UK-9 | decided by D-003's timestamps: a release carries `createdAt` through `timestampsMigrationColumns`, and that is all. **No `createdBy`, and nothing is rendered.** AC-19 says any member can release, so "who cut it" answers no question the criteria ask; adding a column and a byline nobody asked for is scope. A later story that wants attribution adds the column then |
+| UK-10 | decided — D-018 |
+
+None deferred.
