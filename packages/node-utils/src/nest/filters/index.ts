@@ -1,3 +1,1 @@
-import { DomainExceptionFilter } from './DomainExceptionFilter';
-
-export { DomainExceptionFilter };
+export * from './DomainExceptionFilter';
