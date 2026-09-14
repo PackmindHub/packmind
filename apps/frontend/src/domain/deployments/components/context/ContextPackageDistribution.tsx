@@ -5,6 +5,7 @@ import {
   PMDrawer,
   PMHStack,
   PMHeading,
+  PMLink,
   PMPortal,
   PMSpinner,
   PMText,
@@ -17,38 +18,40 @@ import type {
 } from '@packmind/types';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { PackageDistributionList } from '../PackageDistributionList';
-import { PackageDetailPane } from '../redesign/components/PackageDetailPane';
 import {
   SyncSurface,
   type SyncScope,
 } from '../redesign/components/SyncSurface';
+import { installDriftEntries } from '../redesign/selectors/installDriftEntries';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import type { PackageDrift } from '../redesign/types';
+import { ContextDestinationList } from './ContextDestinationList';
+import { buildPackageDestinations } from './buildPackageDestinations';
 
 /**
- * The other half of a package: not what it holds, but where it landed and what
- * is stale there.
+ * Where a package has got to, as one list.
  *
- * It reuses the drift pane built for the Distribution surface rather than
- * showing a lighter summary here. Two readings of the same state, one per
- * screen, is how a package ends up looking up to date in one place and behind in
- * the other; and the answer to "this is behind" has to be the redistribute
- * gesture, which only that pane carries.
+ * It was the drift pane the Distribution surface reads, which was the right
+ * call while the two screens showed the same state and the one that could push
+ * was that pane. What it is not built for is the size this one reaches: a
+ * package landing in three hundred places is three hundred rows of a table, and
+ * the four that need a hand are somewhere in them.
  *
- * One reading and no chip row above it. The targets used to share that row with
- * the distribution events, which are not a second place the package is: they
- * answer "what happened" where the targets answer "where is it", and the row
- * showed it, since the events were the one chip that could carry no count. They
- * open in a drawer now, from the pane's own link and from its failure alert,
- * which is where a reader asks for them: a row failed, they want to know why,
- * they read it and go on with the list still behind them. That left one chip,
- * always active, choosing between itself and nothing, so the row went with it.
+ * So this list instead, shared with the edition that also publishes to
+ * marketplaces. The exceptions are the page, what is fine folds into a count,
+ * and the rest is reached by a name. That pane is unchanged and still answers
+ * the two screens it was written for.
  *
- * A drawer and not the takeover the events used to be, even though at full
- * width it covers as much. What was wrong with that one is not that it filled
- * the screen, it is that it was somewhere to be: reached by a button and left
- * by a chevron. A drawer is not left, it is closed, and closing it puts back
- * exactly the state it opened over.
+ * The distribution events open in a drawer over the list, from the link above
+ * it. They are not a second place the package is: they answer "what happened"
+ * where the list answers "where is it", and the reader asks for them when a row
+ * failed, reads them, and goes on with the list still behind them.
+ *
+ * A drawer and not a takeover, even though at full width it covers as much.
+ * What was wrong with the takeover this replaced is not that it filled the
+ * screen, it is that it was somewhere to be: reached by a button and left by a
+ * chevron. A drawer is not left, it is closed, and closing it puts back exactly
+ * the state it opened over.
  */
 export function ContextPackageDistribution({
   pkg,
@@ -93,6 +96,20 @@ export function ContextPackageDistribution({
   const [isHistoryOpen, setHistoryOpen] = useState(false);
 
   /*
+   * No publications in this edition, so the list is the repositories alone. The
+   * model takes them as an optional argument for exactly this: one list, one
+   * set of rules about what is behind, and a marketplace half only where there
+   * is one.
+   */
+  const destinations = useMemo(
+    () =>
+      buildPackageDestinations({
+        installs: drift ? installDriftEntries(drift) : [],
+      }),
+    [drift],
+  );
+
+  /*
    * The redistribute flow takes over the pane and leaves the rail alone: the
    * package it is about is named in the header just above, and cancelling has to
    * come back to the same place it started from.
@@ -123,42 +140,15 @@ export function ContextPackageDistribution({
         <PMBox flex="1" minH={0} paddingX={6} paddingBottom={6}>
           <PMText color="error">Error loading distributions.</PMText>
         </PMBox>
-      ) : drift ? (
-        <PMBox flex="1" minH={0}>
-          <PackageDetailPane
-            pkg={drift}
-            hideIdentityHeader
-            /*
-             * The header above this pane carries both `Distribute` and, when
-             * something is behind, `Update N distributions`, so the pane does not
-             * need a package-wide push of its own. What it keeps acts on a
-             * selection, which is a different question.
-             */
-            surfaceOwnsDistribute
-            /*
-             * `Artifacts` is the count on the Components tab two rows up, and it
-             * is the size of the half you are not looking at.
-             *
-             * `Distributions` stays. There is no chip row in this edition, so
-             * the summary is the only place the destination count is stated,
-             * and the list below it is somewhere to count rather than somewhere
-             * to read a number.
-             *
-             * What the summary keeps besides it is state rather than
-             * inventory: what is behind, what failed, when this last went out.
-             */
-            surfaceOwnsStats={['artifacts']}
-            providersWithToken={providersWithToken}
-            isProvidersLoading={isProvidersLoading}
-            onSyncPackage={onSyncPackage}
-            /*
-             * The pane's standing link and its failure alert both land here, and
-             * this surface no longer claims to own the entry, so the link is
-             * back in the summary row. That link is the whole of what the chip
-             * used to be, one row lower and next to what prompts it.
-             */
-            distributionHistory={{ onOpen: () => setHistoryOpen(true) }}
-          />
+      ) : destinations.length === 0 ? (
+        <PMBox
+          flex="1"
+          minH={0}
+          overflowY="auto"
+          paddingX={6}
+          paddingBottom={6}
+        >
+          <NeverDistributed />
         </PMBox>
       ) : (
         <PMBox
@@ -168,7 +158,30 @@ export function ContextPackageDistribution({
           paddingX={6}
           paddingBottom={6}
         >
-          <NeverDistributed />
+          {/*
+            The way into the events, above the list rather than inside it. It
+            was on the drift pane's summary row, which this list replaced, and
+            it is the one thing that row carried which the rows themselves
+            cannot: what happened here, as opposed to where things stand.
+          */}
+          <PMHStack justify="flex-end" paddingBottom={2}>
+            <PMLink
+              as="button"
+              fontSize="xs"
+              onClick={() => setHistoryOpen(true)}
+            >
+              Distribution history
+            </PMLink>
+          </PMHStack>
+          <ContextDestinationList
+            destinations={destinations}
+            onUpdate={(picked) => {
+              const installKeys = picked
+                .map((destination) => destination.installKey)
+                .filter((key): key is string => key !== null);
+              if (installKeys.length > 0) onSyncPackage(pkg.id, installKeys);
+            }}
+          />
         </PMBox>
       )}
 
