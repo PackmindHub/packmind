@@ -217,6 +217,49 @@ describe('buildPackageDestinations', () => {
     });
   });
 
+  describe('whether there is anything to send', () => {
+    it('follows the late components on a landing', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({ repoId: 'repo-1', targetId: 't1' }),
+          install({
+            repoId: 'repo-2',
+            targetId: 't2',
+            behindArtifacts: [behindArtifact('a')],
+          }),
+        ],
+      });
+
+      expect(rows.map((row) => row.hasWorkToSend)).toEqual([true, false]);
+    });
+
+    describe('on a published copy, which carries no count', () => {
+      it('follows whether it was overtaken, so republishing stays offerable', () => {
+        const rows = buildPackageDestinations({
+          installs: [],
+          publications: [
+            publication({ id: 'mkt-1', isOutdated: true }),
+            publication({ id: 'mkt-2' }),
+          ],
+        });
+
+        expect(rows.map((row) => row.hasWorkToSend)).toEqual([true, false]);
+      });
+
+      it('holds on a publish that failed, which is retried the same way', () => {
+        const rows = buildPackageDestinations({
+          installs: [],
+          publications: [
+            publication({ isOutdated: true, lastAttempt: 'failed' }),
+          ],
+        });
+
+        expect(rows[0].state).toBe('failed');
+        expect(rows[0].hasWorkToSend).toBe(true);
+      });
+    });
+  });
+
   describe('the order of the list', () => {
     it('puts the worst first and the aligned last, interleaving the two kinds', () => {
       const rows = buildPackageDestinations({

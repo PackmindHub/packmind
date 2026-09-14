@@ -102,6 +102,15 @@ export type PackageDestination = {
   behindArtifacts: readonly DriftArtifactEntry[];
   behindCount: number;
   /**
+   * Whether pushing this destination would send anything.
+   *
+   * A field rather than `behindCount > 0`, because the two kinds know their own
+   * lateness differently: a landing knows which components are late, a
+   * published copy only knows it has been overtaken. Reading the count would
+   * make every marketplace look up to date to whatever offers the gesture.
+   */
+  hasWorkToSend: boolean;
+  /**
    * The key the redistribute flow works in, `repoId::targetId`. Null for a
    * marketplace, which is republished rather than pushed to.
    */
@@ -173,6 +182,7 @@ function repositoryRow(
     state: repositoryState(entry),
     behindArtifacts: entry.behindArtifacts,
     behindCount: entry.behindArtifacts.length,
+    hasWorkToSend: entry.behindArtifacts.length > 0,
     installKey: `${entry.repo.id}::${entry.target.id}`,
     prUrl: null,
     lastActivityAt: entry.lastDistributedAt ?? entry.mostRecentDeployedAt,
@@ -212,6 +222,12 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
             : 'aligned',
     behindArtifacts: [],
     behindCount: 0,
+    /*
+     * The copy has been overtaken, whatever became of the last attempt. A
+     * publish that failed left it outdated too, and republishing is how that
+     * one is retried.
+     */
+    hasWorkToSend: publication.isOutdated,
     installKey: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,

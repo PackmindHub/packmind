@@ -24,18 +24,28 @@ function behind(name: string, version: number): DriftArtifactEntry {
 function destination(
   overrides: Partial<PackageDestination> = {},
 ): PackageDestination {
-  return {
+  const row = {
     key: 'r:repo-1::target-1',
-    kind: 'repository',
+    kind: 'repository' as const,
     name: 'PackmindHub/packmind',
     details: ['main'],
-    state: 'aligned',
+    state: 'aligned' as const,
     behindArtifacts: [],
     behindCount: 0,
+    hasWorkToSend: false,
     installKey: 'repo-1::target-1',
     prUrl: null,
     lastActivityAt: '2026-09-01T10:00:00.000Z',
     ...overrides,
+  };
+  return {
+    ...row,
+    /*
+     * Follows the count unless a test says otherwise, which is the selector's
+     * own rule for a landing. A marketplace has to state it, since its drift
+     * carries no count.
+     */
+    hasWorkToSend: overrides.hasWorkToSend ?? row.behindCount > 0,
   };
 }
 
@@ -590,6 +600,55 @@ describe('ContextDestinationList', () => {
       expect(
         screen.queryByRole('button', { name: 'Update' }),
       ).not.toBeInTheDocument();
+    });
+
+    describe('when a published copy has been overtaken', () => {
+      const outdated = () =>
+        destination({
+          key: 'm:mkt-1',
+          kind: 'marketplace',
+          name: 'acme-marketplace',
+          details: [],
+          state: 'behind',
+          installKey: null,
+          hasWorkToSend: true,
+        });
+
+      it('offers to republish it, which is the verb of that channel', () => {
+        renderList([outdated()], vi.fn());
+
+        expect(
+          screen.getByRole('button', { name: 'Republish' }),
+        ).toBeInTheDocument();
+      });
+
+      it('can be put in a batch with the landings', async () => {
+        const onUpdate = vi.fn();
+        renderList(
+          [
+            outdated(),
+            destination({
+              key: 'r:repo-1',
+              state: 'behind',
+              behindCount: 1,
+              behindArtifacts: [behind('a', 2)],
+            }),
+          ],
+          onUpdate,
+        );
+
+        await userEvent.click(
+          screen.getByRole('checkbox', { name: 'Select acme-marketplace' }),
+        );
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Select all 2' }),
+        );
+        await userEvent.click(
+          screen.getByRole('button', { name: /Update 2 destinations/ }),
+        );
+
+        expect(onUpdate.mock.calls[0][0]).toHaveLength(2);
+      });
     });
 
     describe('when a publication waits on a merge', () => {

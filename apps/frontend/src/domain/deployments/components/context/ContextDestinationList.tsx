@@ -290,24 +290,20 @@ function FilterRow({
 }
 
 /**
- * Whether this row has something to send.
+ * Whether this row can be sent again.
  *
  * One rule for the checkbox and for the button, because the two offer the same
  * gesture and a row that can be ticked but not pushed would put work into a
  * batch that then silently drops it.
  *
  * Something outstanding is what it takes, not a particular state: a landing
- * whose push was rejected is repaired by pushing again, and that is a `failed`
- * row. What it excludes is a push already on its way, which would be started
- * twice, a marketplace, which is republished rather than written to, and a
- * failure that left nothing behind, where there is nothing to send.
+ * whose push was rejected is repaired by pushing again, and so is a publish
+ * that failed, and both of those are `failed` rows. What it excludes is work
+ * already on its way, which would be started twice, and a row with nothing to
+ * send, where the gesture would write nothing anywhere.
  */
 function canPush(destination: PackageDestination): boolean {
-  return (
-    destination.installKey !== null &&
-    destination.behindCount > 0 &&
-    destination.state !== 'waiting'
-  );
+  return destination.hasWorkToSend && destination.state !== 'waiting';
 }
 
 /**
@@ -723,7 +719,14 @@ function RowAction({
       flexShrink={0}
       onClick={() => onUpdate([destination])}
     >
-      Update
+      {/*
+        The verb of the channel, because the two are not the same act: a
+        repository is written to and the work is done when the call returns, a
+        catalog is republished through a pull request someone then merges. The
+        bar above says `Update` over a mixed pick, which is the one word that
+        covers both without promising either.
+      */}
+      {destination.kind === 'marketplace' ? 'Republish' : 'Update'}
     </PMButton>
   );
 }

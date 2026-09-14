@@ -60,7 +60,7 @@ export function ContextPackageDistribution({
   isLoading,
   isError,
   syncScope,
-  onSyncPackage,
+  onStartSync,
   onSyncClose,
 }: Readonly<{
   pkg: PackageResponse;
@@ -80,10 +80,14 @@ export function ContextPackageDistribution({
    */
   syncScope: SyncScope | null;
   /**
-   * Asks the pane above to start the flow, for every drifted destination or for
-   * the subset the list has ticked.
+   * Asks the pane above to start the flow over what this tab hands it.
+   *
+   * A whole scope and not a package with keys, which is what it used to take.
+   * The edition that also publishes to marketplaces has picks this cannot
+   * express, and the two tabs keep one shape so the pane above them can stay
+   * one file.
    */
-  onSyncPackage: (packageId: PackageId, installKeys?: string[]) => void;
+  onStartSync: (scope: SyncScope) => void;
   /** The flow is over, whether it ran or was cancelled. */
   onSyncClose: () => void;
 }>) {
@@ -179,7 +183,13 @@ export function ContextPackageDistribution({
               const installKeys = picked
                 .map((destination) => destination.installKey)
                 .filter((key): key is string => key !== null);
-              if (installKeys.length > 0) onSyncPackage(pkg.id, installKeys);
+              if (installKeys.length > 0) {
+                onStartSync({
+                  kind: 'package',
+                  packageId: pkg.id,
+                  installKeys,
+                });
+              }
             }}
           />
         </PMBox>

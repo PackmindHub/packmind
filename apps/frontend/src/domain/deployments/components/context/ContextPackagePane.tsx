@@ -1182,7 +1182,7 @@ export function ContextPackagePane({
           isLoading={isLoading}
           isError={isError}
           syncScope={syncScope}
-          onSyncPackage={startSync}
+          onStartSync={setSyncScope}
           onSyncClose={closeSync}
         />
       </PMTabsCompound.Content>
