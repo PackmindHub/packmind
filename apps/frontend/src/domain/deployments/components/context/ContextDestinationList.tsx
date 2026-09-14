@@ -16,10 +16,12 @@ import {
   LuStore,
 } from 'react-icons/lu';
 import { ContextChip } from './ContextChip';
+import { ContextSearchField } from './ContextSearchField';
 import {
   filterPackageDestinations,
   needsAHand,
   packageDestinationSummary,
+  searchPackageDestinations,
   type PackageDestination,
   type PackageDestinationFilter,
   type PackageDestinationState,
@@ -51,8 +53,11 @@ export function ContextDestinationList({
   onUpdate?: (destination: PackageDestination) => void;
 }>) {
   const [filter, setFilter] = useState<PackageDestinationFilter>('all');
+  const [query, setQuery] = useState('');
 
-  const shown = filterPackageDestinations(destinations, filter);
+  const isSearching = query.trim().length > 0;
+  const matched = searchPackageDestinations(destinations, query);
+  const shown = filterPackageDestinations(matched, filter);
   const failed = shown.filter((row) => row.state === 'failed');
   const pending = shown.filter(
     (row) => row.state === 'behind' || row.state === 'waiting',
@@ -61,22 +66,63 @@ export function ContextDestinationList({
 
   return (
     <>
+      {/*
+        Above the chips rather than beside them, because it is the wider
+        question: the chips cut the list by what it is, and this one reaches a
+        row the reader already has in mind. At three hundred landings it is the
+        control most readers come for.
+      */}
+      <PMBox paddingBottom={2} maxWidth="420px">
+        <ContextSearchField
+          label="Find a repository, branch or marketplace"
+          value={query}
+          onChange={setQuery}
+        />
+      </PMBox>
       <FilterRow
         destinations={destinations}
         value={filter}
         onChange={setFilter}
       />
+      {isSearching && (
+        <PMHStack gap={2} align="center" paddingBottom={2}>
+          <PMText fontSize="xs" color="faded">
+            {matched.length} of {destinations.length} destination
+            {destinations.length === 1 ? '' : 's'} match "{query.trim()}".
+          </PMText>
+          <PMButton variant="tertiary" size="xs" onClick={() => setQuery('')}>
+            Clear
+          </PMButton>
+        </PMHStack>
+      )}
       <PMBox
         borderWidth="1px"
         borderColor="border.tertiary"
         borderRadius="sm"
         overflow="hidden"
       >
+        {/*
+          An empty box would read as a rendering fault, which is how the
+          question "is this repository in here" gets answered by silence.
+        */}
+        {shown.length === 0 && (
+          <PMText fontSize="sm" color="faded" padding={4} as="div">
+            {isSearching
+              ? `No destination of this package matches "${query.trim()}".`
+              : 'No destination under this reading.'}
+          </PMText>
+        )}
         <Band
           label="Failed"
           tone="red.300"
           rows={failed}
-          total={destinations.length}
+          /*
+           * The share of the package, and only while the list is the package.
+           * Under a search "1 of 240" would put the size of the whole beside a
+           * number that counts what one typed word reached, and the line above
+           * already states that ratio in the terms it belongs to.
+           */
+          total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
           isFirst
         />
@@ -84,7 +130,7 @@ export function ContextDestinationList({
           label="Behind or waiting"
           tone="orange.500"
           rows={pending}
-          total={destinations.length}
+          total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
           isFirst={failed.length === 0}
         />
@@ -96,7 +142,7 @@ export function ContextDestinationList({
            * it. Folding them there would answer a click on `Up to date 3` with
            * a count of three and no way to see them without undoing the filter.
            */
-          forceOpen={filter === 'up-to-date'}
+          forceOpen={filter === 'up-to-date' || isSearching}
         />
       </PMBox>
     </>
@@ -197,8 +243,11 @@ function Band({
   label: string;
   tone: string;
   rows: readonly PackageDestination[];
-  /** Every destination, so the band can say what share of them it holds. */
-  total: number;
+  /**
+   * Every destination, so the band can say what share of them it holds.
+   * Absent when the list is a search result, which is a share of nothing.
+   */
+  total?: number;
   isFirst: boolean;
   onUpdate?: (destination: PackageDestination) => void;
 }>) {
@@ -233,7 +282,9 @@ function Band({
           rest of the list is folded away.
         */}
         <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-          {rows.length} of {total} destination{total === 1 ? '' : 's'}
+          {total === undefined
+            ? `${rows.length} destination${rows.length === 1 ? '' : 's'}`
+            : `${rows.length} of ${total} destination${total === 1 ? '' : 's'}`}
         </PMText>
       </PMHStack>
       {rows.map((row) => (

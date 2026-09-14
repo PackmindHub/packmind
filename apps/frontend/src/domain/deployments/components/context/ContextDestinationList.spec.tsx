@@ -229,6 +229,80 @@ describe('ContextDestinationList', () => {
     });
   });
 
+  describe('the search', () => {
+    const searchable = () => [
+      destination({
+        key: 'a',
+        name: 'acme/checkout-api',
+        details: ['main', 'services/api'],
+        state: 'behind',
+        behindCount: 1,
+      }),
+      destination({ key: 'b', name: 'acme/ledger', details: ['release'] }),
+    ];
+
+    const typeQuery = async (text: string) =>
+      userEvent.type(
+        screen.getByLabelText('Find a repository, branch or marketplace'),
+        text,
+      );
+
+    it('reaches a row by its name', async () => {
+      renderList(searchable());
+
+      await typeQuery('ledger');
+
+      expect(screen.getByText('acme/ledger')).toBeInTheDocument();
+      expect(screen.queryByText('acme/checkout-api')).not.toBeInTheDocument();
+    });
+
+    it('reaches a row by its branch or its target', async () => {
+      renderList(searchable());
+
+      await typeQuery('services/api');
+
+      expect(screen.getByText('acme/checkout-api')).toBeInTheDocument();
+    });
+
+    describe('when what matches is up to date', () => {
+      it('shows it rather than folding it into the count', async () => {
+        renderList(searchable());
+
+        await typeQuery('ledger');
+
+        expect(screen.getByText('acme/ledger')).toBeInTheDocument();
+      });
+    });
+
+    it('says how much of the package it reached, and offers the way back', async () => {
+      renderList(searchable());
+
+      await typeQuery('acme');
+
+      expect(
+        screen.getByText('2 of 2 destinations match "acme".'),
+      ).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+      expect(screen.queryByText(/destinations match/)).not.toBeInTheDocument();
+    });
+
+    describe('when nothing matches', () => {
+      it('says so rather than leaving an empty box', async () => {
+        renderList(searchable());
+
+        await typeQuery('nothing-like-this');
+
+        expect(
+          screen.getByText(
+            'No destination of this package matches "nothing-like-this".',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('what a drifted row says', () => {
     it('names the late components rather than only counting them', () => {
       renderList([

@@ -254,6 +254,38 @@ export function filterPackageDestinations(
 }
 
 /**
+ * The destinations a typed name reaches.
+ *
+ * Name and details, which is owner, repository, branch and target. Nobody
+ * remembers a target path, everybody remembers the repository they broke, and
+ * at three hundred landings the search is the only way to reach one in
+ * particular: the bands answer "what is wrong", and this answers "what about
+ * this one".
+ *
+ * It reads the whole set, including what is folded away as up to date. A search
+ * that only looked at the rows already on screen would answer "no" about a
+ * repository the reader can see the count of.
+ *
+ * What it reads is exactly what a row shows, which is why the target only
+ * counts where `details` carries it: on a repository reached in one place the
+ * landing has no label, and a row coming back for a word the reader cannot find
+ * anywhere on it is a result they have to take on trust.
+ */
+export function searchPackageDestinations(
+  destinations: readonly PackageDestination[],
+  query: string,
+): PackageDestination[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return [...destinations];
+
+  return destinations.filter((row) =>
+    [row.name, ...row.details].some((field) =>
+      field.toLowerCase().includes(needle),
+    ),
+  );
+}
+
+/**
  * What the chip row counts. Taken from the rows rather than from the queries
  * behind them, so a chip cannot say five where the list shows four.
  */

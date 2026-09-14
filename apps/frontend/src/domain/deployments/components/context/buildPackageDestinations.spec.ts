@@ -12,6 +12,7 @@ import {
   buildPackageDestinations,
   filterPackageDestinations,
   packageDestinationSummary,
+  searchPackageDestinations,
   type PackagePublication,
 } from './buildPackageDestinations';
 
@@ -315,6 +316,43 @@ describe('filterPackageDestinations', () => {
 
     expect(shown).toHaveLength(2);
     expect(shown.every((row) => row.state === 'aligned')).toBe(true);
+  });
+});
+
+describe('searchPackageDestinations', () => {
+  const rows = () =>
+    buildPackageDestinations({
+      installs: [
+        install({ repoId: 'repo-1', targetId: 't1' }),
+        install({
+          repoId: 'repo-1',
+          targetId: 't2',
+          branch: 'release',
+          target: { id: createTargetId('t2'), name: 'services/api' },
+        }),
+      ],
+      publications: [publication({ name: 'acme-marketplace' })],
+    });
+
+  it('takes everything when nothing is typed', () => {
+    expect(searchPackageDestinations(rows(), '   ')).toHaveLength(3);
+  });
+
+  it('matches a name whatever its case', () => {
+    expect(
+      searchPackageDestinations(rows(), 'ACME-MARKET').map((row) => row.name),
+    ).toEqual(['acme-marketplace']);
+  });
+
+  it('matches a branch, which is not in the name', () => {
+    expect(searchPackageDestinations(rows(), 'release')).toHaveLength(1);
+  });
+
+  it('matches a target, which is how one landing among several is reached', () => {
+    const found = searchPackageDestinations(rows(), 'services/');
+
+    expect(found).toHaveLength(1);
+    expect(found[0].details).toContain('services/api');
   });
 });
 
