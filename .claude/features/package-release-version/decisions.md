@@ -1060,6 +1060,108 @@ in any repository but this one.
 
 ---
 
+## D-024 — The flag is a teammate's, later; keep the version area gate-ready
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `UK-7`, `D-020`, `D-018`
+
+**Decision.** D-020 stands and is confirmed: this feature adds no feature flag. A
+teammate will add one separately, at their own moment. The only obligation that falls
+on this feature is that the version area must be **one mountable element**, so wrapping
+it in a gate later is a one-line change and not a hunt.
+
+**Reasoning.** D-020 argued the flag was not this feature's to add; the confirmation
+adds the fact that one is coming from someone else. That changes nothing about what to
+build and one thing about how: a feature that will be gated later is worth building so
+it *can* be, and the cheap way to lose that is to scatter the release UI across the
+pane's header, its two tab bodies and a menu entry. Gathering it into a single
+component costs nothing now and is the difference between a one-line gate and a
+four-site one.
+
+Deliberately not anticipated further: no placeholder key, no commented-out
+`useFeatureFlag`, no "flag-ready" indirection layer. Scaffolding for a flag whose name,
+audience and owner are all someone else's decision is the kind of guess that gets
+inherited as a requirement.
+
+**Rejected.**
+
+- Adding the flag anyway so the teammate only has to set the audience — commits them to
+  a key name and a gate placement they have not chosen, in a registry whose every
+  entry so far is a staff pin.
+- Leaving a commented-out gate or a TODO at the call site — a note that rots, where a
+  single component is a fact that does not.
+
+**Constrains implementation.** Build the version area (badge, action, behind-signal) as
+one component mounted at one place in `ContextPackagePane`'s header, so that a later
+gate wraps exactly one JSX element. Do not add anything to `packages/feature-flags`,
+do not import `useFeatureFlag`, and do not leave a placeholder key or a TODO.
+
+---
+
+## D-025 — The analytics call is a typed no-op on OSS; the two events go into the stub's `AnalyticsEventMap`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `UK-8`, `D-021`
+
+**Decision.** D-021 stands: both events are tracked from the release form via
+`useAnalytics`. On this repository that call does nothing, by design, and that is the
+finished state here. What this feature must also do is add `package_version_released`
+and `package_release_refused` to the event map of the OSS stub —
+`apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts` — because
+without them the call does not compile. The proprietary side adds the same two entries
+to its own provider and is where the events actually reach Amplitude.
+
+**Reasoning.** Verified, and it is the part D-021 could not have known. On OSS,
+`vite.config.ts` and `tsconfig.paths.oss.json` both redirect
+`@packmind/proprietary/frontend/*` to `apps/frontend/src/domain/editions/stubs/*`,
+where `Analytics` is a `NoopAnalyticsService` whose `track` body is a comment. So the
+call is inert here — exactly as intended, and not a bug for anyone to chase.
+
+But `track` is generic: `track<E extends AnalyticsEventName>(event: E, payload:
+AnalyticsEventMap[E])`, and `AnalyticsEventName = keyof AnalyticsEventMap`, a closed
+map of fourteen literal event names in that same stub. `analytics.track('package_version_released', …)`
+is therefore a **type error** until the map lists it. An implementer who hits that error
+with no guidance has three tempting exits — cast the event name, silence the call, or
+drop the tracking — and all three ship something wrong. The fix is one entry per event
+in the map, declaring the payload shape D-021 specified.
+
+This is also the right side of the OSS/proprietary seam: shared files are edited here
+and the proprietary repository picks them up by merge, never the reverse. The stub's
+map is the OSS copy; the proprietary provider's map is its twin, and keeping the two
+event names and payload shapes identical is what makes the merge a no-op.
+
+**Rejected.**
+
+- Casting the event name (`as AnalyticsEventName`) or the payload — compiles, and
+  defeats the only thing the typed map exists for: that a call site and the provider
+  agree on the payload. It would also hide the divergence at exactly the merge where it
+  matters.
+- Skipping the `track` calls on OSS behind an edition check — the call site is the
+  shared artefact; making it conditional means proprietary would have to add it back,
+  which is the merge direction this repository does not use.
+- Declaring the events only in the proprietary repository — the OSS build would not
+  compile, so this is not an option, only a thing someone might attempt.
+
+**Constrains implementation.** Add two entries to `AnalyticsEventMap` in
+`apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts`:
+`package_version_released: { packageId: string; version: string; componentsCount: number; changeSources: string[] }`
+and
+`package_release_refused: { packageId: string; attemptedVersion: string; refusalReason: string }`.
+Change nothing else in that stub — in particular, do not give `NoopAnalyticsService` a
+body. Do not assert in any test that an event was delivered; assert only that `track`
+was called with the right name and payload, against a mocked provider, the way
+`SkillFileEditor.test.tsx` mocks it.
+
+---
+
 ## Known unknowns — disposition
 
 | id | disposition |
@@ -1070,8 +1172,8 @@ in any repository but this one.
 | UK-4 | decided — D-006 |
 | UK-5 | decided — D-009 (ordering by parsed triple) + D-012 |
 | UK-6 | decided — D-013 |
-| UK-7 | decided — D-020 (no flag). Reversible in one unit if the user wants one; no other decision depends on it |
-| UK-8 | decided — D-021 |
+| UK-7 | decided — D-020, confirmed by D-024: no flag here, a teammate adds one later |
+| UK-8 | decided — D-021, refined by D-025: the call is a typed no-op on OSS and its event names must be declared in the stub's map |
 | UK-9 | decided by D-003's timestamps: a release carries `createdAt` through `timestampsMigrationColumns`, and that is all. **No `createdBy`, and nothing is rendered.** AC-19 says any member can release, so "who cut it" answers no question the criteria ask; adding a column and a byline nobody asked for is scope. A later story that wants attribution adds the column then |
 | UK-10 | decided — D-018 |
 
