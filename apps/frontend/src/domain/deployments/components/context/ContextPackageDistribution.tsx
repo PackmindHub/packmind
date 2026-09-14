@@ -14,21 +14,17 @@ import {
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
-import { usePackageMarketplacePublications } from '@packmind/proprietary/frontend/domain/marketplaces/components/usePackageMarketplacePublications';
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
-import { useSpaceMarketplaces } from '@packmind/proprietary/frontend/domain/spaces/components/overview/useSpaceMarketplaces';
 import { PackageDistributionList } from '../PackageDistributionList';
 import {
   SyncSurface,
   type SyncScope,
 } from '../redesign/components/SyncSurface';
-import { installDriftEntries } from '../redesign/selectors/installDriftEntries';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import type { PackageDrift } from '../redesign/types';
 import { ContextDestinationList } from './ContextDestinationList';
-import { buildPackageDestinations } from './buildPackageDestinations';
 import { buildPackageSyncScope } from './buildPackageSyncScope';
-import { toPackagePublications } from './toPackagePublications';
+import { usePackageDestinations } from './usePackageDestinations';
 
 /**
  * Where a package has got to, as one list.
@@ -113,23 +109,11 @@ export function ContextPackageDistribution({
   );
   const [isHistoryOpen, setHistoryOpen] = useState(false);
 
-  /*
-   * An empty organization id disables the query rather than asking about
-   * nobody's marketplaces, which is what lets this be called unconditionally in
-   * a pane that can render without an organization. It used to live inside a
-   * chip for want of that guard, and the chip then had to report its count
-   * upwards for the tab to know what to open on.
-   */
-  const { publications, isLoading: isPublicationsLoading } =
-    usePackageMarketplacePublications(organization?.id ?? '', pkg.id);
-  /*
-   * Membership and staleness are two different questions here, and only the
-   * first has an answer scoped to this package: the publications say which
-   * marketplaces carry it, and the space's drift says which of the copies have
-   * been overtaken. Both hooks fan out over the same distribution queries, so
-   * React Query answers the second one from the cache of the first.
-   */
-  const { marketplaces } = useSpaceMarketplaces();
+  const {
+    destinations,
+    marketplaces,
+    isLoading: isPublicationsLoading,
+  } = usePackageDestinations(pkg.id, drift);
   /*
    * Withheld rather than passed with no organization, which is what the
    * Distribution rail does with it: the confirmation hides its whole
@@ -139,15 +123,6 @@ export function ContextPackageDistribution({
    */
   const distributeMarketplaces = useMarketplaceBatchDistribution(
     organization?.id ?? null,
-  );
-
-  const destinations = useMemo(
-    () =>
-      buildPackageDestinations({
-        installs: drift ? installDriftEntries(drift) : [],
-        publications: toPackagePublications(publications, marketplaces, pkg.id),
-      }),
-    [drift, publications, marketplaces, pkg.id],
   );
 
   /*

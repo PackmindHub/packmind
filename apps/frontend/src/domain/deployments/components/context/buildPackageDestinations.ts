@@ -46,6 +46,34 @@ const STATE_RANK: Record<PackageDestinationState, number> = {
   aligned: 3,
 };
 
+/**
+ * The colour of each state, beside the states themselves so a dot, a band and
+ * a summary line cannot drift apart on what orange means.
+ */
+export const STATE_TONE: Record<PackageDestinationState, string> = {
+  failed: 'red.300',
+  waiting: 'blue.300',
+  behind: 'orange.500',
+  aligned: 'green.500',
+};
+
+/**
+ * The worst state in a set, which is what a single mark standing for many of
+ * them has to show. Ranked exactly as the rows are sorted, so the mark agrees
+ * with whatever is at the top of the list it summarises.
+ */
+export function worstState(
+  destinations: readonly PackageDestination[],
+): PackageDestinationState {
+  return destinations.reduce<PackageDestinationState>(
+    (worst, destination) =>
+      STATE_RANK[destination.state] < STATE_RANK[worst]
+        ? destination.state
+        : worst,
+    'aligned',
+  );
+}
+
 /** The states that put a row in the band at the top. */
 export function needsAHand(state: PackageDestinationState): boolean {
   return state !== 'aligned';

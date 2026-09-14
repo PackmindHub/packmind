@@ -74,6 +74,8 @@ import {
   COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
+import { PackageReachStrip } from './PackageReachStrip';
+import { usePackageDestinations } from './usePackageDestinations';
 import { ContextChip } from './ContextChip';
 import { ContextSearchField } from './ContextSearchField';
 import { filterPackageGroups } from './filterPackageGroups';
@@ -545,6 +547,14 @@ export function ContextPackagePane({
   } = usePackageDrift(pkg.id);
 
   /*
+   * Read here for the line above the component list. The same call inside the
+   * Distribution tab is answered from the same cache, so the reach stated here
+   * and the list found there cannot come out of two different counts.
+   */
+  const { destinations, isLoading: areDestinationsLoading } =
+    usePackageDestinations(pkg.id, drift);
+
+  /*
    * Read here for the header's own push. React Query answers this and the
    * identical call inside the Distribution tab from one request, so the two
    * cannot disagree about which providers can be written to.
@@ -1004,6 +1014,16 @@ export function ContextPackagePane({
           />
         ) : (
           <PMVStack gap={5} align="stretch">
+            {/*
+              Where this package reaches, above the list of what is in it. The
+              two tabs each hold half of the question a reader arrives with,
+              and this is the half the other tab owns, said in one line.
+            */}
+            <PackageReachStrip
+              destinations={destinations}
+              isLoading={isLoading || areDestinationsLoading}
+              onOpenDistribution={() => showTab(DISTRIBUTION_TAB)}
+            />
             {/*
               The filter row, above everything the list does. A package can hold
               a hundred components, and until this existed the only way to reach

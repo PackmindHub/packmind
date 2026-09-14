@@ -23,6 +23,7 @@ import { ContextChip } from './ContextChip';
 import { ContextPickBox } from './ContextPickBox';
 import { ContextSearchField } from './ContextSearchField';
 import {
+  STATE_TONE,
   filterPackageDestinations,
   needsAHand,
   packageDestinationSummary,
@@ -652,14 +653,6 @@ function textIndentPx(hasSelection: boolean): number {
     gutters
   );
 }
-
-/** The colour of each state, in one place, so a dot and a band agree. */
-const STATE_TONE: Record<PackageDestinationState, string> = {
-  failed: 'red.300',
-  waiting: 'blue.300',
-  behind: 'orange.500',
-  aligned: 'green.500',
-};
 
 /**
  * How this destination stands, as a mark rather than a word.
