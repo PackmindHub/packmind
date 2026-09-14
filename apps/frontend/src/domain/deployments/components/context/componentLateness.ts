@@ -1,7 +1,4 @@
-import {
-  installDriftEntries,
-  type DriftArtifactEntry,
-} from '../redesign/selectors/installDriftEntries';
+import { installDriftEntries } from '../redesign/selectors/installDriftEntries';
 import type { PackageDrift } from '../redesign/types';
 import { componentSelectionKey } from './buildPackageContext';
 
@@ -49,40 +46,4 @@ export function componentLateness(
   }
 
   return counts;
-}
-
-/**
- * What each component is missing on one landing in particular.
- *
- * The count above answers "how widely is this late"; this answers "what is
- * wrong here", which is the question someone debugging a single repository
- * arrives with and which no count can answer: `behind on 9` does not say
- * whether this one is two versions back or was never written at all.
- *
- * Keyed like the counts, and empty for a landing this package does not reach,
- * which the caller reads as "nothing to say" rather than "everything is fine".
- */
-export function componentDriftOn(
-  drift: PackageDrift | null,
-  installKey: string,
-): Map<string, DriftArtifactEntry> {
-  const here = new Map<string, DriftArtifactEntry>();
-  if (!drift) return here;
-
-  const landing = installDriftEntries(drift).find(
-    (entry) => `${entry.repo.id}::${entry.target.id}` === installKey,
-  );
-  if (!landing) return here;
-
-  for (const entry of landing.behindArtifacts) {
-    here.set(
-      componentSelectionKey({
-        type: entry.artifact.kind,
-        key: entry.artifact.id,
-      }),
-      entry,
-    );
-  }
-
-  return here;
 }

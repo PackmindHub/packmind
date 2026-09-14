@@ -10,7 +10,7 @@ import type {
   PackageDrift,
   RepoInstall,
 } from '../redesign/types';
-import { componentDriftOn, componentLateness } from './componentLateness';
+import { componentLateness } from './componentLateness';
 
 function install(
   repoId: string,
@@ -145,50 +145,5 @@ describe('componentLateness', () => {
     );
 
     expect(counts.get('standard:std-1')).toBe(2);
-  });
-});
-
-describe('componentDriftOn', () => {
-  const twoLandings = drift(
-    [
-      artifact('std-1', 'standard', [
-        install('repo-a', 'target-1', 'outdated'),
-        install('repo-b', 'target-1', 'outdated'),
-      ]),
-      artifact('std-2', 'standard', [
-        install('repo-a', 'target-1', 'aligned'),
-        install('repo-b', 'target-1', 'not-distributed'),
-      ]),
-    ],
-    [location('repo-a', 'target-1'), location('repo-b', 'target-1')],
-  );
-
-  it('answers for the landing asked about and no other', () => {
-    const here = componentDriftOn(twoLandings, 'repo-a::target-1');
-
-    expect([...here.keys()]).toEqual(['standard:std-1']);
-  });
-
-  it('carries what is wrong, not only that something is', () => {
-    const here = componentDriftOn(twoLandings, 'repo-b::target-1');
-
-    expect(here.get('standard:std-2')?.reason).toBe('not-distributed');
-  });
-
-  describe('when the key names no landing of this package', () => {
-    /*
-     * What an address carrying a stale key resolves to. Empty rather than
-     * everything, so a filter that cannot be honoured shows nothing wrong
-     * instead of showing another landing's drift.
-     */
-    it('answers nothing', () => {
-      expect(componentDriftOn(twoLandings, 'repo-z::target-9').size).toBe(0);
-    });
-  });
-
-  describe('when the package has never been distributed', () => {
-    it('answers nothing', () => {
-      expect(componentDriftOn(null, 'repo-a::target-1').size).toBe(0);
-    });
   });
 });

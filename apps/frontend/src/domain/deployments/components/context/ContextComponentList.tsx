@@ -39,7 +39,6 @@ import {
   pendingReviewsByComponent,
   reviewChangesLabel,
 } from './componentMaintenance';
-import type { DriftArtifactEntry } from '../redesign/selectors/installDriftEntries';
 import { ContextPickBox } from './ContextPickBox';
 
 /**
@@ -87,16 +86,6 @@ export type ComponentListEntry = {
    * numbers.
    */
   behindOn?: number;
-  /**
-   * What is wrong with this component on the one destination being read
-   * against, when the reader has picked one.
-   *
-   * Set instead of `behindOn` and not beside it: the caller decides which
-   * question the list is answering, and a row showing both "behind on 9" and
-   * "v2 → v5" would be stating a count across destinations next to a fact
-   * about one of them, in the same column, with nothing saying which is which.
-   */
-  behindHere?: DriftArtifactEntry;
 };
 
 /**
@@ -211,9 +200,7 @@ export function ContextComponentList({
    * between two groups of one pane.
    */
   const showDrift = sections.some((section) =>
-    section.entries.some(
-      (entry) => (entry.behindOn ?? 0) > 0 || entry.behindHere !== undefined,
-    ),
+    section.entries.some((entry) => (entry.behindOn ?? 0) > 0),
   );
 
   /*
@@ -471,7 +458,7 @@ function ComponentRow({
   isSelecting: boolean;
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
-  const { component, packageNames = [], behindOn = 0, behindHere } = entry;
+  const { component, packageNames = [], behindOn = 0 } = entry;
 
   return (
     /*
@@ -559,7 +546,7 @@ function ComponentRow({
             </PMBox>
             {showPackages && <PackageColumn names={packageNames} />}
             {showReviews && <ReviewColumn count={pendingReviews} />}
-            {showDrift && <DriftColumn count={behindOn} here={behindHere} />}
+            {showDrift && <DriftColumn count={behindOn} />}
             {/*
               A fixed width, not the width of the number: v12 is one character
               wider than v5, and every column to its left would move with it.
@@ -658,12 +645,7 @@ function ComponentRow({
  * are where they should be, and a column of zeroes teaches the eye to skip the
  * row that has a number.
  */
-function DriftColumn({
-  count,
-  here,
-}: Readonly<{ count: number; here?: DriftArtifactEntry }>) {
-  if (here) return <DriftHereColumn entry={here} />;
-
+function DriftColumn({ count }: Readonly<{ count: number }>) {
   const label = `Behind on ${count} destination${count === 1 ? '' : 's'} of this package`;
 
   return (
@@ -713,59 +695,6 @@ function DriftColumn({
           </PMBox>
         </PMTooltip>
       )}
-    </PMBox>
-  );
-}
-
-/**
- * What is wrong with this component on the destination being read against.
- *
- * The short form of the row the Distribution tab unfolds, in the width a
- * component list can spare. `DriftArtifactRow` says the same three things with
- * badges and an arrow, which is right for a list of four entries under an
- * opened landing and too loud for a column beside a hundred names.
- *
- * The words are that row's words. `Not distributed` becomes `not there` and
- * `Needs removal` becomes `to remove`, shortened but not renamed: a reader who
- * follows the link to the other tab must recognise what they saw here.
- *
- * Nothing at all when this component is fine there, which is what makes the
- * column readable: against a destination, the rows that carry a mark are the
- * ones the reader came to find.
- */
-function DriftHereColumn({ entry }: Readonly<{ entry: DriftArtifactEntry }>) {
-  const label =
-    entry.reason === 'not-distributed'
-      ? 'not there'
-      : entry.reason === 'needs-removal'
-        ? 'to remove'
-        : `v${entry.deployedVersion} → v${entry.artifact.packmindVersion}`;
-
-  return (
-    <PMBox
-      flexShrink={0}
-      width="96px"
-      display="flex"
-      alignItems="center"
-      justifyContent="flex-end"
-      gap="6px"
-    >
-      <PMBox
-        width="8px"
-        height="8px"
-        borderRadius="full"
-        bg="orange.500"
-        flexShrink={0}
-        aria-hidden
-      />
-      <PMText
-        fontSize="xs"
-        color="faded"
-        fontVariantNumeric="tabular-nums"
-        whiteSpace="nowrap"
-      >
-        {label}
-      </PMText>
     </PMBox>
   );
 }
