@@ -366,6 +366,95 @@ describe('ContextDestinationList', () => {
     });
   });
 
+  describe('picking several landings', () => {
+    const pushable = () => [
+      destination({
+        key: 'a',
+        name: 'acme/one',
+        installKey: 'repo-1::t1',
+        state: 'behind',
+        behindCount: 1,
+        behindArtifacts: [behind('a', 2)],
+      }),
+      destination({
+        key: 'b',
+        name: 'acme/two',
+        installKey: 'repo-2::t2',
+        state: 'behind',
+        behindCount: 1,
+        behindArtifacts: [behind('b', 2)],
+      }),
+      destination({ key: 'c', name: 'acme/fine' }),
+    ];
+
+    it('sends the ones that were ticked, and nothing else', async () => {
+      const onUpdate = vi.fn();
+      renderList(pushable(), onUpdate);
+
+      await userEvent.click(
+        screen.getByRole('checkbox', { name: 'Select acme/one' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: /Update 1 destination/ }),
+      );
+
+      expect(onUpdate).toHaveBeenCalledWith([
+        expect.objectContaining({ installKey: 'repo-1::t1' }),
+      ]);
+    });
+
+    it('offers the rest of what can be pushed, and only that', async () => {
+      const onUpdate = vi.fn();
+      renderList(pushable(), onUpdate);
+
+      await userEvent.click(
+        screen.getByRole('checkbox', { name: 'Select acme/one' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Select all 2' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: /Update 2 destinations/ }),
+      );
+
+      expect(onUpdate.mock.calls[0][0]).toHaveLength(2);
+    });
+
+    describe('when a row has nothing to send', () => {
+      it('gives it no checkbox, so a batch cannot carry work that would be dropped', () => {
+        renderList(pushable(), vi.fn());
+
+        expect(
+          screen.queryByRole('checkbox', { name: 'Select acme/fine' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when a search hides a picked row', () => {
+      it('leaves it out of the batch, since it is no longer on screen', async () => {
+        const onUpdate = vi.fn();
+        renderList(pushable(), onUpdate);
+
+        await userEvent.click(
+          screen.getByRole('checkbox', { name: 'Select acme/one' }),
+        );
+        await userEvent.type(
+          screen.getByLabelText('Find a repository, branch or marketplace'),
+          'two',
+        );
+
+        // The bar goes with it, leaving the row's own button behind.
+        expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
+      });
+    });
+
+    it('picks nothing when the reader cannot push at all', () => {
+      renderList(pushable());
+
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+  });
+
   describe('opening a drifted row', () => {
     const late = () =>
       destination({
@@ -445,9 +534,9 @@ describe('ContextDestinationList', () => {
 
       await userEvent.click(screen.getByRole('button', { name: 'Update' }));
 
-      expect(onUpdate).toHaveBeenCalledWith(
+      expect(onUpdate).toHaveBeenCalledWith([
         expect.objectContaining({ installKey: 'repo-1::target-1' }),
-      );
+      ]);
     });
 
     describe('when the last push failed and left components behind', () => {

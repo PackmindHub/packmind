@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import {
   PMBox,
   PMButton,
+  PMCheckbox,
   PMHStack,
   PMIcon,
   PMIconButton,
@@ -13,10 +14,13 @@ import {
   LuChevronDown,
   LuChevronRight,
   LuFolderGit2,
+  LuRefreshCw,
   LuStore,
 } from 'react-icons/lu';
 import { DriftArtifactRow } from '../redesign/components/DriftArtifactRow';
+import { SelectionBar } from '../SelectionBar';
 import { ContextChip } from './ContextChip';
+import { ContextPickBox } from './ContextPickBox';
 import { ContextSearchField } from './ContextSearchField';
 import {
   filterPackageDestinations,
@@ -48,13 +52,21 @@ export function ContextDestinationList({
 }: Readonly<{
   destinations: readonly PackageDestination[];
   /**
-   * Pushing this package to one landing again. Absent for a marketplace, which
-   * is republished rather than written to, and for a reader who cannot act.
+   * Pushing this package to a set of landings again: one, from a row, or those
+   * the reader ticked. One callback for both, because they are one gesture over
+   * a different number of rows, and two would let a bar and a row disagree
+   * about what "update" sends.
+   *
+   * Absent for a reader who cannot act, which is what takes the checkboxes and
+   * the buttons off the list at once.
    */
-  onUpdate?: (destination: PackageDestination) => void;
+  onUpdate?: (destinations: readonly PackageDestination[]) => void;
 }>) {
   const [filter, setFilter] = useState<PackageDestinationFilter>('all');
   const [query, setQuery] = useState('');
+  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const isSearching = query.trim().length > 0;
   const matched = searchPackageDestinations(destinations, query);
@@ -64,6 +76,23 @@ export function ContextDestinationList({
     (row) => row.state === 'behind' || row.state === 'waiting',
   );
   const aligned = shown.filter((row) => !needsAHand(row.state));
+
+  /*
+   * Resolved against what is on screen, not against everything ever ticked. A
+   * reader who picks three rows and then types a name into the field must not
+   * send a fourth they can no longer see, and this is the rule the component
+   * list of this surface already follows for the same reason.
+   */
+  const pickable = shown.filter(canPush);
+  const picked = pickable.filter((row) => selectedKeys.has(row.key));
+  const isSelecting = picked.length > 0;
+
+  const toggle = (row: PackageDestination) =>
+    setSelectedKeys((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(row.key)) next.add(row.key);
+      return next;
+    });
 
   return (
     <>
@@ -96,6 +125,27 @@ export function ContextDestinationList({
           </PMButton>
         </PMHStack>
       )}
+      {onUpdate && isSelecting && (
+        <PMBox paddingBottom={2}>
+          <SelectionBar
+            count={picked.length}
+            total={pickable.length}
+            onSelectAll={() =>
+              setSelectedKeys(new Set(pickable.map((row) => row.key)))
+            }
+            actions={[
+              {
+                label: `Update ${picked.length} destination${
+                  picked.length === 1 ? '' : 's'
+                }`,
+                icon: <LuRefreshCw />,
+                onAct: () => onUpdate(picked),
+              },
+            ]}
+            onClear={() => setSelectedKeys(new Set())}
+          />
+        </PMBox>
+      )}
       <PMBox
         borderWidth="1px"
         borderColor="border.tertiary"
@@ -125,6 +175,9 @@ export function ContextDestinationList({
            */
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
+          selection={
+            onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
+          }
           isFirst
         />
         <Band
@@ -133,6 +186,9 @@ export function ContextDestinationList({
           rows={pending}
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
+          selection={
+            onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
+          }
           isFirst={failed.length === 0}
         />
         <UpToDateBand
@@ -233,6 +289,37 @@ function FilterRow({
   );
 }
 
+/**
+ * Whether this row has something to send.
+ *
+ * One rule for the checkbox and for the button, because the two offer the same
+ * gesture and a row that can be ticked but not pushed would put work into a
+ * batch that then silently drops it.
+ *
+ * Something outstanding is what it takes, not a particular state: a landing
+ * whose push was rejected is repaired by pushing again, and that is a `failed`
+ * row. What it excludes is a push already on its way, which would be started
+ * twice, a marketplace, which is republished rather than written to, and a
+ * failure that left nothing behind, where there is nothing to send.
+ */
+function canPush(destination: PackageDestination): boolean {
+  return (
+    destination.installKey !== null &&
+    destination.behindCount > 0 &&
+    destination.state !== 'waiting'
+  );
+}
+
+/**
+ * What a row needs to be picked: which keys are ticked, whether a batch is
+ * under way, and the way to tick one.
+ */
+type RowSelection = {
+  selectedKeys: ReadonlySet<string>;
+  isSelecting: boolean;
+  toggle: (destination: PackageDestination) => void;
+};
+
 function Band({
   label,
   tone,
@@ -240,6 +327,7 @@ function Band({
   total,
   isFirst,
   onUpdate,
+  selection,
 }: Readonly<{
   label: string;
   tone: string;
@@ -250,7 +338,8 @@ function Band({
    */
   total?: number;
   isFirst: boolean;
-  onUpdate?: (destination: PackageDestination) => void;
+  onUpdate?: (destinations: readonly PackageDestination[]) => void;
+  selection?: RowSelection;
 }>) {
   if (rows.length === 0) return null;
 
@@ -289,7 +378,12 @@ function Band({
         </PMText>
       </PMHStack>
       {rows.map((row) => (
-        <DestinationRow key={row.key} destination={row} onUpdate={onUpdate} />
+        <DestinationRow
+          key={row.key}
+          destination={row}
+          onUpdate={onUpdate}
+          selection={selection}
+        />
       ))}
     </>
   );
@@ -376,9 +470,11 @@ function UpToDateBand({
 function DestinationRow({
   destination,
   onUpdate,
+  selection,
 }: Readonly<{
   destination: PackageDestination;
-  onUpdate?: (destination: PackageDestination) => void;
+  onUpdate?: (destinations: readonly PackageDestination[]) => void;
+  selection?: RowSelection;
 }>) {
   const [expanded, setExpanded] = useState(false);
   /*
@@ -389,15 +485,47 @@ function DestinationRow({
    * by what.
    */
   const canExpand = destination.behindArtifacts.length > 0;
+  const isPicked = selection?.selectedKeys.has(destination.key) ?? false;
 
   return (
     <PMBox
       borderTopWidth="1px"
       borderColor="border.tertiary"
       transition="background-color 150ms ease-out"
+      // The picked row stays legible once the pointer has left it.
+      bg={isPicked ? 'background.secondary' : undefined}
       _hover={{ bg: 'background.secondary' }}
+      // Chakra's `_groupHover` keys off this class, not `role="group"`.
+      className="group"
     >
       <PMHStack gap={3} align="center" paddingX={3} paddingY={2}>
+        {selection && (
+          /*
+            The column is there whether or not this row can be picked, so the
+            names of a band keep one left edge. A landing with nothing to send
+            is not a landing that should be indented differently.
+          */
+          <PMBox
+            width="16px"
+            flexShrink={0}
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            {canPush(destination) && (
+              <ContextPickBox shown={isPicked || selection.isSelecting}>
+                <PMCheckbox
+                  size="sm"
+                  checked={isPicked}
+                  onCheckedChange={() => selection.toggle(destination)}
+                  inputProps={{
+                    'aria-label': `Select ${destination.name}`,
+                  }}
+                />
+              </ContextPickBox>
+            )}
+          </PMBox>
+        )}
         <PMIcon fontSize="sm" color="text.faded" flexShrink={0}>
           {destination.kind === 'repository' ? <LuFolderGit2 /> : <LuStore />}
         </PMIcon>
@@ -565,7 +693,7 @@ function RowAction({
   onUpdate,
 }: Readonly<{
   destination: PackageDestination;
-  onUpdate?: (destination: PackageDestination) => void;
+  onUpdate?: (destinations: readonly PackageDestination[]) => void;
 }>): ReactNode {
   /*
    * The pull request first, whatever else the row could offer. A publication
@@ -586,32 +714,14 @@ function RowAction({
     );
   }
 
-  /*
-   * Offered wherever there is something to send, which includes a landing whose
-   * last push failed: pushing again is exactly how a rejected push is retried,
-   * and the row that stops short of saying so leaves the reader to find the
-   * gesture on the package-wide button, which would touch the other two hundred
-   * landings as well.
-   *
-   * What it needs is something behind, not a particular state. A failure with
-   * nothing outstanding has already been repaired by whoever repaired it, and
-   * pushing a package nothing is waiting for writes nothing anywhere.
-   */
-  if (
-    !onUpdate ||
-    destination.installKey === null ||
-    destination.behindCount === 0 ||
-    destination.state === 'waiting'
-  ) {
-    return null;
-  }
+  if (!onUpdate || !canPush(destination)) return null;
 
   return (
     <PMButton
       variant="tertiary"
       size="xs"
       flexShrink={0}
-      onClick={() => onUpdate(destination)}
+      onClick={() => onUpdate([destination])}
     >
       Update
     </PMButton>

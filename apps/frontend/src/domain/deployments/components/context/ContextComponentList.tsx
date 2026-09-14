@@ -39,6 +39,7 @@ import {
   pendingReviewsByComponent,
   reviewChangesLabel,
 } from './componentMaintenance';
+import { ContextPickBox } from './ContextPickBox';
 
 /**
  * The mark of each type, in one place. The two panes and the filter chips read
@@ -280,39 +281,6 @@ export function ContextComponentList({
 }
 
 /**
- * A checkbox that is only there when it is wanted: under the pointer, under the
- * keyboard, or once a selection has started.
- *
- * A hundred components is a hundred empty boxes down the left edge, and reading
- * a package is what this list is for nine times out of ten; picking things out
- * of it is the tenth. The destinations rail settled this for the surface
- * already and this is the same behaviour, with the focus case added: a checkbox
- * at zero opacity still takes the keyboard, so without `_focusWithin` tabbing
- * into the list would move an invisible focus ring down an empty column.
- *
- * Faded rather than unmounted, which is what keeps the column steady. A row
- * that renders its checkbox only on hover shifts its name sideways under the
- * pointer, and the eye is running down that name.
- */
-function PickBox({
-  shown,
-  children,
-}: Readonly<{ shown: boolean; children: ReactNode }>) {
-  return (
-    <PMBox
-      display="inline-flex"
-      alignItems="center"
-      opacity={shown ? 1 : 0}
-      transition="opacity 100ms ease-out"
-      _groupHover={{ opacity: 1 }}
-      _focusWithin={{ opacity: 1 }}
-    >
-      {children}
-    </PMBox>
-  );
-}
-
-/**
  * The band header. Quieter than the rows it heads and tinted, so a long list
  * reads as runs of components separated by labels rather than as one table with
  * odd lines in it.
@@ -382,7 +350,7 @@ function SectionHeader({
           three of forty needs to be told that clicking here takes the other
           thirty-seven, not that nothing is picked.
         */
-        <PickBox shown={isSelecting || selection.selected > 0}>
+        <ContextPickBox shown={isSelecting || selection.selected > 0}>
           <PMCheckbox
             size="sm"
             checked={
@@ -397,7 +365,7 @@ function SectionHeader({
               'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
             }}
           />
-        </PickBox>
+        </ContextPickBox>
       )}
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
@@ -496,14 +464,14 @@ function ComponentRow({
           row would open it.
         */
         <PMBox display="flex" alignItems="center" paddingLeft={3}>
-          <PickBox shown={isSelected || isSelecting}>
+          <ContextPickBox shown={isSelected || isSelecting}>
             <PMCheckbox
               size="sm"
               checked={isSelected}
               onCheckedChange={() => onToggleSelect(component)}
               inputProps={{ 'aria-label': `Select ${component.name}` }}
             />
-          </PickBox>
+          </ContextPickBox>
         </PMBox>
       )}
       {/*
