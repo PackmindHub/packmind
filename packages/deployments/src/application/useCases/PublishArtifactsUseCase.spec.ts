@@ -418,7 +418,7 @@ describe('PublishArtifactsUseCase', () => {
           gitRepoId: gitRepo.id,
           organizationId,
           userId,
-          recipeVersionIds: [recipeVersion.id],
+          commandVersionIds: [recipeVersion.id],
           standardVersionIds: [standardVersion.id],
           skillVersionIds: [],
           fileUpdates: expect.objectContaining({

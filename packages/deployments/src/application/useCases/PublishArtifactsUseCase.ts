@@ -62,7 +62,7 @@ type ActiveVersionsByTarget = {
 };
 
 /**
- * Unified usecase for publishing recipes, standards, and skills together
+ * Unified usecase for publishing commands, standards, and skills together
  * Uses the unified renderArtifacts method for atomic updates
  */
 export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
@@ -89,9 +89,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const { source = 'ui' } = command;
 
     this.logger.info(
-      'Publishing artifacts (unified recipes + standards + skills)',
+      'Publishing artifacts (unified commands + standards + skills)',
       {
-        recipeVersionIdsCount: command.recipeVersionIds.length,
+        commandVersionIdsCount: command.recipeVersionIds.length,
         standardVersionIdsCount: command.standardVersionIds.length,
         skillVersionIdsCount: command.skillVersionIds?.length ?? 0,
         targetIdsCount: command.targetIds.length,
@@ -125,7 +125,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.targetIds,
     );
 
-    const [recipeVersionsResult, standardVersionsResult, skillVersionsResult] =
+    const [commandVersionsResult, standardVersionsResult, skillVersionsResult] =
       await Promise.allSettled([
         this.fetchVersions(
           command.recipeVersionIds,
@@ -144,7 +144,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         ),
       ]);
 
-    const recipeVersions = this.unwrapVersionsResult(recipeVersionsResult);
+    const commandVersions = this.unwrapVersionsResult(commandVersionsResult);
     const standardVersions = this.unwrapVersionsResult(standardVersionsResult);
     const skillVersions = this.unwrapVersionsResult(skillVersionsResult);
 
@@ -161,7 +161,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           gitRepoOwner: gitRepo.owner,
           gitRepoName: gitRepo.repo,
           targetsCount: targets.length,
-          recipesCount: recipeVersions.length,
+          commandsCount: commandVersions.length,
           standardsCount: standardVersions.length,
           skillsCount: skillVersions.length,
         });
@@ -183,7 +183,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           combined: allCommandVersions,
         } = this.collectAllCommandVersions(
           targets,
-          recipeVersions,
+          commandVersions,
           activeVersionsByTargetId,
           activeVersionsFromPackagesByTargetId,
         );
@@ -213,7 +213,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         const removedCommandVersionsFromDeployedPackages =
           this.computeRemovedCommandVersions(
             previousCommandVersionsFromPackages,
-            recipeVersions,
+            commandVersions,
           );
         // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
         const commandVersionsFromOtherPackages = previousCommandVersions.filter(
@@ -225,9 +225,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         // Only truly remove if not still present via other packages
         const removedCommandVersions =
           removedCommandVersionsFromDeployedPackages.filter(
-            (rrv) =>
+            (rcv) =>
               !commandVersionsFromOtherPackages.some(
-                (rv) => rv.recipeId === rrv.recipeId,
+                (cv) => cv.recipeId === rcv.recipeId,
               ),
           );
 
@@ -300,12 +300,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           (sv) => !removedStandardIds.has(sv.standardId),
         );
 
-        // Filter out removed recipes from installed list
+        // Filter out removed commands from installed list
         const removedCommandIds = new Set(
-          removedCommandVersions.map((rv) => rv.recipeId),
+          removedCommandVersions.map((cv) => cv.recipeId),
         );
         const filteredCommandVersions = allCommandVersions.filter(
-          (rv) => !removedCommandIds.has(rv.recipeId),
+          (cv) => !removedCommandIds.has(cv.recipeId),
         );
 
         const standardIdsMissingRules = [
@@ -379,7 +379,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
         // Build commit message for the job
         const commitMessage = this.buildCommitMessage(
-          recipeVersions,
+          commandVersions,
           standardVersions,
           skillVersions,
           filteredCommandVersions,
@@ -429,7 +429,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           gitRepoId: gitRepo.id,
           fileUpdates: firstTargetUpdates,
           commitMessage,
-          recipeVersionIds: recipeVersions.map((rv) => rv.id),
+          commandVersionIds: commandVersions.map((cv) => cv.id),
           standardVersionIds: standardVersions.map((sv) => sv.id),
           skillVersionIds: skillVersions.map((skv) => skv.id),
           activeRenderModes,
@@ -475,7 +475,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         userId: command.userId as UserId,
         organizationId: command.organizationId as OrganizationId,
         targetIds: command.targetIds,
-        recipeCount: recipeVersions.length,
+        recipeCount: commandVersions.length,
         standardCount: standardVersions.length,
         source,
       }),
@@ -600,7 +600,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
-      // Call unified renderArtifacts with recipes, standards, and skills
+      // Call unified renderArtifacts with commands, standards, and skills
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
@@ -875,26 +875,31 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const previousFromPackagesMap = new Map<string, CommandVersion>();
 
     for (const target of targets) {
-      // Get all previous recipe versions (for combining)
+      // Get all previous command versions (for combining)
       const previousCommandVersions =
         activeVersionsByTargetId.get(target.id)?.commandVersions ?? [];
 
-      for (const recipeVersion of previousCommandVersions) {
-        const existing = allPreviousCommandVersions.get(recipeVersion.recipeId);
-        if (!existing || recipeVersion.version > existing.version) {
-          allPreviousCommandVersions.set(recipeVersion.recipeId, recipeVersion);
+      for (const commandVersion of previousCommandVersions) {
+        const existing = allPreviousCommandVersions.get(
+          commandVersion.recipeId,
+        );
+        if (!existing || commandVersion.version > existing.version) {
+          allPreviousCommandVersions.set(
+            commandVersion.recipeId,
+            commandVersion,
+          );
         }
       }
 
-      // Get previous recipe versions filtered by packages being deployed (for removal calculation)
+      // Get previous command versions filtered by packages being deployed (for removal calculation)
       const previousFromPackagesVersions =
         activeVersionsFromPackagesByTargetId.get(target.id)?.commandVersions ??
         [];
 
-      for (const recipeVersion of previousFromPackagesVersions) {
-        const existing = previousFromPackagesMap.get(recipeVersion.recipeId);
-        if (!existing || recipeVersion.version > existing.version) {
-          previousFromPackagesMap.set(recipeVersion.recipeId, recipeVersion);
+      for (const commandVersion of previousFromPackagesVersions) {
+        const existing = previousFromPackagesMap.get(commandVersion.recipeId);
+        if (!existing || commandVersion.version > existing.version) {
+          previousFromPackagesMap.set(commandVersion.recipeId, commandVersion);
         }
       }
     }
@@ -1011,8 +1016,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     newVersions: CommandVersion[],
   ): CommandVersion[] {
     const map = new Map<string, CommandVersion>();
-    previous.forEach((rv) => map.set(rv.recipeId, rv));
-    newVersions.forEach((rv) => map.set(rv.recipeId, rv));
+    previous.forEach((cv) => map.set(cv.recipeId, cv));
+    newVersions.forEach((cv) => map.set(cv.recipeId, cv));
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
@@ -1043,15 +1048,15 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Computes recipe versions that were previously deployed but are no longer
+   * Computes command versions that were previously deployed but are no longer
    * in the current deployment (i.e., they are being removed)
    */
   private computeRemovedCommandVersions(
     previousVersions: CommandVersion[],
     currentVersions: CommandVersion[],
   ): CommandVersion[] {
-    const currentCommandIds = new Set(currentVersions.map((rv) => rv.recipeId));
-    return previousVersions.filter((rv) => !currentCommandIds.has(rv.recipeId));
+    const currentCommandIds = new Set(currentVersions.map((cv) => cv.recipeId));
+    return previousVersions.filter((cv) => !currentCommandIds.has(cv.recipeId));
   }
 
   /**
@@ -1102,7 +1107,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   private buildCommitMessage(
-    recipeVersions: CommandVersion[],
+    commandVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[],
     allCommandVersions: CommandVersion[],
@@ -1116,8 +1121,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       '',
     ];
 
-    if (recipeVersions.length > 0) {
-      parts.push(`- Updated ${recipeVersions.length} command(s)`);
+    if (commandVersions.length > 0) {
+      parts.push(`- Updated ${commandVersions.length} command(s)`);
       parts.push(
         `- Total commands in repository: ${allCommandVersions.length}`,
       );
@@ -1144,10 +1149,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     parts.push(`- Targets: ${targets.map((t) => t.name).join(', ')}`);
     parts.push('');
 
-    if (recipeVersions.length > 0) {
+    if (commandVersions.length > 0) {
       parts.push('Commands updated:');
-      recipeVersions.forEach((rv) => {
-        parts.push(`- ${rv.name} (${rv.slug}) v${rv.version}`);
+      commandVersions.forEach((cv) => {
+        parts.push(`- ${cv.name} (${cv.slug}) v${cv.version}`);
       });
       parts.push('');
     }
