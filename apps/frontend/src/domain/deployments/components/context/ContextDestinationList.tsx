@@ -15,9 +15,13 @@ import {
   LuFolderGit2,
   LuStore,
 } from 'react-icons/lu';
+import { ContextChip } from './ContextChip';
 import {
+  filterPackageDestinations,
   needsAHand,
+  packageDestinationSummary,
   type PackageDestination,
+  type PackageDestinationFilter,
   type PackageDestinationState,
 } from './buildPackageDestinations';
 
@@ -46,37 +50,139 @@ export function ContextDestinationList({
    */
   onUpdate?: (destination: PackageDestination) => void;
 }>) {
-  const failed = destinations.filter((row) => row.state === 'failed');
-  const pending = destinations.filter(
+  const [filter, setFilter] = useState<PackageDestinationFilter>('all');
+
+  const shown = filterPackageDestinations(destinations, filter);
+  const failed = shown.filter((row) => row.state === 'failed');
+  const pending = shown.filter(
     (row) => row.state === 'behind' || row.state === 'waiting',
   );
-  const aligned = destinations.filter((row) => !needsAHand(row.state));
+  const aligned = shown.filter((row) => !needsAHand(row.state));
 
   return (
-    <PMBox
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="sm"
-      overflow="hidden"
-    >
-      <Band
-        label="Failed"
-        tone="red.300"
-        rows={failed}
-        total={destinations.length}
-        onUpdate={onUpdate}
-        isFirst
+    <>
+      <FilterRow
+        destinations={destinations}
+        value={filter}
+        onChange={setFilter}
       />
-      <Band
-        label="Behind or waiting"
-        tone="orange.500"
-        rows={pending}
-        total={destinations.length}
-        onUpdate={onUpdate}
-        isFirst={failed.length === 0}
-      />
-      <UpToDateBand rows={aligned} isFirst={destinations.length === 0} />
-    </PMBox>
+      <PMBox
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="sm"
+        overflow="hidden"
+      >
+        <Band
+          label="Failed"
+          tone="red.300"
+          rows={failed}
+          total={destinations.length}
+          onUpdate={onUpdate}
+          isFirst
+        />
+        <Band
+          label="Behind or waiting"
+          tone="orange.500"
+          rows={pending}
+          total={destinations.length}
+          onUpdate={onUpdate}
+          isFirst={failed.length === 0}
+        />
+        <UpToDateBand
+          rows={aligned}
+          isFirst={failed.length === 0 && pending.length === 0}
+          /*
+           * Asked for by name, so they are the list rather than the line under
+           * it. Folding them there would answer a click on `Up to date 3` with
+           * a count of three and no way to see them without undoing the filter.
+           */
+          forceOpen={filter === 'up-to-date'}
+        />
+      </PMBox>
+    </>
+  );
+}
+
+/**
+ * The five readings of the list, as one row.
+ *
+ * Counted from the whole set and not from what is on screen: a chip whose
+ * number changed with the filter would be reporting on the filter rather than
+ * on the package, and the reader could not use it to get back.
+ *
+ * A reading that would leave the list as it is gets no chip. That covers the
+ * empty one, `Marketplaces 0` on a package that reaches none, and the full one,
+ * `Repositories 11` beside `All destinations 11`, which is the same list under
+ * a second name. Both are controls that do nothing, on a row whose whole job is
+ * to say what there is; the second is the more misleading of the two, since its
+ * number invites the reader to believe it narrows something.
+ *
+ * When that leaves `All destinations` alone, the row goes: one chip, always
+ * active, choosing between itself and nothing is a heading drawn as a control.
+ */
+function FilterRow({
+  destinations,
+  value,
+  onChange,
+}: Readonly<{
+  destinations: readonly PackageDestination[];
+  value: PackageDestinationFilter;
+  onChange: (next: PackageDestinationFilter) => void;
+}>) {
+  const summary = packageDestinationSummary(destinations);
+
+  const chips: Array<{
+    filter: PackageDestinationFilter;
+    label: string;
+    count: number;
+    icon?: ReactNode;
+  }> = [
+    { filter: 'all', label: 'All destinations', count: summary.all },
+    {
+      filter: 'repositories',
+      label: 'Repositories',
+      count: summary.repositories,
+      icon: <LuFolderGit2 />,
+    },
+    {
+      filter: 'marketplaces',
+      label: 'Marketplaces',
+      count: summary.marketplaces,
+      icon: <LuStore />,
+    },
+    {
+      filter: 'needs-a-hand',
+      label: 'Needs a hand',
+      count: summary.needsAHand,
+    },
+    { filter: 'up-to-date', label: 'Up to date', count: summary.upToDate },
+  ];
+
+  const narrowing = chips.filter(
+    (chip) =>
+      chip.filter !== 'all' &&
+      /*
+       * The active one stays whatever its count, so a filter can always be
+       * read off the row and undone from it.
+       */
+      (chip.filter === value || (chip.count > 0 && chip.count < summary.all)),
+  );
+
+  if (narrowing.length === 0) return null;
+
+  return (
+    <PMHStack gap={1} align="center" paddingBottom={2} wrap="wrap">
+      {[chips[0], ...narrowing].map((chip) => (
+        <ContextChip
+          key={chip.filter}
+          label={chip.label}
+          count={chip.count}
+          icon={chip.icon}
+          isActive={value === chip.filter}
+          onClick={() => onChange(chip.filter)}
+        />
+      ))}
+    </PMHStack>
   );
 }
 
@@ -147,8 +253,20 @@ function Band({
 function UpToDateBand({
   rows,
   isFirst,
-}: Readonly<{ rows: readonly PackageDestination[]; isFirst: boolean }>) {
-  const [open, setOpen] = useState(false);
+  forceOpen = false,
+}: Readonly<{
+  rows: readonly PackageDestination[];
+  isFirst: boolean;
+  /**
+   * These rows are what was asked for, so they are shown and the fold is not
+   * offered. Kept out of the state below rather than pushed into it: a filter
+   * that set the state would leave it set once the filter was dropped, and the
+   * next reader would find three hundred rows open for a reason they never saw.
+   */
+  forceOpen?: boolean;
+}>) {
+  const [openedByReader, setOpened] = useState(false);
+  const open = forceOpen || openedByReader;
 
   if (rows.length === 0) return null;
 
@@ -182,18 +300,20 @@ function UpToDateBand({
             {rows.map((row) => row.name).join(' · ')}
           </PMText>
         )}
-        <PMIconButton
-          aria-label={`${open ? 'Hide' : 'Show'} the destinations that are up to date`}
-          aria-expanded={open}
-          variant="ghost"
-          size="2xs"
-          color="text.faded"
-          marginLeft="auto"
-          flexShrink={0}
-          onClick={() => setOpen((previous) => !previous)}
-        >
-          {open ? <LuChevronDown /> : <LuChevronRight />}
-        </PMIconButton>
+        {!forceOpen && (
+          <PMIconButton
+            aria-label={`${open ? 'Hide' : 'Show'} the destinations that are up to date`}
+            aria-expanded={open}
+            variant="ghost"
+            size="2xs"
+            color="text.faded"
+            marginLeft="auto"
+            flexShrink={0}
+            onClick={() => setOpened((previous) => !previous)}
+          >
+            {open ? <LuChevronDown /> : <LuChevronRight />}
+          </PMIconButton>
+        )}
       </PMHStack>
       {open &&
         rows.map((row) => <DestinationRow key={row.key} destination={row} />)}

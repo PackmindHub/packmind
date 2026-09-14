@@ -10,6 +10,7 @@ import type {
 import type { ArtifactDrift } from '../redesign/types';
 import {
   buildPackageDestinations,
+  filterPackageDestinations,
   packageDestinationSummary,
   type PackagePublication,
 } from './buildPackageDestinations';
@@ -264,6 +265,56 @@ describe('buildPackageDestinations', () => {
 
       expect(rows.map((row) => row.behindCount)).toEqual([2, 1]);
     });
+  });
+});
+
+describe('filterPackageDestinations', () => {
+  const rows = () =>
+    buildPackageDestinations({
+      installs: [
+        install({ repoId: 'repo-1', targetId: 't1' }),
+        install({
+          repoId: 'repo-2',
+          targetId: 't2',
+          behindArtifacts: [behindArtifact('a')],
+        }),
+      ],
+      publications: [
+        publication({ id: 'mkt-1' }),
+        publication({ id: 'mkt-2', isOutdated: true }),
+      ],
+    });
+
+  it('keeps everything under "all"', () => {
+    expect(filterPackageDestinations(rows(), 'all')).toHaveLength(4);
+  });
+
+  it('keeps one kind at a time', () => {
+    expect(
+      filterPackageDestinations(rows(), 'repositories').map((row) => row.kind),
+    ).toEqual(['repository', 'repository']);
+    expect(
+      filterPackageDestinations(rows(), 'marketplaces').map((row) => row.kind),
+    ).toEqual(['marketplace', 'marketplace']);
+  });
+
+  describe('when the reader asks for what needs a hand', () => {
+    it('takes both kinds and every state but aligned', () => {
+      const shown = filterPackageDestinations(rows(), 'needs-a-hand');
+
+      expect(shown.map((row) => row.kind)).toEqual([
+        'repository',
+        'marketplace',
+      ]);
+      expect(shown.every((row) => row.state !== 'aligned')).toBe(true);
+    });
+  });
+
+  it('takes the aligned ones and nothing else under "up to date"', () => {
+    const shown = filterPackageDestinations(rows(), 'up-to-date');
+
+    expect(shown).toHaveLength(2);
+    expect(shown.every((row) => row.state === 'aligned')).toBe(true);
   });
 });
 

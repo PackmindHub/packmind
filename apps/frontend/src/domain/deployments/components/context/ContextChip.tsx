@@ -46,6 +46,13 @@ export function ContextChip({
       transition="background-color 150ms ease-out"
       onClick={onClick}
       aria-pressed={isActive}
+      /*
+       * Spelled out when there is a count, because the label and the number are
+       * two text nodes side by side and a screen reader runs them together:
+       * `Marketplaces 3` was announced as "Marketplaces3". The drift filter on
+       * the Distribution surface hit this first and says the same thing.
+       */
+      aria-label={count === undefined ? undefined : `${label}, ${count}`}
     >
       {icon && (
         <PMIcon fontSize="xs" color="text.faded">

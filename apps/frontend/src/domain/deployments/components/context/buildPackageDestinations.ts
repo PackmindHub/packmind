@@ -219,6 +219,41 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
 }
 
 /**
+ * The readings the chip row offers, one at a time.
+ *
+ * Two axes in one row, and picking one drops the other. It reads as five ways
+ * to narrow the same list rather than as a grid, which is what the reader is
+ * actually after: "the marketplaces" and "what needs a hand" are each a whole
+ * question, and someone who wants the marketplaces that need a hand has at most
+ * a handful of rows left to read by then. A second row of chips to express the
+ * crossing would cost every reader a line to spare that one a glance.
+ */
+export type PackageDestinationFilter =
+  | 'all'
+  | 'repositories'
+  | 'marketplaces'
+  | 'needs-a-hand'
+  | 'up-to-date';
+
+export function filterPackageDestinations(
+  destinations: readonly PackageDestination[],
+  filter: PackageDestinationFilter,
+): PackageDestination[] {
+  switch (filter) {
+    case 'repositories':
+      return destinations.filter((row) => row.kind === 'repository');
+    case 'marketplaces':
+      return destinations.filter((row) => row.kind === 'marketplace');
+    case 'needs-a-hand':
+      return destinations.filter((row) => needsAHand(row.state));
+    case 'up-to-date':
+      return destinations.filter((row) => !needsAHand(row.state));
+    default:
+      return [...destinations];
+  }
+}
+
+/**
  * What the chip row counts. Taken from the rows rather than from the queries
  * behind them, so a chip cannot say five where the list shows four.
  */

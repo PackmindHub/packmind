@@ -105,7 +105,8 @@ describe('ContextDestinationList', () => {
       expect(
         screen.getByText('2 destinations are up to date'),
       ).toBeInTheDocument();
-      expect(screen.queryByText('Up to date')).not.toBeInTheDocument();
+      // Folded, so the names are in that one line and not in rows of their own.
+      expect(screen.queryByText('acme/one')).not.toBeInTheDocument();
     });
 
     it('names them beside the count, which is what makes the folded line worth reading', () => {
@@ -127,7 +128,103 @@ describe('ContextDestinationList', () => {
           }),
         );
 
-        expect(screen.getByText('Up to date')).toBeInTheDocument();
+        expect(screen.getByText('acme/one')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('the chip row', () => {
+    const mixed = () => [
+      destination({
+        key: 'a',
+        name: 'acme/late',
+        state: 'behind',
+        behindCount: 1,
+      }),
+      destination({ key: 'b', name: 'acme/fine' }),
+      destination({
+        key: 'm:mkt-1',
+        kind: 'marketplace',
+        name: 'packmind-marketplace',
+        details: [],
+        installKey: null,
+      }),
+    ];
+
+    it('counts the whole package and not what the filter left', async () => {
+      renderList(mixed());
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Needs a hand, 1' }),
+      );
+
+      expect(
+        screen.getByRole('button', { name: 'All destinations, 3' }),
+      ).toBeInTheDocument();
+    });
+
+    it('narrows the list to one kind', async () => {
+      renderList(mixed());
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Marketplaces, 1' }),
+      );
+
+      expect(screen.getByText('packmind-marketplace')).toBeInTheDocument();
+      expect(screen.queryByText('acme/late')).not.toBeInTheDocument();
+    });
+
+    describe('when nothing falls under a reading', () => {
+      it('leaves its chip out rather than offering a control that does nothing', () => {
+        renderList([
+          destination({ key: 'a', state: 'behind', behindCount: 1 }),
+          destination({ key: 'b' }),
+        ]);
+
+        expect(
+          screen.queryByRole('button', { name: /Marketplaces/ }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when a reading holds everything', () => {
+      it('leaves it out too, since it is the same list under a second name', () => {
+        renderList([
+          destination({ key: 'a', state: 'behind', behindCount: 1 }),
+          destination({ key: 'b', state: 'behind', behindCount: 1 }),
+        ]);
+
+        expect(
+          screen.queryByRole('button', { name: /Repositories/ }),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('button', { name: /Needs a hand/ }),
+        ).not.toBeInTheDocument();
+      });
+
+      it('drops the whole row when only "all" is left, rather than heading the list with a control', () => {
+        renderList([destination({ state: 'behind', behindCount: 1 })]);
+
+        expect(
+          screen.queryByRole('button', { name: /All destinations/ }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when the reader asks for what is up to date', () => {
+      it('shows those rows rather than the line that stands for them', async () => {
+        renderList(mixed());
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Up to date, 2' }),
+        );
+
+        expect(screen.getByText('acme/fine')).toBeInTheDocument();
+        expect(
+          screen.queryByRole('button', {
+            name: 'Hide the destinations that are up to date',
+          }),
+        ).not.toBeInTheDocument();
       });
     });
   });
