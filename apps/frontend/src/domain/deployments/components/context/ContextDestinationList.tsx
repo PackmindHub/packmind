@@ -49,9 +49,16 @@ import {
  */
 export function ContextDestinationList({
   destinations,
+  headerAction,
   onUpdate,
 }: Readonly<{
   destinations: readonly PackageDestination[];
+  /**
+   * Whatever the caller wants on the search line, at its right end. The search
+   * field stops at 420px and the rest of that line was empty, so a caller with
+   * one control to place had to spend a row of its own on it.
+   */
+  headerAction?: ReactNode;
   /**
    * Pushing this package to a set of landings again: one, from a row, or those
    * the reader ticked. One callback for both, because they are one gesture over
@@ -103,13 +110,21 @@ export function ContextDestinationList({
         row the reader already has in mind. At three hundred landings it is the
         control most readers come for.
       */}
-      <PMBox paddingBottom={2} maxWidth="420px">
-        <ContextSearchField
-          label="Find a repository, branch or marketplace"
-          value={query}
-          onChange={setQuery}
-        />
-      </PMBox>
+      <PMHStack
+        paddingBottom={2}
+        align="center"
+        justify="space-between"
+        gap={3}
+      >
+        <PMBox maxWidth="420px" flex="1" minW={0}>
+          <ContextSearchField
+            label="Find a repository, branch or marketplace"
+            value={query}
+            onChange={setQuery}
+          />
+        </PMBox>
+        {headerAction}
+      </PMHStack>
       <FilterRow
         destinations={destinations}
         value={filter}

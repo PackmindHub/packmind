@@ -178,23 +178,29 @@ export function ContextPackageDistribution({
         </PMBox>
       ) : (
         <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
-          {/*
-            The way into the events, above the list rather than inside it. It
-            was on the drift pane's summary row, which this list replaced, and
-            it is the one thing that row carried which the rows themselves
-            cannot: what happened here, as opposed to where things stand.
-          */}
-          <PMHStack justify="flex-end" paddingBottom={2}>
-            <PMLink
-              as="button"
-              fontSize="xs"
-              onClick={() => setHistoryOpen(true)}
-            >
-              Distribution history
-            </PMLink>
-          </PMHStack>
           <ContextDestinationList
             destinations={destinations}
+            /*
+              The way into the events, above the list rather than inside it. It
+              was on the drift pane's summary row, which this list replaced, and
+              it is the one thing that row carried which the rows themselves
+              cannot: what happened here, as opposed to where things stand.
+
+              On the search line rather than a line of its own. Alone on a row
+              it cost the list a full line of height to say one short thing,
+              and it reads the same at the far end of a line that was already
+              there.
+            */
+            headerAction={
+              <PMLink
+                as="button"
+                fontSize="xs"
+                flexShrink={0}
+                onClick={() => setHistoryOpen(true)}
+              >
+                Distribution history
+              </PMLink>
+            }
             onUpdate={(picked) => {
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);
