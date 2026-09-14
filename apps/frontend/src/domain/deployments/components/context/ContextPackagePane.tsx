@@ -75,7 +75,7 @@ import {
   ContextComponentList,
 } from './ContextComponentList';
 import { PackageReachStrip } from './PackageReachStrip';
-import { componentLateness } from './componentLateness';
+import { componentDriftOn, componentLateness } from './componentLateness';
 import { usePackageDestinations } from './usePackageDestinations';
 import { ContextChip } from './ContextChip';
 import { ContextSearchField } from './ContextSearchField';
@@ -103,6 +103,16 @@ import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
 import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
+
+/**
+ * The landing the component list is read against, in the address.
+ *
+ * Its own parameter rather than a piece of component state, for the reason the
+ * tab is: "here is what this repository is missing" is the whole point of the
+ * reading, and a reading nobody can send is one they will describe in words
+ * instead.
+ */
+const AGAINST_PARAM = 'against';
 
 /**
  * One package, read from two sides: what it holds, and where it landed.
@@ -559,6 +569,36 @@ export function ContextPackagePane({
    * component row can say how many landings it has not reached.
    */
   const lateness = useMemo(() => componentLateness(drift), [drift]);
+
+  /*
+   * Which landing the component list is being read against, in the address so
+   * that "what is missing on this repository" is a thing one can send someone.
+   * Absent for all of them, which is the reading the list opens on.
+   */
+  const againstKey = searchParams.get(AGAINST_PARAM);
+  const against =
+    destinations.find((destination) => destination.installKey === againstKey) ??
+    null;
+  /*
+   * Read from the resolved destination and not from the parameter, so a key
+   * that no longer names a landing falls back to every destination instead of
+   * emptying the column against nothing.
+   */
+  const driftHere = useMemo(
+    () => componentDriftOn(drift, against?.installKey ?? ''),
+    [drift, against],
+  );
+
+  const showAgainst = (installKey: string | null) => {
+    setSearchParams(
+      (previous) => {
+        if (installKey === null) previous.delete(AGAINST_PARAM);
+        else previous.set(AGAINST_PARAM, installKey);
+        return previous;
+      },
+      { replace: true },
+    );
+  };
 
   /*
    * Read here for the header's own push. React Query answers this and the
@@ -1028,6 +1068,9 @@ export function ContextPackagePane({
             <PackageReachStrip
               destinations={destinations}
               isLoading={isLoading || areDestinationsLoading}
+              against={against}
+              onAgainst={showAgainst}
+              behindHere={driftHere.size}
               onOpenDistribution={() => showTab(DISTRIBUTION_TAB)}
             />
             {/*
@@ -1180,7 +1223,23 @@ export function ContextPackagePane({
                       searchParams,
                       pkg.id,
                     ),
-                    behindOn: lateness.get(componentSelectionKey(component)),
+                    /*
+                      One question at a time. Against a destination the row
+                      says what is wrong there; otherwise it counts how widely
+                      the component is late. Decided here rather than in the
+                      list, which then has nothing to know about modes.
+                    */
+                    ...(against
+                      ? {
+                          behindHere: driftHere.get(
+                            componentSelectionKey(component),
+                          ),
+                        }
+                      : {
+                          behindOn: lateness.get(
+                            componentSelectionKey(component),
+                          ),
+                        }),
                   })),
                 }))}
                 onMove={(component) => setMoving([component])}
