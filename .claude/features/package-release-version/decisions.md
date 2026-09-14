@@ -1724,3 +1724,80 @@ releases changes this deliberately, and will find this entry.
 `package.createdBy`. The command still carries `spaceId`, because the route is
 space-scoped and the package is looked up within it — that is addressing, not
 authorisation.
+
+---
+
+## D-036 — Latest-version resolution and current-version derivation are shared, not duplicated
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-4`, `AC-11`, `AC-16`, `D-006`, `D-009`, `D-014`, `D-015`
+
+**Decision.** The two derivations `CreatePackageReleaseUseCase` currently keeps private
+become shared and are called by both the cut and the readiness read:
+
+- **`currentVersionOf(releases)`** — the greatest release by parsed triple, `'0.0.0'` for
+  an empty list — becomes a pure function over releases already read.
+- **latest-version resolution across the three families** becomes a module-level helper in
+  `application/services/`, taking the three ports as arguments. It returns, per component,
+  `{ family, componentId, name, versionId, versionNumber }`, plus a list of components it
+  could not resolve.
+
+Neither use case keeps a private copy.
+
+**Reasoning.** The readiness read exists to tell a user whether a cut will be accepted and
+what version it will be offered. If the two answers come from two implementations, the
+pane can say "ready" while the cut refuses, or offer increments computed from a current
+version the validation does not use. That is not duplication of style; it is two sources
+of truth for one answer, and the failure it produces is a user being told something the
+next click contradicts.
+
+The richer return shape is what AC-4 needs and the cut does not: "0.1.0 is behind on Work
+with Jest (v4 pinned, v5 available)" requires a name and two version *numbers*, while the
+cut needs only ids (D-002). One resolution producing both is cheaper than two resolutions
+and cannot drift; the cut simply projects it down to `PackageReleaseVersionIds`.
+
+*Why a module-level helper and not a service class.* `DeploymentsServices` is constructed
+from repositories alone and holds no ports; giving it the three artefact ports to host one
+resolver would widen a constructor every existing use case depends on. A function taking
+its ports as arguments is the smaller change and stays pure in the sense that matters —
+it has no state to get stale.
+
+*The unresolved components, and why the two callers differ.* A component with no version
+at all refuses the whole cut (D-014) — that stands. The readiness read must not throw: the
+pane has to render. So readiness simply omits an unresolved component from the snapshot it
+compares, which makes the package look different from its release and yields `ready`. That
+is the honest answer — something *is* wrong — and the cut will then say so loudly. The
+alternative, inventing a readiness code for a case no acceptance criterion describes,
+would add a fifth thing for the frontend to render and a sentence nobody has written.
+
+**Rejected.**
+
+- Duplicating both loops in the readiness use case, matching the existing idiom — two
+  implementations of one answer, and the drift is invisible until a user sees the pane and
+  the refusal disagree.
+- Making the private methods public on `CreatePackageReleaseUseCase` and calling it from
+  the other use case — the repository's use-case standard forbids both a use case
+  instantiating another and exposing methods beyond `execute`.
+- Putting the resolver on `PackageReleaseService` too — it would need the three artefact
+  ports, which is not what a release service is for, and it would drag them into
+  `DeploymentsServices`.
+- Making `currentVersionOf` a `PackageReleaseService` method taking a `packageId` — it
+  would change what every existing spec has to mock, which turns a behaviour-preserving
+  extraction into one that cannot be checked against the tests that already pass. A pure
+  function over releases the caller has already read needs no mock at all.
+- Having readiness throw on an unresolved component, matching the cut — the readiness read
+  is what renders the pane, and a package with one broken component would render nothing
+  at all rather than showing the problem.
+
+**Constrains implementation.** `currentVersionOf(releases: PackageRelease[]): string` is a
+pure function — parse each version and compare the triple, never the string (D-009).
+Extract the resolution loop into one exported function in
+`packages/deployments/src/application/services/`, keeping the per-component-id caching and
+the descending `version` sort for commands (`ICommandsPort` still has no
+`getLatestCommandVersion`, and adding one is still out of scope). `CreatePackageReleaseUseCase`
+must call both and keep no private copy. Its existing tests must pass unchanged — this
+extraction changes no behaviour.

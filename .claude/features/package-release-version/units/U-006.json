@@ -1,0 +1,13 @@
+{
+  "unit_id": "U-006",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/application/services/packageReleaseResolution.ts",
+    "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='CreatePackageReleaseUseCase'",
+    "kind": "characterization",
+    "describes": "AC-16"
+  }
+}

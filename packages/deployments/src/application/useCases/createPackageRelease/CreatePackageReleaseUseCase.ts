@@ -1,8 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  CommandId,
-  CommandVersionId,
   CreatePackageReleaseCommand,
   CreatePackageReleaseResponse,
   IAccountsPort,
@@ -10,26 +8,20 @@ import {
   ICreatePackageReleaseUseCase,
   ISkillsPort,
   IStandardsPort,
-  PackageId,
-  SkillId,
-  SkillVersionId,
-  StandardId,
-  StandardVersionId,
-  comparePackageReleaseVersions,
   createPackageReleaseId,
-  parsePackageReleaseVersion,
   validatePackageReleaseVersion,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import {
+  resolveLatestComponentVersions,
+  currentVersionOf,
+  toPackageReleaseVersionIds,
+} from '../../services/packageReleaseResolution';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReleaseRefusedError } from '../../../domain/errors/PackageReleaseRefusedError';
-import { PackageReleaseVersionIds } from '../../../domain/repositories/IPackageReleaseRepository';
 
 const origin = 'CreatePackageReleaseUseCase';
-
-/** A package that has never been released; internal, never rendered. */
-const NEVER_RELEASED = '0.0.0';
 
 /** Postgres unique_violation. */
 const UNIQUE_VIOLATION = '23505';
@@ -74,7 +66,10 @@ export class CreatePackageReleaseUseCase
     const standardIds = pkg.standards ?? [];
     const skillIds = pkg.skills ?? [];
 
-    const currentVersion = await this.readCurrentVersion(packageId);
+    const releases = await this.services
+      .getPackageReleaseService()
+      .listReleases(packageId);
+    const currentVersion = currentVersionOf(releases);
 
     // Before the version is even looked at: an empty package with a malformed
     // version reports the empty package.
@@ -91,11 +86,43 @@ export class CreatePackageReleaseUseCase
       throw new PackageReleaseRefusedError(refusal, currentVersion);
     }
 
-    const versions = await this.pinLatestVersions(
-      recipeIds,
-      standardIds,
-      skillIds,
+    const resolution = await resolveLatestComponentVersions(
+      {
+        recipeIds,
+        standardIds,
+        skillIds,
+      },
+      {
+        commandsPort: this.commandsPort,
+        standardsPort: this.standardsPort,
+        skillsPort: this.skillsPort,
+      },
     );
+
+    // Throw for unresolved components in family order: recipe, standard, skill
+    for (const unresolved of resolution.unresolved) {
+      if (unresolved.family === 'recipe') {
+        throw new Error(
+          `Command ${unresolved.componentId} has no version to pin`,
+        );
+      }
+    }
+    for (const unresolved of resolution.unresolved) {
+      if (unresolved.family === 'standard') {
+        throw new Error(
+          `Standard ${unresolved.componentId} has no version to pin`,
+        );
+      }
+    }
+    for (const unresolved of resolution.unresolved) {
+      if (unresolved.family === 'skill') {
+        throw new Error(
+          `Skill ${unresolved.componentId} has no version to pin`,
+        );
+      }
+    }
+
+    const versions = toPackageReleaseVersionIds(resolution.resolved);
 
     try {
       const release = await this.services
@@ -122,7 +149,10 @@ export class CreatePackageReleaseUseCase
       // The unique index is the arbiter of the race; the pre-check above only
       // produces the good message when nobody is racing.
       if (isUniqueViolation(error)) {
-        const freshCurrentVersion = await this.readCurrentVersion(packageId);
+        const freshReleases = await this.services
+          .getPackageReleaseService()
+          .listReleases(packageId);
+        const freshCurrentVersion = currentVersionOf(freshReleases);
         throw new PackageReleaseRefusedError(
           'not_greater',
           freshCurrentVersion,
@@ -131,105 +161,5 @@ export class CreatePackageReleaseUseCase
 
       throw error;
     }
-  }
-
-  /**
-   * The greatest release by parsed triple, or the never-released sentinel.
-   * Never orders by the version string: `0.10.0` sorts below `0.9.0`.
-   */
-  private async readCurrentVersion(packageId: PackageId): Promise<string> {
-    const releases = await this.services
-      .getPackageReleaseService()
-      .listReleases(packageId);
-
-    let current = NEVER_RELEASED;
-    let currentParsed = parsePackageReleaseVersion(NEVER_RELEASED);
-
-    for (const release of releases) {
-      const parsed = parsePackageReleaseVersion(release.version);
-      if (!parsed) {
-        continue;
-      }
-      if (
-        !currentParsed ||
-        comparePackageReleaseVersions(parsed, currentParsed) > 0
-      ) {
-        current = release.version;
-        currentParsed = parsed;
-      }
-    }
-
-    return current;
-  }
-
-  /**
-   * Resolves every component to its latest version, caching per component id.
-   * A component with no version at all refuses the whole release: a release is
-   * a claim about a set, so it is never quietly cut short.
-   */
-  private async pinLatestVersions(
-    recipeIds: CommandId[],
-    standardIds: StandardId[],
-    skillIds: SkillId[],
-  ): Promise<PackageReleaseVersionIds> {
-    const recipeVersionIds: CommandVersionId[] = [];
-    const standardVersionIds: StandardVersionId[] = [];
-    const skillVersionIds: SkillVersionId[] = [];
-
-    const commandVersionCache = new Map<CommandId, CommandVersionId>();
-    const standardVersionCache = new Map<StandardId, StandardVersionId>();
-    const skillVersionCache = new Map<SkillId, SkillVersionId>();
-
-    for (const recipeId of recipeIds) {
-      if (!commandVersionCache.has(recipeId)) {
-        const versions = await this.commandsPort.listCommandVersions(recipeId);
-        if (versions.length > 0) {
-          const latestVersion = [...versions].sort(
-            (a, b) => b.version - a.version,
-          )[0];
-          commandVersionCache.set(recipeId, latestVersion.id);
-        }
-      }
-
-      const versionId = commandVersionCache.get(recipeId);
-      if (!versionId) {
-        throw new Error(`Command ${recipeId} has no version to pin`);
-      }
-      recipeVersionIds.push(versionId);
-    }
-
-    for (const standardId of standardIds) {
-      if (!standardVersionCache.has(standardId)) {
-        const latestVersion =
-          await this.standardsPort.getLatestStandardVersion(standardId);
-        if (latestVersion) {
-          standardVersionCache.set(standardId, latestVersion.id);
-        }
-      }
-
-      const versionId = standardVersionCache.get(standardId);
-      if (!versionId) {
-        throw new Error(`Standard ${standardId} has no version to pin`);
-      }
-      standardVersionIds.push(versionId);
-    }
-
-    for (const skillId of skillIds) {
-      if (!skillVersionCache.has(skillId)) {
-        const latestVersion =
-          await this.skillsPort.getLatestSkillVersion(skillId);
-        if (latestVersion) {
-          skillVersionCache.set(skillId, latestVersion.id);
-        }
-      }
-
-      const versionId = skillVersionCache.get(skillId);
-      if (!versionId) {
-        throw new Error(`Skill ${skillId} has no version to pin`);
-      }
-      skillVersionIds.push(versionId);
-    }
-
-    return { recipeVersionIds, standardVersionIds, skillVersionIds };
   }
 }
