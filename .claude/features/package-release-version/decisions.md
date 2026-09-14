@@ -1610,3 +1610,117 @@ actually needs, and decides the format once.
 **Constrains implementation.** No `createdAt` or `updatedAt` key on any release response
 contract in `packages/types/src/deployments/contracts/`. Do not map them in the
 controller. The entity's optional `createdAt?: Date` stays as it is.
+
+---
+
+## D-034 — A refused cut reports four codes; `no_components` is enforced server-side and `no_change` is not
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-9`, `AC-16`, `D-011`, `D-029`, `D-031`
+
+**Decision.** The write channel has its own code type, in
+`packages/types/src/deployments/PackageRelease.ts`:
+
+```ts
+export type PackageReleaseRefusalCode = PackageReleaseRefusal | 'no_components';
+```
+
+Four members: `malformed`, `not_greater`, `not_an_increment`, `no_components`. The cut
+use case refuses an empty package with `no_components`. It does **not** refuse a package
+that has nothing changed since its last release.
+
+**Reasoning.** D-029 split the read's verdict from the write's refusal, and D-031 named
+the version-rule half. Neither said what a *submitted* cut does about content, and the
+answer is not the same for the two content reasons — which is why this is a decision and
+not an oversight being tidied.
+
+*Why `no_components` is enforced.* The charter states it as a veto: "an empty package can
+never be released". That is a rule about releases, not a statement about a button. A
+release is a claim that a version contains a set of components; one containing none is
+not a weaker claim but a meaningless one, and it would make AC-16 false for that row
+forever, with no way to repair it because releases are immutable. AC-15's principle
+applies directly — narrowing what a form offers does not remove the check behind it — and
+an empty package is reachable by a POST from a stale page whose package was emptied in
+another tab.
+
+*Why `no_change` is not.* Nothing in the issue makes an unchanged release invalid; AC-3
+says the **action is disabled**, which is an affordance, not an invariant. And a release
+with identical content is a legitimate act: cutting 1.0.0 over 0.9.0 to mark a playbook
+stable changes nothing but the number, and that is the whole point of the number. The
+version rules already prevent the only real hazard, a duplicate, because every cut must
+be strictly greater than the last. Enforcing `no_change` server-side would refuse a
+deliberate, meaningful act in order to defend a disabled button.
+
+The asymmetry is the point and it is why both halves are written down: one of these two
+reasons is a rule and the other is a UI state, and they look identical in the gate's
+tri-state.
+
+**Rejected.**
+
+- Enforcing both, for symmetry with the gate — refuses the legitimate "mark it stable"
+  release, and treats an affordance as an invariant.
+- Enforcing neither, leaving `no_components` to the frontend — lets a stale page write a
+  release that pins nothing, permanently, into an immutable table.
+- Reusing `PackageReleaseVerdict` as the refusal type — it contains `ready`, which is not
+  a refusal, so every consumer would have to handle a case that cannot occur.
+- Re-merging into D-011's original five-code union — puts `no_change` on the write
+  channel, where this decision says it does not belong.
+
+**Constrains implementation.** Declare `PackageReleaseRefusalCode` as above. The cut
+refuses an empty package with `no_components` **before** validating the version, so an
+empty package with a malformed version reports the empty package — the same precedence
+D-007 fixed for the gate. Do not refuse on `no_change`. Do not call the gate function
+from the cut: the cut needs one veto, not a verdict.
+
+---
+
+## D-035 — D-017's authorisation is organization membership, not space membership
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-19`, `D-017`
+
+**Decision.** D-017 stands: the release use cases extend `AbstractMemberUseCase`. Its
+reasoning contains one factual slip, corrected here rather than left to mislead — it says
+"the space membership check that `AbstractMemberUseCase` performs", and that class checks
+**organization** membership. There is no space-level check, and that is intended.
+
+**Reasoning.** The base class validates the user against the organization and yields a
+`MemberContext` of user, organization and org membership. Space membership is checked by
+a different base, `AbstractSpaceMemberUseCase`, which the design session did not mention
+and which a reader comparing the neighbours would reasonably reach for —
+`GetPackageByIdUseCase`, the closest sibling, uses exactly that one.
+
+Organization membership is the correct level here, because it is what AC-19 asks for: "a
+member of the organization who did not create the package can release it — no ownership
+or role check refuses them". The charter says the same in scope: "Any member of the
+organization can release."
+
+The consequence, stated plainly because it is the kind of thing a security review asks
+about later: an organization member who does not belong to a space can cut a release of a
+package in that space, since the route's `OrganizationAccessGuard` and this base class
+both stop at the organization boundary. That follows from "no permission check" being an
+explicit scope item rather than an omission. A story that wants space-level scoping on
+releases changes this deliberately, and will find this entry.
+
+**Rejected.**
+
+- `AbstractSpaceMemberUseCase`, matching the neighbouring package read — adds a space
+  membership check nothing asked for, and AC-19 is written against organization
+  membership.
+- Silently leaving D-017's wording — the slip names a check that does not happen, so a
+  later reader would believe space scoping exists and build on it.
+- Editing D-017's reasoning in place — the log is append-only for exactly this case.
+
+**Constrains implementation.** Extend `AbstractMemberUseCase` and implement
+`executeForMembers`. Do not inject `ISpacesPort` for an authorisation check. Do not read
+`package.createdBy`. The command still carries `spaceId`, because the route is
+space-scoped and the package is looked up within it — that is addressing, not
+authorisation.

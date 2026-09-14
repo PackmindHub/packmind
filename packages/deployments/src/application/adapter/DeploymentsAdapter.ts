@@ -13,6 +13,8 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
@@ -114,6 +116,7 @@ import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
+import { CreatePackageReleaseUseCase } from '../useCases/createPackageRelease/CreatePackageReleaseUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeletePackagesBatchUseCase } from '../useCases/deletePackage/DeletePackagesBatchUseCase';
@@ -189,6 +192,7 @@ export class DeploymentsAdapter
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUseCase;
   private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
   private _createPackageUseCase!: CreatePackageUseCase;
+  private _createPackageReleaseUseCase!: CreatePackageReleaseUseCase;
   private _updatePackageUseCase!: UpdatePackageUseCase;
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
@@ -491,6 +495,14 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
     this._updatePackageUseCase = new UpdatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -770,6 +782,12 @@ export class DeploymentsAdapter
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
+  }
+
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this._createPackageReleaseUseCase.execute(command);
   }
 
   async updatePackage(

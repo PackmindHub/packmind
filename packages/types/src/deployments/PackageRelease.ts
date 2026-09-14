@@ -37,3 +37,12 @@ export type PackageReleaseRefusal =
   | 'malformed'
   | 'not_greater'
   | 'not_an_increment';
+
+/**
+ * Every reason a cut can be refused: the three version refusals, plus the one
+ * the cut itself enforces before it ever looks at the version.
+ *
+ * `no_change` is deliberately absent — it disables the action in the UI, it
+ * does not refuse the cut server-side.
+ */
+export type PackageReleaseRefusalCode = PackageReleaseRefusal | 'no_components';

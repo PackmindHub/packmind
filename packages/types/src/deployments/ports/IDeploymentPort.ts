@@ -6,6 +6,8 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
@@ -407,6 +409,18 @@ export interface IDeploymentPort {
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
+
+  /**
+   * Cuts an immutable release of a package, pinning the latest version of
+   * every component it holds.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseRefusedError carrying a code and the current
+   *         version, when the package is empty or the version is refused
+   */
+  createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse>;
 
   /**
    * System-level package lookup by id, bypassing membership validation.

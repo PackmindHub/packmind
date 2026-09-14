@@ -43,3 +43,4 @@ export * from './ITrackPluginDeletedUseCase';
 export * from './IListActiveDistributedPackagesBySpace';
 export * from './IGetLastDistributionDateByProvidersUseCase';
 export * from './PackageResponse';
+export * from './ICreatePackageReleaseUseCase';
