@@ -82,3 +82,8 @@ videos/
 
 .nx/migrate-runs
 .impeccable
+
+# Agentic pipeline: baseline-run telemetry. Feature-scoped metrics
+# (.claude/features/*/metrics.jsonl) are versioned; these are not, and
+# leaving them untracked trips the gate's own dirty-tree check.
+.claude/pipeline/metrics.jsonl
