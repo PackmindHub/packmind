@@ -1,0 +1,246 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
+import { UIProvider } from '@packmind/ui';
+import type { DriftArtifactEntry } from '../redesign/selectors/installDriftEntries';
+import type { ArtifactDrift } from '../redesign/types';
+import { ContextDestinationList } from './ContextDestinationList';
+import type { PackageDestination } from './buildPackageDestinations';
+
+function behind(name: string, version: number): DriftArtifactEntry {
+  return {
+    artifact: { name, packmindVersion: version } as unknown as ArtifactDrift,
+    reason: 'behind',
+    deployedVersion: version - 1,
+    lastDeployedAt: '2026-09-01T10:00:00.000Z',
+  };
+}
+
+function destination(
+  overrides: Partial<PackageDestination> = {},
+): PackageDestination {
+  return {
+    key: 'r:repo-1::target-1',
+    kind: 'repository',
+    name: 'PackmindHub/packmind',
+    details: ['main'],
+    state: 'aligned',
+    behindArtifacts: [],
+    behindCount: 0,
+    installKey: 'repo-1::target-1',
+    prUrl: null,
+    lastActivityAt: '2026-09-01T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function renderList(
+  destinations: PackageDestination[],
+  onUpdate?: (destination: PackageDestination) => void,
+) {
+  return render(
+    <UIProvider>
+      <ContextDestinationList destinations={destinations} onUpdate={onUpdate} />
+    </UIProvider>,
+  );
+}
+
+describe('ContextDestinationList', () => {
+  it('reads a repository and a marketplace as rows of one list', () => {
+    renderList([
+      destination({
+        state: 'behind',
+        behindCount: 1,
+        behindArtifacts: [behind('a', 2)],
+      }),
+      destination({
+        key: 'm:mkt-1',
+        kind: 'marketplace',
+        name: 'packmind-marketplace',
+        details: [],
+        state: 'behind',
+        installKey: null,
+      }),
+    ]);
+
+    expect(screen.getByText('PackmindHub/packmind')).toBeInTheDocument();
+    expect(screen.getByText('packmind-marketplace')).toBeInTheDocument();
+  });
+
+  describe('the band a row lands in', () => {
+    it('keeps failures out of the drifted band, since the two are not put right the same way', () => {
+      renderList([
+        destination({ key: 'a', state: 'failed' }),
+        destination({ key: 'b', state: 'behind', behindCount: 1 }),
+      ]);
+
+      expect(screen.getByText('Failed')).toBeInTheDocument();
+      expect(screen.getByText('Behind or waiting')).toBeInTheDocument();
+    });
+
+    it('leaves out a band with nothing in it', () => {
+      renderList([destination({ state: 'behind', behindCount: 1 })]);
+
+      expect(screen.queryByText('Failed')).not.toBeInTheDocument();
+    });
+
+    it('says what share of the destinations it holds', () => {
+      renderList([
+        destination({ key: 'a', state: 'behind', behindCount: 1 }),
+        destination({ key: 'b' }),
+        destination({ key: 'c' }),
+      ]);
+
+      expect(screen.getByText('1 of 3 destinations')).toBeInTheDocument();
+    });
+  });
+
+  describe('what is up to date', () => {
+    it('is a count and not a run of rows', () => {
+      renderList([
+        destination({ key: 'a', name: 'acme/one' }),
+        destination({ key: 'b', name: 'acme/two' }),
+      ]);
+
+      expect(
+        screen.getByText('2 destinations are up to date'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Up to date')).not.toBeInTheDocument();
+    });
+
+    it('names them beside the count, which is what makes the folded line worth reading', () => {
+      renderList([
+        destination({ key: 'a', name: 'acme/one' }),
+        destination({ key: 'b', name: 'acme/two' }),
+      ]);
+
+      expect(screen.getByText('acme/one · acme/two')).toBeInTheDocument();
+    });
+
+    describe('when the reader opens it', () => {
+      it('shows the rows it was standing for', async () => {
+        renderList([destination({ key: 'a', name: 'acme/one' })]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(screen.getByText('Up to date')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('what a drifted row says', () => {
+    it('names the late components rather than only counting them', () => {
+      renderList([
+        destination({
+          state: 'behind',
+          behindCount: 2,
+          behindArtifacts: [
+            behind('feature-flags-audit', 5),
+            behind('datadog-analysis', 3),
+          ],
+        }),
+      ]);
+
+      expect(
+        screen.getByText(
+          '2 components behind: feature-flags-audit v5, datadog-analysis v3',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('names two and counts the rest, so the row stays a row', () => {
+      renderList([
+        destination({
+          state: 'behind',
+          behindCount: 4,
+          behindArtifacts: [
+            behind('a', 2),
+            behind('b', 2),
+            behind('c', 2),
+            behind('d', 2),
+          ],
+        }),
+      ]);
+
+      expect(
+        screen.getByText('4 components behind: a v2, b v2, +2'),
+      ).toBeInTheDocument();
+    });
+
+    describe('when the drift is a marketplace copy', () => {
+      it('states it without a number, since the data does not carry one', () => {
+        renderList([
+          destination({
+            key: 'm:mkt-1',
+            kind: 'marketplace',
+            state: 'behind',
+            installKey: null,
+            behindCount: 0,
+          }),
+        ]);
+
+        expect(
+          screen.getByText('The published copy is behind this package'),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('the action on a row', () => {
+    it('pushes this landing again, and hands back the row it was asked from', async () => {
+      const onUpdate = vi.fn();
+      renderList(
+        [
+          destination({
+            state: 'behind',
+            behindCount: 1,
+            behindArtifacts: [behind('a', 2)],
+          }),
+        ],
+        onUpdate,
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Update' }));
+
+      expect(onUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ installKey: 'repo-1::target-1' }),
+      );
+    });
+
+    it('offers nothing on a row that is up to date', () => {
+      renderList([destination()], vi.fn());
+
+      expect(
+        screen.queryByRole('button', { name: 'Update' }),
+      ).not.toBeInTheDocument();
+    });
+
+    describe('when a publication waits on a merge', () => {
+      it('offers the pull request rather than a second publish', () => {
+        renderList([
+          destination({
+            key: 'm:mkt-1',
+            kind: 'marketplace',
+            state: 'waiting',
+            installKey: null,
+            prUrl: 'https://github.com/acme/marketplace/pull/12',
+          }),
+        ]);
+
+        expect(
+          screen.getByRole('link', { name: 'Review the pull request' }),
+        ).toHaveAttribute(
+          'href',
+          'https://github.com/acme/marketplace/pull/12',
+        );
+        expect(
+          screen.queryByRole('button', { name: 'Update' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+});
