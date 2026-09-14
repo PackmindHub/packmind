@@ -1017,3 +1017,69 @@ Nest DI in the booted application and when constructed directly in a unit spec; 
 abandoning delegation. Additionally, the unit spec must assert that the `warn` payload
 for a domain error has **no** `stack` key, and that the non-domain path still produces
 today's ERROR-level log — `expect.objectContaining` does not test absence.
+
+---
+
+## D-021 — The logging ACs yield to the tests standard, and go unverified
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-14`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-8`, `AC-11`, `D-009`
+
+**Decision.** Every assertion on the stubbed logger is removed from
+`DomainExceptionFilter.spec.ts`. AC-11's `verified by` column is emptied, and AC-8's
+cites only the integration spec, which proves the status and body but not the log. The
+filter's logging behaviour is unchanged — it is simply no longer tested. Decided by Malo.
+
+**Reasoning.** The repo's `@backend-tests-redaction` standard says *"avoid asserting on
+stubbed logger output like specific messages or call counts; instead verify observable
+behaviour or return values"*, and the Packmind CLI enforces it as a CI-blocking error.
+Every other file in the monorepo observes it; a search found no spec anywhere else
+asserting on a logger stub, and no suppression mechanism — no `.packmindignore`, no
+disable comment.
+
+The conflict is genuine rather than a technicality. AC-11 *is* a statement about logging
+— "an access denial is logged at `warn` without a stack trace" — and for a log level
+there is no observable behaviour other than the log. The standard implicitly assumes
+logging is never the requirement under test, which is true almost everywhere and false
+here.
+
+It yields anyway, for two reasons. A shared standard that the whole codebase observes
+should not acquire its first exception inside a feature PR, decided by the feature's
+author. And the cost is bounded: the behaviour ships correct, it is described in D-009,
+and what is lost is protection against a future regression rather than any present
+guarantee.
+
+The accepted cost, recorded so it is not rediscovered as an oversight: nothing now
+catches a change from `warn` to `error`, or a stack trace reappearing in the payload.
+That is precisely what `ExpectedAuthError`'s docstring asked for and what this feature
+finally delivered, now shipping unguarded.
+
+**Rejected.**
+
+- Amending the standard to carve out "unless the logging behaviour is itself the
+  requirement under test" — arguably the correct fix, since the standard targets log
+  assertions used as a *proxy* for behaviour and does not contemplate the log being the
+  requirement. Rejected here as a matter of process, not merit: it changes policy for
+  every backend package and wants the team's agreement, not a drive-by edit riding along
+  with an unrelated feature. Worth raising separately.
+- Adding an ignore entry for this one spec — keeps the tests and touches no shared
+  standard, but would be the repo's first such exception, invisible to anyone reading the
+  spec, and set by the author of the code it exempts.
+- Routing the same assertions through a helper — the adjacent
+  `expect(Object.keys(warnPayload())).not.toContain('stack')` was **not** flagged, because
+  the rule keys on `expect(logger.…)` directly. Rejected outright: it is the identical
+  assertion hidden from the matcher, which evades the rule rather than satisfying it, and
+  is exactly the "find the config before finding the fix" move the pipeline's guardrails
+  exist to prevent. For the same reason that helper-based assertion is removed too, even
+  though CI does not flag it.
+
+**Constrains implementation.** Remove every assertion that reads the stubbed logger in
+`DomainExceptionFilter.spec.ts` — including ones the linter does not flag, and the
+`warnPayload` helper if it becomes unused. Keep every assertion about status, body and
+response keys. Do not add an ignore entry, a disable comment, or a helper that launders a
+logger assertion past the rule. Do not change `DomainExceptionFilter.ts`: the logging
+behaviour itself is correct and stays.

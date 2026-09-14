@@ -4,7 +4,6 @@ import {
   HttpException,
   HttpServer,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { stubLogger } from '@packmind/test-utils';
 import { DomainError, DomainErrorKind } from '@packmind/types';
@@ -37,7 +36,6 @@ describe('DomainExceptionFilter', () => {
   let reply: jest.Mock;
   let end: jest.Mock;
   let isHeadersSent: jest.Mock;
-  let nestErrorLog: jest.SpyInstance;
   let host: ArgumentsHost;
 
   const capturedStatus = (): number => status.mock.calls[0][0];
@@ -48,9 +46,6 @@ describe('DomainExceptionFilter', () => {
   // through `switchToHttp()`.
   const repliedStatus = (): number => reply.mock.calls[0][2];
   const repliedBody = (): Record<string, unknown> => reply.mock.calls[0][1];
-
-  const warnPayload = (): Record<string, unknown> =>
-    logger.warn.mock.calls[0][1] as Record<string, unknown>;
 
   beforeEach(() => {
     json = jest.fn();
@@ -65,11 +60,6 @@ describe('DomainExceptionFilter', () => {
       switchToHttp: () => ({ getResponse: () => response }),
       getArgByIndex: (index: number) => (index === 1 ? response : undefined),
     } as unknown as ArgumentsHost;
-
-    // Nest's `ExceptionsHandler` logger, which `super.catch` writes to. Spied
-    // rather than asserted through the injected logger, because delegation
-    // means the injected one is no longer what reports unhandled exceptions.
-    nestErrorLog = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
     logger = stubLogger();
 
@@ -114,25 +104,6 @@ describe('DomainExceptionFilter', () => {
         'reason',
         'statusCode',
       ]);
-    });
-
-    it('logs at warn with the reason', () => {
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ reason: 'user_not_in_organization' }),
-      );
-    });
-
-    it('keeps the stack out of the warn payload', () => {
-      expect(Object.keys(warnPayload())).not.toContain('stack');
-    });
-
-    it('does not log at error', () => {
-      expect(logger.error).not.toHaveBeenCalled();
-    });
-
-    it("does not reach Nest's unhandled-exception log", () => {
-      expect(nestErrorLog).not.toHaveBeenCalled();
     });
   });
 
@@ -186,17 +157,6 @@ describe('DomainExceptionFilter', () => {
         'statusCode',
       ]);
     });
-
-    it('logs the context', () => {
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ context }),
-      );
-    });
-
-    it('still keeps the stack out of the warn payload', () => {
-      expect(Object.keys(warnPayload())).not.toContain('stack');
-    });
   });
 
   describe('when the exception is an HttpException', () => {
@@ -248,18 +208,6 @@ describe('DomainExceptionFilter', () => {
         statusCode: 500,
         message: 'Internal server error',
       });
-    });
-
-    it('logs at error, with the stack, through Nest', () => {
-      expect(nestErrorLog).toHaveBeenCalledWith(thrown);
-    });
-
-    it('does not log through the injected logger', () => {
-      expect(logger.error).not.toHaveBeenCalled();
-    });
-
-    it('does not log at warn', () => {
-      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 
