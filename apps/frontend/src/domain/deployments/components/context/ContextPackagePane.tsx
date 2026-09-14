@@ -75,6 +75,7 @@ import {
   ContextComponentList,
 } from './ContextComponentList';
 import { PackageReachStrip } from './PackageReachStrip';
+import { componentLateness } from './componentLateness';
 import { usePackageDestinations } from './usePackageDestinations';
 import { ContextChip } from './ContextChip';
 import { ContextSearchField } from './ContextSearchField';
@@ -553,6 +554,11 @@ export function ContextPackagePane({
    */
   const { destinations, isLoading: areDestinationsLoading } =
     usePackageDestinations(pkg.id, drift);
+  /*
+   * The same drift the tab beside this one lists by landing, pivoted so a
+   * component row can say how many landings it has not reached.
+   */
+  const lateness = useMemo(() => componentLateness(drift), [drift]);
 
   /*
    * Read here for the header's own push. React Query answers this and the
@@ -1174,6 +1180,7 @@ export function ContextPackagePane({
                       searchParams,
                       pkg.id,
                     ),
+                    behindOn: lateness.get(componentSelectionKey(component)),
                   })),
                 }))}
                 onMove={(component) => setMoving([component])}
