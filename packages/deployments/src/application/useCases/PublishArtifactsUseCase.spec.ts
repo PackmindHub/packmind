@@ -58,10 +58,11 @@ describe('PublishArtifactsUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
-  // The publish path fetches all three artifact types through the single
-  // batched findActiveVersionsByTarget call. These per-artifact stubs let each
-  // test block seed the three types independently; the mock implementation in
-  // beforeEach assembles them into the batched result.
+  // The publish path fetches all three artifact types, for every target and
+  // in both scopes, through the single batched findActiveVersionsByTargets
+  // call. These per-artifact stubs let each test block seed the three types
+  // independently; the mock implementation in beforeEach assembles them into
+  // the batched per-target result.
   let activeVersions: {
     standardVersionsByTarget: jest.Mock;
     commandVersionsByTarget: jest.Mock;
@@ -123,6 +124,8 @@ describe('PublishArtifactsUseCase', () => {
 
     mockDistributionRepository = {
       add: jest.fn(),
+      findActiveVersionsByTargets: jest.fn(),
+      // Still used by the removed-agents cleanup branch, one target at a time.
       findActiveVersionsByTarget: jest.fn(),
       findActiveRenderModesByTarget: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
@@ -142,12 +145,40 @@ describe('PublishArtifactsUseCase', () => {
     mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
       [],
     );
-
     mockDistributionRepository.findActiveVersionsByTarget.mockImplementation(
-      async (orgId, tId, packageIds) => {
-        if (packageIds) {
+      async (orgId, tId) => {
+        const [standardVersions, commandVersions, skillVersions] =
+          await Promise.all([
+            activeVersions.standardVersionsByTarget(orgId, tId),
+            activeVersions.commandVersionsByTarget(orgId, tId),
+            activeVersions.skillVersionsByTarget(orgId, tId),
+          ]);
+        return { standardVersions, commandVersions, skillVersions };
+      },
+    );
+
+    mockDistributionRepository.findActiveVersionsByTargets.mockImplementation(
+      async (orgId, targetIds, packageIds) => {
+        const activeVersionsByTargetId = new Map();
+
+        for (const tId of targetIds) {
           const [standardVersions, commandVersions, skillVersions] =
             await Promise.all([
+              activeVersions.standardVersionsByTarget(orgId, tId),
+              activeVersions.commandVersionsByTarget(orgId, tId),
+              activeVersions.skillVersionsByTarget(orgId, tId),
+            ]);
+          const all = { standardVersions, commandVersions, skillVersions };
+
+          // Without a package filter the two scopes are the same thing, which
+          // is what the repository itself returns.
+          let fromPackages = all;
+          if (packageIds) {
+            const [
+              standardVersionsFromPackages,
+              commandVersionsFromPackages,
+              skillVersionsFromPackages,
+            ] = await Promise.all([
               activeVersions.standardVersionsByTargetAndPackages(
                 orgId,
                 tId,
@@ -164,16 +195,17 @@ describe('PublishArtifactsUseCase', () => {
                 packageIds,
               ),
             ]);
-          return { standardVersions, commandVersions, skillVersions };
+            fromPackages = {
+              standardVersions: standardVersionsFromPackages,
+              commandVersions: commandVersionsFromPackages,
+              skillVersions: skillVersionsFromPackages,
+            };
+          }
+
+          activeVersionsByTargetId.set(tId, { all, fromPackages });
         }
 
-        const [standardVersions, commandVersions, skillVersions] =
-          await Promise.all([
-            activeVersions.standardVersionsByTarget(orgId, tId),
-            activeVersions.commandVersionsByTarget(orgId, tId),
-            activeVersions.skillVersionsByTarget(orgId, tId),
-          ]);
-        return { standardVersions, commandVersions, skillVersions };
+        return activeVersionsByTargetId;
       },
     );
 
@@ -935,14 +967,18 @@ describe('PublishArtifactsUseCase', () => {
         expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
       });
 
-      it('fetches active versions via two batched calls per target instead of six', () => {
-        // One unfiltered call plus one packageIds-filtered call per target
-        // (2 targets x 2 calls), instead of the six per-target calls to the
-        // individual findActiveXVersionsByTarget[AndPackages] methods this
-        // replaced.
+      it('fetches the active versions of every target in one call', () => {
+        // Both scopes, for both targets, out of a single batched read: the
+        // cost no longer grows with the number of targets.
         expect(
-          mockDistributionRepository.findActiveVersionsByTarget,
-        ).toHaveBeenCalledTimes(4);
+          mockDistributionRepository.findActiveVersionsByTargets,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      it('asks for both targets at once', () => {
+        expect(
+          mockDistributionRepository.findActiveVersionsByTargets,
+        ).toHaveBeenCalledWith(organizationId, [targetId1, targetId2], []);
       });
 
       it('includes Production target name in commit message', () => {

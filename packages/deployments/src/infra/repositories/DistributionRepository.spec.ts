@@ -38,6 +38,77 @@ describe('DistributionRepository', () => {
   const packageId1 = createPackageId('package-1');
   const packageId2 = createPackageId('package-2');
 
+  const createStandardVersionFor = (
+    id: string,
+    standardId: string,
+    name: string,
+  ) => ({
+    id: createStandardVersionId(id),
+    standardId: createStandardId(standardId),
+    name,
+    slug: name.toLowerCase().replace(/ /g, '-'),
+    description: `Description for ${name}`,
+    version: 1,
+    gitCommit: undefined,
+    userId: createUserId('author-1'),
+    scope: null,
+  });
+
+  /**
+   * Seeds the rows the DISTINCT ON scan returns: one per (target, package)
+   * pair that is still active.
+   */
+  const seedActiveRows = (
+    rows: Array<{
+      targetId: ReturnType<typeof createTargetId>;
+      distributedPackageId: string;
+      packageId: ReturnType<typeof createPackageId>;
+      distributedAt?: string;
+    }>,
+  ) => {
+    (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
+      rows.map((row) => ({
+        distributedAt: '2024-01-01T00:00:00Z',
+        ...row,
+        operation: 'add',
+        renderModes: [],
+      })),
+    );
+  };
+
+  /**
+   * Seeds the hydration query: which artifact versions each distributed
+   * package carries.
+   */
+  const seedDistributedVersions = (
+    packages: Array<{
+      distributedPackageId: string;
+      standardVersions?: unknown[];
+      recipeVersions?: unknown[];
+      skillVersions?: unknown[];
+    }>,
+  ) => {
+    mockQueryBuilder.getMany.mockResolvedValue([
+      {
+        id: createDistributionId('dist-1'),
+        organizationId,
+        authorId: createUserId('author-1'),
+        status: DistributionStatus.success,
+        createdAt: '2024-01-01T00:00:00Z',
+        renderModes: [],
+        source: 'cli',
+        distributedPackages: packages.map((pkg) => ({
+          id: createDistributedPackageId(pkg.distributedPackageId),
+          distributionId: createDistributionId('dist-1'),
+          operation: 'add',
+          standardVersions: pkg.standardVersions ?? [],
+          recipeVersions: pkg.recipeVersions ?? [],
+          skillVersions: pkg.skillVersions ?? [],
+        })),
+      },
+    ] as never);
+  };
+
   const createMockQueryBuilder = (): jest.Mocked<
     SelectQueryBuilder<Distribution>
   > => {
@@ -609,14 +680,21 @@ describe('DistributionRepository', () => {
         );
       });
 
-      it('collapses to one row per package via DISTINCT ON', () => {
+      it('collapses to one row per target and package via DISTINCT ON', () => {
         expect(mockQueryBuilder.distinctOn).toHaveBeenCalledWith([
+          'distribution.target_id',
           'distributedPackage.package_id',
         ]);
       });
 
-      it('orders by package id', () => {
+      it('orders by target id', () => {
         expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+          'distribution.target_id',
+        );
+      });
+
+      it('then orders by package id', () => {
+        expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
           'distributedPackage.package_id',
         );
       });
@@ -676,6 +754,7 @@ describe('DistributionRepository', () => {
       beforeEach(async () => {
         (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
           {
+            targetId,
             distributedPackageId: 'dp-1',
             packageId: packageId1,
             operation: 'add',
@@ -746,18 +825,47 @@ describe('DistributionRepository', () => {
     });
 
     describe('with a non-empty packageIds array', () => {
-      beforeEach(async () => {
-        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+      const svOfPackage1 = createStandardVersionFor(
+        'sv-1',
+        'std-1',
+        'From one',
+      );
+      const svOfPackage2 = createStandardVersionFor(
+        'sv-2',
+        'std-2',
+        'From two',
+      );
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveVersionsByTarget>
+      >;
 
-        await repository.findActiveVersionsByTarget(organizationId, targetId, [
-          packageId1,
+      beforeEach(async () => {
+        seedActiveRows([
+          { targetId, distributedPackageId: 'dp-1', packageId: packageId1 },
+          { targetId, distributedPackageId: 'dp-2', packageId: packageId2 },
         ]);
+        seedDistributedVersions([
+          { distributedPackageId: 'dp-1', standardVersions: [svOfPackage1] },
+          { distributedPackageId: 'dp-2', standardVersions: [svOfPackage2] },
+        ]);
+
+        result = await repository.findActiveVersionsByTarget(
+          organizationId,
+          targetId,
+          [packageId1],
+        );
       });
 
-      it('filters distributed packages by the requested package ids', () => {
-        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+      it('keeps only the artifacts of the requested packages', () => {
+        expect(result.standardVersions).toEqual([svOfPackage1]);
+      });
+
+      // The scan is deliberately unfiltered so that one read can serve both
+      // the restricted and the unrestricted view; the narrowing is in memory.
+      it('does not narrow the scan in SQL', () => {
+        expect(mockQueryBuilder.andWhere).not.toHaveBeenCalledWith(
           'distributedPackage.packageId IN (:...packageIds)',
-          { packageIds: [packageId1] },
+          expect.anything(),
         );
       });
     });
@@ -785,6 +893,211 @@ describe('DistributionRepository', () => {
 
       it('does not execute a query', () => {
         expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('findActiveVersionsByTargets', () => {
+    const targetA = createTargetId('target-a');
+    const targetB = createTargetId('target-b');
+
+    describe('when two targets are requested', () => {
+      const svOfA = createStandardVersionFor('sv-a', 'std-a', 'Only on A');
+      const svOfB = createStandardVersionFor('sv-b', 'std-b', 'Only on B');
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveVersionsByTargets>
+      >;
+
+      beforeEach(async () => {
+        seedActiveRows([
+          {
+            targetId: targetA,
+            distributedPackageId: 'dp-a',
+            packageId: packageId1,
+          },
+          {
+            targetId: targetB,
+            distributedPackageId: 'dp-b',
+            packageId: packageId2,
+          },
+        ]);
+        seedDistributedVersions([
+          { distributedPackageId: 'dp-a', standardVersions: [svOfA] },
+          { distributedPackageId: 'dp-b', standardVersions: [svOfB] },
+        ]);
+
+        result = await repository.findActiveVersionsByTargets(organizationId, [
+          targetA,
+          targetB,
+        ]);
+      });
+
+      it('gives the first target its own versions', () => {
+        expect(result.get(targetA)?.all.standardVersions).toEqual([svOfA]);
+      });
+
+      it('gives the second target its own versions', () => {
+        expect(result.get(targetB)?.all.standardVersions).toEqual([svOfB]);
+      });
+
+      // The point of the batch: the scan cost stops growing with the target
+      // count.
+      it('resolves both targets in one scan', () => {
+        expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
+      });
+
+      it('scopes the scan to the requested targets', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'distribution.target_id IN (:...targetIds)',
+          { targetIds: [targetA, targetB] },
+        );
+      });
+
+      it('reads fromPackages as everything when no package filter is given', () => {
+        expect(result.get(targetA)?.fromPackages).toEqual(
+          result.get(targetA)?.all,
+        );
+      });
+    });
+
+    describe('when two targets hold different versions of the same standard', () => {
+      const olderOnA = createStandardVersionFor('sv-old', 'std-1', 'Shared');
+      const newerOnB = createStandardVersionFor('sv-new', 'std-1', 'Shared');
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveVersionsByTargets>
+      >;
+
+      beforeEach(async () => {
+        seedActiveRows([
+          {
+            targetId: targetA,
+            distributedPackageId: 'dp-a',
+            packageId: packageId1,
+            distributedAt: '2024-01-01T00:00:00Z',
+          },
+          {
+            targetId: targetB,
+            distributedPackageId: 'dp-b',
+            packageId: packageId1,
+            distributedAt: '2024-06-01T00:00:00Z',
+          },
+        ]);
+        seedDistributedVersions([
+          { distributedPackageId: 'dp-a', standardVersions: [olderOnA] },
+          { distributedPackageId: 'dp-b', standardVersions: [newerOnB] },
+        ]);
+
+        result = await repository.findActiveVersionsByTargets(organizationId, [
+          targetA,
+          targetB,
+        ]);
+      });
+
+      // The recency reduce runs per target. Run over every target's rows at
+      // once, target B's newer distribution would hide target A's version.
+      it('keeps the version the older target actually holds', () => {
+        expect(result.get(targetA)?.all.standardVersions).toEqual([olderOnA]);
+      });
+
+      it('keeps the version the newer target actually holds', () => {
+        expect(result.get(targetB)?.all.standardVersions).toEqual([newerOnB]);
+      });
+    });
+
+    describe('when packageIds are given', () => {
+      const svOfPackage1 = createStandardVersionFor(
+        'sv-1',
+        'std-1',
+        'From one',
+      );
+      const svOfPackage2 = createStandardVersionFor(
+        'sv-2',
+        'std-2',
+        'From two',
+      );
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveVersionsByTargets>
+      >;
+
+      beforeEach(async () => {
+        // Distinct timestamps so the recency order of the unrestricted view
+        // is the seeded order rather than an id tie-break.
+        seedActiveRows([
+          {
+            targetId: targetA,
+            distributedPackageId: 'dp-1',
+            packageId: packageId1,
+            distributedAt: '2024-06-01T00:00:00Z',
+          },
+          {
+            targetId: targetA,
+            distributedPackageId: 'dp-2',
+            packageId: packageId2,
+            distributedAt: '2024-01-01T00:00:00Z',
+          },
+        ]);
+        seedDistributedVersions([
+          { distributedPackageId: 'dp-1', standardVersions: [svOfPackage1] },
+          { distributedPackageId: 'dp-2', standardVersions: [svOfPackage2] },
+        ]);
+
+        result = await repository.findActiveVersionsByTargets(
+          organizationId,
+          [targetA],
+          [packageId1],
+        );
+      });
+
+      it('restricts fromPackages to the requested packages', () => {
+        expect(result.get(targetA)?.fromPackages.standardVersions).toEqual([
+          svOfPackage1,
+        ]);
+      });
+
+      it('leaves the unrestricted view whole', () => {
+        expect(result.get(targetA)?.all.standardVersions).toEqual([
+          svOfPackage1,
+          svOfPackage2,
+        ]);
+      });
+
+      // Both views come out of the same rows, so the filter costs nothing.
+      it('still scans once', () => {
+        expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when a requested target has no distribution history', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveVersionsByTargets>
+      >;
+
+      beforeEach(async () => {
+        seedActiveRows([]);
+        seedDistributedVersions([]);
+
+        result = await repository.findActiveVersionsByTargets(organizationId, [
+          targetA,
+        ]);
+      });
+
+      it('still gives it an entry, with empty arrays', () => {
+        expect(result.get(targetA)?.all).toEqual({
+          standardVersions: [],
+          commandVersions: [],
+          skillVersions: [],
+        });
+      });
+    });
+
+    describe('when no target is requested', () => {
+      it('returns an empty map without querying', async () => {
+        const result = await repository.findActiveVersionsByTargets(
+          organizationId,
+          [],
+        );
+
+        expect(result.size).toBe(0);
       });
     });
   });

@@ -17,6 +17,17 @@ import {
   RenderMode,
 } from '@packmind/types';
 
+export type ActiveArtifactVersions = {
+  standardVersions: StandardVersion[];
+  commandVersions: CommandVersion[];
+  skillVersions: SkillVersion[];
+};
+
+export type ActiveArtifactVersionsByScope = {
+  all: ActiveArtifactVersions;
+  fromPackages: ActiveArtifactVersions;
+};
+
 export interface IDistributionRepository {
   add(distribution: Distribution): Promise<Distribution>;
 
@@ -82,11 +93,13 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
     packageIds?: PackageId[],
-  ): Promise<{
-    standardVersions: StandardVersion[];
-    commandVersions: CommandVersion[];
-    skillVersions: SkillVersion[];
-  }>;
+  ): Promise<ActiveArtifactVersions>;
+
+  findActiveVersionsByTargets(
+    organizationId: OrganizationId,
+    targetIds: TargetId[],
+    packageIds?: PackageId[],
+  ): Promise<Map<TargetId, ActiveArtifactVersionsByScope>>;
 
   /**
    * Get all currently active (not removed) package IDs for a specific target.

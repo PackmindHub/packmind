@@ -22,6 +22,8 @@ import {
 } from '@packmind/types';
 import { Repository } from 'typeorm';
 import {
+  ActiveArtifactVersions,
+  ActiveArtifactVersionsByScope,
   ActivePackageOperationRow,
   IDistributionRepository,
   OutdatedDeploymentsByTarget,
@@ -45,12 +47,19 @@ function toIsoString(value: unknown): string {
 }
 
 type LatestDistributedPackageRow = {
+  targetId: TargetId;
   distributedPackageId: string;
   packageId: PackageId;
   operation: DistributionOperation | null;
   renderModes: RenderMode[] | string | null;
   distributedAt: Date | string;
 };
+
+const emptyActiveVersions = (): ActiveArtifactVersions => ({
+  standardVersions: [],
+  commandVersions: [],
+  skillVersions: [],
+});
 
 type VersionRelationName = keyof Pick<
   DistributedPackage,
@@ -546,10 +555,10 @@ export class DistributionRepository implements IDistributionRepository {
 
   private async findActiveDistributedPackages(
     organizationId: OrganizationId,
-    targetId: TargetId,
+    targetIds: TargetId[],
     packageIds?: PackageId[],
   ): Promise<LatestDistributedPackageRow[]> {
-    if (packageIds && packageIds.length === 0) {
+    if (targetIds.length === 0 || (packageIds && packageIds.length === 0)) {
       return [];
     }
 
@@ -559,7 +568,9 @@ export class DistributionRepository implements IDistributionRepository {
       .where('distribution.organizationId = :organizationId', {
         organizationId,
       })
-      .andWhere('distribution.target_id = :targetId', { targetId })
+      .andWhere('distribution.target_id IN (:...targetIds)', {
+        targetIds: targetIds,
+      })
       .andWhere('distribution.status = :status', {
         status: DistributionStatus.success,
       });
@@ -574,11 +585,13 @@ export class DistributionRepository implements IDistributionRepository {
     }
 
     const rows = await queryBuilder
-      .distinctOn(['distributedPackage.package_id'])
-      .orderBy('distributedPackage.package_id')
+      .distinctOn(['distribution.target_id', 'distributedPackage.package_id'])
+      .orderBy('distribution.target_id')
+      .addOrderBy('distributedPackage.package_id')
       .addOrderBy('distribution.createdAt', 'DESC')
       .addOrderBy('distribution.id', 'DESC')
-      .select('distributedPackage.id', 'distributedPackageId')
+      .select('distribution.target_id', 'targetId')
+      .addSelect('distributedPackage.id', 'distributedPackageId')
       .addSelect('distributedPackage.package_id', 'packageId')
       .addSelect('distributedPackage.operation', 'operation')
       .addSelect('distribution.render_modes', 'renderModes')
@@ -588,17 +601,18 @@ export class DistributionRepository implements IDistributionRepository {
     return rows.filter((row) => (row.operation ?? 'add') !== 'remove');
   }
 
-  private async findActiveVersionsForDistributedPackages<
+  private async fetchVersionsByDistributedPackage<
     R extends VersionRelationName,
   >(
-    activePackages: LatestDistributedPackageRow[],
+    distributedPackageIds: string[],
     relation: R,
-    artifactIdOf: (version: DistributedPackage[R][number]) => string,
-  ): Promise<DistributedPackage[R]> {
+  ): Promise<Map<string, DistributedPackage[R][number][]>> {
     type V = DistributedPackage[R][number];
 
-    if (activePackages.length === 0) {
-      return [] as DistributedPackage[R];
+    const versionsByDistributedPackageId = new Map<string, V[]>();
+
+    if (distributedPackageIds.length === 0) {
+      return versionsByDistributedPackageId;
     }
 
     const queryBuilder = this.repository
@@ -607,9 +621,7 @@ export class DistributionRepository implements IDistributionRepository {
       .innerJoin('distribution.distributedPackages', 'distributedPackage')
       .innerJoin(`distributedPackage.${relation}`, 'version')
       .where('distributedPackage.id IN (:...distributedPackageIds)', {
-        distributedPackageIds: activePackages.map(
-          (row) => row.distributedPackageId,
-        ),
+        distributedPackageIds,
       });
 
     if (relation === 'skillVersions') {
@@ -618,7 +630,6 @@ export class DistributionRepository implements IDistributionRepository {
 
     const distributions = await queryBuilder.getMany();
 
-    const versionsByDistributedPackageId = new Map<string, V[]>();
     for (const distribution of distributions) {
       for (const distributedPackage of distribution.distributedPackages) {
         versionsByDistributedPackageId.set(
@@ -627,6 +638,19 @@ export class DistributionRepository implements IDistributionRepository {
         );
       }
     }
+
+    return versionsByDistributedPackageId;
+  }
+
+  private latestVersionPerArtifact<R extends VersionRelationName>(
+    activePackages: LatestDistributedPackageRow[],
+    versionsByDistributedPackageId: Map<
+      string,
+      DistributedPackage[R][number][]
+    >,
+    artifactIdOf: (version: DistributedPackage[R][number]) => string,
+  ): DistributedPackage[R] {
+    type V = DistributedPackage[R][number];
 
     const packagesByRecency = [...activePackages].sort((a, b) => {
       const delta =
@@ -658,6 +682,30 @@ export class DistributionRepository implements IDistributionRepository {
     return Array.from(versionByArtifactId.values()) as DistributedPackage[R];
   }
 
+  private async findActiveVersionsForDistributedPackages<
+    R extends VersionRelationName,
+  >(
+    activePackages: LatestDistributedPackageRow[],
+    relation: R,
+    artifactIdOf: (version: DistributedPackage[R][number]) => string,
+  ): Promise<DistributedPackage[R]> {
+    if (activePackages.length === 0) {
+      return [] as DistributedPackage[R];
+    }
+
+    const versionsByDistributedPackageId =
+      await this.fetchVersionsByDistributedPackage<R>(
+        activePackages.map((row) => row.distributedPackageId),
+        relation,
+      );
+
+    return this.latestVersionPerArtifact<R>(
+      activePackages,
+      versionsByDistributedPackageId,
+      artifactIdOf,
+    );
+  }
+
   async findActiveStandardVersionsByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
@@ -670,7 +718,7 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const activePackages = await this.findActiveDistributedPackages(
         organizationId,
-        targetId,
+        [targetId],
       );
 
       const activeStandardVersions =
@@ -703,62 +751,138 @@ export class DistributionRepository implements IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
     packageIds?: PackageId[],
-  ): Promise<{
-    standardVersions: StandardVersion[];
-    commandVersions: CommandVersion[];
-    skillVersions: SkillVersion[];
-  }> {
-    this.logger.info('Finding active versions by target', {
+  ): Promise<ActiveArtifactVersions> {
+    if (packageIds && packageIds.length === 0) {
+      return emptyActiveVersions();
+    }
+
+    const activeVersionsByTargetId = await this.findActiveVersionsByTargets(
       organizationId,
-      targetId,
+      [targetId],
+      packageIds,
+    );
+
+    return (
+      activeVersionsByTargetId.get(targetId)?.fromPackages ??
+      emptyActiveVersions()
+    );
+  }
+
+  async findActiveVersionsByTargets(
+    organizationId: OrganizationId,
+    targetIds: TargetId[],
+    packageIds?: PackageId[],
+  ): Promise<Map<TargetId, ActiveArtifactVersionsByScope>> {
+    this.logger.info('Finding active versions by targets', {
+      organizationId,
+      targetCount: targetIds.length,
       packageIdsCount: packageIds?.length,
     });
 
-    if (packageIds && packageIds.length === 0) {
-      return { standardVersions: [], commandVersions: [], skillVersions: [] };
+    const activeVersionsByTargetId = new Map<
+      TargetId,
+      ActiveArtifactVersionsByScope
+    >();
+    for (const targetId of targetIds) {
+      activeVersionsByTargetId.set(targetId, {
+        all: emptyActiveVersions(),
+        fromPackages: emptyActiveVersions(),
+      });
+    }
+
+    if (targetIds.length === 0) {
+      return activeVersionsByTargetId;
     }
 
     try {
       const activePackages = await this.findActiveDistributedPackages(
         organizationId,
-        targetId,
-        packageIds,
+        targetIds,
       );
 
-      const [standardVersions, commandVersions, skillVersions] =
-        await Promise.all([
-          this.findActiveVersionsForDistributedPackages(
-            activePackages,
-            'standardVersions',
-            (standardVersion) => standardVersion.standardId,
-          ),
-          this.findActiveVersionsForDistributedPackages(
-            activePackages,
-            'recipeVersions',
-            (commandVersion) => commandVersion.recipeId,
-          ),
-          this.findActiveVersionsForDistributedPackages(
-            activePackages,
-            'skillVersions',
-            (skillVersion) => skillVersion.skillId,
-          ),
-        ]);
+      const distributedPackageIds = activePackages.map(
+        (row) => row.distributedPackageId,
+      );
 
-      this.logger.info('Active versions found by target', {
-        organizationId,
-        targetId,
-        packageIdsCount: packageIds?.length,
-        activePackageCount: activePackages.length,
-        standardVersionsCount: standardVersions.length,
-        commandVersionsCount: commandVersions.length,
-        skillVersionsCount: skillVersions.length,
+      const [
+        standardVersionsByPackage,
+        commandVersionsByPackage,
+        skillVersionsByPackage,
+      ] = await Promise.all([
+        this.fetchVersionsByDistributedPackage(
+          distributedPackageIds,
+          'standardVersions',
+        ),
+        this.fetchVersionsByDistributedPackage(
+          distributedPackageIds,
+          'recipeVersions',
+        ),
+        this.fetchVersionsByDistributedPackage(
+          distributedPackageIds,
+          'skillVersions',
+        ),
+      ]);
+
+      const activePackagesByTargetId = new Map<
+        TargetId,
+        LatestDistributedPackageRow[]
+      >();
+      for (const row of activePackages) {
+        const rows = activePackagesByTargetId.get(row.targetId) ?? [];
+        rows.push(row);
+        activePackagesByTargetId.set(row.targetId, rows);
+      }
+
+      const reduce = (
+        rows: LatestDistributedPackageRow[],
+      ): ActiveArtifactVersions => ({
+        standardVersions: this.latestVersionPerArtifact<'standardVersions'>(
+          rows,
+          standardVersionsByPackage,
+          (standardVersion) => standardVersion.standardId,
+        ),
+        commandVersions: this.latestVersionPerArtifact<'recipeVersions'>(
+          rows,
+          commandVersionsByPackage,
+          (commandVersion) => commandVersion.recipeId,
+        ),
+        skillVersions: this.latestVersionPerArtifact<'skillVersions'>(
+          rows,
+          skillVersionsByPackage,
+          (skillVersion) => skillVersion.skillId,
+        ),
       });
 
-      return { standardVersions, commandVersions, skillVersions };
-    } catch (error) {
-      this.logger.error('Failed to find active versions by target', {
+      const requestedPackageIds = packageIds
+        ? new Set<string>(packageIds)
+        : undefined;
+
+      for (const targetId of activeVersionsByTargetId.keys()) {
+        const rows = activePackagesByTargetId.get(targetId) ?? [];
+        const all = reduce(rows);
+
+        let fromPackages = all;
+        if (requestedPackageIds) {
+          fromPackages = reduce(
+            rows.filter((row) => requestedPackageIds.has(row.packageId)),
+          );
+        }
+
+        activeVersionsByTargetId.set(targetId, { all, fromPackages });
+      }
+
+      this.logger.info('Active versions found by targets', {
         organizationId,
-        targetId,
+        targetCount: targetIds.length,
+        packageIdsCount: packageIds?.length,
+        activePackageCount: activePackages.length,
+      });
+
+      return activeVersionsByTargetId;
+    } catch (error) {
+      this.logger.error('Failed to find active versions by targets', {
+        organizationId,
+        targetCount: targetIds.length,
         error: getErrorMessage(error),
       });
       throw error;
@@ -837,7 +961,7 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const activePackages = await this.findActiveDistributedPackages(
         organizationId,
-        targetId,
+        [targetId],
       );
 
       const activePackageIds = activePackages.map((row) => row.packageId);
@@ -871,7 +995,7 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const activePackages = await this.findActiveDistributedPackages(
         organizationId,
-        targetId,
+        [targetId],
       );
 
       const renderModes = new Set<RenderMode>();

@@ -30,7 +30,10 @@ import {
   PackmindLockFile,
   normalizeCodingAgents,
 } from '@packmind/types';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import {
+  ActiveArtifactVersions,
+  IDistributionRepository,
+} from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
@@ -54,12 +57,6 @@ export class ArtifactVersionNotFoundError extends Error {
     this.name = 'ArtifactVersionNotFoundError';
   }
 }
-
-type ActiveVersionsByTarget = {
-  standardVersions: StandardVersion[];
-  commandVersions: CommandVersion[];
-  skillVersions: SkillVersion[];
-};
 
 /**
  * Unified usecase for publishing commands, standards, and skills together
@@ -166,16 +163,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           skillsCount: skillVersions.length,
         });
 
-        const activeVersionsByTargetId = await this.fetchActiveVersionsByTarget(
+        const {
+          all: activeVersionsByTargetId,
+          fromPackages: activeVersionsFromPackagesByTargetId,
+        } = await this.fetchActiveVersionsByTarget(
           command.organizationId as OrganizationId,
           targets,
+          command.packageIds,
         );
-        const activeVersionsFromPackagesByTargetId =
-          await this.fetchActiveVersionsByTarget(
-            command.organizationId as OrganizationId,
-            targets,
-            command.packageIds,
-          );
 
         const {
           previous: previousCommandVersions,
@@ -831,31 +826,33 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     organizationId: OrganizationId,
     targets: Target[],
     packageIds?: PackageId[],
-  ): Promise<Map<TargetId, ActiveVersionsByTarget>> {
-    const activeVersionsByTargetId = new Map<
-      TargetId,
-      ActiveVersionsByTarget
-    >();
-
-    for (const target of targets) {
-      activeVersionsByTargetId.set(
-        target.id,
-        await this.distributionRepository.findActiveVersionsByTarget(
-          organizationId,
-          target.id,
-          packageIds,
-        ),
+  ): Promise<{
+    all: Map<TargetId, ActiveArtifactVersions>;
+    fromPackages: Map<TargetId, ActiveArtifactVersions>;
+  }> {
+    const activeVersionsByTargetId =
+      await this.distributionRepository.findActiveVersionsByTargets(
+        organizationId,
+        targets.map((target) => target.id),
+        packageIds,
       );
+
+    const all = new Map<TargetId, ActiveArtifactVersions>();
+    const fromPackages = new Map<TargetId, ActiveArtifactVersions>();
+
+    for (const [targetId, scopes] of activeVersionsByTargetId) {
+      all.set(targetId, scopes.all);
+      fromPackages.set(targetId, scopes.fromPackages);
     }
 
-    return activeVersionsByTargetId;
+    return { all, fromPackages };
   }
 
   private collectAllCommandVersions(
     targets: Target[],
     newCommandVersions: CommandVersion[],
-    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
-    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsByTargetId: Map<TargetId, ActiveArtifactVersions>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveArtifactVersions>,
   ): {
     previous: CommandVersion[];
     previousFromPackages: CommandVersion[];
@@ -903,8 +900,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private collectAllStandardVersions(
     targets: Target[],
     newStandardVersions: StandardVersion[],
-    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
-    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsByTargetId: Map<TargetId, ActiveArtifactVersions>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveArtifactVersions>,
   ): {
     previous: StandardVersion[];
     previousFromPackages: StandardVersion[];
@@ -960,8 +957,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private collectAllSkillVersions(
     targets: Target[],
     newSkillVersions: SkillVersion[],
-    activeVersionsByTargetId: Map<TargetId, ActiveVersionsByTarget>,
-    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveVersionsByTarget>,
+    activeVersionsByTargetId: Map<TargetId, ActiveArtifactVersions>,
+    activeVersionsFromPackagesByTargetId: Map<TargetId, ActiveArtifactVersions>,
   ): {
     previous: SkillVersion[];
     previousFromPackages: SkillVersion[];
