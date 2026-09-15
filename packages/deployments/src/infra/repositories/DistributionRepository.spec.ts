@@ -953,10 +953,12 @@ describe('DistributionRepository', () => {
         );
       });
 
-      it('reads fromPackages as everything when no package filter is given', () => {
-        expect(result.get(targetA)?.fromPackages).toEqual(
-          result.get(targetA)?.all,
-        );
+      describe('when no package filter is given', () => {
+        it('reads fromPackages as everything', () => {
+          expect(result.get(targetA)?.fromPackages).toEqual(
+            result.get(targetA)?.all,
+          );
+        });
       });
     });
 
