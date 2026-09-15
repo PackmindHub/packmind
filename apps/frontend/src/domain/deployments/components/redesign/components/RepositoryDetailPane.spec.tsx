@@ -100,6 +100,30 @@ const repo: RepositoryDrift = {
   targets: [{ id: targetId, target: targetRef, packages: [driftedPackage] }],
 };
 
+/** The same drift, with the distribution that repairs it already running. */
+const distributingPackage: PackageDrift = {
+  ...driftedPackage,
+  id: createPackageId('package-2'),
+  name: 'Frontend guidelines',
+  installLocations: [
+    {
+      ...driftedPackage.installLocations[0],
+      lastDistributionStatus: DistributionStatus.in_progress,
+    },
+  ],
+};
+
+const withOneOfEach: RepositoryDrift = {
+  ...repo,
+  targets: [
+    {
+      id: targetId,
+      target: targetRef,
+      packages: [driftedPackage, distributingPackage],
+    },
+  ],
+};
+
 const GIT_SETTINGS_HREF = '/org/packmind/settings/git';
 
 function renderPane(
@@ -142,7 +166,50 @@ function rowCheckbox() {
   });
 }
 
+const segment = (name: RegExp) => screen.getByRole('tab', { name });
+
 describe('RepositoryDetailPane', () => {
+  /*
+   * The segment beside the rail's band, which had the same hole: `Drift`
+   * counted the rows being distributed and headed them with a mark only the
+   * others wore.
+   */
+  describe('when a package is drifted and already being distributed', () => {
+    it('counts it under Waiting rather than under Drift', () => {
+      renderPane(vi.fn(), withOneOfEach);
+
+      expect(segment(/^Drift, 1 package$/)).toBeInTheDocument();
+      expect(segment(/^Waiting, 1 package$/)).toBeInTheDocument();
+    });
+
+    it('narrows to it alone', async () => {
+      renderPane(vi.fn(), withOneOfEach);
+
+      await userEvent.click(segment(/^Waiting, 1 package$/));
+
+      expect(screen.getByText(distributingPackage.name)).toBeVisible();
+      expect(screen.queryByText(driftedPackage.name)).not.toBeInTheDocument();
+    });
+
+    it('leaves it out of the drift lens', async () => {
+      renderPane(vi.fn(), withOneOfEach);
+
+      await userEvent.click(segment(/^Drift, 1 package$/));
+
+      expect(screen.getByText(driftedPackage.name)).toBeVisible();
+      expect(
+        screen.queryByText(distributingPackage.name),
+      ).not.toBeInTheDocument();
+    });
+
+    /* It is drifted, so it is not what `Aligned` is counting either. */
+    it('keeps it out of the aligned count', () => {
+      renderPane(vi.fn(), withOneOfEach);
+
+      expect(segment(/^Aligned, 0 packages$/)).toBeInTheDocument();
+    });
+  });
+
   describe('when nothing is selected', () => {
     it('offers the repository-wide distribution', () => {
       renderPane();
