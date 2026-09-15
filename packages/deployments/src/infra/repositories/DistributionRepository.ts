@@ -145,7 +145,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -192,7 +195,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -229,13 +235,16 @@ export class DistributionRepository implements IDistributionRepository {
   }
 
   async listByCommandId(
-    recipeId: CommandId,
+    commandId: CommandId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]> {
-    this.logger.info('Listing distributions by recipe ID and organization ID', {
-      recipeId,
-      organizationId,
-    });
+    this.logger.info(
+      'Listing distributions by command ID and organization ID',
+      {
+        commandId,
+        organizationId,
+      },
+    );
 
     try {
       const distributions = await this.repository
@@ -251,13 +260,13 @@ export class DistributionRepository implements IDistributionRepository {
         )
         .innerJoinAndSelect(
           'distributedPackage.recipeVersions',
-          'recipeVersion',
+          'commandVersion',
         )
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
-        .where('recipeVersion.recipeId = :recipeId', {
-          recipeId: recipeId as string,
+        .where('commandVersion.recipeId = :commandId', {
+          commandId: commandId as string,
         })
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
@@ -270,17 +279,17 @@ export class DistributionRepository implements IDistributionRepository {
         .getMany();
 
       this.logger.info(
-        'Distributions listed by recipe ID and organization ID successfully',
+        'Distributions listed by command ID and organization ID successfully',
         {
-          recipeId,
+          commandId,
           organizationId,
           count: distributions.length,
         },
       );
       return distributions;
     } catch (error) {
-      this.logger.error('Failed to list distributions by recipe ID', {
-        recipeId,
+      this.logger.error('Failed to list distributions by command ID', {
+        commandId,
         error: getErrorMessage(error),
       });
       throw error;
@@ -311,7 +320,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -371,7 +383,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -431,7 +446,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -498,7 +516,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -678,153 +699,6 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findActiveCommandVersionsByTarget(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-  ): Promise<CommandVersion[]> {
-    this.logger.info('Finding active recipe versions by target', {
-      organizationId,
-      targetId,
-    });
-
-    try {
-      const activePackages = await this.findActiveDistributedPackages(
-        organizationId,
-        targetId,
-      );
-
-      const activeCommandVersions =
-        await this.findActiveVersionsForDistributedPackages(
-          activePackages,
-          'recipeVersions',
-          (recipeVersion) => recipeVersion.recipeId,
-        );
-
-      this.logger.info('Active recipe versions found by target', {
-        organizationId,
-        targetId,
-        activePackageCount: activePackages.length,
-        activeRecipeVersionsCount: activeCommandVersions.length,
-        recipeIds: activeCommandVersions.map((rv) => rv.recipeId),
-      });
-
-      return activeCommandVersions;
-    } catch (error) {
-      this.logger.error('Failed to find active recipe versions by target', {
-        organizationId,
-        targetId,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
-  async findActiveStandardVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<StandardVersion[]> {
-    this.logger.info(
-      'Finding active standard versions by target and packages',
-      {
-        organizationId,
-        targetId,
-        packageIdsCount: packageIds.length,
-      },
-    );
-
-    if (packageIds.length === 0) {
-      return [];
-    }
-
-    try {
-      const activePackages = await this.findActiveDistributedPackages(
-        organizationId,
-        targetId,
-        packageIds,
-      );
-
-      const activeStandardVersions =
-        await this.findActiveVersionsForDistributedPackages(
-          activePackages,
-          'standardVersions',
-          (standardVersion) => standardVersion.standardId,
-        );
-
-      this.logger.info(
-        'Active standard versions found by target and packages',
-        {
-          organizationId,
-          targetId,
-          packageIdsCount: packageIds.length,
-          activeStandardVersionsCount: activeStandardVersions.length,
-        },
-      );
-
-      return activeStandardVersions;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find active standard versions by target and packages',
-        {
-          organizationId,
-          targetId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
-  }
-
-  async findActiveCommandVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<CommandVersion[]> {
-    this.logger.info('Finding active recipe versions by target and packages', {
-      organizationId,
-      targetId,
-      packageIdsCount: packageIds.length,
-    });
-
-    if (packageIds.length === 0) {
-      return [];
-    }
-
-    try {
-      const activePackages = await this.findActiveDistributedPackages(
-        organizationId,
-        targetId,
-        packageIds,
-      );
-
-      const activeCommandVersions =
-        await this.findActiveVersionsForDistributedPackages(
-          activePackages,
-          'recipeVersions',
-          (recipeVersion) => recipeVersion.recipeId,
-        );
-
-      this.logger.info('Active recipe versions found by target and packages', {
-        organizationId,
-        targetId,
-        packageIdsCount: packageIds.length,
-        activeRecipeVersionsCount: activeCommandVersions.length,
-      });
-
-      return activeCommandVersions;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find active recipe versions by target and packages',
-        {
-          organizationId,
-          targetId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
-  }
-
   async findActiveVersionsByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
@@ -861,7 +735,7 @@ export class DistributionRepository implements IDistributionRepository {
           this.findActiveVersionsForDistributedPackages(
             activePackages,
             'recipeVersions',
-            (recipeVersion) => recipeVersion.recipeId,
+            (commandVersion) => commandVersion.recipeId,
           ),
           this.findActiveVersionsForDistributedPackages(
             activePackages,
@@ -912,7 +786,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .innerJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -1024,97 +901,6 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findActiveSkillVersionsByTarget(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-  ): Promise<SkillVersion[]> {
-    this.logger.info('Finding active skill versions by target', {
-      organizationId,
-      targetId,
-    });
-
-    try {
-      const activePackages = await this.findActiveDistributedPackages(
-        organizationId,
-        targetId,
-      );
-
-      const activeSkillVersions =
-        await this.findActiveVersionsForDistributedPackages(
-          activePackages,
-          'skillVersions',
-          (skillVersion) => skillVersion.skillId,
-        );
-
-      this.logger.info('Active skill versions found by target', {
-        organizationId,
-        targetId,
-        activePackageCount: activePackages.length,
-        activeSkillVersionsCount: activeSkillVersions.length,
-        skillIds: activeSkillVersions.map((sv) => sv.skillId),
-      });
-
-      return activeSkillVersions;
-    } catch (error) {
-      this.logger.error('Failed to find active skill versions by target', {
-        organizationId,
-        targetId,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
-  async findActiveSkillVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<SkillVersion[]> {
-    this.logger.info('Finding active skill versions by target and packages', {
-      organizationId,
-      targetId,
-      packageIdsCount: packageIds.length,
-    });
-
-    if (packageIds.length === 0) {
-      return [];
-    }
-
-    try {
-      const activePackages = await this.findActiveDistributedPackages(
-        organizationId,
-        targetId,
-        packageIds,
-      );
-
-      const activeSkillVersions =
-        await this.findActiveVersionsForDistributedPackages(
-          activePackages,
-          'skillVersions',
-          (skillVersion) => skillVersion.skillId,
-        );
-
-      this.logger.info('Active skill versions found by target and packages', {
-        organizationId,
-        targetId,
-        packageIdsCount: packageIds.length,
-        activeSkillVersionsCount: activeSkillVersions.length,
-      });
-
-      return activeSkillVersions;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find active skill versions by target and packages',
-        {
-          organizationId,
-          targetId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
-  }
-
   async countActiveArtifactsBySpace(
     organizationId: OrganizationId,
     spaceId: SpaceId,
@@ -1168,7 +954,10 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distributedPackage.package', 'package')
         .where('distribution.organizationId = :organizationId', {
@@ -1189,7 +978,7 @@ export class DistributionRepository implements IDistributionRepository {
           {
             operation: string;
             standardVersions: StandardVersion[];
-            recipeVersions: CommandVersion[];
+            commandVersions: CommandVersion[];
             skillVersions: SkillVersion[];
           }
         >
@@ -1209,7 +998,7 @@ export class DistributionRepository implements IDistributionRepository {
             latestPerPackage.set(dp.packageId, {
               operation: dp.operation ?? 'add',
               standardVersions: dp.standardVersions,
-              recipeVersions: dp.recipeVersions,
+              commandVersions: dp.recipeVersions,
               skillVersions: dp.skillVersions,
             });
           }
@@ -1218,7 +1007,7 @@ export class DistributionRepository implements IDistributionRepository {
 
       // Collect unique artifact IDs from active packages across all targets
       const standardIds = new Set<StandardId>();
-      const recipeIds = new Set<CommandId>();
+      const commandIds = new Set<CommandId>();
       const skillIds = new Set<SkillId>();
 
       for (const [, latestPerPackage] of targetPackageData) {
@@ -1231,8 +1020,8 @@ export class DistributionRepository implements IDistributionRepository {
             standardIds.add(sv.standardId);
           }
 
-          for (const rv of pkgData.recipeVersions) {
-            recipeIds.add(rv.recipeId);
+          for (const cv of pkgData.commandVersions) {
+            commandIds.add(cv.recipeId);
           }
 
           for (const skv of pkgData.skillVersions) {
@@ -1243,7 +1032,7 @@ export class DistributionRepository implements IDistributionRepository {
 
       const result = {
         standardIds: Array.from(standardIds),
-        recipeIds: Array.from(recipeIds),
+        recipeIds: Array.from(commandIds),
         skillIds: Array.from(skillIds),
       };
 
@@ -1251,7 +1040,7 @@ export class DistributionRepository implements IDistributionRepository {
         organizationId,
         spaceId,
         standardCount: result.standardIds.length,
-        recipeCount: result.recipeIds.length,
+        commandCount: result.recipeIds.length,
         skillCount: result.skillIds.length,
       });
 
@@ -1394,7 +1183,7 @@ export class DistributionRepository implements IDistributionRepository {
       };
       type CommandVersionRow = {
         distributedPackageId: string;
-        recipeId: CommandId;
+        commandId: CommandId;
         name: string;
         slug: string;
         version: number;
@@ -1427,15 +1216,15 @@ export class DistributionRepository implements IDistributionRepository {
         this.repository
           .createQueryBuilder('distribution')
           .innerJoin('distribution.distributedPackages', 'distributedPackage')
-          .innerJoin('distributedPackage.recipeVersions', 'recipeVersion')
+          .innerJoin('distributedPackage.recipeVersions', 'commandVersion')
           .where('distributedPackage.id IN (:...ids)', {
             ids: distributedPackageIds,
           })
           .select('distributedPackage.id', 'distributedPackageId')
-          .addSelect('recipeVersion.command_id', 'recipeId')
-          .addSelect('recipeVersion.name', 'name')
-          .addSelect('recipeVersion.slug', 'slug')
-          .addSelect('recipeVersion.version', 'version')
+          .addSelect('commandVersion.command_id', 'commandId')
+          .addSelect('commandVersion.name', 'name')
+          .addSelect('commandVersion.slug', 'slug')
+          .addSelect('commandVersion.version', 'version')
           .getRawMany<CommandVersionRow>(),
         this.repository
           .createQueryBuilder('distribution')
@@ -1456,7 +1245,7 @@ export class DistributionRepository implements IDistributionRepository {
         targetName: string;
         gitRepoId: string;
         standards: Map<string, OutdatedStandardDeployment>;
-        recipes: Map<string, OutdatedCommandDeployment>;
+        commands: Map<string, OutdatedCommandDeployment>;
         skills: Map<string, OutdatedSkillDeployment>;
       };
 
@@ -1470,7 +1259,7 @@ export class DistributionRepository implements IDistributionRepository {
           targetName: row.targetName,
           gitRepoId: row.gitRepoId,
           standards: new Map(),
-          recipes: new Map(),
+          commands: new Map(),
           skills: new Map(),
         };
         targets.set(tId, created);
@@ -1498,16 +1287,16 @@ export class DistributionRepository implements IDistributionRepository {
         });
       }
 
-      for (const rv of commandRows) {
-        const dp = dpById.get(rv.distributedPackageId);
+      for (const cv of commandRows) {
+        const dp = dpById.get(cv.distributedPackageId);
         if (!dp) continue;
         const bucket = bucketFor(dp);
-        if (bucket.recipes.has(rv.recipeId)) continue;
-        bucket.recipes.set(rv.recipeId, {
-          artifactId: rv.recipeId,
-          artifactName: rv.name,
-          artifactSlug: rv.slug,
-          deployedVersion: rv.version,
+        if (bucket.commands.has(cv.commandId)) continue;
+        bucket.commands.set(cv.commandId, {
+          artifactId: cv.commandId,
+          artifactName: cv.name,
+          artifactSlug: cv.slug,
+          deployedVersion: cv.version,
           deploymentDate: toIsoString(dp.deploymentDate),
           isDeleted: false,
         });
@@ -1532,7 +1321,7 @@ export class DistributionRepository implements IDistributionRepository {
       for (const [tId, bucket] of targets) {
         if (
           bucket.standards.size === 0 &&
-          bucket.recipes.size === 0 &&
+          bucket.commands.size === 0 &&
           bucket.skills.size === 0
         ) {
           continue;
@@ -1542,7 +1331,7 @@ export class DistributionRepository implements IDistributionRepository {
           targetName: bucket.targetName,
           gitRepoId: bucket.gitRepoId,
           standards: Array.from(bucket.standards.values()),
-          recipes: Array.from(bucket.recipes.values()),
+          recipes: Array.from(bucket.commands.values()),
           skills: Array.from(bucket.skills.values()),
         });
       }

@@ -30,7 +30,7 @@ export interface IDistributionRepository {
   ): Promise<Distribution[]>;
 
   listByCommandId(
-    recipeId: CommandId,
+    commandId: CommandId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]>;
 
@@ -66,72 +66,17 @@ export interface IDistributionRepository {
   ): Promise<StandardVersion[]>;
 
   /**
-   * Get all currently distributed recipe versions for a specific target.
-   * This returns the latest distributed version of each unique recipe.
-   * Used to generate complete recipe books that include all distributed recipes.
-   */
-  findActiveCommandVersionsByTarget(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-  ): Promise<CommandVersion[]>;
-
-  /**
-   * Get currently distributed standard versions for a specific target,
-   * filtered by the specified packages.
-   * This returns the latest distributed version of each unique standard
-   * that belongs to one of the specified packages.
-   * Used to compute removed artifacts only from packages being deployed.
-   */
-  findActiveStandardVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<StandardVersion[]>;
-
-  /**
-   * Get currently distributed recipe versions for a specific target,
-   * filtered by the specified packages.
-   * This returns the latest distributed version of each unique recipe
-   * that belongs to one of the specified packages.
-   * Used to compute removed artifacts only from packages being deployed.
-   */
-  findActiveCommandVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<CommandVersion[]>;
-
-  /**
-   * Get all currently distributed skill versions for a specific target.
-   * This returns the latest distributed version of each unique skill.
-   * Used to generate complete skill books that include all distributed skills.
-   */
-  findActiveSkillVersionsByTarget(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-  ): Promise<SkillVersion[]>;
-
-  /**
-   * Get currently distributed skill versions for a specific target,
-   * filtered by the specified packages.
-   * This returns the latest distributed version of each unique skill
-   * that belongs to one of the specified packages.
-   * Used to compute removed artifacts only from packages being deployed.
-   */
-  findActiveSkillVersionsByTargetAndPackages(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-    packageIds: PackageId[],
-  ): Promise<SkillVersion[]>;
-
-  /**
-   * Batched equivalent of findActive{Standard,Command,Skill}VersionsByTarget
-   * (packageIds omitted) or the ByTargetAndPackages variants (packageIds
-   * given): fetches the active distributed packages for the target ONCE and
-   * hydrates all three artifact types from those same rows, instead of
-   * running the identical underlying query once per artifact type.
-   * Byte-identical results to calling the three single-artifact methods with
-   * the same arguments.
+   * Get all currently distributed standard, command and skill versions for a
+   * specific target, returning the latest distributed version of each unique
+   * artifact. Used to generate the complete artifact books for a target.
+   *
+   * Resolves the active distributed packages ONCE and hydrates all three
+   * artifact types from those same rows, so the underlying query runs once
+   * rather than once per artifact type.
+   *
+   * Pass `packageIds` to restrict the result to artifacts belonging to those
+   * packages, which is what computing removed artifacts from the packages
+   * being deployed needs; omit it for every artifact active on the target.
    */
   findActiveVersionsByTarget(
     organizationId: OrganizationId,

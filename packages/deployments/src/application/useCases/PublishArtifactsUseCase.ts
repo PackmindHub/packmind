@@ -619,24 +619,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       });
 
       if (removedAgents.length > 0) {
-        const [
-          activeCommandVersions,
-          activeStandardVersions,
-          activeSkillVersions,
-        ] = await Promise.all([
-          this.distributionRepository.findActiveCommandVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-          this.distributionRepository.findActiveStandardVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-          this.distributionRepository.findActiveSkillVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-        ]);
+        const {
+          commandVersions: activeCommandVersions,
+          standardVersions: activeStandardVersions,
+          skillVersions: activeSkillVersions,
+        } = await this.distributionRepository.findActiveVersionsByTarget(
+          organizationId,
+          target.id,
+        );
 
         const cleanupFileUpdates =
           await this.codingAgentPort.generateAgentCleanupUpdatesForAgents({

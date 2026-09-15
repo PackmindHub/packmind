@@ -637,889 +637,6 @@ describe('DistributionRepository', () => {
     });
   });
 
-  describe('findActiveCommandVersionsByTarget', () => {
-    const createCommandVersion = (
-      id: string,
-      recipeId: string,
-      name: string,
-    ) => ({
-      id: createCommandVersionId(id),
-      recipeId: createCommandId(recipeId),
-      name,
-      slug: name.toLowerCase().replace(/ /g, '-'),
-      content: `Content for ${name}`,
-      version: 1,
-      userId: null,
-    });
-
-    const createDistribution = (
-      id: string,
-      createdAt: string,
-      distributedPackages: Distribution['distributedPackages'],
-    ): Distribution => ({
-      id: createDistributionId(id),
-      organizationId,
-      authorId: createUserId('author-1'),
-      status: DistributionStatus.success,
-      target: {
-        id: targetId,
-        name: 'default',
-        path: '/',
-        gitRepoId: 'git-repo-1' as never,
-      },
-      distributedPackages,
-      createdAt,
-      renderModes: [],
-      source: 'cli',
-    });
-
-    const seedActivePackages = (
-      rows: Array<{
-        distributedPackageId: string;
-        packageId: ReturnType<typeof createPackageId>;
-        operation: 'add' | 'remove' | null | undefined;
-        distributedAt: string;
-      }>,
-    ) => {
-      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
-        rows.map((row) => ({ ...row, renderModes: [] })),
-      );
-    };
-
-    describe('with an active package', () => {
-      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [rv1],
-              skillVersions: [],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveCommandVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('returns one command version', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the command version from the active package', () => {
-        expect(result[0].id).toBe(rv1.id);
-      });
-    });
-
-    describe('with a removed package', () => {
-      const rv2 = createCommandVersion('rv-2', 'recipe-2', 'Recipe Two');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'remove',
-            distributedAt: '2024-01-02T00:00:00Z',
-          },
-          {
-            distributedPackageId: 'dp-2',
-            packageId: packageId2,
-            operation: 'add',
-            distributedAt: '2024-01-03T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-2', '2024-01-03T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [rv2],
-              skillVersions: [],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveCommandVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('excludes command versions from the removed package', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns only the command version from the active package', () => {
-        expect(result[0].id).toBe(rv2.id);
-      });
-    });
-
-    describe('with a null operation', () => {
-      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: null,
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [rv1],
-              skillVersions: [],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveCommandVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('treats a null operation as add', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the command version from the package with a null operation', () => {
-        expect(result[0].id).toBe(rv1.id);
-      });
-    });
-
-    describe('with duplicate command versions across active packages', () => {
-      const rvOld = createCommandVersion(
-        'rv-1-old',
-        'recipe-1',
-        'Recipe One Old',
-      );
-      const rvNew = createCommandVersion(
-        'rv-1-new',
-        'recipe-1',
-        'Recipe One New',
-      );
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-          {
-            distributedPackageId: 'dp-2',
-            packageId: packageId2,
-            operation: 'add',
-            distributedAt: '2024-01-02T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [rvOld],
-              skillVersions: [],
-            },
-          ]),
-          createDistribution('dist-2', '2024-01-02T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [rvNew],
-              skillVersions: [],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveCommandVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('deduplicates command versions by recipeId', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('keeps the version from the most recently distributed package', () => {
-        expect(result[0].id).toBe(rvNew.id);
-      });
-    });
-  });
-
-  describe('findActiveSkillVersionsByTarget', () => {
-    const createSkillVersion = (id: string, skillId: string, name: string) => ({
-      id: createSkillVersionId(id),
-      skillId: createSkillId(skillId),
-      version: 1,
-      userId: createUserId('author-1'),
-      name,
-      slug: name.toLowerCase().replace(/ /g, '-'),
-      description: `Description for ${name}`,
-      prompt: '',
-    });
-
-    const createDistribution = (
-      id: string,
-      createdAt: string,
-      distributedPackages: Distribution['distributedPackages'],
-    ): Distribution => ({
-      id: createDistributionId(id),
-      organizationId,
-      authorId: createUserId('author-1'),
-      status: DistributionStatus.success,
-      target: {
-        id: targetId,
-        name: 'default',
-        path: '/',
-        gitRepoId: 'git-repo-1' as never,
-      },
-      distributedPackages,
-      createdAt,
-      renderModes: [],
-      source: 'cli',
-    });
-
-    const seedActivePackages = (
-      rows: Array<{
-        distributedPackageId: string;
-        packageId: ReturnType<typeof createPackageId>;
-        operation: 'add' | 'remove' | null | undefined;
-        distributedAt: string;
-      }>,
-    ) => {
-      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
-        rows.map((row) => ({ ...row, renderModes: [] })),
-      );
-    };
-
-    describe('with an active package', () => {
-      const skv1 = createSkillVersion('skv-1', 'skill-1', 'Skill One');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skv1],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveSkillVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('returns one skill version', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the skill version from the active package', () => {
-        expect(result[0].id).toBe(skv1.id);
-      });
-    });
-
-    describe('with a removed package', () => {
-      const skv2 = createSkillVersion('skv-2', 'skill-2', 'Skill Two');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'remove',
-            distributedAt: '2024-01-02T00:00:00Z',
-          },
-          {
-            distributedPackageId: 'dp-2',
-            packageId: packageId2,
-            operation: 'add',
-            distributedAt: '2024-01-03T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-2', '2024-01-03T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skv2],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveSkillVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('excludes skill versions from the removed package', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns only the skill version from the active package', () => {
-        expect(result[0].id).toBe(skv2.id);
-      });
-    });
-
-    describe('with a null operation', () => {
-      const skv1 = createSkillVersion('skv-1', 'skill-1', 'Skill One');
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: null,
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skv1],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveSkillVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('treats a null operation as add', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the skill version from the package with a null operation', () => {
-        expect(result[0].id).toBe(skv1.id);
-      });
-    });
-
-    describe('with duplicate skill versions across active packages', () => {
-      const skvOld = createSkillVersion(
-        'skv-1-old',
-        'skill-1',
-        'Skill One Old',
-      );
-      const skvNew = createSkillVersion(
-        'skv-1-new',
-        'skill-1',
-        'Skill One New',
-      );
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
-      >;
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-          {
-            distributedPackageId: 'dp-2',
-            packageId: packageId2,
-            operation: 'add',
-            distributedAt: '2024-01-02T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skvOld],
-            },
-          ]),
-          createDistribution('dist-2', '2024-01-02T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skvNew],
-            },
-          ]),
-        ]);
-
-        result = await repository.findActiveSkillVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('deduplicates skill versions by skillId', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('keeps the version from the most recently distributed package', () => {
-        expect(result[0].id).toBe(skvNew.id);
-      });
-    });
-
-    // A soft-deleted parent Skill can no longer be simulated at this layer:
-    // exclusion now happens through the DB-level join below (TypeORM omits
-    // rows whose joined soft-deletable relation is deleted) rather than an
-    // in-memory filter. The most a mocked query builder can prove is that the
-    // join guarding that exclusion is actually requested.
-    describe('SQL shape', () => {
-      const skv1 = createSkillVersion('skv-1', 'skill-1', 'Skill One');
-
-      beforeEach(async () => {
-        seedActivePackages([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          createDistribution('dist-1', '2024-01-01T00:00:00Z', [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [skv1],
-            },
-          ]),
-        ]);
-
-        await repository.findActiveSkillVersionsByTarget(
-          organizationId,
-          targetId,
-        );
-      });
-
-      it('joins the parent skill to exclude soft-deleted skills', () => {
-        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
-          'version.skill',
-          'skill',
-        );
-      });
-    });
-  });
-
-  describe('findActiveStandardVersionsByTargetAndPackages', () => {
-    describe('with a non-empty packageIds array', () => {
-      const sv1 = {
-        id: createStandardVersionId('sv-1'),
-        standardId: createStandardId('std-1'),
-        name: 'Standard One',
-        slug: 'standard-one',
-        description: 'Description for Standard One',
-        version: 1,
-        gitCommit: undefined,
-        userId: createUserId('author-1'),
-        scope: null,
-      };
-      let result: Awaited<
-        ReturnType<
-          typeof repository.findActiveStandardVersionsByTargetAndPackages
-        >
-      >;
-
-      beforeEach(async () => {
-        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            renderModes: [],
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          {
-            id: createDistributionId('dist-1'),
-            organizationId,
-            authorId: createUserId('author-1'),
-            status: DistributionStatus.success,
-            target: {
-              id: targetId,
-              name: 'default',
-              path: '/',
-              gitRepoId: 'git-repo-1' as never,
-            },
-            distributedPackages: [
-              {
-                id: createDistributedPackageId('dp-1'),
-                distributionId: createDistributionId('dist-1'),
-                packageId: packageId1,
-                operation: 'add',
-                standardVersions: [sv1],
-                recipeVersions: [],
-                skillVersions: [],
-              },
-            ],
-            createdAt: '2024-01-01T00:00:00Z',
-            renderModes: [],
-            source: 'cli',
-          },
-        ]);
-
-        result = await repository.findActiveStandardVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [packageId1],
-        );
-      });
-
-      it('returns the standard version for the requested package', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the correct standard version id', () => {
-        expect(result[0].id).toBe(sv1.id);
-      });
-
-      it('filters distributed packages by the requested package ids', () => {
-        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-          'distributedPackage.packageId IN (:...packageIds)',
-          { packageIds: [packageId1] },
-        );
-      });
-    });
-
-    describe('with an empty packageIds array', () => {
-      let result: Awaited<
-        ReturnType<
-          typeof repository.findActiveStandardVersionsByTargetAndPackages
-        >
-      >;
-
-      beforeEach(async () => {
-        result = await repository.findActiveStandardVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [],
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      // An empty `IN (...)` list is a SQL syntax error; the guard must
-      // short-circuit before any query is built.
-      it('does not execute a query', () => {
-        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('findActiveCommandVersionsByTargetAndPackages', () => {
-    describe('with a non-empty packageIds array', () => {
-      const rv1 = {
-        id: createCommandVersionId('rv-1'),
-        recipeId: createCommandId('recipe-1'),
-        name: 'Recipe One',
-        slug: 'recipe-one',
-        content: 'Content for Recipe One',
-        version: 1,
-        userId: null,
-      };
-      let result: Awaited<
-        ReturnType<
-          typeof repository.findActiveCommandVersionsByTargetAndPackages
-        >
-      >;
-
-      beforeEach(async () => {
-        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            renderModes: [],
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          {
-            id: createDistributionId('dist-1'),
-            organizationId,
-            authorId: createUserId('author-1'),
-            status: DistributionStatus.success,
-            target: {
-              id: targetId,
-              name: 'default',
-              path: '/',
-              gitRepoId: 'git-repo-1' as never,
-            },
-            distributedPackages: [
-              {
-                id: createDistributedPackageId('dp-1'),
-                distributionId: createDistributionId('dist-1'),
-                packageId: packageId1,
-                operation: 'add',
-                standardVersions: [],
-                recipeVersions: [rv1],
-                skillVersions: [],
-              },
-            ],
-            createdAt: '2024-01-01T00:00:00Z',
-            renderModes: [],
-            source: 'cli',
-          },
-        ]);
-
-        result = await repository.findActiveCommandVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [packageId1],
-        );
-      });
-
-      it('returns the command version for the requested package', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the correct command version id', () => {
-        expect(result[0].id).toBe(rv1.id);
-      });
-
-      it('filters distributed packages by the requested package ids', () => {
-        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-          'distributedPackage.packageId IN (:...packageIds)',
-          { packageIds: [packageId1] },
-        );
-      });
-    });
-
-    describe('with an empty packageIds array', () => {
-      let result: Awaited<
-        ReturnType<
-          typeof repository.findActiveCommandVersionsByTargetAndPackages
-        >
-      >;
-
-      beforeEach(async () => {
-        result = await repository.findActiveCommandVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [],
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not execute a query', () => {
-        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('findActiveSkillVersionsByTargetAndPackages', () => {
-    describe('with a non-empty packageIds array', () => {
-      const skv1 = {
-        id: createSkillVersionId('skv-1'),
-        skillId: createSkillId('skill-1'),
-        version: 1,
-        userId: createUserId('author-1'),
-        name: 'Skill One',
-        slug: 'skill-one',
-        description: 'Description for Skill One',
-        prompt: '',
-      };
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTargetAndPackages>
-      >;
-
-      beforeEach(async () => {
-        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
-          {
-            distributedPackageId: 'dp-1',
-            packageId: packageId1,
-            operation: 'add',
-            renderModes: [],
-            distributedAt: '2024-01-01T00:00:00Z',
-          },
-        ]);
-
-        mockQueryBuilder.getMany.mockResolvedValue([
-          {
-            id: createDistributionId('dist-1'),
-            organizationId,
-            authorId: createUserId('author-1'),
-            status: DistributionStatus.success,
-            target: {
-              id: targetId,
-              name: 'default',
-              path: '/',
-              gitRepoId: 'git-repo-1' as never,
-            },
-            distributedPackages: [
-              {
-                id: createDistributedPackageId('dp-1'),
-                distributionId: createDistributionId('dist-1'),
-                packageId: packageId1,
-                operation: 'add',
-                standardVersions: [],
-                recipeVersions: [],
-                skillVersions: [skv1],
-              },
-            ],
-            createdAt: '2024-01-01T00:00:00Z',
-            renderModes: [],
-            source: 'cli',
-          },
-        ]);
-
-        result = await repository.findActiveSkillVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [packageId1],
-        );
-      });
-
-      it('returns the skill version for the requested package', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns the correct skill version id', () => {
-        expect(result[0].id).toBe(skv1.id);
-      });
-
-      it('filters distributed packages by the requested package ids', () => {
-        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-          'distributedPackage.packageId IN (:...packageIds)',
-          { packageIds: [packageId1] },
-        );
-      });
-    });
-
-    describe('with an empty packageIds array', () => {
-      let result: Awaited<
-        ReturnType<typeof repository.findActiveSkillVersionsByTargetAndPackages>
-      >;
-
-      beforeEach(async () => {
-        result = await repository.findActiveSkillVersionsByTargetAndPackages(
-          organizationId,
-          targetId,
-          [],
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not execute a query', () => {
-        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
-      });
-    });
-  });
-
   describe('findActiveVersionsByTarget', () => {
     describe('with active packages', () => {
       const sv1 = {
@@ -1533,12 +650,12 @@ describe('DistributionRepository', () => {
         userId: createUserId('author-1'),
         scope: null,
       };
-      const rv1 = {
+      const cv1 = {
         id: createCommandVersionId('rv-1'),
-        recipeId: createCommandId('recipe-1'),
-        name: 'Recipe One',
-        slug: 'recipe-one',
-        content: 'Content for Recipe One',
+        recipeId: createCommandId('command-1'),
+        name: 'Command One',
+        slug: 'command-one',
+        content: 'Content for Command One',
         version: 1,
         userId: null,
       };
@@ -1586,7 +703,7 @@ describe('DistributionRepository', () => {
                 packageId: packageId1,
                 operation: 'add',
                 standardVersions: [sv1],
-                recipeVersions: [rv1],
+                recipeVersions: [cv1],
                 skillVersions: [skv1],
               },
             ],
@@ -1607,7 +724,7 @@ describe('DistributionRepository', () => {
       });
 
       it('returns the active command versions', () => {
-        expect(result.commandVersions).toEqual([rv1]);
+        expect(result.commandVersions).toEqual([cv1]);
       });
 
       it('returns the active skill versions', () => {
@@ -1618,6 +735,30 @@ describe('DistributionRepository', () => {
       // DISTINCT ON query once per artifact type.
       it('runs the DISTINCT ON query only once for all three artifact types', () => {
         expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
+      });
+
+      it('joins the parent skill to exclude soft-deleted skills', () => {
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'version.skill',
+          'skill',
+        );
+      });
+    });
+
+    describe('with a non-empty packageIds array', () => {
+      beforeEach(async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        await repository.findActiveVersionsByTarget(organizationId, targetId, [
+          packageId1,
+        ]);
+      });
+
+      it('filters distributed packages by the requested package ids', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'distributedPackage.packageId IN (:...packageIds)',
+          { packageIds: [packageId1] },
+        );
       });
     });
 
@@ -1763,7 +904,7 @@ describe('DistributionRepository', () => {
     describe('with deployed artifacts across packages', () => {
       const standardId1 = createStandardId('std-1');
       const standardId2 = createStandardId('std-2');
-      const commandId1 = createCommandId('recipe-1');
+      const commandId1 = createCommandId('command-1');
       const skillId1 = createSkillId('skill-1');
 
       let result: Awaited<
@@ -1808,8 +949,8 @@ describe('DistributionRepository', () => {
                 {
                   id: createCommandVersionId('rv-1'),
                   recipeId: commandId1,
-                  name: 'Recipe One',
-                  slug: 'recipe-one',
+                  name: 'Command One',
+                  slug: 'command-one',
                   content: 'content',
                   version: 1,
                   userId: null,
@@ -1841,7 +982,7 @@ describe('DistributionRepository', () => {
         expect(result.standardIds).toEqual([standardId1, standardId2]);
       });
 
-      it('returns recipe IDs', () => {
+      it('returns command IDs', () => {
         expect(result.recipeIds).toEqual([commandId1]);
       });
 
@@ -1970,7 +1111,7 @@ describe('DistributionRepository', () => {
         expect(result.standardIds).toEqual([]);
       });
 
-      it('returns empty recipe IDs', () => {
+      it('returns empty command IDs', () => {
         expect(result.recipeIds).toEqual([]);
       });
 
@@ -2088,7 +1229,7 @@ describe('DistributionRepository', () => {
     };
     type CommandVersionRowRaw = {
       distributedPackageId: string;
-      recipeId: CommandId;
+      commandId: CommandId;
       name: string;
       slug: string;
       version: number;
@@ -2114,10 +1255,10 @@ describe('DistributionRepository', () => {
         .mockResolvedValueOnce(skillRows);
     };
 
-    describe('with standards and recipes across multiple targets', () => {
+    describe('with standards and commands across multiple targets', () => {
       const standardId1 = createStandardId('std-1');
       const standardId2 = createStandardId('std-2');
-      const commandId1 = createCommandId('recipe-1');
+      const commandId1 = createCommandId('command-1');
 
       let result: OutdatedDeploymentsByTarget[];
 
@@ -2158,9 +1299,9 @@ describe('DistributionRepository', () => {
           [
             {
               distributedPackageId: 'dp-1',
-              recipeId: commandId1,
-              name: 'Recipe One',
-              slug: 'recipe-one',
+              commandId: commandId1,
+              name: 'Command One',
+              slug: 'command-one',
               version: 3,
             },
           ],
@@ -2196,12 +1337,12 @@ describe('DistributionRepository', () => {
         expect(target1!.standards[0].deployedVersion).toBe(2);
       });
 
-      it('sets correct recipe artifactId for first target', () => {
+      it('sets correct command artifactId for first target', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.recipes[0].artifactId).toBe(commandId1);
       });
 
-      it('sets correct recipe deployedVersion for first target', () => {
+      it('sets correct command deployedVersion for first target', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.recipes[0].deployedVersion).toBe(3);
       });
@@ -2211,7 +1352,7 @@ describe('DistributionRepository', () => {
         expect(target2!.standards[0].artifactId).toBe(standardId2);
       });
 
-      it('includes no recipes for second target', () => {
+      it('includes no commands for second target', () => {
         const target2 = result.find((r) => r.targetId === targetId2);
         expect(target2!.recipes).toHaveLength(0);
       });
