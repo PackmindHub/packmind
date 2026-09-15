@@ -180,8 +180,10 @@ describe('RemovePackageFromTargetsUseCase', () => {
       targetIds,
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
       mockPackageService.findByIdInOrganization.mockResolvedValue(null);
+
+      await useCase.execute(command).catch(() => undefined);
     });
 
     it('throws PackageNotFoundError', async () => {
@@ -192,9 +194,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
     // A package outside the caller's organization resolves to null just like
     // an unknown one, so the caller cannot tell the two apart.
-    it('scopes the lookup to the caller organization', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow();
-
+    it('scopes the lookup to the caller organization', () => {
       expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
         packageId,
         organizationId,

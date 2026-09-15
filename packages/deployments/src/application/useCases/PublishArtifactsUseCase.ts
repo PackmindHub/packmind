@@ -892,35 +892,23 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async hydrateInstalledArtifacts(
     installed: ArtifactVersions,
   ): Promise<ArtifactVersions> {
-    const standardIdsMissingRules = [
-      ...new Set(
-        installed.standardVersions
-          .filter((sv) => sv.rules == null)
-          .map((sv) => sv.standardId),
-      ),
-    ];
-    const skillVersionIdsMissingFiles = installed.skillVersions
+    const versionIdsMissingRules = installed.standardVersions
+      .filter((sv) => sv.rules == null)
+      .map((sv) => sv.id);
+
+    const versionIdsMissingFiles = installed.skillVersions
       .filter((sv) => sv.files === undefined)
       .map((sv) => sv.id);
-    const [latestStandardVersionsWithRules, hydratedSkillVersions] =
-      await Promise.all([
-        standardIdsMissingRules.length > 0
-          ? this.standardsPort.getLatestStandardVersionsWithRules(
-              standardIdsMissingRules,
-            )
-          : Promise.resolve<StandardVersion[]>([]),
-        skillVersionIdsMissingFiles.length > 0
-          ? this.skillsPort.getSkillVersionsByIds(skillVersionIdsMissingFiles)
-          : Promise.resolve<SkillVersion[]>([]),
-      ]);
-    const missingRulesByStandardId = new Map(
-      latestStandardVersionsWithRules.map((sv) => [
-        sv.standardId,
-        sv.rules ?? [],
-      ]),
+
+    const [hydratedStandards, hydratedSkills] = await Promise.all([
+      this.standardsPort.getStandardVersionsByIds(versionIdsMissingRules),
+      this.skillsPort.getSkillVersionsByIds(versionIdsMissingFiles),
+    ]);
+    const rulesByVersionId = new Map(
+      hydratedStandards.map((sv) => [sv.id, sv.rules ?? []]),
     );
-    const missingFilesByVersionId = new Map(
-      hydratedSkillVersions.map((sv) => [sv.id, sv.files ?? []]),
+    const filesByVersionId = new Map(
+      hydratedSkills.map((sv) => [sv.id, sv.files ?? []]),
     );
 
     return {
@@ -928,15 +916,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       standardVersions: installed.standardVersions.map((sv) =>
         sv.rules != null
           ? sv
-          : {
-              ...sv,
-              rules: missingRulesByStandardId.get(sv.standardId) ?? [],
-            },
+          : { ...sv, rules: rulesByVersionId.get(sv.id) ?? [] },
       ),
       skillVersions: installed.skillVersions.map((sv) =>
         sv.files !== undefined
           ? sv
-          : { ...sv, files: missingFilesByVersionId.get(sv.id) ?? [] },
+          : { ...sv, files: filesByVersionId.get(sv.id) ?? [] },
       ),
     };
   }

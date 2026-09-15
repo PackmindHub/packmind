@@ -516,7 +516,7 @@ describe('PublishPackagesUseCase', () => {
   describe('when a package belongs to another organization', () => {
     let command: PublishPackagesCommand;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       mockPackageService.getPackagesByIdsInOrganization.mockRejectedValue(
         new PackageNotFoundError(packageId),
       );
@@ -527,6 +527,8 @@ describe('PublishPackagesUseCase', () => {
         packageIds: [packageId],
         targetIds: [targetId],
       };
+
+      await useCase.execute(command).catch(() => undefined);
     });
 
     it('throws PackageNotFoundError', async () => {
@@ -535,19 +537,21 @@ describe('PublishPackagesUseCase', () => {
       );
     });
 
-    it('resolves no artifact version', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow();
-
+    it('resolves no command version', () => {
       expect(mockCommandsPort.getLatestCommandVersions).not.toHaveBeenCalled();
+    });
+
+    it('resolves no standard version', () => {
       expect(
         mockStandardsPort.getLatestStandardVersions,
       ).not.toHaveBeenCalled();
+    });
+
+    it('resolves no skill version', () => {
       expect(mockSkillsPort.getLatestSkillVersions).not.toHaveBeenCalled();
     });
 
-    it('publishes nothing', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow();
-
+    it('publishes nothing', () => {
       expect(mockDeploymentPort.publishArtifacts).not.toHaveBeenCalled();
     });
   });

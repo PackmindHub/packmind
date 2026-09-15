@@ -101,7 +101,6 @@ describe('PublishArtifactsUseCase', () => {
 
     mockStandardsPort = {
       getStandardVersionsByIds: jest.fn().mockResolvedValue([]),
-      getLatestStandardVersionsWithRules: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockSkillsPort = {
@@ -1637,12 +1636,13 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
-        newStandardVersion,
-      ]);
-      mockStandardsPort.getLatestStandardVersionsWithRules.mockResolvedValue([
-        { ...previousStandardVersion, rules: mockRules },
-      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockImplementation(
+        async (ids) =>
+          [
+            newStandardVersion,
+            { ...previousStandardVersion, rules: mockRules },
+          ].filter((version) => ids.includes(version.id)),
+      );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -1668,9 +1668,9 @@ describe('PublishArtifactsUseCase', () => {
     it('loads the rules of every rules-less standard in a single call', async () => {
       await useCase.execute(command);
 
-      expect(
-        mockStandardsPort.getLatestStandardVersionsWithRules,
-      ).toHaveBeenCalledWith([previousStandardVersion.standardId]);
+      expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith([
+        previousStandardVersion.id,
+      ]);
     });
 
     it('passes standards with loaded rules to renderArtifacts', async () => {
@@ -1704,6 +1704,117 @@ describe('PublishArtifactsUseCase', () => {
         );
 
       expect(standardsWithoutRules).toHaveLength(0);
+    });
+  });
+
+  describe('when a previously deployed standard is behind its latest version', () => {
+    let command: PublishArtifactsCommand;
+    let deployedStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let latestStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const standardId = createStandardId('pinned-standard');
+    const deployedStandardVersionId = createStandardVersionId(uuidv4());
+    const latestStandardVersionId = createStandardVersionId(uuidv4());
+    const deployedRules: Rule[] = [
+      {
+        id: createRuleId(uuidv4()),
+        content: 'Rule as written in version 1',
+        standardVersionId: deployedStandardVersionId,
+      },
+    ];
+    const latestRules: Rule[] = [
+      {
+        id: createRuleId(uuidv4()),
+        content: 'Rule as rewritten in version 2',
+        standardVersionId: latestStandardVersionId,
+      },
+    ];
+
+    beforeEach(() => {
+      // Active on the target, and returned by the distribution repository
+      // without its rules relation.
+      deployedStandardVersion = standardVersionFactory({
+        id: deployedStandardVersionId,
+        standardId,
+        name: 'Pinned Standard',
+        slug: 'pinned-standard',
+        version: 1,
+        rules: undefined,
+      });
+
+      // Latest version of the same standard, which nobody asked to deploy.
+      latestStandardVersion = standardVersionFactory({
+        id: latestStandardVersionId,
+        standardId,
+        name: 'Pinned Standard',
+        slug: 'pinned-standard',
+        version: 2,
+        rules: latestRules,
+      });
+
+      gitRepo = gitRepoFactory();
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      command = {
+        userId,
+        organizationId,
+        commandVersionIds: [],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockStandardsPort.getStandardVersionsByIds.mockImplementation(
+        async (ids) =>
+          [
+            { ...deployedStandardVersion, rules: deployedRules },
+            latestStandardVersion,
+          ].filter((version) => ids.includes(version.id)),
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        deployedStandardVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/standards/pinned-standard.md',
+            content: 'standard content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    it('looks the rules up by standard version id', async () => {
+      await useCase.execute(command);
+
+      expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith([
+        deployedStandardVersionId,
+      ]);
+    });
+
+    it('renders the deployed version with its own rules', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            standardVersions: [
+              { ...deployedStandardVersion, rules: deployedRules },
+            ],
+          }),
+        }),
+      );
     });
   });
 

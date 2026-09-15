@@ -322,14 +322,6 @@ export class StandardsAdapter
       .getLatestRulesByStandardId(id);
   }
 
-  getLatestStandardVersionsWithRules(
-    standardIds: StandardId[],
-  ): Promise<StandardVersion[]> {
-    return this.services
-      .getStandardVersionService()
-      .getLatestVersionsWithRulesByStandardIds(standardIds);
-  }
-
   getRulesByStandardId(id: StandardId): Promise<Rule[]> {
     return this._getRulesByStandardId.getRulesByStandardId(id);
   }
