@@ -280,9 +280,25 @@ export function repositoryLockProfile(
   if (!providersWithToken.has(repo.repo.providerId)) {
     return 'all-no-app-token';
   }
-  // No-app-token resolved at the provider level; only check per-install
-  // in-progress status here. A drifted location is "in progress" when its
-  // last distribution status is in_progress.
+  // No-app-token resolved at the provider level; what is left is whether the
+  // drift is already being dealt with.
+  return repositoryDriftIsWaiting(repo) ? 'all-in-progress' : 'none';
+}
+
+/**
+ * Every drifted install of this repository is mid-distribution.
+ *
+ * Lifted out of `repositoryLockProfile` because it answers a question that is
+ * not about locks: a repository in this state is waiting, which is a state of
+ * its own with its own mark and its own count in the band above the list. The
+ * profile keeps it as one of its answers, since a run already going is also a
+ * reason the app has nothing to offer.
+ *
+ * The provider token is deliberately not read here. Whether Packmind can push
+ * on its own decides how the drift gets repaired, not whether a repair is
+ * already under way.
+ */
+export function repositoryDriftIsWaiting(repo: RepositoryDrift): boolean {
   let drifted = 0;
   let inProgress = 0;
   for (const t of repo.targets) {
@@ -297,8 +313,7 @@ export function repositoryLockProfile(
       }
     }
   }
-  if (drifted > 0 && inProgress === drifted) return 'all-in-progress';
-  return 'none';
+  return drifted > 0 && inProgress === drifted;
 }
 
 /**

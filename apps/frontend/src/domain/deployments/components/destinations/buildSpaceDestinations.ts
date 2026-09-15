@@ -1,6 +1,8 @@
+import { MarketplaceDistributionStatus } from '@packmind/types';
 import { marketplacePluginCount } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview';
 import {
   repositoryBehindInstallCount,
+  repositoryDriftIsWaiting,
   repositoryFailedInstallCount,
   sortRepositoriesByDriftFirst,
 } from '../redesign/selectors/buildRepositoryDriftOverview';
@@ -28,6 +30,18 @@ export type RepositoryDestination = {
   behind: number;
   /** Distributions whose last run failed. Inside `behind`, not beside it. */
   failed: number;
+  /**
+   * Behind, and the run that puts it right is already going: every drifted
+   * distribution here is `in_progress`.
+   *
+   * Carried on the destination rather than worked out where it is drawn,
+   * because three places need the same answer and they have to agree: the mark
+   * on the row, the count in the band above the list, and whether the batch
+   * offers to send this again. It used to be worked out in the row alone, and
+   * the band counted it as plain drift under an orange mark the rows did not
+   * wear.
+   */
+  waiting: boolean;
   /** Packages that land here, for the search. Sorted, unique. */
   packageNames: string[];
   repository: RepositoryDrift;
@@ -55,6 +69,12 @@ export type MarketplaceDestination = {
    * pull request and the failure reason.
    */
   failed: number;
+  /**
+   * Behind, and already republished: every outdated plugin here rides an open
+   * sync pull request and goes live the moment someone merges it. The same
+   * state as a repository mid-distribution, reached the other way.
+   */
+  waiting: boolean;
   packageNames: string[];
   marketplace: MarketplaceDrift;
 };
@@ -75,31 +95,48 @@ export type Destination = RepositoryDestination | MarketplaceDestination;
  * bug in it, and two similar conditions kept in step by hand is how that
  * happens.
  */
-export type DestinationStatus = 'aligned' | 'behind' | 'failed';
+export type DestinationStatus = 'aligned' | 'behind' | 'waiting' | 'failed';
 
-/** The two the filter band offers. `aligned` is what neither of them selects. */
+/** The three the filter band offers. `aligned` is what none of them selects. */
 export type DriftStatus = Exclude<DestinationStatus, 'aligned'>;
 
 export function destinationDriftStatus(
   destination: Destination,
 ): DestinationStatus {
   if (destination.failed > 0) return 'failed';
-  if (destination.behind > 0) return 'behind';
-  return 'aligned';
+  if (destination.behind === 0) return 'aligned';
+  return destination.waiting ? 'waiting' : 'behind';
 }
+
+/**
+ * The colour of each state, beside the states themselves so a dot, a band and
+ * a summary line cannot drift apart on what orange means.
+ *
+ * The same table `buildPackageDestinations` keeps for the Context surface, and
+ * on the same four states: the two surfaces are read minutes apart and a mark
+ * that means "already going" on one of them cannot mean anything else on the
+ * other.
+ */
+export const STATUS_TONE: Readonly<Record<DestinationStatus, string>> = {
+  aligned: 'green.500',
+  behind: 'orange.500',
+  waiting: 'blue.300',
+  failed: 'red.500',
+};
 
 export type ReachSummary = {
   destinations: number;
   repositories: number;
   marketplaces: number;
-  /** Destinations that are not aligned, whichever of the two ways. */
+  /** Destinations that are not aligned, whichever of the three ways. */
   needingWork: number;
   /**
    * Destinations, per status, which is the grain the filter band counts in: a
-   * pill's number is the number of rows clicking it leaves on screen. The two
+   * pill's number is the number of rows clicking it leaves on screen. The three
    * add up to `needingWork`.
    */
   behindDestinations: number;
+  waitingDestinations: number;
   failedDestinations: number;
   /** Distributions behind, not destinations: one repository holds several. */
   behind: number;
@@ -140,6 +177,7 @@ export function buildSpaceDestinations(
     branch: repository.branch,
     behind: repositoryBehindInstallCount(repository),
     failed: repositoryFailedInstallCount(repository),
+    waiting: repositoryDriftIsWaiting(repository),
     packageNames: uniqueSorted(
       repository.targets.flatMap((target) =>
         target.packages.map((pkg) => pkg.name),
@@ -160,6 +198,17 @@ export function buildSpaceDestinations(
       name: marketplace.name,
       behind: marketplacePluginCount(marketplace),
       failed: 0,
+      /*
+       * `marketplace.plugins` holds the outdated ones and nothing else, so
+       * every one of them riding an open pull request is the whole of this
+       * catalog's drift already sent.
+       */
+      waiting:
+        marketplace.plugins.length > 0 &&
+        marketplace.plugins.every(
+          (plugin) =>
+            plugin.lastStatus === MarketplaceDistributionStatus.pending_merge,
+        ),
       packageNames: uniqueSorted(marketplace.publishedPackageNames),
       marketplace,
     }));
@@ -178,6 +227,7 @@ export function destinationReachSummary(
   let repositories = 0;
   let marketplaces = 0;
   let behindDestinations = 0;
+  let waitingDestinations = 0;
   let failedDestinations = 0;
   let behind = 0;
   let failed = 0;
@@ -187,6 +237,7 @@ export function destinationReachSummary(
     else marketplaces += 1;
     const status = destinationDriftStatus(destination);
     if (status === 'behind') behindDestinations += 1;
+    else if (status === 'waiting') waitingDestinations += 1;
     else if (status === 'failed') failedDestinations += 1;
     behind += destination.behind;
     failed += destination.failed;
@@ -203,8 +254,9 @@ export function destinationReachSummary(
      * not include: the rail said everything was aligned above a row saying it
      * was not.
      */
-    needingWork: behindDestinations + failedDestinations,
+    needingWork: behindDestinations + waitingDestinations + failedDestinations,
     behindDestinations,
+    waitingDestinations,
     failedDestinations,
     behind,
     failed,
@@ -222,7 +274,7 @@ export function destinationReachSummary(
  * that made the difference worth keeping.
  */
 export function isBatchDistributable(destination: Destination): boolean {
-  return destination.behind > 0;
+  return destination.behind > 0 && !destination.waiting;
 }
 
 export type DestinationMatch = {

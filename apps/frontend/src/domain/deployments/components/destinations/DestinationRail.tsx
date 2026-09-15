@@ -22,6 +22,7 @@ import {
   destinationDriftStatus,
   isBatchDistributable,
   searchDestinations,
+  STATUS_TONE,
   type Destination,
   type DestinationMatch,
   type DriftStatus,
@@ -128,13 +129,11 @@ export function DestinationRail({
   const active = useMemo(
     () =>
       new Set(
-        [...statuses].filter((status) =>
-          status === 'failed'
-            ? summary.failedDestinations > 0
-            : summary.behindDestinations > 0,
+        [...statuses].filter(
+          (status) => destinationsInStatus(summary, status) > 0,
         ),
       ),
-    [statuses, summary.behindDestinations, summary.failedDestinations],
+    [statuses, summary],
   );
   const filtering = active.size > 0;
   /*
@@ -425,7 +424,12 @@ function ReachRow({
           justifyContent="center"
           aria-hidden
         >
-          <PMBox width="8px" height="8px" borderRadius="full" bg="green.500" />
+          <PMBox
+            width="8px"
+            height="8px"
+            borderRadius="full"
+            bg={STATUS_TONE.aligned}
+          />
         </PMBox>
         <PMText fontSize="xs" color="secondary" truncate>
           {summary.destinations} destination{destinationWord} on the latest
@@ -435,36 +439,44 @@ function ReachRow({
     );
   }
 
-  return (
-    <PMHStack gap={1.5} align="center" marginTop={2} minW={0}>
-      {/*
-        Drift then Failed, which is the order the pane's own control puts them
-        in. Two controls a quarter of a screen apart filtering the same three
-        states should not read left to right in opposite directions.
+  /*
+    Drift, Waiting then Failed, which is the order the pane's own control puts
+    them in. Two controls a quarter of a screen apart filtering the same states
+    should not read left to right in opposite directions.
 
-        A pill appears only while it has something to count, where the pane keeps
-        a `Failed 0` segment standing. That is the difference the two forms are
-        for: a segmented bar with a hole in it is broken, and a loose chip that
-        empties the list when clicked is a dead control.
-      */}
-      {summary.behindDestinations > 0 && (
+    A pill appears only while it has something to count, where the pane keeps a
+    `Failed 0` segment standing. That is the difference the two forms are for: a
+    segmented bar with a hole in it is broken, and a loose chip that empties the
+    list when clicked is a dead control.
+  */
+  const shown = DRIFT_STATUSES.map(
+    (status) => [status, destinationsInStatus(summary, status)] as const,
+  ).filter(([, count]) => count > 0);
+
+  return (
+    /*
+      Wrapping, for the one arrangement that does not fit: three pills and the
+      way out of them is wider than 320px, and a truncated `Drift` is worse than
+      a second line that appears while a lens is on.
+    */
+    <PMHStack
+      gap={1.5}
+      rowGap={1}
+      flexWrap="wrap"
+      align="center"
+      marginTop={2}
+      minW={0}
+    >
+      {shown.map(([status, count], index) => (
         <StatusPill
-          status="behind"
-          count={summary.behindDestinations}
-          isActive={active.has('behind')}
-          onToggle={() => onToggle('behind')}
-          isFirst
+          key={status}
+          status={status}
+          count={count}
+          isActive={active.has(status)}
+          onToggle={() => onToggle(status)}
+          isFirst={index === 0}
         />
-      )}
-      {summary.failedDestinations > 0 && (
-        <StatusPill
-          status="failed"
-          count={summary.failedDestinations}
-          isActive={active.has('failed')}
-          onToggle={() => onToggle('failed')}
-          isFirst={summary.behindDestinations === 0}
-        />
-      )}
+      ))}
       {active.size > 0 && (
         /*
           The only thing on screen saying rows are missing, and the way back from
@@ -494,34 +506,57 @@ function ReachRow({
 }
 
 /**
- * The wording each pill carries, and the mark the rows it selects wear.
+ * The wording each pill carries.
  *
- * `Drift` and `Failed` with the count after them, and the orange and red of the
- * dots, are lifted from `PackageFilterControl`: the pane beside this rail
- * filters its own rows by the same three states, and two controls a quarter of a
- * screen apart calling one state two different words is worse than either word
- * is good. `Drift` is now the only word for it anywhere: rows, tooltips and
- * badges say drifted, whatever the destination is and whatever repairs it.
+ * `Drift` and `Failed` with the count after them are lifted from
+ * `PackageFilterControl`: the pane beside this rail filters its own rows by the
+ * same states, and two controls a quarter of a screen apart calling one state
+ * two different words is worse than either word is good. `Drift` is now the
+ * only word for it anywhere: rows, tooltips and badges say drifted, whatever
+ * the destination is and whatever repairs it.
+ *
+ * `Waiting` is the third, and it is why this record no longer carries a colour.
+ * The mark comes from `STATUS_TONE`, the one table the rows read too, because
+ * the band saying orange over a row wearing blue is exactly what a reader
+ * noticed: `Drift 3` counted a repository mid-distribution and two catalogs
+ * riding an open pull request, and headed all three with the mark only one of
+ * them wore.
+ *
+ * The order here is the order the band lays them out in, and the order the
+ * sentence under an emptied list reads them in.
  */
 const STATUS_PILL: Readonly<
-  Record<
-    DriftStatus,
-    { label: string; dot: string; sentence: string; reading: string }
-  >
+  Record<DriftStatus, { label: string; sentence: string; reading: string }>
 > = {
   behind: {
     label: 'Drift',
-    dot: 'orange.500',
     sentence: 'drifted',
-    reading: 'with something drifted and nothing failed',
+    reading: 'with drift nobody has sent yet',
+  },
+  waiting: {
+    label: 'Waiting',
+    sentence: 'waiting',
+    reading: 'whose drift is already on its way',
   },
   failed: {
     label: 'Failed',
-    dot: 'red.500',
     sentence: 'failed',
     reading: 'whose last distribution failed',
   },
 };
+
+/** The band's order, read off the record so the two cannot disagree. */
+const DRIFT_STATUSES = Object.keys(STATUS_PILL) as DriftStatus[];
+
+/** A summary read by status, so the band and the lens count the same rows. */
+function destinationsInStatus(
+  summary: ReachSummary,
+  status: DriftStatus,
+): number {
+  if (status === 'behind') return summary.behindDestinations;
+  if (status === 'waiting') return summary.waitingDestinations;
+  return summary.failedDestinations;
+}
 
 /**
  * One state, its count, and the lens onto it.
@@ -552,7 +587,7 @@ function StatusPill({
    */
   isFirst: boolean;
 }>) {
-  const { label, dot, reading } = STATUS_PILL[status];
+  const { label, reading } = STATUS_PILL[status];
 
   return (
     <PMBox
@@ -598,7 +633,12 @@ function StatusPill({
         justifyContent="center"
         aria-hidden
       >
-        <PMBox width="8px" height="8px" borderRadius="full" bg={dot} />
+        <PMBox
+          width="8px"
+          height="8px"
+          borderRadius="full"
+          bg={STATUS_TONE[status]}
+        />
       </PMBox>
       {/*
         The accent carries "on", which is what the design system reserves it for
@@ -673,10 +713,13 @@ function NoStatusMatches({
    * Off the record and not off the set, so the sentence reads in the order the
    * pills are laid out rather than in the order they happened to be clicked.
    */
-  const states = (Object.keys(STATUS_PILL) as DriftStatus[])
-    .filter((status) => active.has(status))
-    .map((status) => STATUS_PILL[status].sentence);
-  const named = states.length === 2 ? states.join(' or ') : states[0];
+  const states = DRIFT_STATUSES.filter((status) => active.has(status)).map(
+    (status) => STATUS_PILL[status].sentence,
+  );
+  const named =
+    states.length > 1
+      ? `${states.slice(0, -1).join(', ')} or ${states[states.length - 1]}`
+      : states[0];
 
   return (
     <PMVStack gap={1} align="start" padding={4}>
@@ -988,6 +1031,13 @@ function destinationState(
   providersWithToken: Set<GitProviderId>,
   isProvidersLoading: boolean,
 ): DestinationState {
+  /*
+   * One mark for the whole function, off the status the band counts by. Each
+   * branch used to name its own colour, which is how a row came to wear blue
+   * under a pill wearing orange.
+   */
+  const dot = STATUS_TONE[destinationDriftStatus(destination)];
+
   if (destination.kind === 'marketplace') {
     const count = destination.behind;
     const plural = count === 1 ? '' : 's';
@@ -1005,7 +1055,7 @@ function destinationState(
       return {
         line: `${plugins} ${pluginWord} distributed`,
         tone: 'secondary',
-        dot: 'green.500',
+        dot,
         tooltip: `${plugins} ${pluginWord} distributed here, all matching their source`,
       };
     }
@@ -1017,25 +1067,21 @@ function destinationState(
      * offering to publish it again is offering to do it twice.
      */
     const plugins = destination.marketplace.plugins;
-    const inFlight = plugins.filter(
-      (plugin) =>
-        plugin.lastStatus === MarketplaceDistributionStatus.pending_merge,
-    ).length;
     const failedPlugins = plugins.filter(
       (plugin) => plugin.lastStatus === MarketplaceDistributionStatus.failure,
     ).length;
 
     /*
-     * The whole destination is in flight, which is the marketplace peer of a
+     * The whole destination is waiting, which is the marketplace peer of a
      * repository whose every drifted install is mid-distribution: blue rather
      * than orange, because orange asks for a hand that nothing here needs.
      * A partial count stays orange, since the rest of it does.
      */
-    if (inFlight === count) {
+    if (destination.waiting) {
       return {
         line: `${count} plugin${plural} drifted`,
         tone: 'warning',
-        dot: 'blue.300',
+        dot,
         tooltip: `${count} plugin${plural} awaiting merge`,
       };
     }
@@ -1050,7 +1096,7 @@ function destinationState(
     return {
       line: `${count} plugin${plural} drifted${failedClause}`,
       tone: 'warning',
-      dot: 'orange.500',
+      dot,
       tooltip:
         failedPlugins > 0
           ? `${count} distributed plugin${plural} whose package has changed since, ${failedPlugins} whose last publish failed`
@@ -1077,7 +1123,7 @@ function destinationState(
        */
       line: `${failed} distribution${failed === 1 ? '' : 's'} failed`,
       tone: 'error',
-      dot: 'red.500',
+      dot,
       tooltip: `${failed} distribution${failed === 1 ? '' : 's'} failed`,
     };
   }
@@ -1086,7 +1132,7 @@ function destinationState(
     return {
       line: `${packages} ${packageWord} aligned`,
       tone: 'secondary',
-      dot: 'green.500',
+      dot,
       tooltip: `${packages} ${packageWord} aligned`,
     };
   }
@@ -1100,13 +1146,17 @@ function destinationState(
   return {
     line: `${drifted} ${drifted === 1 ? 'package' : 'packages'} drifted`,
     tone: 'warning',
-    dot: lock === 'all-in-progress' ? 'blue.300' : 'orange.500',
-    tooltip:
-      lock === 'all-no-app-token'
+    dot,
+    /*
+     * The run first, then the way it will have to be run. A repository with no
+     * app token whose drift is already going is waiting like any other, and
+     * naming the mechanism there would answer a question nobody is asking yet.
+     */
+    tooltip: destination.waiting
+      ? `${behind} distribution${behind === 1 ? '' : 's'} in progress`
+      : lock === 'all-no-app-token'
         ? `${behind} distribution${behind === 1 ? '' : 's'} drifted, all via packmind install`
-        : lock === 'all-in-progress'
-          ? `${behind} distribution${behind === 1 ? '' : 's'} in progress`
-          : `${drifted} of ${packages} ${packageWord} drifted`,
+        : `${drifted} of ${packages} ${packageWord} drifted`,
   };
 }
 
