@@ -18,6 +18,9 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
   createSpaceId,
+  CreatePackageReleaseCommand,
+  ListPackageReleasesCommand,
+  GetPackageReleaseCommand,
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -48,6 +51,9 @@ import {
   UPDATE_PACKAGE_MUTATION_KEY,
   getDashboardKpiKey,
   getDashboardNonLiveKey,
+  LIST_PACKAGE_RELEASES_KEY,
+  getListPackageReleasesKey,
+  getGetPackageReleaseKey,
 } from '../queryKeys';
 
 export const useListCommandDeploymentsQuery = (recipeId: CommandId) => {
@@ -263,6 +269,91 @@ export const useGetPackageByIdQuery = (
       isOrgMatch &&
       isSpaceMatch,
   });
+};
+
+export const getPackageReleasesQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+) => ({
+  queryKey: getListPackageReleasesKey(
+    spaceId || '',
+    organizationId || '',
+    packageId || '',
+  ),
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch package releases');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch package releases');
+    }
+    if (!packageId) {
+      throw new Error('Package ID is required to fetch package releases');
+    }
+    return deploymentsGateways.listPackageReleases({
+      organizationId,
+      spaceId,
+      packageId,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!packageId,
+});
+
+export const useListPackageReleasesQuery = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+) => {
+  return useQuery(
+    getPackageReleasesQueryOptions(organizationId, spaceId, packageId),
+  );
+};
+
+export const getPackageReleaseQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+  version: string | undefined,
+) => ({
+  queryKey: getGetPackageReleaseKey(
+    spaceId || '',
+    organizationId || '',
+    packageId || '',
+    version || '',
+  ),
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch package release');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch package release');
+    }
+    if (!packageId) {
+      throw new Error('Package ID is required to fetch package release');
+    }
+    if (!version) {
+      throw new Error('Version is required to fetch package release');
+    }
+    return deploymentsGateways.getPackageRelease({
+      organizationId,
+      spaceId,
+      packageId,
+      version,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!packageId && !!version,
+});
+
+export const useGetPackageReleaseQuery = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+  version: string | undefined,
+) => {
+  return useQuery(
+    getPackageReleaseQueryOptions(organizationId, spaceId, packageId, version),
+  );
 };
 
 export const useGetDashboardKpiQuery = (spaceId: string) => {
@@ -697,6 +788,32 @@ export const useCreatePackageMutation = () => {
     },
     onError: (error) => {
       console.error('Error creating package:', error);
+    },
+  });
+};
+
+export const CREATE_PACKAGE_RELEASE_MUTATION_KEY = 'createPackageRelease';
+export const useCreatePackageReleaseMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CREATE_PACKAGE_RELEASE_MUTATION_KEY],
+    mutationFn: async (
+      command: Omit<CreatePackageReleaseCommand, 'userId'>,
+    ) => {
+      return deploymentsGateways.createPackageRelease(command);
+    },
+    onSuccess: async (data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: getListPackageReleasesKey(
+          variables.spaceId,
+          variables.organizationId,
+          variables.packageId,
+        ),
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating package release:', error);
     },
   });
 };
