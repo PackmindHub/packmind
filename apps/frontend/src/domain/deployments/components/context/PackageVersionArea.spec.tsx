@@ -14,7 +14,18 @@ import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQuerie
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageReleasesQuery: vi.fn(),
+  useCreatePackageReleaseMutation: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
 }));
+
+vi.mock(
+  '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
+  () => ({
+    useAnalytics: () => ({ track: vi.fn() }),
+  }),
+);
 
 const packageId = createPackageId('pkg-1');
 const spaceId = createSpaceId('space-1');
@@ -28,7 +39,7 @@ const renderComponent = ({
     outdatedComponents: [],
   },
   isLoading = false,
-  onCreateRelease = vi.fn(),
+  componentsCount = 1,
 } = {}) => {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
     data: {
@@ -44,12 +55,10 @@ const renderComponent = ({
         packageId={packageId}
         spaceId={spaceId}
         organizationId={organizationId}
-        onCreateRelease={onCreateRelease}
+        componentsCount={componentsCount}
       />
     </UIProvider>,
   );
-
-  return { onCreateRelease };
 };
 
 describe('PackageVersionArea', () => {
@@ -192,8 +201,8 @@ describe('PackageVersionArea', () => {
     expect(screen.queryByText(/→/)).not.toBeInTheDocument();
   });
 
-  it('clicking the enabled action calls onCreateRelease once', async () => {
-    const { onCreateRelease } = renderComponent({
+  it('clicking the enabled action opens the release drawer', async () => {
+    renderComponent({
       readiness: {
         currentVersion: null,
         verdict: 'ready',
@@ -202,11 +211,13 @@ describe('PackageVersionArea', () => {
       },
     });
 
+    expect(screen.queryByLabelText(/version/i)).not.toBeInTheDocument();
+
     await userEvent.click(
       screen.getByRole('button', { name: /create a release/i }),
     );
 
-    expect(onCreateRelease).toHaveBeenCalledTimes(1);
+    expect(await screen.findByLabelText(/version/i)).toBeInTheDocument();
   });
 
   it('loading — renders without throwing when data is undefined', () => {
@@ -221,7 +232,7 @@ describe('PackageVersionArea', () => {
           packageId={packageId}
           spaceId={spaceId}
           organizationId={organizationId}
-          onCreateRelease={vi.fn()}
+          componentsCount={1}
         />
       </UIProvider>,
     );

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PMBadge, PMButton, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import { OrganizationId, PackageId, SpaceId } from '@packmind/types';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
@@ -5,15 +6,25 @@ import {
   PACKAGE_MESSAGES,
   getReleaseVerdictMessage,
 } from '../../constants/messages';
+import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 
+/**
+ * A package's version, and the one action that changes it.
+ *
+ * The drawer is owned here rather than by the pane above: the readiness this
+ * area already reads is exactly what the form needs, and one mountable element
+ * is what a later flag can wrap whole.
+ */
 export function PackageVersionArea(
   props: Readonly<{
     packageId: PackageId;
     spaceId: SpaceId;
     organizationId: OrganizationId;
-    onCreateRelease: () => void;
+    componentsCount: number;
   }>,
 ) {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const { data, isLoading } = useListPackageReleasesQuery(
     props.organizationId,
     props.spaceId,
@@ -42,7 +53,7 @@ export function PackageVersionArea(
         <PMButton
           variant="secondary"
           size="sm"
-          onClick={props.onCreateRelease}
+          onClick={() => setIsDrawerOpen(true)}
           disabled={!isReady}
         >
           Create a release
@@ -65,6 +76,16 @@ export function PackageVersionArea(
           ))}
         </PMVStack>
       )}
+
+      <CreatePackageReleaseDrawer
+        packageId={props.packageId}
+        spaceId={props.spaceId}
+        organizationId={props.organizationId}
+        readiness={readiness}
+        componentsCount={props.componentsCount}
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+      />
     </PMVStack>
   );
 }

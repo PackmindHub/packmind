@@ -2092,3 +2092,80 @@ out of scope to fix here (D-022).
 `verdict !== 'ready'`, taken from the single messages file of D-011. Do not wrap the
 action in `PMTooltip`. Do not render any reason text when the verdict is `ready`. Do not
 change the existing `headerActions.update` tooltip in `ContextPackagePane`.
+
+---
+
+## D-042 — The form refuses client-side; a refused cut does not currently reach it, and that is its own unit
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-12`, `AC-13`, `AC-14`, `AC-15`, `AC-20`, `D-009`, `D-011`, `D-019`, `D-021`
+
+**Decision.** The release form validates the submitted version **on the client**, with
+`validatePackageReleaseVersion` from `@packmind/types`, and renders the D-011 sentence
+for whichever of `malformed`, `not_greater` or `not_an_increment` comes back. It does
+not depend on the server's refusal to satisfy any of AC-12 to AC-15.
+
+Separately, and recorded here rather than fixed in passing: **a server refusal currently
+loses its reason in transit.** Repairing that is its own unit, with its own criterion.
+
+**Reasoning.** *Why the form can refuse on its own.* `packageReleaseVersionRules.ts`
+already exports a synchronous `validatePackageReleaseVersion(submitted, currentVersion)`
+returning `PackageReleaseRefusal | null`, built from the same parser and comparator the
+server validates with. That is D-009's single source of truth doing exactly the job it
+was created for: one module, both ends. AC-12's `1,2,3`, AC-13's lower version, AC-14's
+equal version and AC-15's well-formed non-increment are all decidable from the submitted
+string and the current version, both of which the form holds. Nothing about those four
+criteria needs the network.
+
+*The transit defect.* `PackageReleaseRefusedError` becomes
+`BadRequestException({ code, currentVersion })`, whose body carries no `message` key.
+`isServerErrorResponse` requires `typeof data.message === 'string'`, so
+`ApiService.handleError` declines the `PackmindError` branch, falls through to
+`response.statusText`, and returns a plain `Error('API Error: Bad Request')`. The `code`
+and the `currentVersion` are discarded inside the shared API client, before any
+component runs. No existing call site in `apps/frontend` reads a structured field off an
+error body — every one reads `.serverError.data.message` or `.serverError.status` — so
+this feature is the first to need it, and the defect has never been exercised.
+
+*Why it is not folded into the form unit.* It is a change to the API's response body and
+to how the shared client narrows errors — a different project, a different blast radius,
+and a criterion of its own ("a refused cut reaches the form carrying its code"). Folding
+it in would put a change every gateway call in the app depends on inside a unit judged by
+a drawer's rendering, where a regression in the shared client would not be what the exit
+criterion is looking at.
+
+*What is degraded until then, stated plainly.* The one refusal the client cannot
+pre-empt is the lost race of AC-20 — current version moves under the form, and the server
+answers `not_greater` for a version that was valid when it was offered. Until the wire is
+repaired, that user sees a generic failure rather than "Version must be greater than
+1.2.1". AC-20 is already verified server-side in S1 and is not an S2 criterion, so this
+degrades a rare path without leaving a criterion unmet. `package_release_refused` (D-021)
+therefore carries an accurate `refusalReason` for every client-side refusal and cannot
+yet carry one for a server-side refusal.
+
+**Rejected.**
+
+- Loosening `isServerErrorResponse` to stop requiring `message` — changes how every error
+  in the application is classified, so that one feature can read two fields. Bodies that
+  today become `Error('API Error: …')` would start becoming `PackmindError` with an
+  `undefined` message, across every domain.
+- Reading the raw axios error in the gateway, bypassing `ApiService` — the client has
+  already discarded the body by the time anything downstream runs, so this means the
+  release gateway stops using the shared client that every other call uses.
+- Validating only on the server and surfacing whatever comes back — AC-12 requires the
+  field to keep `1,2,3` after a refusal, which is client-side behaviour, and D-019
+  already decided validation runs on submit in the form.
+- Doing the wire repair inside the form unit "while we are here" — see above; it is a
+  shared-client change judged by a drawer test.
+
+**Constrains implementation.** The form calls
+`validatePackageReleaseVersion(submitted, currentVersion ?? '0.0.0')` on submit and does
+not call the mutation when it returns a refusal. It renders the sentence for that code
+from the single messages file of D-011, and **keeps the field's value** (D-019). It must
+not re-derive the three rules. A failure from the mutation itself is surfaced with the
+generic failure the neighbouring drawers use, not with an invented sentence — until the
+unit that repairs the wire lands.
