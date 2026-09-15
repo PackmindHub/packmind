@@ -2045,3 +2045,50 @@ the fix is one clause, which is what makes this worth accepting rather than pre-
 **Constrains implementation.** Keep the predicate as `error.code === '23505'`, rethrowing
 anything else. If a second unique index is ever added to `package_releases`, this entry is
 the one to revisit, and the narrowing becomes required rather than optional.
+
+---
+
+## D-041 — The gate's reason is visible text, not a tooltip
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-15`
+- supersedes: D-018 (partial — how the disabled action carries its reason)
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-9`, `D-011`, `D-018`, `D-029`
+
+**Decision.** When the verdict is not `ready`, the version area renders the D-011
+sentence as **visible text beside the disabled action**. The action is not wrapped in a
+`PMTooltip`, and the reason is not carried by `title` or `aria-label` alone.
+
+**Reasoning.** D-018 said "disabled with its reason as a tooltip", written before anyone
+had the button in front of them. A disabled button receives no pointer events, so a
+tooltip anchored to it never opens on hover — which means the sentence AC-2, AC-3 and
+AC-9 each quote would be, in practice, unreachable. The criteria are written from the
+user's side: the package "shows the action disabled with 'Add at least one component'".
+A sentence nobody can surface does not satisfy that, however correct the string is.
+
+The second reason is that a tooltip's content is only in the DOM while it is open, so no
+frontend test can assert the sentence without driving a hover that a disabled control
+will not emit. That would leave the three criteria verifiable only by eye, in the one
+session whose entire job is to make them observable.
+
+The codebase does contain the pattern this rejects — `ContextPackagePane` wraps a
+disabled `PMButton` in `PMTooltip label={headerActions.update.lockTooltip}`. That is
+precedent for the spelling, not evidence that it works; it has the same defect and is
+out of scope to fix here (D-022).
+
+**Rejected.**
+
+- A tooltip, as D-018 wrote it — unreachable on a disabled control, and unassertable.
+- Keeping the button enabled and refusing on click so the tooltip works — turns a
+  disabled affordance into a trap, and AC-2 and AC-3 both say *disabled*.
+- A wrapper span around the disabled button to catch hover — restores the tooltip at the
+  cost of a nonstandard control; the sentence is short and belongs on screen anyway.
+- Visible text *and* a tooltip carrying the same string — the sentence would appear twice
+  in the accessibility tree and twice in any `getByText`.
+
+**Constrains implementation.** The reason renders as visible text whenever
+`verdict !== 'ready'`, taken from the single messages file of D-011. Do not wrap the
+action in `PMTooltip`. Do not render any reason text when the verdict is `ready`. Do not
+change the existing `headerActions.update` tooltip in `ContextPackagePane`.

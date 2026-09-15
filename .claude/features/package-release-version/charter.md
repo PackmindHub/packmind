@@ -122,15 +122,15 @@ others do not secretly assume a skill.
 
 | id | criterion | user-visible | verified by |
 |----|-----------|--------------|-------------|
-| AC-1 | A package that has never been released shows "Not released yet" and a "Create a release" action | yes | |
-| AC-2 | A package with no components shows the action disabled with "Add at least one component" | yes | |
-| AC-3 | A released package identical to its last release shows the action disabled with "Nothing has changed since 0.1.0" | yes | |
-| AC-4 | A released package one of whose pinned components has a newer version shows it is behind on that component — v4 pinned, v5 available — and offers a release | yes | |
+| AC-1 | A package that has never been released shows "Not released yet" and a "Create a release" action | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "never released does not render the sentinel" |
+| AC-2 | A package with no components shows the action disabled with "Add at least one component" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty package", for the sentence and the disabled action; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_components when package has never been released", for the rule |
+| AC-3 | A released package identical to its last release shows the action disabled with "Nothing has changed since 0.1.0" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release"; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_change when package is identical to its latest release" |
+| AC-4 | A released package one of whose pinned components has a newer version shows it is behind on that component — v4 pinned, v5 available — and offers a release | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "behind on a component", which asserts the name, v4 and v5 together and the action still enabled; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when a pinned component has a newer version available" |
 | AC-5 | Renaming a released package enables the action; renaming it back disables it again | yes | |
 | AC-6 | Editing the description of a released package enables the action | yes | |
 | AC-7 | A title edit that differs from the released title only by surrounding whitespace, or only by case, leaves the action disabled | yes | |
 | AC-8 | Adding a component enables the action, removing one enables it, and adding then removing the same one leaves it disabled | yes | |
-| AC-9 | Removing the last component leaves the action disabled with "Add at least one component", not with a change reason — empty beats changed | yes | |
+| AC-9 | Removing the last component leaves the action disabled with "Add at least one component", not with a change reason — empty beats changed | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty beats changed", which asserts the change sentence is absent; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_components when package HAS been released" |
 | AC-10 | One change of any kind is enough: a package whose component list is back to identical but whose title differs can be released | yes | |
 | AC-11 | The release form offers exactly the three next increments — 0.1.0 offers 0.1.1, 0.2.0 and 1.0.0 — and is pre-filled with the patch one | yes | |
 | AC-12 | A submitted version that does not follow X.Y.Z is refused with "Version must follow X.Y.Z", and the form keeps what was typed, so `1,2,3` can be corrected | yes | |
