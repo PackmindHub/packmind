@@ -60,6 +60,9 @@ describe('PackageReleaseRepository', () => {
   let commandVersion: CommandVersion;
   let standardVersion: StandardVersion;
   let skillVersion: SkillVersion;
+  let command: Command;
+  let standard: Standard;
+  let skill: Skill;
 
   const releaseOf = (version: string) => ({
     id: createPackageReleaseId(uuidv4()),
@@ -78,9 +81,9 @@ describe('PackageReleaseRepository', () => {
   beforeAll(async () => {
     await fixture.initialize();
 
-    const command: Command = commandFactory({ spaceId: pkg.spaceId });
-    const standard: Standard = standardFactory({ spaceId: pkg.spaceId });
-    const skill: Skill = skillFactory({ spaceId: pkg.spaceId });
+    command = commandFactory({ spaceId: pkg.spaceId });
+    standard = standardFactory({ spaceId: pkg.spaceId });
+    skill = skillFactory({ spaceId: pkg.spaceId });
 
     await fixture.datasource.getRepository(PackageSchema).save(pkg);
     await fixture.datasource.getRepository(CommandSchema).save(command);
@@ -279,6 +282,60 @@ describe('PackageReleaseRepository', () => {
       expect(found.recipeVersions[0].id).toEqual(commandVersion.id);
       expect(found.standardVersions).toHaveLength(1);
       expect(found.standardVersions[0].id).toEqual(standardVersion.id);
+    });
+  });
+
+  describe('when a newer version of a pinned component is published', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('4.0.0'), pinnedVersions());
+
+      await fixture.datasource
+        .getRepository(CommandVersionSchema)
+        .save(commandVersionFactory({ recipeId: command.id, version: 4 }));
+      await fixture.datasource
+        .getRepository(StandardVersionSchema)
+        .save(standardVersionFactory({ standardId: standard.id, version: 3 }));
+      await fixture.datasource
+        .getRepository(SkillVersionSchema)
+        .save(skillVersionFactory({ skillId: skill.id, version: 6 }));
+    });
+
+    it('keeps the pinned command version when found by package id and version', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
+
+      expect(found?.recipeVersions).toHaveLength(1);
+      expect(found?.recipeVersions[0].id).toEqual(commandVersion.id);
+      expect(found?.recipeVersions[0].version).toEqual(3);
+    });
+
+    it('keeps the pinned standard version when found by package id and version', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
+
+      expect(found?.standardVersions).toHaveLength(1);
+      expect(found?.standardVersions[0].id).toEqual(standardVersion.id);
+      expect(found?.standardVersions[0].version).toEqual(2);
+    });
+
+    it('keeps the pinned skill version when found by package id and version', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
+
+      expect(found?.skillVersions).toHaveLength(1);
+      expect(found?.skillVersions[0].id).toEqual(skillVersion.id);
+      expect(found?.skillVersions[0].version).toEqual(5);
+    });
+
+    it('keeps the pinned versions when found by package id', async () => {
+      const [found] = await repository.findByPackageId(pkg.id);
+
+      expect(found.recipeVersions).toHaveLength(1);
+      expect(found.recipeVersions[0].id).toEqual(commandVersion.id);
+      expect(found.recipeVersions[0].version).toEqual(3);
+      expect(found.standardVersions).toHaveLength(1);
+      expect(found.standardVersions[0].id).toEqual(standardVersion.id);
+      expect(found.standardVersions[0].version).toEqual(2);
+      expect(found.skillVersions).toHaveLength(1);
+      expect(found.skillVersions[0].id).toEqual(skillVersion.id);
+      expect(found.skillVersions[0].version).toEqual(5);
     });
   });
 });

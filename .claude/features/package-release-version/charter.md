@@ -138,7 +138,7 @@ others do not secretly assume a skill.
 | AC-14 | A submitted version equal to the current one is refused with "Version must be greater than 1.2.0" | yes | |
 | AC-15 | A submitted version that is well-formed and greater but not one of the three next increments — 0.5.0 after 0.1.0 — is refused | yes | |
 | AC-16 | A release pins the latest version of each component it holds: releasing 0.2.0 over a 0.1.0 that pinned v4 and v3 records v16 and v45, and the package then lists both versions | yes | |
-| AC-17 | Publishing a newer version of a pinned component does not change what an existing release pins: 0.1.0 still carries "Work with Jest" v4 | yes | |
+| AC-17 | Publishing a newer version of a pinned component does not change what an existing release pins: 0.1.0 still carries "Work with Jest" v4 | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*newer version'` |
 | AC-18 | A component deleted after a release is still shown, at its pinned version, when browsing that release; a release cut afterwards excludes it | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*deleted'` — first clause only; the second is a consequence of the package's component list, see D-037 |
 | AC-19 | A member of the organization who did not create the package can release it — no ownership or role check refuses them | yes | |
 | AC-20 | Two releases of the same version cut concurrently: the first is written and the second is refused because that version already exists | yes | |
