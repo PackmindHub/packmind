@@ -47,6 +47,7 @@ describe('StandardVersionService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByStandardVersionId: jest.fn(),
       findByStandardVersionIds: jest.fn(),
       findByIdInSpace: jest.fn(),

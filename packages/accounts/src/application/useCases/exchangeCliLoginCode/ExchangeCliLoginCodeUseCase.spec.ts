@@ -32,6 +32,7 @@ describe('ExchangeCliLoginCodeUseCase', () => {
       add: jest.fn(),
       findByCode: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       deleteExpired: jest.fn(),

@@ -31,6 +31,7 @@ describe('SkillService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -59,6 +60,7 @@ describe('SkillService', () => {
     skillFileRepository = {
       add: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findBySkillVersionId: jest.fn(),
