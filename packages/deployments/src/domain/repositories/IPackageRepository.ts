@@ -17,6 +17,15 @@ export interface IPackageRepository extends IRepository<Package> {
   findBySpaceId(spaceId: SpaceId): Promise<Package[]>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Package[]>;
   findById(id: PackageId): Promise<Package | null>;
+  /**
+   * Tenancy-scoped sibling of `findByIds`, for ids that came from a caller.
+   * Ids outside the organization resolve to nothing instead of leaking the
+   * owning organization's package.
+   */
+  findByIdsInOrganization(
+    ids: PackageId[],
+    organizationId: OrganizationId,
+  ): Promise<Package[]>;
   findBySlugsWithArtefacts(
     slugs: string[],
     organizationId: OrganizationId,

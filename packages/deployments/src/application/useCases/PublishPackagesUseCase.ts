@@ -17,11 +17,13 @@ import {
   createDistributedPackageId,
   createPackagesDeploymentId,
   Distribution,
+  OrganizationId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { PackageService } from '../services/PackageService';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 
 const origin = 'PublishPackagesUseCase';
 
@@ -65,14 +67,17 @@ export class PublishPackagesUseCase implements IPublishPackages {
     });
 
     const packagesById = new Map(
-      (await this.packageService.getPackagesByIds(command.packageIds)).map(
-        (pkg) => [pkg.id, pkg],
-      ),
+      (
+        await this.packageService.getPackagesByIdsInOrganization(
+          command.packageIds,
+          command.organizationId as OrganizationId,
+        )
+      ).map((pkg) => [pkg.id, pkg]),
     );
     const packages: Package[] = command.packageIds.map((packageId) => {
       const pkg = packagesById.get(packageId);
       if (!pkg) {
-        throw new Error(`Package with ID ${packageId} not found`);
+        throw new PackageNotFoundError(packageId);
       }
       return pkg;
     });

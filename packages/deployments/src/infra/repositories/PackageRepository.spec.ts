@@ -2,11 +2,13 @@ import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  createOrganizationId,
   createPackageId,
   createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
+  OrganizationId,
   Package,
   PackageSlugInSpace,
   SpaceId,
@@ -14,6 +16,8 @@ import {
   StandardId,
 } from '@packmind/types';
 import { StandardSchema, standardsSchemas } from '@packmind/standards';
+import { SpaceSchema } from '@packmind/spaces';
+import { spaceFactory } from '@packmind/spaces/test';
 import { GitCommitSchema } from '@packmind/git';
 
 import { PackageRepository } from './PackageRepository';
@@ -37,6 +41,7 @@ describe('PackageRepository', () => {
   const fixture = createTestDatasourceFixture([
     GitCommitSchema,
     ...standardsSchemas,
+    SpaceSchema,
     PackageSchema,
     PackageSkillsSchema,
     PackageStandardsSchema,
@@ -321,6 +326,103 @@ describe('PackageRepository', () => {
       it('returns no package without querying', async () => {
         const spy = countQueries();
         await repository.findByIds([]);
+        expect(spy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('findByIdsInOrganization', () => {
+    const orgAId = createOrganizationId(uuidv4());
+    const orgBId = createOrganizationId(uuidv4());
+
+    const saveSpace = async (
+      spaceId: SpaceId,
+      organizationId: OrganizationId,
+      slug: string,
+    ) =>
+      fixture.datasource
+        .getRepository(SpaceSchema)
+        .save(spaceFactory({ id: spaceId, slug, organizationId }));
+
+    beforeEach(async () => {
+      await saveSpace(spaceAId, orgAId, 'space-a');
+      await saveSpace(spaceBId, orgBId, 'space-b');
+    });
+
+    describe('when the package belongs to the organization', () => {
+      let owned: Awaited<ReturnType<typeof savePackage>>;
+      let standardInA: Awaited<ReturnType<typeof saveStandard>>;
+      let result: Package[];
+
+      beforeEach(async () => {
+        owned = await savePackage('frontend-pack', spaceAId);
+        standardInA = await saveStandard('standard-a', spaceAId);
+        await linkStandard(owned.id, standardInA.id);
+
+        result = await repository.findByIdsInOrganization([owned.id], orgAId);
+      });
+
+      it('returns it', () => {
+        expect(result.map((pkg) => pkg.id)).toEqual([owned.id]);
+      });
+
+      it('fills its artifact ids like the unscoped lookup does', () => {
+        expect(result[0].standards).toEqual([standardInA.id]);
+      });
+    });
+
+    describe('when the package belongs to another organization', () => {
+      it('returns nothing', async () => {
+        const foreign = await savePackage('backend-pack', spaceBId);
+
+        expect(
+          await repository.findByIdsInOrganization([foreign.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when ids from two organizations are requested together', () => {
+      it('keeps only the caller organization package', async () => {
+        const owned = await savePackage('frontend-pack', spaceAId);
+        const foreign = await savePackage('backend-pack', spaceBId);
+
+        const result = await repository.findByIdsInOrganization(
+          [owned.id, foreign.id],
+          orgAId,
+        );
+
+        expect(result.map((pkg) => pkg.id)).toEqual([owned.id]);
+      });
+    });
+
+    describe('when the package space has no row', () => {
+      it('returns nothing, since no organization owns it', async () => {
+        const orphan = await savePackage(
+          'orphan-pack',
+          createSpaceId(uuidv4()),
+        );
+
+        expect(
+          await repository.findByIdsInOrganization([orphan.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when the package was soft deleted', () => {
+      it('excludes it', async () => {
+        const pkg = await savePackage('frontend-pack', spaceAId);
+        await packageRepo.softDelete(pkg.id);
+
+        expect(
+          await repository.findByIdsInOrganization([pkg.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when no id is given', () => {
+      it('returns no package without querying', async () => {
+        const spy = countQueries();
+        await repository.findByIdsInOrganization([], orgAId);
         expect(spy).not.toHaveBeenCalled();
       });
     });

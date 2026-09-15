@@ -64,7 +64,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     mockPackageService = {
-      getPackagesByIds: jest.fn(),
+      getPackagesByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     mockDistributedPackageRepository = {
@@ -129,7 +129,9 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         renderModes: [],
       });
 
-      mockPackageService.getPackagesByIds.mockResolvedValue([pkg]);
+      mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+        pkg,
+      ]);
       mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         {
           id: createCommandVersionId(uuidv4()),
