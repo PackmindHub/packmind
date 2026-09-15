@@ -11,13 +11,16 @@ import axios from 'axios';
 
 // Mock axios
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+// An AxiosInstance is callable and mostly data, so it is mocked by hand rather
+// than with mockInterface: only the verbs this suite drives are stubbed.
 const mockAxiosInstance = {
   get: jest.fn(),
   post: jest.fn(),
   put: jest.fn(),
   delete: jest.fn(),
-} as unknown as jest.Mocked<AxiosInstance>;
+} as Partial<jest.Mocked<AxiosInstance>> as jest.Mocked<AxiosInstance>;
 
 describe('GitlabProvider', () => {
   let gitlabProvider: GitlabProvider;
@@ -26,12 +29,7 @@ describe('GitlabProvider', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
-      (payload) =>
-        typeof payload === 'object' &&
-        payload !== null &&
-        (payload as { isAxiosError?: boolean }).isAxiosError === true,
-    );
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
     gitlabProvider = new GitlabProvider('test-token', '', mockLogger);
   });
 
