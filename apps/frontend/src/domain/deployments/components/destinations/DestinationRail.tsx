@@ -1080,7 +1080,13 @@ function destinationState(
     if (destination.waiting) {
       return {
         line: `${count} plugin${plural} drifted`,
-        tone: 'warning',
+        /*
+         * Not orange, which is the tone the other drifted rows print in. It is
+         * what the line means here that changed, not what it counts: orange
+         * asks for a hand, and this row is asking for nothing. The mark beside
+         * it says which of the two it is; the words no longer contradict it.
+         */
+        tone: 'secondary',
         dot,
         tooltip: `${count} plugin${plural} awaiting merge`,
       };
@@ -1145,7 +1151,7 @@ function destinationState(
   );
   return {
     line: `${drifted} ${drifted === 1 ? 'package' : 'packages'} drifted`,
-    tone: 'warning',
+    tone: destination.waiting ? 'secondary' : 'warning',
     dot,
     /*
      * The run first, then the way it will have to be run. A repository with no
