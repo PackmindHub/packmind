@@ -246,6 +246,46 @@ export class PackageRepository
     }
   }
 
+  override async findByIds(ids: PackageId[]): Promise<Package[]> {
+    const packages = await super.findByIds(ids);
+    if (packages.length === 0) return [];
+
+    const rows = await this.repository
+      .createQueryBuilder('package')
+      .select('package.id', 'package_id')
+      .addSelect(
+        'array_agg(DISTINCT pc.command_id) FILTER (WHERE pc.command_id IS NOT NULL)',
+        'recipes',
+      )
+      .addSelect(
+        'array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL)',
+        'standards',
+      )
+      .addSelect(
+        'array_agg(DISTINCT psk.skill_id) FILTER (WHERE psk.skill_id IS NOT NULL)',
+        'skills',
+      )
+      .leftJoin('package_commands', 'pc', 'pc.package_id = package.id')
+      .leftJoin('package_standards', 'ps', 'ps.package_id = package.id')
+      .leftJoin('package_skills', 'psk', 'psk.package_id = package.id')
+      .where('package.id IN (:...ids)', { ids: packages.map((pkg) => pkg.id) })
+      .groupBy('package.id')
+      .getRawMany<{
+        package_id: string;
+        recipes: CommandId[] | null;
+        standards: StandardId[] | null;
+        skills: SkillId[] | null;
+      }>();
+
+    const artifactsById = new Map(rows.map((row) => [row.package_id, row]));
+    return packages.map((pkg) => ({
+      ...pkg,
+      recipes: artifactsById.get(pkg.id)?.recipes ?? [],
+      standards: artifactsById.get(pkg.id)?.standards ?? [],
+      skills: artifactsById.get(pkg.id)?.skills ?? [],
+    }));
+  }
+
   override async findById(id: PackageId): Promise<Package | null> {
     this.logger.info('Finding package by ID', { packageId: id });
 

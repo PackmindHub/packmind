@@ -64,15 +64,18 @@ export class PublishPackagesUseCase implements IPublishPackages {
       organizationId: command.organizationId,
     });
 
-    // Fetch packages by their IDs
-    const packages: Package[] = [];
-    for (const packageId of command.packageIds) {
-      const pkg = await this.packageService.findById(packageId);
+    const packagesById = new Map(
+      (await this.packageService.getPackagesByIds(command.packageIds)).map(
+        (pkg) => [pkg.id, pkg],
+      ),
+    );
+    const packages: Package[] = command.packageIds.map((packageId) => {
+      const pkg = packagesById.get(packageId);
       if (!pkg) {
         throw new Error(`Package with ID ${packageId} not found`);
       }
-      packages.push(pkg);
-    }
+      return pkg;
+    });
 
     const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
       await Promise.all([

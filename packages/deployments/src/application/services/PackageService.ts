@@ -56,6 +56,29 @@ export class PackageService {
     }
   }
 
+  async getPackagesByIds(packageIds: PackageId[]): Promise<Package[]> {
+    this.logger.info('Getting packages by IDs', {
+      count: packageIds.length,
+    });
+
+    try {
+      const packages = await this.packageRepository.findByIds(packageIds);
+
+      this.logger.info('Packages retrieved by IDs successfully', {
+        requestedCount: packageIds.length,
+        foundCount: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to get packages by IDs', {
+        count: packageIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async getPackagesBySpaceId(spaceId: SpaceId): Promise<Package[]> {
     this.logger.info('Getting packages by space ID', {
       spaceId,
