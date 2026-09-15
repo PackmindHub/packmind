@@ -82,6 +82,7 @@ describe('UpdateRuleExampleUseCase', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByIdInSpace: jest.fn(),
       updateById: jest.fn(),
       findByRuleId: jest.fn(),

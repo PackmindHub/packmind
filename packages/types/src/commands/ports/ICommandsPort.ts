@@ -114,10 +114,16 @@ export interface ICommandsPort {
     allowedSpaceIds: SpaceId[],
   ): Promise<CommandVersion | null>;
 
+  getLatestCommandVersions(recipeIds: CommandId[]): Promise<CommandVersion[]>;
+
   /**
    * Get a recipe version by its ID
    */
   getCommandVersionById(id: string): Promise<CommandVersion | null>;
+
+  getCommandVersionsByIds(
+    commandVersionIds: CommandVersionId[],
+  ): Promise<CommandVersion[]>;
 
   /**
    * Update a recipe from UI with new content (creates new version)

@@ -7,10 +7,10 @@ import { Distribution } from '../Distribution';
 import { PackageId } from '../Package';
 
 /**
- * Command to publish recipes, standards, and skills artifacts to targets
+ * Command to publish commands, standards, and skills artifacts to targets
  */
 export type PublishArtifactsCommand = PackmindCommand & {
-  recipeVersionIds: CommandVersionId[];
+  commandVersionIds: CommandVersionId[];
   standardVersionIds: StandardVersionId[];
   skillVersionIds?: SkillVersionId[];
   targetIds: TargetId[];
@@ -28,7 +28,7 @@ export type PublishArtifactsResponse = {
 };
 
 /**
- * UseCase for publishing recipes, standards, and skills in a single unified operation
+ * UseCase for publishing commands, standards, and skills in a single unified operation
  */
 export type IPublishArtifactsUseCase = IUseCase<
   PublishArtifactsCommand,

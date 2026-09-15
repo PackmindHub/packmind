@@ -120,8 +120,11 @@ export class StandardVersionRepository
     });
 
     try {
-      const versions = await this.findByStandardId(standardId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const latestVersion = await this.repository.findOne({
+        where: { standardId },
+        order: { version: 'DESC' },
+        relations: ['gitCommit', 'rules'],
+      });
 
       if (latestVersion) {
         this.logger.info('Latest standard version found', {
@@ -141,7 +144,7 @@ export class StandardVersionRepository
         'Failed to find latest standard version by standard ID',
         {
           standardId,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;

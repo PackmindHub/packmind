@@ -78,6 +78,58 @@ export class CommandVersionService {
     }
   }
 
+  async getLatestCommandVersions(
+    recipeIds: CommandId[],
+  ): Promise<CommandVersion[]> {
+    this.logger.info('Getting latest recipe versions', {
+      count: recipeIds.length,
+    });
+
+    try {
+      const versions =
+        await this.commandVersionRepository.findLatestByCommandIds(recipeIds);
+
+      this.logger.info('Latest recipe versions retrieved successfully', {
+        requestedCount: recipeIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to get latest recipe versions', {
+        count: recipeIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getCommandVersionsByIds(
+    commandVersionIds: CommandVersionId[],
+  ): Promise<CommandVersion[]> {
+    this.logger.info('Getting recipe versions by IDs', {
+      count: commandVersionIds.length,
+    });
+
+    try {
+      const versions =
+        await this.commandVersionRepository.findByIds(commandVersionIds);
+
+      this.logger.info('Recipe versions retrieved by IDs successfully', {
+        requestedCount: commandVersionIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to get recipe versions by IDs', {
+        count: commandVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async getCommandVersion(
     recipeId: CommandId,
     version: number,

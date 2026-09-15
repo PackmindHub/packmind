@@ -197,11 +197,11 @@ export class DeploymentsGatewayApi
   publishCommands: NewGateway<IPublishCommands> = async ({
     organizationId,
     targetIds,
-    recipeVersionIds,
+    commandVersionIds,
   }: NewPackmindCommandBody<PublishCommandsCommand>) => {
     return this._api.post(
       `${this._endpoint}/${organizationId}/deployments/commands/publish`,
-      { targetIds, commandVersionIds: recipeVersionIds },
+      { targetIds, commandVersionIds },
     );
   };
 

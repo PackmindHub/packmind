@@ -326,7 +326,7 @@ export const useDeployCommandsMutation = () => {
       console.log('Publishing recipes to targets...');
       return deploymentsGateways.publishCommands({
         organizationId: organization.id,
-        recipeVersionIds: commandVersionIds,
+        commandVersionIds,
         targetIds,
       });
     },

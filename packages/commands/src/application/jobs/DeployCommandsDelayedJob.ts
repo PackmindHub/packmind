@@ -128,7 +128,7 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
         organizationId: input.organizationId,
         userId: createUserId('system'), // System user for automated background deployments
         targetIds: targetIdsToDeployTo,
-        recipeVersionIds: input.recipeVersionIds,
+        commandVersionIds: input.recipeVersionIds,
         standardVersionIds: [],
         packagesSlugs: [],
         packageIds: [],

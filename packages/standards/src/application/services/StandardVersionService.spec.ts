@@ -39,6 +39,7 @@ describe('StandardVersionService', () => {
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findLatestByStandardIds: jest.fn(),
+      findByIds: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
     };
 
@@ -46,6 +47,7 @@ describe('StandardVersionService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByStandardVersionId: jest.fn(),
       findByStandardVersionIds: jest.fn(),
       findByIdInSpace: jest.fn(),
@@ -400,14 +402,15 @@ describe('StandardVersionService', () => {
     });
   });
 
-  describe('getLatestVersionsWithRulesByStandardIds', () => {
+  describe('getLatestStandardVersions', () => {
     const firstStandardId = createStandardId(uuidv4());
     const secondStandardId = createStandardId(uuidv4());
 
     let firstVersion: StandardVersion;
     let secondVersion: StandardVersion;
+    let result: StandardVersion[];
 
-    beforeEach(() => {
+    beforeEach(async () => {
       firstVersion = standardVersionFactory({
         standardId: firstStandardId,
         version: 2,
@@ -416,33 +419,70 @@ describe('StandardVersionService', () => {
         standardId: secondStandardId,
         version: 1,
       });
+
+      (
+        standardVersionRepository.findLatestByStandardIds as jest.Mock
+      ).mockResolvedValue([firstVersion, secondVersion]);
+
+      result = await standardVersionService.getLatestStandardVersions([
+        firstStandardId,
+        secondStandardId,
+      ]);
     });
 
-    describe('when every standard has a version', () => {
+    it('returns the latest version of every standard', () => {
+      expect(result).toEqual([firstVersion, secondVersion]);
+    });
+
+    it('looks the versions up in a single call', () => {
+      expect(
+        standardVersionRepository.findLatestByStandardIds,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not look any rule up', () => {
+      expect(ruleRepository.findByStandardVersionIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getStandardVersionsByIds', () => {
+    let firstVersion: StandardVersion;
+    let secondVersion: StandardVersion;
+
+    beforeEach(() => {
+      firstVersion = standardVersionFactory({
+        standardId: createStandardId(uuidv4()),
+        version: 1,
+      });
+      secondVersion = standardVersionFactory({
+        standardId: createStandardId(uuidv4()),
+        version: 1,
+      });
+    });
+
+    describe('when every version exists', () => {
       let result: StandardVersion[];
       let firstRule: ReturnType<typeof ruleFactory>;
 
       beforeEach(async () => {
         firstRule = ruleFactory({ standardVersionId: firstVersion.id });
 
-        (
-          standardVersionRepository.findLatestByStandardIds as jest.Mock
-        ).mockResolvedValue([firstVersion, secondVersion]);
+        (standardVersionRepository.findByIds as jest.Mock).mockResolvedValue([
+          firstVersion,
+          secondVersion,
+        ]);
         (
           ruleRepository.findByStandardVersionIds as jest.Mock
         ).mockResolvedValue([firstRule]);
 
-        result =
-          await standardVersionService.getLatestVersionsWithRulesByStandardIds([
-            firstStandardId,
-            secondStandardId,
-          ]);
+        result = await standardVersionService.getStandardVersionsByIds([
+          firstVersion.id,
+          secondVersion.id,
+        ]);
       });
 
       it('looks the versions up in a single call', () => {
-        expect(
-          standardVersionRepository.findLatestByStandardIds,
-        ).toHaveBeenCalledTimes(1);
+        expect(standardVersionRepository.findByIds).toHaveBeenCalledTimes(1);
       });
 
       it('looks the rules up in a single call, for every returned version', () => {
@@ -465,18 +505,17 @@ describe('StandardVersionService', () => {
       });
     });
 
-    describe('when no standard has a version', () => {
+    describe('when no version exists', () => {
       let result: StandardVersion[];
 
       beforeEach(async () => {
-        (
-          standardVersionRepository.findLatestByStandardIds as jest.Mock
-        ).mockResolvedValue([]);
+        (standardVersionRepository.findByIds as jest.Mock).mockResolvedValue(
+          [],
+        );
 
-        result =
-          await standardVersionService.getLatestVersionsWithRulesByStandardIds([
-            firstStandardId,
-          ]);
+        result = await standardVersionService.getStandardVersionsByIds([
+          firstVersion.id,
+        ]);
       });
 
       it('returns nothing', () => {

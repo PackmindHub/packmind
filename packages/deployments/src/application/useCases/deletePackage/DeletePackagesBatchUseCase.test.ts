@@ -20,7 +20,7 @@ describe('DeletePackagesBatchUseCase', () => {
 
   beforeEach(() => {
     mockPackageService = {
-      findById: jest.fn(),
+      findByIdInOrganization: jest.fn(),
       deletePackage: jest.fn(),
       getPackagesBySpaceId: jest.fn(),
       getPackagesBySlugsWithArtefacts: jest.fn(),
@@ -57,7 +57,7 @@ describe('DeletePackagesBatchUseCase', () => {
         const package2 = packageFactory({ id: packageId2, spaceId });
         const package3 = packageFactory({ id: packageId3, spaceId });
 
-        mockPackageService.findById
+        mockPackageService.findByIdInOrganization
           .mockResolvedValueOnce(package1)
           .mockResolvedValueOnce(package2)
           .mockResolvedValueOnce(package3);
@@ -73,20 +73,31 @@ describe('DeletePackagesBatchUseCase', () => {
         await usecase.execute(command);
       });
 
-      it('calls findById for each package', () => {
-        expect(mockPackageService.findById).toHaveBeenCalledTimes(3);
+      it('calls findByIdInOrganization for each package', () => {
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledTimes(
+          3,
+        );
       });
 
-      it('looks up first package by id', () => {
-        expect(mockPackageService.findById).toHaveBeenCalledWith(packageId1);
+      it('scopes the first package lookup to the organization', () => {
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+          packageId1,
+          organizationId,
+        );
       });
 
-      it('looks up second package by id', () => {
-        expect(mockPackageService.findById).toHaveBeenCalledWith(packageId2);
+      it('scopes the second package lookup to the organization', () => {
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+          packageId2,
+          organizationId,
+        );
       });
 
-      it('looks up third package by id', () => {
-        expect(mockPackageService.findById).toHaveBeenCalledWith(packageId3);
+      it('scopes the third package lookup to the organization', () => {
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+          packageId3,
+          organizationId,
+        );
       });
 
       it('deletes all packages with the user id', () => {
@@ -119,7 +130,9 @@ describe('DeletePackagesBatchUseCase', () => {
       beforeEach(async () => {
         const existingPackage = packageFactory({ id: packageId, spaceId });
 
-        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          existingPackage,
+        );
         mockPackageService.deletePackages.mockResolvedValue();
 
         const command: DeletePackagesBatchCommand = {
@@ -133,7 +146,10 @@ describe('DeletePackagesBatchUseCase', () => {
       });
 
       it('looks up the package by id', () => {
-        expect(mockPackageService.findById).toHaveBeenCalledWith(packageId);
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+          packageId,
+          organizationId,
+        );
       });
 
       it('deletes the package with the user id', () => {
@@ -159,7 +175,7 @@ describe('DeletePackagesBatchUseCase', () => {
       beforeEach(() => {
         const package1 = packageFactory({ id: packageId1, spaceId });
 
-        mockPackageService.findById
+        mockPackageService.findByIdInOrganization
           .mockResolvedValueOnce(package1)
           .mockResolvedValueOnce(null);
 
@@ -179,11 +195,13 @@ describe('DeletePackagesBatchUseCase', () => {
         );
       });
 
-      it('calls findById for both packages', async () => {
+      it('calls findByIdInOrganization for both packages', async () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageService.findById).toHaveBeenCalledTimes(2);
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledTimes(
+          2,
+        );
       });
 
       it('does not call deletePackages', async () => {
@@ -213,7 +231,7 @@ describe('DeletePackagesBatchUseCase', () => {
           spaceId: wrongSpaceId,
         });
 
-        mockPackageService.findById
+        mockPackageService.findByIdInOrganization
           .mockResolvedValueOnce(package1)
           .mockResolvedValueOnce(package2);
 
@@ -233,11 +251,13 @@ describe('DeletePackagesBatchUseCase', () => {
         );
       });
 
-      it('calls findById for both packages', async () => {
+      it('calls findByIdInOrganization for both packages', async () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageService.findById).toHaveBeenCalledTimes(2);
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledTimes(
+          2,
+        );
       });
 
       it('does not call deletePackages', async () => {
@@ -261,7 +281,7 @@ describe('DeletePackagesBatchUseCase', () => {
         const package2 = packageFactory({ id: packageId2, spaceId });
 
         const serviceError = new Error('Database transaction failed');
-        mockPackageService.findById
+        mockPackageService.findByIdInOrganization
           .mockResolvedValueOnce(package1)
           .mockResolvedValueOnce(package2);
         mockPackageService.deletePackages.mockRejectedValue(serviceError);
@@ -282,11 +302,13 @@ describe('DeletePackagesBatchUseCase', () => {
         );
       });
 
-      it('calls findById for both packages', async () => {
+      it('calls findByIdInOrganization for both packages', async () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageService.findById).toHaveBeenCalledTimes(2);
+        expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledTimes(
+          2,
+        );
       });
 
       it('attempts to delete the packages', async () => {
@@ -320,7 +342,7 @@ describe('DeletePackagesBatchUseCase', () => {
         const package1 = packageFactory({ id: packageId1, spaceId });
         const package2 = packageFactory({ id: packageId2, spaceId });
 
-        mockPackageService.findById
+        mockPackageService.findByIdInOrganization
           .mockResolvedValueOnce(package1)
           .mockResolvedValueOnce(package2)
           .mockResolvedValueOnce(null);

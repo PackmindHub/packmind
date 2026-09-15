@@ -397,7 +397,7 @@ export class DeploymentsController {
         userId: request.user.userId,
         organizationId,
         targetIds: body.targetIds,
-        recipeVersionIds: commandVersionIds ?? [],
+        commandVersionIds: commandVersionIds ?? [],
       };
 
       const deployments =

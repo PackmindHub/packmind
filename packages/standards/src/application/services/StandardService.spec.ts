@@ -38,6 +38,7 @@ describe('StandardService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -58,6 +59,7 @@ describe('StandardService', () => {
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findLatestByStandardIds: jest.fn(),
+      findByIds: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
     };
 
@@ -65,6 +67,7 @@ describe('StandardService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       hardDeleteById: jest.fn(),
@@ -77,6 +80,7 @@ describe('StandardService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       hardDeleteById: jest.fn(),

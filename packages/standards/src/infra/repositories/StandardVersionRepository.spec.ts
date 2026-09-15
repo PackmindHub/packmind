@@ -23,12 +23,10 @@ import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { StandardVersionRepository } from './StandardVersionRepository';
 
 describe('StandardVersionRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    StandardVersionSchema,
-    StandardSchema,
-    RuleSchema,
-    GitCommitSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [StandardVersionSchema, StandardSchema, RuleSchema, GitCommitSchema],
+    { recordQueries: true },
+  );
 
   let standardVersionRepository: StandardVersionRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -155,6 +153,105 @@ describe('StandardVersionRepository', () => {
       standardId: latestVersion.standardId,
       version: latestVersion.version,
       name: latestVersion.name,
+    });
+  });
+
+  describe('when a standard has several versions', () => {
+    beforeEach(async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 1 }),
+      );
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 2 }),
+      );
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 3 }),
+      );
+
+      fixture.queries.reset();
+      await standardVersionRepository.findLatestByStandardId(standard.id);
+    });
+
+    it('fetches a single row instead of the whole history', () => {
+      expect(
+        fixture.queries.countMatching(
+          /from "standard_versions"[\s\S]*limit 1/i,
+        ),
+      ).toBe(1);
+    });
+  });
+
+  describe('findByIds', () => {
+    let firstVersion: StandardVersion;
+    let secondVersion: StandardVersion;
+
+    beforeEach(async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+      firstVersion = await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 1 }),
+      );
+      secondVersion = await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 2 }),
+      );
+    });
+
+    it('returns every requested version', async () => {
+      const versions = await standardVersionRepository.findByIds([
+        firstVersion.id,
+        secondVersion.id,
+      ]);
+
+      expect(versions.map((version) => version.id).sort()).toEqual(
+        [firstVersion.id, secondVersion.id].sort(),
+      );
+    });
+
+    it('omits an unknown version id', async () => {
+      const versions = await standardVersionRepository.findByIds([
+        firstVersion.id,
+        createStandardVersionId(uuidv4()),
+      ]);
+
+      expect(versions).toEqual([
+        expect.objectContaining({ id: firstVersion.id }),
+      ]);
+    });
+
+    it('issues a single query for several version ids', async () => {
+      fixture.queries.reset();
+
+      await standardVersionRepository.findByIds([
+        firstVersion.id,
+        secondVersion.id,
+      ]);
+
+      expect(fixture.queries.countMatching(/from "standard_versions"/i)).toBe(
+        1,
+      );
+    });
+
+    describe('when no id is given', () => {
+      let versions: StandardVersion[];
+
+      beforeEach(async () => {
+        fixture.queries.reset();
+        versions = await standardVersionRepository.findByIds([]);
+      });
+
+      it('returns nothing', () => {
+        expect(versions).toEqual([]);
+      });
+
+      it('issues no query', () => {
+        expect(fixture.queries.countMatching(/from "standard_versions"/i)).toBe(
+          0,
+        );
+      });
     });
   });
 
