@@ -137,12 +137,12 @@ others do not secretly assume a skill.
 | AC-13 | A submitted version lower than the current one is refused with "Version must be greater than 1.2.0" | yes | |
 | AC-14 | A submitted version equal to the current one is refused with "Version must be greater than 1.2.0" | yes | |
 | AC-15 | A submitted version that is well-formed and greater but not one of the three next increments — 0.5.0 after 0.1.0 — is refused | yes | |
-| AC-16 | A release pins the latest version of each component it holds: releasing 0.2.0 over a 0.1.0 that pinned v4 and v3 records v16 and v45, and the package then lists both versions | yes | |
+| AC-16 | A release pins the latest version of each component it holds: releasing 0.2.0 over a 0.1.0 that pinned v4 and v3 records v16 and v45, and the package then lists both versions | yes | `nx test deployments --testNamePattern='CreatePackageReleaseUseCase\|ListPackageReleasesUseCase'` |
 | AC-17 | Publishing a newer version of a pinned component does not change what an existing release pins: 0.1.0 still carries "Work with Jest" v4 | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*newer version'` |
 | AC-18 | A component deleted after a release is still shown, at its pinned version, when browsing that release; a release cut afterwards excludes it | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*deleted'` — first clause only; the second is a consequence of the package's component list, see D-037 |
-| AC-19 | A member of the organization who did not create the package can release it — no ownership or role check refuses them | yes | |
-| AC-20 | Two releases of the same version cut concurrently: the first is written and the second is refused because that version already exists | yes | |
-| AC-21 | Every rule above holds for a package whose components include a command and a standard, not only skills | no | |
+| AC-19 | A member of the organization who did not create the package can release it — no ownership or role check refuses them | yes | `nx test deployments --testNamePattern='CreatePackageReleaseUseCase\|GetPackageReleaseUseCase'` — "releases for a member who did not create the package", and "read a release the caller did not create" |
+| AC-20 | Two releases of the same version cut concurrently: the first is written and the second is refused because that version already exists | yes | `nx test deployments --testNamePattern='PackageReleaseRepository'` for the constraint itself, `CreatePackageReleaseUseCase` for the 23505 translation — see D-027 on what pg-mem does and does not prove |
+| AC-21 | Every rule above holds for a package whose components include a command and a standard, not only skills | no | `nx test deployments --testNamePattern='PackageReleaseRepository\|packageReleaseGate'` — the pinning fixture holds one command, one standard and one skill; the gate's change cases are driven through the **recipe** family. AC-18's block deliberately names only the command and the standard, because `SkillVersionSchema` has no soft-delete columns (D-037). S1 rules only; S2 re-checks its own |
 
 ## Known unknowns
 

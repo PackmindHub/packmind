@@ -31,6 +31,17 @@ export type PackageRelease = {
   updatedAt?: Date;
 };
 
+/**
+ * What a release response carries: the release without its timestamps.
+ *
+ * `createdAt` / `updatedAt` are a `Date` once TypeORM hydrates the entity but a
+ * string by the time they reach a client, so no release response carries them.
+ */
+export type PackageReleaseContent = Omit<
+  PackageRelease,
+  'createdAt' | 'updatedAt'
+>;
+
 export type PackageReleaseVerdict = 'ready' | 'no_components' | 'no_change';
 
 export type PackageReleaseRefusal =

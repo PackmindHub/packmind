@@ -1,7 +1,7 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { OrganizationId } from '../../accounts/Organization';
 import { PackageId } from '../Package';
-import { PackageRelease } from '../PackageRelease';
+import { PackageReleaseContent } from '../PackageRelease';
 import { SpaceId } from '../../spaces/SpaceId';
 
 export type GetPackageReleaseCommand = PackmindCommand & {
@@ -12,7 +12,7 @@ export type GetPackageReleaseCommand = PackmindCommand & {
 };
 
 export type GetPackageReleaseResponse = {
-  release: PackageRelease;
+  release: PackageReleaseContent;
 };
 
 export type IGetPackageReleaseUseCase = IUseCase<

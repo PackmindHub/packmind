@@ -1942,3 +1942,106 @@ they are what makes the ordering permanent.
 own TypeORM standard tells authors to "handle soft-deleted entities properly using
 `withDeleted()`" without mentioning that placement matters. Auditing other repositories
 is outside this charter (D-022) and belongs in its own story.
+
+---
+
+## D-039 — The two release responses carry a content type that has no timestamps
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `AC-18`, `D-016`, `D-026`, `D-033`
+
+**Decision.** `PackageRelease.ts` declares
+
+```ts
+export type PackageReleaseContent = Omit<PackageRelease, 'createdAt' | 'updatedAt'>;
+```
+
+and both `CreatePackageReleaseResponse` and `GetPackageReleaseResponse` key their
+`release` on that type rather than on `PackageRelease`. The entity keeps its optional
+`createdAt?: Date` / `updatedAt?: Date`; nothing else changes.
+
+**Reasoning.** D-033 decided the substance — no timestamp crosses the controller
+boundary — and named the exact harm: a field declared `Date | undefined` that is an ISO
+string at runtime, which S2 would then branch on. The S1 boundary reconcile found the
+decision was honoured in the one place it was applied (`PackageReleaseSummary` is
+`{ version: string }` and nothing else) and unhonoured in the two it was not, because
+both responses key `release` on the hydrated entity and nothing strips it.
+
+No unit deviated to produce this, which is why it needs an entry rather than a fix note.
+D-033 landed between U-005 and U-007 and was applied by the unit that read it; U-005 and
+U-009 had already shipped `{ release: PackageRelease }`, and U-011 correctly passed
+through what it was handed. Three defensible local choices, one wrong wire.
+
+This entry exists because D-033 stated the rule and not its mechanism, and a rule with no
+named type is a rule each response re-decides. One `Omit` alias, referenced twice, is the
+mechanism — and it fails the build if a third response is ever added that forgets.
+
+*Why an alias and not `Omit<...>` written inline twice.* Two inline spellings are two
+places to forget the second field, and the name is what a reader of S2's drawer sees.
+
+**Rejected.**
+
+- Making the entity's `createdAt` non-optional and mapping it to an ISO string in the
+  controller — D-033 rejected this already: the entity is what TypeORM hydrates, and it
+  hydrates a `Date`; the wire is what should bend.
+- Stripping the keys in the controller with a destructure — invisible to the type system,
+  so the contract would still promise a `Date` that never arrives.
+- Leaving it and letting S2 ignore the fields — the type says `Date`, the wire says
+  string, and the first `toLocaleDateString()` call is the bug.
+
+**Constrains implementation.** Declare `PackageReleaseContent` in
+`packages/types/src/deployments/PackageRelease.ts` and key `release` on it in both
+`ICreatePackageReleaseUseCase.ts` and `IGetPackageReleaseUseCase.ts`. Do not change the
+`PackageRelease` entity, the repository, or the controller's pass-through. Do not add a
+mapper. Timestamps on the *nested* version entities are out of this entry's scope — D-033
+speaks about the release's own.
+
+---
+
+## D-040 — The unique-violation predicate is `23505` alone, deliberately
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-20`, `D-013`, `D-027`, `D-032`
+
+**Decision.** `CreatePackageReleaseUseCase` tests `error.code === '23505'` and nothing
+else. D-032's secondary check — that the constraint name is `idx_package_releases_unique`
+— is **not** implemented, and that is a choice, not an omission.
+
+**Reasoning.** D-032's *Constrains implementation* line mandates only the `23505` test,
+so the shipped code satisfies the binding half of that entry; its Decision paragraph also
+describes the name as a secondary narrowing, and the S1 reconcile correctly noticed the
+gap between the two halves. Left unrecorded, the next reader finds a decision that asks
+for two checks and code that does one, and cannot tell which is authoritative.
+
+The narrowing buys one thing: that a *second* unique index on `package_releases` could not
+be mistranslated into "that version already exists". There is exactly one unique index on
+that table today (`(package_id, version)`, D-003), this feature never writes another, and
+releases are immutable so no future update path adds one. The check therefore defends
+against a table shape nobody has proposed, at the cost of a predicate that is harder to
+reason about and — because D-032 itself concedes pg-mem may not populate the name — can
+only ever be exercised in production.
+
+The risk being accepted is named plainly: if a second unique constraint is ever added to
+`package_releases`, violating it will refuse the cut with `not_greater` and tell the user
+to pick a higher version, which will be wrong and confusing. The trigger is specific and
+the fix is one clause, which is what makes this worth accepting rather than pre-empting.
+
+**Rejected.**
+
+- Implementing the name check now, as D-032's prose describes — defends a table shape that
+  does not exist, and cannot be tested in the only harness available (D-027).
+- Appending a `supersedes: D-032` entry — D-032's binding constraint is satisfied as
+  written; only its prose overreached, and superseding it would discard the `23505`
+  reasoning, which is right and load-bearing.
+
+**Constrains implementation.** Keep the predicate as `error.code === '23505'`, rethrowing
+anything else. If a second unique index is ever added to `package_releases`, this entry is
+the one to revisit, and the narrowing becomes required rather than optional.
