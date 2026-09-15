@@ -15,6 +15,8 @@ import {
   CreatePackageResponse,
   CreatePackageReleaseCommand,
   CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
   ListPackageReleasesCommand,
   ListPackageReleasesResponse,
   UpdatePackageCommand,
@@ -119,6 +121,7 @@ import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFr
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
 import { CreatePackageReleaseUseCase } from '../useCases/createPackageRelease/CreatePackageReleaseUseCase';
+import { GetPackageReleaseUseCase } from '../useCases/getPackageRelease/GetPackageReleaseUseCase';
 import { ListPackageReleasesUseCase } from '../useCases/listPackageReleases/ListPackageReleasesUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
@@ -196,6 +199,7 @@ export class DeploymentsAdapter
   private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
   private _createPackageUseCase!: CreatePackageUseCase;
   private _createPackageReleaseUseCase!: CreatePackageReleaseUseCase;
+  private _getPackageReleaseUseCase!: GetPackageReleaseUseCase;
   private _listPackageReleasesUseCase!: ListPackageReleasesUseCase;
   private _updatePackageUseCase!: UpdatePackageUseCase;
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
@@ -507,6 +511,11 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
     this._listPackageReleasesUseCase = new ListPackageReleasesUseCase(
       this.accountsPort,
       this.deploymentsServices,
@@ -800,6 +809,12 @@ export class DeploymentsAdapter
     command: CreatePackageReleaseCommand,
   ): Promise<CreatePackageReleaseResponse> {
     return this._createPackageReleaseUseCase.execute(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this._getPackageReleaseUseCase.execute(command);
   }
 
   async listPackageReleases(

@@ -8,6 +8,8 @@ import {
   CreatePackageResponse,
   CreatePackageReleaseCommand,
   CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
   ListPackageReleasesCommand,
   ListPackageReleasesResponse,
   CreateRenderModeConfigurationCommand,
@@ -435,6 +437,17 @@ export interface IDeploymentPort {
   listPackageReleases(
     command: ListPackageReleasesCommand,
   ): Promise<ListPackageReleasesResponse>;
+
+  /**
+   * Gets one release of a package by its version, with everything it pinned —
+   * including components that have since been deleted.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseNotFoundError when the package has no such version
+   */
+  getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse>;
 
   /**
    * System-level package lookup by id, bypassing membership validation.

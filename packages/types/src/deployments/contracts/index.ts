@@ -44,4 +44,5 @@ export * from './IListActiveDistributedPackagesBySpace';
 export * from './IGetLastDistributionDateByProvidersUseCase';
 export * from './PackageResponse';
 export * from './ICreatePackageReleaseUseCase';
+export * from './IGetPackageReleaseUseCase';
 export * from './IListPackageReleasesUseCase';
