@@ -323,10 +323,23 @@ export function contextPackageHref(
   { orgSlug, spaceSlug }: ContextLinkTarget,
   packageId: PackageId,
   componentKey?: string,
+  /**
+   * Which half of the package to open on, for the callers that are pointing at
+   * one: a link that says "where did this package land" has to arrive on the
+   * tab that answers that, not on the list of what it holds.
+   *
+   * A default is dropped rather than written, by the same rule the surface's
+   * own builders follow. Writing it would give the plain reading of a package
+   * two addresses, and the one nobody links to is the one that ends up pasted.
+   */
+  tab?: string,
 ): string {
   const params = new URLSearchParams({ [PACKAGE_PARAM]: packageId });
   if (componentKey) {
     params.set(COMPONENT_PARAM, componentKey);
+  }
+  if (tab && !isDefaultTab(tab)) {
+    params.set(TAB_PARAM, tab);
   }
   return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
 }
