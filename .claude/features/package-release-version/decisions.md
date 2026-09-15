@@ -2169,3 +2169,107 @@ from the single messages file of D-011, and **keeps the field's value** (D-019).
 not re-derive the three rules. A failure from the mutation itself is surfaced with the
 generic failure the neighbouring drawers use, not with an invented sentence — until the
 unit that repairs the wire lands.
+
+---
+
+## D-043 — AC-5, AC-6, AC-7, AC-8 and AC-10 stay open until the gate's composition is checked
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-5`, `AC-6`, `AC-7`, `AC-8`, `AC-10`, `D-007`, `D-008`
+
+**Decision.** These five criteria are deliberately left with an empty `verified by`,
+although both halves of each appear to exist. Do not fill them from the S1 gate suite
+without first checking the gap named below. This is a reservation, not an oversight.
+
+**Reasoning.** Each of the five is a rule proven in `packageReleaseGateHelpers.spec.ts`
+plus a rendering proven in `PackageVersionArea.spec.tsx`. Four of them compose cleanly:
+`returns ready when package name changed` (AC-5), `returns ready when package
+description changed` (AC-6), `returns ready when a component is added` / `is removed` /
+`returns no_change when a component is added and then removed` (AC-8), and `returns
+ready when component list is unchanged but name differs` (AC-10). Paired with U-014's
+"never released" (enabled on `ready`) and "unchanged since the last release" (disabled on
+`no_change`), they look closed.
+
+**AC-7 is the one that is not.** It requires that a title differing from the released one
+*only* by surrounding whitespace, or *only* by case, leaves the action disabled. What S1
+names is `matches names differing only by surrounding whitespace` and `matches names
+differing only by case` — tests of the `packageNameMatches` **comparison in isolation**.
+No named test drives such a name through `evaluatePackageReleaseGate` to `no_change`. The
+composition is very probably correct, and "very probably" is not what a `verified by`
+column asserts.
+
+The reason to hold all five rather than claim four and hold one: they share a shape — a
+rule tested at one level and an affordance tested at another, with the join untested —
+and AC-7 is simply where that shape is visible. Whatever closes AC-7 honestly closes the
+others by the same argument.
+
+This is the failure mode the boundary reconcile exists for: every test green, every
+criterion apparently covered, and a join nobody exercised. It costs one reconcile to
+settle and is unrecoverable if claimed wrongly, because a filled `verified by` is what
+the next reader trusts instead of re-checking.
+
+**Rejected.**
+
+- Filling all five from the S1 gate suite — the honest-looking move, and it would record
+  AC-7 as verified by a test that never runs the composition it describes.
+- Writing the missing gate case immediately as part of an S2 unit — reasonable, and
+  premature: the reconcile may find the case already covered under another name, and a
+  test written to close a column is worth less than one written to close a gap.
+- Dropping AC-7 to "covered by AC-5" — they are different rules; AC-5 is that a rename
+  enables, AC-7 is that a non-rename does not.
+
+**Constrains implementation.** Run the feature-boundary reconcile before filling any of
+these five. If it confirms the composition is untested, the fix is one named case in
+`packageReleaseGateHelpers.spec.ts` driving a whitespace-only and a case-only renamed
+package through `evaluatePackageReleaseGate` and asserting `no_change` — then all five
+are filled, citing it.
+
+---
+
+## D-044 — `changeSources` ships empty, and that is a contradiction to resolve, not a bug to patch
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-15`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-007`, `D-021`, `D-029`
+
+**Decision.** `package_version_released` carries `changeSources: []`. The field stays in
+the payload and in the stub's `AnalyticsEventMap`, and nothing populates it.
+
+**Reasoning.** D-021 asks the event to carry `changeSources`. D-007 decided the gate
+returns **one ordered verdict** and explicitly refused to report which of the three
+sources changed — "the user is never told *which* source changed, only that something
+did, so the verdict does not carry a breakdown" — and D-029 reinforced it by collapsing
+the payload to a single tri-state. So the data D-021 asks the frontend to send is data
+D-007 decided not to compute, and the two entries were written in the same session
+without the conflict surfacing.
+
+Empty is the only truthful value available. The alternatives are worse in the specific
+way analytics is worse when wrong: a fabricated breakdown would be indistinguishable from
+a real one in Amplitude, and the first person to build a funnel on it would be reading
+invention.
+
+Recorded rather than quietly omitted because the field's presence in a typed event map is
+a promise, and the next person to see `changeSources: []` in production will otherwise
+read it as a bug in the call site rather than a decision about the gate.
+
+**Rejected.**
+
+- Computing the breakdown in the frontend from the readiness payload — it does not carry
+  one; that is precisely what D-029 removed.
+- Teaching the gate to report which sources changed, to fill the field — reverses D-007
+  for an analytics field, and D-007's reasoning is about AC-9's precedence, which is a
+  user-facing rule and outranks an event property.
+- Dropping `changeSources` from the event and the map — plausible, and it discards a
+  question someone deliberately asked; the field is cheap to keep and the emptiness is
+  now documented.
+
+**Constrains implementation.** Do not populate `changeSources` by inference at the call
+site. A story that wants it adds a breakdown to the gate first, with its own entry
+superseding D-007's "no breakdown" clause, and only then fills the event.
