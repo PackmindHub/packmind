@@ -13,7 +13,7 @@ scripts/check-edition-parity.sh
 BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "HEAD~1")
 
 export PACKMIND_LOG_LEVEL=silent
-export NODE_OPTIONS='--max-old-space-size=16384'
+export NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-webstorage'
 
 # Always typecheck the frontend, regardless of what `affected` detects.
 # Cached by Nx, so this is a no-op cache hit when nothing in the frontend changed.
