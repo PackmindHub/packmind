@@ -26,6 +26,12 @@ overrides:
   ws: '>=8.21.0'
   uuid: '>=11.1.1'
   esbuild: '>=0.28.1'
+  # @visulima/boxen 2.x caps engines at 'node: >=20.18 <=25.x'. With
+  # engineStrict that is a hard `pnpm install` failure on Node 26, not a warning.
+  # 3.0.0 reopened the range to '^22.14.0 || >=24.10.0'. Only reached through
+  # @chakra-ui/cli (the `chakra:typegen` script), which still declares ^2.0.10
+  # as of its latest 3.37.0 — so the parent will not float off 2.x on its own.
+  '@visulima/boxen': '^3.0.0'
   # Two coexisting major lines (istanbul chain wants ^3.x, eslint chain wants ^4.x)
   js-yaml@3: 3.15.0
   js-yaml@4: 4.3.0
