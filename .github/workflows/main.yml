@@ -3,7 +3,7 @@ name: Main CI/CD Pipeline
 # ┌─────────────────────────────────────────────────────────────────┐
 # │ GLOBAL CONFIGURATION                                            │
 # │ To update Node.js version, change all occurrences below        │
-# │ Current version: 24.18.0                                       │
+# │ Current version: 26.8.2                                        │
 # │                                                                 │
 # │ Repository Variables Required:                                  │
 # │ - PACKMIND_EDITION: 'oss' or 'proprietary'                     │
@@ -54,7 +54,7 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      node-version: 24.18.0
+      node-version: 26.8.2
     secrets:
       VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
       VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
@@ -67,14 +67,14 @@ jobs:
   e2e:
     uses: ./.github/workflows/e2e.yml
     with:
-      node-version: 24.18.0
+      node-version: 26.8.2
 
   # GitGuardian, lint+format, Sonar and the OSS parity check. All source-only:
   # they read the checkout and nothing else, so no `needs:`.
   quality:
     uses: ./.github/workflows/quality.yml
     with:
-      node-version: 24.18.0
+      node-version: 26.8.2
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -100,7 +100,7 @@ jobs:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
       frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
       standard-samples-artifact: ${{ needs.build.outputs.standard-samples-artifact }}
-      node-version: 24.18.0
+      node-version: 26.8.2
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
     with:
-      node-version: 24.18.0
+      node-version: 26.8.2
       helm-charts-repository: ${{ vars.HELM_CHARTS_REPOSITORY || 'PackmindHub/packmind-ai-helm-charts' }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
