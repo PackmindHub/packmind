@@ -21,7 +21,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-PNPM_VERSION="11.5.0"
+PNPM_VERSION="11.27.0"
 
 echo "==> Packmind npm -> pnpm migration"
 

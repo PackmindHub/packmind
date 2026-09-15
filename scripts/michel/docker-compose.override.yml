@@ -73,7 +73,7 @@ services:
       - |
         set -eu
         corepack enable
-        corepack prepare pnpm@11.5.0 --activate
+        corepack prepare pnpm@11.27.0 --activate
         # Always --prefer-offline (never hard --offline). The warm store is baked
         # from the OSS lockfile; against the proprietary repo (OSS + extra deps)
         # a hard --offline can't resolve the additional packages and fails the

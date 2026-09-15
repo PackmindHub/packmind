@@ -19,9 +19,9 @@ cd "${ROOT}"
 # local `setup.sh` run edition-correct without the caller knowing the edition.
 export PACKMIND_EDITION="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-edition.sh")"
 
-# Pinned pnpm version — keep in sync with package.json `packageManager` (pnpm@11.5.0).
+# Pinned pnpm version — keep in sync with package.json `packageManager` (pnpm@11.27.0).
 # Overridable via env; the default satisfies `set -u` (nounset) below.
-PNPM_VERSION="${PNPM_VERSION:-11.5.0}"
+PNPM_VERSION="${PNPM_VERSION:-11.27.0}"
 
 # 0a. Install/activate pnpm. Prefer corepack (ships with Node); fall back to a
 #    global npm install if corepack is unavailable or refuses to activate.
