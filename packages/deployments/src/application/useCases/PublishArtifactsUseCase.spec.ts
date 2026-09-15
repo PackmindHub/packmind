@@ -379,6 +379,18 @@ describe('PublishArtifactsUseCase', () => {
       it('stores distribution without git commit', () => {
         expect(result.distributions[0].gitCommit).toBeUndefined();
       });
+
+      it('emits a DeploymentCompletedEvent with the requested artifact counts', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              targetIds: [targetId],
+              recipeCount: 1,
+              standardCount: 1,
+            }),
+          }),
+        );
+      });
     });
 
     it('calls renderArtifacts with both command and standard versions', async () => {
@@ -844,6 +856,12 @@ describe('PublishArtifactsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions[0].gitCommit).toBeUndefined();
+    });
+
+    it('emits a DeploymentCompletedEvent despite the repository failure', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
     });
   });
 
