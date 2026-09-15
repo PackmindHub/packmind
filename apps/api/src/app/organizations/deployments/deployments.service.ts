@@ -43,6 +43,12 @@ import {
   DashboardKpiResponse,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
   IDeploymentPort,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
@@ -200,6 +206,24 @@ export class DeploymentsService {
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this.deploymentAdapter.getDashboardNonLive(command);
+  }
+
+  async listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse> {
+    return this.deploymentAdapter.listPackageReleases(command);
+  }
+
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this.deploymentAdapter.createPackageRelease(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this.deploymentAdapter.getPackageRelease(command);
   }
 
   async listActiveDistributedPackagesBySpace(

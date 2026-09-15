@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -31,7 +32,15 @@ import {
   AddArtefactsToPackageCommand,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
+  ListPackageReleasesResponse,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseResponse,
 } from '@packmind/types';
+import {
+  PackageNotFoundError,
+  PackageReleaseNotFoundError,
+  PackageReleaseRefusedError,
+} from '@packmind/deployments';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
@@ -182,6 +191,142 @@ export class OrganizationsSpacesPackagesController {
         { organizationId, spaceId, slug, error: errorMessage },
       );
       if (error instanceof Error && error.message.includes('does not exist')) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * List a package's releases together with the release panel's readiness
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases
+   */
+  @Get(':packageId/releases')
+  async listPackageReleases(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListPackageReleasesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Listing releases',
+      { organizationId, spaceId, packageId },
+    );
+
+    try {
+      return await this.deploymentsService.listPackageReleases({
+        userId,
+        organizationId,
+        spaceId,
+        packageId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Failed to list releases',
+        { organizationId, spaceId, packageId, error: errorMessage },
+      );
+      if (error instanceof PackageNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Cut a release of a package
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases
+   */
+  @Post(':packageId/releases')
+  async createPackageRelease(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { version: string },
+  ): Promise<CreatePackageReleaseResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Creating release',
+      { organizationId, spaceId, packageId, version: body.version },
+    );
+
+    try {
+      return await this.deploymentsService.createPackageRelease({
+        userId,
+        organizationId,
+        spaceId,
+        packageId,
+        version: body.version,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Failed to create release',
+        {
+          organizationId,
+          spaceId,
+          packageId,
+          version: body.version,
+          error: errorMessage,
+        },
+      );
+      if (error instanceof PackageReleaseRefusedError) {
+        throw new BadRequestException({
+          code: error.code,
+          currentVersion: error.currentVersion,
+        });
+      }
+      if (error instanceof PackageNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get one release of a package by version, with everything it pinned
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version
+   */
+  @Get(':packageId/releases/:version')
+  async getPackageRelease(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Param('version') version: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetPackageReleaseResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version - Fetching release',
+      { organizationId, spaceId, packageId, version },
+    );
+
+    try {
+      return await this.deploymentsService.getPackageRelease({
+        userId,
+        organizationId,
+        spaceId,
+        packageId,
+        version,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version - Failed to fetch release',
+        { organizationId, spaceId, packageId, version, error: errorMessage },
+      );
+      if (error instanceof PackageReleaseNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof PackageNotFoundError) {
         throw new NotFoundException(error.message);
       }
       throw error;
