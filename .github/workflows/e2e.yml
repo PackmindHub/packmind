@@ -209,7 +209,7 @@ jobs:
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types --no-experimental-webstorage'
         run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
