@@ -2,7 +2,7 @@
  * Members that must never be answered with a `jest.fn()`. The runtime probes
  * some of them on any object it is handed - `await` looks for `then`,
  * pretty-format looks for `toJSON` and `$$typeof`, `expect` looks for
- * `asymmetricMatch` - and a mock answering them makes the port look like a
+ * `asymmetricMatch` - and a mock answering them makes the mock look like a
  * thenable or breaks the failure output.
  */
 const NEVER_MOCKED = [
@@ -36,7 +36,7 @@ type MethodKeys<T> = {
  * The members a `jest.fn()` can stand in for without being asked: the methods
  * the proxy is free to answer. A symbol-keyed member is not one of them - the
  * runtime probes symbols such as `Symbol.iterator` on any object, so answering
- * them would make the mock claim behaviour the port never declared - and nor is
+ * them would make the mock claim behaviour the interface never declared - and nor is
  * a member named after one of the probes above.
  */
 type AutoMockedKeys<T> = Exclude<MethodKeys<T> & string, NeverMockedName>;
@@ -48,19 +48,19 @@ type DataKeys<T> = Exclude<keyof T, MethodKeys<T>>;
 
 /**
  * An auto-mocked method can be seeded either with a real implementation - which
- * is type checked against the port and wrapped in a `jest.fn()` - or with a mock
+ * is type checked against the interface and wrapped in a `jest.fn()` - or with a mock
  * built by hand, and may be left out entirely.
  *
- * An excluded method may be left out too when the port declares it optional -
+ * An excluded method may be left out too when the interface declares it optional -
  * `Pick` carries that optionality over, and the `undefined` the proxy answers
- * with is exactly what such a port allows.
+ * with is exactly what such an interface allows.
  *
- * A data member is always demanded, optional on the port or not. The proxy has
+ * A data member is always demanded, optional on the interface or not. The proxy has
  * only the member's name to go on, so an absent one would be answered with a
- * `jest.fn()` - a function standing where the port declares a value, which is
+ * `jest.fn()` - a function standing where the interface declares a value, which is
  * the very lie this helper exists to avoid.
  */
-export type PortStubs<T> = Partial<{
+export type InterfaceStubs<T> = Partial<{
   [K in AutoMockedKeys<T>]: NonNullable<T[K]> extends (
     ...args: infer A
   ) => infer R
@@ -70,7 +70,7 @@ export type PortStubs<T> = Partial<{
   Pick<T, ExcludedMethodKeys<T>> &
   Required<Pick<T, DataKeys<T>>>;
 
-export type MockPortOptions = {
+export type MockInterfaceOptions = {
   /**
    * Make a member that was never stubbed throw when it is called, rather than
    * answer `undefined`.
@@ -88,10 +88,10 @@ export type MockPortOptions = {
   strict?: boolean;
 };
 
-type PortStubsArgs<T> =
-  Record<never, never> extends PortStubs<T>
-    ? [stubs?: PortStubs<T>, options?: MockPortOptions]
-    : [stubs: PortStubs<T>, options?: MockPortOptions];
+type InterfaceStubsArgs<T> =
+  Record<never, never> extends InterfaceStubs<T>
+    ? [stubs?: InterfaceStubs<T>, options?: MockInterfaceOptions]
+    : [stubs: InterfaceStubs<T>, options?: MockInterfaceOptions];
 
 type UnknownFunction = (...args: unknown[]) => unknown;
 
@@ -100,18 +100,18 @@ type UnknownFunction = (...args: unknown[]) => unknown;
  * spec never set up. Carries the member's name, so a test can assert on which
  * one it was rather than on the wording of a message.
  */
-export class UnstubbedPortCallError extends Error {
+export class UnstubbedCallError extends Error {
   constructor(public readonly member: string) {
     super(
-      `mockPort: '${member}' was called but was never stubbed. Stub it, or drop the strict option if answering undefined is what this test wants.`,
+      `mockInterface: '${member}' was called but was never stubbed. Stub it, or drop the strict option if answering undefined is what this test wants.`,
     );
-    this.name = 'UnstubbedPortCallError';
+    this.name = 'UnstubbedCallError';
   }
 }
 
 function refuseUnstubbedCall(member: string): UnknownFunction {
   return () => {
-    throw new UnstubbedPortCallError(member);
+    throw new UnstubbedCallError(member);
   };
 }
 
@@ -123,41 +123,52 @@ function isJestMock(value: unknown): boolean {
 }
 
 /**
- * Typed mock of an interface, the counterpart of `createMockInstance` for ports
- * that have no class to walk at runtime.
+ * Typed mock of an interface, the counterpart of `createMockInstance` for the
+ * types that have no class to walk at runtime - a port, a service reached
+ * through its type, anything structural.
  *
  * Every member is lazily backed by a `jest.fn()`, so the mock is complete by
  * construction and never needs an `as unknown as jest.Mocked<T>` cast - which
  * would switch off the structural checks the spec type check relies on. Stubs
- * are typed against the port, so a fixture that drifts from the contract fails
- * the build:
+ * are typed against the interface, so a fixture that drifts from the contract
+ * fails the build:
  *
  * ```ts
- * const gitRepo = mockPort<IGitRepo>();
+ * const gitRepo = mockInterface<IGitRepo>();
  * gitRepo.getFileOnRepo.mockResolvedValue({ sha: 'sha', content: 'content' });
- *
- * // or seed implementations up front
- * const accounts = mockPort<IAccountsPort>({
- *   getUserById: async () => user,
- * });
  * ```
  *
- * It fits ports whose members are all plainly named methods. Anything the proxy
- * cannot conjure - a data member such as an `AxiosInstance`'s `defaults`, a
- * symbol-keyed method, a method named after one of the probes above - has to be
- * supplied, and a type whose shape is mostly data is better mocked by hand.
+ * A member can also be seeded up front, either with a mock or with a plain
+ * implementation - the implementation is wrapped in a `jest.fn()` on the way in,
+ * so the member is a mock either way and records its calls. Prefer the
+ * implementation: it is checked against the member's signature, where a
+ * `jest.fn()` is typed `any` and a payload that drifts from the contract goes
+ * unnoticed.
+ *
+ * ```ts
+ * const accounts = mockInterface<IAccountsPort>({
+ *   getUserById: async () => user, // checked against IAccountsPort
+ * });
+ *
+ * expect(accounts.getUserById).toHaveBeenCalledWith(user.id); // still a mock
+ * ```
+ *
+ * It fits interfaces whose members are all plainly named methods. Anything the
+ * proxy cannot conjure - a data member such as an `AxiosInstance`'s `defaults`,
+ * a symbol-keyed method, a method named after one of the probes above - has to
+ * be supplied, and a type whose shape is mostly data is better mocked by hand.
  *
  * Pass `{ strict: true }` to make an unstubbed member refuse the call instead of
  * answering `undefined`:
  *
  * ```ts
- * const gitRepo = mockPort<IGitRepo>({}, { strict: true });
+ * const gitRepo = mockInterface<IGitRepo>({}, { strict: true });
  * ```
  */
-export function mockPort<T extends object>(
-  ...args: PortStubsArgs<T>
+export function mockInterface<T extends object>(
+  ...args: InterfaceStubsArgs<T>
 ): jest.Mocked<T> {
-  const [stubs = {} as PortStubs<T>, options = {}] = args;
+  const [stubs = {} as InterfaceStubs<T>, options = {}] = args;
   const members = new Map<string | symbol, unknown>();
 
   const isAutoMocked = (member: string | symbol): boolean =>

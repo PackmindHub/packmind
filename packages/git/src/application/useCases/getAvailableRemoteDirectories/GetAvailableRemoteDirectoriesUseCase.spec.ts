@@ -1,5 +1,5 @@
 import { Cache } from '@packmind/node-utils';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   GetAvailableRemoteDirectoriesCommand,
   createOrganizationId,
@@ -21,7 +21,7 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 // Get the mocked Cache after the mock
-const mockCacheInstance = mockPort<Cache>();
+const mockCacheInstance = mockInterface<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 describe('GetAvailableTargetsUseCase', () => {
@@ -29,7 +29,7 @@ describe('GetAvailableTargetsUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
 
   beforeEach(() => {
-    mockGitProviderService = mockPort<GitProviderService>();
+    mockGitProviderService = mockInterface<GitProviderService>();
 
     // Setup cache mock
     MockedCache.getInstance.mockReturnValue(mockCacheInstance);

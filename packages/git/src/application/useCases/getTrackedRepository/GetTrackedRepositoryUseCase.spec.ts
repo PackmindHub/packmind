@@ -1,4 +1,4 @@
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -57,7 +57,7 @@ describe('GetTrackedRepositoryUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(user);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

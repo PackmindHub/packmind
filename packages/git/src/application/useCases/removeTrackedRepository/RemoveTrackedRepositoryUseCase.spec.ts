@@ -1,6 +1,6 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -61,7 +61,7 @@ describe('RemoveTrackedRepositoryUseCase', () => {
       name: 'PickMand',
       slug: 'pickmand',
     };
-    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(user);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
   };
@@ -81,7 +81,7 @@ describe('RemoveTrackedRepositoryUseCase', () => {
       markTrackingRemoved: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
-    mockEventEmitter = mockPort<PackmindEventEmitterService>();
+    mockEventEmitter = mockInterface<PackmindEventEmitterService>();
 
     setupAccounts('admin');
     useCase = buildUseCase();

@@ -24,7 +24,7 @@ import {
 } from '@packmind/types';
 
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { gitProviderFactory, gitRepoFactory } from '../../../../test';
 
@@ -76,7 +76,7 @@ describe('AddGitRepoUseCase', () => {
       slug: 'test-org',
     });
 
-    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(adminUser);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

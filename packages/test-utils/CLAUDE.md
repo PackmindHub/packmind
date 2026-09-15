@@ -28,21 +28,21 @@ own — most of what a new spec needs already exists.
 | `randomIn` | pick a random value from a set, for factory defaults |
 | `stubLogger` | fully typed `PackmindLogger` stub |
 | `createMockInstance` | typed mock of a whole class |
-| `mockPort` | typed mock of an interface — the counterpart for ports, which have no class to walk |
+| `mockInterface` | typed mock of an interface — the counterpart for the types that have no class to walk |
 | `skipWhenRoot` | skip specs that cannot run as `root` (filesystem-permission tests) |
 | `src/repository/` | shared repository-test helpers |
 
-## Mocking a port
+## Mocking an interface
 
-Reach for `mockPort<IPort>()` rather than an object literal cast with
-`as unknown as jest.Mocked<IPort>`. The cast switches off the structural check the spec type check
+Reach for `mockInterface<IGitRepo>()` — a port, a service reached through its type, anything
+structural — rather than an object literal cast with `as unknown as jest.Mocked<IGitRepo>`. The cast switches off the structural check the spec type check
 exists for: members the mock omits are invisible until the test blows up at runtime, and a value
 stubbed inside the literal (`findById: jest.fn().mockResolvedValue(…)`) is never compared to the
-contract, because a bare `jest.fn()` is typed `any`. `mockPort` backs every member with a
+contract, because a bare `jest.fn()` is typed `any`. `mockInterface` backs every member with a
 `jest.fn()` lazily, so the mock is complete by construction, and stubs are typed:
 
 ```ts
-const gitRepo = mockPort<IGitRepo>();
+const gitRepo = mockInterface<IGitRepo>();
 gitRepo.getFileOnRepo.mockResolvedValue({ sha, content }); // checked against IGitRepo
 ```
 
@@ -52,9 +52,9 @@ pass — where a hand-written partial mock would have thrown `is not a function`
 `{ strict: true }` where that silence would hide something, and the call is refused by name instead:
 
 ```ts
-const gitRepo = mockPort<IGitRepo>({}, { strict: true });
+const gitRepo = mockInterface<IGitRepo>({}, { strict: true });
 gitRepo.commitFiles(files, 'message');
-// Error: mockPort: 'commitFiles' was called but was never stubbed
+// Error: mockInterface: 'commitFiles' was called but was never stubbed
 ```
 
 The price is that every member the run reaches has to be stubbed, so it suits a spec asserting on a

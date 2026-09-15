@@ -12,7 +12,7 @@ import {
   createOrganizationId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
-import { mockPort } from '@packmind/test-utils';
+import { mockInterface } from '@packmind/test-utils';
 import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 
 const makeProvider = (overrides: Partial<GitProvider> = {}): GitProvider =>
@@ -54,7 +54,7 @@ const stubOrgGitHubAppRepository = (
   result: OrganizationGitHubApp | null,
   findByIdResult: OrganizationGitHubApp | null = result,
 ): jest.Mocked<IOrganizationGitHubAppRepository> =>
-  mockPort<IOrganizationGitHubAppRepository>({
+  mockInterface<IOrganizationGitHubAppRepository>({
     findActiveByOrganizationId: async () => result,
     findById: async () => findByIdResult,
   });

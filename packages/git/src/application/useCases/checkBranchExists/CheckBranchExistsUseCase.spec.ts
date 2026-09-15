@@ -5,7 +5,7 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
-import { invalidInput, mockPort } from '@packmind/test-utils';
+import { invalidInput, mockInterface } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { CheckBranchExistsUseCase } from './CheckBranchExistsUseCase';
 
@@ -42,7 +42,7 @@ describe('CheckBranchExistsUseCase', () => {
   const args = { owner: 'acme', repo: 'repo-a', branch: 'main' };
 
   beforeEach(() => {
-    mockGitProviderService = mockPort<GitProviderService>();
+    mockGitProviderService = mockInterface<GitProviderService>();
 
     useCase = new CheckBranchExistsUseCase(mockGitProviderService);
   });

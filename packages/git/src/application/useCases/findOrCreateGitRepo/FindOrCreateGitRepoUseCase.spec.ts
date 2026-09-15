@@ -1,4 +1,4 @@
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -36,7 +36,7 @@ describe('FindOrCreateGitRepoUseCase', () => {
   };
 
   beforeEach(() => {
-    mockGitPort = mockPort<IGitPort>();
+    mockGitPort = mockInterface<IGitPort>();
 
     const user: User = {
       id: userId,
@@ -51,7 +51,7 @@ describe('FindOrCreateGitRepoUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    mockAccountsAdapter = mockPort<IAccountsPort>();
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(user);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

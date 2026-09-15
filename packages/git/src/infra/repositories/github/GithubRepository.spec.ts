@@ -32,7 +32,7 @@ describe('GithubRepository', () => {
 
   beforeEach(() => {
     // An AxiosInstance is callable and mostly data, so it is mocked by hand
-    // rather than with mockPort: only what this suite drives is stubbed.
+    // rather than with mockInterface: only what this suite drives is stubbed.
     mockAxiosInstance = {
       interceptors: {
         request: { use: jest.fn(), eject: jest.fn(), clear: jest.fn() },

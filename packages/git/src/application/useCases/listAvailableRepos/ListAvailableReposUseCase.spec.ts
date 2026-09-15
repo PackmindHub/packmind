@@ -6,7 +6,7 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
-import { invalidInput, mockPort } from '@packmind/test-utils';
+import { invalidInput, mockInterface } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
 
@@ -54,7 +54,7 @@ describe('ListAvailableReposUseCase', () => {
   } as GitProvider;
 
   beforeEach(() => {
-    mockGitProviderService = mockPort<GitProviderService>();
+    mockGitProviderService = mockInterface<GitProviderService>();
 
     useCase = new ListAvailableReposUseCase(mockGitProviderService);
   });

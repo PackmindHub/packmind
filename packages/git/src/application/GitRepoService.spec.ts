@@ -1,4 +1,4 @@
-import { mockPort } from '@packmind/test-utils';
+import { mockInterface } from '@packmind/test-utils';
 import { GitRepoService } from './GitRepoService';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
 import { createOrganizationId, createUserId } from '@packmind/types';
@@ -19,7 +19,7 @@ describe('GitRepoService', () => {
   });
 
   beforeEach(() => {
-    mockGitRepoRepository = mockPort<IGitRepoRepository>();
+    mockGitRepoRepository = mockInterface<IGitRepoRepository>();
 
     gitRepoService = new GitRepoService(mockGitRepoRepository);
   });

@@ -9,7 +9,7 @@ import axios, { AxiosInstance } from 'axios';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
-// than with mockPort: only the verbs this suite drives are stubbed.
+// than with mockInterface: only the verbs this suite drives are stubbed.
 const mockAxiosInstance = {
   get: jest.fn(),
   post: jest.fn(),

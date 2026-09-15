@@ -1,4 +1,4 @@
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   GitProviderDisplayNameAlreadyUsedError,
@@ -62,7 +62,7 @@ describe('UpdateGitProviderUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    accountsAdapter = mockPort<IAccountsPort>();
+    accountsAdapter = mockInterface<IAccountsPort>();
     accountsAdapter.getUserById.mockResolvedValue(adminUser);
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

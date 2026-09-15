@@ -13,7 +13,7 @@ import { IGitProviderRepository } from '../../../domain/repositories/IGitProvide
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import { stubLogger, mockPort } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
 
@@ -27,12 +27,12 @@ describe('CheckDirectoryExistenceUseCase', () => {
 
   beforeEach(() => {
     // Mock GitRepoService with its required methods
-    mockGitRepoService = mockPort<GitRepoService>();
+    mockGitRepoService = mockInterface<GitRepoService>();
 
-    mockGitProviderRepository = mockPort<IGitProviderRepository>();
+    mockGitProviderRepository = mockInterface<IGitProviderRepository>();
 
     // Mock IGitRepo instance with checkDirectoryExists method
-    mockGitRepoInstance = mockPort<IGitRepo>();
+    mockGitRepoInstance = mockInterface<IGitRepo>();
 
     // Mock IGitRepoFactory
     mockGitRepoFactory = {

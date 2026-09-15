@@ -1,4 +1,4 @@
-import { invalidInput, mockPort, stubLogger } from '@packmind/test-utils';
+import { invalidInput, mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   createOrganizationId,
@@ -46,7 +46,7 @@ describe('ListProvidersUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    mockAccountsPort = mockPort<IAccountsPort>();
+    mockAccountsPort = mockInterface<IAccountsPort>();
     mockAccountsPort.getUserById.mockResolvedValue(user);
     mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
 
