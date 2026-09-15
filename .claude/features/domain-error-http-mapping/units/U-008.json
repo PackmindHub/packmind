@@ -1,0 +1,16 @@
+{
+  "unit_id": "U-008",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/node-utils/src/nest/filters/index.ts",
+    "packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+    "packages/node-utils/src/nest/filters/DomainExceptionFilter.spec.ts",
+    "packages/node-utils/.swcrc",
+    "packages/node-utils/jest.config.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test node-utils --testNamePattern='DomainExceptionFilter'",
+    "kind": "behavioural",
+    "describes": "prepares AC-1..AC-6, AC-8, AC-9, AC-11"
+  }
+}

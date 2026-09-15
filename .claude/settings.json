@@ -1,4 +1,7 @@
 {
+  "env": {
+    "PACKMIND_EDITION": "oss"
+  },
   "statusLine": {
     "type": "command",
     "command": "python3 .claude/statusline.py"

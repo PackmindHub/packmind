@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-009",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "apps/api/src/app/app.module.ts",
+    "apps/api/src/app/shared/filters/domainExceptionFilter.integration.spec.ts",
+    "apps/api/webpack.paths.base.js"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test api --testNamePattern='the domain exception filter over HTTP'",
+    "kind": "behavioural",
+    "describes": "AC-1..AC-6, AC-8, AC-9"
+  }
+}

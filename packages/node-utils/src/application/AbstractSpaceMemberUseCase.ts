@@ -6,14 +6,21 @@ import {
   SpaceMemberCommand,
 } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
+import { SpaceContext, UserAccessError } from './UserAccessErrors';
 
 const defaultOrigin = 'AbstractSpaceMemberUseCase';
 
 export type SpaceMemberContext = MemberContext;
 
-export class SpaceMembershipRequiredError extends Error {
+export class SpaceMembershipRequiredError extends UserAccessError {
   constructor(userId: string, spaceId: string) {
-    super(`User ${userId} is not a member of space ${spaceId}`);
+    const context: SpaceContext = { userId, spaceId };
+    super(
+      'not_found',
+      'space_membership_required',
+      context,
+      'This space does not exist, or you do not have access to it.',
+    );
     this.name = 'SpaceMembershipRequiredError';
   }
 }

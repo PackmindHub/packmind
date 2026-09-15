@@ -1,0 +1,15 @@
+{
+  "unit_id": "U-001",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/types/src/errors/DomainError.ts",
+    "packages/types/src/errors/DomainError.spec.ts",
+    "packages/types/src/errors/index.ts",
+    "packages/types/src/index.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test types --testNamePattern='isDomainError'",
+    "kind": "behavioural",
+    "describes": "prepares AC-6"
+  }
+}

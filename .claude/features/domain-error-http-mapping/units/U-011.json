@@ -1,0 +1,12 @@
+{
+  "unit_id": "U-011",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/node-utils/src/nest/filters/index.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test api --testNamePattern='the domain exception filter over HTTP'",
+    "kind": "characterization",
+    "describes": "no behavioural delta"
+  }
+}

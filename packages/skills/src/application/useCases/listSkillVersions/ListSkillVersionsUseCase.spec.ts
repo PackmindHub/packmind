@@ -1,3 +1,7 @@
+import {
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -261,8 +265,8 @@ describe('ListSkillVersionsUseCase', () => {
       });
 
       it('throws user not found error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotFoundError,
         );
       });
     });
@@ -293,8 +297,8 @@ describe('ListSkillVersionsUseCase', () => {
       });
 
       it('throws membership error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotInOrganizationError,
         );
       });
     });
