@@ -66,6 +66,7 @@ import {
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
+import { PackageVersionArea } from './PackageVersionArea';
 import { RelativeDate } from '../RelativeDate';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
@@ -775,6 +776,19 @@ export function ContextPackagePane({
           <PMBox minW={0} maxWidth="68ch">
             <PMHeading level="h2">{pkg.name}</PMHeading>
             <PackageActivity pkg={pkg} />
+            {/*
+              The package's version, and the one action that moves it. It sits
+              under the name rather than beside the header's other buttons
+              because it reads as a fact about the package first and an action
+              second, and because a later feature gate wraps exactly this one
+              element.
+            */}
+            <PackageVersionArea
+              packageId={pkg.id}
+              spaceId={spaceId}
+              organizationId={organizationId}
+              componentsCount={total}
+            />
             {pkg.description && (
               <ContextPackageDescription
                 packageName={pkg.name}
