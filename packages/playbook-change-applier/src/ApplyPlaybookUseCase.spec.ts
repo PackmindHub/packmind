@@ -93,8 +93,6 @@ describe('ApplyPlaybookUseCase', () => {
         skill: { id: createSkillId(uuidv4()), slug: 'my-skill' } as Skill,
         versionCreated: true,
       }),
-      hardDeleteSkill: async () => undefined,
-      hardDeleteSkillVersion: async () => undefined,
       getSkillFiles: async () => [],
     });
 
@@ -104,8 +102,6 @@ describe('ApplyPlaybookUseCase', () => {
           id: createStandardId(uuidv4()),
           slug: 'my-standard',
         }) as Standard,
-      hardDeleteStandard: async () => undefined,
-      hardDeleteStandardVersion: async () => undefined,
       getRulesByStandardId: async () => [],
     });
 
@@ -115,8 +111,6 @@ describe('ApplyPlaybookUseCase', () => {
           id: createCommandId(uuidv4()),
           slug: 'my-command',
         }) as Command,
-      hardDeleteCommand: async () => undefined,
-      hardDeleteCommandVersion: async () => undefined,
     });
 
     spacesPort = mockInterface<ISpacesPort>({
