@@ -44,6 +44,17 @@ export type AnalyticsEventMap = {
       | 'cliInit'
       | 'cliStartAnalysis';
   };
+  /**
+   * A reader moved between the two space navigations. `origin` separates an
+   * invitation that was followed from a switch that was found: a link
+   * carrying `?nav=` is how the beta is handed out, the switch on the profile
+   * page is how somebody who already knows about it changes their mind.
+   */
+  navigation_mode_switched: {
+    fromMode: 'today' | 'plugin-first';
+    toMode: 'today' | 'plugin-first';
+    origin: 'switch' | 'link';
+  };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
@@ -62,4 +73,11 @@ export type UserProperties = Record<string, unknown> & {
   orgName?: string;
   plan?: string;
   edition?: 'oss' | 'proprietary';
+  /**
+   * Which space navigation this person is reading right now. Set for everyone,
+   * `today` included: it is what lets every other event be split by
+   * architecture, and a property posted only for the people who switched would
+   * have no denominator to divide by.
+   */
+  navigationMode?: 'today' | 'plugin-first';
 };

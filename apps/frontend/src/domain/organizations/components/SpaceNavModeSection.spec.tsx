@@ -8,10 +8,18 @@ import type { Mock } from 'vitest';
 import { SpaceNavModeSection } from './SpaceNavModeSection';
 import { SpaceNavModeProvider, useSpaceNavMode } from './SpaceNavModeContext';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 
 vi.mock('../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: vi.fn(),
 }));
+
+vi.mock(
+  '@packmind/proprietary/frontend/domain/amplitude/providers/analytics',
+  () => ({
+    Analytics: { track: vi.fn(), setUserProperties: vi.fn() },
+  }),
+);
 
 const IN_BETA = 'joan@packmind.com';
 const OUTSIDE_BETA = 'someone@example.com';
@@ -46,6 +54,7 @@ function renderSection(userEmail: string, url = '/') {
 describe('SpaceNavModeSection', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   describe('when the user is outside the flag audience', () => {
@@ -143,6 +152,58 @@ describe('SpaceNavModeSection', () => {
         renderSection(IN_BETA);
 
         expect(screen.getByLabelText('New navigation')).toBeChecked();
+      });
+    });
+  });
+  describe('what it reports', () => {
+    it('names the architecture of every reader, so a rate has a denominator', () => {
+      renderSection(OUTSIDE_BETA);
+
+      expect(Analytics.setUserProperties).toHaveBeenCalledWith({
+        navigationMode: 'today',
+      });
+    });
+
+    it('reports a flip of the switch', async () => {
+      renderSection(IN_BETA);
+
+      await userEvent.click(screen.getByLabelText('New navigation'));
+
+      expect(Analytics.track).toHaveBeenCalledWith('navigation_mode_switched', {
+        fromMode: 'plugin-first',
+        toMode: 'today',
+        origin: 'switch',
+      });
+    });
+
+    it('reports an invitation link that was followed', () => {
+      renderSection(OUTSIDE_BETA, '/?nav=plugin-first');
+
+      expect(Analytics.track).toHaveBeenCalledWith('navigation_mode_switched', {
+        fromMode: 'today',
+        toMode: 'plugin-first',
+        origin: 'link',
+      });
+    });
+
+    describe('when the link asks for the mode the reader is already on', () => {
+      it('reports nothing, since nothing moved', () => {
+        renderSection(IN_BETA, '/?nav=plugin-first');
+
+        expect(Analytics.track).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a mode was already chosen', () => {
+      it('reports the move away from it, not from the default', () => {
+        localStorage.setItem(CHOICE_KEY, 'plugin-first');
+
+        renderSection(OUTSIDE_BETA, '/?nav=today');
+
+        expect(Analytics.track).toHaveBeenCalledWith(
+          'navigation_mode_switched',
+          { fromMode: 'plugin-first', toMode: 'today', origin: 'link' },
+        );
       });
     });
   });

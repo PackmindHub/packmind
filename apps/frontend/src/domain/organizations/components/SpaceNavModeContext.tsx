@@ -13,6 +13,7 @@ import {
   isFeatureFlagEnabled,
   SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
 } from '@packmind/feature-flags';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 
 /**
  * Which information architecture a space's sidebar renders: the current one,
@@ -162,13 +163,41 @@ export function SpaceNavModeProvider({
    * A `nav` in the URL is as much a choice as flipping the switch, so it is
    * stored as one. The parameter does not survive an internal link, and
    * without this a pinned demo would come undone on the first click.
+   *
+   * The event compares against the mode this browser would have resolved
+   * *without* the parameter, not against the mode in state: `pickMode` has
+   * already applied the parameter by the time this runs, so comparing with
+   * state would report nothing for the one case worth counting, somebody
+   * arriving on an invitation link. Reading storage here is safe because the
+   * write below is the only one, so a second pass over the same parameter —
+   * a redirect carrying it on, a remount, StrictMode — reads back what it just
+   * wrote and stays quiet.
    */
   useEffect(() => {
-    if (isSpaceNavMode(requestedMode)) {
-      setMode(requestedMode);
-      rememberChosenMode(requestedMode);
+    if (!isSpaceNavMode(requestedMode)) return;
+
+    const previous = readChosenMode() ?? defaultMode(userEmail);
+    if (previous !== requestedMode) {
+      Analytics.track('navigation_mode_switched', {
+        fromMode: previous,
+        toMode: requestedMode,
+        origin: 'link',
+      });
     }
-  }, [requestedMode]);
+
+    setMode(requestedMode);
+    rememberChosenMode(requestedMode);
+  }, [requestedMode, userEmail]);
+
+  /*
+   * Posted for everybody, `today` included, and on mount rather than on a
+   * change. It is what lets every other event be read per architecture, and a
+   * property carried only by the people who switched would leave the rate with
+   * no denominator. In OSS the whole call is a no-op.
+   */
+  useEffect(() => {
+    Analytics.setUserProperties({ navigationMode: mode });
+  }, [mode]);
 
   /*
    * Only a choice is written. Storing the resolved mode instead — which is what

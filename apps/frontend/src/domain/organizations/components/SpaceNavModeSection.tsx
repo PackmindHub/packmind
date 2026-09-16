@@ -9,6 +9,7 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
 } from '@packmind/feature-flags';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useSpaceNavMode } from './SpaceNavModeContext';
 
@@ -49,9 +50,21 @@ export function SpaceNavModeSection() {
               size="sm"
               colorPalette="blue"
               checked={mode === 'plugin-first'}
-              onCheckedChange={(details) =>
-                setMode(details.checked ? 'plugin-first' : 'today')
-              }
+              onCheckedChange={(details) => {
+                const next = details.checked ? 'plugin-first' : 'today';
+                /*
+                 * `switch` rather than `link`: this is somebody who already
+                 * knows the beta exists changing their mind, not somebody
+                 * following an invitation. Keeping the two apart is what says
+                 * whether the beta is spreading on its own.
+                 */
+                Analytics.track('navigation_mode_switched', {
+                  fromMode: mode,
+                  toMode: next,
+                  origin: 'switch',
+                });
+                setMode(next);
+              }}
               /*
                * On the hidden input rather than on the root: the root is the
                * `<label>`, so naming it there leaves the checkbox itself
