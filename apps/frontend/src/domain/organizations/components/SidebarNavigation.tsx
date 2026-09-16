@@ -43,6 +43,7 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
 import { useSidebarCollapse } from './SidebarCollapseContext';
+import { useSpaceNavMode } from './SpaceNavModeContext';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
 import { SidebarSectionCaption } from './sidebar/SidebarSectionCaption';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
@@ -194,6 +195,13 @@ export const SidebarNavigation: React.FunctionComponent<
   // space — except on org-only sections where we want no active space.
   const currentSpaceSlug = spaceSlug || fallbackSpaceSlug;
 
+  /*
+   * One boolean, decided in SpaceNavModeContext. The three conditions behind it
+   * live there on purpose: this file differs between the two editions, and a
+   * condition hand-applied twice is a condition that drifts.
+   */
+  const { shouldPointAtNewNavigation } = useSpaceNavMode();
+
   const sidebarWidth = isCollapsed
     ? SIDEBAR_WIDTH_COLLAPSED
     : SIDEBAR_WIDTH_EXPANDED;
@@ -293,15 +301,35 @@ export const SidebarNavigation: React.FunctionComponent<
                         SidebarAccountsMenuDataTestIds.OpenSubMenuCTA
                       }
                     >
-                      <PMAvatar.Root
-                        size="xs"
-                        backgroundColor="background.secondary"
-                        color="text.primary"
-                      >
-                        <PMAvatar.Fallback
-                          name={user?.displayName ?? user?.email}
-                        />
-                      </PMAvatar.Root>
+                      {/*
+                        Collapsed, the account entries are a menu and a menu
+                        item carries no badge, so the mark goes on what is
+                        actually on screen. Without it the readers who work with
+                        a narrow sidebar would be the ones never told, which is
+                        the gap moving the switch to the profile page just
+                        closed.
+                      */}
+                      <PMBox position="relative" display="inline-flex">
+                        <PMAvatar.Root
+                          size="xs"
+                          backgroundColor="background.secondary"
+                          color="text.primary"
+                        >
+                          <PMAvatar.Fallback
+                            name={user?.displayName ?? user?.email}
+                          />
+                        </PMAvatar.Root>
+                        {shouldPointAtNewNavigation && (
+                          <PMBox
+                            position="absolute"
+                            top="-2px"
+                            right="-2px"
+                            boxSize="1.5"
+                            borderRadius="full"
+                            bg="blue.300"
+                          />
+                        )}
+                      </PMBox>
                     </PMBox>
                   </PMMenu.Trigger>
                   <PMPortal>
@@ -373,6 +401,17 @@ export const SidebarNavigation: React.FunctionComponent<
                       url={routes.org.toProfile(orgSlug)}
                       label="Profile"
                       icon={<LuCircleUser />}
+                      /*
+                       * The only thing in the app that says the new navigation
+                       * exists. It points at the page holding the switch rather
+                       * than explaining anything, and the section it leads to
+                       * clears it on sight.
+                       */
+                      badge={
+                        shouldPointAtNewNavigation
+                          ? { text: 'Beta', colorScheme: 'blue' }
+                          : undefined
+                      }
                     />,
                     <SidebarNavigationLink
                       key="setup"

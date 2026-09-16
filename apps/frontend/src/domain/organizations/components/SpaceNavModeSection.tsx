@@ -10,6 +10,7 @@ import {
   SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
 } from '@packmind/feature-flags';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
+import { useEffect } from 'react';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useSpaceNavMode } from './SpaceNavModeContext';
 
@@ -30,7 +31,16 @@ import { useSpaceNavMode } from './SpaceNavModeContext';
  */
 export function SpaceNavModeSection() {
   const { user } = useAuthContext();
-  const { mode, setMode } = useSpaceNavMode();
+  const { mode, setMode, markNewNavigationSeen } = useSpaceNavMode();
+
+  /*
+   * Marked here rather than on the profile route: this component only renders
+   * for somebody the flag covers, so the mark follows the offer having actually
+   * been on screen and not merely the page having been opened.
+   */
+  useEffect(() => {
+    markNewNavigationSeen();
+  }, [markNewNavigationSeen]);
 
   return (
     <PMFeatureFlag
@@ -43,7 +53,7 @@ export function SpaceNavModeSection() {
         it is given in a heading, so handing it one nests an `h3` inside an
         `h3`. Several sections elsewhere still do exactly that.
       */}
-      <PMPageSection backgroundColor="primary" title="Navigation">
+      <PMPageSection backgroundColor="primary" title="Navigation (beta)">
         <PMVStack align="stretch" gap={5} pt={4} w="lg">
           <PMField.Root>
             <PMSwitch
@@ -76,10 +86,16 @@ export function SpaceNavModeSection() {
             >
               New navigation
             </PMSwitch>
+            {/*
+              This text is the whole explanation. There is no page documenting
+              the navigation, deliberately: one that needs documenting has a
+              problem the documentation would only hide. So it says what changes,
+              that the change is free to undo, and how far the choice reaches.
+            */}
             <PMField.HelperText>
               Replaces the per-object entries of a space with Context,
-              Distribution and Review changes. The choice applies to this
-              browser, on every space at once.
+              Distribution and Review changes. You can switch back at any time.
+              The choice applies to this browser, on every space at once.
             </PMField.HelperText>
           </PMField.Root>
         </PMVStack>

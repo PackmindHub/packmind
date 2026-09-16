@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
@@ -26,8 +26,15 @@ const OUTSIDE_DEFAULT_AUDIENCE = 'someone@example.com';
 const CHOICE_KEY = 'space-nav-mode.v2';
 
 function ModeProbe() {
-  const { mode } = useSpaceNavMode();
-  return <span data-testid="mode">{mode}</span>;
+  const { mode, shouldPointAtNewNavigation } = useSpaceNavMode();
+  return (
+    <>
+      <span data-testid="mode">{mode}</span>
+      <span data-testid="pointer">
+        {shouldPointAtNewNavigation ? 'pointing' : 'quiet'}
+      </span>
+    </>
+  );
 }
 
 /*
@@ -36,6 +43,25 @@ function ModeProbe() {
  * shows and one for where the person starts, so a test that mocked only one of
  * the two would describe a state that cannot happen.
  */
+/*
+ * The provider without the section, which is the only way to read the pointer
+ * before the offer has been on screen: rendering the section marks it seen on
+ * mount, so a probe beside it would always report the state after the fact.
+ */
+function renderWithoutSection(userEmail: string, url = '/') {
+  (useAuthContext as Mock).mockReturnValue({ user: { email: userEmail } });
+
+  return render(
+    <UIProvider>
+      <MemoryRouter initialEntries={[url]}>
+        <SpaceNavModeProvider userEmail={userEmail}>
+          <ModeProbe />
+        </SpaceNavModeProvider>
+      </MemoryRouter>
+    </UIProvider>,
+  );
+}
+
 function renderSection(userEmail: string, url = '/') {
   (useAuthContext as Mock).mockReturnValue({ user: { email: userEmail } });
 
@@ -55,6 +81,37 @@ describe('SpaceNavModeSection', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+  });
+
+  describe('the mark that points at it', () => {
+    it('points, for somebody who has never had the offer on screen', () => {
+      renderWithoutSection(OUTSIDE_DEFAULT_AUDIENCE);
+
+      expect(screen.getByTestId('pointer')).toHaveTextContent('pointing');
+    });
+
+    it('goes quiet once the section has rendered', () => {
+      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
+
+      expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
+    });
+
+    it('stays quiet on the next visit, since the browser remembers', () => {
+      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
+      cleanup();
+
+      renderWithoutSection(OUTSIDE_DEFAULT_AUDIENCE);
+
+      expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
+    });
+
+    describe('when the reader is already on the new navigation', () => {
+      it('says nothing, since there is nothing to discover', () => {
+        renderWithoutSection(IN_DEFAULT_AUDIENCE);
+
+        expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
+      });
+    });
   });
 
   /*
@@ -88,7 +145,7 @@ describe('SpaceNavModeSection', () => {
       renderSection(IN_DEFAULT_AUDIENCE);
 
       expect(
-        screen.getByRole('heading', { name: 'Navigation' }),
+        screen.getByRole('heading', { name: 'Navigation (beta)' }),
       ).toBeInTheDocument();
     });
 
