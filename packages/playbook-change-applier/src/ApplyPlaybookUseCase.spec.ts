@@ -83,42 +83,35 @@ describe('ApplyPlaybookUseCase', () => {
   };
 
   beforeEach(() => {
-    accountsPort = mockInterface<IAccountsPort>({
-      getUserById: async () => user,
-      getOrganizationById: async () => organization,
-    });
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    skillsPort = mockInterface<ISkillsPort>({
-      uploadSkill: async () => ({
-        skill: { id: createSkillId(uuidv4()), slug: 'my-skill' } as Skill,
-        versionCreated: true,
-      }),
-      getSkillFiles: async () => [],
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.uploadSkill.mockResolvedValue({
+      skill: { id: createSkillId(uuidv4()), slug: 'my-skill' } as Skill,
+      versionCreated: true,
     });
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    standardsPort = mockInterface<IStandardsPort>({
-      createStandardWithExamples: async () =>
-        ({
-          id: createStandardId(uuidv4()),
-          slug: 'my-standard',
-        }) as Standard,
-      getRulesByStandardId: async () => [],
-    });
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.createStandardWithExamples.mockResolvedValue({
+      id: createStandardId(uuidv4()),
+      slug: 'my-standard',
+    } as Standard);
+    standardsPort.getRulesByStandardId.mockResolvedValue([]);
 
-    commandsPort = mockInterface<ICommandsPort>({
-      captureCommand: async () =>
-        ({
-          id: createCommandId(uuidv4()),
-          slug: 'my-command',
-        }) as Command,
-    });
+    commandsPort = mockInterface<ICommandsPort>();
+    commandsPort.captureCommand.mockResolvedValue({
+      id: createCommandId(uuidv4()),
+      slug: 'my-command',
+    } as Command);
 
-    spacesPort = mockInterface<ISpacesPort>({
-      getSpaceById: async (id) => {
-        if (id === spaceId) return space;
-        if (id === spaceId2) return space2;
-        return null;
-      },
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.getSpaceById.mockImplementation(async (id) => {
+      if (id === spaceId) return space;
+      if (id === spaceId2) return space2;
+      return null;
     });
 
     stubbedLogger = stubLogger();
