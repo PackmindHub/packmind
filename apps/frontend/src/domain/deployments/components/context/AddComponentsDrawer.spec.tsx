@@ -6,9 +6,11 @@ import { UIProvider } from '@packmind/ui';
 import {
   createOrganizationId,
   createPackageId,
+  createSkillId,
   createSpaceId,
   createStandardId,
   type PackageResponse,
+  type Skill,
   type Standard,
   type StandardId,
 } from '@packmind/types';
@@ -53,9 +55,20 @@ const standard = (id: string, name: string): Standard =>
     version: 1,
   }) as Standard;
 
+const skill = (id: string, name: string): Skill =>
+  ({
+    id: createSkillId(id),
+    name,
+    slug: name.toLowerCase().replace(/ /g, '-'),
+    description: '',
+    version: 1,
+  }) as Skill;
+
 const NAMING = standard('s1', 'Naming conventions');
 /** A candidate some other package already carries, so it is not an orphan. */
 const SHIPPED = standard('s2', 'Error handling');
+/** A second type, so the list has something for the type chips to narrow. */
+const REVIEWING = skill('k1', 'Reviewing a diff');
 
 const emptyCatalogue: SpaceCatalogue = {
   standards: [],
@@ -272,7 +285,7 @@ describe('AddComponentsDrawer', () => {
 
       withPackages([otherPackage([NAMING.id])]);
 
-      expect(screen.queryByText(/Nothing matches/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/matches/)).not.toBeInTheDocument();
     });
 
     it('says what the list has become', () => {
@@ -281,6 +294,82 @@ describe('AddComponentsDrawer', () => {
       withPackages([otherPackage([NAMING.id])]);
 
       expect(screen.getByText(/does not hold yet/)).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The reason the chips exist: a space of four hundred loose components
+   * arrives here as one list of every type, and reaching the skills meant
+   * typing a word they happen to share.
+   */
+  describe('when the candidates span several types', () => {
+    const mixed = {
+      catalogue: {
+        ...emptyCatalogue,
+        standards: [NAMING],
+        skills: [REVIEWING],
+      },
+    };
+
+    const chip = (name: string) => screen.getByRole('button', { name });
+
+    it('offers one chip per type among the candidates', () => {
+      renderDrawer(mixed);
+
+      expect(chip('Standards, 1')).toBeInTheDocument();
+      expect(chip('Skills, 1')).toBeInTheDocument();
+    });
+
+    it('narrows the list to the type picked', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(chip('Skills, 1'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Reviewing a diff/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('checkbox', { name: /Naming conventions/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('gives the whole list back', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(chip('Skills, 1'));
+      await userEvent.click(chip('All, 2'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * A pick is a decision about a component; narrowing the list is a way of
+     * reaching one. The second must not undo the first, or a reader working
+     * type by type loses everything at each chip.
+     */
+    it('keeps what was picked under another chip', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      );
+      await userEvent.click(chip('Skills, 1'));
+
+      expect(
+        screen.getByRole('button', { name: 'Add 1 standard' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the candidates are all of one type', () => {
+    it('offers no chip with nothing to narrow', () => {
+      renderDrawer();
+
+      expect(
+        screen.queryByRole('button', { name: /^All,/ }),
+      ).not.toBeInTheDocument();
     });
   });
 
