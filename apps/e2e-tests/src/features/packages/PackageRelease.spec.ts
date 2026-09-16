@@ -53,4 +53,25 @@ testWithApi.describe('package release', () => {
       ]);
     },
   );
+
+  testWithApi(
+    'it states why the action is disabled when nothing has changed',
+    async ({ dashboardPage }) => {
+      const contextPage = await dashboardPage.openPackageInContext(
+        releasablePackage.id,
+      );
+
+      await contextPage.createRelease('0.1.0');
+
+      // The readiness is recomputed server-side and re-read when the mutation's
+      // invalidation lands, so poll until the button is disabled.
+      // eslint-disable-next-line playwright/no-standalone-expect
+      await expect.poll(() => contextPage.canCreateRelease()).toBe(false);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await contextPage.getReleaseBlockedReason()).toBe(
+        'Nothing has changed since 0.1.0',
+      );
+    },
+  );
 });

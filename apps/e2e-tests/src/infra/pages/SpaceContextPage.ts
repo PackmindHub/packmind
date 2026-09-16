@@ -99,6 +99,36 @@ export class SpaceContextPage
   }
 
   /**
+   * Whether the "Create a release" button is currently enabled. Returns the
+   * negation of Playwright's isDisabled() check.
+   */
+  async canCreateRelease(): Promise<boolean> {
+    const button = this.page.getByRole('button', {
+      name: 'Create a release',
+      exact: true,
+    });
+    return !(await button.isDisabled());
+  }
+
+  /**
+   * The visible reason text explaining why the release action is disabled.
+   * Returns the trimmed text from the element immediately after the button row.
+   * Waits for it to be visible; returns empty string if not found.
+   */
+  async getReleaseBlockedReason(): Promise<string> {
+    const reasonElement = this.page
+      .getByRole('button', { name: 'Create a release', exact: true })
+      .locator('xpath=ancestor::*[1]/following-sibling::*[1]');
+
+    try {
+      await reasonElement.waitFor({ state: 'visible' });
+      return (await reasonElement.innerText()).trim();
+    } catch {
+      return '';
+    }
+  }
+
+  /**
    * The badge (no release) or button (released) sitting just before the
    * `Create a release` trigger in the version area. Both states have to be
    * reachable through one locator, and only the second one is a button — hence

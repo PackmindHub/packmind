@@ -117,6 +117,17 @@ export interface ISpaceContextPage extends IPackmindAppPage {
    * and trimmed. Waits for the detail view to render after the selection.
    */
   listComponentsPinnedBy(version: string): Promise<string[]>;
+  /**
+   * Whether the "Create a release" action is currently actionable. Returns
+   * true when enabled, false when disabled.
+   */
+  canCreateRelease(): Promise<boolean>;
+  /**
+   * The visible reason text explaining why the release action is disabled.
+   * Returns the trimmed text; waits for the element to be visible. Returns
+   * empty string if the verdict is ready (reason not rendered).
+   */
+  getReleaseBlockedReason(): Promise<string>;
 }
 
 export interface ICreateStandardPage extends IPackmindAppPage {
