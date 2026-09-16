@@ -182,9 +182,9 @@ nineteen units with every criterion met.
 | UK-8 | Amplitude: `package_version_released` and `package_release_refused` are asked for, but the analytics provider is imported from `@packmind/proprietary/frontend/domain/amplitude/...` and `packages/amplitude` is empty on OSS. Can these events be emitted from the OSS side at all, and does `package_release_refused` fire on a client-side rejection, a server-side one, or both? | design session, verified empirically |
 | UK-9 | Does a release record who cut it and when, and is that shown? Nothing in the issue asks for it, and nothing forbids it. | design session |
 | UK-10 | Which surface browses a released version (AC-18) — the existing context package pane with a version selector, a separate route, or a drawer — and where the version area sits relative to `PackageReachStrip` and the existing tabs. | design session |
-| UK-11 | Does the flag gate the **API routes** as well as the UI, or only the UI? If the routes stay open the feature is hidden but reachable by URL, and the immutable rows can still be created; if they close, what do they answer — 404, 403, or a refusal code — and does that disclose the flag's existence? | next design session |
-| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | next design session |
-| UK-13 | Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and outlive the flag. Does that matter, and is anything owed to them when the feature opens up? | next design session |
+| UK-11 | Does the flag gate the **API routes** as well as the UI, or only the UI? If the routes stay open the feature is hidden but reachable by URL, and the immutable rows can still be created; if they close, what do they answer — 404, 403, or a refusal code — and does that disclose the flag's existence? | **resolved — D-057**: UI only. The routes are unchanged, so they answer exactly what they answer today, and the disclosure question is moot. `isFeatureEnabled` has zero call sites in the repository and being its first is not worth the threat model |
+| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | **resolved — D-057**: `package-releases`, audience `['@packmind.com', '@promyze.com']`. D-020's premise was wrong — an audience of `[]` **is** off for everyone — and the empty audience is rejected anyway, because the `underFeatureFlag` fixture is domain-based and would take AC-22..AC-25 with it. Removal is left open, and D-057 says so |
+| UK-13 | Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and outlive the flag. Does that matter, and is anything owed to them when the feature opens up? | **resolved — D-057**: no. Under a staff pin they are demo data on staff organizations, plus what the e2e suite writes to its own database |
 
 ## Size and sessions
 
@@ -206,8 +206,8 @@ package pane. The comparison rules (AC-7, AC-8, AC-10) are pure functions and ar
 cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real design
 risk, and they are the two that UK-3 and UK-6 have to settle first.
 
-- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4). S4 is
-  unsized pending its design session
+- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4), plus `2`
+  for S4
 - verdict: `split`
 - session boundaries:
 
@@ -216,12 +216,18 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S1 | AC-16, AC-17, AC-18, AC-19, AC-20, AC-21 | the four tables and their migration, the `PackageRelease` aggregate, the version module in `packages/types`, the change gate and its comparisons, the three use cases and the three routes on the existing packages controller | — |
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
-  | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the feature flag that hides the release surface: at least the UI gate around `PackageVersionArea`, and whatever UK-11 decides about the API routes | S3, and its own design session |
+  | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
 
   **S1, S2 and S3 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
-  closed. It is **not sized**, because its unknowns are not resolved: the next session is a
-  design session (phase 1b), not an orchestrator run. Sizing is its closing act, as it was
-  for S1-S3.
+  closed, and sized the same day by D-057 — which the human decided directly, with the
+  repository facts attached, in place of the design session D-056 called for. UK-11, UK-12 and
+  UK-13 are resolved there.
+
+  S4 is two units and they do not share an exit command, which is the whole of why it is two:
+  the registry key and the JSX wrap are judged by `nx test frontend`, and the e2e spec's
+  `underFeatureFlag` declaration is judged by Playwright against a running stack. The second
+  is not bookkeeping — an audience that matches nobody in the browser suite would silently
+  retire AC-22 to AC-25, and the gate never runs Playwright, so nothing else would notice.
 
   The cut is not "backend then frontend" as a habit — it is where the contract is.
   The **rules** behind AC-2..AC-15 are built and unit-tested in S1, where they live

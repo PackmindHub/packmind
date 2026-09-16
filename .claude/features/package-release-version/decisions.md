@@ -3088,3 +3088,96 @@ resolves UK-11, UK-12 and UK-13 and then sizes the work; an orchestrator run fol
 nothing in `packages/feature-flags` changes, and the S3 end-to-end specs keep `underFeatureFlag: false`
 — whoever adds the gate owns updating them, and should expect to, because the four seam tests drive
 the surface the gate will hide.
+
+---
+
+## D-057 — The flag is a staff pin on the UI only: `package-releases`, `['@packmind.com', '@promyze.com']`, no route gate
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `UK-11`, `UK-12`, `UK-13`, `D-020`, `D-024`, `D-048`, `D-050`, `D-056`
+
+**Decision.** S4 adds one key, `package-releases`, to `packages/feature-flags/src/registry.ts`
+with the audience `['@packmind.com', '@promyze.com']` — the same entry every existing key
+carries. `<PackageVersionArea>` is wrapped in `<PMFeatureFlag>` at its single mount site in
+`ContextPackagePane`. **The three release routes are not gated.** Nothing calls
+`isFeatureEnabled`, and no `FF_PACKAGE_RELEASES` env var is relied on.
+
+Decided by the human on 2026-09-16, in place of the design session D-056 called for, after the
+three unknowns were put to them with the repository facts attached.
+
+**Reasoning.**
+
+*The registry has a kill switch after all, and we are choosing not to use it.* D-020 recorded
+that `packages/feature-flags` is "a mechanism for pinning a demo to staff, not a rollout or a
+kill switch", and D-056 inherited that as the premise of UK-12. It is wrong, and the correction
+matters more than the decision it informs: `isFeatureAllowedForUser` bails on
+`if (!allowedEntries?.length) return false`, so an audience of `[]` is off for everyone,
+staff included. "Hide from everyone until a sibling ships" **is** expressible in that registry,
+in one token.
+
+*It is rejected anyway, because of what it costs the e2e suite.* The `underFeatureFlag` fixture
+is **domain-based, not key-based**: it signs the test user up as `@packmind.com` rather than
+`@example.com`, and cannot flip one key. With an audience of `[]`, `@packmind.com` matches
+nothing either, and the frontend has no environment override to let the suite through — the map
+is a compile-time constant and the package README forbids the node-only dependency that would
+change that. The backend helper has an `FF_*` override; the browser bundle does not. So an
+empty audience takes AC-22 to AC-25 with it — the only four criteria that cross the HTTP
+boundary, added by D-048 precisely because a defect lived in that gap (D-042).
+
+*The staff pin is not what D-056 asked for in words, and is what it asked for in substance.*
+D-056's stated harm is a **curator** cutting `0.1.0`, `0.2.0`, `0.3.0` — immutable records
+(charter: no deleting, yanking, editing or re-cutting) that nothing installs and nothing
+compares against. Curators are customers; the pin makes the surface invisible to every one of
+them. Staff cutting demo releases know they are inert, which is the whole of UK-13's answer:
+releases cut before the flag opens are staff demo data on staff organizations, plus whatever the
+e2e suite writes to its own database. Nothing is owed to them.
+
+*UK-11: UI only.* The harm is writing immutable rows, not reading an empty list, so the read
+routes were never the question. The write route was, and the case for closing it is that a UI
+gate stops the well-behaved user and not a hand-crafted `POST`. It is not closed, because
+`isFeatureEnabled` has **zero call sites in this repository** — it is exported, documented in
+`node-utils/CLAUDE.md` and in the `feature-flags-authoring` skill, and called by nothing. Being
+its first caller is new machinery, asynchronous, inside a Nest controller that today carries only
+`OrganizationAccessGuard`, and it buys a threat model of "a customer reads our API surface and
+hand-writes a request to create a record they cannot see". That is not the risk D-056 named.
+
+*What this deliberately does not fix.* The flag's effect is nearly identical to the accidental
+state D-050 found — the Context surface is already reachable only under `plugin-first`
+navigation, itself pinned to the same two domains. D-056 already answered that objection and it
+still holds: the point is not a change in who sees the feature, it is that the hiding becomes
+deliberate, owned by this feature's own code, and switchable by one line in a registry rather
+than by another team's navigation work.
+
+**Rejected.**
+
+- **An audience of `[]` — literally off for everyone.** Expressible, one token, and exactly
+  D-056's wording. It retires AC-22 to AC-25 until the flag opens, because no frontend override
+  exists to let the suite past a map that matches nobody. Trading the feature's only
+  cross-boundary tests for a distinction between "invisible to all customers" and "invisible to
+  all humans" is a bad trade.
+- **An audience of `[]` plus a build-time override for the frontend map.** Buys the wording back
+  and puts `import.meta.env` into a package whose README says it must stay pure and
+  browser-safe, for one flag, changing how every other flag resolves.
+- **Gating the create route as well.** Defensible, and the honest cost is first-caller risk on an
+  unused async helper for a threat the charter never raised. Reconsider when the consumer story
+  lands and a release starts to mean something.
+- **Answering a gated route with 404 or 403** — moot once the routes stay open, recorded because
+  UK-11 asked what they would answer and the answer is now "nothing, they are unchanged".
+
+**Constrains implementation.** Add the key constant, the `FeatureFlagKey` union member and the
+`DEFAULT_FEATURE_DOMAIN_MAP` entry together, per the `feature-flags-authoring` skill — all three
+or none. Wrap exactly the one `<PackageVersionArea>` element in `ContextPackagePane`; do not
+move it, do not gate its siblings, do not gate the pane. Do not touch
+`packages/deployments`, `apps/api`, or any file under `packages/node-utils`. Do not call
+`isFeatureEnabled`. `PackageRelease.spec.ts` must declare
+`testWithApi.use({ underFeatureFlag: true })` — that is not optional bookkeeping, it is what
+keeps four acceptance criteria reachable.
+
+**Left open.** Who removes the flag, and when. D-020 rejected a flag partly because "it would
+have to be removed in a follow-up nobody schedules", and that objection is not answered here —
+the sibling consumer story has no date. The removal path is the `feature-flags-authoring`
+skill's "Remove a flag" section, and it is three deletions and an audit run.
