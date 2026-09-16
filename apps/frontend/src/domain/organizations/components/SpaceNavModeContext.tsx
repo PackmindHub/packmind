@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router';
 import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
-  SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
+  SPACE_NAV_PLUGIN_FIRST_BY_DEFAULT_FEATURE_KEY,
 } from '@packmind/feature-flags';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 
@@ -60,10 +60,14 @@ function isSpaceNavMode(value: string | null): value is SpaceNavMode {
  * audience lands on the plugin-first navigation, everyone else on the current
  * one. It stays a default and not a lock — the switch moves either way, and a
  * mode that was chosen wins over this.
+ *
+ * The `by-default` key, not the one that gates the switch. They are the same
+ * audience today and they are meant to part: the offer widens to hand the beta
+ * out, while who lands on it without asking stays deliberately narrow.
  */
 function defaultMode(userEmail?: string | null): SpaceNavMode {
   return isFeatureFlagEnabled({
-    featureKeys: [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY],
+    featureKeys: [SPACE_NAV_PLUGIN_FIRST_BY_DEFAULT_FEATURE_KEY],
     featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
     userEmail,
   })

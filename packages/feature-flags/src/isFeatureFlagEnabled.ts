@@ -11,6 +11,21 @@ export interface FeatureFlagEvaluationInput {
   userEmail?: string | null;
 }
 
+/**
+ * The entry that opens a flag to everybody rather than to a list. It still
+ * needs somebody signed in: `isFeatureFlagEnabled` answers false for an absent
+ * email before any entry is read, so `*` means every account, not every
+ * visitor.
+ *
+ * A flag opened this way keeps its entry in the registry, which is what lets it
+ * be narrowed again by editing one line rather than by reverting the code that
+ * reads it.
+ */
+export const EVERY_ACCOUNT_ENTRY = '*';
+
+const isEveryAccountEntry = (entry: string): boolean =>
+  entry.trim() === EVERY_ACCOUNT_ENTRY;
+
 const isExactEmailEntry = (entry: string): boolean =>
   entry.includes('@') && !entry.trim().startsWith('@');
 
@@ -43,6 +58,9 @@ const isEntryAllowedForUser = ({
   userEmail: string;
   userDomain: string | null;
 }): boolean => {
+  if (isEveryAccountEntry(entry)) {
+    return true;
+  }
   if (isExactEmailEntry(entry)) {
     return normalizeEmail(entry) === userEmail;
   }

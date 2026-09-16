@@ -127,6 +127,56 @@ describe('isFeatureFlagEnabled', () => {
     });
   });
 
+  describe('when the entry opens the flag to every account', () => {
+    const openMap = {
+      featureOpen: ['*'],
+    };
+
+    it('enables the feature for a domain nobody listed', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureOpen'],
+        featureDomainMap: openMap,
+        userEmail: 'someone@unknown-company.com',
+      });
+
+      expect(isEnabled).toBe(true);
+    });
+
+    it('still refuses somebody who is not signed in', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureOpen'],
+        featureDomainMap: openMap,
+        userEmail: null,
+      });
+
+      expect(isEnabled).toBe(false);
+    });
+
+    describe('when it sits beside a domain', () => {
+      it('opens the flag anyway, since one entry is enough', () => {
+        const isEnabled = isFeatureFlagEnabled({
+          featureKeys: ['featureOpen'],
+          featureDomainMap: { featureOpen: ['@packmind.com', '*'] },
+          userEmail: 'someone@unknown-company.com',
+        });
+
+        expect(isEnabled).toBe(true);
+      });
+    });
+
+    describe('when the star is part of a longer entry', () => {
+      it('does not open the flag, since only the entry itself means everybody', () => {
+        const isEnabled = isFeatureFlagEnabled({
+          featureKeys: ['featureOpen'],
+          featureDomainMap: { featureOpen: ['*.packmind.com'] },
+          userEmail: 'someone@sub.packmind.com',
+        });
+
+        expect(isEnabled).toBe(false);
+      });
+    });
+  });
+
   describe('when the email is malformed', () => {
     it('returns false for an email with no @', () => {
       const isEnabled = isFeatureFlagEnabled({
