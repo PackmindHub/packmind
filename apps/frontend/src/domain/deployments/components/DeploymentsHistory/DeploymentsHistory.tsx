@@ -47,6 +47,12 @@ type DeploymentsHistoryProps = {
   | { type: Exclude<DeploymentType, 'package'>; deployments: Distribution[] }
 );
 
+type HistoryRow = {
+  deployment: DistributionHistoryEntry;
+  version: string | number;
+  removed: boolean;
+};
+
 export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   deployments,
   type,
@@ -417,25 +423,22 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     { key: 'message', header: 'Message', grow: true, align: 'left' },
   ] as PMTableColumn[];
 
-  const rows: Array<{
-    deployment: DistributionHistoryEntry;
-    version: string | number;
-    removed: boolean;
-  }> =
-    type === 'package'
-      ? deployments.map((deployment) => ({
-          deployment,
-          version: '-',
-          removed:
-            deployment.distributedPackages.find(
-              (dp) => dp.packageId === entityId,
-            )?.operation === 'remove',
-        }))
-      : deployments.map((deployment) => ({
-          deployment,
-          version: getVersion(deployment),
-          removed: isRemoval(deployment),
-        }));
+  let rows: HistoryRow[];
+  if (type === 'package') {
+    rows = deployments.map((deployment) => ({
+      deployment,
+      version: '-',
+      removed:
+        deployment.distributedPackages.find((dp) => dp.packageId === entityId)
+          ?.operation === 'remove',
+    }));
+  } else {
+    rows = deployments.map((deployment) => ({
+      deployment,
+      version: getVersion(deployment),
+      removed: isRemoval(deployment),
+    }));
+  }
 
   const tableData: PMTableRow[] = rows.map(
     ({ deployment, version, removed }) => ({
