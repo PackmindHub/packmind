@@ -1,5 +1,6 @@
 import {
   Distribution,
+  DistributionHistoryEntry,
   DistributionId,
   DistributionStatus,
   GitCommit,
@@ -38,7 +39,7 @@ export interface IDistributionRepository {
   listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<DistributionHistoryEntry[]>;
 
   listByCommandId(
     commandId: CommandId,

@@ -13,6 +13,7 @@ import {
 import {
   ActiveDistributedPackagesByTarget,
   Distribution,
+  DistributionHistoryEntry,
   PackagesDeployment,
   PublishCommandsCommand,
   PublishStandardsCommand,
@@ -133,7 +134,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: PackageId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/package/:id - Fetching deployments by package ID',
       {

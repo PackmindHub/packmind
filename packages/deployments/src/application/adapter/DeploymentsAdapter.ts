@@ -25,6 +25,7 @@ import {
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
   Distribution,
+  DistributionHistoryEntry,
   DownloadSkillZipForAgentCommand,
   DownloadSkillZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
@@ -646,7 +647,7 @@ export class DeploymentsAdapter
 
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     return this._listDeploymentsByPackageUseCase.execute(command);
   }
 

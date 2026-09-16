@@ -14,7 +14,7 @@ import {
   createUserId,
   DistributionStatus,
   RenderMode,
-  type Distribution,
+  type DistributionHistoryEntry,
   type DistributionOperation,
 } from '@packmind/types';
 
@@ -27,9 +27,9 @@ const LONG_ERROR =
 
 const distribution = (
   index: number,
-  overrides: Partial<Distribution> = {},
+  overrides: Partial<DistributionHistoryEntry> = {},
   operation: DistributionOperation = 'add',
-): Distribution => ({
+): DistributionHistoryEntry => ({
   id: createDistributionId(`distribution-${index}`),
   createdAt: '2026-08-31T10:56:00.000Z',
   authorId,
@@ -54,16 +54,13 @@ const distribution = (
       id: createDistributedPackageId(`distributed-${index}`),
       distributionId: createDistributionId(`distribution-${index}`),
       packageId,
-      standardVersions: [],
-      recipeVersions: [],
-      skillVersions: [],
       operation,
     },
   ],
   ...overrides,
 });
 
-const renderHistory = (deployments: Distribution[]) =>
+const renderHistory = (deployments: DistributionHistoryEntry[]) =>
   render(
     <MemoryRouter>
       <UIProvider>

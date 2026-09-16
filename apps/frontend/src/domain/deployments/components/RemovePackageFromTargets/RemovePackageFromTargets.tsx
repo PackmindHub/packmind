@@ -8,7 +8,7 @@ import React, {
   SetStateAction,
 } from 'react';
 import {
-  Distribution,
+  DistributionHistoryEntry,
   Package,
   RemovePackageFromTargetsResult,
   TargetId,
@@ -21,7 +21,7 @@ import { RemovePackageFromTargetsCTAImpl } from './RemovePackageFromTargetsCTA';
 type RemovePackageFromTargetsStep = 'select' | 'confirm';
 
 type RemovePackageFromTargetsCtxType = {
-  distributions: Distribution[];
+  distributions: DistributionHistoryEntry[];
   selectedTargetIds: TargetId[];
   setSelectedTargetIds: Dispatch<SetStateAction<TargetId[]>>;
   currentStep: RemovePackageFromTargetsStep;
@@ -47,7 +47,7 @@ export const useRemovePackageFromTargetsContext = () => {
 
 interface RemovePackageFromTargetsProps {
   selectedPackage: Package;
-  distributions: Distribution[];
+  distributions: DistributionHistoryEntry[];
   onRemovalComplete?: (results: RemovePackageFromTargetsResult[]) => void;
   children?: React.ReactNode;
 }

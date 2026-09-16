@@ -1,7 +1,7 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationId,
-  Distribution,
+  DistributionHistoryEntry,
   IListDeploymentsByPackage,
   ListDeploymentsByPackageCommand,
 } from '@packmind/types';
@@ -25,7 +25,7 @@ export class ListDeploymentsByPackageUseCase implements IListDeploymentsByPackag
    */
   public async execute(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     this.logger.info('Listing distributions for package', {
       packageId: command.packageId,
       organizationId: command.organizationId,

@@ -1,4 +1,4 @@
-import { Distribution } from '../Distribution';
+import { DistributionHistoryEntry } from '../DistributionHistoryEntry';
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { PackageId } from '../Package';
 
@@ -8,5 +8,5 @@ export type ListDeploymentsByPackageCommand = PackmindCommand & {
 
 export type IListDeploymentsByPackage = IUseCase<
   ListDeploymentsByPackageCommand,
-  Distribution[]
+  DistributionHistoryEntry[]
 >;

@@ -3,6 +3,7 @@ import { localDataSource, getErrorMessage } from '@packmind/node-utils';
 import {
   Distribution,
   DistributedPackage,
+  DistributionHistoryEntry,
   DistributionId,
   DistributionOperation,
   DistributionStatus,
@@ -184,7 +185,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by package ID and organization ID',
       {
@@ -200,15 +201,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distribution.distributedPackages',
           'distributedPackage',
         )
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')

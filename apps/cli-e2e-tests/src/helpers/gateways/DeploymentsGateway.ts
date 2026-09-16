@@ -3,7 +3,7 @@ import {
   Gateway,
   IGetTargetsByOrganizationUseCase,
   IUpdateRenderModeConfigurationUseCase,
-  Distribution,
+  DistributionHistoryEntry,
 } from '@packmind/types';
 import { IDeploymentsGateway } from '../IPackmindGateway';
 
@@ -32,7 +32,7 @@ export class DeploymentsGateway implements IDeploymentsGateway {
 
   listDeploymentsByPackage = async (
     packageId: string,
-  ): Promise<Distribution[]> => {
+  ): Promise<DistributionHistoryEntry[]> => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/deployments/package/${packageId}`,

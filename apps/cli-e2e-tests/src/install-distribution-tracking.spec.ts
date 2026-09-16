@@ -7,7 +7,7 @@ import {
   setupGitRepo,
   UserSignedUpContext,
 } from './helpers';
-import { Distribution, Package } from '@packmind/types';
+import { DistributionHistoryEntry, Package } from '@packmind/types';
 import { matchesVersionConstraint } from './helpers/cliVersion';
 
 const packmindEmail = (): string =>
@@ -46,7 +46,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -78,7 +78,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -112,7 +112,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -163,7 +163,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           let context: UserSignedUpContext;
           let pkg: Package;
           let result: RunCliResult;
-          let distributions: Distribution[];
+          let distributions: DistributionHistoryEntry[];
 
           beforeEach(async () => {
             context = await getContext();

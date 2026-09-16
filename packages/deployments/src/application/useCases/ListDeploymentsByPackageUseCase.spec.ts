@@ -5,6 +5,7 @@ import {
   createGitRepoId,
   createTargetId,
   Distribution,
+  DistributionHistoryEntry,
   DistributionStatus,
   ListDeploymentsByPackageCommand,
   OrganizationId,
@@ -59,7 +60,7 @@ describe('ListDeploymentsByPackageUseCase', () => {
           renderModes: [],
         }),
       ];
-      let result: Distribution[];
+      let result: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         mockRepository.listByPackageId.mockResolvedValue(mockDistributions);
