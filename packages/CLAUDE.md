@@ -77,7 +77,7 @@ src/index.ts                            always — public barrel; nothing is imp
 src/application/useCases/<useCaseName>/ most — `spaces` uses flat `src/application/usecases/<UseCaseName>.ts` files instead of one folder per use case
 src/domain/repositories|useCases|errors/ most
 src/domain/entities/                    only accounts and standards
-src/infra/schemas/                      persistence packages only — <name>Schemas.ts barrel of TypeORM EntitySchemas
+src/infra/schemas/                      persistence packages only — index.ts barrel exporting a <name>Schemas array of TypeORM EntitySchemas
 src/infra/repositories/                 persistence packages, plus `coding-agent` (deployer implementations, not persisted entities)
 src/application/jobs/ + src/domain/jobs/ only commands, deployments, git
 test/                                   only the 7 packages listed below
@@ -116,9 +116,9 @@ plus one `<entity>Factory.ts` per entity), imported as `@packmind/<pkg>/test` �
 import one. (`packages/node-utils/test/` exists but holds shared test suites, not factories, and is
 not exposed as a subpath.)
 
-Only `commands`, `deployments`, `skills`, `spaces` (and the legacy `recipes`) have an explicit
-`"@packmind/<pkg>/test"` entry in `tsconfig.base.json`; `accounts`, `git` and `standards` resolve
-through the workspace package instead. If a new `/test` subpath fails to resolve under Jest, add the
+Only `commands`, `deployments`, `skills`, `spaces`, `standards` (and the legacy `recipes`) have an
+explicit `"@packmind/<pkg>/test"` entry in `tsconfig.base.json`; `accounts` and `git` resolve through
+the workspace package instead. If a new `/test` subpath fails to resolve under Jest, add the
 alias — `jest.config.ts` maps modules from those `paths`.
 
 Spec files import factories from there; production code must not. For the split between these and the

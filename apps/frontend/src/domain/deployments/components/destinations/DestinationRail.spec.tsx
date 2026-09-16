@@ -28,12 +28,21 @@ const providerId = createGitProviderId('provider-1');
 /**
  * A package landed on one (repo, target). `behind` is what a distribution
  * would fix, `failed` is what the last attempt did, and a failed landing is
- * drifted as well, which is the shape the real data has.
+ * drifted as well, which is the shape the real data has. `waiting` is drifted
+ * too, with the distribution that repairs it already running.
  */
+type LandedState = 'aligned' | 'behind' | 'waiting' | 'failed';
+
+const lastStatus = (state: LandedState): DistributionStatus => {
+  if (state === 'failed') return DistributionStatus.failure;
+  if (state === 'waiting') return DistributionStatus.in_progress;
+  return DistributionStatus.success;
+};
+
 const landed = (
   name: string,
   repoId: string,
-  state: 'aligned' | 'behind' | 'failed',
+  state: LandedState,
 ): PackageDrift =>
   ({
     name,
@@ -52,10 +61,7 @@ const landed = (
       {
         repo: { id: createGitRepoId(repoId), providerId },
         target: { id: createTargetId(`${repoId}-root`) },
-        lastDistributionStatus:
-          state === 'failed'
-            ? DistributionStatus.failure
-            : DistributionStatus.success,
+        lastDistributionStatus: lastStatus(state),
       },
     ],
   }) as unknown as PackageDrift;
@@ -63,7 +69,7 @@ const landed = (
 const repository = (
   id: string,
   name: string,
-  state: 'aligned' | 'behind' | 'failed',
+  state: LandedState,
 ): RepositoryDrift =>
   ({
     id: createGitRepoId(id),
@@ -85,7 +91,7 @@ const repository = (
 const twoTargets = (
   id: string,
   name: string,
-  state: 'aligned' | 'behind' | 'failed',
+  state: LandedState,
 ): RepositoryDrift =>
   ({
     id: createGitRepoId(id),
@@ -135,6 +141,7 @@ function catalogWithStatuses(
 const BEHIND = repository('repo-behind', 'webapp', 'behind');
 const FAILED = repository('repo-failed', 'api', 'failed');
 const ALIGNED = repository('repo-aligned', 'docs', 'aligned');
+const WAITING = repository('repo-waiting', 'infra', 'waiting');
 
 function renderRail(
   repositories: RepositoryDrift[] = [BEHIND, FAILED, ALIGNED],
@@ -180,7 +187,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       expect(
-        pill(/^Show only the 1 destination with something drifted/),
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
       ).toBeInTheDocument();
       expect(
         pill(/^Show only the 1 destination whose last distribution failed/),
@@ -212,7 +219,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something drifted/),
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
       );
 
       expect(rowNames()).toEqual(['Repository acme/webapp']);
@@ -226,7 +233,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something drifted/),
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
       );
       await userEvent.click(
         pill(/^Show only the 1 destination whose last distribution failed/),
@@ -242,7 +249,7 @@ describe('DestinationRail', () => {
       renderRail();
 
       await userEvent.click(
-        pill(/^Show only the 1 destination with something drifted/),
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
       );
       await userEvent.click(
         screen.getByRole('button', { name: 'Clear filters' }),
@@ -429,6 +436,86 @@ describe('DestinationRail', () => {
       expect(
         screen.getByRole('img', { name: '2 plugins awaiting merge' }),
       ).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The reading that opened this: `Drift 3` wore an orange mark over one
+   * orange row and two blue ones, because the band counted a state it did not
+   * name. Each pill now wears the mark of the rows clicking it leaves.
+   */
+  describe('when a destination is drifted and already being distributed', () => {
+    it('counts it under Waiting rather than under Drift', () => {
+      renderRail([BEHIND, WAITING, ALIGNED]);
+
+      expect(
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
+      ).toBeInTheDocument();
+      expect(
+        pill(/^Show only the 1 destination whose drift is already on its way/),
+      ).toBeInTheDocument();
+    });
+
+    it('narrows to it alone', async () => {
+      renderRail([BEHIND, WAITING, ALIGNED]);
+
+      await userEvent.click(
+        pill(/^Show only the 1 destination whose drift is already on its way/),
+      );
+
+      expect(rowNames()).toEqual(['Repository acme/infra']);
+    });
+
+    it('leaves it out of the drift lens', async () => {
+      renderRail([BEHIND, WAITING, ALIGNED]);
+
+      await userEvent.click(
+        pill(/^Show only the 1 destination with drift nobody has sent yet/),
+      );
+
+      expect(rowNames()).toEqual(['Repository acme/webapp']);
+    });
+
+    /*
+     * The row says so on its own line too, which is the other half of the
+     * complaint: a mark nobody has a legend for is only half an answer.
+     */
+    it('says what it is waiting on', () => {
+      renderRail([WAITING]);
+
+      expect(
+        screen.getByRole('img', { name: '1 distribution in progress' }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The batch would send a second distribution of what is already going,
+     * which is what the pane beside this rail has always refused per row.
+     */
+    it('offers no checkbox on it', async () => {
+      renderRail([WAITING]);
+
+      await userEvent.hover(
+        screen.getByRole('button', { name: /^Repository acme\/infra/ }),
+      );
+
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+
+    it('leaves it out of what the batch offers to distribute', () => {
+      renderRail([BEHIND, WAITING]);
+
+      expect(
+        screen.getByRole('button', { name: 'Distribute drifted (1)' }),
+      ).toBeInTheDocument();
+    });
+
+    it('offers no batch at all when it is the only drift', () => {
+      renderRail([WAITING, ALIGNED]);
+
+      expect(
+        screen.queryByRole('button', { name: /^Distribute drifted/ }),
+      ).not.toBeInTheDocument();
     });
   });
 

@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
@@ -73,6 +73,7 @@ import { CliVersionLoggerMiddleware } from './shared/middleware/CliVersionLogger
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { SSEModule } from './sse/sse.module';
+import { DomainExceptionFilter } from '@packmind/node-utils/filters';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -285,6 +286,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: DomainExceptionFilter,
     },
     {
       provide: PackmindLogger,

@@ -39,6 +39,7 @@ import {
   pendingReviewsByComponent,
   reviewChangesLabel,
 } from './componentMaintenance';
+import { ContextPickBox } from './ContextPickBox';
 
 /**
  * The mark of each type, in one place. The two panes and the filter chips read
@@ -76,6 +77,15 @@ export const COMPONENT_ACTION_ICONS = {
 export type ComponentListEntry = {
   component: ContextComponent;
   packageNames?: string[];
+  /**
+   * How many of the package's landings this component has not reached.
+   *
+   * Given per row rather than read here, because only a list scoped to one
+   * package has a drift to pivot: read across the space a component belongs to
+   * several packages at once and "behind on 12" would be a sum of unrelated
+   * numbers.
+   */
+  behindOn?: number;
 };
 
 /**
@@ -184,6 +194,16 @@ export function ContextComponentList({
   const showReviews = pendingReviews.size > 0;
 
   /*
+   * Reserved for the whole list or for none of it, for the reason above: the
+   * panes render one list per type, and a column that appears in the band that
+   * happens to hold a late component would step the version column sideways
+   * between two groups of one pane.
+   */
+  const showDrift = sections.some((section) =>
+    section.entries.some((entry) => (entry.behindOn ?? 0) > 0),
+  );
+
+  /*
    * Which bands are folded, by section key.
    *
    * Held here rather than by the panes: it is a way of reading this list and
@@ -259,6 +279,7 @@ export function ContextComponentList({
                 entry={entry}
                 showPackages={showPackages}
                 showReviews={showReviews}
+                showDrift={showDrift}
                 pendingReviews={
                   pendingReviews.get(componentSelectionKey(entry.component)) ??
                   0
@@ -275,39 +296,6 @@ export function ContextComponentList({
             ))}
         </Fragment>
       ))}
-    </PMBox>
-  );
-}
-
-/**
- * A checkbox that is only there when it is wanted: under the pointer, under the
- * keyboard, or once a selection has started.
- *
- * A hundred components is a hundred empty boxes down the left edge, and reading
- * a package is what this list is for nine times out of ten; picking things out
- * of it is the tenth. The destinations rail settled this for the surface
- * already and this is the same behaviour, with the focus case added: a checkbox
- * at zero opacity still takes the keyboard, so without `_focusWithin` tabbing
- * into the list would move an invisible focus ring down an empty column.
- *
- * Faded rather than unmounted, which is what keeps the column steady. A row
- * that renders its checkbox only on hover shifts its name sideways under the
- * pointer, and the eye is running down that name.
- */
-function PickBox({
-  shown,
-  children,
-}: Readonly<{ shown: boolean; children: ReactNode }>) {
-  return (
-    <PMBox
-      display="inline-flex"
-      alignItems="center"
-      opacity={shown ? 1 : 0}
-      transition="opacity 100ms ease-out"
-      _groupHover={{ opacity: 1 }}
-      _focusWithin={{ opacity: 1 }}
-    >
-      {children}
     </PMBox>
   );
 }
@@ -382,7 +370,7 @@ function SectionHeader({
           three of forty needs to be told that clicking here takes the other
           thirty-seven, not that nothing is picked.
         */
-        <PickBox shown={isSelecting || selection.selected > 0}>
+        <ContextPickBox shown={isSelecting || selection.selected > 0}>
           <PMCheckbox
             size="sm"
             checked={
@@ -397,7 +385,7 @@ function SectionHeader({
               'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
             }}
           />
-        </PickBox>
+        </ContextPickBox>
       )}
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
@@ -447,6 +435,7 @@ function ComponentRow({
   entry,
   showPackages,
   showReviews,
+  showDrift,
   pendingReviews,
   onMove,
   onRemove,
@@ -458,6 +447,8 @@ function ComponentRow({
   showPackages: boolean;
   /** Whether any row of this list is waiting on someone. */
   showReviews: boolean;
+  /** Whether any row of this list is late somewhere. */
+  showDrift: boolean;
   /** How many proposals wait on this one, zero for most rows. */
   pendingReviews: number;
   onMove?: (component: ContextComponent) => void;
@@ -467,7 +458,7 @@ function ComponentRow({
   isSelecting: boolean;
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
-  const { component, packageNames = [] } = entry;
+  const { component, packageNames = [], behindOn = 0 } = entry;
 
   return (
     /*
@@ -496,14 +487,14 @@ function ComponentRow({
           row would open it.
         */
         <PMBox display="flex" alignItems="center" paddingLeft={3}>
-          <PickBox shown={isSelected || isSelecting}>
+          <ContextPickBox shown={isSelected || isSelecting}>
             <PMCheckbox
               size="sm"
               checked={isSelected}
               onCheckedChange={() => onToggleSelect(component)}
               inputProps={{ 'aria-label': `Select ${component.name}` }}
             />
-          </PickBox>
+          </ContextPickBox>
         </PMBox>
       )}
       {/*
@@ -555,6 +546,7 @@ function ComponentRow({
             </PMBox>
             {showPackages && <PackageColumn names={packageNames} />}
             {showReviews && <ReviewColumn count={pendingReviews} />}
+            {showDrift && <DriftColumn count={behindOn} />}
             {/*
               A fixed width, not the width of the number: v12 is one character
               wider than v5, and every column to its left would move with it.
@@ -628,6 +620,82 @@ function ComponentRow({
         </PMBox>
       )}
     </PMHStack>
+  );
+}
+
+/**
+ * Where this component has not arrived.
+ *
+ * The one fact this list could never state. It knew what the package holds and
+ * the tab next door knew where the package stands, and no row said that this
+ * standard is the one missing from nine repositories while the one under it is
+ * everywhere.
+ *
+ * Words and not a bare number, which is where this parts company with the
+ * review mark beside it. "2" next to a purple dot is a quantity of something
+ * the column header would have named; there is no header here, and a row that
+ * says only "9" leaves the reader to guess whether that is good. `behind on 9`
+ * is the whole sentence at the size it has to be read at.
+ *
+ * Orange, which this file already reserves for exactly this: the review mark
+ * takes the surface accent and its own comment says why the two must not share
+ * a colour. Something drifted where it was sent is the orange fact.
+ *
+ * Absent at zero rather than `behind on 0`, like the mark beside it: most rows
+ * are where they should be, and a column of zeroes teaches the eye to skip the
+ * row that has a number.
+ */
+function DriftColumn({ count }: Readonly<{ count: number }>) {
+  const label = `Behind on ${count} destination${count === 1 ? '' : 's'} of this package`;
+
+  return (
+    <PMBox
+      flexShrink={0}
+      /*
+       * Room for the words and three digits, fixed for the reason the version
+       * beside it is fixed: a number that widens its own column drags every
+       * column left of it sideways, and the eye runs down these.
+       */
+      width="96px"
+      display="flex"
+      alignItems="center"
+      justifyContent="flex-end"
+      gap="6px"
+    >
+      {count > 0 && (
+        <PMTooltip label={label} showArrow>
+          <PMBox
+            display="flex"
+            alignItems="center"
+            gap="6px"
+            role="img"
+            aria-label={label}
+          >
+            <PMBox
+              width="8px"
+              height="8px"
+              borderRadius="full"
+              bg="orange.500"
+              flexShrink={0}
+              aria-hidden
+            />
+            {/*
+              Never wrapped. Two words and a number in a fixed column will
+              break after "on" the moment the number takes a third digit, and a
+              row that grows a second line makes the whole band jump.
+            */}
+            <PMText
+              fontSize="xs"
+              color="faded"
+              fontVariantNumeric="tabular-nums"
+              whiteSpace="nowrap"
+            >
+              behind on {count}
+            </PMText>
+          </PMBox>
+        </PMTooltip>
+      )}
+    </PMBox>
   );
 }
 

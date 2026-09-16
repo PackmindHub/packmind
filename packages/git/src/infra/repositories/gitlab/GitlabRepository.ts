@@ -8,8 +8,39 @@ import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
 } from '../http/withTransientRetry';
+import { gitBlobSha } from '@packmind/node-utils';
+import { providerHttpsAgent } from '../http/providerHttpAgent';
 
 const origin = 'GitlabRepository';
+
+/**
+ * One entry of a GitLab recursive tree listing.
+ *
+ * `id` is the blob's SHA-1 - the same hash `gitBlobSha` computes from content
+ * we hold locally - and `mode` is the Unix mode string, `100755` for an
+ * executable file. Both are optional here because nothing in the response
+ * guarantees them, and the callers treat a missing one as "cannot tell"
+ * rather than as a value.
+ */
+type GitlabTreeItem = {
+  path: string;
+  type: string;
+  id?: string;
+  mode?: string;
+};
+
+/** What the tree already tells us about a file that exists on the branch. */
+type ExistingBlob = {
+  sha?: string;
+  mode?: string;
+};
+
+type FileAnalysis = {
+  path: string;
+  hasChanges: boolean;
+  action: 'create' | 'update';
+  existingExecuteFilemode: boolean;
+};
 
 export class GitlabRepository implements IGitRepo {
   private readonly axiosInstance: AxiosInstance;
@@ -62,6 +93,7 @@ export class GitlabRepository implements IGitRepo {
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab docs
       },
       // Note: GitLab API docs show PRIVATE-TOKEN header authentication
+      httpsAgent: providerHttpsAgent,
     });
 
     this.logger.debug('GitlabRepository initialized successfully', {
@@ -90,8 +122,15 @@ export class GitlabRepository implements IGitRepo {
     return path.slice(start, end);
   }
 
-  private async fetchRepositoryTree(branch: string): Promise<Set<string>> {
-    const allTreeItems: Array<{ path: string; type: string }> = [];
+  /**
+   * Every blob in the repository, from one paginated walk.
+   *
+   * Shared by the commit diff and the directory listings: each used to run
+   * this loop for itself, so expanding N directory deletions walked the whole
+   * repository N times to answer what one listing already holds.
+   */
+  private async walkRepositoryTree(branch: string): Promise<GitlabTreeItem[]> {
+    const allTreeItems: GitlabTreeItem[] = [];
     let nextPage: string | null = null;
     let pageNumber = 1;
     const perPage = 100;
@@ -154,132 +193,87 @@ export class GitlabRepository implements IGitRepo {
       }
     } while (nextPage);
 
-    // Return normalized paths for blobs only
-    return new Set(
-      allTreeItems
-        .filter((item: { type: string }) => item.type === 'blob')
-        .map((item: { path: string }) => this.normalizePath(item.path)),
+    return allTreeItems.filter((item) => item.type === 'blob');
+  }
+
+  /**
+   * The repository's blobs keyed by normalised path, keeping the SHA and mode
+   * the listing already reported.
+   *
+   * Those two fields are what let `commitFiles` work out which files changed
+   * without downloading any of them: a blob SHA is a hash of the bytes, so
+   * hashing the content we mean to write answers the question locally. The
+   * walk used to be reduced to a bare set of paths with everything else
+   * discarded, which is why the diff then had to fetch every existing file
+   * back one request at a time.
+   */
+  private async fetchRepositoryTree(
+    branch: string,
+  ): Promise<Map<string, ExistingBlob>> {
+    const blobs = await this.walkRepositoryTree(branch);
+
+    return new Map(
+      blobs.map((item) => [
+        this.normalizePath(item.path),
+        { sha: item.id, mode: item.mode },
+      ]),
     );
   }
 
-  private static readonly FILE_ANALYSIS_BATCH_SIZE = 10;
-
-  private async analyzeFilesForCommit(
+  /**
+   * Which files changed, worked out from the tree alone.
+   *
+   * Every existing file used to be downloaded through the files API - batched
+   * ten at a time, batch after batch - so its decoded text could be compared
+   * with ours. The tree already carries a SHA per path, so the same question
+   * is a local hash: 1,129 files stop costing 1,129 requests, and a publish
+   * that changes nothing stops costing what one that rewrites everything does.
+   */
+  private analyzeFilesForCommit(
     files: CommitFile[],
-    existingPaths: Set<string>,
-    targetBranch: string,
-  ): Promise<
-    Array<{
-      path: string;
-      hasChanges: boolean;
-      action: 'create' | 'update';
-      existingExecuteFilemode: boolean;
-    }>
-  > {
-    type FileAnalysisResult = {
-      path: string;
-      hasChanges: boolean;
-      action: 'create' | 'update';
-      existingExecuteFilemode: boolean;
-    };
+    existingBlobs: Map<string, ExistingBlob>,
+  ): FileAnalysis[] {
+    return files.map((file) => {
+      const existing = existingBlobs.get(this.normalizePath(file.path));
 
-    // Pre-allocate results array to preserve original file order
-    const results: FileAnalysisResult[] = new Array(files.length);
-
-    // Resolve new files immediately, collect existing files with their original indices
-    const existingFileIndices: Array<{ index: number; file: CommitFile }> = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const normalizedPath = this.normalizePath(file.path);
-
-      if (!existingPaths.has(normalizedPath)) {
-        this.logger.debug('File action determined', {
-          filePath: file.path,
-          action: 'create',
-        });
-        results[i] = {
-          path: file.path,
-          hasChanges: true,
-          action: 'create',
-          existingExecuteFilemode: false,
-        };
-      } else {
-        existingFileIndices.push({ index: i, file });
-      }
-    }
-
-    // Existing files need content check — process in batches to avoid rate limiting
-    for (
-      let i = 0;
-      i < existingFileIndices.length;
-      i += GitlabRepository.FILE_ANALYSIS_BATCH_SIZE
-    ) {
-      const batch = existingFileIndices.slice(
-        i,
-        i + GitlabRepository.FILE_ANALYSIS_BATCH_SIZE,
-      );
-      const batchResults = await Promise.all(
-        batch.map(async ({ file }) =>
-          this.analyzeExistingFile(file, targetBranch),
-        ),
-      );
-      for (let j = 0; j < batch.length; j++) {
-        results[batch[j].index] = batchResults[j];
-      }
-    }
-
-    return results;
-  }
-
-  private async analyzeExistingFile(
-    file: CommitFile,
-    targetBranch: string,
-  ): Promise<{
-    path: string;
-    hasChanges: boolean;
-    action: 'create' | 'update';
-    existingExecuteFilemode: boolean;
-  }> {
-    try {
-      const existingFile = await this.getFileOnRepo(file.path, targetBranch);
-
-      if (!existingFile) {
+      if (!existing) {
+        // Absent from the tree means new, which is what a 404 from the files
+        // API used to stand for.
         return {
           path: file.path,
           hasChanges: true,
-          action: 'create',
+          action: 'create' as const,
           existingExecuteFilemode: false,
         };
       }
 
-      const existingContent = Buffer.from(
-        existingFile.content,
-        'base64',
-      ).toString('utf-8');
-      const hasChanges = existingContent !== file.content;
+      return {
+        path: file.path,
+        // A tree entry carrying no SHA tells us nothing, so the file goes into
+        // the commit rather than being skipped: committing a file that turned
+        // out to be identical costs one action, skipping one that changed
+        // loses the change.
+        hasChanges: !existing.sha || existing.sha !== gitBlobSha(file.content),
+        action: 'update' as const,
+        existingExecuteFilemode: this.isExecutableMode(existing.mode),
+      };
+    });
+  }
 
-      return {
-        path: file.path,
-        hasChanges,
-        action: 'update',
-        existingExecuteFilemode: existingFile.execute_filemode === true,
-      };
-    } catch (fileError: unknown) {
-      // If the files API fails for an existing file, treat as create
-      // This handles transient errors gracefully
-      this.logger.debug('File content check failed, treating as create', {
-        filePath: file.path,
-        error:
-          fileError instanceof Error ? fileError.message : String(fileError),
-      });
-      return {
-        path: file.path,
-        hasChanges: true,
-        action: 'create',
-        existingExecuteFilemode: false,
-      };
+  /**
+   * Executable in the sense the tree reports it: mode `100755` rather than
+   * `100644`. This is the same bit the files API returns as
+   * `execute_filemode`, and reading it off the tree is what removes the
+   * request that used to be made per file to learn it.
+   */
+  private isExecutableMode(mode: string | undefined): boolean {
+    if (!mode) {
+      return false;
     }
+
+    const parsed = Number.parseInt(mode, 8);
+
+    return Number.isNaN(parsed) ? false : (parsed & 0o111) !== 0;
   }
 
   private isExecutable(permissions: string): boolean {
@@ -332,17 +326,15 @@ export class GitlabRepository implements IGitRepo {
           )
         : undefined;
 
-      // Fetch tree once as single source of truth for file existence
-      // This prevents race conditions and inconsistent state between create/update/delete decisions
-      const existingPaths = await this.fetchRepositoryTree(targetBranch);
+      // Fetch the tree once: it is the single source of truth for which files
+      // exist, what they contain and how they are permissioned.
+      const existingBlobs = await this.fetchRepositoryTree(targetBranch);
 
-      // Determine create/update for files to commit using tree lookup
-      // Only call the files API for existing files to check content changes and existing permissions
-      // Process in batches to avoid overwhelming the GitLab API with concurrent requests
-      const fileAnalysis = await this.analyzeFilesForCommit(
+      // Create/update, content changes and existing permissions all come from
+      // that one listing - no request is made per file.
+      const fileAnalysis = this.analyzeFilesForCommit(
         deduplicatedFiles,
-        existingPaths,
-        targetBranch,
+        existingBlobs,
       );
 
       const fileDifferenceCheck = fileAnalysis;
@@ -367,11 +359,11 @@ export class GitlabRepository implements IGitRepo {
           content: file.content,
         }));
 
-      // Filter deleteFiles using the same existingPaths from tree
+      // Filter deleteFiles using the same tree listing
       let existingDeleteFiles: { path: string }[] = [];
       if (deduplicatedDeleteFiles && deduplicatedDeleteFiles.length > 0) {
         existingDeleteFiles = deduplicatedDeleteFiles.filter((file) =>
-          existingPaths.has(this.normalizePath(file.path)),
+          existingBlobs.has(this.normalizePath(file.path)),
         );
 
         const skippedCount =
@@ -1254,67 +1246,43 @@ export class GitlabRepository implements IGitRepo {
     path: string,
     branch: string,
   ): Promise<{ path: string }[]> {
+    return this.listFilesInDirectories([path], branch);
+  }
+
+  /**
+   * The files under every requested directory, from one tree walk.
+   *
+   * This used to be a loop over the singular form, and the singular form ran
+   * the whole paginated walk for itself - so expanding 112 directory
+   * deletions downloaded a listing of the entire repository 112 times, one
+   * after another, to answer what a single listing already holds. GitLab's
+   * tree endpoint paginating is what made collapsing this a ticket of its
+   * own; it changes nothing about the answer.
+   */
+  async listFilesInDirectories(
+    paths: string[],
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    if (paths.length === 0) {
+      return [];
+    }
+
     try {
-      // Normalize path to ensure it ends with /
-      const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+      const blobs = await this.walkRepositoryTree(branch);
 
-      // Fetch the repository tree recursively
-      const allTreeItems: Array<{ path: string; type: string }> = [];
-      let nextPage: string | null = null;
-      let pageNumber = 1;
-      const perPage = 100;
+      // Filtered per path rather than once against all prefixes, so the
+      // result is ordered and duplicated exactly as looping the singular form
+      // over these paths produced.
+      const files = paths.flatMap((path) => {
+        const normalizedPath = path.endsWith('/') ? path : `${path}/`;
 
-      do {
-        const url =
-          nextPage || `/projects/${this.encodedProjectPath}/repository/tree`;
+        return blobs
+          .filter((item) => item.path.startsWith(normalizedPath))
+          .map((item) => ({ path: item.path }));
+      });
 
-        const params: Record<string, string | number> = {
-          ref: branch,
-          recursive: 'true',
-          per_page: perPage,
-        };
-
-        if (!nextPage) {
-          params['page'] = pageNumber;
-        }
-
-        const response = await this.axiosInstance.get(url, {
-          params: nextPage ? undefined : params,
-        });
-
-        if (Array.isArray(response.data)) {
-          allTreeItems.push(...response.data);
-        }
-
-        // Check for pagination
-        const headers = response.headers as Record<string, string>;
-        nextPage = null;
-
-        const xNextPage = headers['x-next-page'];
-        if (xNextPage && xNextPage.trim() !== '') {
-          nextPage = `/projects/${this.encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
-        } else {
-          const linkHeader = headers['link'];
-          if (linkHeader) {
-            const nextUrl = extractNextPageUrl(linkHeader);
-            if (nextUrl) {
-              nextPage = nextUrl;
-            }
-          }
-        }
-
-        pageNumber++;
-      } while (nextPage);
-
-      const files = allTreeItems
-        .filter(
-          (item) =>
-            item.type === 'blob' && item.path.startsWith(normalizedPath),
-        )
-        .map((item) => ({ path: item.path }));
-
-      this.logger.debug('Listed files in directory', {
-        path,
+      this.logger.debug('Listed files in directories', {
+        directoryCount: paths.length,
         branch,
         fileCount: files.length,
       });
@@ -1323,36 +1291,16 @@ export class GitlabRepository implements IGitRepo {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to list files in directory', {
-        path,
+      this.logger.error('Failed to list files in directories', {
+        directoryCount: paths.length,
         owner: this.options.owner,
         repo: this.options.repo,
         branch,
         error: errorMessage,
       });
-      // Return empty array if directory doesn't exist
+      // Matches what the per-directory form did: an unreachable or missing
+      // tree means "nothing to expand", not a failed publish.
       return [];
     }
-  }
-
-  /**
-   * Sequential on purpose. GitLab's tree endpoint paginates, so serving every
-   * path from one listing is a larger change than the GitHub side needed, and
-   * collapsing it here was deliberately left out of the fan-out fix so that
-   * one ticket touched one provider. GitLab therefore keeps exactly the
-   * behaviour it had when the caller looped: one paginated tree walk per
-   * directory. It needs its own ticket.
-   */
-  async listFilesInDirectories(
-    paths: string[],
-    branch: string,
-  ): Promise<{ path: string }[]> {
-    const files: { path: string }[] = [];
-
-    for (const path of paths) {
-      files.push(...(await this.listFilesInDirectory(path, branch)));
-    }
-
-    return files;
   }
 }

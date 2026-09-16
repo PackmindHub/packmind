@@ -16,6 +16,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { packageHoldsComponent } from './buildMoveTargets';
+import type { SpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 
 /**
  * The component the pane is showing, in the URL, beside the package it is being
@@ -323,12 +324,70 @@ export function contextPackageHref(
   { orgSlug, spaceSlug }: ContextLinkTarget,
   packageId: PackageId,
   componentKey?: string,
+  /**
+   * Which half of the package to open on, for the callers that are pointing at
+   * one: a link that says "where did this package land" has to arrive on the
+   * tab that answers that, not on the list of what it holds.
+   *
+   * A default is dropped rather than written, by the same rule the surface's
+   * own builders follow. Writing it would give the plain reading of a package
+   * two addresses, and the one nobody links to is the one that ends up pasted.
+   */
+  tab?: string,
 ): string {
   const params = new URLSearchParams({ [PACKAGE_PARAM]: packageId });
   if (componentKey) {
     params.set(COMPONENT_PARAM, componentKey);
   }
+  if (tab && !isDefaultTab(tab)) {
+    params.set(TAB_PARAM, tab);
+  }
   return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
+}
+
+/**
+ * Where a link to a package goes, in the navigation the reader has.
+ *
+ * The one place that answers it, because the answer is not the same twice and
+ * the question is asked from three screens that have nothing else in common: a
+ * package's edit form on its way out, the distribution history of a component,
+ * and the destination surface. Three copies of a ternary are three chances for
+ * one of them to keep pointing at the page after the toggle comes off.
+ *
+ * `today` gets the package's own page, which is what a package is there: a
+ * sidebar entry leads to the list and the list leads here. `plugin-first` gets
+ * the rail, where the same package is a row and reading it costs no screen.
+ *
+ * Not the same thing as letting the redirect catch it. That one exists for the
+ * addresses already in the wild, and it is right that it does; a link the
+ * product prints today should not need it. A row inside Context whose href is
+ * the old page leaves the surface and is sent back to it, which is a round trip
+ * the reader can see.
+ *
+ * `distribution` asks for the half that says where the package landed, spelled
+ * the way each surface spells it.
+ */
+export function packageHref(
+  mode: SpaceNavMode,
+  target: ContextLinkTarget,
+  packageId: PackageId,
+  { distribution = false }: { distribution?: boolean } = {},
+): string {
+  if (mode === 'plugin-first') {
+    return contextPackageHref(
+      target,
+      packageId,
+      undefined,
+      distribution ? DISTRIBUTION_TAB : undefined,
+    );
+  }
+
+  const page = routes.space.toPackage(
+    target.orgSlug,
+    target.spaceSlug,
+    packageId,
+  );
+  return distribution ? `${page}?tab=distributions` : page;
 }
 
 /**

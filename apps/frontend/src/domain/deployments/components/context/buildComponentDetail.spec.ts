@@ -31,6 +31,7 @@ import {
   componentRuleHref,
   contextComponentHref,
   contextPackageHref,
+  packageHref,
   packageDetailHref,
   packageDetailParams,
   selectDetailComponent,
@@ -211,6 +212,37 @@ describe('contextPackageHref', () => {
       expect(contextPackageHref(TARGET, PACKAGE, 'a b&c')).toBe(
         '/org/acme/space/core/context?package=pkg-1&component=a+b%26c',
       );
+    });
+  });
+});
+
+describe('packageHref', () => {
+  describe('in the plugin-first navigation', () => {
+    it('opens the package in the rail', () => {
+      expect(packageHref('plugin-first', TARGET, PACKAGE)).toBe(
+        '/org/acme/space/core/context?package=pkg-1',
+      );
+    });
+
+    it('opens the distribution half on the tab that answers', () => {
+      expect(
+        packageHref('plugin-first', TARGET, PACKAGE, { distribution: true }),
+      ).toBe('/org/acme/space/core/context?package=pkg-1&tab=distribution');
+    });
+  });
+
+  describe('in the current navigation', () => {
+    it("opens the package's own page", () => {
+      expect(packageHref('today', TARGET, PACKAGE)).toBe(
+        '/org/acme/space/core/packages/pkg-1',
+      );
+    });
+
+    /* The same half, spelled the way that page spells it. */
+    it('opens the distribution half on the tab that answers', () => {
+      expect(
+        packageHref('today', TARGET, PACKAGE, { distribution: true }),
+      ).toBe('/org/acme/space/core/packages/pkg-1?tab=distributions');
     });
   });
 });

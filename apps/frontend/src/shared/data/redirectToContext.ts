@@ -1,4 +1,5 @@
 import { redirect, type LoaderFunctionArgs } from 'react-router';
+import type { PackageId } from '@packmind/types';
 import { queryClient } from './queryClient';
 import {
   ensureOrgContext,
@@ -10,7 +11,13 @@ import {
   resolveSpaceNavMode,
   withNavMode,
 } from '../../domain/organizations/components/SpaceNavModeContext';
-import { contextComponentHref } from '../../domain/deployments/components/context/buildComponentDetail';
+import {
+  contextComponentHref,
+  contextPackageHref,
+  DISTRIBUTION_TAB,
+  TAB_PARAM,
+} from '../../domain/deployments/components/context/buildComponentDetail';
+import { routes } from '../utils/routes';
 
 /**
  * Sends a reader who landed on a component's own page into the Context surface,
@@ -112,5 +119,70 @@ export async function redirectSkillToContextComponent(
       return skill?.skill?.id ?? null;
     },
     filePath,
+  );
+}
+
+/**
+ * The tab of the package's own page, said the way the Context surface says it.
+ *
+ * The two surfaces name the same two halves differently — the page has
+ * `content` and `distributions`, the pane has `components` and `distribution` —
+ * and a link built before the pane existed carries the page's spelling. An
+ * address asking for the distributions of a package has to land on the tab that
+ * answers, or the redirect is worse than the page it replaced.
+ *
+ * Undefined for everything else, which is the page's own default and every
+ * value a hand-edited address can hold. The builder drops it and the pane opens
+ * on what the package holds, which is what an address naming no tab means on
+ * both surfaces.
+ */
+function contextPackageTab(requested: string | null): string | undefined {
+  return requested === 'distributions' ? DISTRIBUTION_TAB : undefined;
+}
+
+/**
+ * The same move `redirectToContextComponent` makes, one level up: a reader who
+ * landed on a package's own page, or on the list of them, opens the Context
+ * surface instead when their navigation has no entry for either.
+ *
+ * A package is not the odd one out here. The plugin-first sidebar names no kind
+ * of object at all, so the packages list and a package's page sit outside it
+ * exactly the way the three component pages do, and every address the product
+ * printed before the rail existed points at one of them.
+ *
+ * `packageId` is absent for the list, which has no package to name. It resolves
+ * to the surface's own default — the first package in the rail — because that
+ * is what Context opens on with no parameters, and `CreatePackagePage` already
+ * treats that address as this navigation's answer to "the packages list".
+ *
+ * Null rather than a redirect means "serve the page", which is what the current
+ * navigation gets: there the packages list is a sidebar entry and a package's
+ * page is where a package is read.
+ */
+export async function redirectToContextPackage(
+  { params, request }: LoaderFunctionArgs,
+  packageId?: string | null,
+): Promise<Response | null> {
+  const me = await ensureOrgContext(params.orgSlug as string);
+  const url = new URL(request.url);
+  if (resolveSpaceNavMode(url.search, me.user?.email) !== 'plugin-first') {
+    return null;
+  }
+
+  const orgSlug = params.orgSlug as string;
+  const spaceSlug = params.spaceSlug as string;
+
+  return redirect(
+    withNavMode(
+      packageId
+        ? contextPackageHref(
+            { orgSlug, spaceSlug },
+            packageId as PackageId,
+            undefined,
+            contextPackageTab(url.searchParams.get(TAB_PARAM)),
+          )
+        : routes.space.toContext(orgSlug, spaceSlug),
+      url.search,
+    ),
   );
 }

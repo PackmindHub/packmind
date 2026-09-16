@@ -13,6 +13,7 @@ import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
 } from '../http/withTransientRetry';
+import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
 
 const origin = 'GitlabProvider';
@@ -45,6 +46,7 @@ export class GitlabProvider implements IGitProvider {
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab API docs
       },
       // GitLab API documentation shows PRIVATE-TOKEN header authentication
+      httpsAgent: providerHttpsAgent,
     });
   }
 

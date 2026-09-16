@@ -3,6 +3,7 @@ import {
   createMarketplaceId,
   createTargetId,
   DistributionStatus,
+  MarketplaceDistributionStatus,
 } from '@packmind/types';
 import type {
   MarketplaceDrift,
@@ -20,13 +21,22 @@ import {
 
 /**
  * A package landed on one (repo, target): `drifting` installs are what a
- * distribution would fix, `failed` is what the last attempt did.
+ * distribution would fix, `failed` is what the last attempt did, and
+ * `distributing` is one whose repair is running right now.
  */
+type LandedState = 'aligned' | 'drifting' | 'distributing' | 'failed';
+
+const lastStatus = (state: LandedState): DistributionStatus => {
+  if (state === 'failed') return DistributionStatus.failure;
+  if (state === 'distributing') return DistributionStatus.in_progress;
+  return DistributionStatus.success;
+};
+
 const landed = (
   name: string,
   repoId: string,
   targetId: string,
-  state: 'aligned' | 'drifting' | 'failed' = 'aligned',
+  state: LandedState = 'aligned',
 ): PackageDrift =>
   ({
     name,
@@ -45,10 +55,7 @@ const landed = (
       {
         repo: { id: createGitRepoId(repoId) },
         target: { id: createTargetId(targetId) },
-        lastDistributionStatus:
-          state === 'failed'
-            ? DistributionStatus.failure
-            : DistributionStatus.success,
+        lastDistributionStatus: lastStatus(state),
       },
     ],
   }) as unknown as PackageDrift;
@@ -77,6 +84,7 @@ const marketplace = (
   id: string,
   name: string,
   packageNames: string[],
+  lastStatusOfPlugins: MarketplaceDistributionStatus | null = null,
 ): MarketplaceDrift =>
   ({
     id: createMarketplaceId(id),
@@ -84,6 +92,7 @@ const marketplace = (
     plugins: packageNames.map((packageName) => ({
       pluginSlug: packageName.toLowerCase(),
       packageName,
+      lastStatus: lastStatusOfPlugins,
     })),
     publishedPackageNames: packageNames,
   }) as unknown as MarketplaceDrift;
@@ -98,6 +107,16 @@ const FAILED_REPO = repository('repo-failed', 'acme', 'api', [
   landed('Backend', 'repo-failed', 'repo-failed-root', 'failed'),
 ]);
 const MARKETPLACE = marketplace('mkt-1', 'Public catalog', ['Frontend']);
+/** Drifted, and every outdated plugin already riding an open sync pull request. */
+const WAITING_MARKETPLACE = marketplace(
+  'mkt-waiting',
+  'Waiting catalog',
+  ['Frontend'],
+  MarketplaceDistributionStatus.pending_merge,
+);
+const DISTRIBUTING_REPO = repository('repo-going', 'acme', 'infra', [
+  landed('Backend', 'repo-going', 'repo-going-root', 'distributing'),
+]);
 
 describe('buildSpaceDestinations', () => {
   it('holds one row per repository and per marketplace', () => {
@@ -280,16 +299,36 @@ describe('destinationReachSummary', () => {
   });
 
   /*
-   * The two pills of the rail's filter band are a partition of what needs work,
-   * which is the whole point of counting them separately: a destination in
-   * neither is aligned, and one in both cannot exist.
+   * The three pills of the rail's filter band are a partition of what needs
+   * work, which is the whole point of counting them separately: a destination
+   * in none of them is aligned, and one in two of them cannot exist.
    */
-  it('splits what needs work between the two, with nothing left over', () => {
+  it('splits what needs work between the three, with nothing left over', () => {
     const summary = destinationReachSummary(DESTINATIONS);
 
-    expect(summary.behindDestinations + summary.failedDestinations).toBe(
-      summary.needingWork,
+    expect(
+      summary.behindDestinations +
+        summary.waitingDestinations +
+        summary.failedDestinations,
+    ).toBe(summary.needingWork);
+  });
+
+  describe('when a destination is drifted and already being repaired', () => {
+    const WITH_WAITING = buildSpaceDestinations(
+      [DRIFTED_REPO, DISTRIBUTING_REPO],
+      [WAITING_MARKETPLACE],
     );
+
+    it('counts it as work, since its copy is still behind', () => {
+      expect(destinationReachSummary(WITH_WAITING).needingWork).toBe(3);
+    });
+
+    it('counts it apart from what nobody has sent yet', () => {
+      const summary = destinationReachSummary(WITH_WAITING);
+
+      expect(summary.behindDestinations).toBe(1);
+      expect(summary.waitingDestinations).toBe(2);
+    });
   });
 
   it('adds what is behind across both kinds', () => {
@@ -307,6 +346,7 @@ describe('destinationReachSummary', () => {
       marketplaces: 0,
       needingWork: 0,
       behindDestinations: 0,
+      waitingDestinations: 0,
       failedDestinations: 0,
       behind: 0,
       failed: 0,
@@ -342,6 +382,33 @@ describe('destinationDriftStatus', () => {
   it('reads a marketplace the same way, since it never reports a failure', () => {
     expect(destinationDriftStatus(market)).toBe('behind');
   });
+
+  /*
+   * The fourth state, and the one the band used to count as plain drift. Both
+   * kinds reach it their own way: every drifted distribution of a repository
+   * running, every outdated plugin of a catalog on an open pull request.
+   */
+  describe('when the drift is already being repaired', () => {
+    it('gives a repository mid-distribution the waiting status', () => {
+      const [going] = buildSpaceDestinations([DISTRIBUTING_REPO], []);
+
+      expect(destinationDriftStatus(going)).toBe('waiting');
+    });
+
+    it('gives a catalog awaiting a merge the waiting status', () => {
+      const [waiting] = buildSpaceDestinations([], [WAITING_MARKETPLACE]);
+
+      expect(destinationDriftStatus(waiting)).toBe('waiting');
+    });
+
+    /*
+     * A failure is still the headline. It is the part distributing again may
+     * not put right on its own, whatever else is running beside it.
+     */
+    it('keeps a failure ahead of it', () => {
+      expect(destinationDriftStatus(failedOne)).toBe('failed');
+    });
+  });
 });
 
 describe('isBatchDistributable', () => {
@@ -374,6 +441,25 @@ describe('isBatchDistributable', () => {
       );
 
       expect(isBatchDistributable(quiet)).toBe(false);
+    });
+  });
+
+  /*
+   * Behind, and offering to send it again is offering to do it twice: the
+   * distribution is running, or the republish is sitting in a pull request
+   * nobody has merged yet.
+   */
+  describe('when the drift is already being repaired', () => {
+    it('leaves out a repository mid-distribution', () => {
+      const [going] = buildSpaceDestinations([DISTRIBUTING_REPO], []);
+
+      expect(isBatchDistributable(going)).toBe(false);
+    });
+
+    it('leaves out a catalog awaiting a merge', () => {
+      const [waiting] = buildSpaceDestinations([], [WAITING_MARKETPLACE]);
+
+      expect(isBatchDistributable(waiting)).toBe(false);
     });
   });
 });

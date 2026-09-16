@@ -27,9 +27,8 @@ import {
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { routes } from '../../../../shared/utils/routes';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
-import { contextPackageHref } from '../context/buildComponentDetail';
+import { packageHref } from '../context/buildComponentDetail';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -66,10 +65,7 @@ export const PackageEditFormBody = ({
    * Context shows the same package, open on what was just changed. Saved or
    * cancelled makes no difference to where this goes.
    */
-  const packageHref =
-    mode === 'plugin-first'
-      ? contextPackageHref({ orgSlug, spaceSlug }, id)
-      : routes.space.toPackage(orgSlug, spaceSlug, id);
+  const backHref = packageHref(mode, { orgSlug, spaceSlug }, id);
 
   const [editName, setEditName] = useState(pkg.name);
   const [editDescription, setEditDescription] = useState(pkg.description ?? '');
@@ -87,7 +83,7 @@ export const PackageEditFormBody = ({
   const updatePackageMutation = useUpdatePackageMutation();
 
   const handleCancel = () => {
-    navigate(packageHref);
+    navigate(backHref);
   };
 
   const handleSave = async () => {
@@ -119,7 +115,7 @@ export const PackageEditFormBody = ({
         description: `"${editName}" has been updated`,
       });
 
-      navigate(packageHref);
+      navigate(backHref);
     } catch (err) {
       console.error('Failed to update package:', err);
       const errorMessage =

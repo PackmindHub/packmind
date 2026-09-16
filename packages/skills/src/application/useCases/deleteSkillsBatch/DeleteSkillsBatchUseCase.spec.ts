@@ -4,6 +4,8 @@ import { spaceFactory } from '@packmind/spaces/test';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -434,8 +436,8 @@ describe('DeleteSkillsBatchUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotFoundError,
         );
       });
 
@@ -560,8 +562,8 @@ describe('DeleteSkillsBatchUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotInOrganizationError,
         );
       });
 

@@ -19,7 +19,8 @@ import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import { Distribution, RenderMode, DistributedPackage } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
-import { routes } from '../../../../shared/utils/routes';
+import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
+import { packageHref } from '../context/buildComponentDetail';
 
 export type DeploymentType = 'recipe' | 'standard' | 'skill' | 'package';
 
@@ -53,6 +54,13 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   hidePackageColumn = false,
   hideVersionColumn = false,
 }) => {
+  /*
+   * Before the early returns below, which is not a style choice: this component
+   * bails out on loading and on error, and a hook read after them would run on
+   * some renders and not others.
+   */
+  const { mode } = useSpaceNavMode();
+
   if (loading) {
     return (
       <PMBox p={4} borderRadius="md" shadow="sm">
@@ -332,7 +340,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         <PMBox display="flex" flexDirection="column" gap={1}>
           {packages.map((pkg) => (
             <PMLink asChild key={pkg!.id} variant="active">
-              <Link to={routes.space.toPackage(orgSlug, spaceSlug, pkg!.id)}>
+              <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg!.id)}>
                 {pkg!.name}
               </Link>
             </PMLink>
