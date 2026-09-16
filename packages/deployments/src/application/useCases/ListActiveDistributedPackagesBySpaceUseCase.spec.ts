@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createGitRepoId,
   createOrganizationId,
@@ -27,6 +27,7 @@ import {
   Standard,
   Target,
   TargetId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -65,6 +66,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [
@@ -131,23 +133,19 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
   } as unknown as GitRepo;
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockSpacesPort = {
-      getSpaceById: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId,
-        spaceId,
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
     distributionRepository = {
       findActivePackageOperationsBySpace: jest.fn().mockResolvedValue([]),

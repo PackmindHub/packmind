@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { OrganizationId, createOrganizationId } from '@packmind/types';
 import {
   CodingAgents,
@@ -17,16 +17,7 @@ describe('RenderModeConfigurationService', () => {
   let organizationId: OrganizationId;
 
   beforeEach(() => {
-    repository = {
-      findByOrganizationId: jest.fn(),
-      upsert: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      find: jest.fn(),
-      findById: jest.fn(),
-      list: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IRenderModeConfigurationRepository>;
+    repository = mockInterface<IRenderModeConfigurationRepository>();
 
     organizationId = createOrganizationId(uuidv4());
     service = new RenderModeConfigurationService(repository, stubLogger());

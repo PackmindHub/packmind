@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
@@ -33,23 +34,16 @@ describe('DeploymentsListener', () => {
     } as unknown as DataSource;
 
     eventService = new PackmindEventEmitterService(mockDataSource);
-    mockPackageRepository = {
-      removeCommandFromAllPackages: jest.fn().mockResolvedValue(undefined),
-      removeSkillFromAllPackages: jest.fn().mockResolvedValue(undefined),
-      removeStandardFromAllPackages: jest.fn().mockResolvedValue(undefined),
-      findBySpaceId: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findById: jest.fn(),
-      findBySlugsWithArtefacts: jest.fn(),
-      addCommands: jest.fn(),
-      addStandards: jest.fn(),
-      updatePackageDetails: jest.fn(),
-      setCommands: jest.fn(),
-      setStandards: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IPackageRepository>;
+    mockPackageRepository = mockInterface<IPackageRepository>();
+    mockPackageRepository.removeCommandFromAllPackages.mockResolvedValue(
+      undefined,
+    );
+    mockPackageRepository.removeSkillFromAllPackages.mockResolvedValue(
+      undefined,
+    );
+    mockPackageRepository.removeStandardFromAllPackages.mockResolvedValue(
+      undefined,
+    );
 
     listener = new DeploymentsListener(mockPackageRepository);
     listener.initialize(eventService);

@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { DeleteTargetUseCase } from './DeleteTargetUseCase';
 import {
   DeleteTargetCommand,
@@ -72,10 +73,7 @@ describe('DeleteTargetUseCase', () => {
       updateTarget: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
-    mockGitPort = {
-      getRepositoryById: jest.fn(),
-      listProviders: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
     useCase = new DeleteTargetUseCase(mockTargetService, mockGitPort);
   });

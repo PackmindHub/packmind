@@ -7,7 +7,7 @@ import { RenderModeConfigurationService } from '../services/RenderModeConfigurat
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { packageFactory } from '../../../test';
 import {
@@ -107,41 +107,20 @@ describe('RemovePackageFromTargetsUseCase', () => {
       findByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
-    mockDistributionRepository = {
-      listByTargetIds: jest.fn(),
-      add: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
-    mockCommandsPort = {
-      getCommandVersionById: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getStandardVersionById: jest.fn(),
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
-    mockGitPort = {
-      getRepositoryById: jest.fn(),
-      getFileFromRepo: jest.fn(),
-      commitToGit: jest.fn(),
-      getFilesInFolder: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
-    mockCodingAgentPort = {
-      renderArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    mockCodingAgentPort = mockInterface<ICodingAgentPort>();
 
     mockRenderModeConfigurationService = {
       getActiveRenderModes: jest.fn(),

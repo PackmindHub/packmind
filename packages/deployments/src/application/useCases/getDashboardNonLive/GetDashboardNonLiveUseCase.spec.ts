@@ -11,7 +11,7 @@ import {
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { standardFactory } from '@packmind/standards/test';
 import { commandFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
@@ -37,21 +37,13 @@ describe('GetDashboardNonLiveUseCase', () => {
   };
 
   beforeEach(() => {
-    mockDistributionRepository = {
-      listDeployedArtifactIdsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
 
-    mockStandardsPort = {
-      listStandardsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockCommandsPort = {
-      listCommandsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockSkillsPort = {
-      listSkillsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
     useCase = new GetDashboardNonLiveUseCase(
       mockDistributionRepository,

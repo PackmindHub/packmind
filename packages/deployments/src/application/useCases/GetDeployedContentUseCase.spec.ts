@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CodingAgent,
   CodingAgents,
@@ -82,19 +82,23 @@ describe('GetDeployedContentUseCase', () => {
       findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
-    distributionRepository = {
-      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveCommandVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      [],
+    );
+    distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
+      [],
+    );
+    distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+      [],
+    );
 
-    codingAgentPort = {
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
     renderModeConfigurationService = {
       resolveCodingAgents: jest
@@ -106,18 +110,13 @@ describe('GetDeployedContentUseCase', () => {
       getPackagesBySlugsWithArtefacts: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<PackageService>;
 
-    skillsPort = {
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    standardsPort = {
-      getRulesByVersionId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getRulesByVersionId.mockResolvedValue([]);
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     organizationId = createOrganizationId(uuidv4());
     organization = {
