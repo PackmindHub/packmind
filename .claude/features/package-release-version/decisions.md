@@ -2849,3 +2849,66 @@ release flow is never to be re-run away.
 **Constrains implementation.** Re-run once, alone, and only for a fixture-stage timeout. Two
 consecutive failures at the same point, idle, are a real failure and route normally. Do not add
 retries to the criterion, do not edit `playwright.config.ts`, and do not edit the gate.
+
+## D-053 — The release spec is the slowest in the suite and flakes at four workers under host load
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-22`..`AC-25`, `D-049`, `D-052`
+
+**Decision.** `PackageRelease.spec.ts` is recorded as **intermittently failing at its configured
+parallelism when the host is loaded**, always at the signup fixture, never in the release flow.
+Nothing is changed to hide it: `playwright.config.ts` keeps its worker count and its 30-second
+timeout, and no retry is added. This entry is the finding, and it is the last open item on this
+feature.
+
+**Reasoning.** D-052 attributed a fixture-stage timeout to the gate's repo-wide build running just
+before the browser. That was right about the mechanism and too narrow about the cause. Measured at
+the feature boundary, on the same stack, with the four tests in one file:
+
+| run | condition | result |
+|---|---|---|
+| 1 | default 4 workers, straight after `nx run-many -t test` over four projects | 3 passed, 1 failed |
+| 2 | default 4 workers, immediately after run 1 | 1 passed, 3 failed |
+| 3 | `--workers=1` | **4 passed**, 48.7s total, 10.8–12.9s each |
+| 4 | default 4 workers, host idle | **4 passed**, 20.4s total, 17.0–18.8s each |
+
+And the control, which is what rules out the stack itself: `import-skills.spec.ts` — also four tests,
+also `testWithApi`, also four workers — passed in 11.3s immediately between those runs.
+
+So the stack handles four concurrent signups fine, and this spec is simply the most expensive in the
+suite. Each of its tests signs up, reads an API key, seeds a standard and a package, loads the Context
+surface, and then cuts one or two releases; that is **17–19 seconds at four workers against a 30-second
+default timeout**, where the neighbour sits at 8–10. The margin is about ten seconds, and host load
+eats it. Every observed failure is `page.waitForURL` inside `SignupPage.signup`, before a line of
+release code runs.
+
+Written down rather than smoothed away because all three smoothings are worse than the fact. Raising
+the timeout or lowering the worker count edits `playwright.config.ts`, which D-049 placed out of
+bounds and which would slow or serialise the whole suite for one file's benefit. `--retries` would
+mask real flakiness in the feature under test exactly as well as it masks this. And re-running until
+green, which is what produced run 4, is how a known flake becomes an unexplained one six months later.
+
+The criteria themselves are not in doubt: each of AC-22 to AC-25 passed its own gated criterion
+individually, and all four pass together serially and at parallelism on an idle host. What is in
+doubt is only whether this file is comfortable in a loaded CI shard, and that is a question about the
+harness, not about releases.
+
+**Rejected.**
+
+- **Editing `playwright.config.ts`** — a guardrail under D-049, and it would change every spec's
+  timing to accommodate one.
+- **Adding `--retries=1`** — hides feature flakiness and harness flakiness with equal enthusiasm.
+- **Splitting the four tests across files so fewer run concurrently** — parallelism is per worker, not
+  per file, so this changes nothing except where the tests live.
+- **Declaring it green on run 4 and saying nothing** — three of four runs disagree, and the one that
+  agreed was the one taken on an idle host after two failures. That is selecting the evidence.
+
+**Constrains implementation.** Anyone touching this spec keeps its per-test work down — it is already
+the most expensive in the suite, and another API seed or navigation moves it past the timeout rather
+than near it. If CI shows this file failing at `SignupPage.signup`, the fix is the harness's worker
+count or timeout, decided for the suite as a whole, not a change to the release feature. Re-running
+until green is not a resolution and must not be recorded as one.
