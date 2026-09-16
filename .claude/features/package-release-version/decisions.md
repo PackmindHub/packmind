@@ -2273,3 +2273,66 @@ read it as a bug in the call site rather than a decision about the gate.
 **Constrains implementation.** Do not populate `changeSources` by inference at the call
 site. A story that wants it adds a breakdown to the gate first, with its own entry
 superseding D-007's "no breakdown" clause, and only then fills the event.
+
+## D-045 — The badge is the history trigger, and only when there is a history
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-1`, `AC-18`, `D-010`, `D-018`
+
+**Decision.** The version badge in `PackageVersionArea` opens the release-history drawer
+when the package has at least one release. When it has none, the badge stays what it is
+today: inert text reading "Not released yet", with no click target, no cursor change and
+no drawer.
+
+The drawer lists every release, newest version first, and selecting one shows what that
+version pins — its snapshotted name and description, and each pinned component as
+`name vN` under its family.
+
+**Reasoning.** D-018 decided the badge opens the history and said nothing about the case
+where there is no history, because at the time the badge was a string rather than a
+control. The never-released package is not an edge case here — it is the state every
+package is in until someone acts, so it is the state most badges are in, and it is the
+first thing anyone building the drawer has to resolve.
+
+A trigger that opens an empty drawer is the plausible wrong answer. It offers an action,
+takes a click, and answers with a panel whose only content is a sentence saying there is
+nothing — the click was the cost and "nothing" was always knowable from the badge, which
+already says "Not released yet". D-010 is the precedent: it refused to render the `0.0.0`
+sentinel because a package with no release should say so in words rather than in a number
+nobody can act on. The same argument applies to an affordance nobody should take.
+
+Making it inert also keeps the badge honest as a status: it reads as a fact when there is
+nothing behind it and as a control when there is, which is the distinction a reader needs
+before clicking rather than after.
+
+*Copy.* The drawer's headings and labels are written inline, as
+`EditPackageDetailsDrawer` writes "Edit package details". D-011 governs the four gate and
+refusal *sentences* — the ones a criterion quotes and both ends must produce identically —
+and those stay in `messages.ts`. A drawer heading is neither, and moving all UI copy into
+that file would widen a rule written for a specific hazard.
+
+**Rejected.**
+
+- A badge that always opens the drawer, empty state inside — costs a click to be told what
+  the badge already said, and makes "Not released yet" a button that does nothing useful.
+- A separate "History" button beside "Create a release" — a second control in a header
+  D-018 deliberately kept to one line, and D-024 wants the area to stay one mountable
+  element rather than grow a second action.
+- Disabling the badge visually when there are no releases — a disabled control still reads
+  as an action that is temporarily unavailable; this one is permanently absent until a
+  release exists, which is what plain text says.
+- Putting the drawer's copy in `messages.ts` — extends a rule written for the four
+  quotable sentences to every string, for no stated benefit.
+
+**Constrains implementation.** `PackageVersionArea` renders the badge as a control only
+when `releases.length > 0`; otherwise it renders exactly what it renders today. The drawer
+is a new component in
+`apps/frontend/src/domain/deployments/components/context/`, modelled on
+`EditPackageDetailsDrawer`, mounted by `PackageVersionArea` so the area stays one element
+(D-024). Order the list by the parsed version triple, never by string comparison (D-009).
+Read one release's content with the existing `useGetPackageReleaseQuery`; do not add a
+gateway method, a query key or an endpoint — all three already exist.

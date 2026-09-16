@@ -10,7 +10,10 @@ import {
 import type { Mock } from 'vitest';
 
 import { PackageVersionArea } from './PackageVersionArea';
-import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
+import {
+  useListPackageReleasesQuery,
+  useGetPackageReleaseQuery,
+} from '../../api/queries/DeploymentsQueries';
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageReleasesQuery: vi.fn(),
@@ -18,6 +21,7 @@ vi.mock('../../api/queries/DeploymentsQueries', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useGetPackageReleaseQuery: vi.fn(),
 }));
 
 vi.mock(
@@ -40,13 +44,19 @@ const renderComponent = ({
   },
   isLoading = false,
   componentsCount = 1,
+  releases = [],
 } = {}) => {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
     data: {
-      releases: [],
+      releases,
       readiness,
     },
     isLoading,
+  });
+
+  (useGetPackageReleaseQuery as Mock).mockReturnValue({
+    data: undefined,
+    isLoading: false,
   });
 
   render(
@@ -238,5 +248,50 @@ describe('PackageVersionArea', () => {
     );
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('opens the history from the badge', async () => {
+    renderComponent({
+      readiness: {
+        currentVersion: '0.1.0',
+        verdict: 'ready',
+        nextVersions: ['0.2.0', '1.0.0', '2.0.0'],
+        outdatedComponents: [],
+      },
+      releases: [{ version: '0.1.0' }],
+    });
+
+    // The badge should be visible as a button
+    expect(screen.getByText('0.1.0')).toBeInTheDocument();
+
+    // Click the version badge to open history
+    await userEvent.click(screen.getByRole('button', { name: /0\.1\.0/ }));
+
+    // The drawer should open with the history title
+    expect(await screen.findByText('Release history')).toBeInTheDocument();
+  });
+
+  it('the badge is not a control when nothing has been released', () => {
+    renderComponent({
+      readiness: {
+        currentVersion: null,
+        verdict: 'ready',
+        nextVersions: ['0.1.0', '0.2.0', '1.0.0'],
+        outdatedComponents: [],
+      },
+      releases: [],
+    });
+
+    // The badge should be visible with "Not released yet"
+    expect(screen.getByText('Not released yet')).toBeInTheDocument();
+
+    // It should not be clickable (no Release history drawer should open)
+    // The badge should not have the appearance of a button
+    const badgeElement = screen.getByText('Not released yet');
+    expect(badgeElement).toBeInTheDocument();
+    // The parent should be a badge, not a button control
+    expect(
+      badgeElement.closest('button[colorpalette="blue"]'),
+    ).not.toBeInTheDocument();
   });
 });

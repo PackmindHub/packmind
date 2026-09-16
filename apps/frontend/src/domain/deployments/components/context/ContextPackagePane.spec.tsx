@@ -23,6 +23,7 @@ import { usePackageDestinations } from './usePackageDestinations';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
+import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
 
 /*
  * Every query the pane and the version area reach for is mocked at its module
@@ -34,6 +35,7 @@ vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useDeletePackagesBatchMutation: vi.fn(),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackageReleasesQuery: vi.fn(),
+  useGetPackageReleaseQuery: vi.fn(),
   useCreatePackageReleaseMutation: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -155,14 +157,24 @@ function resetHooks() {
     data: { providers: [] },
     isLoading: false,
   });
+  (useGetPackageReleaseQuery as Mock).mockReturnValue({
+    data: undefined,
+    isLoading: false,
+  });
 }
 
-async function renderPane(readiness: PackageReleaseReadiness) {
+async function renderPane(
+  readiness: PackageReleaseReadiness,
+  releases: { version: string }[] = [],
+) {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
     data: {
-      releases: readiness.currentVersion
-        ? [{ version: readiness.currentVersion }]
-        : [],
+      releases:
+        releases.length > 0
+          ? releases
+          : readiness.currentVersion
+            ? [{ version: readiness.currentVersion }]
+            : [],
       readiness,
     },
     isLoading: false,

@@ -7,6 +7,7 @@ import {
   getReleaseVerdictMessage,
 } from '../../constants/messages';
 import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
+import { PackageReleasesDrawer } from './PackageReleasesDrawer';
 
 /**
  * A package's version, and the one action that changes it.
@@ -24,6 +25,7 @@ export function PackageVersionArea(
   }>,
 ) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
 
   const { data, isLoading } = useListPackageReleasesQuery(
     props.organizationId,
@@ -35,7 +37,7 @@ export function PackageVersionArea(
     return null;
   }
 
-  const { readiness } = data;
+  const { readiness, releases } = data;
   const isReady = readiness.verdict === 'ready';
   const reasonMessage = getReleaseVerdictMessage(
     readiness.verdict,
@@ -43,13 +45,25 @@ export function PackageVersionArea(
   );
   const displayVersion =
     readiness.currentVersion || PACKAGE_MESSAGES.release.notReleasedYet;
+  const hasReleases = releases.length > 0;
 
   return (
     <PMVStack gap={2} align="flex-start" width="100%">
       <PMHStack gap={2} align="center" width="100%">
-        <PMBadge variant="outline" colorPalette="blue" size="sm">
-          {displayVersion}
-        </PMBadge>
+        {hasReleases ? (
+          <PMButton
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryDrawerOpen(true)}
+            colorPalette="blue"
+          >
+            {displayVersion}
+          </PMButton>
+        ) : (
+          <PMBadge variant="outline" colorPalette="blue" size="sm">
+            {displayVersion}
+          </PMBadge>
+        )}
         <PMButton
           variant="secondary"
           size="sm"
@@ -85,6 +99,15 @@ export function PackageVersionArea(
         componentsCount={props.componentsCount}
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
+      />
+
+      <PackageReleasesDrawer
+        releases={releases}
+        packageId={props.packageId}
+        spaceId={props.spaceId}
+        organizationId={props.organizationId}
+        open={isHistoryDrawerOpen}
+        onOpenChange={setIsHistoryDrawerOpen}
       />
     </PMVStack>
   );
