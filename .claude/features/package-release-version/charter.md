@@ -1,7 +1,8 @@
 # Feature: Release a numbered version of a package
 
 - slug: `package-release-version` — the directory name under `.claude/features/`
-- status: `done`
+- status: `open` — AC-1..AC-25 are delivered and green; reopened on 2026-09-16 by D-056, which
+  puts a feature flag in scope
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -77,6 +78,15 @@ it", and no record afterwards that the moment happened.
   closed. Every criterion above is verified either side of the HTTP boundary and none
   across it, and D-042 is a real defect living in exactly that gap. Playwright only;
   `apps/cli-e2e-tests/` stays out, because releasing from the CLI remains a non-goal.
+
+- **A feature flag that hides the release surface**, added on 2026-09-16 by D-056 after the
+  feature was otherwise closed. Releases are inert until the consumer side ships (D-022), and
+  a visible "Create a release" action invites curators to cut immutable records that nothing
+  installs or compares against. This reverses D-020 and D-024, whose conclusion was that no
+  flag was needed — that argument was about rollback risk, and the reason here is
+  incompleteness. **At least the UI**, which D-024 already made a one-line gate by keeping the
+  version area one mountable element; **probably the API routes too**, which is UK-11 and is
+  not decided. The flag's key, audience and removal are UK-12.
 
 ## Out of scope
 
@@ -172,6 +182,9 @@ nineteen units with every criterion met.
 | UK-8 | Amplitude: `package_version_released` and `package_release_refused` are asked for, but the analytics provider is imported from `@packmind/proprietary/frontend/domain/amplitude/...` and `packages/amplitude` is empty on OSS. Can these events be emitted from the OSS side at all, and does `package_release_refused` fire on a client-side rejection, a server-side one, or both? | design session, verified empirically |
 | UK-9 | Does a release record who cut it and when, and is that shown? Nothing in the issue asks for it, and nothing forbids it. | design session |
 | UK-10 | Which surface browses a released version (AC-18) — the existing context package pane with a version selector, a separate route, or a drawer — and where the version area sits relative to `PackageReachStrip` and the existing tabs. | design session |
+| UK-11 | Does the flag gate the **API routes** as well as the UI, or only the UI? If the routes stay open the feature is hidden but reachable by URL, and the immutable rows can still be created; if they close, what do they answer — 404, 403, or a refusal code — and does that disclose the flag's existence? | next design session |
+| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | next design session |
+| UK-13 | Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and outlive the flag. Does that matter, and is anything owed to them when the feature opens up? | next design session |
 
 ## Size and sessions
 
@@ -193,7 +206,8 @@ package pane. The comparison rules (AC-7, AC-8, AC-10) are pure functions and ar
 cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real design
 risk, and they are the two that UK-3 and UK-6 have to settle first.
 
-- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3
+- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4). S4 is
+  unsized pending its design session
 - verdict: `split`
 - session boundaries:
 
@@ -202,9 +216,12 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S1 | AC-16, AC-17, AC-18, AC-19, AC-20, AC-21 | the four tables and their migration, the `PackageRelease` aggregate, the version module in `packages/types`, the change gate and its comparisons, the three use cases and the three routes on the existing packages controller | — |
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
+  | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the feature flag that hides the release surface: at least the UI gate around `PackageVersionArea`, and whatever UK-11 decides about the API routes | S3, and its own design session |
 
-  **All three sessions are complete and green.** S3 was added on 2026-09-16 by D-048,
-  after S2 closed, and ran the same day.
+  **S1, S2 and S3 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
+  closed. It is **not sized**, because its unknowns are not resolved: the next session is a
+  design session (phase 1b), not an orchestrator run. Sizing is its closing act, as it was
+  for S1-S3.
 
   The cut is not "backend then frontend" as a habit — it is where the contract is.
   The **rules** behind AC-2..AC-15 are built and unit-tested in S1, where they live
@@ -279,7 +296,8 @@ When the verdict was `split`, that is the bar for the **feature**, not for each
 session. A session ending green with its own ACs covered is a session done; the feature
 is done when the last one is.
 
-**Status on 2026-09-16 — the feature is done.** All of AC-1 to AC-25 carry a
+**Status on 2026-09-16 — every acceptance criterion is met; the feature is reopened.**
+All of AC-1 to AC-25 carry a
 `verified by`. `nx run-many -t test` over `types`, `deployments`, `api` and `frontend`
 is green at the boundary (145 files, 2173 tests), and the four end-to-end criteria pass
 together in `apps/e2e-tests/src/features/packages/PackageRelease.spec.ts`.
@@ -296,6 +314,17 @@ Two things a reader should carry rather than discover:
   because the blast radius was "a panel not rendering"; for most users the panel is not
   reachable either. It changes no criterion and is out of scope here (D-022), but it is
   the open product question this feature leaves behind: D-050.
+
+**And then reopened, the same day.** D-056 puts a feature flag in scope: the release surface
+ships hidden until the sibling stories that make a release do something are done. Nothing
+already built is in doubt — S1, S2 and S3 stay green and nothing is rolled back — but the bar
+above is no longer the last word, because S4 adds a deliverable with no acceptance criterion
+of its own. A flag is a control, not a behaviour anyone asked to observe, so it is judged the
+way D-047 judged the documentation: by a person, and by the suite staying green around it.
+
+The second bullet above is the reason. It was written as an open product question and D-056
+answers it — not by making the surface more reachable, but by hiding it deliberately instead
+of by accident.
 
 One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
 `apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`

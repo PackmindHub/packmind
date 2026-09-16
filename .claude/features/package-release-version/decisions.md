@@ -906,7 +906,7 @@ buttons set the field's value and nothing else.
 - user-visible: `no`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-056 (its conclusion — a flag is now required)
 - relates to: `UK-7`
 
 **Decision.** The feature ships unflagged. Nothing is added to
@@ -1066,7 +1066,7 @@ in any repository but this one.
 - user-visible: `no`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-056 (its conclusion — a flag is now required; its one-mountable-element obligation stands and is discharged)
 - relates to: `UK-7`, `D-020`, `D-018`
 
 **Decision.** D-020 stands and is confirmed: this feature adds no feature flag. A
@@ -3013,3 +3013,78 @@ green-and-meaningless shape this log has refused throughout (D-027, D-028, D-032
 `apps/frontend/src/shared/data/queryClient.ts` should know that AC-25's test loses its sharpness if
 the form's readiness can refresh mid-test. If that changes, the test needs a different way to keep
 the client's belief stale — not a looser assertion.
+
+## D-056 — The feature ships behind a flag, off, until its sibling stories land; the shape is next session's
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-16`
+- supersedes: D-020, D-024 (their conclusion — that this feature adds no flag)
+- superseded-by: —
+- relates to: `UK-11`, `UK-12`, `UK-13`, `D-020`, `D-022`, `D-024`, `D-050`
+
+**Decision.** Package releases ship **hidden behind a feature flag, off by default**, until the
+sibling stories that make a release do something are done. D-020 and D-024 concluded this feature
+adds no flag; that conclusion is reversed. What a flag must cover — UI only, or the API routes too —
+its key, its audience and its removal are **not decided here** and are the next session's work.
+
+Requested by the human on 2026-09-16, after the feature was closed.
+
+**Reasoning.** D-020's argument was about **rollback risk**, and it was sound on its own terms: the
+feature is purely additive — new tables, new endpoints, a new header element — nothing that exists
+today changes behaviour, so the blast radius of a bug is a panel not rendering and the rollback is a
+revert. None of that is wrong now.
+
+But it answered a question nobody was asking. The reason to hide this is not that it might break
+something; it is that it is **complete against its charter and incomplete as a product**. D-022 says
+so plainly: releases are inert, nothing else in the product reads them, and "the consumer side —
+installing or pinning a released version — is the sibling story that makes releases do something.
+Until it exists, a release is a record." A visible "Create a release" action invites a curator to cut
+`0.1.0`, `0.2.0`, `0.3.0` — immutable records (charter: no deleting, yanking, editing or re-cutting)
+that nothing installs, nothing distributes and nothing compares against. The cost of shipping early
+is not a broken panel, it is durable data created under a promise the product cannot yet keep.
+
+D-050's finding is why this did not surface sooner, and it cuts both ways. The release UI mounts only
+on the Context surface, reachable today in `plugin-first` navigation, gated to `@packmind.com` and
+`@promyze.com` — so in practice the feature is already nearly hidden, by accident. That accident is
+not a control: it belongs to someone else's navigation work, it can move without anyone consulting
+this feature, and it is invisible in this feature's own code. A flag makes the same state deliberate,
+owned here, and switchable.
+
+D-024 anticipated exactly this without meaning to. It required the version area to be "one mountable
+element, so wrapping it in a gate later is a one-line change and not a hunt", and refused to scaffold
+further because the flag was then "someone else's decision". The obligation it imposed is discharged:
+`PackageVersionArea` is one component, mounted once. The UI half of this is now the one-line change it
+was built to be.
+
+**What is deliberately not decided, and why it is a session rather than a unit.** The UI half is
+cheap; the rest is a real design question with more than one defensible answer, and getting it wrong
+is worse than waiting a day:
+
+- If the API routes stay open while the UI is hidden, the feature is hidden from users but reachable
+  by anyone with the URL, and the immutable rows can still be created. If they close, what do they
+  answer — 404, 403, or a refusal code — and does that leak the flag's existence?
+- `packages/feature-flags` today holds three keys, every one mapped to `['@packmind.com',
+  '@promyze.com']`. D-020 called it correctly: it is a mechanism for pinning a demo to staff, not a
+  rollout or a kill switch, and it has no per-organization audience. Hiding a feature from everyone
+  until a sibling ships may not be what that registry does.
+- Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and will
+  outlive the flag. Whether that matters is a question about data, not about a gate.
+
+**Rejected.**
+
+- **Implementing the UI gate now and deferring only the backend** — the tempting half-step, and it
+  would commit to a key name and an audience that the deferred half may want to change, in a registry
+  whose shape is itself in question. D-024 refused to scaffold a flag whose owner had not decided;
+  the same argument holds when the owner is the next session.
+- **Leaving it unflagged and relying on the Context surface being hard to reach** — that is an
+  accident of another team's navigation work, not a control this feature owns, and it can be removed
+  without anyone reading this log.
+- **Reopening D-020 in place** — the log is append-only, and D-020's reasoning about rollback risk is
+  still correct and worth reading. It was not wrong; it was answering a different question.
+
+**Constrains implementation.** No flag is added yet. The next session is a **design session** that
+resolves UK-11, UK-12 and UK-13 and then sizes the work; an orchestrator run follows it. Until then
+nothing in `packages/feature-flags` changes, and the S3 end-to-end specs keep `underFeatureFlag: false`
+— whoever adds the gate owns updating them, and should expect to, because the four seam tests drive
+the surface the gate will hide.
