@@ -73,6 +73,10 @@ it", and no record afterwards that the moment happened.
   rules speak of components. A command and a standard must appear in the tests.
 - **CHANGELOG under `Unreleased`, and end-user documentation under `apps/doc/`** — the
   flow is user-facing.
+- **End-to-end coverage under `apps/e2e-tests/`**, added on 2026-09-16 by D-048 after S2
+  closed. Every criterion above is verified either side of the HTTP boundary and none
+  across it, and D-042 is a real defect living in exactly that gap. Playwright only;
+  `apps/cli-e2e-tests/` stays out, because releasing from the CLI remains a non-goal.
 
 ## Out of scope
 
@@ -117,8 +121,14 @@ Each AC is **one user-observable behaviour**, and becomes at least one named tes
 
 AC-1 to AC-11 are about the gate and the form and are observable in the frontend
 against a stubbed API; AC-12 to AC-19 are about what the backend writes and refuses,
-and are observable at the use-case or HTTP boundary. AC-20's whole content is that the
-others do not secretly assume a skill.
+and are observable at the use-case or HTTP boundary. AC-20 is the concurrent cut, and
+AC-21's whole content is that the others do not secretly assume a skill.
+
+AC-22 to AC-25 were added on 2026-09-16 by D-048 and are different in kind from all of
+the above: they are the only ones observable **across** the HTTP boundary, in a browser
+against a running API and database. Everything before them is verified on one side of
+that boundary or the other, which is why a defect sitting in the seam (D-042) survived
+nineteen units with every criterion met.
 
 | id | criterion | user-visible | verified by |
 |----|-----------|--------------|-------------|
@@ -143,6 +153,10 @@ others do not secretly assume a skill.
 | AC-19 | A member of the organization who did not create the package can release it — no ownership or role check refuses them | yes | `nx test deployments --testNamePattern='CreatePackageReleaseUseCase\|GetPackageReleaseUseCase'` — "releases for a member who did not create the package", and "read a release the caller did not create" |
 | AC-20 | Two releases of the same version cut concurrently: the first is written and the second is refused because that version already exists | yes | `nx test deployments --testNamePattern='PackageReleaseRepository'` for the constraint itself, `CreatePackageReleaseUseCase` for the 23505 translation — see D-027 on what pg-mem does and does not prove |
 | AC-21 | Every rule above holds for a package whose components include a command and a standard, not only skills | no | `nx test deployments --testNamePattern='PackageReleaseRepository\|packageReleaseGate'` — the pinning fixture holds one command, one standard and one skill; the gate's change cases are driven through the **recipe** family. AC-18's block deliberately names only the command and the standard, because `SkillVersionSchema` has no soft-delete columns (D-037). S1 rules only; S2 re-checks its own |
+| AC-22 | A user cuts a release in the browser against a real API, and the version it created is then shown as the package's current version | yes | |
+| AC-23 | A release cut in the browser pins the package's real components, and browsing that version in the history lists them at the versions it pinned | yes | |
+| AC-24 | With nothing changed since the last release, the action is disabled in the running app and states why, naming the version | yes | |
+| AC-25 | A version the server refuses reaches the form carrying its reason: the sentence the user sees names the refusal, not a generic failure | yes | |
 
 ## Known unknowns
 
@@ -179,7 +193,7 @@ package pane. The comparison rules (AC-7, AC-8, AC-10) are pure functions and ar
 cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real design
 risk, and they are the two that UK-3 and UK-6 have to settle first.
 
-- rough unit count: `12-18`
+- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3
 - verdict: `split`
 - session boundaries:
 
@@ -187,6 +201,10 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   |----|-----|---------------|------------|
   | S1 | AC-16, AC-17, AC-18, AC-19, AC-20, AC-21 | the four tables and their migration, the `PackageRelease` aggregate, the version module in `packages/types`, the change gate and its comparisons, the three use cases and the three routes on the existing packages controller | — |
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
+  | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on `IPackagePage` / `PackagePage`, one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
+
+  **S1 and S2 are complete and green.** S3 was added on 2026-09-16 by D-048, after S2
+  closed; it is the session the next run picks up.
 
   The cut is not "backend then frontend" as a habit — it is where the contract is.
   The **rules** behind AC-2..AC-15 are built and unit-tested in S1, where they live
@@ -225,6 +243,33 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   S1 runs long, that endpoint is the cheapest thing to carry into S2 — not a third
   session.
 
+- why S3 is its own session, and not four more units on the end of S2:
+
+  **It is a different kind of verification, with a different failure mode.** Every unit
+  in S1 and S2 is judged by a test that runs in seconds against mocks or an in-memory
+  database. S3's are judged by a browser driving a running frontend against a running API
+  and a real Postgres. When one of those fails, the question "is the feature wrong or is
+  the harness wrong" is live in a way it never is for a jest run — and answering it is
+  most of the work. Mixing that into a session sized around fast feedback would make the
+  fast units pay the slow ones' startup cost and the slow ones inherit the fast ones'
+  assumptions.
+
+  **The dev stack is a precondition nothing else in this feature has.** `apps/e2e-tests/`
+  needs the frontend on 4200 and the API up before a single spec runs. That is the first
+  thing S3 establishes and the first thing that will go wrong; it has no bearing on any
+  unit before it.
+
+  **D-042's repair is genuinely risky and belongs beside its proof.** It changes how the
+  shared API client narrows errors, which every domain in `apps/frontend` depends on.
+  D-042 rejected loosening `isServerErrorResponse` precisely because the blast radius is
+  the whole application. Landing that change in the same session as the only test that
+  watches a real 400 travel end to end is what makes it verifiable rather than hopeful;
+  landing it in S2, judged by a drawer's rendering, is what D-042 refused.
+
+  **And S3 is informed by S2 in the same way S2 was by S1.** The page objects it extends,
+  the query hooks it exercises and the sentences it asserts all exist in the repository
+  now, so S3 specs its units against something real rather than something described.
+
 ## Done
 
 Every AC has a passing named test recorded in `records.jsonl`, and the full suite is
@@ -233,3 +278,12 @@ green at the feature boundary.
 When the verdict was `split`, that is the bar for the **feature**, not for each
 session. A session ending green with its own ACs covered is a session done; the feature
 is done when the last one is.
+
+**Status on 2026-09-16.** S1 and S2 are done: AC-1 to AC-21 each carry a `verified by`,
+and `nx run-many -t test` over `types`, `deployments`, `api` and `frontend` is green
+(145 files, 2170 tests). The feature is **not** done, because D-048 added S3. AC-22 to
+AC-25 are open and are the next session's work.
+
+One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
+`apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`
+declares no test target. It is gated by `sweep` and read by a person, per D-047.

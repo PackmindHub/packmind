@@ -2467,3 +2467,73 @@ deliverable sits beside it.
 `records.jsonl` like any other unit, with `self_check.command` naming the sweep so the
 record does not imply a test ran. Any future feature whose only remaining deliverable is
 documentation follows this entry rather than re-deciding it.
+
+## D-048 — End-to-end coverage is added to scope, and it carries D-042's wire repair with it
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-22`..`AC-25`, `D-016`, `D-042`, charter `In scope`
+
+**Decision.** Playwright end-to-end coverage under `apps/e2e-tests/` is now in scope for this
+feature, as a third session S3. The repair D-042 deferred — a server-side refusal losing its
+code in transit — moves into that same session rather than staying an unowned carry-out, and
+the e2e spec is what verifies it.
+
+Releasing from the CLI stays a non-goal, so `apps/cli-e2e-tests/` is untouched.
+
+**Reasoning.** Requested by the human on 2026-09-16, after the S2 close-out reported that no
+e2e test had been written. Recorded as a decision rather than absorbed silently because it
+reverses a standing position: the charter never asked for e2e, every AC named its own
+verification level, and S1 and S2 were both judged complete against that bar. A later reader
+finding e2e specs for a feature whose charter did not ask for them should find the entry that
+put them there.
+
+*What the existing bar actually misses.* Nothing in nineteen units crosses the HTTP boundary.
+The frontend tests mock `useListPackageReleasesQuery` and `useCreatePackageReleaseMutation`
+wholesale; the backend tests drive use cases and repositories directly; U-011 tested the
+controller with the service mocked. So the three routes of D-016 have never been called by a
+real client against a real API. Every individual criterion is met and the seam between them
+is unexercised — which is the same shape of gap D-043 caught inside the gate, one level up.
+
+*Why D-042 comes along.* D-042 is not merely a bug that happens to be nearby; it is a bug
+that **lives in exactly the untested seam**, and it is the evidence for this entry rather than
+a coincidence beside it. `PackageReleaseRefusedError` becomes a `BadRequestException` whose
+body carries no `message` key, `isServerErrorResponse` therefore declines it, and the `code`
+and `currentVersion` are discarded inside the shared API client before any component runs. No
+test in this feature could have caught that, because no test crosses the boundary where it
+happens. D-042 said the repair needed "its own unit, with its own criterion"; the criterion it
+was missing is an e2e one, and pairing them is what turns the fix from plausible into proven.
+
+*Why not a third e2e session for CLI.* The charter's non-goal is unchanged and specific: no
+file under `apps/cli` is touched, and releasing from the CLI is a sibling story. There is
+nothing for `apps/cli-e2e-tests/` to exercise.
+
+**Rejected.**
+
+- **Leaving e2e out, as framed.** Defensible until D-042 existed. Once a real defect was found
+  sitting in precisely the gap e2e covers, "every AC has a test" stopped being an argument that
+  the feature is verified.
+- **Repairing D-042 with a unit test and leaving e2e out.** The repair is a change to how the
+  shared API client narrows *every* error in the application. A unit test would assert the
+  narrowing in isolation, against a hand-built error body — which is the same mock-shaped
+  confidence that let the defect through. The point is to watch a real 400 travel from the
+  controller to the form.
+- **Widening S3 to e2e-cover the whole release surface.** Four criteria, chosen because each
+  crosses the boundary once. Re-asserting the gate's rules or the version grammar through a
+  browser would re-verify what `packageReleaseGateHelpers.spec.ts` already proves, at a hundred
+  times the runtime and with a much worse failure message.
+- **Folding S3's ACs into S2 retroactively.** S2 is finished and green on its own terms. Moving
+  the bar under a completed session makes the record of what was verified when unreadable.
+
+**Constrains implementation.** S3 follows the `create-run-e2e-tests` skill: never Playwright's
+raw `test`, always a fixture from `src/fixtures/packmindTest.ts` (`testWithApi`, since a package
+must be seeded), and the UI is driven through page objects, never raw selectors in a spec.
+`PackagePage` / `IPackagePage` and `apiPackageFactory` already exist and are extended, not
+replaced — the release methods join `IPackagePage` beside `listStandardsInPackage()`. Seed
+everything not under test through `packmindApi`, which means adding the release endpoints of
+D-016 to `IPackmindApi`. The spec lands in `apps/e2e-tests/src/features/packages/`. Nothing in
+`packages/` or `apps/api/` changes except the one file D-042's repair requires, and that repair
+must not loosen `isServerErrorResponse` for every domain — D-042 rejected that explicitly.
