@@ -355,6 +355,28 @@ describe('packageReleaseGate', () => {
         expect(evaluatePackageReleaseGate(pkg, release)).toBe('no_change');
       });
 
+      it('returns no_change when the name differs only by surrounding whitespace', () => {
+        const pkg: PackageGateSnapshot = {
+          ...fp(),
+          name: '  My Package  ',
+        };
+
+        const release = releaseBuilder();
+
+        expect(evaluatePackageReleaseGate(pkg, release)).toBe('no_change');
+      });
+
+      it('returns no_change when the name differs only by case', () => {
+        const pkg: PackageGateSnapshot = {
+          ...fp(),
+          name: 'MY PACKAGE',
+        };
+
+        const release = releaseBuilder();
+
+        expect(evaluatePackageReleaseGate(pkg, release)).toBe('no_change');
+      });
+
       it('returns ready when package name changed', () => {
         const pkg: PackageGateSnapshot = {
           ...fp(),

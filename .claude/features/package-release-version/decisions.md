@@ -2336,3 +2336,71 @@ is a new component in
 (D-024). Order the list by the parsed version triple, never by string comparison (D-009).
 Read one release's content with the existing `useGetPackageReleaseQuery`; do not add a
 gateway method, a query key or an endpoint — all three already exist.
+
+## D-046 — D-043 was upheld: the leaf was covered, the composition was not
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-5`, `AC-6`, `AC-7`, `AC-8`, `AC-10`, `D-007`, `D-008`, `D-043`
+
+**Decision.** The S2 boundary reconcile ran the check D-043 reserved, and D-043 was right.
+Its hold is now lifted on the terms it set: the two named cases it prescribed were written,
+and AC-5, AC-6, AC-7, AC-8 and AC-10 are filled citing them and the join cases named below.
+
+What the reconcile found, per criterion:
+
+- **AC-5, AC-6, AC-8, AC-10 — the join was already exercised.** `returns ready when
+  package name changed`, `returns ready when package description changed`, `returns ready
+  when a component is added` / `is removed` / `returns no_change when a component is added
+  and then removed`, and `returns ready when component list is unchanged but name differs`
+  all call `evaluatePackageReleaseGate` and assert its verdict. Four of the five could have
+  been filled without writing anything.
+- **AC-7 — the join was not exercised.** All eleven cases under
+  `describe('evaluatePackageReleaseGate')` were read. The only ones reaching `no_change`
+  compared byte-identical names. `matches names differing only by surrounding whitespace`
+  and `matches names differing only by case` call `packageNameMatches` directly, on two
+  strings. Nothing put a package in that state and asked the gate for a verdict.
+
+**Reasoning.** This entry exists because a lifted reservation and a forgotten one look
+identical six months later. D-043 was written as a hold with a named condition; recording
+that the condition was met, and by what, is what stops the next reader re-opening the
+question or — worse — concluding the column was filled on the same "very probably correct"
+that D-043 refused.
+
+It also records the shape of the near-miss, because the shape is the lesson and it is not
+specific to this feature. Every one of the five criteria had a green test at each level and
+no test across the seam. The suite was green, the columns looked fillable, and the one join
+nobody had driven was invisible precisely because both halves were present. D-043 named
+that as the failure mode the boundary reconcile exists for, and it was.
+
+*Why AC-5, AC-6, AC-8 and AC-10 were still held.* They did not need the new cases, and
+holding them was right anyway: D-043's argument was that the five share a shape and AC-7 is
+where it is visible, so whatever closes AC-7 honestly closes the rest by the same argument.
+Filling four and holding one would have split a single reservation into a claim and a
+doubt, with nothing recording that they were ever the same question.
+
+*One wording correction the reconcile asked for, applied here.* AC-8's third clause —
+"adding then removing the same component leaves it disabled" — is proven by set-equality of
+the resulting state (D-008), not by driving a sequence. A stateless gate (D-006) cannot be
+asked anything else, and the column now says so, so no reader infers a temporal test that
+does not exist.
+
+**Rejected.**
+
+- Filling the five without the two cases, on the reconcile's word that the composition was
+  "very probably" right — the exact move D-043 was written to prevent, and its reasoning
+  holds whoever is making it.
+- Treating the four join-covered criteria as closed and leaving AC-7 alone open — splits one
+  reservation in two and loses the argument that tied them together.
+- Superseding D-043 — it was correct, it was acted on, and it stays readable as the entry
+  that caught this. A reservation that was upheld is not a decision that was wrong.
+
+**Constrains implementation.** No production code changes on this entry. The unit that
+wrote the two cases was given no permission to edit `packageReleaseGateHelpers.ts`: if
+either case had failed, that would have been a real defect in the gate rather than a
+verification gap, and it would have halted as its own unit with its own criterion. Do not
+add further cases to close this; the composition is now covered at the two points D-008
+makes non-obvious.
