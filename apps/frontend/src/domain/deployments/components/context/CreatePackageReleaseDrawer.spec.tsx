@@ -11,6 +11,10 @@ import {
 import type { Mock } from 'vitest';
 
 import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
+import {
+  PackmindError,
+  type ServerErrorResponse,
+} from '../../../../services/api/errors/PackmindError';
 import { useCreatePackageReleaseMutation } from '../../api/queries/DeploymentsQueries';
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
@@ -215,6 +219,78 @@ describe('CreatePackageReleaseDrawer', () => {
         expect.objectContaining({ packageId, version: '0.1.1' }),
       ),
     );
+  });
+
+  /**
+   * The 400 the release endpoint answers with, as the shared client hands it
+   * to the caller: a message the user never reads, plus the two fields the
+   * sentence is built from.
+   */
+  const serverRefusal = (code: string, currentVersion: string) =>
+    new PackmindError({
+      data: {
+        message: `Package release refused: ${code}`,
+        code,
+        currentVersion,
+      },
+      status: 400,
+      statusText: 'Bad Request',
+    } as ServerErrorResponse);
+
+  it("names the server's own current version when it refuses the cut", async () => {
+    renderDrawer({
+      readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+      mutateAsync: vi
+        .fn()
+        .mockRejectedValue(serverRefusal('not_greater', '0.2.0')),
+    });
+
+    await typeVersion('0.2.0');
+    await userEvent.click(submit());
+
+    // 0.2.0, not the stale 0.1.0 the page still believes is current.
+    expect(
+      await screen.findByText('Version must be greater than 0.2.0'),
+    ).toBeInTheDocument();
+    expect(versionField()).toHaveValue('0.2.0');
+  });
+
+  it('tracks a refusal coming from the server', async () => {
+    renderDrawer({
+      readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+      mutateAsync: vi
+        .fn()
+        .mockRejectedValue(serverRefusal('not_greater', '0.2.0')),
+    });
+
+    await typeVersion('0.2.0');
+    await userEvent.click(submit());
+
+    await waitFor(() =>
+      expect(mockTrack).toHaveBeenCalledWith(
+        'package_release_refused',
+        expect.objectContaining({
+          packageId,
+          attemptedVersion: '0.2.0',
+          refusalReason: 'not_greater',
+        }),
+      ),
+    );
+  });
+
+  it('keeps the drawer open when the server refuses', async () => {
+    const { onOpenChange } = renderDrawer({
+      readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+      mutateAsync: vi
+        .fn()
+        .mockRejectedValue(serverRefusal('not_greater', '0.2.0')),
+    });
+
+    await typeVersion('0.2.0');
+    await userEvent.click(submit());
+
+    await screen.findByText('Version must be greater than 0.2.0');
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it('tracks a refusal', async () => {

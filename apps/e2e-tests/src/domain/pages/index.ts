@@ -104,6 +104,12 @@ export interface IPackagePage extends IPackmindAppPage {
 export interface ISpaceContextPage extends IPackmindAppPage {
   /** Cuts a release of the shown package through the release drawer. */
   createRelease(version: string): Promise<void>;
+  /**
+   * Attempts a cut the drawer may be refused, and returns the trimmed sentence
+   * shown beside the version field. Unlike `createRelease` it does not wait
+   * for the drawer to close - a refused cut leaves it open.
+   */
+  attemptRelease(version: string): Promise<string>;
   /** `Not released yet` before the first release, the version after it. */
   getCurrentVersion(): Promise<string>;
   /**

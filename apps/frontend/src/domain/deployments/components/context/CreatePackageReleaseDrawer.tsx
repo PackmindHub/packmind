@@ -17,12 +17,13 @@ import {
   type OrganizationId,
   type PackageId,
   type PackageReleaseReadiness,
-  type PackageReleaseRefusal,
+  type PackageReleaseRefusalCode,
   type SpaceId,
 } from '@packmind/types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { useCreatePackageReleaseMutation } from '../../api/queries/DeploymentsQueries';
 import { getReleaseVerdictMessage } from '../../constants/messages';
+import { readPackageReleaseRefusal } from '../../api/errors/packageReleaseRefusal';
 
 const VERSION_FIELD_ID = 'create-package-release-version';
 
@@ -66,7 +67,16 @@ export function CreatePackageReleaseDrawer({
       : readiness.nextVersions[0];
 
   const [version, setVersion] = useState(defaultVersion);
-  const [refusal, setRefusal] = useState<PackageReleaseRefusal | null>(null);
+  /**
+   * A refusal and the version it was judged against. The client's own
+   * pre-check judges against what the page last read; the server judges
+   * against what it re-reads at that instant, and those two differ by exactly
+   * the amount that matters when a release lands between the two.
+   */
+  const [refusal, setRefusal] = useState<{
+    code: PackageReleaseRefusalCode;
+    currentVersion: string | null;
+  } | null>(null);
 
   const createRelease = useCreatePackageReleaseMutation();
   const analytics = useAnalytics();
@@ -97,7 +107,7 @@ export function CreatePackageReleaseDrawer({
     );
 
     if (refused) {
-      setRefusal(refused);
+      setRefusal({ code: refused, currentVersion: readiness.currentVersion });
       analytics.track('package_release_refused', {
         packageId,
         attemptedVersion: version,
@@ -131,7 +141,19 @@ export function CreatePackageReleaseDrawer({
         title: `Released ${version}`,
       });
       onOpenChange(false);
-    } catch {
+    } catch (error) {
+      const serverRefusal = readPackageReleaseRefusal(error);
+
+      if (serverRefusal) {
+        setRefusal(serverRefusal);
+        analytics.track('package_release_refused', {
+          packageId,
+          attemptedVersion: version,
+          refusalReason: serverRefusal.code,
+        });
+        return;
+      }
+
       pmToaster.create({
         type: 'error',
         title: `Couldn't release ${version}`,
@@ -141,7 +163,7 @@ export function CreatePackageReleaseDrawer({
   };
 
   const refusalMessage = refusal
-    ? getReleaseVerdictMessage(refusal, readiness.currentVersion)
+    ? getReleaseVerdictMessage(refusal.code, refusal.currentVersion)
     : undefined;
 
   return (

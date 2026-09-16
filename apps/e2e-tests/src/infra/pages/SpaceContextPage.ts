@@ -38,6 +38,37 @@ export class SpaceContextPage
   }
 
   /**
+   * Attempt a cut that may be refused, and read back the sentence the form
+   * puts beside the version field.
+   *
+   * Deliberately not `createRelease`: that one waits for the drawer to close,
+   * which a refused cut never does.
+   */
+  async attemptRelease(version: string): Promise<string> {
+    await this.page
+      .getByRole('button', { name: 'Create a release', exact: true })
+      .click();
+
+    const versionField = this.page.locator(`#${VERSION_FIELD_ID}`);
+    await versionField.waitFor({ state: 'visible' });
+    await versionField.fill(version);
+
+    const drawer = this.page
+      .locator('[role="dialog"]')
+      .filter({ has: this.page.locator(`#${VERSION_FIELD_ID}`) });
+    await drawer.getByRole('button', { name: 'Release', exact: true }).click();
+
+    // The message is the field's error text, which the form renders only once
+    // the verdict - client-side or server-side - is in.
+    const message = drawer
+      .locator(`#${VERSION_FIELD_ID}`)
+      .locator('xpath=following-sibling::*[1]');
+    await message.waitFor({ state: 'visible' });
+
+    return (await message.innerText()).trim();
+  }
+
+  /**
    * What the version area currently reads: `Not released yet` while the
    * package has no release, the version string once it has one.
    */

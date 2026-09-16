@@ -2700,3 +2700,152 @@ this way; it is recorded because D-020 argued the feature needed no flag on the 
 its blast radius was "a panel not rendering", and this says the panel is, for most users,
 not reachable either. It changes no acceptance criterion and is out of scope to fix here
 (D-022).
+
+## D-051 — The refusal body gains a `message`; the narrowing lives in the deployments domain, not the shared client
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-20`, `AC-25`, `D-011`, `D-012`, `D-034`, `D-042`, `D-048`
+
+**Decision.** Three changes, each as small as the defect allows:
+
+1. **The controller sends a `message`.** `BadRequestException({ code, currentVersion })` becomes
+   `BadRequestException({ message: error.message, code, currentVersion })`, where `error.message`
+   is `PackageReleaseRefusedError`'s existing developer-facing string, `Package release refused:
+   <code>`. `isServerErrorResponse` is **not touched**, and now matches this body on its own terms,
+   so `handleError` returns a `PackmindError` carrying `code` and `currentVersion` in `serverError.data`.
+2. **A predicate in the deployments domain**, not in `services/api/`, reads the refusal off a caught
+   error: it calls the existing `isPackmindError` and then structurally checks `serverError.data`
+   for a `code` in the refusal union. It takes `unknown` and does its own narrowing, so no shared
+   type changes.
+3. **The drawer's `catch` binds its error**, and on a refusal sets the refusal state from the
+   server's `code` **and** the server's `currentVersion`, rendering the D-011 sentence inline and
+   keeping the field's value. Anything else keeps the generic toast it shows today.
+
+The frontend never renders `data.message`. It is developer-facing and exists only to satisfy the
+predicate.
+
+**Reasoning.** D-042 named the defect and rejected the obvious repairs; what it did not have was the
+shape of the one that works. The scout found it: **the wire already has room for this, and the repo
+already does it.** `apps/api/src/app/auth/auth.controller.ts` throws
+`HttpException({ message: error.message, bannedUntil: ... })` — `message` plus a structured field —
+and that body passes `isServerErrorResponse` today without anyone having widened it. The release
+refusal is the same shape minus the `message`, which is precisely why it falls through.
+
+So the repair is to stop sending an incomplete body, rather than to teach the client to accept one.
+That inverts D-042's framing in the only way that keeps its constraint: **not one call site in
+`apps/frontend` changes classification.** A body that carries a string `message` was always going to
+become a `PackmindError`; this one now does, because it now carries one. Every other endpoint's
+errors are classified exactly as before, which is the guarantee D-042 demanded and the reason it
+rejected loosening the predicate.
+
+*Why the predicate is not in `services/api/`.* That module is shared by every domain, and a release
+refusal is not a shared concept. `isServerErrorResponse` and `isPackmindError` have exactly two call
+sites between them, both inside that module; adding a third concept there would make the shared
+client know about packages. The deployments domain is where `PackageReleaseRefusal` already lives.
+
+*Why `message` and not the existing `data.reason`.* `ServerErrorResponse.data` already declares an
+optional `reason?: string` described as a discriminator, and it is tempting — but nothing has ever
+set or read it, and it is one field where two are needed: the sentence for `not_greater` interpolates
+`currentVersion` (D-012), which the client cannot supply because in the race its own copy is stale by
+exactly the amount that matters. Using `reason` would still require a second field, so it buys
+nothing and spends a slot someone reserved for a different purpose.
+
+*Why the server's `currentVersion` and not the client's.* D-012 is explicit: compute the refusal's
+`currentVersion` from the database at refusal time. The drawer therefore cannot keep deriving its
+sentence from `readiness.currentVersion` for a server refusal — that is the stale value, and telling
+the loser of the race to beat a version they already beat is the bug the re-read exists to prevent.
+
+**Rejected.**
+
+- **Loosening `isServerErrorResponse` to stop requiring `message`** — D-042 rejected it and it stays
+  rejected: bodies that today become `Error('API Error: …')` would start becoming `PackmindError`
+  with an `undefined` message, in every domain, so that one feature can read two fields.
+- **Reading the raw axios error in the release gateway, bypassing `ApiService`** — the body is
+  already gone by the time anything downstream runs, so this means the release gateway stops using
+  the shared client every other call uses.
+- **Putting the user-facing sentence in `message` and rendering it** — the smallest diff of all, and
+  it breaks D-011: the copy would move into `packages/deployments`, changing a word would become a
+  backend deploy, and the client-side and server-side refusals would stop producing identical
+  sentences from identical inputs.
+- **A NestJS exception filter rewriting refusal bodies globally** — there is no filter in `apps/api`
+  at all (checked), so this would introduce a global interception point for one endpoint's benefit.
+
+**Constrains implementation.** `isServerErrorResponse`, `PackmindError`, `ServerErrorResponse` and
+`ApiService.handleError` are **not modified** — if a unit believes one must be, that is a halt, not a
+judgement call. The `message` on the wire is `PackageReleaseRefusedError`'s own `error.message`; do
+not compose a new sentence there, and do not render it. The refusal predicate lives under
+`apps/frontend/src/domain/deployments/`. The drawer keeps the field's value on a server refusal
+exactly as it does on a client one (D-019), and keeps its generic toast for every non-refusal
+failure. Update `packages.controller.spec.ts` and `CreatePackageReleaseDrawer.spec.tsx` where the
+changed shapes require it.
+
+**How AC-25 is driven, and why that scenario.** The client pre-check (D-042) already decides
+`malformed`, `not_greater` and `not_an_increment` against the version the form holds, so most
+refusals never reach the server. The reachable server-only refusal is **AC-20's lost race**, and it
+is reachable in a browser without a second tab: cut `0.1.0`, then cut `0.2.0` through `packmindApi`
+behind the page's back, then submit `0.2.0` from the stale form. The client's own check passes —
+`0.2.0` is greater than the `0.1.0` it still believes is current, and it is an increment — so the
+request is sent, and the server refuses `not_greater` with a freshly read `0.2.0`. The form must then
+read `Version must be greater than 0.2.0`, naming the version the client did not have. That single
+test proves the wire repair, D-012's re-read, and AC-20 end to end, which is what D-048 meant by
+watching a real 400 travel from the controller to the form.
+
+## D-052 — A browser criterion can fail the gate on contention alone; re-run before believing it
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-22`..`AC-25`, `D-048`, `D-049`
+
+**Decision.** When an S3 unit's criterion fails at the `tests` stage with a timeout inside the
+**fixture** — signup, `waitForURL`, the API key read — rather than inside the release flow, re-run
+the criterion alone before treating it as a unit failure. If it passes on an idle machine, it was
+contention: record the unit as passing, leave both metric rows in place, and say so in the record.
+
+**Reasoning.** U-023 failed its first gate run at `AbstractPackmindPage.waitForLoaded`, with the
+browser sitting on `/sign-in` after signup. Nothing in the unit touches authentication. The stack
+was healthy throughout — every container up, `localhost:4200` and `/api/v0` both answering 200, and
+the backend log showing a signup completing normally a minute either side. Re-run alone, the same
+criterion passed in 11 seconds. Re-gated, it passed.
+
+The cause is structural rather than incidental, which is why it is written down. `agent-gate.mjs`
+runs `wide` — `nx run-many -t lint build --parallel=6` across every project — immediately before the
+`tests` stage. For every unit in S1 and S2 that was harmless: jest starts after it, on an idle
+machine. An S3 criterion instead drives a **browser against the live dev stack**, whose frontend and
+API are containers on the same host that the build just saturated, and Playwright's default timeout
+is 30 seconds. The suite is not flaky; it is being asked to log in to an application that is
+momentarily starved.
+
+Recorded rather than fixed because both available fixes are worse than the diagnosis. Raising
+Playwright's timeout edits `playwright.config.ts`, which D-049 put out of bounds and which would
+slow every real failure. Reordering the gate's stages edits `agent-gate.mjs`, a declared guardrail.
+Neither is this feature's to make, and a session that knows to re-run loses a minute where a session
+that does not loses a unit to a phantom.
+
+**What distinguishes the two cases**, since the whole entry rests on telling them apart: a
+contention failure lands in the **fixture**, before a single assertion of the criterion runs, and
+its stack trace names `packmindTest.ts`, `SignupPage`, `PageFactory` or `AbstractPackmindPage`. A
+real failure lands in the spec body and names the page object or the assertion. A failure inside the
+release flow is never to be re-run away.
+
+**Rejected.**
+
+- **Recording the first run as a unit failure** — it would put an environment fault into the
+  first-attempt pass rate, which is the pipeline's main routing signal, and would have escalated a
+  unit whose code was already correct.
+- **Rewriting the failed row out of `metrics.jsonl`** — the run happened, and a metrics file the
+  orchestrator edits to look better is worth nothing. Both rows stay; this entry is what makes them
+  readable.
+- **Retrying automatically inside the criterion** (Playwright `--retries=1`) — it would hide real
+  flakiness in the feature under test as effectively as it hides contention, which is the opposite
+  of what an exit criterion is for.
+
+**Constrains implementation.** Re-run once, alone, and only for a fixture-stage timeout. Two
+consecutive failures at the same point, idle, are a real failure and route normally. Do not add
+retries to the criterion, do not edit `playwright.config.ts`, and do not edit the gate.

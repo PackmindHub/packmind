@@ -278,6 +278,12 @@ export class OrganizationsSpacesPackagesController {
       );
       if (error instanceof PackageReleaseRefusedError) {
         throw new BadRequestException({
+          /*
+           * Developer-facing, and there only so the body satisfies the shared
+           * client's error predicate: the sentence the user reads is built in
+           * the frontend from `code` and `currentVersion`.
+           */
+          message: error.message,
           code: error.code,
           currentVersion: error.currentVersion,
         });

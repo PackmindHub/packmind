@@ -176,6 +176,7 @@ describe('OrganizationsSpacesPackagesController', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);
         expect((error as BadRequestException).getResponse()).toEqual({
+          message: 'Package release refused: not_greater',
           code: 'not_greater',
           currentVersion: '1.2.0',
         });
