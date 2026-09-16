@@ -5,6 +5,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const stubResolver = (
@@ -33,12 +34,7 @@ describe('GithubProvider', () => {
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
-      (payload) =>
-        typeof payload === 'object' &&
-        payload !== null &&
-        (payload as { isAxiosError?: boolean }).isAxiosError === true,
-    );
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
 
     githubProvider = new GithubProvider(stubResolver(), mockLogger);
   });
