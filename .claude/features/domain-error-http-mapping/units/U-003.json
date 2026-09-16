@@ -1,0 +1,16 @@
+{
+  "unit_id": "U-003",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/node-utils/src/application/UserAccessErrors.ts",
+    "packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+    "packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+    "packages/node-utils/src/application/SpaceAccessErrors.spec.ts",
+    "packages/integration-tests/src/add-rule-to-standard.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test node-utils --testNamePattern='space access error contract'",
+    "kind": "behavioural",
+    "describes": "prepares AC-4, AC-5"
+  }
+}

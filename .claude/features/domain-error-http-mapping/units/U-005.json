@@ -1,0 +1,13 @@
+{
+  "unit_id": "U-005",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/node-utils/src/observability/withSpan.ts",
+    "packages/node-utils/src/observability/withSpan.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test node-utils --testNamePattern='withSpan'",
+    "kind": "behavioural",
+    "describes": "AC-10"
+  }
+}

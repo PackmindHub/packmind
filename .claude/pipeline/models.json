@@ -1,0 +1,24 @@
+{
+  "$comment": "Tier names to models. The only place in the pipeline a model appears — skills and templates name tiers, never models.",
+
+  "tiers": {
+    "orchestrator": "opus",
+    "scout": "sonnet",
+    "executor": "haiku",
+    "sweep": "haiku",
+    "reconcile": "opus"
+  },
+
+  "$comment_escalation": "Brief 2 §6: repeated typecheck failure is a capability signal, repeated test failure is a specification signal. Only the former climbs this ladder; a test failure re-specs at the same tier.",
+  "escalation": ["haiku", "sonnet", "opus"],
+  "escalateAfterConsecutiveTypecheckFailures": 2,
+
+  "$comment_split": "As-needed decomposition. When the tiers run out the unit is too big, not the executor too small: split it and send both halves in at the bottom tier with their attempt counts reset. This is the only place the pipeline ever splits anything.",
+  "splitAfterTopTierFailures": 1,
+  "splitAfterScopeFailures": 2,
+
+  "$comment_halt": "Per unit, halves counted separately. Reached only by a half that has itself been split once and still fails.",
+  "haltAfterAttempts": 4,
+
+  "$comment_default_drift": "If two consecutive units both escalate, the default tier for this feature is wrong. Raise `tiers.executor` for the remainder rather than paying the escalation on every unit."
+}

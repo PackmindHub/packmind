@@ -62,4 +62,51 @@ describe('withSpan', () => {
       expect(end).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('when the callback rejects with a domain error', () => {
+    const domainError = Object.assign(new Error('you do not have permission'), {
+      kind: 'forbidden' as const,
+      reason: 'you do not have permission',
+    });
+    let recordException: jest.SpyInstance;
+    let setStatus: jest.SpyInstance;
+    let end: jest.SpyInstance;
+
+    beforeEach(async () => {
+      try {
+        await withSpan('operation', async (span) => {
+          recordException = jest.spyOn(span, 'recordException');
+          setStatus = jest.spyOn(span, 'setStatus');
+          end = jest.spyOn(span, 'end');
+          throw domainError;
+        });
+      } catch {
+        // The rejection itself is asserted in its own test below.
+      }
+    });
+
+    it('rethrows the error', async () => {
+      await expect(
+        withSpan('operation', async () => {
+          throw domainError;
+        }),
+      ).rejects.toThrow(domainError);
+    });
+
+    it('records the exception on the span', () => {
+      expect(recordException).toHaveBeenCalledWith(domainError);
+    });
+
+    it('does not mark the span as failed', () => {
+      expect(setStatus).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: SpanStatusCode.ERROR,
+        }),
+      );
+    });
+
+    it('ends the span', () => {
+      expect(end).toHaveBeenCalledTimes(1);
+    });
+  });
 });

@@ -1,0 +1,21 @@
+{
+  "unit_id": "U-004",
+  "feature": "domain-error-http-mapping",
+  "files_in_scope": [
+    "packages/node-utils/src/application/UserAccessErrors.ts",
+    "packages/node-utils/src/application/UserAccessErrors.spec.ts",
+    "packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.spec.ts",
+    "packages/skills/src/application/useCases/getSkillWithFiles/GetSkillWithFilesUseCase.spec.ts",
+    "packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.spec.ts",
+    "packages/skills/src/application/useCases/listSkillVersions/ListSkillVersionsUseCase.spec.ts",
+    "packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.spec.ts",
+    "packages/skills/src/application/useCases/saveSkillVersion/SaveSkillVersionUseCase.spec.ts",
+    "packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.spec.ts",
+    "packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test node-utils --testNamePattern='access error messages'",
+    "kind": "behavioural",
+    "describes": "AC-7"
+  }
+}

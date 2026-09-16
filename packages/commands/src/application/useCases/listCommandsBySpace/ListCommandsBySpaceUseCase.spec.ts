@@ -9,7 +9,10 @@ import {
   createUserId,
 } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test';
-import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import {
+  SpaceMembershipRequiredError,
+  UserNotFoundError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 
 describe('ListRecipesBySpaceUseCase', () => {
@@ -310,7 +313,7 @@ describe('ListRecipesBySpaceUseCase', () => {
             organizationId,
             spaceId,
           }),
-        ).rejects.toThrow('User not found');
+        ).rejects.toBeInstanceOf(UserNotFoundError);
       });
     });
 
