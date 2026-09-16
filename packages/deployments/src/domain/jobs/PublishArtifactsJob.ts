@@ -19,7 +19,7 @@ export interface PublishArtifactsJobInput {
   gitRepoId: GitRepoId;
   fileUpdates: FileUpdates;
   commitMessage: string;
-  recipeVersionIds: string[];
+  commandVersionIds: string[];
   standardVersionIds: string[];
   skillVersionIds: string[];
   activeRenderModes: RenderMode[];

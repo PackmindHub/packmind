@@ -106,7 +106,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
 
       // Fetch packages and their artifacts (skip if removal-only operation)
-      let recipeVersions: CommandVersion[] = [];
+      let commandVersions: CommandVersion[] = [];
       let standardVersions: StandardVersion[] = [];
       let skillVersions: SkillVersion[] = [];
       let packages: PackageWithArtefacts[] = [];
@@ -137,13 +137,13 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           packagesSlugs: packages.map((p) => p.slug),
         });
 
-        // Extract recipes, standards, and skills from packages
+        // Extract commands, standards, and skills from packages
         const allCommands = packages.flatMap((pkg) => pkg.recipes);
         const allStandards = packages.flatMap((pkg) => pkg.standards);
         const allSkills = packages.flatMap((pkg) => pkg.skills);
 
         // Deduplicate by ID (when multiple packages share the same artifact)
-        const recipes = [
+        const commands = [
           ...new Map(allCommands.map((r) => [r.id, r])).values(),
         ];
         const standards = [
@@ -174,28 +174,26 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         const skillPackageIdMap = buildPackageIdMap((pkg) => pkg.skills);
 
         this.logger.info('Extracted content from packages', {
-          recipeCount: recipes.length,
+          commandCount: commands.length,
           standardCount: standards.length,
           skillCount: skills.length,
         });
 
-        // Get recipe versions for recipes
-        const commandVersionsPromises = recipes.map(async (recipe) => {
-          const versions = await this.commandsPort.listCommandVersions(
-            recipe.id,
-          );
+        // Get command versions for commands
+        const commandVersionsPromises = commands.map(async (cmd) => {
+          const versions = await this.commandsPort.listCommandVersions(cmd.id);
           versions.sort(
             (a: CommandVersion, b: CommandVersion) => b.version - a.version,
           );
           return versions[0];
         });
 
-        recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
+        commandVersions = (await Promise.all(commandVersionsPromises)).filter(
           (rv): rv is NonNullable<typeof rv> => rv !== null,
         );
 
-        this.logger.info('Retrieved recipe versions', {
-          count: recipeVersions.length,
+        this.logger.info('Retrieved command versions', {
+          count: commandVersions.length,
         });
 
         // Get standard versions for standards
@@ -237,10 +235,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         artifactMetadata = buildArtifactMetadataMap({
           recipes: {
             spaceIdMap: new Map(
-              recipes.map((r) => [r.id as string, r.spaceId as string]),
+              commands.map((c) => [c.id as string, c.spaceId as string]),
             ),
             packageIdMap: commandPackageIdMap,
-            versions: recipeVersions,
+            versions: commandVersions,
           },
           standards: {
             spaceIdMap: new Map(
@@ -293,12 +291,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             removedPackageSlugs,
             command.organization.id,
           );
-          removedCommandVersions = result.recipeVersions;
+          removedCommandVersions = result.commandVersions;
           removedStandardVersions = result.standardVersions;
           removedSkillVersions = result.skillVersions;
 
           this.logger.info('Retrieved removed artifact versions', {
-            removedRecipesCount: removedCommandVersions.length,
+            removedCommandsCount: removedCommandVersions.length,
             removedStandardsCount: removedStandardVersions.length,
             removedSkillsCount: removedSkillVersions.length,
           });
@@ -330,7 +328,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           // artifacts that are still present in the current package content
           removedCommandVersions = [
             ...removedCommandVersions,
-            ...previousResult.recipeVersions,
+            ...previousResult.commandVersions,
           ];
           removedStandardVersions = [
             ...removedStandardVersions,
@@ -344,10 +342,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           this.logger.info(
             'Retrieved previous artifact versions from updated packages',
             {
-              previousRecipesCount: previousResult.recipeVersions.length,
+              previousCommandsCount: previousResult.commandVersions.length,
               previousStandardsCount: previousResult.standardVersions.length,
               previousSkillsCount: previousResult.skillVersions.length,
-              totalRemovedRecipesCount: removedCommandVersions.length,
+              totalRemovedCommandsCount: removedCommandVersions.length,
               totalRemovedStandardsCount: removedStandardVersions.length,
               totalRemovedSkillsCount: removedSkillVersions.length,
             },
@@ -386,15 +384,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           ];
         }
 
-        if (previouslyDeployed.recipeVersions.length > 0) {
+        if (previouslyDeployed.commandVersions.length > 0) {
           this.logger.info(
-            'Retrieved previously deployed recipe versions from distribution history',
-            { count: previouslyDeployed.recipeVersions.length },
+            'Retrieved previously deployed command versions from distribution history',
+            { count: previouslyDeployed.commandVersions.length },
           );
 
           removedCommandVersions = [
             ...removedCommandVersions,
-            ...previouslyDeployed.recipeVersions,
+            ...previouslyDeployed.commandVersions,
           ];
         }
 
@@ -429,7 +427,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       const artifactFileUpdates =
         await this.codingAgentPort.deployArtifactsForAgents({
-          recipeVersions,
+          recipeVersions: commandVersions,
           standardVersions,
           skillVersions,
           codingAgents,
@@ -452,17 +450,17 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           removedCommandVersions,
           removedStandardVersions,
           removedSkillVersions,
-          recipeVersions,
+          commandVersions,
           standardVersions,
           skillVersions,
         );
-        const commandVersionsToDelete = filterResult.recipeVersionsToDelete;
+        const commandVersionsToDelete = filterResult.commandVersionsToDelete;
         const standardVersionsToDelete = filterResult.standardVersionsToDelete;
         skillVersionsToDelete = filterResult.skillVersionsToDelete; // Assign to outer scope
 
         this.logger.info('Filtered shared artifacts from deletion', {
-          originalRemovedRecipes: removedCommandVersions.length,
-          actualRecipesToDelete: commandVersionsToDelete.length,
+          originalRemovedCommands: removedCommandVersions.length,
+          actualCommandsToDelete: commandVersionsToDelete.length,
           originalRemovedStandards: removedStandardVersions.length,
           actualStandardsToDelete: standardVersionsToDelete.length,
           originalRemovedSkills: removedSkillVersions.length,
@@ -482,7 +480,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
                 skillVersions: skillVersionsToDelete,
               },
               installed: {
-                recipeVersions,
+                recipeVersions: commandVersions,
                 standardVersions,
                 skillVersions,
               },
@@ -529,24 +527,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             );
 
             if (removedAgents.length > 0) {
-              const [
-                activeCommandVersions,
-                activeStandardVersions,
-                activeSkillVersions,
-              ] = await Promise.all([
-                this.distributionRepository.findActiveCommandVersionsByTarget(
-                  command.organization.id,
-                  target.id,
-                ),
-                this.distributionRepository.findActiveStandardVersionsByTarget(
-                  command.organization.id,
-                  target.id,
-                ),
-                this.distributionRepository.findActiveSkillVersionsByTarget(
-                  command.organization.id,
-                  target.id,
-                ),
-              ]);
+              const {
+                commandVersions: activeCommandVersions,
+                standardVersions: activeStandardVersions,
+                skillVersions: activeSkillVersions,
+              } = await this.distributionRepository.findActiveVersionsByTarget(
+                command.organization.id,
+                target.id,
+              );
 
               cleanupSkillVersions = activeSkillVersions;
 
@@ -602,7 +590,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         fileModifications: mergedFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
         ),
-        recipeVersions,
+        recipeVersions: commandVersions,
         standardVersions,
         skillVersions,
         codingAgents,
@@ -626,7 +614,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           userId: createUserId(command.userId),
           organizationId: createOrganizationId(command.organizationId),
           packageSlugs: command.packagesSlugs,
-          recipeCount: recipeVersions.length,
+          recipeCount: commandVersions.length,
           standardCount: standardVersions.length,
           skillCount: skillVersions.length,
           source,
@@ -865,7 +853,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     remainingStandardVersions: StandardVersion[],
     remainingSkillVersions: SkillVersion[],
   ): {
-    recipeVersionsToDelete: CommandVersion[];
+    commandVersionsToDelete: CommandVersion[];
     standardVersionsToDelete: StandardVersion[];
     skillVersionsToDelete: SkillVersion[];
   } {
@@ -890,20 +878,20 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     return {
-      recipeVersionsToDelete: commandVersionsToDelete,
+      commandVersionsToDelete,
       standardVersionsToDelete,
       skillVersionsToDelete,
     };
   }
 
   /**
-   * Fetches recipe, standard, and skill versions for the removed packages
+   * Fetches command, standard, and skill versions for the removed packages
    */
   private async fetchArtifactsForRemovedPackages(
     removedPackageSlugs: string[],
     organizationId: OrganizationId,
   ): Promise<{
-    recipeVersions: CommandVersion[];
+    commandVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }> {
@@ -913,26 +901,26 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       organizationId,
     );
 
-    // Extract recipes, standards, and skills from removed packages
+    // Extract commands, standards, and skills from removed packages
     const allCommands = packages.flatMap((pkg) => pkg.recipes);
     const allStandards = packages.flatMap((pkg) => pkg.standards);
     const allSkills = packages.flatMap((pkg) => pkg.skills);
 
     // Deduplicate by ID (when multiple packages share the same artifact)
-    const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
+    const commands = [...new Map(allCommands.map((c) => [c.id, c])).values()];
     const standards = [...new Map(allStandards.map((s) => [s.id, s])).values()];
     const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
-    // Get recipe versions for removed recipes
-    const commandVersionsPromises = recipes.map(async (recipe) => {
-      const versions = await this.commandsPort.listCommandVersions(recipe.id);
+    // Get command versions for removed commands
+    const commandVersionsPromises = commands.map(async (cmd) => {
+      const versions = await this.commandsPort.listCommandVersions(cmd.id);
       versions.sort(
         (a: CommandVersion, b: CommandVersion) => b.version - a.version,
       );
       return versions[0];
     });
 
-    const recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
+    const commandVersions = (await Promise.all(commandVersionsPromises)).filter(
       (rv): rv is NonNullable<typeof rv> => rv !== null,
     );
 
@@ -954,6 +942,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       (skv) => skv !== null,
     );
 
-    return { recipeVersions, standardVersions, skillVersions };
+    return { commandVersions, standardVersions, skillVersions };
   }
 }

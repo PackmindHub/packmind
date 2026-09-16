@@ -65,14 +65,54 @@ export class SkillVersionRepository
     }
   }
 
+  async findLatestBySkillIds(skillIds: SkillId[]): Promise<SkillVersion[]> {
+    const uniqueSkillIds = [...new Set(skillIds)];
+
+    if (uniqueSkillIds.length === 0) {
+      this.logger.info('No skill IDs provided to findLatestBySkillIds');
+      return [];
+    }
+
+    this.logger.info('Finding latest skill versions by skill IDs', {
+      count: uniqueSkillIds.length,
+    });
+
+    try {
+      const versions = await this.repository
+        .createQueryBuilder('skillVersion')
+        .where('skillVersion.skillId IN (:...skillIds)', {
+          skillIds: uniqueSkillIds as string[],
+        })
+        .distinctOn(['skillVersion.skillId'])
+        .orderBy('skillVersion.skillId', 'ASC')
+        .addOrderBy('skillVersion.version', 'DESC')
+        .getMany();
+
+      this.logger.info('Latest skill versions found by skill IDs', {
+        requestedCount: uniqueSkillIds.length,
+        foundCount: versions.length,
+      });
+
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find latest skill versions by skill IDs', {
+        count: uniqueSkillIds.length,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
   async findLatestBySkillId(skillId: SkillId): Promise<SkillVersion | null> {
     this.logger.info('Finding latest skill version by skill ID', {
       skillId,
     });
 
     try {
-      const versions = await this.findBySkillId(skillId);
-      const latestVersion = versions.length > 0 ? versions[0] : null;
+      const latestVersion = await this.repository.findOne({
+        where: { skillId },
+        order: { version: 'DESC' },
+      });
 
       if (latestVersion) {
         this.logger.info('Latest skill version found', {
@@ -90,7 +130,7 @@ export class SkillVersionRepository
     } catch (error) {
       this.logger.error('Failed to find latest skill version by skill ID', {
         skillId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }

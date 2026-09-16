@@ -28,6 +28,7 @@ import {
   QueryOption,
   Command,
   CommandId,
+  CommandVersion,
   CommandVersionId,
   SpaceId,
   UpdateCommandFromUICommand,
@@ -344,6 +345,22 @@ export class CommandsAdapter
       this.commandsServices.getCommandVersionService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return commandVersionService.getCommandVersionById(id as any);
+  }
+
+  public getCommandVersionsByIds(
+    commandVersionIds: CommandVersionId[],
+  ): Promise<CommandVersion[]> {
+    return this.commandsServices
+      .getCommandVersionService()
+      .getCommandVersionsByIds(commandVersionIds);
+  }
+
+  public getLatestCommandVersions(
+    recipeIds: CommandId[],
+  ): Promise<CommandVersion[]> {
+    return this.commandsServices
+      .getCommandVersionService()
+      .getLatestCommandVersions(recipeIds);
   }
 
   async duplicateCommandToSpace(

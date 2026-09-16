@@ -18,11 +18,10 @@ import {
   GitRepo,
   Target,
   TargetId,
+  PackageId,
   CommandVersion,
   SkillVersion,
-  SkillVersionId,
   StandardVersion,
-  StandardVersionId,
   RenderMode,
   FileUpdates,
   CodingAgent,
@@ -31,7 +30,11 @@ import {
   PackmindLockFile,
   normalizeCodingAgents,
 } from '@packmind/types';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import {
+  ActiveArtifactVersions,
+  ActiveArtifactVersionsByScope,
+  IDistributionRepository,
+} from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
@@ -46,8 +49,54 @@ import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
 const origin = 'PublishArtifactsUseCase';
 
+export class ArtifactVersionNotFoundError extends Error {
+  constructor(
+    public readonly artifactLabel: 'Command' | 'Standard' | 'Skill',
+    public readonly versionId: string,
+  ) {
+    super(`${artifactLabel} version with ID ${versionId} not found`);
+    this.name = 'ArtifactVersionNotFoundError';
+  }
+}
+
+type ArtifactVersions = ActiveArtifactVersions;
+
+type ArtifactChangeSet = {
+  installed: ArtifactVersions;
+  removed: ArtifactVersions;
+};
+
+type RepositoryPublishContext = {
+  command: PublishArtifactsCommand;
+  source: NonNullable<PublishArtifactsCommand['source']>;
+  repositoryId: string;
+  gitRepo: GitRepo;
+  targets: Target[];
+  requestedVersions: ArtifactVersions;
+  activeRenderModes: RenderMode[];
+  codingAgents: CodingAgent[];
+};
+
+type PrepareUnifiedDeploymentParams = {
+  userId: UserId;
+  organizationId: OrganizationId;
+  gitRepo: GitRepo;
+  targets: Target[];
+  codingAgents: CodingAgent[];
+  changeSet: ArtifactChangeSet;
+  packagesSlugs: string[];
+  artifactSpaceIds: Record<string, string>;
+  artifactPackageIds: Record<string, string[]>;
+  accessiblePackageIds: string[];
+};
+
+// Key extractors: the only thing that differs between the three artifact kinds.
+const commandKey = (version: CommandVersion): string => version.recipeId;
+const standardKey = (version: StandardVersion): string => version.standardId;
+const skillKey = (version: SkillVersion): string => version.skillId;
+
 /**
- * Unified usecase for publishing recipes, standards, and skills together
+ * Unified usecase for publishing commands, standards, and skills together
  * Uses the unified renderArtifacts method for atomic updates
  */
 export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
@@ -74,9 +123,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const { source = 'ui' } = command;
 
     this.logger.info(
-      'Publishing artifacts (unified recipes + standards + skills)',
+      'Publishing artifacts (unified commands + standards + skills)',
       {
-        recipeVersionIdsCount: command.recipeVersionIds.length,
+        commandVersionIdsCount: command.commandVersionIds.length,
         standardVersionIdsCount: command.standardVersionIds.length,
         skillVersionIdsCount: command.skillVersionIds?.length ?? 0,
         targetIdsCount: command.targetIds.length,
@@ -110,300 +159,26 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.targetIds,
     );
 
-    // Fetch recipe, standard, and skill versions
-    const recipeVersions = await this.fetchCommandVersions(
-      command.recipeVersionIds,
-    );
-    const standardVersions = await this.fetchStandardVersions(
-      command.standardVersionIds,
-    );
-    const skillVersions = await this.fetchSkillVersions(
-      command.skillVersionIds ?? [],
-    );
-
-    const distributions: Distribution[] = [];
+    const requestedVersions = await this.fetchRequestedVersions(command);
 
     // Process each repository with all its targets
+    const distributions: Distribution[] = [];
     for (const [
       repositoryId,
       { repository: gitRepo, targets },
     ] of repositoryTargetsMap) {
-      try {
-        this.logger.info('Processing repository with unified artifacts', {
+      distributions.push(
+        ...(await this.publishToRepository({
+          command,
+          source,
           repositoryId,
-          gitRepoOwner: gitRepo.owner,
-          gitRepoName: gitRepo.repo,
-          targetsCount: targets.length,
-          recipesCount: recipeVersions.length,
-          standardsCount: standardVersions.length,
-          skillsCount: skillVersions.length,
-        });
-
-        // Get previous deployments for all targets in this repo
-        const {
-          previous: previousCommandVersions,
-          previousFromPackages: previousCommandVersionsFromPackages,
-          combined: allCommandVersions,
-        } = await this.collectAllCommandVersions(
-          command,
-          targets,
-          recipeVersions,
-        );
-        const {
-          previous: previousStandardVersions,
-          previousFromPackages: previousStandardVersionsFromPackages,
-          combined: allStandardVersions,
-        } = await this.collectAllStandardVersions(
-          command,
-          targets,
-          standardVersions,
-        );
-        const {
-          previous: previousSkillVersions,
-          previousFromPackages: previousSkillVersionsFromPackages,
-          combined: allSkillVersions,
-        } = await this.collectAllSkillVersions(command, targets, skillVersions);
-
-        // Compute removed artifacts (previously deployed from the same packages but not in new deployment command)
-        // Only compare against artifacts from the packages being deployed to avoid removing artifacts from other packages
-        const removedCommandVersionsFromDeployedPackages =
-          this.computeRemovedCommandVersions(
-            previousCommandVersionsFromPackages,
-            recipeVersions,
-          );
-        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
-        const commandVersionsFromOtherPackages = previousCommandVersions.filter(
-          (pv) =>
-            !previousCommandVersionsFromPackages.some(
-              (pfp) => pfp.recipeId === pv.recipeId,
-            ),
-        );
-        // Only truly remove if not still present via other packages
-        const removedCommandVersions =
-          removedCommandVersionsFromDeployedPackages.filter(
-            (rrv) =>
-              !commandVersionsFromOtherPackages.some(
-                (rv) => rv.recipeId === rrv.recipeId,
-              ),
-          );
-
-        const removedStandardVersionsFromDeployedPackages =
-          this.computeRemovedStandardVersions(
-            previousStandardVersionsFromPackages,
-            standardVersions,
-          );
-        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
-        const standardVersionsFromOtherPackages =
-          previousStandardVersions.filter(
-            (pv) =>
-              !previousStandardVersionsFromPackages.some(
-                (pfp) => pfp.standardId === pv.standardId,
-              ),
-          );
-        // Only truly remove if not still present via other packages
-        const removedStandardVersions =
-          removedStandardVersionsFromDeployedPackages.filter(
-            (rsv) =>
-              !standardVersionsFromOtherPackages.some(
-                (sv) => sv.standardId === rsv.standardId,
-              ),
-          );
-
-        const removedSkillVersionsFromDeployedPackages =
-          this.computeRemovedSkillVersions(
-            previousSkillVersionsFromPackages,
-            skillVersions,
-          );
-        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
-        const skillVersionsFromOtherPackages = previousSkillVersions.filter(
-          (pv) =>
-            !previousSkillVersionsFromPackages.some(
-              (pfp) => pfp.skillId === pv.skillId,
-            ),
-        );
-        // Only truly remove if not still present via other packages
-        const removedSkillVersions =
-          removedSkillVersionsFromDeployedPackages.filter(
-            (rsv) =>
-              !skillVersionsFromOtherPackages.some(
-                (sv) => sv.skillId === rsv.skillId,
-              ),
-          );
-
-        const renamedSkillVersions = this.computeRenamedSkillVersions(
-          previousSkillVersionsFromPackages,
-          skillVersions,
-        );
-
-        const skillVersionsToRemove = [
-          ...removedSkillVersions,
-          ...renamedSkillVersions,
-        ];
-
-        // Filter out removed skills from installed list
-        const removedSkillIds = new Set(
-          removedSkillVersions.map((sv) => sv.skillId),
-        );
-        const filteredSkillVersions = allSkillVersions.filter(
-          (sv) => !removedSkillIds.has(sv.skillId),
-        );
-
-        // Filter out removed standards from installed list
-        const removedStandardIds = new Set(
-          removedStandardVersions.map((sv) => sv.standardId),
-        );
-        const filteredStandardVersions = allStandardVersions.filter(
-          (sv) => !removedStandardIds.has(sv.standardId),
-        );
-
-        // Filter out removed recipes from installed list
-        const removedCommandIds = new Set(
-          removedCommandVersions.map((rv) => rv.recipeId),
-        );
-        const filteredCommandVersions = allCommandVersions.filter(
-          (rv) => !removedCommandIds.has(rv.recipeId),
-        );
-
-        // Load rules for all standard versions that don't have them populated
-        // This is critical for previously deployed standards which come from the database
-        // without their rules relation loaded
-        const standardVersionsWithRules = await Promise.all(
-          filteredStandardVersions.map(async (sv) => {
-            if (sv.rules === undefined || sv.rules === null) {
-              this.logger.debug('Loading rules for standard version', {
-                standardVersionId: sv.id,
-                standardId: sv.standardId,
-                slug: sv.slug,
-              });
-              const rules = await this.standardsPort.getRulesByStandardId(
-                sv.standardId,
-              );
-              return { ...sv, rules };
-            }
-            return sv;
-          }),
-        );
-
-        // Load files for all skill versions that don't have them populated
-        // This is critical for previously deployed skills which come from the database
-        // without their files relation loaded
-        const skillVersionsWithFiles = await Promise.all(
-          filteredSkillVersions.map(async (sv) => {
-            if (sv.files !== undefined) return sv;
-            const files = await this.skillsPort.getSkillFiles(sv.id);
-            return { ...sv, files };
-          }),
-        );
-
-        // Prepare unified deployment using renderArtifacts for ALL targets
-        const {
-          fileUpdatesPerTarget,
-          renderModesPerTarget,
-          addedPackmindSkills,
-        } = await this.prepareUnifiedDeployment(
-          command.userId as UserId,
-          command.organizationId as OrganizationId,
-          filteredCommandVersions,
-          standardVersionsWithRules,
-          skillVersionsWithFiles,
-          removedCommandVersions,
-          removedStandardVersions,
-          skillVersionsToRemove,
           gitRepo,
           targets,
-          codingAgents,
-          command.packagesSlugs,
-          command.artifactSpaceIds ?? {},
-          command.artifactPackageIds ?? {},
-          command.packageIds.map(String),
-        );
-
-        // Build commit message for the job
-        const commitMessage = this.buildCommitMessage(
-          recipeVersions,
-          standardVersions,
-          skillVersions,
-          filteredCommandVersions,
-          standardVersionsWithRules,
-          skillVersionsWithFiles,
-          targets,
-          addedPackmindSkills,
-        );
-
-        // Get file updates from first target (they're all the same for multi-target repos)
-        const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-        if (!firstTargetUpdates) {
-          throw new Error('No file updates found for any target');
-        }
-
-        // Create distribution records for each target with in_progress status
-        const targetDistributions: Distribution[] = [];
-        for (const target of targets) {
-          // Use per-target render modes from packmind.json, fallback to org-level
-          const targetRenderModes =
-            renderModesPerTarget.get(target.id) ?? activeRenderModes;
-          const distribution = await this.createDistribution(
-            command,
-            target,
-            targetRenderModes,
-            DistributionStatus.in_progress,
-            undefined,
-          );
-          targetDistributions.push(distribution);
-          distributions.push(distribution);
-
-          this.logger.info('Created distribution record for target', {
-            targetId: target.id,
-            distributionId: distribution.id,
-            status: DistributionStatus.in_progress,
-          });
-        }
-
-        // Enqueue one job per repository (using the first target's distribution as the reference)
-        // The job will update all distributions for this repository on completion
-        const firstDistribution = targetDistributions[0];
-        await this.publishArtifactsDelayedJob.addJob({
-          distributionId: firstDistribution.id,
-          organizationId: command.organizationId as OrganizationId,
-          userId: command.userId as UserId,
-          targetId: targets[0].id,
-          gitRepoId: gitRepo.id,
-          fileUpdates: firstTargetUpdates,
-          commitMessage,
-          recipeVersionIds: recipeVersions.map((rv) => rv.id),
-          standardVersionIds: standardVersions.map((sv) => sv.id),
-          skillVersionIds: skillVersions.map((skv) => skv.id),
+          requestedVersions,
           activeRenderModes,
-          packagesSlugs: command.packagesSlugs,
-          source,
-        });
-
-        this.logger.info('Enqueued publish artifacts job for repository', {
-          repositoryId,
-          distributionId: firstDistribution.id,
-          targetsCount: targets.length,
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        this.logger.error('Failed to publish artifacts to repository', {
-          repositoryId,
-          error: errorMessage,
-        });
-
-        // Create failure distributions for all targets
-        for (const target of targets) {
-          const distribution = await this.createDistribution(
-            command,
-            target,
-            activeRenderModes,
-            DistributionStatus.failure,
-            undefined,
-            errorMessage,
-          );
-          distributions.push(distribution);
-        }
-      }
+          codingAgents,
+        })),
+      );
     }
 
     this.logger.info('Successfully published unified artifacts', {
@@ -416,38 +191,238 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         userId: command.userId as UserId,
         organizationId: command.organizationId as OrganizationId,
         targetIds: command.targetIds,
-        recipeCount: recipeVersions.length,
-        standardCount: standardVersions.length,
+        recipeCount: requestedVersions.commandVersions.length,
+        standardCount: requestedVersions.standardVersions.length,
         source,
       }),
     );
 
+    return { distributions };
+  }
+
+  private async fetchRequestedVersions(
+    command: PublishArtifactsCommand,
+  ): Promise<ArtifactVersions> {
+    const [commandVersionsResult, standardVersionsResult, skillVersionsResult] =
+      await Promise.allSettled([
+        this.fetchVersions(
+          command.commandVersionIds,
+          (ids) => this.commandsPort.getCommandVersionsByIds(ids),
+          'Command',
+        ),
+        this.fetchVersions(
+          command.standardVersionIds,
+          (ids) => this.standardsPort.getStandardVersionsByIds(ids),
+          'Standard',
+        ),
+        this.fetchVersions(
+          command.skillVersionIds ?? [],
+          (ids) => this.skillsPort.getSkillVersionsByIds(ids),
+          'Skill',
+        ),
+      ]);
+
     return {
-      distributions,
+      commandVersions: this.unwrapVersionsResult(commandVersionsResult),
+      standardVersions: this.unwrapVersionsResult(standardVersionsResult),
+      skillVersions: this.unwrapVersionsResult(skillVersionsResult),
     };
+  }
+
+  private async publishToRepository(
+    ctx: RepositoryPublishContext,
+  ): Promise<Distribution[]> {
+    const {
+      command,
+      repositoryId,
+      gitRepo,
+      targets,
+      requestedVersions,
+      activeRenderModes,
+      codingAgents,
+    } = ctx;
+    const organizationId = command.organizationId as OrganizationId;
+    const userId = command.userId as UserId;
+    const created: Distribution[] = [];
+
+    try {
+      this.logger.info('Processing repository with unified artifacts', {
+        repositoryId,
+        gitRepoOwner: gitRepo.owner,
+        gitRepoName: gitRepo.repo,
+        targetsCount: targets.length,
+        commandsCount: requestedVersions.commandVersions.length,
+        standardsCount: requestedVersions.standardVersions.length,
+        skillsCount: requestedVersions.skillVersions.length,
+      });
+
+      const changeSet = await this.resolveArtifactChangeSet(
+        organizationId,
+        targets,
+        command.packageIds,
+        requestedVersions,
+      );
+
+      const {
+        fileUpdatesPerTarget,
+        renderModesPerTarget,
+        addedPackmindSkills,
+      } = await this.prepareUnifiedDeployment({
+        userId,
+        organizationId,
+        gitRepo,
+        targets,
+        codingAgents,
+        changeSet,
+        packagesSlugs: command.packagesSlugs,
+        artifactSpaceIds: command.artifactSpaceIds ?? {},
+        artifactPackageIds: command.artifactPackageIds ?? {},
+        accessiblePackageIds: command.packageIds.map(String),
+      });
+
+      const commitMessage = this.buildCommitMessage(
+        requestedVersions,
+        changeSet.installed,
+        targets,
+        addedPackmindSkills,
+      );
+
+      const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
+      if (!firstTargetUpdates) {
+        throw new Error('No file updates found for any target');
+      }
+
+      await this.createInProgressDistributions(
+        command,
+        targets,
+        renderModesPerTarget,
+        activeRenderModes,
+        created,
+      );
+      await this.enqueuePublishJob(
+        ctx,
+        created[0],
+        firstTargetUpdates,
+        commitMessage,
+      );
+
+      return created;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to publish artifacts to repository', {
+        repositoryId,
+        error: errorMessage,
+      });
+
+      const failures = await this.createFailureDistributions(
+        command,
+        targets,
+        activeRenderModes,
+        errorMessage,
+      );
+
+      return [...created, ...failures];
+    }
+  }
+
+  private async createInProgressDistributions(
+    command: PublishArtifactsCommand,
+    targets: Target[],
+    renderModesPerTarget: Map<string, RenderMode[]>,
+    activeRenderModes: RenderMode[],
+    created: Distribution[],
+  ): Promise<void> {
+    for (const target of targets) {
+      // Use per-target render modes from packmind.json, fallback to org-level
+      const targetRenderModes =
+        renderModesPerTarget.get(target.id) ?? activeRenderModes;
+      const distribution = await this.createDistribution(
+        command,
+        target,
+        targetRenderModes,
+        DistributionStatus.in_progress,
+      );
+      created.push(distribution);
+
+      this.logger.info('Created distribution record for target', {
+        targetId: target.id,
+        distributionId: distribution.id,
+        status: DistributionStatus.in_progress,
+      });
+    }
+  }
+
+  private async createFailureDistributions(
+    command: PublishArtifactsCommand,
+    targets: Target[],
+    activeRenderModes: RenderMode[],
+    errorMessage: string,
+  ): Promise<Distribution[]> {
+    const distributions: Distribution[] = [];
+    for (const target of targets) {
+      distributions.push(
+        await this.createDistribution(
+          command,
+          target,
+          activeRenderModes,
+          DistributionStatus.failure,
+          errorMessage,
+        ),
+      );
+    }
+    return distributions;
+  }
+
+  private async enqueuePublishJob(
+    ctx: RepositoryPublishContext,
+    firstDistribution: Distribution,
+    fileUpdates: FileUpdates,
+    commitMessage: string,
+  ): Promise<void> {
+    const { command, repositoryId, gitRepo, targets, requestedVersions } = ctx;
+
+    await this.publishArtifactsDelayedJob.addJob({
+      distributionId: firstDistribution.id,
+      organizationId: command.organizationId as OrganizationId,
+      userId: command.userId as UserId,
+      targetId: targets[0].id,
+      gitRepoId: gitRepo.id,
+      fileUpdates,
+      commitMessage,
+      commandVersionIds: requestedVersions.commandVersions.map((cv) => cv.id),
+      standardVersionIds: requestedVersions.standardVersions.map((sv) => sv.id),
+      skillVersionIds: requestedVersions.skillVersions.map((skv) => skv.id),
+      activeRenderModes: ctx.activeRenderModes,
+      packagesSlugs: command.packagesSlugs,
+      source: ctx.source,
+    });
+
+    this.logger.info('Enqueued publish artifacts job for repository', {
+      repositoryId,
+      distributionId: firstDistribution.id,
+      targetsCount: targets.length,
+    });
   }
 
   private async createDistribution(
     command: PublishArtifactsCommand,
     target: Target,
-    activeRenderModes: RenderMode[],
+    renderModes: RenderMode[],
     status: DistributionStatus,
-    gitCommit?: undefined,
     error?: string,
   ): Promise<Distribution> {
-    const distributionId = createDistributionId(uuidv4());
-
     const distribution: Distribution = {
-      id: distributionId,
+      id: createDistributionId(uuidv4()),
       distributedPackages: [], // DistributedPackages are created by PublishPackagesUseCase
       createdAt: new Date().toISOString(),
       authorId: command.userId as UserId,
       organizationId: command.organizationId as OrganizationId,
-      gitCommit,
+      gitCommit: undefined,
       target,
       status,
       error,
-      renderModes: activeRenderModes,
+      renderModes,
       source: 'app',
     };
 
@@ -460,27 +435,23 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
    * Prepares unified deployment using renderArtifacts for all targets
    * Returns a map of targetId -> FileUpdates and names of newly added Packmind skills
    */
-  private async prepareUnifiedDeployment(
-    userId: UserId,
-    organizationId: OrganizationId,
-    installedCommandVersions: CommandVersion[],
-    installedStandardVersions: StandardVersion[],
-    installedSkillVersions: SkillVersion[],
-    removedCommandVersions: CommandVersion[],
-    removedStandardVersions: StandardVersion[],
-    removedSkillVersions: SkillVersion[],
-    gitRepo: GitRepo,
-    targets: Target[],
-    codingAgents: CodingAgent[],
-    packagesSlugs: string[],
-    artifactSpaceIds: Record<string, string>,
-    artifactPackageIds: Record<string, string[]>,
-    accessiblePackageIds: string[],
-  ): Promise<{
+  private async prepareUnifiedDeployment({
+    userId,
+    organizationId,
+    gitRepo,
+    targets,
+    codingAgents,
+    changeSet,
+    packagesSlugs,
+    artifactSpaceIds,
+    artifactPackageIds,
+    accessiblePackageIds,
+  }: PrepareUnifiedDeploymentParams): Promise<{
     fileUpdatesPerTarget: Map<string, FileUpdates>;
     renderModesPerTarget: Map<string, RenderMode[]>;
     addedPackmindSkills: string[];
   }> {
+    const { installed, removed } = changeSet;
     const fileUpdatesPerTarget = new Map<string, FileUpdates>();
     const renderModesPerTarget = new Map<string, RenderMode[]>();
     let addedPackmindSkills: string[] = [];
@@ -541,43 +512,33 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
-      // Call unified renderArtifacts with recipes, standards, and skills
+      // Call unified renderArtifacts with commands, standards, and skills
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
         installed: {
-          recipeVersions: installedCommandVersions,
-          standardVersions: installedStandardVersions,
-          skillVersions: installedSkillVersions,
+          recipeVersions: installed.commandVersions,
+          standardVersions: installed.standardVersions,
+          skillVersions: installed.skillVersions,
         },
         removed: {
-          recipeVersions: removedCommandVersions,
-          standardVersions: removedStandardVersions,
-          skillVersions: removedSkillVersions,
+          recipeVersions: removed.commandVersions,
+          standardVersions: removed.standardVersions,
+          skillVersions: removed.skillVersions,
         },
         codingAgents: targetCodingAgents,
         existingFiles,
       });
 
       if (removedAgents.length > 0) {
-        const [
-          activeCommandVersions,
-          activeStandardVersions,
-          activeSkillVersions,
-        ] = await Promise.all([
-          this.distributionRepository.findActiveCommandVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-          this.distributionRepository.findActiveStandardVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-          this.distributionRepository.findActiveSkillVersionsByTarget(
-            organizationId,
-            target.id,
-          ),
-        ]);
+        const {
+          commandVersions: activeCommandVersions,
+          standardVersions: activeStandardVersions,
+          skillVersions: activeSkillVersions,
+        } = await this.distributionRepository.findActiveVersionsByTarget(
+          organizationId,
+          target.id,
+        );
 
         const cleanupFileUpdates =
           await this.codingAgentPort.generateAgentCleanupUpdatesForAgents({
@@ -634,9 +595,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
         ),
-        recipeVersions: installedCommandVersions,
-        standardVersions: installedStandardVersions,
-        skillVersions: installedSkillVersions,
+        recipeVersions: installed.commandVersions,
+        standardVersions: installed.standardVersions,
+        skillVersions: installed.skillVersions,
         codingAgents: targetCodingAgents,
         packageSlugs: packagesSlugs,
         targetId: target.id,
@@ -747,284 +708,222 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return map;
   }
 
-  private async fetchCommandVersions(
-    recipeVersionIds: string[],
-  ): Promise<CommandVersion[]> {
-    const versions: CommandVersion[] = [];
-    for (const id of recipeVersionIds) {
-      const version = await this.commandsPort.getCommandVersionById(id);
-      if (!version) {
-        throw new Error(`Command version with ID ${id} not found`);
-      }
-      versions.push(version);
+  private unwrapVersionsResult<V>(result: PromiseSettledResult<V[]>): V[] {
+    if (result.status === 'rejected') {
+      throw result.reason;
     }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
+    return result.value;
   }
 
-  private async fetchStandardVersions(
-    standardVersionIds: StandardVersionId[],
-  ): Promise<StandardVersion[]> {
-    const versions: StandardVersion[] = [];
-    for (const id of standardVersionIds) {
-      const version = await this.standardsPort.getStandardVersionById(id);
-      if (!version) {
-        throw new Error(`Standard version with ID ${id} not found`);
-      }
-      versions.push(version);
-    }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
+  private async fetchVersions<
+    Id extends string,
+    V extends { id: Id; name: string },
+  >(
+    requestedIds: Id[],
+    fetchByIds: (ids: Id[]) => Promise<V[]>,
+    artifactLabel: 'Command' | 'Standard' | 'Skill',
+  ): Promise<V[]> {
+    const fetchedVersions = await fetchByIds(requestedIds);
+    const versionsById = new Map(
+      fetchedVersions.map((version) => [version.id, version]),
+    );
+
+    return requestedIds
+      .map((id) => {
+        const version = versionsById.get(id);
+        if (!version) {
+          throw new ArtifactVersionNotFoundError(artifactLabel, id);
+        }
+        return version;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private async fetchSkillVersions(
-    skillVersionIds: SkillVersionId[],
-  ): Promise<SkillVersion[]> {
-    const versions: SkillVersion[] = [];
-    for (const id of skillVersionIds) {
-      const version = await this.skillsPort.getSkillVersion(id);
-      if (!version) {
-        throw new Error(`Skill version with ID ${id} not found`);
-      }
-      // Fetch skill files for this version
-      const files = await this.skillsPort.getSkillFiles(id);
-      versions.push({ ...version, files });
-    }
-    return versions.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  private async collectAllCommandVersions(
-    command: PublishArtifactsCommand,
+  private async resolveArtifactChangeSet(
+    organizationId: OrganizationId,
     targets: Target[],
-    newCommandVersions: CommandVersion[],
-  ): Promise<{
-    previous: CommandVersion[];
-    previousFromPackages: CommandVersion[];
-    combined: CommandVersion[];
-  }> {
-    const allPreviousCommandVersions = new Map<string, CommandVersion>();
-    const previousFromPackagesMap = new Map<string, CommandVersion>();
+    packageIds: PackageId[],
+    requested: ArtifactVersions,
+  ): Promise<ArtifactChangeSet> {
+    const activeVersionsByTargetId =
+      await this.distributionRepository.findActiveVersionsByTargets(
+        organizationId,
+        targets.map((target) => target.id),
+        packageIds,
+      );
 
-    for (const target of targets) {
-      // Get all previous recipe versions (for combining)
-      const previousCommandVersions =
-        await this.distributionRepository.findActiveCommandVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
+    const { installed, removed } = this.computeChangeSet(
+      requested,
+      activeVersionsByTargetId,
+      targets,
+    );
 
-      for (const recipeVersion of previousCommandVersions) {
-        const existing = allPreviousCommandVersions.get(recipeVersion.recipeId);
-        if (!existing || recipeVersion.version > existing.version) {
-          allPreviousCommandVersions.set(recipeVersion.recipeId, recipeVersion);
-        }
-      }
-
-      // Get previous recipe versions filtered by packages being deployed (for removal calculation)
-      const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveCommandVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
-
-      for (const recipeVersion of previousFromPackagesVersions) {
-        const existing = previousFromPackagesMap.get(recipeVersion.recipeId);
-        if (!existing || recipeVersion.version > existing.version) {
-          previousFromPackagesMap.set(recipeVersion.recipeId, recipeVersion);
-        }
-      }
-    }
-
-    const previous = Array.from(allPreviousCommandVersions.values());
-    const previousFromPackages = Array.from(previousFromPackagesMap.values());
-    const combined = this.combineCommandVersions(previous, newCommandVersions);
-    return { previous, previousFromPackages, combined };
+    return {
+      installed: await this.hydrateInstalledArtifacts(installed),
+      removed,
+    };
   }
 
-  private async collectAllStandardVersions(
-    command: PublishArtifactsCommand,
+  private computeChangeSet(
+    requested: ArtifactVersions,
+    activeVersionsByTargetId: Map<TargetId, ActiveArtifactVersionsByScope>,
     targets: Target[],
-    newStandardVersions: StandardVersion[],
-  ): Promise<{
-    previous: StandardVersion[];
-    previousFromPackages: StandardVersion[];
-    combined: StandardVersion[];
-  }> {
-    const allPreviousStandardVersions = new Map<string, StandardVersion>();
-    const previousFromPackagesMap = new Map<string, StandardVersion>();
+  ): ArtifactChangeSet {
+    const scopes = targets.map((target) =>
+      activeVersionsByTargetId.get(target.id),
+    );
 
-    for (const target of targets) {
-      // Get all previous standard versions (for combining)
-      const previousStandardVersions =
-        await this.distributionRepository.findActiveStandardVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
+    const commands = this.computeArtifactChanges(
+      requested.commandVersions,
+      scopes,
+      (versions) => versions.commandVersions,
+      commandKey,
+    );
+    const standards = this.computeArtifactChanges(
+      requested.standardVersions,
+      scopes,
+      (versions) => versions.standardVersions,
+      standardKey,
+    );
+    const skills = this.computeArtifactChanges(
+      requested.skillVersions,
+      scopes,
+      (versions) => versions.skillVersions,
+      skillKey,
+    );
 
-      for (const standardVersion of previousStandardVersions) {
-        const existing = allPreviousStandardVersions.get(
-          standardVersion.standardId,
-        );
-        if (!existing || standardVersion.version > existing.version) {
-          allPreviousStandardVersions.set(
-            standardVersion.standardId,
-            standardVersion,
-          );
-        }
-      }
+    const renamedSkillVersions = this.computeRenamedSkillVersions(
+      skills.previousFromPackages,
+      requested.skillVersions,
+    );
 
-      // Get previous standard versions filtered by packages being deployed (for removal calculation)
-      const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveStandardVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
+    return {
+      installed: {
+        commandVersions: commands.installed,
+        standardVersions: standards.installed,
+        skillVersions: skills.installed,
+      },
+      removed: {
+        commandVersions: commands.removed,
+        standardVersions: standards.removed,
+        skillVersions: [...skills.removed, ...renamedSkillVersions],
+      },
+    };
+  }
 
-      for (const standardVersion of previousFromPackagesVersions) {
-        const existing = previousFromPackagesMap.get(
-          standardVersion.standardId,
-        );
-        if (!existing || standardVersion.version > existing.version) {
-          previousFromPackagesMap.set(
-            standardVersion.standardId,
-            standardVersion,
-          );
-        }
-      }
-    }
+  private computeArtifactChanges<V extends { version: number; name: string }>(
+    requested: V[],
+    scopes: (ActiveArtifactVersionsByScope | undefined)[],
+    pick: (versions: ActiveArtifactVersions) => V[],
+    keyOf: (version: V) => string,
+  ): { previousFromPackages: V[]; installed: V[]; removed: V[] } {
+    // Previously deployed versions across all packages (for combining)
+    const previous = this.latestVersionPerArtifact(
+      scopes.flatMap((scope) => (scope ? (pick(scope.all) ?? []) : [])),
+      keyOf,
+    );
+    const previousFromPackages = this.latestVersionPerArtifact(
+      scopes.flatMap((scope) =>
+        scope ? (pick(scope.fromPackages) ?? []) : [],
+      ),
+      keyOf,
+    );
+    const combined = this.combineVersions(previous, requested, keyOf);
 
-    const previous = Array.from(allPreviousStandardVersions.values());
-    const previousFromPackages = Array.from(previousFromPackagesMap.values());
-    const combined = this.combineStandardVersions(
+    const removedFromDeployedPackages = this.excludeByKey(
+      previousFromPackages,
+      requested,
+      keyOf,
+    );
+    // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
+    const fromOtherPackages = this.excludeByKey(
       previous,
-      newStandardVersions,
+      previousFromPackages,
+      keyOf,
     );
-    return { previous, previousFromPackages, combined };
+    const removed = this.excludeByKey(
+      removedFromDeployedPackages,
+      fromOtherPackages,
+      keyOf,
+    );
+
+    // Filter out removed artifacts from the installed list
+    const installed = this.excludeByKey(combined, removed, keyOf);
+
+    return { previousFromPackages, installed, removed };
   }
 
-  private async collectAllSkillVersions(
-    command: PublishArtifactsCommand,
-    targets: Target[],
-    newSkillVersions: SkillVersion[],
-  ): Promise<{
-    previous: SkillVersion[];
-    previousFromPackages: SkillVersion[];
-    combined: SkillVersion[];
-  }> {
-    const allPreviousSkillVersions = new Map<string, SkillVersion>();
-    const previousFromPackagesMap = new Map<string, SkillVersion>();
-
-    for (const target of targets) {
-      // Get all previous skill versions (for combining)
-      const previousSkillVersions =
-        await this.distributionRepository.findActiveSkillVersionsByTarget(
-          command.organizationId as OrganizationId,
-          target.id,
-        );
-
-      for (const skillVersion of previousSkillVersions) {
-        const existing = allPreviousSkillVersions.get(skillVersion.skillId);
-        if (!existing || skillVersion.version > existing.version) {
-          allPreviousSkillVersions.set(skillVersion.skillId, skillVersion);
-        }
-      }
-
-      // Get previous skill versions filtered by packages being deployed (for removal calculation)
-      const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
-          command.organizationId as OrganizationId,
-          target.id,
-          command.packageIds,
-        );
-
-      for (const skillVersion of previousFromPackagesVersions) {
-        const existing = previousFromPackagesMap.get(skillVersion.skillId);
-        if (!existing || skillVersion.version > existing.version) {
-          previousFromPackagesMap.set(skillVersion.skillId, skillVersion);
-        }
+  private latestVersionPerArtifact<V extends { version: number }>(
+    versions: V[],
+    keyOf: (version: V) => string,
+  ): V[] {
+    const latestByKey = new Map<string, V>();
+    for (const version of versions) {
+      const existing = latestByKey.get(keyOf(version));
+      if (!existing || version.version > existing.version) {
+        latestByKey.set(keyOf(version), version);
       }
     }
-
-    const previous = Array.from(allPreviousSkillVersions.values());
-    const previousFromPackages = Array.from(previousFromPackagesMap.values());
-    const combined = this.combineSkillVersions(previous, newSkillVersions);
-    return { previous, previousFromPackages, combined };
+    return Array.from(latestByKey.values());
   }
 
-  private combineCommandVersions(
-    previous: CommandVersion[],
-    newVersions: CommandVersion[],
-  ): CommandVersion[] {
-    const map = new Map<string, CommandVersion>();
-    previous.forEach((rv) => map.set(rv.recipeId, rv));
-    newVersions.forEach((rv) => map.set(rv.recipeId, rv));
-    return Array.from(map.values()).sort((a, b) =>
+  private combineVersions<V extends { name: string }>(
+    previous: V[],
+    requested: V[],
+    keyOf: (version: V) => string,
+  ): V[] {
+    const byKey = new Map<string, V>();
+    previous.forEach((version) => byKey.set(keyOf(version), version));
+    requested.forEach((version) => byKey.set(keyOf(version), version));
+    return Array.from(byKey.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
   }
 
-  private combineStandardVersions(
-    previous: StandardVersion[],
-    newVersions: StandardVersion[],
-  ): StandardVersion[] {
-    const map = new Map<string, StandardVersion>();
-    previous.forEach((sv) => map.set(sv.standardId, sv));
-    newVersions.forEach((sv) => map.set(sv.standardId, sv));
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+  private excludeByKey<V>(
+    versions: V[],
+    excluded: V[],
+    keyOf: (version: V) => string,
+  ): V[] {
+    const excludedKeys = new Set(excluded.map(keyOf));
+    return versions.filter((version) => !excludedKeys.has(keyOf(version)));
   }
 
-  private combineSkillVersions(
-    previous: SkillVersion[],
-    newVersions: SkillVersion[],
-  ): SkillVersion[] {
-    const map = new Map<string, SkillVersion>();
-    previous.forEach((skv) => map.set(skv.skillId, skv));
-    newVersions.forEach((skv) => map.set(skv.skillId, skv));
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }
+  private async hydrateInstalledArtifacts(
+    installed: ArtifactVersions,
+  ): Promise<ArtifactVersions> {
+    const versionIdsMissingRules = installed.standardVersions
+      .filter((sv) => sv.rules == null)
+      .map((sv) => sv.id);
 
-  /**
-   * Computes recipe versions that were previously deployed but are no longer
-   * in the current deployment (i.e., they are being removed)
-   */
-  private computeRemovedCommandVersions(
-    previousVersions: CommandVersion[],
-    currentVersions: CommandVersion[],
-  ): CommandVersion[] {
-    const currentCommandIds = new Set(currentVersions.map((rv) => rv.recipeId));
-    return previousVersions.filter((rv) => !currentCommandIds.has(rv.recipeId));
-  }
+    const versionIdsMissingFiles = installed.skillVersions
+      .filter((sv) => sv.files === undefined)
+      .map((sv) => sv.id);
 
-  /**
-   * Computes standard versions that were previously deployed but are no longer
-   * in the current deployment (i.e., they are being removed)
-   */
-  private computeRemovedStandardVersions(
-    previousVersions: StandardVersion[],
-    currentVersions: StandardVersion[],
-  ): StandardVersion[] {
-    const currentStandardIds = new Set(
-      currentVersions.map((sv) => sv.standardId),
+    const [hydratedStandards, hydratedSkills] = await Promise.all([
+      this.standardsPort.getStandardVersionsByIds(versionIdsMissingRules),
+      this.skillsPort.getSkillVersionsByIds(versionIdsMissingFiles),
+    ]);
+    const rulesByVersionId = new Map(
+      hydratedStandards.map((sv) => [sv.id, sv.rules ?? []]),
     );
-    return previousVersions.filter(
-      (sv) => !currentStandardIds.has(sv.standardId),
+    const filesByVersionId = new Map(
+      hydratedSkills.map((sv) => [sv.id, sv.files ?? []]),
     );
-  }
 
-  /**
-   * Computes skill versions that were previously deployed but are no longer
-   * in the current deployment (i.e., they are being removed)
-   */
-  private computeRemovedSkillVersions(
-    previousVersions: SkillVersion[],
-    currentVersions: SkillVersion[],
-  ): SkillVersion[] {
-    const currentSkillIds = new Set(currentVersions.map((skv) => skv.skillId));
-    return previousVersions.filter((skv) => !currentSkillIds.has(skv.skillId));
+    return {
+      commandVersions: installed.commandVersions,
+      standardVersions: installed.standardVersions.map((sv) =>
+        sv.rules != null
+          ? sv
+          : { ...sv, rules: rulesByVersionId.get(sv.id) ?? [] },
+      ),
+      skillVersions: installed.skillVersions.map((sv) =>
+        sv.files !== undefined
+          ? sv
+          : { ...sv, files: filesByVersionId.get(sv.id) ?? [] },
+      ),
+    };
   }
 
   /**
@@ -1047,37 +946,36 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   private buildCommitMessage(
-    recipeVersions: CommandVersion[],
-    standardVersions: StandardVersion[],
-    skillVersions: SkillVersion[],
-    allCommandVersions: CommandVersion[],
-    allStandardVersions: StandardVersion[],
-    allSkillVersions: SkillVersion[],
+    requested: ArtifactVersions,
+    installed: ArtifactVersions,
     targets: Target[],
     addedPackmindSkills: string[],
   ): string {
+    const { commandVersions, standardVersions, skillVersions } = requested;
     const parts: string[] = [
       '[PACKMIND] Update artifacts (commands + standards + skills)',
       '',
     ];
 
-    if (recipeVersions.length > 0) {
-      parts.push(`- Updated ${recipeVersions.length} command(s)`);
+    if (commandVersions.length > 0) {
+      parts.push(`- Updated ${commandVersions.length} command(s)`);
       parts.push(
-        `- Total commands in repository: ${allCommandVersions.length}`,
+        `- Total commands in repository: ${installed.commandVersions.length}`,
       );
     }
 
     if (standardVersions.length > 0) {
       parts.push(`- Updated ${standardVersions.length} standard(s)`);
       parts.push(
-        `- Total standards in repository: ${allStandardVersions.length}`,
+        `- Total standards in repository: ${installed.standardVersions.length}`,
       );
     }
 
     if (skillVersions.length > 0) {
       parts.push(`- Updated ${skillVersions.length} skill(s)`);
-      parts.push(`- Total skills in repository: ${allSkillVersions.length}`);
+      parts.push(
+        `- Total skills in repository: ${installed.skillVersions.length}`,
+      );
     }
 
     if (addedPackmindSkills.length > 0) {
@@ -1089,10 +987,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     parts.push(`- Targets: ${targets.map((t) => t.name).join(', ')}`);
     parts.push('');
 
-    if (recipeVersions.length > 0) {
+    if (commandVersions.length > 0) {
       parts.push('Commands updated:');
-      recipeVersions.forEach((rv) => {
-        parts.push(`- ${rv.name} (${rv.slug}) v${rv.version}`);
+      commandVersions.forEach((cv) => {
+        parts.push(`- ${cv.name} (${cv.slug}) v${cv.version}`);
       });
       parts.push('');
     }
