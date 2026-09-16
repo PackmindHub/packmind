@@ -13,6 +13,11 @@ export interface IPackmindAppPage extends IPackmindPage {
   openSettings(): Promise<ISettingsPage>;
   openIntegrations(): Promise<ICliSetupPage>;
   openSpaceSettings(): Promise<ISpaceSettingsPage>;
+  /**
+   * The space Context surface, opened on one package. The navigation is pinned
+   * to `plugin-first`, which is the only mode that renders that surface.
+   */
+  openPackageInContext(packageId: string): Promise<ISpaceContextPage>;
   createSpace(
     name: string,
     options?: { type?: SpaceType },
@@ -92,6 +97,17 @@ export interface IPackagePage extends IPackmindAppPage {
   listStandardsInPackage(): Promise<{ name: string }[]>;
 }
 
+/**
+ * The space Context surface, showing one package. It is where a package's
+ * version is read and where a release is cut.
+ */
+export interface ISpaceContextPage extends IPackmindAppPage {
+  /** Cuts a release of the shown package through the release drawer. */
+  createRelease(version: string): Promise<void>;
+  /** `Not released yet` before the first release, the version after it. */
+  getCurrentVersion(): Promise<string>;
+}
+
 export interface ICreateStandardPage extends IPackmindAppPage {
   createStandard(
     name: string,
@@ -162,4 +178,5 @@ export interface IPageFactory {
   getGitSettingsPage(): Promise<IGitSettingsPage>;
   getInvitationPage(token: string): Promise<IInvitationPage>;
   getSpaceSettingsPage(): Promise<ISpaceSettingsPage>;
+  getSpaceContextPage(): Promise<ISpaceContextPage>;
 }

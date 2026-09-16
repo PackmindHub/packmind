@@ -2537,3 +2537,166 @@ everything not under test through `packmindApi`, which means adding the release 
 D-016 to `IPackmindApi`. The spec lands in `apps/e2e-tests/src/features/packages/`. Nothing in
 `packages/` or `apps/api/` changes except the one file D-042's repair requires, and that repair
 must not loosen `isServerErrorResponse` for every domain — D-042 rejected that explicitly.
+
+## D-049 — S3's exit criteria run Playwright and translate its summary; the gate is not touched
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-22`..`AC-25`, `D-047`, `D-048`
+
+**Decision.** Every S3 unit's `exit_criterion.command` has this shape, run through `bash`
+because `/bin/sh` here is dash and the pipeline needs `pipefail`:
+
+```
+./node_modules/.bin/nx run e2e-tests:typecheck --tuiAutoExit && bash -c 'set -o pipefail; cd apps/e2e-tests && npx playwright test <spec> --grep "<name>" --reporter=list 2>&1 | awk "{print} /^[[:space:]]*[0-9]+ passed/ {n=\$1} END {if (n>0) print \"Tests: \" n \" passed\"}"'
+```
+
+The `awk` prints Playwright's output unchanged and appends one line, `Tests: N passed`,
+where `N` is read from Playwright's own `N passed (12.3s)` summary. `scripts/agent-gate.mjs`
+is not modified.
+
+**Reasoning.** The gate's `assertionsRun` reads a jest `Tests:` line (or vitest's spacing
+variant) and fails a criterion that exits 0 without one — deliberately, so that a
+`--testNamePattern` matching nothing cannot pass as green. Playwright writes `2 passed
+(28.1s)` and no such line, so an untranslated Playwright criterion fails the gate at the
+`tests` stage with "printed no test summary" no matter how many specs actually passed.
+S1 and S2 never met this because every unit was gated by jest or vitest.
+
+Translating in the criterion rather than in the gate is not merely the smaller change: the
+gate lists `scripts/agent-gate.mjs` and `.claude/pipeline/**` among its **guardrails**, so
+editing either is a scope violation regardless of what a spec declares, and D-048's own
+constraint is that S3 changes nothing outside `apps/e2e-tests/` bar D-042's one file.
+
+The translation is a translation and not a fabrication, and the distinction is the whole
+point: `N` comes from Playwright's reporter, so a run with nothing to report prints no
+line and the criterion fails. Checked rather than assumed — `--grep` against a name that
+does not exist exits **1** with `Error: No tests found`, which is *stricter* than jest,
+where a non-matching pattern skips everything and still exits 0. The hazard the gate's
+assertion count was written for cannot arise here; the translation is what lets the gate
+see that.
+
+*Why `typecheck` is chained in front.* Playwright transpiles each spec at run time without
+checking it, and `apps/e2e-tests/project.json` says so in its own comment: the project's
+single `tsconfig.json` is "the only thing that type-checks them". The gate runs
+`frontendTypecheck` only for `apps/frontend`, `packages/ui` and `packages/frontend-lib`, so
+nothing in the pipeline would typecheck a spec, a page object or the API client. A page
+object whose types do not compile would run — and pass — until the shape it returns was
+wrong at a moment the assertions happened not to look. `wide` still lints the project;
+only typechecking is missing, and one `&&` supplies it.
+
+**Rejected.**
+
+- **Teaching `agent-gate.mjs` to read Playwright's summary** — the right shape if this were
+  the pipeline's own repository, and forbidden here: the file is a declared guardrail, and a
+  change to how every future feature is gated does not belong inside a unit of this one. It
+  is also the change an executor reaches for when it cannot pass a strict rule, which is the
+  exact behaviour the guardrail list exists to catch.
+- **Echoing a fixed `Tests: 1 passed` after the run** — satisfies the gate and certifies
+  nothing, the "green check that certifies nothing" this feature has now refused four times
+  (D-027, D-028, D-032, D-047). The count must come from the runner or it is a lie.
+- **Gating S3's units with `sweep`, as D-047 did for the documentation unit** — D-047's
+  grounds were that `apps/doc` has *no assertion to name*. S3 has the opposite problem: it
+  has four criteria that are precisely named assertions, and they are the only ones in the
+  feature that cross the HTTP boundary. Waiving the gate on the session added to close a
+  verification gap would be self-defeating.
+- **Running the suite through the containerised `run-e2e-tests` profile** — the canonical CI
+  path, and wrong for a per-unit gate: it runs every spec in the repository, so a unit would
+  be judged by six unrelated features' tests and take minutes per attempt. The skill names
+  local iteration as the authoring path, and that is what a unit gate is.
+
+**Constrains implementation.** The stack must be up before any S3 unit is dispatched
+(`docker compose --profile dev up -d`, then poll `localhost:4200` and
+`localhost:4200/api/v0`); a red criterion against a stack that is down is an environment
+failure, not a unit failure, and must not be recorded as one. Executors do not start,
+stop or reconfigure the stack, and do not edit `playwright.config.ts`, `scripts/agent-gate.mjs`
+or anything under `.claude/pipeline/`. Criterion commands name one spec file and, where a
+unit covers one criterion of several in that file, one `--grep`.
+
+## D-050 — The release UI lives on the Context surface, so S3 drives it through a Context page object pinned with `?nav=plugin-first`
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-22`..`AC-25`, `D-018`, `D-020`, `D-024`, `D-048`
+
+**Decision.** S3's specs reach the release UI through a **new page object for the space
+Context surface** — `ISpaceContextPage` in `src/domain/pages/index.ts`,
+`SpaceContextPage` in `src/infra/pages/`, registered in `PageFactory` — and
+`createRelease()` / `getCurrentVersion()` live on **that** object, not on `IPackagePage`.
+A navigation method on `AbstractPackmindAppPage` opens the surface at
+`/org/<orgSlug>/space/<spaceSlug>/context?nav=plugin-first&package=<packageId>` and
+returns it through the factory.
+
+`PackagePage` is left exactly as it was. Nothing in `apps/frontend/` changes.
+
+**Reasoning.** U-020 blocked on a premise this log never stated and the charter assumed
+wrongly: **the release UI is not on the package detail route.** Verified directly rather
+than taken from the report — `PackageVersionArea` is imported in exactly one file
+(`ContextPackagePane.tsx:69`), which is rendered in exactly one file
+(`SpaceContextSurface.tsx:630`), which is one route, the space `context` route. The
+`/packages/:id` page that `PackagePage.expectedUrl()` matches never mounts it, and the
+aria snapshot of that page shows only *Remove from destinations*, *Edit* and *Delete*.
+
+That is D-018 working as designed, not a defect: it put the version area in
+`ContextPackagePane`'s header and said so. What nobody wrote down is that
+`ContextPackagePane` is not what `openPackage()` opens, so S3 inherited a spec flow that
+could not reach the feature. The charter's S3 row says "release methods on
+`IPackagePage` / `PackagePage`", and that line is simply wrong about which route hosts
+the surface; this entry corrects it.
+
+*Why the `?nav=plugin-first` parameter, specifically.* The Context entry renders only in
+`plugin-first` navigation mode, which `SpaceNavModeContext` resolves as URL parameter >
+stored choice > `SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY`. Two facts decide it. First,
+`playwright.config.ts` pins **every** context in the suite to
+`localStorage['space-nav-mode.v2'] = 'today'`, deliberately, so that the flag's audience
+can move without the suite following — a spec therefore has to override per navigation,
+not per fixture. Second, the parameter exists for exactly this: the module's own comment
+says a link pins the architecture "which is also how an e2e spec pins it, without needing
+the feature flag", and `withNavMode` carries it across redirects for the same reason. The
+provider also calls `rememberChosenMode`, so one navigation pins the rest of the test.
+
+Using the documented hook keeps D-020's "no feature flag" intact: the spec does not need
+a `@packmind.com` user, and `underFeatureFlag` stays `false`.
+
+**Rejected.**
+
+- **Mounting `PackageVersionArea` in the `/packages/:id` header too**, so the spec's flow
+  becomes true as written — the only option where nothing about the test changes, and it
+  changes the *product* to suit a test. It contradicts D-018, which chose the pane header
+  deliberately, and D-022, which forbids this feature touching other surfaces. A test that
+  moves the feature to where the test was looking has stopped being evidence.
+- **Keeping the methods on `PackagePage` and having it navigate to the context route** —
+  fits the original scope list and breaks the page-object standard: `expectedUrl()` would
+  claim `/packages/<uuid>` while the object drove `/context`, so `waitForLoaded()` would be
+  asserting a URL the object never sits on. One page object per route is the rule the whole
+  suite is built on.
+- **Reaching Context by clicking the sidebar** — the entry is absent in `today` mode, which
+  is the mode the config pins, so there is nothing to click until the mode is already
+  changed. Chicken and egg.
+- **Overriding `storageState` per spec file to pin `plugin-first`** — fights the global
+  pin rather than using the parameter written for this, and it would silently diverge from
+  the config's stated intent the next time that file is edited.
+
+**Constrains implementation.** The release methods are named `createRelease(version)` and
+`getCurrentVersion()` and sit on `ISpaceContextPage`. `SpaceContextPage.expectedUrl()`
+matches the context route. The navigation method derives `orgSlug` and `spaceSlug` from the
+browser's current URL rather than taking them as arguments — the spec knows neither. Do not
+edit `playwright.config.ts`, and do not set `underFeatureFlag: true`. Do not modify
+`PackagePage.ts` or anything under `apps/frontend/`.
+
+**Noted for elsewhere, not fixed here, and the human's call.** "Unflagged" (D-020, D-024)
+and "reachable" are not the same statement for this feature. The release UI ships behind no
+feature flag, but the only surface that mounts it is reachable in `plugin-first` mode, whose
+sidebar entry is gated by `SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY` — audience `@packmind.com`
+and `@promyze.com`. A member of any other organization has no navigation route to the
+release UI at all today, short of typing `?nav=plugin-first`. That may be exactly as
+intended, since the mode is a user preference and the whole Context architecture is shipping
+this way; it is recorded because D-020 argued the feature needed no flag on the grounds that
+its blast radius was "a panel not rendering", and this says the panel is, for most users,
+not reachable either. It changes no acceptance criterion and is out of scope to fix here
+(D-022).

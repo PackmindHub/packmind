@@ -11,6 +11,7 @@ import {
   ISignUpPage,
   ISkillFilePage,
   ISkillsPage,
+  ISpaceContextPage,
   ISpaceSettingsPage,
   IStandardsPage,
   IUsersSettingsPage,
@@ -29,6 +30,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
 import { InvitationPage } from './pages/InvitationPage';
 import { SpaceSettingsPage } from './pages/SpaceSettingsPage';
+import { SpaceContextPage } from './pages/SpaceContextPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -91,6 +93,10 @@ export class PageFactory implements IPageFactory {
 
   async getSpaceSettingsPage(): Promise<ISpaceSettingsPage> {
     return this.getPageInstance(SpaceSettingsPage);
+  }
+
+  getSpaceContextPage(): Promise<ISpaceContextPage> {
+    return this.getPageInstance(SpaceContextPage);
   }
 
   private async getPageInstance<T extends IPackmindPage>(
