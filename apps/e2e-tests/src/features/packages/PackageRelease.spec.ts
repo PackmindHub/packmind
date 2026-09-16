@@ -35,4 +35,22 @@ testWithApi.describe('package release', () => {
       await expect.poll(() => contextPage.getCurrentVersion()).toBe('0.1.0');
     },
   );
+
+  testWithApi(
+    'it lists what a release pinned when browsing that version',
+    async ({ dashboardPage }) => {
+      const contextPage = await dashboardPage.openPackageInContext(
+        releasablePackage.id,
+      );
+
+      await contextPage.createRelease('0.1.0');
+
+      await contextPage.openReleaseHistory();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await contextPage.listComponentsPinnedBy('0.1.0')).toEqual([
+        `${standard.name} v1`,
+      ]);
+    },
+  );
 });

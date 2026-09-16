@@ -106,6 +106,17 @@ export interface ISpaceContextPage extends IPackmindAppPage {
   createRelease(version: string): Promise<void>;
   /** `Not released yet` before the first release, the version after it. */
   getCurrentVersion(): Promise<string>;
+  /**
+   * Opens the release history drawer for the package, showing all available
+   * releases. Drives only — the assertion belongs to the spec.
+   */
+  openReleaseHistory(): Promise<void>;
+  /**
+   * In the open release history drawer, selects a version and returns the
+   * pinned component lines, each in the form `<name> v<number>`, in DOM order
+   * and trimmed. Waits for the detail view to render after the selection.
+   */
+  listComponentsPinnedBy(version: string): Promise<string[]>;
 }
 
 export interface ICreateStandardPage extends IPackmindAppPage {

@@ -49,6 +49,56 @@ export class SpaceContextPage
   }
 
   /**
+   * Opens the release history drawer for the package, showing all available
+   * releases. Drives only — the assertion belongs to the spec.
+   */
+  async openReleaseHistory(): Promise<void> {
+    // The version display is a button only when the package has at least one
+    // release, and it is the trigger for the history drawer.
+    await this.versionDisplay().click();
+
+    // The drawer opens only once the click resolves, and it is the dialog
+    // containing the heading `Release history`.
+    const historyDrawer = this.page.locator('[role="dialog"]').filter({
+      has: this.page.getByRole('heading', { name: 'Release history' }),
+    });
+    await historyDrawer.waitFor({ state: 'visible' });
+  }
+
+  /**
+   * In the open release history drawer, selects a version and returns the
+   * pinned component lines, each in the form `<name> v<number>`, in DOM order
+   * and trimmed. Waits for the detail view to render after the selection.
+   */
+  async listComponentsPinnedBy(version: string): Promise<string[]> {
+    // The version is listed as a button in the release history drawer. Use
+    // exact match to avoid substring overlaps.
+    const historyDrawer = this.page.locator('[role="dialog"]').filter({
+      has: this.page.getByRole('heading', { name: 'Release history' }),
+    });
+    await historyDrawer
+      .getByRole('button', { name: version, exact: true })
+      .click();
+
+    // The detail view fetches over the network; wait for it to appear by
+    // waiting for the Standards section to be visible. The detail view is
+    // rendered only once the fetch resolves, so this ensures the full content
+    // has arrived.
+    await historyDrawer
+      .getByText('Standards', { exact: true })
+      .waitFor({ state: 'visible' });
+
+    // Extract all component lines in the drawer. Each line is `<name> v<number>`.
+    // The regex filters out headers and description by matching the pattern.
+    const componentPattern = / v\d+$/;
+    const allText = await historyDrawer.innerText();
+    const lines = allText.split('\n').map((line) => line.trim());
+    const componentLines = lines.filter((line) => componentPattern.test(line));
+
+    return componentLines;
+  }
+
+  /**
    * The badge (no release) or button (released) sitting just before the
    * `Create a release` trigger in the version area. Both states have to be
    * reachable through one locator, and only the second one is a button — hence
