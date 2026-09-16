@@ -1,7 +1,7 @@
 # Feature: Release a numbered version of a package
 
 - slug: `package-release-version` — the directory name under `.claude/features/`
-- status: `framing`
+- status: `done`
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -201,10 +201,10 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   |----|-----|---------------|------------|
   | S1 | AC-16, AC-17, AC-18, AC-19, AC-20, AC-21 | the four tables and their migration, the `PackageRelease` aggregate, the version module in `packages/types`, the change gate and its comparisons, the three use cases and the three routes on the existing packages controller | — |
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
-  | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on `IPackagePage` / `PackagePage`, one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
+  | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
 
-  **S1 and S2 are complete and green.** S3 was added on 2026-09-16 by D-048, after S2
-  closed; it is the session the next run picks up.
+  **All three sessions are complete and green.** S3 was added on 2026-09-16 by D-048,
+  after S2 closed, and ran the same day.
 
   The cut is not "backend then frontend" as a habit — it is where the contract is.
   The **rules** behind AC-2..AC-15 are built and unit-tested in S1, where they live
@@ -279,10 +279,23 @@ When the verdict was `split`, that is the bar for the **feature**, not for each
 session. A session ending green with its own ACs covered is a session done; the feature
 is done when the last one is.
 
-**Status on 2026-09-16.** S1 and S2 are done: AC-1 to AC-21 each carry a `verified by`,
-and `nx run-many -t test` over `types`, `deployments`, `api` and `frontend` is green
-(145 files, 2170 tests). The feature is **not** done, because D-048 added S3. AC-22 to
-AC-25 are open and are the next session's work.
+**Status on 2026-09-16 — the feature is done.** All of AC-1 to AC-25 carry a
+`verified by`. `nx run-many -t test` over `types`, `deployments`, `api` and `frontend`
+is green at the boundary (145 files, 2173 tests), and the four end-to-end criteria pass
+together in `apps/e2e-tests/src/features/packages/PackageRelease.spec.ts`.
+
+Two things a reader should carry rather than discover:
+
+- **`PackageRelease.spec.ts` flakes at four workers under host load** — always inside
+  the signup fixture, never in the release flow, because it is the most expensive spec
+  in the suite and sits around 17s against a 30s timeout. Measured, not inferred, and
+  deliberately not smoothed away: D-053.
+- **The release UI is unflagged but not widely reachable.** It is mounted only on the
+  space Context surface, which renders in `plugin-first` navigation, whose sidebar entry
+  is gated to `@packmind.com` and `@promyze.com`. D-020 argued no flag was needed partly
+  because the blast radius was "a panel not rendering"; for most users the panel is not
+  reachable either. It changes no criterion and is out of scope here (D-022), but it is
+  the open product question this feature leaves behind: D-050.
 
 One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
 `apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`

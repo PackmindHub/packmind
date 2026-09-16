@@ -2474,7 +2474,7 @@ documentation follows this entry rather than re-deciding it.
 - user-visible: `no`
 - decided: `2026-09-16`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-050 (partial — which page object hosts the release methods)
 - relates to: `AC-22`..`AC-25`, `D-016`, `D-042`, charter `In scope`
 
 **Decision.** Playwright end-to-end coverage under `apps/e2e-tests/` is now in scope for this
@@ -2620,8 +2620,8 @@ unit covers one criterion of several in that file, one `--grep`.
 - status: `active`
 - user-visible: `no`
 - decided: `2026-09-16`
-- supersedes: —
-- superseded-by: —
+- supersedes: D-048 (partial — the release methods join a new Context page object, not `IPackagePage`)
+- superseded-by: D-051 (partial — the wire repair does change two files under `apps/frontend/`)
 - relates to: `AC-22`..`AC-25`, `D-018`, `D-020`, `D-024`, `D-048`
 
 **Decision.** S3's specs reach the release UI through a **new page object for the space
@@ -2706,7 +2706,7 @@ not reachable either. It changes no acceptance criterion and is out of scope to 
 - status: `active`
 - user-visible: `yes`
 - decided: `2026-09-16`
-- supersedes: —
+- supersedes: D-050 (partial — its blanket "nothing under `apps/frontend/` changes")
 - superseded-by: —
 - relates to: `AC-20`, `AC-25`, `D-011`, `D-012`, `D-034`, `D-042`, `D-048`
 
@@ -2912,3 +2912,104 @@ the most expensive in the suite, and another API seed or navigation moves it pas
 than near it. If CI shows this file failing at `SignupPage.signup`, the fix is the harness's worker
 count or timeout, decided for the suite as a whole, not a change to the release feature. Re-running
 until green is not a resolution and must not be recorded as one.
+
+## D-054 — D-002's three-family rule binds the rule and pinning suites, not the seam tests
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: D-002 (partial — the scope of its coverage constraint)
+- superseded-by: —
+- relates to: `AC-21`, `AC-23`, `D-002`, `D-048`
+
+**Decision.** The S3 end-to-end fixture seeds a package holding **one standard and nothing else**,
+and that is deliberate. D-002's constraint — "every test that exercises the gate or the pinning must
+use a package holding at least one command, one standard and one skill" — binds S1's rule and pinning
+suites. It does not bind the four seam tests.
+
+**Reasoning.** The feature-boundary reconcile found this and was right to: AC-23 exercises pinning,
+`apiPackageFactory(packmindApi, { standardIds: [standard.id] })` seeds one family, and no entry said
+that was allowed. Code and a binding constraint line genuinely disagreed, which is the one shape that
+must not be left to a reader's inference.
+
+It resolves in favour of the fixture, for the reason D-002 gives for itself. Its hazard is named
+precisely: "three parallel arrays are exactly the shape where a skill-shaped implementation compiles
+and ships with two empty branches", and its constraint closes with "a test fixture holding **only
+skills** is not acceptable coverage for any criterion". That hazard is about the *implementation* of
+the three families, and it was closed where the three families are implemented — the repository's
+pinning spec holds one command, one standard and one skill, and the gate's change cases run through
+the recipe family.
+
+S3 verifies something else entirely. D-048 put e2e in scope to cover the **HTTP seam**, and
+explicitly rejected "widening S3 to e2e-cover the whole release surface" on the grounds that
+re-asserting the rules through a browser "would re-verify what `packageReleaseGateHelpers.spec.ts`
+already proves, at a hundred times the runtime and with a much worse failure message". A seam test
+that seeded all three families would pay exactly that cost to re-prove exactly that.
+
+And the fixture is a **standard**, not a skill — so even read at its most literal, D-002's stated
+unacceptable case is not the one here. A standard-only package proves the join hydrates a real
+component at a real version across the wire, which is AC-23's whole claim.
+
+AC-21's `verified by` column says "S1 rules only; S2 re-checks its own", written before S3 existed.
+Read it as naming the sessions that carry the three-family obligation: S1 and S2. S3 does not.
+
+**Rejected.**
+
+- **Seeding a command and a skill into the e2e fixture as well** — honours D-002's letter, adds two
+  API seeds per test to a spec already measured as the slowest in the suite (D-053), and re-verifies
+  through a browser what a jest test proves in milliseconds. It would make the flake worse to prove
+  nothing new.
+- **Leaving the disagreement unrecorded** — a reader comparing D-002's constraint with the fixture
+  would find a violation and no argument, and would either "fix" the fixture or lose confidence in
+  the constraint. Both are worse than a paragraph.
+- **Weakening D-002 itself** — its rule is right where it applies, and it is the reason AC-21 is real
+  coverage rather than a skill-shaped accident.
+
+**Constrains implementation.** S1's pinning and gate suites keep the three-family fixture; nothing
+about them changes. A future seam test may seed whichever single family is cheapest for what it is
+proving, and must say which claim it is making. If the release write path ever grows a fourth family
+or stops treating the three uniformly, that is D-002's territory again, not this entry's.
+
+## D-055 — AC-25's proof rests on the query cache's staleness, and that is now written down
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-25`, `D-042`, `D-051`
+
+**Decision.** AC-25's test asserts `Version must be greater than 0.2.0`, and that sentence is
+**producible by two paths**: the drawer's client-side pre-check, and the server refusal travelling
+over the repaired wire. What separates them is that the client cannot hold `0.2.0` — its readiness is
+cached with `staleTime: 10 minutes` and `refetchOnWindowFocus: false` in
+`apps/frontend/src/shared/data/queryClient.ts`, so the two cuts made through the API behind the open
+form cannot reach it. That dependency is recorded here rather than left implicit.
+
+**Reasoning.** Found by the feature-boundary reconcile, and it is the kind of thing that is true,
+invisible, and quietly load-bearing. The test does fail if the repair regresses — without it the
+refusal never renders any sentence and `attemptRelease` times out waiting for one — so the criterion
+is sound today. But its *sharpness*, the fact that the sentence names a version the client never
+held, is guaranteed by a caching setting in a shared file that has nothing to do with releases.
+
+Someone lowering `staleTime`, or turning `refetchOnWindowFocus` on, would not be touching this
+feature and would have no reason to look here. The test would not start failing; it would start
+being able to pass for the wrong reason, which is worse than failing and is exactly the
+green-and-meaningless shape this log has refused throughout (D-027, D-028, D-032, D-047).
+
+**Rejected.**
+
+- **Asserting on something only the wire can produce, such as a distinct refusal code** — there is
+  none: D-012 deliberately collapsed lower, equal and lost-the-race into one code and one sentence,
+  and inventing a second now to make a test sharper would reverse a user-facing decision for a test's
+  convenience.
+- **Intercepting the network in the spec to prove the request was sent** — Playwright can do it, and
+  it would turn an end-to-end test into an assertion about traffic, which is the mock-shaped
+  confidence D-048 added this session to get away from.
+- **Leaving it unstated because the test passes** — the point of the entry is the future change, not
+  the present state.
+
+**Constrains implementation.** Anyone changing `staleTime` or `refetchOnWindowFocus` in
+`apps/frontend/src/shared/data/queryClient.ts` should know that AC-25's test loses its sharpness if
+the form's readiness can refresh mid-test. If that changes, the test needs a different way to keep
+the client's belief stale — not a looser assertion.
