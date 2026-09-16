@@ -11,6 +11,7 @@ import {
   createSpaceId,
   DiffService,
 } from '@packmind/types';
+import { mockInterface } from '@packmind/test-utils';
 import { StandardChangesApplier } from './StandardChangesApplier';
 
 describe('StandardChangesApplier', () => {
@@ -49,11 +50,7 @@ describe('StandardChangesApplier', () => {
   beforeEach(() => {
     diffService = new DiffService();
 
-    standardsPort = {
-      getLatestStandardVersion: jest.fn(),
-      getRulesByStandardId: jest.fn(),
-      updateStandard: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
 
     applier = new StandardChangesApplier(diffService, standardsPort);
   });

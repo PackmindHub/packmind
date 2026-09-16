@@ -11,6 +11,7 @@ import {
   createSpaceId,
   DiffService,
 } from '@packmind/types';
+import { mockInterface } from '@packmind/test-utils';
 import { SkillChangesApplier } from './SkillChangesApplier';
 
 describe('SkillChangesApplier', () => {
@@ -57,11 +58,7 @@ describe('SkillChangesApplier', () => {
   beforeEach(() => {
     diffService = new DiffService();
 
-    skillsPort = {
-      getLatestSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn(),
-      saveSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
 
     applier = new SkillChangesApplier(diffService, skillsPort);
   });
