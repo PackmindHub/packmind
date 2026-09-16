@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import { AddGitProviderUseCase } from './AddGitProviderUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import {
@@ -17,7 +18,7 @@ import {
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { gitProviderFactory } from '../../../../test';
-import { invalidInput, mockInterface, stubLogger } from '@packmind/test-utils';
+import { invalidInput, stubLogger } from '@packmind/test-utils';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
@@ -51,7 +52,7 @@ describe('AddGitProviderUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    accountsAdapter = mockInterface<IAccountsPort>();
+    accountsAdapter = mock<IAccountsPort>();
     accountsAdapter.getUserById.mockResolvedValue(memberUser);
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

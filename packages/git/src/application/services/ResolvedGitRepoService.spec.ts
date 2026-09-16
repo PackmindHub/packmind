@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import { ResolvedGitRepoService } from './ResolvedGitRepoService';
 import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 import { IGitRepo } from '../../domain/repositories/IGitRepo';
@@ -9,11 +10,10 @@ import {
 } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { GitProvider, GitProviderNotFoundError } from '@packmind/types';
 import { gitProviderFactory, gitRepoFactory } from '../../../test';
-import { stubLogger, mockInterface } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { instrumentComponents } from '@packmind/node-utils';
 
-const stubGitRepoInstance = (): jest.Mocked<IGitRepo> =>
-  mockInterface<IGitRepo>();
+const stubGitRepoInstance = (): jest.Mocked<IGitRepo> => mock<IGitRepo>();
 
 describe('ResolvedGitRepoService', () => {
   let gitProviderRepository: jest.Mocked<IGitProviderRepository>;
@@ -24,7 +24,7 @@ describe('ResolvedGitRepoService', () => {
   beforeEach(() => {
     provider = gitProviderFactory();
 
-    gitProviderRepository = mockInterface<IGitProviderRepository>();
+    gitProviderRepository = mock<IGitProviderRepository>();
     gitProviderRepository.findById.mockResolvedValue(provider);
 
     // A fresh instance per call, so "same instance" is a real assertion.

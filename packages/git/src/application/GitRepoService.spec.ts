@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { mock } from 'jest-mock-extended';
 import { GitRepoService } from './GitRepoService';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
 import { createOrganizationId, createUserId } from '@packmind/types';
@@ -19,7 +19,7 @@ describe('GitRepoService', () => {
   });
 
   beforeEach(() => {
-    mockGitRepoRepository = mockInterface<IGitRepoRepository>();
+    mockGitRepoRepository = mock<IGitRepoRepository>();
 
     gitRepoService = new GitRepoService(mockGitRepoRepository);
   });

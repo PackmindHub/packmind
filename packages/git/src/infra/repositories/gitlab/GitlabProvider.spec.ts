@@ -10,7 +10,7 @@ jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
-// than with mockInterface: only the verbs this suite drives are stubbed.
+// than with jest-mock-extended: only the verbs this suite drives are stubbed.
 const mockAxiosInstance = {
   get: jest.fn(),
   post: jest.fn(),

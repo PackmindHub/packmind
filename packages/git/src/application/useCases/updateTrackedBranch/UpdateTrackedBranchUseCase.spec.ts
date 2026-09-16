@@ -1,8 +1,9 @@
+import { mock } from 'jest-mock-extended';
 import {
   OrganizationAdminRequiredError,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { stubLogger, mockInterface } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -71,7 +72,7 @@ describe('UpdateTrackedBranchUseCase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
-    mockAccountsAdapter = mockInterface<IAccountsPort>();
+    mockAccountsAdapter = mock<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(user);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
   };
@@ -102,7 +103,7 @@ describe('UpdateTrackedBranchUseCase', () => {
       execute: jest.fn(),
     } as jest.Mocked<IFindOrCreateGitRepoUseCase>;
 
-    mockEventEmitter = mockInterface<PackmindEventEmitterService>();
+    mockEventEmitter = mock<PackmindEventEmitterService>();
 
     setupAccounts('admin');
     useCase = buildUseCase();

@@ -1,5 +1,6 @@
+import { mock } from 'jest-mock-extended';
 import { Cache } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
   GitRepo,
   createGitProviderId,
@@ -18,7 +19,7 @@ jest.mock('@packmind/node-utils', () => ({
   },
 }));
 
-const mockCacheInstance = mockInterface<Cache>();
+const mockCacheInstance = mock<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 const repositoryId = createGitRepoId('repo-1');
@@ -42,9 +43,9 @@ describe('CheckTrackedBranchExistsUseCase', () => {
   let checkBranchExists: jest.Mocked<CheckBranchExistsUseCase>;
 
   beforeEach(() => {
-    gitRepoService = mockInterface<GitRepoService>();
+    gitRepoService = mock<GitRepoService>();
     gitRepoService.findGitRepoById.mockResolvedValue(gitRepo);
-    checkBranchExists = mockInterface<CheckBranchExistsUseCase>();
+    checkBranchExists = mock<CheckBranchExistsUseCase>();
     checkBranchExists.execute.mockResolvedValue(true);
 
     MockedCache.getInstance.mockReturnValue(mockCacheInstance);

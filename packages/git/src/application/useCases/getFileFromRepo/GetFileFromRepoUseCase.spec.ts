@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import { GetFileFromRepoUseCase } from './GetFileFromRepoUseCase';
 import { IGitProviderRepository } from '../../../domain/repositories/IGitProviderRepository';
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
@@ -9,7 +10,7 @@ import {
   GitProviderNotFoundError,
   GitProviderVendors,
 } from '@packmind/types';
-import { stubLogger, mockInterface } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
   gitProviderFactory,
   gitRepoFactory as gitRepoEntityFactory,
@@ -34,9 +35,9 @@ describe('GetFileFromRepoUseCase', () => {
   });
 
   beforeEach(() => {
-    gitProviderRepository = mockInterface<IGitProviderRepository>();
+    gitProviderRepository = mock<IGitProviderRepository>();
 
-    mockGitRepoInstance = mockInterface<IGitRepo>();
+    mockGitRepoInstance = mock<IGitRepo>();
 
     gitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {

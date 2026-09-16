@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import {
   GitProvider,
   GitProviderId,
@@ -6,7 +7,7 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
-import { invalidInput, mockInterface } from '@packmind/test-utils';
+import { invalidInput } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
 
@@ -54,7 +55,7 @@ describe('ListAvailableReposUseCase', () => {
   } as GitProvider;
 
   beforeEach(() => {
-    mockGitProviderService = mockInterface<GitProviderService>();
+    mockGitProviderService = mock<GitProviderService>();
 
     useCase = new ListAvailableReposUseCase(mockGitProviderService);
   });

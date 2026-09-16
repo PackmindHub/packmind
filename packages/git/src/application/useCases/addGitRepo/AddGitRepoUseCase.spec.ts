@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import { AddGitRepoUseCase } from './AddGitRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
@@ -24,7 +25,7 @@ import {
 } from '@packmind/types';
 
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
-import { stubLogger, mockInterface } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { gitProviderFactory, gitRepoFactory } from '../../../../test';
 
@@ -76,7 +77,7 @@ describe('AddGitRepoUseCase', () => {
       slug: 'test-org',
     });
 
-    mockAccountsAdapter = mockInterface<IAccountsPort>();
+    mockAccountsAdapter = mock<IAccountsPort>();
     mockAccountsAdapter.getUserById.mockResolvedValue(adminUser);
     mockAccountsAdapter.getOrganizationById.mockResolvedValue(organization);
 

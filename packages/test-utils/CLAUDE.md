@@ -28,38 +28,52 @@ own — most of what a new spec needs already exists.
 | `randomIn` | pick a random value from a set, for factory defaults |
 | `stubLogger` | fully typed `PackmindLogger` stub |
 | `createMockInstance` | typed mock of a whole class |
-| `mockInterface` | typed mock of an interface — the counterpart for the types that have no class to walk |
 | `skipWhenRoot` | skip specs that cannot run as `root` (filesystem-permission tests) |
 | `src/repository/` | shared repository-test helpers |
 
 ## Mocking an interface
 
-Reach for `mockInterface<IGitRepo>()` — a port, a service reached through its type, anything
-structural — rather than an object literal cast with `as unknown as jest.Mocked<IGitRepo>`. The cast switches off the structural check the spec type check
-exists for: members the mock omits are invisible until the test blows up at runtime, and a value
-stubbed inside the literal (`findById: jest.fn().mockResolvedValue(…)`) is never compared to the
-contract, because a bare `jest.fn()` is typed `any`. `mockInterface` backs every member with a
-`jest.fn()` lazily, so the mock is complete by construction, and stubs are typed:
+For a type with no class to walk — a port, a service reached through its type, anything structural —
+use `mock<T>()` from **jest-mock-extended** (a root devDependency), not an object literal cast with
+`as unknown as jest.Mocked<T>`:
 
 ```ts
-const gitRepo = mockInterface<IGitRepo>();
+import { mock } from 'jest-mock-extended';
+
+const gitRepo = mock<IGitRepo>();
 gitRepo.getFileOnRepo.mockResolvedValue({ sha, content }); // checked against IGitRepo
+```
+
+The cast is what we are avoiding: it switches off the structural check the spec type check exists
+for. Members the mock omits are invisible until the test blows up at runtime, and a value stubbed
+inside the literal (`findById: jest.fn().mockResolvedValue(…)`) is never compared to the contract,
+because a bare `jest.fn()` is typed `any`. `mock<T>()` answers every member with a `jest.fn()`, so
+the mock is complete by construction, and it returns `MockProxy<T> & T`, which assigns to a
+`jest.Mocked<T>` variable — reaching for a member the interface does not declare is a compile error.
+
+Members can be seeded up front, and an implementation is checked against the signature where a
+`jest.fn()` is not:
+
+```ts
+const accounts = mock<IAccountsPort>({ getUserById: async () => user });
 ```
 
 A complete mock is a quiet one: a member nobody stubbed answers `undefined`, so the day the code
 under test starts calling one this spec never set up, the call goes through and the test may still
-pass — where a hand-written partial mock would have thrown `is not a function`. Pass
-`{ strict: true }` where that silence would hide something, and the call is refused by name instead:
+pass — where a hand-written partial mock would have thrown `is not a function`. Pass a
+`fallbackMockImplementation` where that silence would hide something:
 
 ```ts
-const gitRepo = mockInterface<IGitRepo>({}, { strict: true });
-gitRepo.commitFiles(files, 'message');
-// Error: mockInterface: 'commitFiles' was called but was never stubbed
+const gitRepo = mock<IGitRepo>(
+  {},
+  { fallbackMockImplementation: () => { throw new Error('not stubbed'); } },
+);
 ```
 
-The price is that every member the run reaches has to be stubbed, so it suits a spec asserting on a
-narrow interaction rather than one driving a whole use case. Note that `jest.resetAllMocks()` and
-`resetMocks` in a jest config drop the refusal along with every other implementation.
+Two limits worth knowing. A **data member** is answered with a `jest.fn()` too — `mock<AxiosInstance>().defaults`
+is a function standing where a value belongs, and nothing catches it at compile time — so a type
+whose shape is mostly data is better mocked by hand (see the axios literals in `packages/git`). And
+an axios instance is callable, which a mock proxy is not.
 
 `createTestDatasourceFixture` is the preferred shape for repository specs: `initialize()` in
 `beforeAll`, `cleanup()` in `afterEach`, `destroy()` in `afterAll`. Its own doc comment carries a

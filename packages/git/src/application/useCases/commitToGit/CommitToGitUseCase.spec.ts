@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import { CommitToGitUseCase } from './CommitToGitUseCase';
 import { GitCommitService } from '../../services/GitCommitService';
 import { IGitProviderRepository } from '../../../domain/repositories/IGitProviderRepository';
@@ -19,7 +20,7 @@ import {
   gitRepoFactory,
 } from '../../../../test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger, mockInterface } from '@packmind/test-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/types';
 
 describe('CommitToGitUseCase', () => {
@@ -31,13 +32,13 @@ describe('CommitToGitUseCase', () => {
   let mockGithubRepository: jest.Mocked<IGitRepo>;
 
   beforeEach(() => {
-    mockGitCommitService = mockInterface<GitCommitService>();
+    mockGitCommitService = mock<GitCommitService>();
 
-    mockGitProviderRepository = mockInterface<IGitProviderRepository>();
+    mockGitProviderRepository = mock<IGitProviderRepository>();
 
     mockLogger = stubLogger();
 
-    mockGithubRepository = mockInterface<IGitRepo>();
+    mockGithubRepository = mock<IGitRepo>();
     mockGithubRepository.listFilesInDirectories.mockResolvedValue([]);
 
     mockGitRepoFactory = {

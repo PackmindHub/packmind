@@ -12,5 +12,4 @@ export * from './logger/stubLogger';
 export * from './skipWhenRoot';
 export * from './repository';
 export * from './createMockInstance';
-export * from './mockInterface';
 export * from './invalidInput';

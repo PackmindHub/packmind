@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import {
   GitProvider,
   GitProviderId,
@@ -5,7 +6,7 @@ import {
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
-import { invalidInput, mockInterface } from '@packmind/test-utils';
+import { invalidInput } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { CheckBranchExistsUseCase } from './CheckBranchExistsUseCase';
 
@@ -42,7 +43,7 @@ describe('CheckBranchExistsUseCase', () => {
   const args = { owner: 'acme', repo: 'repo-a', branch: 'main' };
 
   beforeEach(() => {
-    mockGitProviderService = mockInterface<GitProviderService>();
+    mockGitProviderService = mock<GitProviderService>();
 
     useCase = new CheckBranchExistsUseCase(mockGitProviderService);
   });
