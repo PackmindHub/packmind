@@ -1,0 +1,10 @@
+{
+  "unit_id": "U-019",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/doc/concepts/packages-management.mdx",
+    "CHANGELOG.MD"
+  ],
+  "gated_by": "sweep",
+  "$comment_no_exit_criterion": "Deliberate, and recorded as D-047. apps/doc declares only a `dev` target — no test, lint or build — and CHANGELOG.MD is prose at the repository root, so there is no assertion to name. Gated with `agent-gate.mjs sweep` (autofix + repo-wide lint/build + standards), never with a criterion borrowed from the feature's existing suite: that would pass green while judging the unit by tests it did not write. Running `agent-gate.mjs unit` against this spec will halt, correctly."
+}

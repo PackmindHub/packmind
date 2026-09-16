@@ -2404,3 +2404,66 @@ either case had failed, that would have been a real defect in the gate rather th
 verification gap, and it would have halted as its own unit with its own criterion. Do not
 add further cases to close this; the composition is now covered at the two points D-008
 makes non-obvious.
+
+## D-047 — The documentation unit is gated by `sweep`, because `apps/doc` has no test to name
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-16`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-023`, charter `In scope`
+
+**Decision.** The unit that writes `apps/doc/concepts/packages-management.mdx` and the
+`CHANGELOG.MD` entry carries **no exit criterion**, and is gated with
+`node scripts/agent-gate.mjs sweep` rather than `unit`. Its `units/U-019.json` records
+`gated_by: "sweep"` and no `exit_criterion`, so the absence is a declared fact rather than
+a missing field.
+
+**Reasoning.** The gate requires an exit criterion that runs assertions — it reads jest's
+`Tests:` line and fails a command that exited 0 having asserted nothing, precisely so a
+unit cannot pass by doing nothing. `apps/doc` declares only a `dev` target: no test, no
+lint, no build (see `apps/CLAUDE.md`). `CHANGELOG.MD` is prose at the repository root. So
+there is no assertion to name, and the pipeline's usual answer — split a characterization
+test out first, or merge into an adjacent unit that has a criterion — has nothing to reach
+for. There is no adjacent code unit left in this feature, and inventing one would mean
+writing a test that reads an `.mdx` file to check it contains a heading.
+
+`sweep` mode is the honest gate for this shape of work. It runs autofix, repo-wide
+lint/build and the Packmind standards check, with no scope check and no named test, on the
+stated basis that repo-wide green is the whole instruction. That is exactly the guarantee
+available here: the documentation cannot be machine-checked for truthfulness, but it can be
+checked for not breaking the repository, and it will be read by a person before it ships.
+
+The reason this is written down rather than quietly done: the tempting alternative is to
+give the docs unit a criterion borrowed from elsewhere — `nx test deployments
+--testNamePattern='PackageRelease'`, say — which passes, produces a green gate, and judges
+the unit by tests it did not write and cannot affect. That is the "a unit that does nothing
+is green" failure the criterion rule exists to prevent, and it would be indistinguishable
+in the metrics from a real pass. Recording the absence keeps the audit trail honest and
+keeps the docs unit out of the first-attempt pass-rate signal, which is about executors'
+capability on gated work.
+
+*What verifies the prose instead.* A person. The charter's `Done` bar is every AC having a
+passing named test, and no AC covers documentation — docs are a charter in-scope
+deliverable, not a criterion. This entry does not lower that bar; it records that this one
+deliverable sits beside it.
+
+**Rejected.**
+
+- Borrowing a criterion from the feature's existing suite — green, meaningless, and it
+  pollutes the pass-rate metric with a unit whose work no test touches. See above.
+- Writing a test that asserts the `.mdx` contains particular headings — couples the prose
+  to a test that must be edited whenever the wording improves, and proves that a string is
+  present rather than that the documentation is true or useful.
+- Adding a `lint` target to `apps/doc` so there is something to run — a change to project
+  configuration, which the gate treats as a guardrail, made to satisfy a bookkeeping need
+  rather than a documentation one.
+- Having the orchestrator write the documentation itself, since no gate applies — the
+  orchestrator does not write files outside its own bookkeeping, and "there is no gate" is
+  an argument for recording the gap, not for taking the work in-house.
+
+**Constrains implementation.** Gate this unit with `agent-gate.mjs sweep`. Record it in
+`records.jsonl` like any other unit, with `self_check.command` naming the sweep so the
+record does not imply a test ran. Any future feature whose only remaining deliverable is
+documentation follows this entry rather than re-deciding it.

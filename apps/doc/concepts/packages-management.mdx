@@ -86,6 +86,46 @@ Learn more in the [Distribution documentation](/governance/distribution).
 
 ## Package Versions
 
-Packages are dynamic collections without their own versions. When you distribute a package, it always includes the latest version of each command, standard, and skill it contains.
+A package can be released under a version. A **release** is an immutable snapshot of the package: it records the package's name and description, and pins the exact version of every command, standard, and skill the package contains at the moment you create it. Nothing changes a release afterwards—publishing a newer version of a component, renaming the package, or removing a component leaves it untouched.
 
-To see which repositories have outdated versions, check the [distribution overview](/governance/distribution).
+Open a package and its header shows the current version beside the name, or **Not released yet** if it has never been released.
+
+<Note>
+  **Distribution always sends current content** — A release names a state, it
+  doesn't change what gets distributed. When you distribute a package or install
+  it with the CLI, it always includes the latest version of each command,
+  standard, and skill it contains. To see which repositories have outdated
+  versions, check the [distribution overview](/governance/distribution).
+</Note>
+
+### Creating a Release
+
+1. Navigate to **Packages** and select your package
+2. Click **Create a release**, beside the version in the package header
+3. Enter a version number as `X.Y.Z`, or click one of the three suggested increments
+4. Submit the form
+
+The field is pre-filled with the next patch version, and only the three suggested increments are accepted. After `0.1.0`, those are `0.1.1`, `0.2.0`, and `1.0.0`. A package's first release is pre-filled with `0.1.0`.
+
+A version that isn't accepted stays in the field so you can correct it. A version that isn't written as `X.Y.Z` is refused with `Version must follow X.Y.Z`, and a version lower than or equal to the current one with `Version must be greater than 1.2.0`, naming the current version. Suffixes such as `1.2.0-beta-2` aren't accepted.
+
+Any member of your organization can create a release.
+
+### When You Can Create a Release
+
+**Create a release** is available once the package has changed since its last release. Any one of these counts as a change:
+
+- A command, standard, or skill in the package has a newer version than the release pinned
+- The package's name or description was edited
+- A component was added to or removed from the package
+
+Otherwise, the reason appears beside the action:
+
+- `Add at least one component` — the package contains no components
+- `Nothing has changed since 0.1.0` — the package is identical to its last release, naming that version
+
+When a component pinned by the last release has a newer version available, the package header says so for each one: the component's name, the version the release pinned, and the version available now.
+
+### Release History
+
+Select the version in the package header to open the release history, which lists every release, newest first. Select a release to see exactly what that version pinned, including components deleted since—at the version the release pinned.
