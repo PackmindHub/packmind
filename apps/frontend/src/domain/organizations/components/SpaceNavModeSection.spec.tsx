@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import type { Mock } from 'vitest';
-import { SpaceNavModeSwitch } from './SpaceNavModeSwitch';
+import { SpaceNavModeSection } from './SpaceNavModeSection';
 import { SpaceNavModeProvider, useSpaceNavMode } from './SpaceNavModeContext';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
@@ -24,18 +24,18 @@ function ModeProbe() {
 
 /*
  * The email reaches the provider as well as the auth mock, the way the
- * protected layout passes it: the flag decides both whether the switch shows
+ * protected layout passes it: the flag decides both whether the section shows
  * and which navigation the person starts on, so a test that mocked only one of
  * the two would describe a state that cannot happen.
  */
-function renderSwitch(userEmail: string, url = '/') {
+function renderSection(userEmail: string, url = '/') {
   (useAuthContext as Mock).mockReturnValue({ user: { email: userEmail } });
 
   return render(
     <UIProvider>
       <MemoryRouter initialEntries={[url]}>
         <SpaceNavModeProvider userEmail={userEmail}>
-          <SpaceNavModeSwitch />
+          <SpaceNavModeSection />
           <ModeProbe />
         </SpaceNavModeProvider>
       </MemoryRouter>
@@ -43,61 +43,73 @@ function renderSwitch(userEmail: string, url = '/') {
   );
 }
 
-describe('SpaceNavModeSwitch', () => {
+describe('SpaceNavModeSection', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
   describe('when the user is outside the flag audience', () => {
     it('shows nothing', () => {
-      renderSwitch(OUTSIDE_BETA);
+      renderSection(OUTSIDE_BETA);
 
-      expect(
-        screen.queryByLabelText('Use the new navigation'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('New navigation')).not.toBeInTheDocument();
     });
 
     it('leaves them on the current navigation', () => {
-      renderSwitch(OUTSIDE_BETA);
+      renderSection(OUTSIDE_BETA);
 
       expect(screen.getByTestId('mode')).toHaveTextContent('today');
     });
 
     it('still honours a pinned demo link, so the mode is not gated', () => {
-      renderSwitch(OUTSIDE_BETA, '/?nav=plugin-first');
+      renderSection(OUTSIDE_BETA, '/?nav=plugin-first');
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
   });
 
   describe('when the user is inside the flag audience', () => {
-    it('starts on, since the audience gets the new navigation by default', () => {
-      renderSwitch(IN_BETA);
+    it('names itself, since the profile page holds more than one section', () => {
+      renderSection(IN_BETA);
 
-      expect(screen.getByLabelText('Use the new navigation')).toBeChecked();
+      expect(
+        screen.getByRole('heading', { name: 'Navigation' }),
+      ).toBeInTheDocument();
+    });
+
+    it('says the choice is held by this browser', () => {
+      renderSection(IN_BETA);
+
+      expect(screen.getByText(/this browser/)).toBeInTheDocument();
+    });
+
+    it('starts on, since the audience gets the new navigation by default', () => {
+      renderSection(IN_BETA);
+
+      expect(screen.getByLabelText('New navigation')).toBeChecked();
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
 
     it('flips the whole layout back to the current navigation', async () => {
-      renderSwitch(IN_BETA);
+      renderSection(IN_BETA);
 
-      await userEvent.click(screen.getByLabelText('Use the new navigation'));
+      await userEvent.click(screen.getByLabelText('New navigation'));
 
       expect(screen.getByTestId('mode')).toHaveTextContent('today');
     });
 
     it('flips on again', async () => {
-      renderSwitch(IN_BETA, '/?nav=today');
+      renderSection(IN_BETA, '/?nav=today');
 
-      await userEvent.click(screen.getByLabelText('Use the new navigation'));
+      await userEvent.click(screen.getByLabelText('New navigation'));
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
 
     it('remembers the choice for the next visit', async () => {
-      renderSwitch(IN_BETA);
+      renderSection(IN_BETA);
 
-      await userEvent.click(screen.getByLabelText('Use the new navigation'));
+      await userEvent.click(screen.getByLabelText('New navigation'));
 
       expect(localStorage.getItem(CHOICE_KEY)).toBe('today');
     });
@@ -105,21 +117,21 @@ describe('SpaceNavModeSwitch', () => {
     it('reads back a stored choice', () => {
       localStorage.setItem(CHOICE_KEY, 'today');
 
-      renderSwitch(IN_BETA);
+      renderSection(IN_BETA);
 
-      expect(screen.getByLabelText('Use the new navigation')).not.toBeChecked();
+      expect(screen.getByLabelText('New navigation')).not.toBeChecked();
     });
 
     it('lets the URL win over what is stored', () => {
       localStorage.setItem(CHOICE_KEY, 'today');
 
-      renderSwitch(IN_BETA, '/?nav=plugin-first');
+      renderSection(IN_BETA, '/?nav=plugin-first');
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
 
     it('ignores a mode it does not know', () => {
-      renderSwitch(IN_BETA, '/?nav=whatever');
+      renderSection(IN_BETA, '/?nav=whatever');
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
@@ -128,9 +140,9 @@ describe('SpaceNavModeSwitch', () => {
       it('ignores it, since nobody chose it', () => {
         localStorage.setItem('space-nav-mode', 'today');
 
-        renderSwitch(IN_BETA);
+        renderSection(IN_BETA);
 
-        expect(screen.getByLabelText('Use the new navigation')).toBeChecked();
+        expect(screen.getByLabelText('New navigation')).toBeChecked();
       });
     });
   });
