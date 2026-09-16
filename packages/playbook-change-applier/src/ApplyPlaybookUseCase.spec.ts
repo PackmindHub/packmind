@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   ApplyPlaybookCommand,
   ApplyPlaybookResponse,
@@ -83,54 +83,49 @@ describe('ApplyPlaybookUseCase', () => {
   };
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>({
+      getUserById: async () => user,
+      getOrganizationById: async () => organization,
+    });
 
-    skillsPort = {
-      uploadSkill: jest.fn().mockResolvedValue({
+    skillsPort = mockInterface<ISkillsPort>({
+      uploadSkill: async () => ({
         skill: { id: createSkillId(uuidv4()), slug: 'my-skill' } as Skill,
         versionCreated: true,
       }),
-      hardDeleteSkill: jest.fn().mockResolvedValue(undefined),
-      hardDeleteSkillVersion: jest.fn().mockResolvedValue(undefined),
-      getLatestSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-      saveSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+      hardDeleteSkill: async () => undefined,
+      hardDeleteSkillVersion: async () => undefined,
+      getSkillFiles: async () => [],
+    });
 
-    standardsPort = {
-      createStandardWithExamples: jest.fn().mockResolvedValue({
-        id: createStandardId(uuidv4()),
-        slug: 'my-standard',
-      } as Standard),
-      hardDeleteStandard: jest.fn().mockResolvedValue(undefined),
-      hardDeleteStandardVersion: jest.fn().mockResolvedValue(undefined),
-      getLatestStandardVersion: jest.fn(),
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
-      updateStandard: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>({
+      createStandardWithExamples: async () =>
+        ({
+          id: createStandardId(uuidv4()),
+          slug: 'my-standard',
+        }) as Standard,
+      hardDeleteStandard: async () => undefined,
+      hardDeleteStandardVersion: async () => undefined,
+      getRulesByStandardId: async () => [],
+    });
 
-    commandsPort = {
-      captureCommand: jest.fn().mockResolvedValue({
-        id: createCommandId(uuidv4()),
-        slug: 'my-command',
-      } as Command),
-      hardDeleteCommand: jest.fn().mockResolvedValue(undefined),
-      hardDeleteCommandVersion: jest.fn().mockResolvedValue(undefined),
-      getCommandByIdInternal: jest.fn(),
-      getCommandVersion: jest.fn(),
-      updateCommandFromUI: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>({
+      captureCommand: async () =>
+        ({
+          id: createCommandId(uuidv4()),
+          slug: 'my-command',
+        }) as Command,
+      hardDeleteCommand: async () => undefined,
+      hardDeleteCommandVersion: async () => undefined,
+    });
 
-    spacesPort = {
-      getSpaceById: jest.fn().mockImplementation((id) => {
-        if (id === spaceId) return Promise.resolve(space);
-        if (id === spaceId2) return Promise.resolve(space2);
-        return Promise.resolve(null);
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>({
+      getSpaceById: async (id) => {
+        if (id === spaceId) return space;
+        if (id === spaceId2) return space2;
+        return null;
+      },
+    });
 
     stubbedLogger = stubLogger();
 
