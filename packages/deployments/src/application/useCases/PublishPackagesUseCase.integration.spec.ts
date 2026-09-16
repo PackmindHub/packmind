@@ -48,15 +48,18 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     mockLogger = stubLogger();
 
     mockCommandsPort = mockInterface<ICommandsPort>();
+    mockCommandsPort.getLatestCommandVersions.mockResolvedValue([]);
 
     mockStandardsPort = mockInterface<IStandardsPort>();
+    mockStandardsPort.getLatestStandardVersions.mockResolvedValue([]);
 
     mockSkillsPort = mockInterface<ISkillsPort>();
+    mockSkillsPort.getLatestSkillVersions.mockResolvedValue([]);
 
     mockDeploymentPort = mockInterface<IDeploymentPort>();
 
     mockPackageService = {
-      findById: jest.fn(),
+      getPackagesByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     mockDistributedPackageRepository =
@@ -109,21 +112,25 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         renderModes: [],
       });
 
-      mockPackageService.findById.mockResolvedValue(pkg);
-      mockCommandsPort.listCommandVersions.mockResolvedValue([
+      mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+        pkg,
+      ]);
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         {
           id: createCommandVersionId(uuidv4()),
           recipeId,
           version: 1,
-        } as Awaited<ReturnType<ICommandsPort['listCommandVersions']>>[0],
+        } as Awaited<ReturnType<ICommandsPort['getLatestCommandVersions']>>[0],
       ]);
-      mockStandardsPort.getLatestStandardVersion.mockResolvedValue({
-        id: createStandardVersionId(uuidv4()),
-        standardId,
-        version: 1,
-      } as NonNullable<
-        Awaited<ReturnType<IStandardsPort['getLatestStandardVersion']>>
-      >);
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
+        {
+          id: createStandardVersionId(uuidv4()),
+          standardId,
+          version: 1,
+        } as Awaited<
+          ReturnType<IStandardsPort['getLatestStandardVersions']>
+        >[0],
+      ]);
 
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [distribution],

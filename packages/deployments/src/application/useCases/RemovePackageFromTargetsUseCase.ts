@@ -75,7 +75,10 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
   async execute(
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse> {
-    const pkg = await this.packageService.findById(command.packageId);
+    const pkg = await this.packageService.findByIdInOrganization(
+      command.packageId,
+      command.organizationId as OrganizationId,
+    );
     if (!pkg) {
       throw new PackageNotFoundError(command.packageId);
     }

@@ -99,7 +99,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
   beforeEach(() => {
     mockPackageService = {
-      findById: jest.fn(),
+      findByIdInOrganization: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     mockTargetService = {
@@ -159,13 +159,24 @@ describe('RemovePackageFromTargetsUseCase', () => {
       targetIds,
     };
 
-    beforeEach(() => {
-      mockPackageService.findById.mockResolvedValue(null);
+    beforeEach(async () => {
+      mockPackageService.findByIdInOrganization.mockResolvedValue(null);
+
+      await useCase.execute(command).catch(() => undefined);
     });
 
     it('throws PackageNotFoundError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         PackageNotFoundError,
+      );
+    });
+
+    // A package outside the caller's organization resolves to null just like
+    // an unknown one, so the caller cannot tell the two apart.
+    it('scopes the lookup to the caller organization', () => {
+      expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+        packageId,
+        organizationId,
       );
     });
   });
@@ -180,7 +191,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockRejectedValue(
           new TargetNotFoundError(targetIds[0]),
         );
@@ -202,7 +215,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockRejectedValue(
           new TargetNotFoundError(targetIds[1]),
         );
@@ -224,7 +239,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockResolvedValue([
           mockTarget,
           mockTarget2,

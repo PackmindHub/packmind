@@ -2,11 +2,13 @@ import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  createOrganizationId,
   createPackageId,
   createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
+  OrganizationId,
   Package,
   PackageSlugInSpace,
   SpaceId,
@@ -14,6 +16,8 @@ import {
   StandardId,
 } from '@packmind/types';
 import { StandardSchema, standardsSchemas } from '@packmind/standards';
+import { SpaceSchema } from '@packmind/spaces';
+import { spaceFactory } from '@packmind/spaces/test';
 import { GitCommitSchema } from '@packmind/git';
 
 import { PackageRepository } from './PackageRepository';
@@ -37,6 +41,7 @@ describe('PackageRepository', () => {
   const fixture = createTestDatasourceFixture([
     GitCommitSchema,
     ...standardsSchemas,
+    SpaceSchema,
     PackageSchema,
     PackageSkillsSchema,
     PackageStandardsSchema,
@@ -189,6 +194,237 @@ describe('PackageRepository', () => {
 
       const { updatedAt } = await timestamps();
       expect(updatedAt).toBeGreaterThan(SEEDED_AT.getTime());
+    });
+  });
+
+  describe('findByIds', () => {
+    const linkCommand = async (pkgId: Package['id'], commandId: string) =>
+      fixture.datasource
+        .getRepository(PackageCommandsSchema)
+        .save({ package_id: pkgId, recipe_id: commandId });
+
+    const linkSkill = async (pkgId: Package['id'], skillId: string) =>
+      fixture.datasource
+        .getRepository(PackageSkillsSchema)
+        .save({ package_id: pkgId, skill_id: skillId });
+
+    describe('when several packages are requested', () => {
+      let packageInA: Awaited<ReturnType<typeof savePackage>>;
+      let packageInB: Awaited<ReturnType<typeof savePackage>>;
+      let commandId: string;
+      let skillId: string;
+      let standardInA: Awaited<ReturnType<typeof saveStandard>>;
+      let result: Package[];
+
+      beforeEach(async () => {
+        packageInA = await savePackage('frontend-pack', spaceAId);
+        packageInB = await savePackage('backend-pack', spaceBId);
+        commandId = uuidv4();
+        skillId = createSkillId(uuidv4());
+        standardInA = await saveStandard('standard-a', spaceAId);
+
+        await linkCommand(packageInA.id, commandId);
+        await linkSkill(packageInA.id, skillId);
+        await linkStandard(packageInA.id, standardInA.id);
+
+        result = await repository.findByIds([packageInA.id, packageInB.id]);
+      });
+
+      it('returns both packages', () => {
+        expect(result.map((pkg) => pkg.slug).sort()).toEqual([
+          'backend-pack',
+          'frontend-pack',
+        ]);
+      });
+
+      it('fills the command ids of each package', () => {
+        expect(result.find((pkg) => pkg.id === packageInA.id)?.recipes).toEqual(
+          [commandId],
+        );
+      });
+
+      it('fills the standard ids of each package', () => {
+        expect(
+          result.find((pkg) => pkg.id === packageInA.id)?.standards,
+        ).toEqual([standardInA.id]);
+      });
+
+      it('fills the skill ids of each package', () => {
+        expect(result.find((pkg) => pkg.id === packageInA.id)?.skills).toEqual([
+          skillId,
+        ]);
+      });
+
+      it('leaves a package without components with empty id arrays', () => {
+        expect(result.find((pkg) => pkg.id === packageInB.id)).toEqual(
+          expect.objectContaining({
+            recipes: [],
+            standards: [],
+            skills: [],
+          }),
+        );
+      });
+
+      it('reads the artifact ids of every package in one query', async () => {
+        const spy = countQueries();
+        await repository.findByIds([packageInA.id, packageInB.id]);
+        // One round trip for the packages, one for the three junction tables,
+        // whatever the package count.
+        expect(spy).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when a package holds several commands and standards', () => {
+      it('lists each id exactly once', async () => {
+        const pkg = await savePackage('frontend-pack', spaceAId);
+        const commandIds = [uuidv4(), uuidv4()].sort();
+        const standardA = await saveStandard('standard-a', spaceAId);
+        const standardB = await saveStandard('standard-b', spaceAId);
+        for (const commandId of commandIds) {
+          await linkCommand(pkg.id, commandId);
+        }
+        await linkStandard(pkg.id, standardA.id);
+        await linkStandard(pkg.id, standardB.id);
+
+        const [result] = await repository.findByIds([pkg.id]);
+
+        // The three joins multiply rows per package before aggregation; this
+        // checks the aggregate collapses them back.
+        expect({
+          recipes: [...result.recipes].sort(),
+          standards: [...result.standards].sort(),
+        }).toEqual({
+          recipes: commandIds,
+          standards: [standardA.id, standardB.id].sort(),
+        });
+      });
+    });
+
+    describe('when a requested package does not exist', () => {
+      it('omits it instead of throwing', async () => {
+        const known = await savePackage('frontend-pack', spaceAId);
+
+        const result = await repository.findByIds([
+          known.id,
+          createPackageId(uuidv4()),
+        ]);
+
+        expect(result.map((pkg) => pkg.id)).toEqual([known.id]);
+      });
+    });
+
+    describe('when a package was soft deleted', () => {
+      it('excludes it', async () => {
+        const pkg = await savePackage('frontend-pack', spaceAId);
+        await packageRepo.softDelete(pkg.id);
+
+        expect(await repository.findByIds([pkg.id])).toEqual([]);
+      });
+    });
+
+    describe('when no id is given', () => {
+      it('returns no package without querying', async () => {
+        const spy = countQueries();
+        await repository.findByIds([]);
+        expect(spy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('findByIdsInOrganization', () => {
+    const orgAId = createOrganizationId(uuidv4());
+    const orgBId = createOrganizationId(uuidv4());
+
+    const saveSpace = async (
+      spaceId: SpaceId,
+      organizationId: OrganizationId,
+      slug: string,
+    ) =>
+      fixture.datasource
+        .getRepository(SpaceSchema)
+        .save(spaceFactory({ id: spaceId, slug, organizationId }));
+
+    beforeEach(async () => {
+      await saveSpace(spaceAId, orgAId, 'space-a');
+      await saveSpace(spaceBId, orgBId, 'space-b');
+    });
+
+    describe('when the package belongs to the organization', () => {
+      let owned: Awaited<ReturnType<typeof savePackage>>;
+      let standardInA: Awaited<ReturnType<typeof saveStandard>>;
+      let result: Package[];
+
+      beforeEach(async () => {
+        owned = await savePackage('frontend-pack', spaceAId);
+        standardInA = await saveStandard('standard-a', spaceAId);
+        await linkStandard(owned.id, standardInA.id);
+
+        result = await repository.findByIdsInOrganization([owned.id], orgAId);
+      });
+
+      it('returns it', () => {
+        expect(result.map((pkg) => pkg.id)).toEqual([owned.id]);
+      });
+
+      it('fills its artifact ids like the unscoped lookup does', () => {
+        expect(result[0].standards).toEqual([standardInA.id]);
+      });
+    });
+
+    describe('when the package belongs to another organization', () => {
+      it('returns nothing', async () => {
+        const foreign = await savePackage('backend-pack', spaceBId);
+
+        expect(
+          await repository.findByIdsInOrganization([foreign.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when ids from two organizations are requested together', () => {
+      it('keeps only the caller organization package', async () => {
+        const owned = await savePackage('frontend-pack', spaceAId);
+        const foreign = await savePackage('backend-pack', spaceBId);
+
+        const result = await repository.findByIdsInOrganization(
+          [owned.id, foreign.id],
+          orgAId,
+        );
+
+        expect(result.map((pkg) => pkg.id)).toEqual([owned.id]);
+      });
+    });
+
+    describe('when the package space has no row', () => {
+      it('returns nothing, since no organization owns it', async () => {
+        const orphan = await savePackage(
+          'orphan-pack',
+          createSpaceId(uuidv4()),
+        );
+
+        expect(
+          await repository.findByIdsInOrganization([orphan.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when the package was soft deleted', () => {
+      it('excludes it', async () => {
+        const pkg = await savePackage('frontend-pack', spaceAId);
+        await packageRepo.softDelete(pkg.id);
+
+        expect(
+          await repository.findByIdsInOrganization([pkg.id], orgAId),
+        ).toEqual([]);
+      });
+    });
+
+    describe('when no id is given', () => {
+      it('returns no package without querying', async () => {
+        const spy = countQueries();
+        await repository.findByIdsInOrganization([], orgAId);
+        expect(spy).not.toHaveBeenCalled();
+      });
     });
   });
 

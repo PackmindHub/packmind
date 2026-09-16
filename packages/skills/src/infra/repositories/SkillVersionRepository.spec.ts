@@ -10,10 +10,10 @@ import { SkillVersionRepository } from './SkillVersionRepository';
 import { SkillRepository } from './SkillRepository';
 
 describe('SkillVersionRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    SkillSchema,
-    SkillVersionSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [SkillSchema, SkillVersionSchema],
+    { recordQueries: true },
+  );
 
   let skillVersionRepository: SkillVersionRepository;
   let skillRepository: SkillRepository;
@@ -136,6 +136,31 @@ describe('SkillVersionRepository', () => {
         );
 
         expect(latestVersion?.version).toBe(1);
+      });
+    });
+
+    describe('when a skill has several versions', () => {
+      beforeEach(async () => {
+        const skill = skillFactory();
+        await skillRepository.add(skill);
+        await skillVersionRepository.add(
+          skillVersionFactory({ skillId: skill.id, version: 1 }),
+        );
+        await skillVersionRepository.add(
+          skillVersionFactory({ skillId: skill.id, version: 2 }),
+        );
+        await skillVersionRepository.add(
+          skillVersionFactory({ skillId: skill.id, version: 3 }),
+        );
+
+        fixture.queries.reset();
+        await skillVersionRepository.findLatestBySkillId(skill.id);
+      });
+
+      it('fetches a single row instead of the whole history', () => {
+        expect(
+          fixture.queries.countMatching(/from "skill_versions"[\s\S]*limit 1/i),
+        ).toBe(1);
       });
     });
   });

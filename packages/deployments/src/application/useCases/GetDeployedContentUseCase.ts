@@ -76,25 +76,18 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     }
 
     // Step 4: Fetch deployed versions
-    const [standardVersions, recipeVersions, activeSkillVersions] =
-      await Promise.all([
-        this.distributionRepository.findActiveStandardVersionsByTarget(
-          command.organization.id,
-          target.id,
-        ),
-        this.distributionRepository.findActiveCommandVersionsByTarget(
-          command.organization.id,
-          target.id,
-        ),
-        this.distributionRepository.findActiveSkillVersionsByTarget(
-          command.organization.id,
-          target.id,
-        ),
-      ]);
+    const {
+      standardVersions,
+      commandVersions,
+      skillVersions: activeSkillVersions,
+    } = await this.distributionRepository.findActiveVersionsByTarget(
+      command.organization.id,
+      target.id,
+    );
 
     this.logger.info('Fetched deployed versions', {
       standardCount: standardVersions.length,
-      recipeCount: recipeVersions.length,
+      commandCount: commandVersions.length,
       skillCount: activeSkillVersions.length,
     });
 
@@ -116,7 +109,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
 
     // Step 7: Render artifacts for coding agents
     const fileUpdates = await this.codingAgentPort.deployArtifactsForAgents({
-      recipeVersions,
+      recipeVersions: commandVersions,
       standardVersions: standardVersionsWithRules,
       skillVersions,
       codingAgents,
@@ -139,7 +132,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       const allStandards = packages.flatMap((pkg) => pkg.standards);
       const allSkills = packages.flatMap((pkg) => pkg.skills);
 
-      const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
+      const commands = [...new Map(allCommands.map((c) => [c.id, c])).values()];
       const standards = [
         ...new Map(allStandards.map((s) => [s.id, s])).values(),
       ];
@@ -151,12 +144,12 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       const skillPackageIdMap = new Map<string, string[]>();
 
       for (const pkg of packages) {
-        for (const recipe of pkg.recipes) {
-          const existing = commandPackageIdMap.get(recipe.id as string);
+        for (const command of pkg.recipes) {
+          const existing = commandPackageIdMap.get(command.id as string);
           if (existing) {
             existing.push(pkg.id as string);
           } else {
-            commandPackageIdMap.set(recipe.id as string, [pkg.id as string]);
+            commandPackageIdMap.set(command.id as string, [pkg.id as string]);
           }
         }
         for (const standard of pkg.standards) {
@@ -180,10 +173,10 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       const artifactMetadata = buildArtifactMetadataMap({
         recipes: {
           spaceIdMap: new Map(
-            recipes.map((r) => [r.id as string, r.spaceId as string]),
+            commands.map((c) => [c.id as string, c.spaceId as string]),
           ),
           packageIdMap: commandPackageIdMap,
-          versions: recipeVersions,
+          versions: commandVersions,
         },
         standards: {
           spaceIdMap: new Map(

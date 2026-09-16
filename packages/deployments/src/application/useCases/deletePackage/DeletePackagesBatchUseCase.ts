@@ -41,7 +41,11 @@ export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
 
     try {
       for (const packageId of packageIds) {
-        const existingPackage = await this.packageService.findById(packageId);
+        const existingPackage =
+          await this.packageService.findByIdInOrganization(
+            packageId,
+            createOrganizationId(organizationId),
+          );
 
         if (!existingPackage) {
           this.logger.error('Package not found', { packageId });

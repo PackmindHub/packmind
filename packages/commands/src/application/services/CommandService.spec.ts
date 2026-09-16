@@ -32,6 +32,7 @@ describe('RecipeService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -50,7 +51,8 @@ describe('RecipeService', () => {
       restoreById: jest.fn(),
       hardDeleteById: jest.fn(),
       findByCommandId: jest.fn(),
-      findLatestByCommandId: jest.fn(),
+      findLatestByCommandIds: jest.fn(),
+      findByIds: jest.fn(),
       findByCommandIdAndVersion: jest.fn(),
     };
 

@@ -322,14 +322,6 @@ export class StandardsAdapter
       .getLatestRulesByStandardId(id);
   }
 
-  getLatestStandardVersionsWithRules(
-    standardIds: StandardId[],
-  ): Promise<StandardVersion[]> {
-    return this.services
-      .getStandardVersionService()
-      .getLatestVersionsWithRulesByStandardIds(standardIds);
-  }
-
   getRulesByStandardId(id: StandardId): Promise<Rule[]> {
     return this._getRulesByStandardId.getRulesByStandardId(id);
   }
@@ -358,10 +350,26 @@ export class StandardsAdapter
     return this._getStandardVersionById.getStandardVersionById(versionId);
   }
 
+  getStandardVersionsByIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<StandardVersion[]> {
+    return this.services
+      .getStandardVersionService()
+      .getStandardVersionsByIds(standardVersionIds);
+  }
+
   getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
     return this._getLatestStandardVersion.getLatestStandardVersion(standardId);
+  }
+
+  getLatestStandardVersions(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    return this.services
+      .getStandardVersionService()
+      .getLatestStandardVersions(standardIds);
   }
 
   getStandardVersionByNumber(

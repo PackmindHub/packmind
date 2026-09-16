@@ -130,7 +130,7 @@ export class TargetResolutionService {
   }
 
   /**
-   * Finds previously deployed versions for all artifact types (standards, recipes, skills)
+   * Finds previously deployed versions for all artifact types (standards, commands, skills)
    * by resolving a target from git info and querying distribution history.
    */
   async findPreviouslyDeployedVersions(
@@ -142,7 +142,7 @@ export class TargetResolutionService {
     currentPackageIds: PackageId[],
   ): Promise<{
     standardVersions: StandardVersion[];
-    recipeVersions: CommandVersion[];
+    commandVersions: CommandVersion[];
     skillVersions: SkillVersion[];
   }> {
     try {
@@ -157,41 +157,29 @@ export class TargetResolutionService {
       if (!target) {
         return {
           standardVersions: [],
-          recipeVersions: [],
+          commandVersions: [],
           skillVersions: [],
         };
       }
 
-      const [standardVersions, recipeVersions, skillVersions] =
-        await Promise.all([
-          this.distributionRepository.findActiveStandardVersionsByTargetAndPackages(
-            organizationId,
-            target.id,
-            currentPackageIds,
-          ),
-          this.distributionRepository.findActiveCommandVersionsByTargetAndPackages(
-            organizationId,
-            target.id,
-            currentPackageIds,
-          ),
-          this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
-            organizationId,
-            target.id,
-            currentPackageIds,
-          ),
-        ]);
+      const { standardVersions, commandVersions, skillVersions } =
+        await this.distributionRepository.findActiveVersionsByTarget(
+          organizationId,
+          target.id,
+          currentPackageIds,
+        );
 
       this.logger.info(
         'Found previously deployed versions from distribution history',
         {
           targetId: target.id,
           standardCount: standardVersions.length,
-          recipeCount: recipeVersions.length,
+          commandCount: commandVersions.length,
           skillCount: skillVersions.length,
         },
       );
 
-      return { standardVersions, recipeVersions, skillVersions };
+      return { standardVersions, commandVersions, skillVersions };
     } catch (error) {
       this.logger.error(
         'Failed to query distribution history for previous versions',
@@ -199,7 +187,7 @@ export class TargetResolutionService {
       );
       return {
         standardVersions: [],
-        recipeVersions: [],
+        commandVersions: [],
         skillVersions: [],
       };
     }

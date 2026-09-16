@@ -431,11 +431,11 @@ describe('TargetResolutionService', () => {
       userId: createUserId(uuidv4()),
     });
 
-    const recipeVersion: CommandVersion = commandVersionFactory({
+    const commandVersion: CommandVersion = commandVersionFactory({
       id: createCommandVersionId(uuidv4()),
       recipeId: createCommandId(uuidv4()),
-      name: 'Test Recipe',
-      slug: 'test-recipe',
+      name: 'Test Command',
+      slug: 'test-command',
       version: 1,
       userId: createUserId(uuidv4()),
     });
@@ -465,15 +465,11 @@ describe('TargetResolutionService', () => {
           }),
         ]);
         targetService.getTargetsByGitRepoId.mockResolvedValue([target]);
-        distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-          [standardVersion],
-        );
-        distributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-          [recipeVersion],
-        );
-        distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-          [skillVersion],
-        );
+        distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+          standardVersions: [standardVersion],
+          commandVersions: [commandVersion],
+          skillVersions: [skillVersion],
+        });
       });
 
       it('returns deployed standard versions', async () => {
@@ -489,7 +485,7 @@ describe('TargetResolutionService', () => {
         expect(result.standardVersions).toEqual([standardVersion]);
       });
 
-      it('returns deployed recipe versions', async () => {
+      it('returns deployed command versions', async () => {
         const result = await service.findPreviouslyDeployedVersions(
           organizationId,
           userId,
@@ -499,7 +495,7 @@ describe('TargetResolutionService', () => {
           packageIds,
         );
 
-        expect(result.recipeVersions).toEqual([recipeVersion]);
+        expect(result.commandVersions).toEqual([commandVersion]);
       });
 
       it('returns deployed skill versions', async () => {
@@ -515,7 +511,7 @@ describe('TargetResolutionService', () => {
         expect(result.skillVersions).toEqual([skillVersion]);
       });
 
-      it('queries standard versions from distribution repository', async () => {
+      it('queries all artifact versions from distribution repository in one call', async () => {
         await service.findPreviouslyDeployedVersions(
           organizationId,
           userId,
@@ -526,11 +522,11 @@ describe('TargetResolutionService', () => {
         );
 
         expect(
-          distributionRepository.findActiveStandardVersionsByTargetAndPackages,
+          distributionRepository.findActiveVersionsByTarget,
         ).toHaveBeenCalledWith(organizationId, targetId, packageIds);
       });
 
-      it('queries recipe versions from distribution repository', async () => {
+      it('queries the distribution repository only once', async () => {
         await service.findPreviouslyDeployedVersions(
           organizationId,
           userId,
@@ -541,23 +537,8 @@ describe('TargetResolutionService', () => {
         );
 
         expect(
-          distributionRepository.findActiveCommandVersionsByTargetAndPackages,
-        ).toHaveBeenCalledWith(organizationId, targetId, packageIds);
-      });
-
-      it('queries skill versions from distribution repository', async () => {
-        await service.findPreviouslyDeployedVersions(
-          organizationId,
-          userId,
-          gitRemoteUrl,
-          gitBranch,
-          '/',
-          packageIds,
-        );
-
-        expect(
-          distributionRepository.findActiveSkillVersionsByTargetAndPackages,
-        ).toHaveBeenCalledWith(organizationId, targetId, packageIds);
+          distributionRepository.findActiveVersionsByTarget,
+        ).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -579,7 +560,7 @@ describe('TargetResolutionService', () => {
         expect(result.standardVersions).toEqual([]);
       });
 
-      it('returns empty recipe versions', async () => {
+      it('returns empty command versions', async () => {
         const result = await service.findPreviouslyDeployedVersions(
           organizationId,
           userId,
@@ -589,7 +570,7 @@ describe('TargetResolutionService', () => {
           packageIds,
         );
 
-        expect(result.recipeVersions).toEqual([]);
+        expect(result.commandVersions).toEqual([]);
       });
 
       it('returns empty skill versions', async () => {
@@ -605,7 +586,7 @@ describe('TargetResolutionService', () => {
         expect(result.skillVersions).toEqual([]);
       });
 
-      it('does not query standard versions from distribution repository', async () => {
+      it('does not query the distribution repository', async () => {
         await service.findPreviouslyDeployedVersions(
           organizationId,
           userId,
@@ -616,37 +597,7 @@ describe('TargetResolutionService', () => {
         );
 
         expect(
-          distributionRepository.findActiveStandardVersionsByTargetAndPackages,
-        ).not.toHaveBeenCalled();
-      });
-
-      it('does not query recipe versions from distribution repository', async () => {
-        await service.findPreviouslyDeployedVersions(
-          organizationId,
-          userId,
-          gitRemoteUrl,
-          gitBranch,
-          '/',
-          packageIds,
-        );
-
-        expect(
-          distributionRepository.findActiveCommandVersionsByTargetAndPackages,
-        ).not.toHaveBeenCalled();
-      });
-
-      it('does not query skill versions from distribution repository', async () => {
-        await service.findPreviouslyDeployedVersions(
-          organizationId,
-          userId,
-          gitRemoteUrl,
-          gitBranch,
-          '/',
-          packageIds,
-        );
-
-        expect(
-          distributionRepository.findActiveSkillVersionsByTargetAndPackages,
+          distributionRepository.findActiveVersionsByTarget,
         ).not.toHaveBeenCalled();
       });
     });

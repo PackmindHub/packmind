@@ -246,6 +246,92 @@ export class PackageRepository
     }
   }
 
+  override async findByIds(ids: PackageId[]): Promise<Package[]> {
+    const packages = await super.findByIds(ids);
+    return this.hydratePackagesArtifacts(packages);
+  }
+
+  async findByIdsInOrganization(
+    ids: PackageId[],
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    const uniqueIds = [...new Set(ids)];
+
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    this.logger.info('Finding packages by IDs within organization', {
+      organizationId,
+      count: uniqueIds.length,
+    });
+
+    try {
+      const packages = await this.repository
+        .createQueryBuilder('package')
+        .innerJoin('spaces', 'space', 'package.space_id = space.id')
+        .where('package.id IN (:...ids)', { ids: uniqueIds as string[] })
+        .andWhere('space.organization_id = :organizationId', { organizationId })
+        .getMany();
+
+      this.logger.info('Packages found by IDs within organization', {
+        organizationId,
+        requestedCount: uniqueIds.length,
+        foundCount: packages.length,
+      });
+
+      return this.hydratePackagesArtifacts(packages);
+    } catch (error) {
+      this.logger.error('Failed to find packages by IDs within organization', {
+        organizationId,
+        count: uniqueIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  private async hydratePackagesArtifacts(
+    packages: Package[],
+  ): Promise<Package[]> {
+    if (packages.length === 0) return [];
+
+    const rows = await this.repository
+      .createQueryBuilder('package')
+      .select('package.id', 'package_id')
+      .addSelect(
+        'array_agg(DISTINCT pc.command_id) FILTER (WHERE pc.command_id IS NOT NULL)',
+        'recipes',
+      )
+      .addSelect(
+        'array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL)',
+        'standards',
+      )
+      .addSelect(
+        'array_agg(DISTINCT psk.skill_id) FILTER (WHERE psk.skill_id IS NOT NULL)',
+        'skills',
+      )
+      .leftJoin('package_commands', 'pc', 'pc.package_id = package.id')
+      .leftJoin('package_standards', 'ps', 'ps.package_id = package.id')
+      .leftJoin('package_skills', 'psk', 'psk.package_id = package.id')
+      .where('package.id IN (:...ids)', { ids: packages.map((pkg) => pkg.id) })
+      .groupBy('package.id')
+      .getRawMany<{
+        package_id: string;
+        recipes: CommandId[] | null;
+        standards: StandardId[] | null;
+        skills: SkillId[] | null;
+      }>();
+
+    const artifactsById = new Map(rows.map((row) => [row.package_id, row]));
+    return packages.map((pkg) => ({
+      ...pkg,
+      recipes: artifactsById.get(pkg.id)?.recipes ?? [],
+      standards: artifactsById.get(pkg.id)?.standards ?? [],
+      skills: artifactsById.get(pkg.id)?.skills ?? [],
+    }));
+  }
+
   override async findById(id: PackageId): Promise<Package | null> {
     this.logger.info('Finding package by ID', { packageId: id });
 

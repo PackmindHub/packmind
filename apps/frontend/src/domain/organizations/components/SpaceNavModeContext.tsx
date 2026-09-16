@@ -11,6 +11,7 @@ import { useSearchParams } from 'react-router';
 import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
+  SPACE_NAV_PLUGIN_FIRST_BY_DEFAULT_FEATURE_KEY,
   SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
 } from '@packmind/feature-flags';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
@@ -39,12 +40,24 @@ const FALLBACK_MODE: SpaceNavMode = 'today';
 interface SpaceNavModeContextValue {
   mode: SpaceNavMode;
   setMode: (mode: SpaceNavMode) => void;
+  /**
+   * Whether anything should point this reader at the new navigation. Answered
+   * here rather than at the sidebar so the sidebar carries one boolean: it is
+   * the file that differs between the two editions, and three conditions
+   * hand-applied twice is three chances to let them drift.
+   */
+  shouldPointAtNewNavigation: boolean;
+  /** Called by the section itself, once it has been on screen. */
+  markNewNavigationSeen: () => void;
 }
 
 const SpaceNavModeContext = createContext<SpaceNavModeContextValue>({
   mode: FALLBACK_MODE,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setMode: () => {},
+  shouldPointAtNewNavigation: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  markNewNavigationSeen: () => {},
 });
 
 export function useSpaceNavMode(): SpaceNavModeContextValue {
@@ -60,10 +73,14 @@ function isSpaceNavMode(value: string | null): value is SpaceNavMode {
  * audience lands on the plugin-first navigation, everyone else on the current
  * one. It stays a default and not a lock — the switch moves either way, and a
  * mode that was chosen wins over this.
+ *
+ * The `by-default` key, not the one that gates the switch. They are the same
+ * audience today and they are meant to part: the offer widens to hand the beta
+ * out, while who lands on it without asking stays deliberately narrow.
  */
 function defaultMode(userEmail?: string | null): SpaceNavMode {
   return isFeatureFlagEnabled({
-    featureKeys: [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY],
+    featureKeys: [SPACE_NAV_PLUGIN_FIRST_BY_DEFAULT_FEATURE_KEY],
     featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
     userEmail,
   })
@@ -90,6 +107,31 @@ function rememberChosenMode(mode: SpaceNavMode): void {
   } catch {
     // Storage unavailable — the choice won't survive a reload, but it holds
     // for the session.
+  }
+}
+
+/**
+ * Whether this browser has had the offer on screen. Its own key rather than a
+ * value read off the mode: somebody can open the section, read it, and decide
+ * to stay where they are, and a marker that only cleared on a choice would
+ * keep pointing at a question they have already answered.
+ */
+const NEW_NAVIGATION_SEEN_KEY = 'space-nav-beta-seen.v1';
+
+function hasSeenNewNavigation(): boolean {
+  try {
+    return localStorage.getItem(NEW_NAVIGATION_SEEN_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function rememberNewNavigationSeen(): void {
+  try {
+    localStorage.setItem(NEW_NAVIGATION_SEEN_KEY, 'true');
+  } catch {
+    // Storage unavailable — the marker comes back next session, which is a
+    // better failure than never showing it.
   }
 }
 
@@ -209,9 +251,36 @@ export function SpaceNavModeProvider({
     rememberChosenMode(next);
   }, []);
 
+  const [hasSeen, setHasSeen] = useState(hasSeenNewNavigation);
+
+  const markNewNavigationSeen = useCallback(() => {
+    setHasSeen(true);
+    rememberNewNavigationSeen();
+  }, []);
+
+  /*
+   * Three conditions, and each of them earns its place. The flag, because
+   * pointing at a switch somebody cannot see is worse than saying nothing. The
+   * mode, because a reader already on the new navigation has nothing to
+   * discover. The marker, because a mark that never clears stops being a mark.
+   */
+  const shouldPointAtNewNavigation =
+    !hasSeen &&
+    mode !== 'plugin-first' &&
+    isFeatureFlagEnabled({
+      featureKeys: [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY],
+      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+      userEmail,
+    });
+
   const value = useMemo(
-    () => ({ mode, setMode: handleSetMode }),
-    [mode, handleSetMode],
+    () => ({
+      mode,
+      setMode: handleSetMode,
+      shouldPointAtNewNavigation,
+      markNewNavigationSeen,
+    }),
+    [mode, handleSetMode, shouldPointAtNewNavigation, markNewNavigationSeen],
   );
 
   return (
