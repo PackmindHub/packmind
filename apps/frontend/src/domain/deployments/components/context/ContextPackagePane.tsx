@@ -5,6 +5,7 @@ import {
   PMBadge,
   PMBox,
   PMButton,
+  PMFeatureFlag,
   PMHStack,
   PMHeading,
   PMIcon,
@@ -17,6 +18,10 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
+import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  PACKAGE_RELEASES_FEATURE_KEY,
+} from '@packmind/feature-flags';
 import {
   LuEllipsisVertical,
   LuPackageMinus,
@@ -67,6 +72,7 @@ import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
 import { PackageVersionArea } from './PackageVersionArea';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { RelativeDate } from '../RelativeDate';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
@@ -182,6 +188,7 @@ export function ContextPackagePane({
   onDeleted: () => void;
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuthContext();
   /*
    * What is being moved, held here rather than in the row: the drawer has to
    * outlive the list it was opened from, because the move rebuilds that list
@@ -783,12 +790,18 @@ export function ContextPackagePane({
               second, and because a later feature gate wraps exactly this one
               element.
             */}
-            <PackageVersionArea
-              packageId={pkg.id}
-              spaceId={spaceId}
-              organizationId={organizationId}
-              componentsCount={total}
-            />
+            <PMFeatureFlag
+              featureKeys={[PACKAGE_RELEASES_FEATURE_KEY]}
+              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+              userEmail={user?.email}
+            >
+              <PackageVersionArea
+                packageId={pkg.id}
+                spaceId={spaceId}
+                organizationId={organizationId}
+                componentsCount={total}
+              />
+            </PMFeatureFlag>
             {pkg.description && (
               <ContextPackageDescription
                 packageName={pkg.name}

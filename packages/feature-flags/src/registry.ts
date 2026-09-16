@@ -13,13 +13,22 @@ export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 export const SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY = 'space-nav-plugin-first';
 
 /**
+ * Gates the package version area - the released version and the action that
+ * cuts a new one. It is off for customers because a release is inert until the
+ * consumer story ships: nothing installs a version yet, so a visible action
+ * would only invite curators to cut immutable records that no one can consume.
+ */
+export const PACKAGE_RELEASES_FEATURE_KEY = 'package-releases';
+
+/**
  * Union of all known feature-flag keys. Extend this whenever a new
  * `*_FEATURE_KEY` constant + `DEFAULT_FEATURE_DOMAIN_MAP` entry is added.
  */
 export type FeatureFlagKey =
   | 'change-proposals-in-webapp'
   | 'orga-space-management'
-  | 'space-nav-plugin-first';
+  | 'space-nav-plugin-first'
+  | 'package-releases';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<
   FeatureFlagKey,
@@ -31,4 +40,5 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [PACKAGE_RELEASES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };

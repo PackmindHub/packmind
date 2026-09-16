@@ -24,6 +24,7 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 /*
  * Every query the pane and the version area reach for is mocked at its module
@@ -61,6 +62,16 @@ vi.mock('./useDeleteContextComponent', () => ({
 vi.mock('../../../git/api/queries/GitProviderQueries', () => ({
   useGetGitProvidersQuery: vi.fn(),
 }));
+
+/*
+ * The pane mounts no auth provider here, and the version area is behind a
+ * feature flag read from the signed-in user's email. Most tests are that user.
+ */
+vi.mock('../../../accounts/hooks/useAuthContext', () => ({
+  useAuthContext: vi.fn(),
+}));
+
+const STAFF_EMAIL = 'someone@packmind.com';
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
@@ -126,6 +137,7 @@ const READY_NEVER_RELEASED: PackageReleaseReadiness = {
 };
 
 function resetHooks() {
+  (useAuthContext as Mock).mockReturnValue({ user: { email: STAFF_EMAIL } });
   (useListPackageDeploymentsQuery as Mock).mockReturnValue({ data: [] });
   (useDeletePackagesBatchMutation as Mock).mockReturnValue({
     mutateAsync: vi.fn(),
@@ -223,6 +235,19 @@ describe('ContextPackagePane', () => {
     expect(
       screen.getByRole('button', { name: /create a release/i }),
     ).toBeEnabled();
+  });
+
+  it('hides the version area from a user outside the flag audience', async () => {
+    (useAuthContext as Mock).mockReturnValue({
+      user: { email: 'someone@example.com' },
+    });
+
+    await renderPane(READY_NEVER_RELEASED);
+
+    expect(screen.queryByText('Not released yet')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /create a release/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the current version once the package has been released', async () => {
