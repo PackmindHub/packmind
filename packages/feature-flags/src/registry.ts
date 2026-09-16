@@ -1,3 +1,5 @@
+import { EVERY_ACCOUNT_ENTRY } from './isFeatureFlagEnabled';
+
 /* Custom feature toggle for the "Propose change" links in the app */
 export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
@@ -46,7 +48,7 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<
     '@promyze.com',
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY]: [EVERY_ACCOUNT_ENTRY],
   [SPACE_NAV_PLUGIN_FIRST_BY_DEFAULT_FEATURE_KEY]: [
     '@packmind.com',
     '@promyze.com',
