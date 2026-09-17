@@ -86,7 +86,10 @@ const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
 
 const MockedConfigFileRepository = ConfigFileRepository as unknown as jest.Mock;
 
-function makeDirent(name: string, isDir = true): fs.Dirent {
+/** `jest.Mocked` resolves `readdirSync` to its `withFileTypes` overload. */
+type ReaddirEntry = ReturnType<typeof fs.readdirSync>[number];
+
+function makeDirent(name: string, isDir = true): ReaddirEntry {
   return {
     name,
     isDirectory: () => isDir,
@@ -98,7 +101,7 @@ function makeDirent(name: string, isDir = true): fs.Dirent {
     isSocket: () => false,
     path: '',
     parentPath: '',
-  } as fs.Dirent;
+  } as unknown as ReaddirEntry;
 }
 
 const mockFs = fs as jest.Mocked<typeof fs>;
@@ -123,6 +126,17 @@ const makeResult = (
   errors: [],
   configCreated: false,
   packagesAdded: [],
+  filesCreated: 0,
+  filesUpdated: 0,
+  filesDeleted: 0,
+  skillsChanged: 0,
+  standardsChanged: 0,
+  commandsChanged: 0,
+  recipesRemoved: 0,
+  standardsRemoved: 0,
+  commandsRemoved: 0,
+  skillsRemoved: 0,
+  skillDirectoriesDeleted: 0,
   sourceArtifacts: {
     skillsCount: 0,
     standardsCount: 0,
@@ -237,9 +251,7 @@ describe('installCommand', () => {
           const s = String(p);
           return s === appsDir || s === path.join(subProject, 'packmind.json');
         });
-        mockFs.readdirSync.mockReturnValue([
-          makeDirent('sub-project'),
-        ] as unknown as string[]);
+        mockFs.readdirSync.mockReturnValue([makeDirent('sub-project')]);
         await handler({
           installPath: 'apps/frontend',
           packages: [],
@@ -294,9 +306,7 @@ describe('installCommand', () => {
     beforeEach(() => {
       mockFs.existsSync.mockReturnValue(true);
       mockFs.statSync.mockReturnValue({ isDirectory: () => true } as fs.Stats);
-      mockFs.readdirSync.mockReturnValue([
-        makeDirent('sub-project'),
-      ] as unknown as string[]);
+      mockFs.readdirSync.mockReturnValue([makeDirent('sub-project')]);
     });
 
     afterEach(() => {
@@ -366,18 +376,15 @@ describe('installCommand', () => {
         mockFs.readdirSync.mockImplementation((dirPath) => {
           const asStr = String(dirPath);
           if (asStr === process.cwd()) {
-            return [
-              makeDirent('apps'),
-              makeDirent('packages'),
-            ] as unknown as string[];
+            return [makeDirent('apps'), makeDirent('packages')];
           }
           if (asStr === path.join(process.cwd(), 'apps')) {
-            return [makeDirent('frontend')] as unknown as string[];
+            return [makeDirent('frontend')];
           }
           if (asStr === path.join(process.cwd(), 'packages')) {
-            return [makeDirent('core')] as unknown as string[];
+            return [makeDirent('core')];
           }
-          return [] as unknown as string[];
+          return [];
         });
         await handler({
           installPath: '',
@@ -425,18 +432,15 @@ describe('installCommand', () => {
         mockFs.readdirSync.mockImplementation((dirPath) => {
           const asStr = String(dirPath);
           if (asStr === process.cwd()) {
-            return [
-              makeDirent('apps'),
-              makeDirent('packages'),
-            ] as unknown as string[];
+            return [makeDirent('apps'), makeDirent('packages')];
           }
           if (asStr === path.join(process.cwd(), 'apps')) {
-            return [makeDirent('frontend')] as unknown as string[];
+            return [makeDirent('frontend')];
           }
           if (asStr === path.join(process.cwd(), 'packages')) {
-            return [makeDirent('core')] as unknown as string[];
+            return [makeDirent('core')];
           }
-          return [] as unknown as string[];
+          return [];
         });
         await handler({
           installPath: '',
@@ -503,7 +507,7 @@ describe('installCommand', () => {
           makeDirent('frontend'),
           makeDirent('backend'),
           makeDirent('shared'),
-        ] as unknown as string[]);
+        ]);
         await handler({
           installPath: 'apps',
           packages: [],
@@ -556,7 +560,7 @@ describe('installCommand', () => {
         mockFs.readdirSync.mockReturnValue([
           makeDirent('frontend'),
           makeDirent('backend'),
-        ] as unknown as string[]);
+        ]);
         mockInstall.mockImplementation((cmd: { baseDirectory: string }) => {
           if (cmd.baseDirectory === frontendDir) {
             return Promise.reject(new Error('network failure'));
@@ -1641,6 +1645,7 @@ describe('installCommand', () => {
         expect(
           decideDistributionTracking({
             branchExists: () => false,
+            detached: false,
             lookup: {
               status: 'resolved',
               trackedGitRepo: { branch: 'feature/login' },
@@ -1662,6 +1667,7 @@ describe('installCommand', () => {
         expect(
           decideDistributionTracking({
             branchExists: () => true,
+            detached: false,
             lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
             currentBranch: 'dev',
           }),
@@ -1812,18 +1818,15 @@ describe('installCommand', () => {
         mockFs.readdirSync.mockImplementation((dirPath) => {
           const asStr = String(dirPath);
           if (asStr === process.cwd()) {
-            return [
-              makeDirent('apps'),
-              makeDirent('packages'),
-            ] as unknown as string[];
+            return [makeDirent('apps'), makeDirent('packages')];
           }
           if (asStr === path.join(process.cwd(), 'apps')) {
-            return [makeDirent('frontend')] as unknown as string[];
+            return [makeDirent('frontend')];
           }
           if (asStr === path.join(process.cwd(), 'packages')) {
-            return [makeDirent('core')] as unknown as string[];
+            return [makeDirent('core')];
           }
-          return [] as unknown as string[];
+          return [];
         });
         await runInstall();
       });
