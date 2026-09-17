@@ -212,7 +212,8 @@ cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real de
 risk, and they are the two that UK-3 and UK-6 have to settle first.
 
 - rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4), plus `2`
-  for S4 (actual: 2)
+  for S4 (actual: 3 — U-026 withdrew the CHANGELOG entry, which the boundary reconcile
+  found rather than the sizing)
 - verdict: `split`
 - session boundaries:
 
@@ -363,10 +364,17 @@ Two things a reader should carry rather than discover:
   "Create a release" button that is no longer rendered. That is not a regression; it is the
   gate working, and U-025 observed exactly that failure before fixing it. It also supersedes
   D-050's `do not set underFeatureFlag: true`, which now carries a forward pointer.
-- **The `apps/doc` section and the CHANGELOG entry describe a flow no customer can now reach.**
-  S2 wrote them true and S4 made them false, and both were right on their own terms; no unit
-  gate could have seen it, because no decision told S4 to touch those files. Raised by the
-  boundary reconcile and left as the one open question this feature hands on.
+- **The CHANGELOG entry is withdrawn; the `apps/doc` section stays.** S2 wrote both true and
+  S4 made them false, and both were right on their own terms; no unit gate could have seen it,
+  because no decision told S4 to touch either file. Raised by the boundary reconcile and
+  settled by D-058 in U-026: `# [Unreleased]` is promoted verbatim into the next numbered
+  section, so left alone the entry would land in a dated release announcing a feature that
+  release gives nobody. Documentation is a claim about the product rather than about a
+  version, and nobody reaches that page without looking for it, so it keeps its section. The
+  entry is restored from U-026's commit when the flag opens.
+
+  The residual, stated rather than waved away: `apps/doc` does describe a flow most readers
+  cannot use. That is the smaller of the two costs, and it is accepted.
 
 One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
 `apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`
