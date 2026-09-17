@@ -1,6 +1,11 @@
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  Target,
   ICodingAgentDeployerRegistry,
   FileUpdates,
   IAccountsPort,
@@ -93,9 +98,7 @@ describe('PullContentUseCase', () => {
   let defaultSpace: Space;
 
   beforeEach(() => {
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
 
     commandsPort = mockInterface<ICommandsPort>();
 
@@ -133,19 +136,13 @@ describe('PullContentUseCase', () => {
 
     accountsPort = mockInterface<IAccountsPort>();
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
-    renderModeConfigurationService = {
-      resolveCodingAgents: jest.fn(),
-      mapRenderModesToCodingAgents: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
 
-    packmindConfigService = {
-      createConfigFileModification: jest.fn(),
-      generateConfigContent: jest.fn(),
-    } as unknown as jest.Mocked<PackmindConfigService>;
+    packmindConfigService = createMockInstance(PackmindConfigService);
 
     packmindConfigService.createConfigFileModification.mockReturnValue({
       path: 'packmind.json',
@@ -168,27 +165,30 @@ describe('PullContentUseCase', () => {
       skillVersions: [],
     });
 
-    targetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(null),
-      findPreviouslyDeployedVersions: jest.fn().mockResolvedValue({
-        standardVersions: [],
-        commandVersions: [],
-        skillVersions: [],
-      }),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    targetResolutionService = createMockInstance(TargetResolutionService);
+    // `findOrCreateTargetFromGitInfo` is typed `Promise<Target>`, but
+    // `PullContentUseCase` still guards its result with `if (target)`. This
+    // default is what exercises that guard.
+    targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      null as unknown as Target,
+    );
+    targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue({
+      standardVersions: [],
+      commandVersions: [],
+      skillVersions: [],
+    });
 
-    lockFileService = {
-      buildLockFile: jest.fn().mockReturnValue({
-        lockfileVersion: 1,
-        packageSlugs: [],
-        agents: [],
-        artifacts: {},
-      }),
-      createLockFileModification: jest.fn().mockReturnValue({
-        path: 'packmind-lock.json',
-        content: '{}',
-      }),
-    } as unknown as jest.Mocked<PackmindLockFileService>;
+    lockFileService = createMockInstance(PackmindLockFileService);
+    lockFileService.buildLockFile.mockReturnValue({
+      lockfileVersion: 1,
+      packageSlugs: [],
+      agents: [],
+      artifacts: {},
+    });
+    lockFileService.createLockFileModification.mockReturnValue({
+      path: 'packmind-lock.json',
+      content: '{}',
+    });
 
     organizationId = createOrganizationId(uuidv4());
     organization = {

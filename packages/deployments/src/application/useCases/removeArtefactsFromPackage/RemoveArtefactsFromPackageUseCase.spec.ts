@@ -20,8 +20,13 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
+import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
@@ -79,24 +84,18 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
     });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      removeCommands: jest.fn(),
-      removeStandards: jest.fn(),
-      removeSkills: jest.fn(),
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageRepository>;
+    mockPackageRepository = createMockInstance(PackageRepository);
 
-    mockPackageService = {
-      findById: jest.fn(),
-      getPackagesBySpaceId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
+    mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
 
-    mockServices = {
-      getPackageService: jest.fn().mockReturnValue(mockPackageService),
-      getRepositories: jest.fn().mockReturnValue({
-        getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      }),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    mockServices = createMockInstance(DeploymentsServices);
+    mockServices.getPackageService.mockReturnValue(mockPackageService);
+    const mockRepositories = mockInterface<IDeploymentsRepositories>();
+    mockRepositories.getPackageRepository.mockReturnValue(
+      mockPackageRepository,
+    );
+    mockServices.getRepositories.mockReturnValue(mockRepositories);
 
     mockAccountsPort = mockInterface<IAccountsPort>();
     mockAccountsPort.getUserById.mockResolvedValue(buildUser());
@@ -112,9 +111,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
       updatedBy: userId,
     });
 
-    mockEventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     stubbedLogger = stubLogger();
 

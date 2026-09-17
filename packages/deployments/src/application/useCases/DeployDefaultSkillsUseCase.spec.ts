@@ -1,5 +1,9 @@
 import { ICodingAgentDeployer } from '@packmind/coding-agent';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CodingAgent,
   DeployDefaultSkillsCommand,
@@ -70,11 +74,9 @@ describe('DeployDefaultSkillsUseCase', () => {
   let logger: ReturnType<typeof stubLogger>;
 
   beforeEach(() => {
-    renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest.fn(),
-      getConfiguration: jest.fn(),
-      upsertConfiguration: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
 
     deployerRegistry = {
       getDeployer: jest.fn(),
