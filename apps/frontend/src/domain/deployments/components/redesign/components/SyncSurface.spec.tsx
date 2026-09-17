@@ -496,4 +496,34 @@ describe('SyncSurface', () => {
       ).toBeEnabled();
     });
   });
+  describe('when the batch groups several packages', () => {
+    const twoPackages = {
+      kind: 'bulk' as const,
+      packageIds: [STUB_PACKAGES[0].id, STUB_PACKAGES[1].id],
+    };
+
+    it('keeps the grouping row that tells them apart', () => {
+      renderSurface({ scope: twoPackages });
+
+      expect(
+        screen.getByRole('checkbox', {
+          name: `Select all repositories for ${STUB_PACKAGES[0].name}`,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The fold is for the batch that spans a space. A handful of rows under it
+     * only costs a click on what a commit is about to touch.
+     */
+    it('opens each of them on its destinations while the batch stays small', () => {
+      renderSurface({ scope: twoPackages });
+
+      expect(
+        screen.getByRole('button', {
+          name: `Collapse ${STUB_PACKAGES[0].name}`,
+        }),
+      ).toBeInTheDocument();
+    });
+  });
 });

@@ -163,6 +163,17 @@ const lockReasonFor = installLockReason;
 
 type SyncStep = 'review' | 'syncing' | 'success' | 'error';
 
+/**
+ * How many destinations a grouped batch may show before it folds them away.
+ *
+ * The fold was written for the batch that spans a space, where every package
+ * opened at once would bury the summary and the confirm button under a few
+ * hundred rows. Below the threshold it buys nothing and costs a click on the
+ * only thing worth reading before a commit goes out, so below it the blocks
+ * open.
+ */
+const OPEN_BY_DEFAULT_ROW_LIMIT = 12;
+
 type SyncSurfaceProps = {
   packages: PackageDrift[];
   scope: SyncScope;
@@ -286,6 +297,15 @@ export function SyncSurface({
     }
     return { inProgress, selectable };
   }, [actionableBlocks, providersWithToken, isProvidersLoading]);
+
+  const openBlocksByDefault = useMemo(
+    () =>
+      actionableBlocks.reduce(
+        (acc, block) => acc + block.driftedEntries.length,
+        0,
+      ) <= OPEN_BY_DEFAULT_ROW_LIMIT,
+    [actionableBlocks],
+  );
 
   const hasMarketplaces = marketplaceTargets.length > 0;
 
@@ -697,6 +717,7 @@ export function SyncSurface({
                       selected={selected}
                       providersWithToken={providersWithToken}
                       isProvidersLoading={isProvidersLoading}
+                      defaultExpanded={openBlocksByDefault}
                       onToggleInstall={toggleInstall}
                       onTogglePackage={(on) => togglePackage(block, on)}
                     />
@@ -945,6 +966,14 @@ type PackageSyncBlockProps = {
   selected: Set<string>;
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
+  /**
+   * Whether the destinations are on screen before the reader asks for them.
+   *
+   * Decided by the surface from the size of the whole batch rather than here,
+   * since what makes a list worth folding is how much of the screen its
+   * siblings already take.
+   */
+  defaultExpanded: boolean;
   onToggleInstall: (key: string) => void;
   onTogglePackage: (on: boolean) => void;
 };
@@ -954,10 +983,11 @@ function PackageSyncBlock({
   selected,
   providersWithToken,
   isProvidersLoading,
+  defaultExpanded,
   onToggleInstall,
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const multiLandingRepos = multiLandingRepoIds(block.pkg.installLocations);
   const entriesWithLock = block.driftedEntries.map((entry) => ({
     entry,
