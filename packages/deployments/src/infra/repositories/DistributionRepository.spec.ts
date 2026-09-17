@@ -1533,25 +1533,11 @@ describe('DistributionRepository', () => {
       targetId: ReturnType<typeof createTargetId>;
       targetName: string;
       gitRepoId: string;
-      deploymentDate: string;
+      distributedAt: string;
     };
-    type StandardVersionRowRaw = {
+    type DeployedVersionRowRaw = {
       distributedPackageId: string;
-      standardId: StandardId;
-      name: string;
-      slug: string;
-      version: number;
-    };
-    type CommandVersionRowRaw = {
-      distributedPackageId: string;
-      commandId: CommandId;
-      name: string;
-      slug: string;
-      version: number;
-    };
-    type SkillVersionRowRaw = {
-      distributedPackageId: string;
-      skillId: SkillId;
+      artifactId: StandardId | CommandId | SkillId;
       name: string;
       slug: string;
       version: number;
@@ -1559,9 +1545,9 @@ describe('DistributionRepository', () => {
 
     const seedRawMany = (
       latestRows: LatestRowRaw[],
-      standardRows: StandardVersionRowRaw[] = [],
-      commandRows: CommandVersionRowRaw[] = [],
-      skillRows: SkillVersionRowRaw[] = [],
+      standardRows: DeployedVersionRowRaw[] = [],
+      commandRows: DeployedVersionRowRaw[] = [],
+      skillRows: DeployedVersionRowRaw[] = [],
     ) => {
       (mockQueryBuilder.getRawMany as jest.Mock)
         .mockResolvedValueOnce(latestRows)
@@ -1585,27 +1571,27 @@ describe('DistributionRepository', () => {
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-02T00:00:00Z',
+              distributedAt: '2024-01-02T00:00:00Z',
             },
             {
               distributedPackageId: 'dp-2',
               targetId: targetId2,
               targetName: 'Target Two',
               gitRepoId: gitRepoId2,
-              deploymentDate: '2024-01-03T00:00:00Z',
+              distributedAt: '2024-01-03T00:00:00Z',
             },
           ],
           [
             {
               distributedPackageId: 'dp-1',
-              standardId: standardId1,
+              artifactId: standardId1,
               name: 'Standard One',
               slug: 'standard-one',
               version: 2,
             },
             {
               distributedPackageId: 'dp-2',
-              standardId: standardId2,
+              artifactId: standardId2,
               name: 'Standard Two',
               slug: 'standard-two',
               version: 1,
@@ -1614,7 +1600,7 @@ describe('DistributionRepository', () => {
           [
             {
               distributedPackageId: 'dp-1',
-              commandId: commandId1,
+              artifactId: commandId1,
               name: 'Command One',
               slug: 'command-one',
               version: 3,
@@ -1730,7 +1716,7 @@ describe('DistributionRepository', () => {
       });
     });
 
-    describe('with duplicate standard versions across distributedPackages', () => {
+    describe('when the same standard ships in two packages on one target', () => {
       const standardId1 = createStandardId('std-1');
 
       let result: OutdatedDeploymentsByTarget[];
@@ -1739,34 +1725,34 @@ describe('DistributionRepository', () => {
         seedRawMany(
           [
             {
-              distributedPackageId: 'dp-1',
+              distributedPackageId: 'dp-older',
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-01T00:00:00Z',
+              distributedAt: '2024-01-01T00:00:00Z',
             },
             {
-              distributedPackageId: 'dp-2',
+              distributedPackageId: 'dp-newer',
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-02T00:00:00Z',
+              distributedAt: '2024-01-02T00:00:00Z',
             },
           ],
           [
             {
-              distributedPackageId: 'dp-2',
-              standardId: standardId1,
-              name: 'Standard One v2',
-              slug: 'standard-one-v2',
-              version: 2,
-            },
-            {
-              distributedPackageId: 'dp-1',
-              standardId: standardId1,
+              distributedPackageId: 'dp-older',
+              artifactId: standardId1,
               name: 'Standard One v1',
               slug: 'standard-one-v1',
               version: 1,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: standardId1,
+              name: 'Standard One v2',
+              slug: 'standard-one-v2',
+              version: 2,
             },
           ],
         );
@@ -1782,7 +1768,186 @@ describe('DistributionRepository', () => {
         expect(target1!.standards).toHaveLength(1);
       });
 
-      it('keeps the first-seen version after deduplication', () => {
+      it('keeps the version from the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+
+      it('reports the deployment date of the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deploymentDate).toBe(
+          '2024-01-02T00:00:00Z',
+        );
+      });
+    });
+
+    describe('when the same command ships in two packages on one target', () => {
+      const commandId1 = createCommandId('command-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-test-package',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2026-02-26T13:32:00Z',
+            },
+            {
+              distributedPackageId: 'dp-frontend',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2026-09-16T12:37:00Z',
+            },
+          ],
+          [],
+          [
+            {
+              distributedPackageId: 'dp-test-package',
+              artifactId: commandId1,
+              name: 'Implement NestJS Controller',
+              slug: 'implement-nestjs-controller',
+              version: 4,
+            },
+            {
+              distributedPackageId: 'dp-frontend',
+              artifactId: commandId1,
+              name: 'Implement NestJS Controller',
+              slug: 'implement-nestjs-controller',
+              version: 8,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('keeps only one command after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes).toHaveLength(1);
+      });
+
+      it('keeps the version from the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes[0].deployedVersion).toBe(8);
+      });
+    });
+
+    describe('when the same skill ships in two packages on one target', () => {
+      const skillId1 = createSkillId('skill-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-older',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-02T00:00:00Z',
+            },
+          ],
+          [],
+          [],
+          [
+            {
+              distributedPackageId: 'dp-older',
+              artifactId: skillId1,
+              name: 'Skill One',
+              slug: 'skill-one',
+              version: 1,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: skillId1,
+              name: 'Skill One',
+              slug: 'skill-one',
+              version: 3,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('keeps only one skill after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.skills).toHaveLength(1);
+      });
+
+      it('keeps the version from the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.skills[0].deployedVersion).toBe(3);
+      });
+    });
+
+    describe('when two packages sharing a standard were distributed to one target at the same time', () => {
+      const standardId1 = createStandardId('std-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-a',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-b',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-a',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 1,
+            },
+            {
+              distributedPackageId: 'dp-b',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 2,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('breaks the tie on the greatest distributed package id', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.standards[0].deployedVersion).toBe(2);
       });

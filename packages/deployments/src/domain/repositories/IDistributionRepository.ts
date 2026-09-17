@@ -156,10 +156,11 @@ export interface IDistributionRepository {
   }>;
 
   /**
-   * Find outdated deployments per target within a space.
-   * Returns lightweight DTOs with deployed vs latest version info,
-   * only for artifacts where the deployed version differs from latest
-   * or the artifact has been deleted.
+   * For each target within a space, return every artifact currently
+   * deployed there as a lightweight DTO, with the version written by the
+   * most recent successful 'add' distribution containing that artifact.
+   * An artifact shipped by several packages on the same target therefore
+   * reports the last write, whichever package it came from.
    */
   findOutdatedDeploymentsBySpace(
     organizationId: OrganizationId,
@@ -195,8 +196,8 @@ export type ActivePackageOperationRow = {
   lastDistributedAt: string;
 };
 
-type OutdatedDeploymentBase = {
-  artifactId: string;
+export type OutdatedDeployment<TArtifactId extends string> = {
+  artifactId: TArtifactId;
   artifactName: string;
   artifactSlug: string;
   deployedVersion: number;
@@ -204,17 +205,11 @@ type OutdatedDeploymentBase = {
   isDeleted: boolean;
 };
 
-export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
-  artifactId: StandardId;
-};
+export type OutdatedStandardDeployment = OutdatedDeployment<StandardId>;
 
-export type OutdatedCommandDeployment = OutdatedDeploymentBase & {
-  artifactId: CommandId;
-};
+export type OutdatedCommandDeployment = OutdatedDeployment<CommandId>;
 
-export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
-  artifactId: SkillId;
-};
+export type OutdatedSkillDeployment = OutdatedDeployment<SkillId>;
 
 export type OutdatedDeploymentsByTarget = {
   targetId: TargetId;
