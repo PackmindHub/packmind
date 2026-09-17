@@ -117,7 +117,7 @@ export class CreatePackageReleases1821000000000 implements MigrationInterface {
     columnNames: ['command_version_id'],
     referencedTableName: 'command_versions',
     referencedColumnNames: ['id'],
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
     name: 'FK_prcv_command_version',
   });
 
@@ -133,7 +133,7 @@ export class CreatePackageReleases1821000000000 implements MigrationInterface {
     columnNames: ['standard_version_id'],
     referencedTableName: 'standard_versions',
     referencedColumnNames: ['id'],
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
     name: 'FK_prsv_standard_version',
   });
 
@@ -149,7 +149,7 @@ export class CreatePackageReleases1821000000000 implements MigrationInterface {
     columnNames: ['skill_version_id'],
     referencedTableName: 'skill_versions',
     referencedColumnNames: ['id'],
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
     name: 'FK_prskv_skill_version',
   });
 
