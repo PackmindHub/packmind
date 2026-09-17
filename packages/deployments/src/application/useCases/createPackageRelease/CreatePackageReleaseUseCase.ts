@@ -20,6 +20,7 @@ import {
 } from '../../services/packageReleaseResolution';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReleaseRefusedError } from '../../../domain/errors/PackageReleaseRefusedError';
+import { PackageComponentHasNoVersionError } from '../../../domain/errors/PackageComponentHasNoVersionError';
 
 const origin = 'CreatePackageReleaseUseCase';
 
@@ -102,22 +103,25 @@ export class CreatePackageReleaseUseCase
     // Throw for unresolved components in family order: recipe, standard, skill
     for (const unresolved of resolution.unresolved) {
       if (unresolved.family === 'recipe') {
-        throw new Error(
-          `Command ${unresolved.componentId} has no version to pin`,
+        throw new PackageComponentHasNoVersionError(
+          unresolved.family,
+          unresolved.componentId,
         );
       }
     }
     for (const unresolved of resolution.unresolved) {
       if (unresolved.family === 'standard') {
-        throw new Error(
-          `Standard ${unresolved.componentId} has no version to pin`,
+        throw new PackageComponentHasNoVersionError(
+          unresolved.family,
+          unresolved.componentId,
         );
       }
     }
     for (const unresolved of resolution.unresolved) {
       if (unresolved.family === 'skill') {
-        throw new Error(
-          `Skill ${unresolved.componentId} has no version to pin`,
+        throw new PackageComponentHasNoVersionError(
+          unresolved.family,
+          unresolved.componentId,
         );
       }
     }

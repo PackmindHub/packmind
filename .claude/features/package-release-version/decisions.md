@@ -3403,3 +3403,198 @@ case outside this feature. Do not add a refusal code or a user-facing sentence. 
 case gets one named test that a package from another space is refused.
 
 ---
+
+## D-061 — The unresolved-component throw becomes a dedicated error class, and stays a 500
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-17`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-16`, `D-011`, `D-014`, `D-034`, `D-059`
+
+**Decision.** The three `new Error(...)` throws in `CreatePackageReleaseUseCase` — one per
+component family, for a component that resolves to no version — become one dedicated
+error class, `PackageComponentHasNoVersionError`, in
+`packages/deployments/src/domain/errors/`, carrying the family and the component id. The
+API controller is **not** given a branch for it, so it keeps falling through to the
+existing `throw error` and surfaces as a 500. No refusal code, no sentence.
+
+**Reasoning.** This is Greptile's fourth finding on PR #489 (P2), and it is half right.
+
+The half that is right: three bare `new Error(...)` in a package that keeps six dedicated
+classes in `domain/errors/` is a convention violation, and it throws away the only thing a
+caller could ever match on. `PackageNotFoundError` and `PackageReleaseRefusedError` both
+live next door and both carry their data as fields. These should too.
+
+The half that is not: the finding concludes that "a known domain refusal becomes an
+internal-server-error response" and asks for a typed **refusal**. It is not a refusal.
+D-034 fixes `PackageReleaseRefusalCode` at four members — `malformed`, `not_greater`,
+`not_an_increment`, `no_components` — and every one of them describes something the person
+at the form did, with a sentence D-011 wrote for it. A component that exists and has no
+version at all is not something the user did and not something they can undo: D-014 calls
+it "close to impossible in practice — the three services create a version alongside the
+artefact", and it is reachable only if an artefact was written without the version that is
+supposed to accompany it. That is a broken invariant on the server, and 500 is what a
+broken server invariant is for.
+
+Making it a 400 would cost two things this feature has twice refused to spend. A fifth
+member in D-034's union, which that entry closed deliberately; and a fifth sentence in
+D-011's messages file, which nobody has written and no criterion describes — the same
+trade D-059 declined a few hours earlier for the read side, on the same grounds. The
+symmetry is deliberate: the read side keeps the broken component visible and says `ready`,
+the write side refuses loudly, and neither invents a user-facing vocabulary for a state no
+user can fix.
+
+*What the class buys, given the status does not change.* The name in the log and the
+stack, the two fields as fields rather than interpolated into a sentence, and a type a
+future caller can narrow on if a story ever gives this case a user-facing meaning. That is
+the whole of it, and it is worth a small unit because the alternative is leaving a
+convention violation in a file a reviewer has already flagged.
+
+**Rejected.**
+
+- A fifth refusal code, `component_has_no_version`, mapped to 400 — what the finding asks
+  for. Reopens D-034's union and needs a sentence D-011 has no source for.
+- Mapping the new class to 422 in the controller without a code — a wire contract with no
+  reader, and the frontend's refusal narrowing expects `code` and `currentVersion`, so it
+  would render an empty sentence.
+- One class per family — three classes to distinguish a field that is already a field.
+- Leaving the bare `Error`s, on the grounds that the status does not change anyway — the
+  convention is the finding, and "it behaves the same" is the argument for every
+  convention violation ever left in place.
+- Collapsing the three family loops into one pass while here — it would change the order
+  in which a multi-family failure reports, which nothing specifies and nothing tests. Out
+  of this unit's scope; noted, not done.
+
+**Constrains implementation.** `PackageComponentHasNoVersionError extends Error`, in its
+own file under `packages/deployments/src/domain/errors/`, constructor taking
+`(family: ComponentFamily, componentId: string)` and exposing both as readonly fields,
+setting `this.name`. Do **not** use `Object.setPrototypeOf` — the repo's TypeScript
+standard forbids it, and `PackageNotFoundError` next door violating that is a pre-existing
+defect, not a pattern to copy. Keep the three family loops and their order exactly as they
+are; change only what they throw. Do not touch
+`apps/api/src/app/organizations/spaces/packages/packages.controller.ts`. Do not add a
+refusal code, a message file entry, or an HTTP mapping.
+
+---
+
+## D-062 — The three version foreign keys become `RESTRICT`, amended in place, and gated by a migration-level spec
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-17`
+- supersedes: D-004 (partial — the premise that component versions are never deleted)
+- superseded-by: —
+- relates to: `AC-17`, `AC-18`, `UK-3`, `D-003`, `D-004`, `D-027`, `D-037`
+
+**Decision.** In `1821000000000-CreatePackageReleases.ts`, the three foreign keys that point
+at `command_versions`, `standard_versions` and `skill_versions` — `prcvCommandVersionFK`,
+`prsvStandardVersionFK`, `prskvSkillVersionFK` — change from `onDelete: 'CASCADE'` to
+`onDelete: 'RESTRICT'`. The three that point at `package_releases`, and the one from
+`package_releases` to `packages`, keep `CASCADE` and are not touched.
+
+The change is made **in the existing migration file**, not in a new ALTER migration. It is
+gated by a new spec in `packages/migrations/src/lib/`, in the established pattern.
+
+**Reasoning.** This is Greptile's second finding on PR #489, and it is true against a
+premise two decisions rest on.
+
+D-004 says deleted components stay browsable "because deletion is soft and versions are
+never deleted", and D-037 sharpens it: "soft delete is an `UPDATE`, so the
+`onDelete: 'CASCADE'` on the version relations never fires". Both are true of every
+*delete* path — `CommandVersionService` and its siblings all route through
+`AbstractRepository.deleteById`, which is `softDelete`. Neither considered a *rollback*
+path. `ApplyPlaybookUseCase.rollback()`, in `packages/playbook-change-applier`, calls
+`hardDeleteCommandVersion` / `hardDeleteStandardVersion` / `hardDeleteSkillVersion`, and
+those reach `AbstractRepository.hardDeleteById`, which is a real `DELETE`. Under `CASCADE`,
+that silently removes the join row, and a release that pinned the version stops carrying it
+— no error, no trace, and no way to repair it, because releases are immutable by
+construction and the table has no `deleted_at` to tell the difference between "was never
+pinned" and "was un-pinned".
+
+The exposure is narrow. `rollback()` hard-deletes only what the same failed apply created,
+so someone must cut a release in the window between a version's creation and that apply's
+failure. The reason to act anyway is not the probability, it is the shape: silent,
+permanent, unobservable, and it falsifies the one promise the feature exists to make.
+
+*Why `RESTRICT` and not something cleverer.* The alternatives were weighed and each gives
+up more. Dropping the foreign key and storing a bare version id keeps the pin but abandons
+referential integrity and leaves a release hydrating nothing — worse than un-pinning,
+because it looks fine. Copying rendered content into the release is what D-003 rejected
+when it chose the junction-table idiom, and re-opening it for this would be a schema
+rewrite for a rare case.
+
+*The cost, stated plainly.* Every parent→version foreign key in the schema is `CASCADE`, so
+`hardDeleteCommand` / `hardDeleteStandard` / `hardDeleteSkill` delete the parent and cascade
+into its versions — and that cascade will now hit this `RESTRICT` and fail. So the change
+does not only block the direct version hard-delete; it blocks the parent one too, whenever
+any version of that parent is pinned by a release. `rollback()` wraps each entry in its own
+`try`/`catch`, logs at error level and continues, so the failure does not abort the rollback
+or propagate — it leaves one artefact behind that the apply meant to remove, recorded in the
+log. That is the trade: a rare, silent, permanent corruption of an immutable record, for a
+rare, logged, recoverable orphan in a cleanup path that is already best-effort by
+construction — it swallows every error it meets today, not just this one. A human can delete
+an orphan artefact. Nobody can restore an un-pinned release.
+
+*On being the first `RESTRICT`.* Every foreign key in the schema that targets the three
+version tables is `CASCADE` today: `rules`, `skill_files`, and the three
+`distributed_package_*_versions` tables. That is a real convention and this breaks it — but
+every one of those is a **current-state** table, where following the version is correct: a
+distribution's pin *should* disappear when what it distributed does. A release is the only
+table in the schema whose stated purpose is to not track current state. The convention's
+rationale does not reach it, and the schema file already says as much in its own comment —
+"a release is immutable and undeletable".
+
+*Why amend the migration rather than add an ALTER.* `1821000000000-CreatePackageReleases.ts`
+is the tip of the migration chain and this branch is unmerged, so the migration has never run
+anywhere but a developer's machine and the e2e database, both of which are rebuilt. There is
+also no in-repo precedent for a drop-and-recreate-to-change-`onDelete` migration, so adding
+one would invent a motion for a file nobody has run. The cost is that anyone who already ran
+it locally must revert it and re-run; that is a line in the PR, not a design problem.
+
+*What gates it, and what it cannot prove.* Repository specs build their schema with TypeORM
+`synchronize()` off `PackageReleaseSchema`, which declares no `onDelete` at all — so the
+migration's clause is not present in the database `PackageReleaseRepository.spec.ts` sees,
+and changing it is invisible there by construction. (Incidentally, pg-mem defaults an
+unspecified `onDelete` to `no action`, which throws: the repository suite has always been
+running against restrict-like behaviour, and nothing noticed, because no test in the
+repository asserts a cascade or a foreign-key violation anywhere.) The gate is therefore a
+new spec in `packages/migrations/src/lib/`, following `gitReposMigrations.spec.ts` — build a
+pg-mem datasource with `entities: []`, create the referenced tables by raw SQL, run the
+migration class's `up()`, then delete a pinned version row and assert it is refused. pg-mem
+implements `restrict` and `cascade` for real, so the assertion is not vacuous. What it does
+not prove is Postgres's behaviour, exactly as D-027 says of AC-20's race; this is the same
+bargain, taken knowingly and for the same reason.
+
+**Rejected.**
+
+- Leaving `CASCADE` and documenting the window — the argument is "it is unlikely", which is
+  also the reason nobody would ever find it. The record it corrupts is the product's promise.
+- `NO ACTION` instead of `RESTRICT` — identical blast radius here, and it reads as "unset".
+- Changing `PackageReleaseSchema`'s relations to declare `onDelete` too, for symmetry — the
+  schema is silent today, and silence already yields the behaviour we want under
+  `synchronize()`. Declaring it in two hand-kept places doubles what can drift; the unique
+  index is in both only because a test needed it, and that comment explains why.
+- Teaching `ApplyPlaybookUseCase.rollback()` to check for pins before hard-deleting — the
+  correct fix in the abstract, and it is another package's use case, reached by nothing in
+  this feature. Squarely outside this charter, and it would make the release table a thing
+  the playbook applier has to know about, which D-022 says nothing reads.
+- A new ALTER migration rather than amending 1821 — see above.
+- Gating it with a repository spec — the clause is not in that database at all, so the test
+  would assert a constraint that was never created. That is the green-and-meaningless shape
+  D-027, D-028, D-032 and D-037 have each refused.
+
+**Constrains implementation.** Change exactly three `onDelete` values in
+`1821000000000-CreatePackageReleases.ts`, on the FKs named `FK_prcv_command_version`,
+`FK_prsv_standard_version` and `FK_prskv_skill_version`. Leave `FK_prcv_package_release`,
+`FK_prsv_package_release`, `FK_prskv_package_release` and `FK_package_releases_package` as
+`CASCADE` — a deleted release must still take its own join rows with it. Do not edit
+`PackageReleaseSchema.ts`. Do not edit anything in `packages/playbook-change-applier`. The
+new spec lives in `packages/migrations/src/lib/`, builds its datasource the way
+`gitReposMigrations.spec.ts` does, and asserts the refusal behaviourally — deleting a pinned
+version row throws — rather than by reading `information_schema`. It must also assert the
+companion case, that deleting the **release** still cascades its join rows away, so the two
+halves of this decision are both covered.
+
+---

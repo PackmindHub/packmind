@@ -33,6 +33,7 @@ import { PackageReleaseService } from '../../services/PackageReleaseService';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReleaseRefusedError } from '../../../domain/errors/PackageReleaseRefusedError';
+import { PackageComponentHasNoVersionError } from '../../../domain/errors/PackageComponentHasNoVersionError';
 
 describe('CreatePackageReleaseUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
@@ -372,5 +373,34 @@ describe('CreatePackageReleaseUseCase', () => {
     await expect(useCase.execute(buildCommand('9.9.9'))).rejects.toBeInstanceOf(
       PackageReleaseRefusedError,
     );
+  });
+
+  it('a component with no version refuses the cut with PackageComponentHasNoVersionError', async () => {
+    commandsPort.listCommandVersions.mockResolvedValue([]);
+
+    let error: unknown;
+    try {
+      await useCase.execute(buildCommand('0.1.0'));
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(PackageComponentHasNoVersionError);
+    expect((error as PackageComponentHasNoVersionError).family).toBe('recipe');
+    expect((error as PackageComponentHasNoVersionError).componentId).toBe(
+      commandId,
+    );
+  });
+
+  it('nothing is written when a component has no version', async () => {
+    commandsPort.listCommandVersions.mockResolvedValue([]);
+
+    try {
+      await useCase.execute(buildCommand('0.1.0'));
+    } catch {
+      // Expected to throw
+    }
+
+    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
   });
 });
