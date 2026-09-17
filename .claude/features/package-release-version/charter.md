@@ -3,7 +3,9 @@
 - slug: `package-release-version` — the directory name under `.claude/features/`
 - status: `closed` for its acceptance criteria — AC-1..AC-25 delivered and green; reopened on
   2026-09-16 by D-056 for a feature flag, and closed again on 2026-09-17 with S4 (D-057).
-  **Not merged: S5 triages the review on PR #489. Start there — see `Next session` below.**
+  S5 triaged the review on PR #489 the same day and closed: four findings, four units
+  (U-027..U-030), all green. **Not merged, and two things outstanding that are not this
+  charter's — see `S5 — done` below.**
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -214,7 +216,8 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
 
 - rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4), plus `2`
   for S4 (actual: 3 — U-026 withdrew the CHANGELOG entry, which the boundary reconcile
-  found rather than the sizing)
+  found rather than the sizing), plus `not sized` for S5 (actual: 4 — one per finding, which
+  is the count the triage produced rather than one it was given)
 - verdict: `split`
 - session boundaries:
 
@@ -224,7 +227,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
-  | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing | S4 |
+  | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing. *Closed 2026-09-17: four units, U-027..U-030, and six decisions, D-059..D-064* | S4 |
 
   **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
@@ -301,46 +304,60 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   the query hooks it exercises and the sentences it asserts all exist in the repository
   now, so S3 specs its units against something real rather than something described.
 
-## Next session — S5: triage the review on PR #489
-
-Everything below this heading is already true and green. This section is the only thing
-outstanding, and it is where a fresh orchestrator session starts.
+## S5 — done: the review on PR #489, triaged
 
 **The PR.** [PackmindHub/packmind#489](https://github.com/PackmindHub/packmind/pull/489),
-branch `feat/845-package-release-version`, checks passing. S4's code commits reached `origin`
-without an explicit push from the orchestrator — the mechanism is **not** a git hook
-(`.husky/` holds only `pre-commit` and `pre-push`, neither of which pushes), and it is not
-established. **So check `git rev-list --count origin/<branch>..HEAD` before assuming the PR
-shows your work**, rather than trusting either that it pushes itself or that it does not.
+branch `feat/845-package-release-version`. One automated review by `greptile-apps`, four
+inline findings, submitted before S3 closed — so it saw S1 and S2 only.
 
-**The review.** One review, by `greptile-apps` — an **automated** reviewer, not a person —
-submitted 2026-09-16 at 10:55, plus one summary comment. It predates S3's close and all of
-S4, so it saw S1 and S2 only. Four inline findings:
+**The result: four findings, four units, and not one of them true as stated.**
 
-| priority | file | line |
-|---|---|---|
-| P1 | `packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts` | 38 |
-| P1 | `packages/migrations/src/migrations/1821000000000-CreatePackageReleases.ts` | 120 |
-| P1 | `packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts` | 194 |
-| P2 | `packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts` | 107 |
+| # | finding | verdict | unit | decision |
+|---|---|---|---|---|
+| P1 | Missing Space Authorization | headline false, residue true | U-029 | D-060, corrected by D-064 |
+| P1 | Cascades Mutate Release History | true, and truer than it knew | U-030 | D-062 |
+| P1 | Unresolved Components Disappear | true | U-027 | D-059 |
+| P2 | Generic Errors Hide Refusals | half true | U-028 | D-061 |
 
-Read them with `gh api repos/PackmindHub/packmind/pulls/489/comments`.
+Each finding correctly identified something and then prescribed a remedy this codebase had
+already rejected, or could not reach. The decision log is what made the two separable, and
+it is also what got one of them wrong — see the last bullet.
 
-**What the session is.** Triage first, fix second. A machine-generated finding is a
-hypothesis, not a defect, and this feature's log is full of places where the obvious-looking
-objection was already decided deliberately — D-027 on what pg-mem does and does not prove,
-D-028 on the untestable transaction, D-032 and D-040 on detecting the unique violation by
-`23505` alone, D-037 on soft-deleting the version row rather than its parent. **Check each
-finding against `decisions.md` before treating it as a defect**: several touch exactly the
-code those entries constrain, and "fixing" one would undo a decision rather than a bug.
+- **Unresolved components** was the cleanest defect. D-036 authorised omitting a versionless
+  component from the gate's snapshot on the reasoning that omission "makes the package look
+  different from its release" — true only when the release pinned the thing omitted. A
+  component added *after* the last release is absent from both sides, so the gate said
+  `no_change`; a package whose only component is versionless reached an empty snapshot and
+  said "Add at least one component" to someone who had one. D-059 keeps the identity with a
+  null pin.
+- **Cascades** was the finding that was more right than it knew: it asserted a hard-delete
+  path it could not locate, and the path exists one package out, in
+  `ApplyPlaybookUseCase.rollback()`. D-004 and D-037 are each locally correct about *soft*
+  delete and were jointly blind to it.
+- **Generic errors** and **space authorization** were each half right, in the same way. The
+  first asked for a fifth refusal code, which D-034 closed deliberately; the second asked for
+  `AbstractSpaceMemberUseCase`, which D-035 rejected for AC-19's sake.
 
-So, per finding: decide true or false. A true one becomes a unit with its own exit criterion,
-gated and committed like any other. A false one gets a reply on the PR saying which decision
-already covers it, and is resolved there. Neither outcome is a charter change, so this is not
-a reopening — but if a finding turns out to require one, that is rung 4 and halts to the human.
+**The two things this session leaves open, neither of them the charter's.**
 
-**Sizing is the triage's closing act**, not something to guess up front: four findings could
-be four units, one, or none.
+- **The cross-organization reach is open on every space-scoped route.** D-060 claimed U-029's
+  space binding closed it; D-064 records that it does not, and why. `OrganizationAccessGuard`
+  reads only `:orgId`, nothing validates `:spaceId` against it, and `AbstractMemberUseCase`
+  never reads `spaceId` — so a caller supplying a consistent foreign `spaceId` and `packageId`
+  passes every check including the new one. The sting: `AbstractSpaceMemberUseCase`, the
+  remedy this feature twice refused, *would* have closed it. D-035 made that call without the
+  fact that nothing upstream binds a space to its organization. Reopening it changes D-035,
+  D-017 and how AC-19 is read, and the same chain serves recipes, standards and skills — so it
+  is rung 4 and it halts to a human.
+- **`GetPackageByIdUseCase` has the same unscoped `findById`** the release routes had, and
+  predates this feature.
+
+**What was verified at the close.** `nx run-many -t test` over `types`, `deployments`, `api`,
+`frontend`, `feature-flags`, `ui` and `migrations`: seven projects green, `--skip-nx-cache`.
+The four Playwright criteria pass together in 49.2s at `--workers=1` — matching S4's 49.1s.
+That run took four attempts, every failure inside the signup fixture and never in the release
+flow, exactly as D-053 describes and D-052 instructs; the one criterion that failed twice
+passes alone in 11.7s.
 
 ## Done
 
@@ -422,3 +439,37 @@ Two things a reader should carry rather than discover:
 One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
 `apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`
 declares no test target. It is gated by `sweep` and read by a person, per D-047.
+
+**And closed a third time on 2026-09-17, after S5.** The review on PR #489 was triaged: four
+findings, four units, six decisions. Nothing already built was rolled back and no acceptance
+criterion changed, which is what the S5 row promised — but three of the four findings were
+real defects, so "closed and green" at the S4 boundary was not the same thing as "correct".
+
+S5 adds no acceptance criterion either, so like S4 it is judged by a person and by the suite
+staying green around it. It is:
+
+- `nx run-many -t test` over `types`, `deployments`, `api`, `frontend`, `feature-flags`, `ui`
+  and `migrations` — seven projects, `--skip-nx-cache`, green. `migrations` joins the boundary
+  list for the first time, because U-030 gave that project its first spec touching this
+  feature.
+- The four end-to-end criteria pass together in 49.2s at `--workers=1`, against S4's 49.1s.
+- U-030's migration spec is mutation-checked twice — by its executor and independently:
+  reverting the three `onDelete` values to `CASCADE` fails 6 of its 8 tests. That check exists
+  because the gate cannot see a vacuous test, and this one asserts a constraint that no
+  repository spec in the codebase can observe.
+
+Three things a reader should carry rather than discover:
+
+- **The cross-organization reach is open, and this feature's own entry once claimed it was
+  closed.** D-060 asserted it; D-064 corrects it with the guard chain quoted end to end. The
+  repair U-029 landed is still right — it makes true a sentence D-035 had already asserted —
+  but it buys addressing, not tenancy. This is the one halt S5 produced.
+- **A versionless component now leads to an enabled button and an opaque 500.** D-059 made
+  that path reachable and D-061 left it unmapped, each correctly on its own terms; the
+  composition is a screen neither entry describes. D-063 accepts it explicitly, with the
+  fifth refusal code named as the repair if it is ever seen in the wild.
+- **The boundary reconcile found both of the above, and neither was visible from inside any
+  unit.** All four units passed their gate on the first attempt with one recorded deviation
+  between them. That is the second time on this feature that a green session hid something a
+  boundary check caught — U-026 and the CHANGELOG was the first — and it is the argument for
+  the reconcile being signal-triggered rather than occasional.

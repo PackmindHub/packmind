@@ -128,7 +128,7 @@ coverage for any criterion.
 - decided: `2026-09-14`
 - supersedes: —
 - superseded-by: —
-- relates to: `AC-16`, `AC-17`, `AC-18`, `UK-3`
+- relates to: `AC-16`, `AC-17`, `AC-18`, `UK-3`, `D-062` (which diverges from the `DistributedPackage` idiom this entry copies: the release join tables' version foreign keys are `RESTRICT`, where every distribution table's are `CASCADE`)
 
 **Decision.** A `package_releases` table (uuid pk, `package_id`, `version`, `name`,
 `description`, timestamps), plus `package_release_command_versions`,
@@ -186,7 +186,7 @@ against `package_releases` or any of its join tables.
 - user-visible: `yes`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-062 (partial — the premise that component versions are never deleted)
 - relates to: `AC-18`, `UK-3`
 
 **Decision.** AC-18 needs no mechanism of its own. `SkillSchema`, `CommandSchema` and
@@ -1738,7 +1738,7 @@ authorisation.
 - user-visible: `no`
 - decided: `2026-09-14`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-059 (partial — the readiness read omits unresolved components from the snapshot)
 - relates to: `AC-4`, `AC-11`, `AC-16`, `D-006`, `D-009`, `D-014`, `D-015`
 
 **Decision.** The two derivations `CreatePackageReleaseUseCase` currently keeps private
@@ -3330,7 +3330,7 @@ refusal code or a sentence.
 - user-visible: `no`
 - decided: `2026-09-17`
 - supersedes: —
-- superseded-by: —
+- superseded-by: D-064 (partial — the claim that this closes a cross-organization reach; the guard itself stands)
 - relates to: `AC-19`, `D-016`, `D-017`, `D-034`, `D-035`
 
 **Decision.** After loading the package, each of the three release use cases compares
@@ -3596,5 +3596,167 @@ new spec lives in `packages/migrations/src/lib/`, builds its datasource the way
 version row throws — rather than by reading `information_schema`. It must also assert the
 companion case, that deleting the **release** still cascades its join rows away, so the two
 halves of this decision are both covered.
+
+---
+
+## D-063 — The versionless-component cut fails generically, and that is accepted rather than stumbled into
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-17`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-4`, `D-011`, `D-014`, `D-034`, `D-059`, `D-061`
+
+**Decision.** A package holding a component with no version shows an **enabled** "Create a
+release" action, and a cut attempted from it fails with the frontend's generic failure — no
+sentence naming the cause, no refusal code, no mapped status. That composed behaviour is
+accepted as it stands. If it is ever observed in the wild, the repair is the fifth refusal
+code and its sentence, and this entry is what a later reader supersedes.
+
+**Reasoning.** Raised by the S5 boundary reconcile, and it is the kind of thing only a
+boundary check finds: it exists in the *composition* of two entries decided hours apart, and
+each is correct alone.
+
+D-059 restored the unresolved component to the gate's snapshot, so the verdict became
+`ready` — deliberately, on the reasoning that "the user acts, and D-014's throw says so
+loudly". D-061 then decided that throw stays an unmapped 500 with no code and no sentence,
+on the reasoning that the state is "not something the user did and not something they can
+undo". Both hold. Composed, they produce a screen neither entry describes: an enabled button
+that leads to an opaque failure.
+
+What changed between them is reachability, and neither entry noticed. Before D-059 the cut
+path was effectively closed for this package — the gate answered `no_change` or
+`no_components`, so the action was disabled and the 500 was unreachable through the UI.
+D-059 opened it. D-061's "no user can fix it" is still true; its unstated premise, that no
+user would meet it, is the part D-059 had just falsified.
+
+*Why accept rather than repair.* The trade has not actually moved. Reaching this state still
+requires an artefact stored without the version the three services create alongside it —
+D-014's "close to impossible in practice", and nothing in S5 made that likelier, only more
+visible when it happens. Against that, a fifth code reopens the union D-034 closed
+deliberately and adds a sentence to D-011's file for a condition no acceptance criterion
+describes, which is the same purchase D-059 and D-061 each declined within a day. Buying it
+now, for a composition rather than for a new requirement, would be paying twice for a
+consistency nobody asked for.
+
+*Why write it down at all, then.* Because the honest form of "we accept this" is an entry
+that says so, and the dishonest form is silence that reads as nobody having looked. The
+failure is now a decision with a stated trigger for revisiting, rather than a seam between
+two entries that each point at the other.
+
+*What a user actually sees, stated so it is not discovered.* The pane offers the release, the
+drawer accepts a version, the submit fails, and the message is the application's generic one.
+Nothing is written — D-014's throw precedes every write, and U-028's test asserts exactly
+that — so the cost is confusion, not damage.
+
+**Rejected.**
+
+- A fifth refusal code with its sentence — the repair, and correct the moment this stops being
+  hypothetical. Declined now for the reason above; named here so it is the obvious next move
+  rather than a rediscovery.
+- Reverting D-059 so the gate hides the component again — trades a rare opaque failure for a
+  frequent wrong sentence, and reinstates the `no_components` message shown to someone who has
+  a component. Strictly worse.
+- Having readiness throw, so the pane fails instead of the cut — D-036 rejected this and its
+  reason stands: the pane must render, and a package with one broken component would show
+  nothing at all.
+- Carrying the broken component in the readiness payload so the pane can name it — a new wire
+  field and a new rendering for a state no criterion describes; strictly more than the fifth
+  code, which is already judged too expensive.
+
+**Constrains implementation.** Nothing. This entry changes no code and is deliberately inert:
+it records an accepted gap, its trigger, and its repair. A unit that finds itself adding a
+fifth `PackageReleaseRefusalCode` member is superseding this entry and should say so.
+
+*Also noted, not decided:* U-028 exported `PackageComponentHasNoVersionError` from
+`packages/deployments/src/index.ts`. D-061's constraints named only the file under
+`domain/errors/` and did not mention the barrel. The export is consistent with that entry's
+stated purpose — "a type a future caller can narrow on" — and is left in place.
+
+---
+
+## D-064 — D-060's repair stands; its security claim was wrong, and the cross-organization reach is open
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-17`
+- supersedes: D-060 (partial — the reasoning's claim about what the guard closes, not the guard)
+- superseded-by: —
+- relates to: `AC-19`, `D-017`, `D-035`, `D-060`
+
+**Decision.** The guard U-029 landed is correct and stays: each release use case compares
+`pkg.spaceId` to `command.spaceId` and throws `PackageNotFoundError`. What changes here is
+the claim about what it buys.
+
+**D-060 asserted that binding the package to the URL's space closes a cross-organization
+reach. That is false.** It closes an addressing gap and nothing more. The
+cross-organization reach is open, on these routes and on every other space-scoped route in
+the API, and closing it is not this charter's call.
+
+**Reasoning.** D-060 was written on an unchecked premise, and the S5 boundary reconcile
+caught it: the argument only works if something proves the URL's `spaceId` belongs to the
+URL's `organizationId`. Nothing does. The chain, checked end to end:
+
+- `OrganizationAccessGuard` is the only guard on the packages controller — class-level, no
+  handler-level guards anywhere in the file. It reads `request.params.orgId` and compares it
+  to the caller's session organization. The string `spaceId` does not appear in it.
+- No guard, interceptor or pipe anywhere under `apps/api/src/app/organizations/spaces/`
+  validates `:spaceId` against `:orgId`. The module's own doc comment says "All routes are
+  protected by `OrganizationAccessGuard` which validates that the user has access to the
+  organization" — accurate, and the word missing from it is the whole problem.
+- `AbstractMemberUseCase.validateMemberAccess` checks the caller against
+  `command.organizationId` and never reads `command.spaceId`.
+
+So an org-A member calling
+`/organizations/orgA/spaces/{spaceFromOrgB}/packages/{packageFromOrgB}/releases` passes the
+guard (orgA matches their session), passes the base class (they are an org-A member), loads
+org B's package by unscoped id — and passes U-029's new check too, because `pkg.spaceId`
+genuinely equals the `spaceId` they put in the URL. The guard binds the package to a space
+that is itself unauthenticated with respect to the organization.
+
+*What U-029 does close, stated accurately.* A package that does not live in the space the URL
+names. That is worth having and it is exactly what D-035 claimed was already true — the entry
+title says "addressing", and addressing is what it delivers. The unit was not wasted; the
+sentence justifying it was wrong.
+
+*The part that is harder to write down.* Greptile's first finding asked for
+`AbstractSpaceMemberUseCase`, and D-060 rejected it citing D-035. On D-035's own terms that
+rejection was right. But `AbstractSpaceMemberUseCase` calls
+`spacesPort.findMembership(user.id, command.spaceId)`, and an org-A caller is not a member of
+an org-B space — **so the remedy this feature twice refused would in fact have closed the
+cross-organization reach.** D-035 made its call without knowing that nothing upstream
+validates the space against the organization, and this entry is the first place that fact is
+recorded. The finding was more right than the triage judged it, and the triage's reasoning
+was sound against a log that was missing a fact.
+
+*Why this halts rather than gets fixed here.* Adopting the space-membership check would
+reverse D-035 and D-017 and change how AC-19 is read — AC-19 forbids an *ownership or role*
+check, and whether space membership is one of those is a question about the criterion, not
+about the code. That is rung 4. And the gap is not this feature's: every controller mounted
+under `/organizations/:orgId/spaces/:spaceId/` — recipes, standards, skills, packages —
+inherits the same chain, so a fix belonging to the release routes alone would be both
+incomplete and misleading, leaving three sibling surfaces open while looking closed.
+
+**Rejected.**
+
+- Editing D-060's reasoning in place — the log is append-only for exactly this case, and
+  D-035 set the precedent by correcting D-017's factual slip this way rather than rewriting
+  it.
+- Reverting U-029 now that its stated justification is gone — the guard is still correct,
+  still cheap, and still makes true a sentence D-035 already asserted. Reverting would
+  restore a second defect to spite a wrong argument.
+- Quietly adopting `AbstractSpaceMemberUseCase` here because it happens to close the hole —
+  it reverses two decisions and reinterprets an acceptance criterion, in a session whose
+  charter says triage "is not a reopening".
+- Extending the guard to load the space and check its `organizationId` — closes it for these
+  three routes only, needs the `ISpacesPort` injection D-035 forbids, and leaves the sibling
+  surfaces open. If the answer is a check, it belongs in a guard, above all of them.
+
+**Constrains implementation.** Nothing changes in the code. Do not revert U-029. Do not add a
+space-membership check to the release use cases without a human decision reopening D-035. The
+open question — whether `/organizations/:orgId/spaces/:spaceId/...` should validate that the
+space is in the organization, and where — is reported to the human as a finding beyond this
+charter, because it is.
 
 ---
