@@ -1,7 +1,7 @@
 import { CommandVersionService } from './CommandVersionService';
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { commandVersionFactory } from '../../../test/commandVersionFactory';
 import {
   createCommandId,
@@ -18,17 +18,7 @@ describe('RecipeVersionService', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockRepository = {
-      add: jest.fn(),
-      list: jest.fn(),
-      findById: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByCommandId: jest.fn(),
-      findLatestByCommandIds: jest.fn(),
-      findByIds: jest.fn(),
-      findByCommandIdAndVersion: jest.fn(),
-    } as unknown as jest.Mocked<ICommandVersionRepository>;
+    mockRepository = mockInterface<ICommandVersionRepository>();
 
     stubbedLogger = stubLogger();
   });
