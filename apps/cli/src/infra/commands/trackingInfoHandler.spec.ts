@@ -145,6 +145,7 @@ describe('trackingInfoHandler', () => {
         owner: 'my-orga',
         repo: 'my-repo',
         currentBranch: 'dev',
+        currentBranchDetached: false,
       });
       await trackingInfoHandler(deps);
     });

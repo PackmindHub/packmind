@@ -1,22 +1,24 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs/promises';
 
 import { InstallUseCase } from './InstallUseCase';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
-import {
-  createMockConfigFileRepository,
-  createMockLockFileRepository,
-} from '../../mocks/createMockRepositories';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { spaceFactory } from '@packmind/spaces/test';
 import {
   createOrganizationId,
   createSpaceId,
   DeleteItemType,
+  FileUpdates,
+  InstallPackagesResponse,
   PackmindLockFile,
   SpaceType,
 } from '@packmind/types';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../../infra/utils/execName';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 
 jest.mock('fs/promises');
 
@@ -32,18 +34,12 @@ const lockFileFactory = (
 
 const installResponseFactory = (
   overrides: Partial<{
-    createOrUpdate: {
-      path: string;
-      content?: string;
-      sections?: { key: string; content: string }[];
-      isBase64?: boolean;
-      skillFilePermissions?: string;
-    }[];
-    delete: { path: string; type: DeleteItemType }[];
+    createOrUpdate: FileUpdates['createOrUpdate'];
+    delete: FileUpdates['delete'];
     skillFolders: string[];
     missingAccess: string[];
   }> = {},
-) => ({
+): InstallPackagesResponse => ({
   fileUpdates: {
     createOrUpdate: overrides.createOrUpdate ?? [],
     delete: overrides.delete ?? [],
@@ -51,22 +47,27 @@ const installResponseFactory = (
   skillFolders: overrides.skillFolders ?? [],
   missingAccess: overrides.missingAccess ?? [],
   resolvedAgents: [],
+  // The use case never reads the counts; they only ride the response.
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
 });
 
 describe('InstallUseCase', () => {
   let useCase: InstallUseCase;
   let mockGateway: ReturnType<typeof createMockPackmindGateway>;
-  let mockLockFileRepository: ReturnType<typeof createMockLockFileRepository>;
-  let mockConfigFileRepository: ReturnType<
-    typeof createMockConfigFileRepository
-  >;
-  let mockSpaceService: ReturnType<typeof createMockSpaceService>;
+  let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
 
   beforeEach(() => {
     mockGateway = createMockPackmindGateway();
-    mockLockFileRepository = createMockLockFileRepository();
-    mockConfigFileRepository = createMockConfigFileRepository();
-    mockSpaceService = createMockSpaceService();
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+    mockConfigFileRepository = mockInterface<IConfigFileRepository>();
+    mockSpaceService = mockInterface<ISpaceService>();
 
     // Setup fs mocks
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
@@ -332,7 +333,7 @@ describe('InstallUseCase', () => {
       beforeEach(() => {
         mockConfigFileRepository.readConfig.mockResolvedValue({
           packages: { '@space/pkg-a': '*' },
-          agents: ['claude-code', 'cursor'],
+          agents: ['claude', 'cursor'],
         });
       });
 
@@ -344,7 +345,7 @@ describe('InstallUseCase', () => {
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
           expect.objectContaining({
-            agents: ['claude-code', 'cursor'],
+            agents: ['claude', 'cursor'],
           }),
         );
       });
@@ -374,15 +375,16 @@ describe('InstallUseCase', () => {
           artifacts: {
             'artifact-1': {
               name: 'my-recipe',
-              type: 'recipe',
+              type: 'command',
               id: 'artifact-1',
               version: 1,
               spaceId: 'space-1',
               packageIds: ['pkg-1'],
+              source: 'user',
               files: [
                 {
                   path: '.packmind/recipes/my-recipe.md',
-                  agent: 'claude-code',
+                  agent: 'claude',
                 },
               ],
             },
@@ -494,6 +496,7 @@ describe('InstallUseCase', () => {
           useCase.execute({
             packages: ['my-package'].map(parsePackageSlug),
             baseDirectory: '/test',
+            cliVersion: '0.0.0-test',
           }),
         ).rejects.toThrow(
           'Your organization has multiple spaces. Please specify the space for each package using the @space/package format',
@@ -1499,7 +1502,7 @@ Old packmind content
         const serverLockFile = {
           lockfileVersion: 1,
           packageSlugs: ['@space/test-package'],
-          agents: ['claude-code'],
+          agents: ['claude'],
           artifacts: {
             'artifact-1': {
               name: 'recipe-from-server',
@@ -1508,10 +1511,11 @@ Old packmind content
               version: 1,
               spaceId: 'space-1',
               packageIds: ['pkg-1'],
+              source: 'user',
               files: [
                 {
                   path: '.packmind/recipes/recipe-from-server.md',
-                  agent: 'claude-code',
+                  agent: 'claude',
                 },
               ],
             },
@@ -1536,7 +1540,7 @@ Old packmind content
         expect(mockLockFileRepository.write).toHaveBeenCalledWith(
           '/test',
           expect.objectContaining({
-            agents: ['claude-code'],
+            agents: ['claude'],
             packageSlugs: ['@space/test-package'],
             cliVersion: '0.28.1-next',
           }),

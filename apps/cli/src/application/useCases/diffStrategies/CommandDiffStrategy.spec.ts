@@ -1,5 +1,5 @@
 import * as fs from 'fs/promises';
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType, ScalarUpdatePayload } from '@packmind/types';
 import { CommandDiffStrategy } from './CommandDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
@@ -72,12 +72,16 @@ describe('CommandDiffStrategy', () => {
 
       it('sets oldValue to full server content', async () => {
         const [diff] = await strategy.diff(baseFile, '/base');
-        expect(diff.payload.oldValue).toBe(baseFile.content);
+        expect((diff.payload as ScalarUpdatePayload).oldValue).toBe(
+          baseFile.content,
+        );
       });
 
       it('sets newValue to full local content', async () => {
         const [diff] = await strategy.diff(baseFile, '/base');
-        expect(diff.payload.newValue).toBe(localContent);
+        expect((diff.payload as ScalarUpdatePayload).newValue).toBe(
+          localContent,
+        );
       });
     });
 

@@ -87,6 +87,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -114,6 +115,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -145,6 +147,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -373,6 +376,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -399,6 +403,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -462,6 +467,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -496,6 +502,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -532,6 +539,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -657,6 +665,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -702,6 +711,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -764,6 +774,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -830,6 +841,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -919,8 +931,9 @@ describe('buildProposals', () => {
           version: 1,
           spaceId: 'space-123',
           packageIds: [],
+          source: 'user',
           files: [
-            { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+            { path: '.claude/commands/my-command.md', agent: 'claude' },
             {
               path: '.github/copilot/commands/my-command.md',
               agent: 'copilot',
@@ -958,7 +971,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -983,7 +996,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1000,7 +1013,7 @@ describe('buildProposals', () => {
       expect(conflicts[0].entries).toEqual([
         {
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         },
         {
           filePath: '.github/copilot/commands/my-command.md',
@@ -1017,7 +1030,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1042,7 +1055,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1071,8 +1084,9 @@ describe('buildProposals', () => {
             version: 1,
             spaceId: 'space-123',
             packageIds: [],
+            source: 'user',
             files: [
-              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
             ],
           },
         },
@@ -1096,7 +1110,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated content',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
       ];
 

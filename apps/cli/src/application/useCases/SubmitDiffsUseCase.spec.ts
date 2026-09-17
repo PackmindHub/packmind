@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   BatchCreateChangeProposalsResponse,
   ChangeProposalCaptureMode,
@@ -7,14 +8,12 @@ import {
 
 import { SubmitDiffsUseCase } from './SubmitDiffsUseCase';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import {
-  createMockChangeProposalGateway,
-  createMockPackmindGateway,
-} from '../../mocks/createMockGateways';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 
 describe('SubmitDiffsUseCase', () => {
   let useCase: SubmitDiffsUseCase;
-  const mockChangeProposals = createMockChangeProposalGateway();
+  const mockChangeProposals = mockInterface<IChangeProposalGateway>();
   const mockGateway = createMockPackmindGateway({
     changeProposals: mockChangeProposals,
   });
@@ -116,7 +115,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('calls batchCreate once for the spaceId', async () => {
-      await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
+      await useCase.execute({
+        groupedDiffs: [sameSpaceGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledTimes(1);
     });
@@ -417,6 +419,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns 0 submitted', async () => {
       const result = await useCase.execute({
         groupedDiffs: [missingArtifactIdGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(0);
@@ -425,6 +428,7 @@ describe('SubmitDiffsUseCase', () => {
     it('skips with reason "Missing artifact metadata"', async () => {
       const result = await useCase.execute({
         groupedDiffs: [missingArtifactIdGroup],
+        message: 'test message',
       });
 
       expect(result.skipped).toEqual([

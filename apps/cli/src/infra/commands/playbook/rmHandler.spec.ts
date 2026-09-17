@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { playbookRmHandler, PlaybookRmHandlerDependencies } from './rmHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -28,6 +29,7 @@ const LOCK_FILE_WITH_COMMAND = {
   targetId: 'target-456',
   artifacts: {
     'my-command': {
+      source: 'user',
       name: 'My Command',
       type: 'command' as const,
       id: 'artifact-cmd-1',
@@ -48,6 +50,7 @@ const LOCK_FILE_WITH_STANDARD = {
   ...LOCK_FILE_WITH_COMMAND,
   artifacts: {
     'my-standard': {
+      source: 'user',
       name: 'My Standard',
       type: 'standard' as const,
       id: 'artifact-std-1',
@@ -68,6 +71,7 @@ const LOCK_FILE_WITH_SKILL = {
   ...LOCK_FILE_WITH_COMMAND,
   artifacts: {
     'my-skill': {
+      source: 'user',
       name: 'My Skill',
       type: 'skill' as const,
       id: 'artifact-skill-1',
@@ -117,17 +121,12 @@ describe('playbookRmHandler', () => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue(LOCK_FILE_WITH_COMMAND),
-    };
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+    mockLockFileRepository.read.mockResolvedValue(LOCK_FILE_WITH_COMMAND);
 
     const fs = jest.requireMock('fs');
     fs.existsSync.mockReturnValue(true);

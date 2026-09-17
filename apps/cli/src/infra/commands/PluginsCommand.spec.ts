@@ -12,9 +12,13 @@ jest.mock('./plugins/DeletePluginCommand', () => ({
 
 import { pluginsCommand } from './PluginsCommand';
 
+/** cmd-ts keeps the subcommand map off the type `subcommands()` returns. */
+const leavesOf = (cmd: typeof pluginsCommand): Record<string, unknown> =>
+  (cmd as unknown as { cmds: Record<string, unknown> }).cmds;
+
 describe('pluginsCommand', () => {
   it('exposes render and delete leaves', () => {
-    expect(Object.keys(pluginsCommand.cmds)).toEqual(
+    expect(Object.keys(leavesOf(pluginsCommand))).toEqual(
       expect.arrayContaining(['render', 'delete']),
     );
   });

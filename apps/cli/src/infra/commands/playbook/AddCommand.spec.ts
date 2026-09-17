@@ -37,6 +37,10 @@ jest.mock('../../utils/readSkillDirectory', () => ({
 import { addPlaybookCommand } from './AddCommand';
 import { playbookAddHandler } from './addHandler';
 
+/** cmd-ts keeps the built parsers off the type `command()` returns. */
+const argsOf = (cmd: typeof addPlaybookCommand): Record<string, unknown> =>
+  (cmd as unknown as { args: Record<string, unknown> }).args;
+
 describe('addPlaybookCommand', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -44,13 +48,13 @@ describe('addPlaybookCommand', () => {
 
   describe('when declaring its path argument', () => {
     it('takes an unbounded list of positionals', () => {
-      expect(addPlaybookCommand.args.filePaths).toEqual(
+      expect(argsOf(addPlaybookCommand).filePaths).toEqual(
         expect.objectContaining({ kind: 'restPositionals' }),
       );
     });
 
     it('names the argument in the plural for the usage line', () => {
-      expect(addPlaybookCommand.args.filePaths).toEqual(
+      expect(argsOf(addPlaybookCommand).filePaths).toEqual(
         expect.objectContaining({ displayName: 'paths' }),
       );
     });

@@ -308,6 +308,14 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
+      # Nothing else compiles the CLI's sources: esbuild strips types without
+      # checking them, and @swc/jest does the same to the specs. This covers
+      # both tsconfigs and costs seconds, so a file that does not compile fails
+      # here rather than in the 3400-test run below.
+      - name: Typecheck CLI
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: ./node_modules/.bin/nx typecheck packmind-cli
       - name: Build CLI
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}

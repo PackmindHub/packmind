@@ -1,7 +1,8 @@
+import { mockInterface } from '@packmind/test-utils';
 import { createSpaceId } from '@packmind/types';
 
 import { ChangeProposalGateway } from './ChangeProposalGateway';
-import { createMockHttpClient } from '../../mocks/createMockHttpClient';
+
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 
@@ -12,12 +13,12 @@ describe('ChangeProposalGateway', () => {
   let mockHttpClient: jest.Mocked<PackmindHttpClient>;
 
   beforeEach(() => {
-    mockHttpClient = createMockHttpClient({
-      getAuthContext: jest.fn().mockReturnValue({
-        host: 'https://api.packmind.com',
-        jwt: 'mock-jwt',
-        organizationId: 'org-123',
-      }),
+    mockHttpClient = mockInterface<PackmindHttpClient>();
+    mockHttpClient.getAuthContext.mockReturnValue({
+      host: 'https://api.packmind.com',
+      jwt: 'mock-jwt',
+      organizationId: 'org-123',
+      role: null,
     });
 
     gateway = new ChangeProposalGateway(mockHttpClient);

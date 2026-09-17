@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs';
 
 jest.mock('fs', () => ({
@@ -130,19 +131,15 @@ describe('playbookAddHandler', () => {
     mockReadFile = jest.fn().mockReturnValue(VALID_COMMAND_CONTENT);
     mockReadSkillDirectory = jest.fn().mockResolvedValue([]);
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue(null),
-      write: jest.fn(),
-      delete: jest.fn(),
-    };
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
+
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+
+    mockLockFileRepository.read.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -503,6 +500,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -564,6 +562,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -620,6 +619,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -849,6 +849,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -922,6 +923,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -1002,6 +1004,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -1077,6 +1080,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -1150,6 +1154,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -1347,6 +1352,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1576,6 +1582,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1628,6 +1635,7 @@ describe('playbookAddHandler', () => {
             targetId: 'target-456',
             artifacts: {
               'my-command': {
+                source: 'user',
                 name: 'My Command',
                 type: 'command',
                 id: 'artifact-cmd-1',
@@ -1683,6 +1691,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1821,6 +1830,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1978,6 +1988,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -2072,6 +2083,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -2158,6 +2170,7 @@ describe('playbookAddHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -2470,6 +2483,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -2781,6 +2795,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'std-1',
@@ -2841,6 +2856,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'std-1',
@@ -2901,6 +2917,7 @@ describe('playbookAddHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'std-1',
