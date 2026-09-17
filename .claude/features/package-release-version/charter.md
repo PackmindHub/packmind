@@ -1,8 +1,9 @@
 # Feature: Release a numbered version of a package
 
 - slug: `package-release-version` — the directory name under `.claude/features/`
-- status: `closed` — AC-1..AC-25 delivered and green; reopened on 2026-09-16 by D-056 for a
-  feature flag, and closed again on 2026-09-17 with S4 (D-057)
+- status: `closed` for its acceptance criteria — AC-1..AC-25 delivered and green; reopened on
+  2026-09-16 by D-056 for a feature flag, and closed again on 2026-09-17 with S4 (D-057).
+  **Not merged: S5 triages the review on PR #489. Start there — see `Next session` below.**
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -223,6 +224,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
+  | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing | S4 |
 
   **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
@@ -298,6 +300,45 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   **And S3 is informed by S2 in the same way S2 was by S1.** The page objects it extends,
   the query hooks it exercises and the sentences it asserts all exist in the repository
   now, so S3 specs its units against something real rather than something described.
+
+## Next session — S5: triage the review on PR #489
+
+Everything below this heading is already true and green. This section is the only thing
+outstanding, and it is where a fresh orchestrator session starts.
+
+**The PR.** [PackmindHub/packmind#489](https://github.com/PackmindHub/packmind/pull/489),
+branch `feat/845-package-release-version`, 46 commits, checks passing. Every commit through
+S4 is already pushed — **a git hook pushes on commit in this repository**, so the branch is
+never behind and there is no push step to remember.
+
+**The review.** One review, by `greptile-apps` — an **automated** reviewer, not a person —
+submitted 2026-09-16 at 10:55, plus one summary comment. It predates S3's close and all of
+S4, so it saw S1 and S2 only. Four inline findings:
+
+| priority | file | line |
+|---|---|---|
+| P1 | `packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts` | 38 |
+| P1 | `packages/migrations/src/migrations/1821000000000-CreatePackageReleases.ts` | 120 |
+| P1 | `packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts` | 194 |
+| P2 | `packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts` | 107 |
+
+Read them with `gh api repos/PackmindHub/packmind/pulls/489/comments`.
+
+**What the session is.** Triage first, fix second. A machine-generated finding is a
+hypothesis, not a defect, and this feature's log is full of places where the obvious-looking
+objection was already decided deliberately — D-027 on what pg-mem does and does not prove,
+D-028 on the untestable transaction, D-032 and D-040 on detecting the unique violation by
+`23505` alone, D-037 on soft-deleting the version row rather than its parent. **Check each
+finding against `decisions.md` before treating it as a defect**: several touch exactly the
+code those entries constrain, and "fixing" one would undo a decision rather than a bug.
+
+So, per finding: decide true or false. A true one becomes a unit with its own exit criterion,
+gated and committed like any other. A false one gets a reply on the PR saying which decision
+already covers it, and is resolved there. Neither outcome is a charter change, so this is not
+a reopening — but if a finding turns out to require one, that is rung 4 and halts to the human.
+
+**Sizing is the triage's closing act**, not something to guess up front: four findings could
+be four units, one, or none.
 
 ## Done
 
