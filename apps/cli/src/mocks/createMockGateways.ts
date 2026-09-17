@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { IChangeProposalGateway } from '../domain/repositories/IChangeProposalGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
@@ -23,6 +24,13 @@ export type MockPackmindGatewayOverrides = {
   repositoryTracking?: jest.Mocked<IRepositoryTrackingGateway>;
 };
 
+/**
+ * `IPackmindGateway` is all data members - one nested gateway per field - so
+ * `mockInterface` cannot build it on its own: it demands them, rather than
+ * answering a `jest.fn()` where the interface declares an object. This factory
+ * supplies that tree; the leaf factories below are the ones `mockInterface`
+ * fills in.
+ */
 export function createMockPackmindGateway(
   overrides?: MockPackmindGatewayOverrides,
 ): jest.Mocked<IPackmindGateway> {
@@ -44,117 +52,63 @@ export function createMockPackmindGateway(
 export function createMockRepositoryTrackingGateway(
   overrides?: Partial<jest.Mocked<IRepositoryTrackingGateway>>,
 ): jest.Mocked<IRepositoryTrackingGateway> {
-  return {
-    getTrackedRepository: jest.fn(),
-    setTrackedRepository: jest.fn(),
-    updateTrackedBranch: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<IRepositoryTrackingGateway>(), overrides);
 }
 
 export function createMockChangeProposalGateway(
   overrides?: Partial<jest.Mocked<IChangeProposalGateway>>,
 ): jest.Mocked<IChangeProposalGateway> {
-  return {
-    batchCreate: jest.fn(),
-    batchApply: jest.fn(),
-    check: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<IChangeProposalGateway>(), overrides);
 }
 
 export function createMockSpacesGateway(
   overrides?: Partial<jest.Mocked<ISpacesGateway>>,
 ): jest.Mocked<ISpacesGateway> {
-  return {
-    getUserSpaces: jest.fn(),
-    getSpaceBySlug: jest.fn(),
-    getApiContext: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<ISpacesGateway>(), overrides);
 }
 
 export function createMockSkillsGateway(
   overrides?: Partial<jest.Mocked<ISkillsGateway>>,
 ): jest.Mocked<ISkillsGateway> {
-  return {
-    upload: jest.fn(),
-    getDefaults: jest.fn(),
-    list: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<ISkillsGateway>(), overrides);
 }
 
 export function createMockCommandsGateway(
   overrides?: Partial<jest.Mocked<ICommandsGateway>>,
 ): jest.Mocked<ICommandsGateway> {
-  return {
-    create: jest.fn(),
-    list: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<ICommandsGateway>(), overrides);
 }
 
 export function createMockStandardsGateway(
   overrides?: Partial<jest.Mocked<IStandardsGateway>>,
 ): jest.Mocked<IStandardsGateway> {
-  return {
-    create: jest.fn(),
-    getRules: jest.fn(),
-    addExampleToRule: jest.fn(),
-    list: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockLinterGateway(
-  overrides?: Partial<jest.Mocked<ILinterGateway>>,
-): jest.Mocked<ILinterGateway> {
-  return {
-    getDraftDetectionProgramsForRule: jest.fn(),
-    getActiveDetectionProgramsForRule: jest.fn(),
-    getDetectionProgramsForPackages: jest.fn(),
-    trackLinterExecution: jest.fn().mockResolvedValue({}),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<IStandardsGateway>(), overrides);
 }
 
 export function createMockPackagesGateway(
   overrides?: Partial<jest.Mocked<IPackagesGateway>>,
 ): jest.Mocked<IPackagesGateway> {
-  return {
-    list: jest.fn(),
-    getSummary: jest.fn(),
-    create: jest.fn(),
-    addArtefacts: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockDeploymentGateway(
-  overrides?: Partial<jest.Mocked<IDeploymentGateway>>,
-): jest.Mocked<IDeploymentGateway> {
-  return {
-    pull: jest.fn(),
-    install: jest.fn(),
-    getDeployed: jest.fn(),
-    getContentByVersions: jest.fn(),
-    notifyDistribution: jest.fn(),
-    notifyArtefactsDistribution: jest.fn(),
-    renderPlugin: jest.fn(),
-    trackPluginDeleted: jest.fn(),
-    getRenderModeConfiguration: jest.fn(),
-    updateRenderModeConfiguration: jest.fn(),
-    getLatestVersion: jest.fn().mockResolvedValue({ version: 1 }),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<IPackagesGateway>(), overrides);
 }
 
 export function createMockOrganizationGateway(
   overrides?: Partial<jest.Mocked<IOrganizationGateway>>,
 ): jest.Mocked<IOrganizationGateway> {
-  return {
-    getOrganization: jest.fn(),
-    ...overrides,
-  };
+  return Object.assign(mockInterface<IOrganizationGateway>(), overrides);
+}
+
+export function createMockLinterGateway(
+  overrides?: Partial<jest.Mocked<ILinterGateway>>,
+): jest.Mocked<ILinterGateway> {
+  const linter = mockInterface<ILinterGateway>();
+  linter.trackLinterExecution.mockResolvedValue({});
+  return Object.assign(linter, overrides);
+}
+
+export function createMockDeploymentGateway(
+  overrides?: Partial<jest.Mocked<IDeploymentGateway>>,
+): jest.Mocked<IDeploymentGateway> {
+  const deployment = mockInterface<IDeploymentGateway>();
+  deployment.getLatestVersion.mockResolvedValue({ version: 1 });
+  return Object.assign(deployment, overrides);
 }
