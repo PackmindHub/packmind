@@ -3,7 +3,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardSamplesCommand,
   CreateStandardSamplesResponse,
@@ -19,6 +19,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
@@ -65,20 +66,21 @@ describe('CreateStandardSamplesUseCase', () => {
       slug: 'test-org',
     };
 
-    spacesPort = {
-      findMembership: jest
-        .fn()
-        .mockResolvedValue({ userId: testUserId, spaceId: testSpaceId }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: testUserId,
+      spaceId: testSpaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: testUserId,
+      updatedBy: testUserId,
+    });
 
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    standardsPort = {
-      createStandardWithExamples: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
 
     eventEmitterService = {
       emit: jest.fn(),

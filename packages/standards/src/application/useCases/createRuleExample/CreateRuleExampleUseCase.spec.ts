@@ -3,7 +3,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CreateRuleExampleCommand,
   createOrganizationId,
@@ -16,6 +16,7 @@ import {
   ProgrammingLanguage,
   RuleUpdatedEvent,
   User,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { ruleExampleFactory } from '../../../../test/ruleExampleFactory';
@@ -56,48 +57,23 @@ describe('CreateRuleExampleUseCase', () => {
   };
 
   beforeEach(() => {
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
-    ruleExampleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByRuleId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleExampleRepository>;
+    ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByIdInSpace: jest.fn(),
-      findAll: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
-    standardVersionRepository = {
-      findById: jest.fn(),
-      list: jest.fn(),
-      findByStandardId: jest.fn(),
-      findLatestByStandardId: jest.fn(),
-      findByStandardIdAndVersion: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IStandardVersionRepository>;
+    standardVersionRepository = mockInterface<IStandardVersionRepository>();
 
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
