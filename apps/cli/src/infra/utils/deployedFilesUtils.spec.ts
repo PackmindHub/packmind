@@ -7,6 +7,7 @@ import {
   lockFileToArtifactVersionEntries,
   resolveDeployedRenderAgents,
 } from './deployedFilesUtils';
+import { FileModification } from '@packmind/types';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 describe('lockFileToArtifactVersionEntries', () => {
@@ -111,10 +112,12 @@ describe('resolveDeployedRenderAgents', () => {
 
 describe('fetchDeployedFiles', () => {
   describe('returns createOrUpdate files from gateway', () => {
-    const files = [{ path: '.claude/rules/x.md', content: 'hello' }];
+    const files: FileModification[] = [
+      { path: '.claude/rules/x.md', content: 'hello' },
+    ];
     let gateway: DeploymentGateway;
     let lockFile: PackmindLockFile;
-    let result: typeof files;
+    let result: FileModification[];
 
     beforeEach(async () => {
       gateway = {

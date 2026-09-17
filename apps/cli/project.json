@@ -4,7 +4,14 @@
   "sourceRoot": "apps/cli/src",
   "projectType": "application",
   "tags": ["env:node"],
+  "// typecheck": "Spelled out rather than the '{}' the packages use: the shared definition in nx.json compiles tsconfig.lib.json, which this app does not have, and it would leave the specs unchecked either way - `test` runs them through @swc/jest, which strips types without checking them.",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project apps/cli/tsconfig.app.json && tsc --noEmit --project apps/cli/tsconfig.spec.json"
+      }
+    },
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],

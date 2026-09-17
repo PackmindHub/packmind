@@ -48,7 +48,6 @@ describe('diffArtefactsHandler', () => {
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
       diffArtefacts: jest.fn(),
-      submitDiffs: jest.fn(),
       checkDiffs: jest.fn(),
       readHierarchicalConfig: jest.fn(),
       findDescendantConfigs: jest.fn(),
@@ -1173,12 +1172,6 @@ describe('diffArtefactsHandler', () => {
 
       expect(mockPackmindCliHexa.diffArtefacts).not.toHaveBeenCalled();
     });
-  });
-
-  it('does not call submitDiffs', async () => {
-    await diffArtefactsHandler({ ...deps });
-
-    expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
   });
 
   describe('when some diffs are already submitted', () => {

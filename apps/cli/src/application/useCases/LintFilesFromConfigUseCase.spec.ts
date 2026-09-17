@@ -8,7 +8,6 @@ import {
   LinterExecutionViolation,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintFilesFromConfigUseCase } from './LintFilesFromConfigUseCase';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
@@ -32,7 +31,7 @@ describe('LintFilesFromConfigUseCase', () => {
   let mockListFiles: jest.Mocked<IListFiles>;
   let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
-  let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
+  let mockPackmindGateway: ReturnType<typeof createMockPackmindGateway>;
   let mockLinterGateway: jest.Mocked<ILinterGateway>;
 
   let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;

@@ -1,7 +1,15 @@
 import * as fs from 'fs/promises';
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType, ScalarUpdatePayload } from '@packmind/types';
 import { CommandDiffStrategy } from './CommandDiffStrategy';
 import { DiffableFile } from './DiffableFile';
+import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
+
+/**
+ * A diff's payload is the union over every proposal type; this strategy only
+ * ever emits scalar updates, so narrow it once rather than at each assertion.
+ */
+const scalarPayload = (diff: ArtefactDiff): ScalarUpdatePayload =>
+  diff.payload as ScalarUpdatePayload;
 
 jest.mock('fs/promises');
 
@@ -72,12 +80,12 @@ describe('CommandDiffStrategy', () => {
 
       it('sets oldValue to full server content', async () => {
         const [diff] = await strategy.diff(baseFile, '/base');
-        expect(diff.payload.oldValue).toBe(baseFile.content);
+        expect(scalarPayload(diff).oldValue).toBe(baseFile.content);
       });
 
       it('sets newValue to full local content', async () => {
         const [diff] = await strategy.diff(baseFile, '/base');
-        expect(diff.payload.newValue).toBe(localContent);
+        expect(scalarPayload(diff).newValue).toBe(localContent);
       });
     });
 

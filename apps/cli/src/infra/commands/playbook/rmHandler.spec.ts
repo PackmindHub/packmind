@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { playbookRmHandler, PlaybookRmHandlerDependencies } from './rmHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -120,17 +121,12 @@ describe('playbookRmHandler', () => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue(LOCK_FILE_WITH_COMMAND),
-    };
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+    mockLockFileRepository.read.mockResolvedValue(LOCK_FILE_WITH_COMMAND);
 
     const fs = jest.requireMock('fs');
     fs.existsSync.mockReturnValue(true);

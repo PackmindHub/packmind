@@ -17,7 +17,7 @@ describe('resolveUrlBuilder', () => {
 
   describe('when no API key', () => {
     it('returns null-builder', () => {
-      mockLoadApiKey.mockReturnValue(null);
+      mockLoadApiKey.mockReturnValue('');
       const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
       expect(builder('my-space', 'my-skill')).toBeNull();
     });

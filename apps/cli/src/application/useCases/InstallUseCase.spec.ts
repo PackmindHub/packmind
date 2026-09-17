@@ -375,7 +375,7 @@ describe('InstallUseCase', () => {
           artifacts: {
             'artifact-1': {
               name: 'my-recipe',
-              type: 'recipe',
+              type: 'command',
               id: 'artifact-1',
               version: 1,
               spaceId: 'space-1',
@@ -496,6 +496,7 @@ describe('InstallUseCase', () => {
           useCase.execute({
             packages: ['my-package'].map(parsePackageSlug),
             baseDirectory: '/test',
+            cliVersion: '0.0.0-test',
           }),
         ).rejects.toThrow(
           'Your organization has multiple spaces. Please specify the space for each package using the @space/package format',
