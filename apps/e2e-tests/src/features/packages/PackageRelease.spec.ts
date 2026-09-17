@@ -5,6 +5,10 @@ import { apiPackageFactory } from '../../domain/apiDataFactories/apiPackageFacto
 import { apiStandardFactory } from '../../domain/apiDataFactories/apiStandardFactory';
 
 testWithApi.describe('package release', () => {
+  // The release surface is behind the package-releases feature flag (audience: @packmind.com, @promyze.com).
+  // Setting underFeatureFlag: true signs up the test user as @packmind.com to access the release UI.
+  testWithApi.use({ underFeatureFlag: true });
+
   let standard: Standard;
   let releasablePackage: Package;
 
