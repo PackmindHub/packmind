@@ -6,7 +6,7 @@ import {
   UserOrganizationMembership,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { TestLLMConnectionUseCase } from './TestLLMConnectionUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
@@ -40,10 +40,7 @@ describe('TestLLMConnectionUseCase', () => {
   };
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     useCase = new TestLLMConnectionUseCase(mockAccountsPort, stubLogger());
     mockExecutePrompt = jest.fn();
