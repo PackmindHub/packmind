@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { skillFactory } from '@packmind/skills/test';
 import { standardFactory } from '@packmind/standards/test';
 import { commandFactory } from '@packmind/commands/test';
@@ -120,26 +121,22 @@ describe('playbookSubmitHandler', () => {
     mockExit = jest.fn();
     mockOpenEditor = jest.fn().mockReturnValue('My commit message');
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue({
-        lockfileVersion: 1,
-        packageSlugs: ['my-package'],
-        agents: ['packmind'],
-        cliVersion: '1.0.0',
-        targetId: 'target-456',
-        artifacts: {},
-      }),
-      write: jest.fn(),
-      delete: jest.fn(),
-    };
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
+
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+
+    mockLockFileRepository.read.mockResolvedValue({
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {},
+    });
   });
 
   afterEach(() => {

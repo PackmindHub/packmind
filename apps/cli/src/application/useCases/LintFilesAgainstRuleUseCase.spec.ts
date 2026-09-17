@@ -1,7 +1,11 @@
 import { mockInterface } from '@packmind/test-utils';
 import {
+  createDetectionProgramId,
+  createRuleId,
   DetectionModeEnum,
+  DetectionProgramWithSeverity,
   DetectionSeverity,
+  DetectionStatus,
   ExecuteLinterProgramsCommand,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
@@ -9,7 +13,6 @@ import {
   RuleId,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 import { LintFilesAgainstRuleUseCase } from './LintFilesAgainstRuleUseCase';
@@ -27,6 +30,22 @@ import {
   logInfoConsole,
 } from '../../infra/utils/consoleLogger';
 
+/**
+ * The gateway answers whole detection programs; only `language`, `mode` and
+ * `code` decide anything here, so the identity fields are filled in once.
+ */
+const detectionProgram = (
+  program: Pick<DetectionProgramWithSeverity, 'language' | 'mode' | 'code'> &
+    Partial<DetectionProgramWithSeverity>,
+): DetectionProgramWithSeverity => ({
+  id: createDetectionProgramId('program-1'),
+  version: 1,
+  ruleId: createRuleId('rule-1'),
+  status: DetectionStatus.READY,
+  sourceCodeState: 'AST',
+  ...program,
+});
+
 jest.mock('fs/promises');
 jest.mock('../../infra/utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
@@ -41,7 +60,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
   let mockListFiles: jest.Mocked<IListFiles>;
   let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
-  let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
+  let mockPackmindGateway: ReturnType<typeof createMockPackmindGateway>;
   let mockLinterGateway: jest.Mocked<ILinterGateway>;
 
   beforeEach(() => {
@@ -111,16 +130,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         return '';
       });
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: [],
+        scope: null,
         ruleContent: 'Interface names should start with I',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function checkSourceCode(ast) { return [1]; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 
@@ -217,16 +236,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         return '';
       });
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: [],
+        scope: null,
         ruleContent: 'Interface names should start with I',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function checkSourceCode(ast) { return [1]; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 
@@ -264,16 +283,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
       );
       mockListFiles.listFilesInDirectory.mockResolvedValue([]);
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: [],
+        scope: null,
         ruleContent: 'Test rule',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function checkSourceCode(ast) { return []; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 
@@ -320,16 +339,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         );
         mockListFiles.readFileContent.mockResolvedValue('interface User {}');
         mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-          scope: [],
+          scope: null,
           ruleContent: 'Interface names should start with I',
           programs: [
-            {
-              language: 'TYPESCRIPT',
+            detectionProgram({
+              language: ProgrammingLanguage.TYPESCRIPT,
               mode: DetectionModeEnum.SINGLE_AST,
               code: 'function checkSourceCode(ast) { return [1]; }',
               sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
-            },
+            }),
           ],
         });
 
@@ -386,16 +405,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         );
         mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
         mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-          scope: [],
+          scope: null,
           ruleContent: 'Test rule',
           programs: [
-            {
-              language: 'js',
+            detectionProgram({
+              language: ProgrammingLanguage.JAVASCRIPT,
               mode: DetectionModeEnum.SINGLE_AST,
               code: 'function check() { return [1]; }',
               sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
-            },
+            }),
           ],
         });
 
@@ -431,16 +450,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
       mockListFiles.readFileContent.mockResolvedValue('interface User {}');
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: [],
+        scope: null,
         ruleContent: 'Test rule',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'invalid code',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
       mockLinterExecutionUseCase.execute.mockRejectedValue(
@@ -489,16 +508,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         return '';
       });
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: ['**/*.spec.ts', '**/test/**/*.ts'],
+        scope: '**/*.spec.ts,**/test/**/*.ts',
         ruleContent: 'Test specific rule',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function checkSourceCode(ast) { return [1]; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 
@@ -543,16 +562,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         return '';
       });
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: [],
+        scope: null,
         ruleContent: 'Global rule',
         programs: [
-          {
-            language: 'typescript',
+          detectionProgram({
+            language: ProgrammingLanguage.TYPESCRIPT,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function checkSourceCode(ast) { return [1]; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 
@@ -572,16 +591,17 @@ describe('LintFilesAgainstRuleUseCase', () => {
     mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue('/project');
     mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
     mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-      scope: [],
+      scope: null,
       ruleContent: 'Test rule',
       programs: [
-        {
-          language: 'unsupported-lang',
+        detectionProgram({
+          // deliberately invalid: only a server could send this
+          language: 'unsupported-lang' as ProgrammingLanguage,
           mode: DetectionModeEnum.SINGLE_AST,
           code: 'function checkSourceCode() { return [1]; }',
           sourceCodeState: 'AST' as const,
           severity: DetectionSeverity.ERROR,
-        },
+        }),
       ],
     });
 
@@ -649,7 +669,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
+            language: ProgrammingLanguage.TYPESCRIPT,
             code: 'const x = 1;',
             mode: 'singleAst',
             sourceCodeState: 'AST' as const,
@@ -711,7 +731,8 @@ describe('LintFilesAgainstRuleUseCase', () => {
           .mockResolvedValue({
             programs: [
               {
-                language: null,
+                // deliberately absent: only a server could send this
+                language: null as unknown as ProgrammingLanguage,
                 code: 'const x = 1;',
                 mode: 'singleAst',
                 sourceCodeState: 'AST' as const,
@@ -743,7 +764,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
           draftMode: true,
           standardSlug: 'test-standard',
           ruleId: 'rule-123' as RuleId,
-          language: 'typescript',
+          language: ProgrammingLanguage.TYPESCRIPT,
         });
       });
 
@@ -760,7 +781,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
+            language: ProgrammingLanguage.TYPESCRIPT,
             code: 'const x = 1;',
             mode: 'singleAst',
             sourceCodeState: 'AST' as const,
@@ -827,7 +848,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
+            language: ProgrammingLanguage.TYPESCRIPT,
             code: 'const x = 1;',
             mode: 'singleAst',
             sourceCodeState: 'AST' as const,
@@ -916,16 +937,17 @@ describe('LintFilesAgainstRuleUseCase', () => {
     describe('when program language is missing', () => {
       beforeEach(async () => {
         mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-          scope: [],
+          scope: null,
           ruleContent: 'Test rule',
           programs: [
-            {
-              language: null,
+            detectionProgram({
+              // deliberately absent: only a server could send this
+              language: null as unknown as ProgrammingLanguage,
               mode: DetectionModeEnum.SINGLE_AST,
               code: 'function checkSourceCode(ast) { return []; }',
               sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
-            },
+            }),
           ],
         });
 
@@ -949,7 +971,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
           draftMode: false,
           standardSlug: 'test-standard',
           ruleId: 'rule-1' as RuleId,
-          language: 'typescript',
+          language: ProgrammingLanguage.TYPESCRIPT,
         });
       });
 
@@ -966,7 +988,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const activeProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
+            language: ProgrammingLanguage.TYPESCRIPT,
             code: 'const x = 1;',
             mode: 'singleAst',
             sourceCodeState: 'AST' as const,
@@ -1063,16 +1085,16 @@ describe('LintFilesAgainstRuleUseCase', () => {
         '/project',
       );
       mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
-        scope: ['*.java'],
+        scope: '*.java',
         ruleContent: 'Some rule',
         programs: [
-          {
-            language: 'java',
+          detectionProgram({
+            language: ProgrammingLanguage.JAVA,
             mode: DetectionModeEnum.SINGLE_AST,
             code: 'function check() { return []; }',
             sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
-          },
+          }),
         ],
       });
 

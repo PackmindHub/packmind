@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   playbookStatusHandler,
   PlaybookStatusHandlerDependencies,
@@ -63,19 +64,17 @@ describe('playbookStatusHandler', () => {
     mockReadFile = jest.fn();
     mockListDirectoryFiles = jest.fn().mockReturnValue([]);
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue(null),
-      write: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined),
-    };
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
+
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+
+    mockLockFileRepository.read.mockResolvedValue(null);
+
+    mockLockFileRepository.write.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
