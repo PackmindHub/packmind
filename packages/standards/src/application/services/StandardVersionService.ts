@@ -406,6 +406,47 @@ export class StandardVersionService {
     }
   }
 
+  /**
+   * Batched sibling of `getLatestRulesByStandardId`: for every given standard,
+   * its latest version carrying that version's rules. Two queries in total,
+   * whatever the number of standards. Standards with no version at all are
+   * absent from the result.
+   */
+  async getLatestVersionsWithRulesByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Getting latest versions with rules by standard IDs', {
+      count: standardIds.length,
+    });
+
+    try {
+      const latestVersions = await this.withRules(
+        await this.standardVersionRepository.findLatestByStandardIds(
+          standardIds,
+        ),
+      );
+
+      this.logger.info(
+        'Latest versions with rules retrieved by standard IDs successfully',
+        {
+          requestedCount: standardIds.length,
+          foundCount: latestVersions.length,
+        },
+      );
+
+      return latestVersions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to get latest versions with rules by standard IDs',
+        {
+          count: standardIds.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async getLatestRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     this.logger.info('Getting latest rules by standard ID', { standardId });
 
