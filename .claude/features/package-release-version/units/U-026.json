@@ -1,0 +1,9 @@
+{
+  "unit_id": "U-026",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "CHANGELOG.MD"
+  ],
+  "gated_by": "sweep",
+  "$comment_no_exit_criterion": "Same shape and same reason as U-019, recorded as D-047: CHANGELOG.MD is prose at the repository root and declares no test, lint or build target, so there is no assertion to name. Gated with `agent-gate.mjs sweep`. A criterion borrowed from the feature's suite would pass green while judging this unit by tests it did not write."
+}

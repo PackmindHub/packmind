@@ -3186,3 +3186,64 @@ keeps four acceptance criteria reachable.
 have to be removed in a follow-up nobody schedules", and that objection is not answered here —
 the sibling consumer story has no date. The removal path is the `feature-flags-authoring`
 skill's "Remove a flag" section, and it is three deletions and an audit run.
+
+---
+
+## D-058 — The CHANGELOG entry is withdrawn while the flag is on; `apps/doc` stays
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-17`
+- supersedes: D-023 (partial — its CHANGELOG half is withdrawn, not its `apps/doc` half)
+- superseded-by: —
+- relates to: `D-023`, `D-047`, `D-056`, `D-057`, charter `In scope`
+
+**Decision.** The `## Added` entry describing the release flow is **removed from `CHANGELOG.MD`**
+for as long as `package-releases` is pinned to staff. The `apps/doc/concepts/packages-management.mdx`
+section written by D-023 **stays**. The entry is restored when the flag opens, recovered from the
+history of the commit that removes it.
+
+Decided by the human on 2026-09-17, after the S4 boundary reconcile raised the mismatch.
+
+**Reasoning.** S2 wrote both surfaces and they were true when written. D-057 hid the feature from
+every customer, which made them false, and no unit gate could have caught it: no decision told S4
+to touch either file, so neither was in any unit's scope to notice. This is the drift the boundary
+reconcile exists for.
+
+*Why `Unreleased` is not enough on its own.* The tempting reading is that nothing has shipped, so
+nothing is yet a promise. That holds only until someone cuts a release. `# [Unreleased]` is a
+staging area whose entries are promoted verbatim into the next numbered section — nobody re-reads
+it at release time asking which lines describe something still behind a flag. The failure mode is
+therefore not "a slightly early note"; it is a dated, permanent entry in `[1.18.0]` announcing a
+feature that release does not give anyone. The timing of the harm is out of this feature's hands,
+which is what makes waiting the wrong default.
+
+*Why `apps/doc` is treated differently, and it is not an oversight.* The two artifacts answer
+different questions. A CHANGELOG entry is a claim about **a version**: it says this release gave
+you this. Documentation is a claim about **the product**: it says this is how releasing a package
+works, for a reader who has arrived looking for it. A reader who cannot see the action does not
+reach that page by accident, and the page is not attached to a number that will carry it into
+someone's upgrade notes. Restoring prose deleted from an `.mdx` is also more work and more loss
+than restoring one bullet.
+
+The residual is real and stated rather than waved away: `apps/doc` does describe a flow most
+readers cannot use. That is accepted, on the grounds above, and is the smaller of the two costs.
+
+**Rejected.**
+
+- **Accept both as they are, relying on `# [Unreleased]`.** The argument is sound the day it is
+  made and expires the moment anyone runs a release, with no one in the loop to catch it. See above.
+- **Annotate both as staff-limited rather than removing.** Honest, and it creates a second thing
+  to remember to undo — on a flag whose removal already has no owner (D-057, `Left open`). D-020
+  rejected a flag partly because "it would have to be removed in a follow-up nobody schedules";
+  adding two more such follow-ups makes that objection worse, not better.
+- **Remove the `apps/doc` section too.** Symmetrical and wrong for the reason above: it answers a
+  different question, it costs more to restore, and nobody lands on it without looking for it.
+- **Keep the entry and move it to a `## Unreleased (behind a flag)` heading.** Invents a CHANGELOG
+  convention this repository does not have, for one entry, and still ships the text.
+
+**Constrains implementation.** Remove exactly the one `## Added` bullet under `# [Unreleased]`
+beginning "A package can now be released under a version". Touch nothing else in `CHANGELOG.MD` —
+not the sibling Distribution-page entry, not `## Changed`, `## Fixed` or `## Removed`, not any
+numbered release section. Do not edit `apps/doc/`. Gated by `sweep`, per D-047: `CHANGELOG.MD` is
+prose at the repository root and there is no assertion to name.
