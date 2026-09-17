@@ -388,4 +388,16 @@ describe('ListPackageReleasesUseCase', () => {
       PackageNotFoundError,
     );
   });
+
+  it('raises PackageNotFoundError when the package belongs to another space', async () => {
+    const otherSpaceId = createSpaceId(uuidv4());
+    packageService.findById.mockResolvedValue(
+      buildPackage({ spaceId: otherSpaceId }),
+    );
+
+    await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+      PackageNotFoundError,
+    );
+    expect(packageReleaseService.listReleases).not.toHaveBeenCalled();
+  });
 });

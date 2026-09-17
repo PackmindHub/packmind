@@ -229,6 +229,18 @@ describe('GetPackageReleaseUseCase', () => {
     expect(packageReleaseService.findByVersion).not.toHaveBeenCalled();
   });
 
+  it('raises PackageNotFoundError when the package belongs to another space', async () => {
+    const otherSpaceId = createSpaceId(uuidv4());
+    packageService.findById.mockResolvedValue(
+      buildPackage({ spaceId: otherSpaceId }),
+    );
+
+    await expect(useCase.execute(buildCommand('1.0.0'))).rejects.toBeInstanceOf(
+      PackageNotFoundError,
+    );
+    expect(packageReleaseService.findByVersion).not.toHaveBeenCalled();
+  });
+
   it('read a release the caller did not create', async () => {
     const release = buildRelease('1.0.0', {
       recipeVersions: [buildCommandVersion()],

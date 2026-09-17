@@ -176,12 +176,16 @@ export class ListPackageReleasesUseCase
   async executeForMembers(
     command: ListPackageReleasesCommand & MemberContext,
   ): Promise<ListPackageReleasesResponse> {
-    const { packageId } = command;
+    const { packageId, spaceId } = command;
 
     this.logger.info('Listing package releases', { packageId });
 
     const pkg = await this.services.getPackageService().findById(packageId);
     if (!pkg) {
+      throw new PackageNotFoundError(packageId);
+    }
+
+    if (pkg.spaceId !== spaceId) {
       throw new PackageNotFoundError(packageId);
     }
 

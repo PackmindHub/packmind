@@ -369,6 +369,18 @@ describe('CreatePackageReleaseUseCase', () => {
     );
   });
 
+  it('raises PackageNotFoundError when the package belongs to another space', async () => {
+    const otherSpaceId = createSpaceId(uuidv4());
+    packageService.findById.mockResolvedValue(
+      buildPackage({ spaceId: otherSpaceId }),
+    );
+
+    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBeInstanceOf(
+      PackageNotFoundError,
+    );
+    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+  });
+
   it('raises PackageReleaseRefusedError instances, not bare errors', async () => {
     await expect(useCase.execute(buildCommand('9.9.9'))).rejects.toBeInstanceOf(
       PackageReleaseRefusedError,

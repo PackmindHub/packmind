@@ -31,12 +31,16 @@ export class GetPackageReleaseUseCase
   async executeForMembers(
     command: GetPackageReleaseCommand & MemberContext,
   ): Promise<GetPackageReleaseResponse> {
-    const { packageId, version } = command;
+    const { packageId, version, spaceId } = command;
 
     this.logger.info('Getting package release', { packageId, version });
 
     const pkg = await this.services.getPackageService().findById(packageId);
     if (!pkg) {
+      throw new PackageNotFoundError(packageId);
+    }
+
+    if (pkg.spaceId !== spaceId) {
       throw new PackageNotFoundError(packageId);
     }
 
