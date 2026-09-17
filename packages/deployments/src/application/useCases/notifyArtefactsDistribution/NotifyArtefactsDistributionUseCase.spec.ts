@@ -24,7 +24,7 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -61,6 +61,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [{ userId, organizationId, role: 'member' as const }],
@@ -169,37 +170,26 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   });
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockCommandsPort = {
-      getCommandVersion: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getStandardVersionByNumber: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getSkillVersionByNumber: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
-    mockDistributionRepository = {
-      add: jest.fn().mockImplementation((d) => Promise.resolve(d)),
-      findActivePackageIdsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
+    mockDistributionRepository.add.mockImplementation((d) =>
+      Promise.resolve(d),
+    );
+    mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
+      [],
+    );
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
     mockRenderModeConfigurationService = {
       mapCodingAgentsToRenderModes: jest.fn().mockReturnValue(['cursor']),

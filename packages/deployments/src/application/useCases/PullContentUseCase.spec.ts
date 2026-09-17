@@ -1,6 +1,7 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  ICodingAgentDeployerRegistry,
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
@@ -96,18 +97,12 @@ describe('PullContentUseCase', () => {
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    commandsPort = {
-      listCommandVersions: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
 
-    standardsPort = {
-      getLatestStandardVersion: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
 
-    skillsPort = {
-      getLatestSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
@@ -117,36 +112,26 @@ describe('PullContentUseCase', () => {
       generateRemovalFileUpdates: jest.fn(),
     };
 
-    const mockRegistry = {
-      getDeployer: jest.fn().mockReturnValue(mockDeployer),
-    };
+    const mockRegistry = mockInterface<ICodingAgentDeployerRegistry>();
+    mockRegistry.getDeployer.mockReturnValue(mockDeployer);
 
-    codingAgentPort = {
-      prepareRecipesDeployment: jest.fn(),
-      prepareStandardsDeployment: jest.fn(),
-      getDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      generateRemovalUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getAgentFilePath: jest.fn(),
-      getAgentSkillPath: jest.fn(),
-      getSupportedAgents: jest.fn(),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.getDeployerRegistry.mockReturnValue(mockRegistry);
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     eventEmitterService = {
       emit: jest.fn(),
@@ -175,14 +160,13 @@ describe('PullContentUseCase', () => {
       [],
     );
 
-    distributionRepository = {
-      findActiveRenderModesByTarget: jest.fn().mockResolvedValue([]),
-      findActiveVersionsByTarget: jest.fn().mockResolvedValue({
-        standardVersions: [],
-        commandVersions: [],
-        skillVersions: [],
-      }),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.findActiveRenderModesByTarget.mockResolvedValue([]);
+    distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+      standardVersions: [],
+      commandVersions: [],
+      skillVersions: [],
+    });
 
     targetResolutionService = {
       findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(null),
@@ -222,10 +206,9 @@ describe('PullContentUseCase', () => {
       isDefaultSpace: true,
     });
 
-    spacesPort = {
-      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
-      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
+    spacesPort.getSpaceBySlug.mockResolvedValue(defaultSpace);
 
     command = {
       organizationId: organizationId as unknown as string,

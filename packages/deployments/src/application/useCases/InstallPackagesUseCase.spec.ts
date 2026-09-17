@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -150,31 +150,24 @@ describe('InstallPackagesUseCase', () => {
         .mockResolvedValue([publicPackage]),
     } as unknown as jest.Mocked<PackageService>;
 
-    commandsPort = {
-      listCommandVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
+    commandsPort.listCommandVersions.mockResolvedValue([]);
 
-    standardsPort = {
-      getLatestStandardVersion: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
-    skillsPort = {
-      getLatestSkillVersion: jest.fn().mockResolvedValue(null),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    codingAgentPort = {
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     eventEmitterService = {
       emit: jest.fn(),
@@ -204,17 +197,17 @@ describe('InstallPackagesUseCase', () => {
       }),
     } as unknown as jest.Mocked<PackmindLockFileService>;
 
-    spacesPort = {
-      listSpacesByOrganization: jest
-        .fn()
-        .mockResolvedValue([publicSpace, privateSpace]),
-      getSpaceBySlug: jest.fn().mockImplementation((slug: string) => {
-        if (slug === 'public') return Promise.resolve(publicSpace);
-        if (slug === 'private') return Promise.resolve(privateSpace);
-        return Promise.resolve(null);
-      }),
-      findMembership: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([
+      publicSpace,
+      privateSpace,
+    ]);
+    spacesPort.getSpaceBySlug.mockImplementation((slug: string) => {
+      if (slug === 'public') return Promise.resolve(publicSpace);
+      if (slug === 'private') return Promise.resolve(privateSpace);
+      return Promise.resolve(null);
+    });
+    spacesPort.findMembership.mockResolvedValue(null);
 
     command = {
       organizationId: organizationId as unknown as string,

@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -30,21 +30,13 @@ describe('GetDashboardKpiUseCase', () => {
   };
 
   beforeEach(() => {
-    distributionRepository = {
-      countActiveArtifactsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
 
-    standardsPort = {
-      listStandardsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
 
-    commandsPort = {
-      listCommandsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
 
-    skillsPort = {
-      listSkillsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
 
     useCase = new GetDashboardKpiUseCase(
       distributionRepository,

@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createDistributionId,
   createPackageId,
@@ -19,14 +19,7 @@ describe('ListDeploymentsByPackageUseCase', () => {
   let mockRepository: jest.Mocked<IDistributionRepository>;
 
   beforeEach(() => {
-    mockRepository = {
-      listByPackageId: jest.fn(),
-      listByOrganizationId: jest.fn(),
-      listByTargetIds: jest.fn(),
-      listByOrganizationIdWithStatus: jest.fn(),
-      add: jest.fn(),
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockRepository = mockInterface<IDistributionRepository>();
 
     useCase = new ListDeploymentsByPackageUseCase(mockRepository, stubLogger());
   });

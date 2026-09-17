@@ -45,7 +45,7 @@ import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import assert from 'assert';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
@@ -95,39 +95,24 @@ describe('PublishArtifactsUseCase', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
 
-    mockCommandsPort = {
-      getCommandVersionsByIds: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
+    mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([]);
 
-    mockStandardsPort = {
-      getStandardVersionsByIds: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
+    mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([]);
 
-    mockSkillsPort = {
-      getSkillVersionsByIds: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
+    mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([]);
 
-    mockGitPort = {
-      commitToGit: jest.fn(),
-      getRepositoryById: jest.fn(),
-      getFileFromRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
-    mockCodingAgentPort = {
-      renderArtifacts: jest.fn(),
-      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    mockCodingAgentPort = mockInterface<ICodingAgentPort>();
+    mockCodingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
 
-    mockDistributionRepository = {
-      add: jest.fn(),
-      findActiveVersionsByTargets: jest.fn(),
-      // Still used by the removed-agents cleanup branch, one target at a time.
-      findActiveVersionsByTarget: jest.fn(),
-      findActiveRenderModesByTarget: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
 
     activeVersions = {
       standardVersionsByTarget: jest.fn(),
@@ -237,11 +222,13 @@ describe('PublishArtifactsUseCase', () => {
       addJob: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
 
-    mockDeployDefaultSkillsUseCase = {
-      execute: jest.fn().mockResolvedValue({
-        fileUpdates: { createOrUpdate: [], delete: [] },
-      }),
-    } as unknown as jest.Mocked<IDeployDefaultSkillsUseCase>;
+    mockDeployDefaultSkillsUseCase =
+      mockInterface<IDeployDefaultSkillsUseCase>();
+    mockDeployDefaultSkillsUseCase.execute.mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skippedSkillsCount: 0,
+      lockFileSlice: {},
+    });
 
     useCase = new PublishArtifactsUseCase(
       mockCommandsPort,
