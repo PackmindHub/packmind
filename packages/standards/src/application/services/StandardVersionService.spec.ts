@@ -1,6 +1,6 @@
 import { createSpaceId, createUserId, SpaceId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -67,11 +67,7 @@ describe('StandardVersionService', () => {
       findAll: jest.fn(),
     } as unknown as IRuleExampleRepository;
 
-    linterAdapter = {
-      copyLinterArtefacts: jest.fn(),
-      updateRuleDetectionAssessmentAfterUpdate: jest.fn(),
-      computeRuleLanguageDetectionStatus: jest.fn(),
-    } as unknown as jest.Mocked<ILinterPort>;
+    linterAdapter = mockInterface<ILinterPort>();
 
     standardVersionService = new StandardVersionService(
       standardVersionRepository,

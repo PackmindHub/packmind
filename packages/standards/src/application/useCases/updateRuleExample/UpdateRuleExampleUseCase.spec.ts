@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -13,6 +13,7 @@ import {
   RuleUpdatedEvent,
   UpdateRuleExampleCommand,
   User,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -69,14 +70,17 @@ describe('UpdateRuleExampleUseCase', () => {
   });
 
   beforeEach(() => {
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
     ruleExampleRepository = {
       add: jest.fn(),
@@ -92,25 +96,9 @@ describe('UpdateRuleExampleUseCase', () => {
       hardDeleteById: jest.fn(),
     };
 
-    ruleRepository = {
-      findById: jest.fn(),
-      findByIdInSpace: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
-    standardVersionRepository = {
-      findById: jest.fn(),
-      list: jest.fn(),
-      findByStandardId: jest.fn(),
-      findLatestByStandardId: jest.fn(),
-      findByStandardIdAndVersion: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IStandardVersionRepository>;
+    standardVersionRepository = mockInterface<IStandardVersionRepository>();
 
     repositories = {
       getRuleExampleRepository: jest

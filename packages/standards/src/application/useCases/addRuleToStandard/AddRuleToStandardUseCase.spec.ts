@@ -2,7 +2,7 @@ import { AddRuleToStandardUseCase } from './AddRuleToStandardUseCase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { Standard, createStandardId } from '@packmind/types';
+import { Standard, createStandardId, UserSpaceRole } from '@packmind/types';
 import { StandardVersion } from '@packmind/types';
 import { Rule } from '@packmind/types';
 import { standardFactory } from '../../../../test/standardFactory';
@@ -14,7 +14,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   AddRuleToStandardCommand,
   AddRuleToStandardResponse,
@@ -70,15 +70,20 @@ describe('AddRuleToStandardUseCase', () => {
       slug: 'test-org',
     };
 
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
     // Mock AccountsPort
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     // Mock StandardService
     standardService = {
@@ -101,22 +106,9 @@ describe('AddRuleToStandardUseCase', () => {
     } as unknown as jest.Mocked<StandardVersionService>;
 
     // Mock RuleRepository
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-      deleteById: jest.fn(),
-      deleteByStandardVersionId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
-    ruleExampleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByRuleId: jest.fn(),
-      updateById: jest.fn(),
-      deleteById: jest.fn(),
-      findAll: jest.fn(),
-    } as unknown as jest.Mocked<IRuleExampleRepository>;
+    ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
