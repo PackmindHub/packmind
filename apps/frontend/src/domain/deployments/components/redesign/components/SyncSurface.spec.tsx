@@ -427,4 +427,73 @@ describe('SyncSurface', () => {
       expect(screen.queryByText('Acme catalog')).not.toBeInTheDocument();
     });
   });
+  describe('when the batch holds a single package', () => {
+    /*
+     * The reader arrived from that package and its name is on the screen
+     * already. A grouping row for it would only fold away the destinations they
+     * came to check before confirming a commit.
+     */
+    it('lists its destinations straight away', () => {
+      renderSurface();
+
+      expect(screen.getByText('acme/webapp')).toBeInTheDocument();
+    });
+
+    it('draws no row that repeats the package name', () => {
+      renderSurface();
+
+      expect(
+        screen.queryByRole('button', {
+          name: `Expand ${STUB_PACKAGES[0].name}`,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('names it in the title rather than counting it', () => {
+      renderSurface({
+        scope: { kind: 'bulk', packageIds: [STUB_PACKAGES[0].id] },
+      });
+
+      expect(
+        screen.getByText(`Distribute ${STUB_PACKAGES[0].name}`),
+      ).toBeInTheDocument();
+    });
+
+    it('leaves the package count off the confirm button', () => {
+      renderSurface();
+
+      expect(
+        screen.getByRole('button', {
+          name: /^Distribute to \d+ distributions?$/,
+        }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('the selection control on the summary line', () => {
+    it('drops every destination at once', async () => {
+      const user = userEvent.setup();
+      renderSurface();
+
+      await user.click(screen.getByRole('button', { name: 'Unselect all' }));
+
+      expect(
+        screen.getByRole('button', {
+          name: 'Select at least one distribution',
+        }),
+      ).toBeDisabled();
+    });
+
+    it('takes them all back', async () => {
+      const user = userEvent.setup();
+      renderSurface();
+
+      await user.click(screen.getByRole('button', { name: 'Unselect all' }));
+      await user.click(screen.getByRole('button', { name: 'Select all' }));
+
+      expect(
+        await screen.findByRole('button', { name: /^Distribute to/ }),
+      ).toBeEnabled();
+    });
+  });
 });

@@ -372,25 +372,45 @@ export function SyncSurface({
     });
   }, []);
 
-  const togglePackage = useCallback(
-    (block: PackageBlock, on: boolean) => {
+  const setBlockSelection = useCallback(
+    (targetBlocks: readonly PackageBlock[], on: boolean) => {
       setSelected((prev) => {
         const next = new Set(prev);
-        for (const entry of block.driftedEntries) {
-          if (lockReasonFor(entry, providersWithToken, isProvidersLoading))
-            continue;
-          const k = installSelectionKey(
-            block.pkg.id,
-            entry.repo.id,
-            entry.target.id,
-          );
-          if (on) next.add(k);
-          else next.delete(k);
+        for (const block of targetBlocks) {
+          for (const entry of block.driftedEntries) {
+            if (lockReasonFor(entry, providersWithToken, isProvidersLoading))
+              continue;
+            const k = installSelectionKey(
+              block.pkg.id,
+              entry.repo.id,
+              entry.target.id,
+            );
+            if (on) next.add(k);
+            else next.delete(k);
+          }
         }
         return next;
       });
     },
     [providersWithToken, isProvidersLoading],
+  );
+
+  const togglePackage = useCallback(
+    (block: PackageBlock, on: boolean) => setBlockSelection([block], on),
+    [setBlockSelection],
+  );
+
+  /**
+   * Takes or drops the whole repository side at once.
+   *
+   * On the summary line rather than on a block header, so it reads the same
+   * whether the batch groups by package or not: the batch of one has no header
+   * left to put it on, and the batch of many would have needed one control per
+   * package to do what this does in one.
+   */
+  const toggleAllInstalls = useCallback(
+    (on: boolean) => setBlockSelection(actionableBlocks, on),
+    [setBlockSelection, actionableBlocks],
   );
 
   const stats = useMemo(() => {
@@ -651,19 +671,37 @@ export function SyncSurface({
                   <LockSummary
                     ready={lockCounts.selectable}
                     inProgress={lockCounts.inProgress}
+                    selectedCount={stats.installCount}
+                    onToggleAll={toggleAllInstalls}
                   />
                 )}
-                {actionableBlocks.map((block) => (
-                  <PackageSyncBlock
-                    key={block.pkg.id}
-                    block={block}
+                {/*
+                  One package is shown as its destinations, several as blocks
+                  that separate them. The grouping row only earns its place when
+                  there is something to tell apart, and the reader who arrived
+                  from a package has already read its name twice on the way in.
+                */}
+                {actionableBlocks.length === 1 ? (
+                  <SinglePackageSyncList
+                    block={actionableBlocks[0]}
                     selected={selected}
                     providersWithToken={providersWithToken}
                     isProvidersLoading={isProvidersLoading}
                     onToggleInstall={toggleInstall}
-                    onTogglePackage={(on) => togglePackage(block, on)}
                   />
-                ))}
+                ) : (
+                  actionableBlocks.map((block) => (
+                    <PackageSyncBlock
+                      key={block.pkg.id}
+                      block={block}
+                      selected={selected}
+                      providersWithToken={providersWithToken}
+                      isProvidersLoading={isProvidersLoading}
+                      onToggleInstall={toggleInstall}
+                      onTogglePackage={(on) => togglePackage(block, on)}
+                    />
+                  ))
+                )}
               </>
             )}
             {cliBlocks.length > 0 && (
@@ -768,9 +806,13 @@ function confirmLabel(
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
 
   if (pluginCount === 0) {
-    return `Distribute ${packageCount} package${
-      packageCount === 1 ? '' : 's'
-    } to ${distributions}`;
+    /*
+     * A single package is not counted, it is named, and the title above has
+     * already named it. Counting it here would put "1 package" in front of the
+     * only number the reader is deciding on.
+     */
+    if (packageCount <= 1) return `Distribute to ${distributions}`;
+    return `Distribute ${packageCount} packages to ${distributions}`;
   }
   if (installCount === 0) {
     return `Distribute ${plugins} to ${marketplaceCount} marketplace${
@@ -796,7 +838,16 @@ function titleForScope(
      * have been titled "Distribute 0 packages", and a mixed one would have
      * announced half of what the button below it offers to send.
      */
-    if (m === 0) return `Distribute ${packages}`;
+    if (m === 0) {
+      /*
+       * One package is named rather than counted, which is what the package
+       * scope below already does. The body no longer prints that name, having
+       * dropped the grouping row a batch of one does not need, so the title is
+       * the only place left that says which package this is about.
+       */
+      const only = n === 1 ? blocks[0]?.pkg.name : null;
+      return only ? `Distribute ${only}` : `Distribute ${packages}`;
+    }
     if (n === 0) return `Distribute to ${catalogs}`;
     return `Distribute ${packages} and ${catalogs}`;
   }
@@ -829,6 +880,66 @@ function buildPackageBlocks(
   return out;
 }
 
+type EntryWithLock = {
+  entry: InstallDriftEntry;
+  lock: LockReason | null;
+};
+
+type InstallSyncRowsProps = {
+  block: PackageBlock;
+  entriesWithLock: readonly EntryWithLock[];
+  /**
+   * Read off every landing of the package, not just the drifted ones listed
+   * here: whether a repository holds a second place is a fact about the
+   * package, and a row must not lose its label because its sibling happens to
+   * be aligned.
+   */
+  multiLandingRepos: Set<string>;
+  selected: Set<string>;
+  onToggleInstall: (key: string) => void;
+};
+
+/**
+ * The destinations of one package, with nothing above them.
+ *
+ * Its own component rather than markup inlined in the block, because a batch of
+ * a single package renders it on its own: there the package name is in the
+ * title already, and a header repeating it would put a chevron between the
+ * reader and the repositories a commit is about to reach.
+ */
+function InstallSyncRows({
+  block,
+  entriesWithLock,
+  multiLandingRepos,
+  selected,
+  onToggleInstall,
+}: Readonly<InstallSyncRowsProps>) {
+  return (
+    <PMVStack gap={0} align="stretch">
+      {entriesWithLock.map(({ entry, lock }) => {
+        const key = installSelectionKey(
+          block.pkg.id,
+          entry.repo.id,
+          entry.target.id,
+        );
+        return (
+          <InstallSyncRow
+            key={key}
+            entry={entry}
+            showTarget={multiLandingRepos.has(entry.repo.id)}
+            selected={selected.has(key)}
+            lockReason={lock}
+            onToggle={() => {
+              if (lock) return;
+              onToggleInstall(key);
+            }}
+          />
+        );
+      })}
+    </PMVStack>
+  );
+}
+
 type PackageSyncBlockProps = {
   block: PackageBlock;
   selected: Set<string>;
@@ -847,12 +958,6 @@ function PackageSyncBlock({
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
   const [expanded, setExpanded] = useState(false);
-  /*
-   * Read off every landing of the package, not just the drifted ones this
-   * block lists: whether a repository holds a second place is a fact about the
-   * package, and a row must not lose its label because its sibling happens to
-   * be aligned.
-   */
   const multiLandingRepos = multiLandingRepoIds(block.pkg.installLocations);
   const entriesWithLock = block.driftedEntries.map((entry) => ({
     entry,
@@ -972,29 +1077,58 @@ function PackageSyncBlock({
       </PMBox>
 
       {expanded && (
-        <PMVStack gap={0} align="stretch">
-          {entriesWithLock.map(({ entry, lock }) => {
-            const key = installSelectionKey(
-              block.pkg.id,
-              entry.repo.id,
-              entry.target.id,
-            );
-            return (
-              <InstallSyncRow
-                key={key}
-                entry={entry}
-                showTarget={multiLandingRepos.has(entry.repo.id)}
-                selected={selected.has(key)}
-                lockReason={lock}
-                onToggle={() => {
-                  if (lock) return;
-                  onToggleInstall(key);
-                }}
-              />
-            );
-          })}
-        </PMVStack>
+        <InstallSyncRows
+          block={block}
+          entriesWithLock={entriesWithLock}
+          multiLandingRepos={multiLandingRepos}
+          selected={selected}
+          onToggleInstall={onToggleInstall}
+        />
       )}
+    </PMBox>
+  );
+}
+
+/**
+ * The same rows in the same card, with the package header taken off.
+ *
+ * What a batch of one package shows instead of a block: the border and the
+ * background stay, so the list keeps the place it had in the column, and the
+ * name that header carried is read once in the title above.
+ */
+function SinglePackageSyncList({
+  block,
+  selected,
+  providersWithToken,
+  isProvidersLoading,
+  onToggleInstall,
+}: Readonly<{
+  block: PackageBlock;
+  selected: Set<string>;
+  providersWithToken: Set<GitProviderId>;
+  isProvidersLoading: boolean;
+  onToggleInstall: (key: string) => void;
+}>) {
+  const multiLandingRepos = multiLandingRepoIds(block.pkg.installLocations);
+  const entriesWithLock = block.driftedEntries.map((entry) => ({
+    entry,
+    lock: lockReasonFor(entry, providersWithToken, isProvidersLoading),
+  }));
+  return (
+    <PMBox
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      overflow="hidden"
+      bg="background.secondary"
+    >
+      <InstallSyncRows
+        block={block}
+        entriesWithLock={entriesWithLock}
+        multiLandingRepos={multiLandingRepos}
+        selected={selected}
+        onToggleInstall={onToggleInstall}
+      />
     </PMBox>
   );
 }
@@ -1441,10 +1575,15 @@ function InstallSyncRow({
 function LockSummary({
   ready,
   inProgress,
+  selectedCount,
+  onToggleAll,
 }: Readonly<{
   ready: number;
   inProgress: number;
+  selectedCount: number;
+  onToggleAll: (on: boolean) => void;
 }>) {
+  const allSelected = ready > 0 && selectedCount === ready;
   const segments: Array<{
     key: string;
     dot: string;
@@ -1491,31 +1630,60 @@ function LockSummary({
     <PMHStack
       gap={4}
       align="center"
+      justify="space-between"
       wrap="wrap"
       rowGap={2}
       paddingX={1}
       paddingY={1}
     >
-      {segments.map((seg, idx) => (
-        <PMHStack key={seg.key} gap={2} align="center">
-          <PMBox
-            width="6px"
-            height="6px"
-            borderRadius="full"
-            bg={seg.dot}
-            flexShrink={0}
-            aria-hidden
-          />
-          <PMText fontSize="sm" color="secondary">
-            {seg.label}
-          </PMText>
-          {idx < segments.length - 1 && (
-            <PMText fontSize="sm" color="faded" aria-hidden>
-              ·
+      <PMHStack gap={4} align="center" wrap="wrap" rowGap={2}>
+        {segments.map((seg, idx) => (
+          <PMHStack key={seg.key} gap={2} align="center">
+            <PMBox
+              width="6px"
+              height="6px"
+              borderRadius="full"
+              bg={seg.dot}
+              flexShrink={0}
+              aria-hidden
+            />
+            <PMText fontSize="sm" color="secondary">
+              {seg.label}
             </PMText>
-          )}
+            {idx < segments.length - 1 && (
+              <PMText fontSize="sm" color="faded" aria-hidden>
+                ·
+              </PMText>
+            )}
+          </PMHStack>
+        ))}
+      </PMHStack>
+      {ready > 0 && (
+        <PMHStack gap={2} align="center" flexShrink={0}>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            fontVariantNumeric="tabular-nums"
+            aria-live="polite"
+          >
+            {selectedCount} selected
+          </PMText>
+          <PMText fontSize="xs" color="faded" aria-hidden>
+            ·
+          </PMText>
+          <PMButton
+            variant="ghost"
+            size="xs"
+            color="text.secondary"
+            fontSize="xs"
+            fontWeight="medium"
+            _hover={{ color: 'text.primary' }}
+            onClick={() => onToggleAll(!allSelected)}
+          >
+            {allSelected ? 'Unselect all' : 'Select all'}
+          </PMButton>
         </PMHStack>
-      ))}
+      )}
     </PMHStack>
   );
 }
