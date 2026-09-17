@@ -931,6 +931,7 @@ describe('buildProposals', () => {
           version: 1,
           spaceId: 'space-123',
           packageIds: [],
+          source: 'user',
           files: [
             { path: '.claude/commands/my-command.md', agent: 'claude' },
             {
@@ -1083,6 +1084,7 @@ describe('buildProposals', () => {
             version: 1,
             spaceId: 'space-123',
             packageIds: [],
+            source: 'user',
             files: [
               { path: '.claude/commands/my-command.md', agent: 'claude' },
             ],

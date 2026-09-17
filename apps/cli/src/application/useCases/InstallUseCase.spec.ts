@@ -380,6 +380,7 @@ describe('InstallUseCase', () => {
               version: 1,
               spaceId: 'space-1',
               packageIds: ['pkg-1'],
+              source: 'user',
               files: [
                 {
                   path: '.packmind/recipes/my-recipe.md',
@@ -1509,6 +1510,7 @@ Old packmind content
               version: 1,
               spaceId: 'space-1',
               packageIds: ['pkg-1'],
+              source: 'user',
               files: [
                 {
                   path: '.packmind/recipes/recipe-from-server.md',
