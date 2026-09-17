@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   DetectionSeverity,
   IExecuteLinterProgramsUseCase,
@@ -11,14 +12,19 @@ describe('ExecuteSingleFileAstUseCase', () => {
   let result: Awaited<ReturnType<ExecuteSingleFileAstUseCase['execute']>>;
 
   beforeEach(async () => {
-    mockLinterExecutionUseCase = {
-      execute: jest.fn().mockResolvedValue({
-        file: 'cli-single-file',
-        violations: [
-          { line: 5, character: 0, rule: 'rule', standard: 'standard' },
-        ],
-      }),
-    } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
+    mockLinterExecutionUseCase = mockInterface<IExecuteLinterProgramsUseCase>();
+    mockLinterExecutionUseCase.execute.mockResolvedValue({
+      file: 'cli-single-file',
+      violations: [
+        {
+          line: 5,
+          character: 0,
+          rule: 'rule',
+          standard: 'standard',
+          severity: DetectionSeverity.ERROR,
+        },
+      ],
+    });
 
     useCase = new ExecuteSingleFileAstUseCase(mockLinterExecutionUseCase);
 
