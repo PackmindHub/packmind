@@ -58,7 +58,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -88,7 +91,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -124,7 +130,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -177,6 +186,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
             );
             distributions =
               await context.gateway.deployments.listDeploymentsByPackage(
+                context.space.id,
                 pkg.id,
               );
           });

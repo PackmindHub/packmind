@@ -303,6 +303,8 @@ export class DeploymentsAdapter
       );
 
     this._listDeploymentsByPackageUseCase = new ListDeploymentsByPackageUseCase(
+      this.spacesPort,
+      this.accountsPort,
       this.distributionRepository,
     );
 

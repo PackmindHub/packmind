@@ -66,6 +66,7 @@ export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
   updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase>;
   listDeploymentsByPackage(
+    spaceId: string,
     packageId: string,
   ): Promise<DistributionHistoryEntry[]>;
 }

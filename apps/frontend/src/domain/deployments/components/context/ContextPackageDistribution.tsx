@@ -258,6 +258,7 @@ export function ContextPackageDistribution({
                 <PMBox paddingTop={5}>
                   <PackageDistributionList
                     packageId={pkg.id}
+                    spaceId={pkg.spaceId}
                     title="Distribution history"
                   />
                 </PMBox>

@@ -78,7 +78,7 @@ export const PackageDetails = ({
   const { data: skillsResponse } = useGetSkillsQuery();
 
   const { data: deployments = [], isLoading: isLoadingDeployments } =
-    useListPackageDeploymentsQuery(id);
+    useListPackageDeploymentsQuery(id, spaceId);
 
   const { data: providersResponse } = useGetGitProvidersQuery();
   const hasGitProviderWithAuth =
@@ -424,7 +424,7 @@ export const PackageDetails = ({
             triggerLabel: 'Distributions',
             content: (
               <PMBox pt={4}>
-                <PackageDistributionList packageId={id} />
+                <PackageDistributionList packageId={id} spaceId={spaceId} />
               </PMBox>
             ),
           },
