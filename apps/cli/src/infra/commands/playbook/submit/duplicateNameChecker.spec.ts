@@ -37,7 +37,6 @@ describe('checkForDuplicateNames', () => {
     mockGateway = createMockPackmindGateway();
     mockGateway.standards.list.mockResolvedValue({
       standards: [],
-      total: 0,
     });
     mockGateway.commands.list.mockResolvedValue({ recipes: [] });
     mockGateway.skills.list.mockResolvedValue([]);
@@ -90,7 +89,6 @@ describe('checkForDuplicateNames', () => {
             slug: 'my-standard',
           }),
         ],
-        total: 1,
       });
       const entries = [makeEntry({ artifactName: 'My Standard' })];
 
@@ -108,7 +106,6 @@ describe('checkForDuplicateNames', () => {
             slug: 'my-standard',
           }),
         ],
-        total: 1,
       });
       const entries = [makeEntry({ artifactName: 'My Standard' })];
 
@@ -255,7 +252,6 @@ describe('checkForDuplicateNames', () => {
             slug: 'my-standard',
           }),
         ],
-        total: 1,
       });
       const entries = [makeEntry({ spaceId: 'space-abc' })];
 
@@ -286,7 +282,6 @@ describe('checkForDuplicateNames', () => {
             slug: 'my-standard',
           }),
         ],
-        total: 1,
       });
       const entries = [makeEntry({ artifactName: 'my standard' })];
 

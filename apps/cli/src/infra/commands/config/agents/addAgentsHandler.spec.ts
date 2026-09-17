@@ -1,3 +1,4 @@
+import { Stats } from 'fs';
 import * as fsPromises from 'fs/promises';
 import {
   RenderMode,
@@ -243,7 +244,7 @@ describe('addAgentsHandler', () => {
     beforeEach(() => {
       mockFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as fsPromises.Stats);
+      } as Stats);
       mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
       mockConfigRepository.readConfig.mockResolvedValue({
         packages: {},

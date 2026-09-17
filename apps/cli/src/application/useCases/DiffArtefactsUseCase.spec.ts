@@ -383,6 +383,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -466,6 +467,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -507,6 +509,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -2314,6 +2317,8 @@ describe('DiffArtefactsUseCase', () => {
         id: 'artifact-lock-1',
         version: 3,
         spaceId: 'space-lock-1',
+        packageIds: [],
+        source: 'user' as const,
         files: [
           {
             path: '.packmind/standards/my-standard.md',
@@ -2327,6 +2332,8 @@ describe('DiffArtefactsUseCase', () => {
         id: 'artifact-lock-2',
         version: 1,
         spaceId: 'space-lock-2',
+        packageIds: [],
+        source: 'user' as const,
         files: [
           {
             path: '.packmind/commands/my-command.md',

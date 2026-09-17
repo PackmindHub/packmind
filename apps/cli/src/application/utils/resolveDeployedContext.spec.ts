@@ -25,7 +25,9 @@ describe('resolveDeployedContext', () => {
 
   const deployedContentResponse: GetDeployedContentResponse = {
     targetId: 'target-abc' as GetDeployedContentResponse['targetId'],
-    fileUpdates: [],
+    fileUpdates: { createOrUpdate: [], delete: [] },
+    skillFolders: [],
+    resolvedAgents: [],
   };
 
   beforeEach(() => {
