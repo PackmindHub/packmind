@@ -1,5 +1,9 @@
 import { UserNotFoundError } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CreateInvitationsCommand,
   createOrganizationId,
@@ -53,23 +57,10 @@ describe('CreateInvitationsUseCase', () => {
       getOrganizationById: mockGetOrganizationById,
     } as unknown as IAccountsPort;
 
-    mockUserService = {
-      getUserById: mockGetUserById,
-      getUserByEmail: jest.fn(),
-      getUserByEmailCaseInsensitive: jest.fn(),
-      createUser: jest.fn(),
-      createInactiveUser: jest.fn(),
-      addOrganizationMembership: jest.fn(),
-      hashPassword: jest.fn(),
-      validatePassword: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
+    mockUserService.getUserById = mockGetUserById;
 
-    mockInvitationService = {
-      createInvitations: jest.fn(),
-      findLatestByUserId: jest.fn(),
-      resendInvitationEmail: jest.fn(),
-      createInvitationForExistingUser: jest.fn(),
-    } as unknown as jest.Mocked<InvitationService>;
+    mockInvitationService = createMockInstance(InvitationService);
 
     mockInvitationService.createInvitations.mockResolvedValue([]);
     mockInvitationService.findLatestByUserId.mockResolvedValue(null);

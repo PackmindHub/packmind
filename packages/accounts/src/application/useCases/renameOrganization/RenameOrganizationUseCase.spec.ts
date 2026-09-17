@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -38,9 +38,8 @@ describe('RenameOrganizationUseCase', () => {
       getOrganizationById: mockGetOrganizationById,
     } as unknown as IAccountsPort;
 
-    organizationService = {
-      renameOrganization: mockRenameOrganization,
-    } as unknown as jest.Mocked<OrganizationService>;
+    organizationService = createMockInstance(OrganizationService);
+    organizationService.renameOrganization = mockRenameOrganization;
 
     mockGetOrganizationById.mockResolvedValue(organization);
 
