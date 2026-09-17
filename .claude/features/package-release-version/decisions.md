@@ -1172,12 +1172,17 @@ was called with the right name and payload, against a mocked provider, the way
 | UK-4 | decided — D-006 |
 | UK-5 | decided — D-009 (ordering by parsed triple) + D-012 |
 | UK-6 | decided — D-013 |
-| UK-7 | decided — D-020, confirmed by D-024: no flag here, a teammate adds one later |
+| UK-7 | decided — D-020, confirmed by D-024: no flag here, a teammate adds one later. **Reversed by D-056**: the flag is added here after all, and D-057 gives it its shape. D-020's reasoning about rollback risk is still correct; it was answering a different question |
 | UK-8 | decided — D-021, refined by D-025: the call is a typed no-op on OSS and its event names must be declared in the stub's map |
 | UK-9 | decided by D-003's timestamps: a release carries `createdAt` through `timestampsMigrationColumns`, and that is all. **No `createdBy`, and nothing is rendered.** AC-19 says any member can release, so "who cut it" answers no question the criteria ask; adding a column and a byline nobody asked for is scope. A later story that wants attribution adds the column then |
 | UK-10 | decided — D-018 |
+| UK-11 | resolved — D-057: the UI only. The three release routes are unchanged, so there is no 404/403/refusal posture to choose and nothing to disclose. `isFeatureEnabled` has no call site in this repository and being its first is not worth the threat model |
+| UK-12 | resolved **except removal** — D-057: key `package-releases`, audience `['@packmind.com', '@promyze.com']`. D-020's premise was wrong — an empty audience **is** off for everyone — and the empty audience is rejected anyway because the `underFeatureFlag` fixture is domain-based and would take AC-22..AC-25 with it. Who removes the flag, and when, is open and D-057 says so |
+| UK-13 | resolved — D-057: no. Under a staff pin the rows are demo data on staff organizations, plus what the e2e suite writes to its own database. Answered by reasoning rather than against a weighed alternative, which is thinner than this log's norm — the rows outlive the flag, so a later story may want to revisit it |
 
-None deferred.
+UK-1 to UK-10 were decided in the first design session. UK-11, UK-12 and UK-13 were opened
+by D-056 and resolved by D-057 — which the human decided directly, with the repository facts
+attached, in place of the design session D-056 called for.
 
 ---
 
@@ -2621,7 +2626,7 @@ unit covers one criterion of several in that file, one `--grep`.
 - user-visible: `no`
 - decided: `2026-09-16`
 - supersedes: D-048 (partial — the release methods join a new Context page object, not `IPackagePage`)
-- superseded-by: D-051 (partial — the wire repair does change two files under `apps/frontend/`)
+- superseded-by: D-051 (partial — the wire repair does change two files under `apps/frontend/`), D-057 (partial — the spec now declares `underFeatureFlag: true`, reversing the `Constrains implementation` line below)
 - relates to: `AC-22`..`AC-25`, `D-018`, `D-020`, `D-024`, `D-048`
 
 **Decision.** S3's specs reach the release UI through a **new page object for the space

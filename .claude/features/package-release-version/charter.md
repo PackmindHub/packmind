@@ -1,8 +1,8 @@
 # Feature: Release a numbered version of a package
 
 - slug: `package-release-version` — the directory name under `.claude/features/`
-- status: `open` — AC-1..AC-25 are delivered and green; reopened on 2026-09-16 by D-056, which
-  puts a feature flag in scope
+- status: `closed` — AC-1..AC-25 delivered and green; reopened on 2026-09-16 by D-056 for a
+  feature flag, and closed again on 2026-09-17 with S4 (D-057)
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -84,9 +84,14 @@ it", and no record afterwards that the moment happened.
   a visible "Create a release" action invites curators to cut immutable records that nothing
   installs or compares against. This reverses D-020 and D-024, whose conclusion was that no
   flag was needed — that argument was about rollback risk, and the reason here is
-  incompleteness. **At least the UI**, which D-024 already made a one-line gate by keeping the
-  version area one mountable element; **probably the API routes too**, which is UK-11 and is
-  not decided. The flag's key, audience and removal are UK-12.
+  incompleteness.
+
+  Shaped by D-057 on 2026-09-17: **the UI only**. `PackageVersionArea` is wrapped in
+  `<PMFeatureFlag>` at its one mount site — the one-line gate D-024 kept it mountable for —
+  under the key `package-releases` with the audience `['@packmind.com', '@promyze.com']`. The
+  three release routes stay open, because the harm is writing immutable rows rather than
+  reading an empty list, and gating them means becoming the first caller of a helper nothing
+  in the repository calls. Who removes the flag, and when, is left open.
 
 ## Out of scope
 
@@ -183,7 +188,7 @@ nineteen units with every criterion met.
 | UK-9 | Does a release record who cut it and when, and is that shown? Nothing in the issue asks for it, and nothing forbids it. | design session |
 | UK-10 | Which surface browses a released version (AC-18) — the existing context package pane with a version selector, a separate route, or a drawer — and where the version area sits relative to `PackageReachStrip` and the existing tabs. | design session |
 | UK-11 | Does the flag gate the **API routes** as well as the UI, or only the UI? If the routes stay open the feature is hidden but reachable by URL, and the immutable rows can still be created; if they close, what do they answer — 404, 403, or a refusal code — and does that disclose the flag's existence? | **resolved — D-057**: UI only. The routes are unchanged, so they answer exactly what they answer today, and the disclosure question is moot. `isFeatureEnabled` has zero call sites in the repository and being its first is not worth the threat model |
-| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | **resolved — D-057**: `package-releases`, audience `['@packmind.com', '@promyze.com']`. D-020's premise was wrong — an audience of `[]` **is** off for everyone — and the empty audience is rejected anyway, because the `underFeatureFlag` fixture is domain-based and would take AC-22..AC-25 with it. Removal is left open, and D-057 says so |
+| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | **resolved except removal — D-057**: `package-releases`, audience `['@packmind.com', '@promyze.com']`. D-020's premise was wrong — an audience of `[]` **is** off for everyone — and the empty audience is rejected anyway, because the `underFeatureFlag` fixture is domain-based and would take AC-22..AC-25 with it. Removal is left open, and D-057 says so |
 | UK-13 | Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and outlive the flag. Does that matter, and is anything owed to them when the feature opens up? | **resolved — D-057**: no. Under a staff pin they are demo data on staff organizations, plus what the e2e suite writes to its own database |
 
 ## Size and sessions
@@ -207,7 +212,7 @@ cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real de
 risk, and they are the two that UK-3 and UK-6 have to settle first.
 
 - rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4), plus `2`
-  for S4
+  for S4 (actual: 2)
 - verdict: `split`
 - session boundaries:
 
@@ -218,7 +223,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
 
-  **S1, S2 and S3 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
+  **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
   repository facts attached, in place of the design session D-056 called for. UK-11, UK-12 and
   UK-13 are resolved there.
@@ -314,12 +319,15 @@ Two things a reader should carry rather than discover:
   the signup fixture, never in the release flow, because it is the most expensive spec
   in the suite and sits around 17s against a 30s timeout. Measured, not inferred, and
   deliberately not smoothed away: D-053.
-- **The release UI is unflagged but not widely reachable.** It is mounted only on the
-  space Context surface, which renders in `plugin-first` navigation, whose sidebar entry
-  is gated to `@packmind.com` and `@promyze.com`. D-020 argued no flag was needed partly
-  because the blast radius was "a panel not rendering"; for most users the panel is not
-  reachable either. It changes no criterion and is out of scope here (D-022), but it is
-  the open product question this feature leaves behind: D-050.
+- **The release UI is hidden behind `package-releases`**, audience `@packmind.com` and
+  `@promyze.com`, wrapped around its single mount site on the space Context surface — which
+  is itself reachable only in `plugin-first` navigation, pinned to the same two domains
+  (D-050). The two together are belt and braces, and that is the point: the hiding is now
+  deliberate and owned by this feature's own code, rather than inherited from another team's
+  navigation work where it could move without anyone reading this log. D-056 and D-057.
+
+  *This bullet read "the release UI is unflagged but not widely reachable" until S4 landed,
+  and it was the open product question that prompted D-056.*
 
 **And then reopened, the same day.** D-056 puts a feature flag in scope: the release surface
 ships hidden until the sibling stories that make a release do something are done. Nothing
@@ -331,6 +339,34 @@ way D-047 judged the documentation: by a person, and by the suite staying green 
 The second bullet above is the reason. It was written as an open product question and D-056
 answers it — not by making the surface more reachable, but by hiding it deliberately instead
 of by accident.
+
+**And closed again on 2026-09-17.** S4 landed as two units. U-024 added the `package-releases`
+key and wrapped `PackageVersionArea`; U-025 moved the end-to-end spec into the flag's audience.
+Both passed their gate on the first attempt with no deviations.
+
+S4 adds no acceptance criterion, so per D-056 it is judged by a person and by the suite staying
+green around it. It is:
+
+- `nx test frontend --testNamePattern='ContextPackagePane'` went from 5 tests to 6, all green.
+  The new one — *"hides the version area from a user outside the flag audience"* — is the only
+  assertion in the repository that the gate exists at all.
+- `nx run-many -t test` over `types`, `deployments`, `api`, `frontend`, `feature-flags` and
+  `ui`: **145 files, 2174 tests, green**. That is exactly one more test than the previous
+  boundary run and no other movement, which is the measurable form of "the flag disturbed
+  nothing".
+- The four end-to-end criteria pass together in 49.1s at `--workers=1`, per D-053.
+
+Two things a reader should carry rather than discover:
+
+- **AC-22..AC-25 now depend on the spec's user signing up on `@packmind.com`.** Flipping
+  `underFeatureFlag` back to `false` makes all four fail at `SpaceContextPage.ts:24`, on the
+  "Create a release" button that is no longer rendered. That is not a regression; it is the
+  gate working, and U-025 observed exactly that failure before fixing it. It also supersedes
+  D-050's `do not set underFeatureFlag: true`, which now carries a forward pointer.
+- **The `apps/doc` section and the CHANGELOG entry describe a flow no customer can now reach.**
+  S2 wrote them true and S4 made them false, and both were right on their own terms; no unit
+  gate could have seen it, because no decision told S4 to touch those files. Raised by the
+  boundary reconcile and left as the one open question this feature hands on.
 
 One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
 `apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`
