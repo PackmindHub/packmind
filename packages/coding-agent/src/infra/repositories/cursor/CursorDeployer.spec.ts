@@ -15,7 +15,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillFileFactory, skillVersionFactory } from '@packmind/skills/test';
 import { commandVersionFactory } from '@packmind/commands/test';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CursorDeployer', () => {
@@ -25,9 +25,7 @@ describe('CursorDeployer', () => {
   let mockTarget: Target;
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new CursorDeployer(mockStandardsPort);
 
