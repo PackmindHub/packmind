@@ -27,7 +27,7 @@ import { Link } from 'react-router';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
 
-export type DeploymentType = 'recipe' | 'standard' | 'skill' | 'package';
+export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
 
 /** Paths that mean "the repository itself", which the target line leaves out. */
 const ROOT_TARGET_PATHS = new Set(['', '/', '.', './']);
@@ -147,12 +147,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const getVersion = (deployment: Distribution) => {
     // Search through all distributed packages for the version
     for (const dp of deployment.distributedPackages || []) {
-      if (type === 'recipe') {
-        const recipeVersion = dp.recipeVersions?.find(
+      if (type === 'command') {
+        const commandVersion = dp.recipeVersions?.find(
           (v) => v.recipeId === entityId,
         );
-        if (recipeVersion) {
-          return recipeVersion.version;
+        if (commandVersion) {
+          return commandVersion.version;
         }
       } else if (type === 'standard') {
         const standardVersion = dp.standardVersions?.find(
@@ -371,10 +371,10 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const isRemoval = (deployment: Distribution): boolean => {
     let distributedPackage: DistributedPackage | undefined;
 
-    if (type === 'recipe') {
+    if (type === 'command') {
       distributedPackage = deployment.distributedPackages?.find(
         (dp: DistributedPackage) =>
-          dp.recipeVersions?.some((rv) => rv.recipeId === entityId),
+          dp.recipeVersions?.some((cv) => cv.recipeId === entityId),
       );
     } else if (type === 'standard') {
       distributedPackage = deployment.distributedPackages?.find(

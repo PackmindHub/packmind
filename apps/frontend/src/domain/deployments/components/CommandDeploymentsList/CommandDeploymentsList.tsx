@@ -38,7 +38,7 @@ export const CommandDeploymentsList: React.FC<CommandDeploymentsListProps> = ({
   return (
     <DeploymentsHistory
       deployments={deployments || []}
-      type="recipe"
+      type="command"
       entityId={recipeId}
       usersMap={userMap}
       loading={isLoadingDeployments || isLoadingUsers}
