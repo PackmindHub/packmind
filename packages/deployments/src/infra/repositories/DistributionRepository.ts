@@ -185,12 +185,14 @@ export class DistributionRepository implements IDistributionRepository {
   async listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
+    spaceId: SpaceId,
   ): Promise<DistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by package ID and organization ID',
       {
         packageId,
         organizationId,
+        spaceId,
       },
     );
 
@@ -201,6 +203,7 @@ export class DistributionRepository implements IDistributionRepository {
           'distribution.distributedPackages',
           'distributedPackage',
         )
+        .innerJoin('distributedPackage.package', 'package')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -210,6 +213,7 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere('package.spaceId = :spaceId', { spaceId })
         .andWhere(
           TRACKED_BRANCH_SCOPE,
           trackedBranchScopeParams(organizationId),
@@ -222,6 +226,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           packageId,
           organizationId,
+          spaceId,
           count: distributions.length,
         },
       );

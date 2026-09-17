@@ -39,6 +39,7 @@ export interface IDistributionRepository {
   listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
+    spaceId: SpaceId,
   ): Promise<DistributionHistoryEntry[]>;
 
   listByCommandId(

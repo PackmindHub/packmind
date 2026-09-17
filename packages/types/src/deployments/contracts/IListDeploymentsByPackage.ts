@@ -13,7 +13,9 @@ export type ListDeploymentsByPackageCommand = SpaceMemberCommand & {
   organizationId: OrganizationId;
 };
 
+export type ListDeploymentsByPackageResponse = DistributionHistoryEntry[];
+
 export type IListDeploymentsByPackage = IUseCase<
   ListDeploymentsByPackageCommand,
-  DistributionHistoryEntry[]
+  ListDeploymentsByPackageResponse
 >;

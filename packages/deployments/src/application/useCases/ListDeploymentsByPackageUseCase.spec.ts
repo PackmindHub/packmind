@@ -8,11 +8,11 @@ import {
   createTargetId,
   createUserId,
   Distribution,
-  DistributionHistoryEntry,
   DistributionStatus,
   IAccountsPort,
   ISpacesPort,
   ListDeploymentsByPackageCommand,
+  ListDeploymentsByPackageResponse,
   Organization,
   User,
   UserId,
@@ -116,7 +116,7 @@ describe('ListDeploymentsByPackageUseCase', () => {
         renderModes: [],
       }),
     ];
-    let result: DistributionHistoryEntry[];
+    let result: ListDeploymentsByPackageResponse;
 
     beforeEach(async () => {
       mockRepository.listByPackageId.mockResolvedValue(mockDistributions);
@@ -131,22 +131,27 @@ describe('ListDeploymentsByPackageUseCase', () => {
       expect(mockRepository.listByPackageId).toHaveBeenCalledWith(
         command.packageId,
         command.organizationId,
+        command.spaceId,
       );
     });
   });
 
   describe('when the caller is not a member of the space', () => {
-    beforeEach(() => {
+    let outcome: Promise<ListDeploymentsByPackageResponse>;
+
+    beforeEach(async () => {
       spacesPort.findMembership.mockResolvedValue(null);
+      outcome = useCase.execute(command);
+      // settle it here so the assertions below do not each re-run the use case,
+      // and so the rejection is never unhandled
+      await outcome.catch(() => undefined);
     });
 
     it('rejects', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow();
+      await expect(outcome).rejects.toThrow();
     });
 
-    it('does not read the history', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow();
-
+    it('does not read the history', () => {
       expect(mockRepository.listByPackageId).not.toHaveBeenCalled();
     });
   });

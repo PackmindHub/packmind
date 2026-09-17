@@ -4,11 +4,11 @@ import {
   SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
-  DistributionHistoryEntry,
   IAccountsPort,
   IListDeploymentsByPackage,
   ISpacesPort,
   ListDeploymentsByPackageCommand,
+  ListDeploymentsByPackageResponse,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
@@ -17,7 +17,7 @@ const origin = 'ListDeploymentsByPackageUseCase';
 export class ListDeploymentsByPackageUseCase
   extends AbstractSpaceMemberUseCase<
     ListDeploymentsByPackageCommand,
-    DistributionHistoryEntry[]
+    ListDeploymentsByPackageResponse
   >
   implements IListDeploymentsByPackage
 {
@@ -38,7 +38,7 @@ export class ListDeploymentsByPackageUseCase
    */
   async executeForSpaceMembers(
     command: ListDeploymentsByPackageCommand & SpaceMemberContext,
-  ): Promise<DistributionHistoryEntry[]> {
+  ): Promise<ListDeploymentsByPackageResponse> {
     this.logger.info('Listing distributions for package', {
       packageId: command.packageId,
       spaceId: command.spaceId,
@@ -49,6 +49,7 @@ export class ListDeploymentsByPackageUseCase
       const distributions = await this.distributionRepository.listByPackageId(
         command.packageId,
         command.organizationId,
+        command.spaceId,
       );
 
       this.logger.info('Distributions for package listed successfully', {
