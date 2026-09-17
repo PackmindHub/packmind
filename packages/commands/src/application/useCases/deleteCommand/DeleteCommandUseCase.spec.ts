@@ -2,7 +2,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createCommandId,
@@ -50,28 +54,12 @@ describe('DeleteRecipeUseCase', () => {
       updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
     });
 
-    commandService = {
-      addCommand: jest.fn(),
-      publishToGit: jest.fn(),
-      getCommandById: jest.fn(),
-      updateRecipe: jest.fn(),
-      findCommandBySlug: jest.fn(),
-      listCommandVersions: jest.fn(),
-      deleteCommand: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
-    commandVersionService = {
-      addCommandVersion: jest.fn(),
-      listCommandVersions: jest.fn(),
-      getCommandVersion: jest.fn(),
-      getCommandVersionById: jest.fn(),
-      deleteCommandVersionsForCommand: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<CommandVersionService>;
+    commandVersionService = createMockInstance(CommandVersionService);
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     stubLogger();
 

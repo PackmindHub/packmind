@@ -5,7 +5,7 @@ import {
   ProgrammingLanguage,
 } from '@packmind/types';
 import { ExecuteLinterProgramsUseCase } from './ExecuteLinterProgramsUseCase';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 
 const buildCommand = (
   overrides: Partial<ExecuteLinterProgramsCommand> = {},
@@ -30,13 +30,11 @@ describe('ExecuteLinterProgramsUseCase', () => {
   let astAdapter: jest.Mocked<ILinterAstPort>;
 
   beforeEach(() => {
-    astAdapter = {
-      parseSourceCode: jest.fn(),
-      isLanguageSupported: jest.fn().mockReturnValue(true),
-      getAvailableLanguages: jest
-        .fn()
-        .mockResolvedValue([ProgrammingLanguage.TYPESCRIPT]),
-    } as unknown as jest.Mocked<ILinterAstPort>;
+    astAdapter = mockInterface<ILinterAstPort>();
+    astAdapter.isLanguageSupported.mockReturnValue(true);
+    astAdapter.getAvailableLanguages.mockReturnValue([
+      ProgrammingLanguage.TYPESCRIPT,
+    ]);
   });
 
   describe('when executing valid detection programs', () => {

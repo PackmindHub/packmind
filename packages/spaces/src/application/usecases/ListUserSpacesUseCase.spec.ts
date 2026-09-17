@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -28,9 +29,7 @@ describe('ListUserSpacesUseCase', () => {
   });
 
   beforeEach(() => {
-    membershipService = {
-      findMembershipsByUserAndOrganization: jest.fn(),
-    } as unknown as jest.Mocked<UserSpaceMembershipService>;
+    membershipService = createMockInstance(UserSpaceMembershipService);
 
     useCase = new ListUserSpacesUseCase(membershipService);
   });
