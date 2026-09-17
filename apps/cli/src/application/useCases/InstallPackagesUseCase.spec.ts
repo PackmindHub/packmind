@@ -51,6 +51,7 @@ describe('InstallPackagesUseCase', () => {
           delete: [],
         },
         skillFolders: [],
+        resolvedAgents: [],
       });
 
       // File does not exist
@@ -95,6 +96,7 @@ describe('InstallPackagesUseCase', () => {
           delete: [],
         },
         skillFolders: [],
+        resolvedAgents: [],
       });
 
       // File exists
@@ -154,6 +156,7 @@ Some footer text.`;
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -225,6 +228,7 @@ Footer text.`;
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -292,6 +296,7 @@ ${newSectionContent}
           delete: [],
         },
         skillFolders: [],
+        resolvedAgents: [],
       });
 
       // File exists
@@ -343,6 +348,7 @@ Some existing content here.
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists and is a file
@@ -381,6 +387,7 @@ Some existing content here.
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // Path exists and is a directory
@@ -426,6 +433,7 @@ Some existing content here.
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // stat returns null when file does not exist (caught error)
@@ -469,6 +477,7 @@ Some existing content here.
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -520,6 +529,7 @@ Some existing content here.
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -572,6 +582,7 @@ ${sectionContent}
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -623,6 +634,7 @@ Section content here
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -670,6 +682,7 @@ Section content here
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
       });
 
@@ -746,6 +759,7 @@ Section content here
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -780,6 +794,7 @@ Section content here
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -821,6 +836,7 @@ Section content here
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -877,6 +893,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -956,6 +973,7 @@ Old packmind content
             '.claude/skills/signal-capture',
             '.github/skills/signal-capture',
           ],
+          resolvedAgents: [],
         });
       });
 
@@ -1028,6 +1046,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
       });
 
@@ -1066,6 +1085,7 @@ Old packmind content
             '.claude/skills/test-skill',
             '.github/skills/test-skill',
           ],
+          resolvedAgents: [],
         });
 
         // First call succeeds, second fails
@@ -1109,6 +1129,7 @@ Old packmind content
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists and is a file
@@ -1153,6 +1174,7 @@ Old packmind content
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists and is a file
@@ -1193,6 +1215,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists
@@ -1245,6 +1268,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: ['.packmind/skills/signal-capture'],
+          resolvedAgents: [],
         });
       });
 
@@ -1271,6 +1295,7 @@ Old packmind content
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists and is a file
@@ -1306,6 +1331,7 @@ Old packmind content
             ],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         // File exists and is a file
@@ -1366,6 +1392,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -1400,6 +1427,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -1428,6 +1456,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));

@@ -1,3 +1,5 @@
+import { skillFactory } from '@packmind/skills/test';
+import { spaceFactory } from '@packmind/spaces/test';
 import { mockInterface } from '@packmind/test-utils';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
@@ -199,17 +201,17 @@ describe('UploadSkillUseCase', () => {
         },
       ]);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 1,
-        },
+        }),
         versionCreated: true,
       });
     });
@@ -315,17 +317,17 @@ describe('UploadSkillUseCase', () => {
         },
       ]);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 1,
-        },
+        }),
         versionCreated: true,
       });
     });
@@ -358,17 +360,17 @@ describe('UploadSkillUseCase', () => {
         },
       ]);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 3,
-        },
+        }),
         versionCreated: false,
       });
     });
@@ -413,17 +415,17 @@ describe('UploadSkillUseCase', () => {
         },
       ]);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 1,
-        },
+        }),
         versionCreated: true,
       });
     });
@@ -464,17 +466,17 @@ describe('UploadSkillUseCase', () => {
       });
       mockedReadSkillDirectory.mockResolvedValue(files);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 1,
-        },
+        }),
         versionCreated: true,
       });
     });
@@ -508,17 +510,17 @@ describe('UploadSkillUseCase', () => {
         },
       ]);
       mockSpaceService.getSpaces.mockResolvedValue([
-        {
+        spaceFactory({
           id: createSpaceId('space-123'),
           slug: 'global',
-        },
+        }),
       ]);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: {
+        skill: skillFactory({
           id: createSkillId('skill-456'),
           name: 'my-skill',
           version: 1,
-        },
+        }),
         versionCreated: true,
       });
     });
@@ -545,7 +547,11 @@ describe('UploadSkillUseCase', () => {
     beforeEach(() => {
       mockedReadSkillDirectory.mockResolvedValue(validFiles);
       mockSkillsGateway.upload.mockResolvedValue({
-        skill: { id: createSkillId('skill-1'), name: 'my-skill', version: 1 },
+        skill: skillFactory({
+          id: createSkillId('skill-1'),
+          name: 'my-skill',
+          version: 1,
+        }),
         versionCreated: true,
       });
     });
@@ -553,8 +559,8 @@ describe('UploadSkillUseCase', () => {
     describe('and no --space flag is provided', () => {
       beforeEach(() => {
         mockSpaceService.getSpaces.mockResolvedValue([
-          { id: createSpaceId('space-1'), slug: 'global' },
-          { id: createSpaceId('space-2'), slug: 'team' },
+          spaceFactory({ id: createSpaceId('space-1'), slug: 'global' }),
+          spaceFactory({ id: createSpaceId('space-2'), slug: 'team' }),
         ]);
       });
 
@@ -574,8 +580,8 @@ describe('UploadSkillUseCase', () => {
     describe('and a valid --space slug is provided', () => {
       beforeEach(() => {
         mockSpaceService.getSpaces.mockResolvedValue([
-          { id: createSpaceId('space-1'), slug: 'global' },
-          { id: createSpaceId('space-2'), slug: 'team' },
+          spaceFactory({ id: createSpaceId('space-1'), slug: 'global' }),
+          spaceFactory({ id: createSpaceId('space-2'), slug: 'team' }),
         ]);
       });
 
@@ -605,8 +611,8 @@ describe('UploadSkillUseCase', () => {
     describe('and an invalid --space slug is provided', () => {
       beforeEach(() => {
         mockSpaceService.getSpaces.mockResolvedValue([
-          { id: createSpaceId('space-1'), slug: 'global' },
-          { id: createSpaceId('space-2'), slug: 'team' },
+          spaceFactory({ id: createSpaceId('space-1'), slug: 'global' }),
+          spaceFactory({ id: createSpaceId('space-2'), slug: 'team' }),
         ]);
       });
 

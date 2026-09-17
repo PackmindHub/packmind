@@ -932,7 +932,7 @@ describe('buildProposals', () => {
           spaceId: 'space-123',
           packageIds: [],
           files: [
-            { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+            { path: '.claude/commands/my-command.md', agent: 'claude' },
             {
               path: '.github/copilot/commands/my-command.md',
               agent: 'copilot',
@@ -970,7 +970,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -995,7 +995,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1012,7 +1012,7 @@ describe('buildProposals', () => {
       expect(conflicts[0].entries).toEqual([
         {
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         },
         {
           filePath: '.github/copilot/commands/my-command.md',
@@ -1029,7 +1029,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1054,7 +1054,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -1084,7 +1084,7 @@ describe('buildProposals', () => {
             spaceId: 'space-123',
             packageIds: [],
             files: [
-              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
             ],
           },
         },
@@ -1108,7 +1108,7 @@ describe('buildProposals', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated content',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
       ];
 

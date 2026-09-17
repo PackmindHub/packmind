@@ -1,3 +1,6 @@
+import { skillFactory } from '@packmind/skills/test';
+import { standardFactory } from '@packmind/standards/test';
+import { commandFactory } from '@packmind/commands/test';
 import {
   playbookSubmitHandler,
   PlaybookSubmitHandlerDependencies,
@@ -2792,12 +2795,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2838,12 +2841,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2903,12 +2906,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'other',
               name: 'Other Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2933,11 +2936,11 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.commands.list.mockResolvedValue({
           recipes: [
-            {
+            commandFactory({
               id: createCommandId('cmd-1'),
               slug: 'my-command',
               name: 'My Command',
-            },
+            }),
           ],
         });
       });
@@ -2962,7 +2965,11 @@ describe('playbookSubmitHandler', () => {
           }),
         ]);
         mockGateway.skills.list.mockResolvedValue([
-          { id: createSkillId('skill-1'), slug: 'my-skill', name: 'My Skill' },
+          skillFactory({
+            id: createSkillId('skill-1'),
+            slug: 'my-skill',
+            name: 'My Skill',
+          }),
         ]);
       });
 
@@ -2989,12 +2996,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'taken-standard',
               name: 'Taken Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3065,12 +3072,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3141,12 +3148,12 @@ describe('playbookSubmitHandler', () => {
 
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3186,12 +3193,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
         mockLockFileRepository.read.mockResolvedValue({
@@ -3254,12 +3261,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'shared-name',
               name: 'Shared Name',
               description: '',
-            },
+            }),
           ],
         });
         mockGateway.commands.list.mockResolvedValue({ recipes: [] });
@@ -3365,12 +3372,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
         mockGateway.commands.list.mockResolvedValue({ recipes: [] });
@@ -3408,12 +3415,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
+            standardFactory({
               id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3919,7 +3926,7 @@ describe('playbookSubmitHandler', () => {
       mockLockFileRepository.read.mockResolvedValue({
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
-        agents: ['claude-code', 'copilot'],
+        agents: ['claude', 'copilot'],
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -3931,7 +3938,7 @@ describe('playbookSubmitHandler', () => {
             spaceId: 'space-123',
             packageIds: [],
             files: [
-              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
               {
                 path: '.github/copilot/commands/my-command.md',
                 agent: 'copilot',
@@ -3965,7 +3972,7 @@ describe('playbookSubmitHandler', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -3982,7 +3989,7 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(buildDeps({ noReview: true }));
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('claude-code'),
+        expect.stringContaining('claude'),
       );
     });
 

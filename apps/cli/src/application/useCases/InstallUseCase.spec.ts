@@ -9,6 +9,8 @@ import {
   createOrganizationId,
   createSpaceId,
   DeleteItemType,
+  FileUpdates,
+  InstallPackagesResponse,
   PackmindLockFile,
   SpaceType,
 } from '@packmind/types';
@@ -32,18 +34,12 @@ const lockFileFactory = (
 
 const installResponseFactory = (
   overrides: Partial<{
-    createOrUpdate: {
-      path: string;
-      content?: string;
-      sections?: { key: string; content: string }[];
-      isBase64?: boolean;
-      skillFilePermissions?: string;
-    }[];
-    delete: { path: string; type: DeleteItemType }[];
+    createOrUpdate: FileUpdates['createOrUpdate'];
+    delete: FileUpdates['delete'];
     skillFolders: string[];
     missingAccess: string[];
   }> = {},
-) => ({
+): InstallPackagesResponse => ({
   fileUpdates: {
     createOrUpdate: overrides.createOrUpdate ?? [],
     delete: overrides.delete ?? [],
@@ -51,6 +47,13 @@ const installResponseFactory = (
   skillFolders: overrides.skillFolders ?? [],
   missingAccess: overrides.missingAccess ?? [],
   resolvedAgents: [],
+  // The use case never reads the counts; they only ride the response.
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
 });
 
 describe('InstallUseCase', () => {
@@ -330,7 +333,7 @@ describe('InstallUseCase', () => {
       beforeEach(() => {
         mockConfigFileRepository.readConfig.mockResolvedValue({
           packages: { '@space/pkg-a': '*' },
-          agents: ['claude-code', 'cursor'],
+          agents: ['claude', 'cursor'],
         });
       });
 
@@ -342,7 +345,7 @@ describe('InstallUseCase', () => {
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
           expect.objectContaining({
-            agents: ['claude-code', 'cursor'],
+            agents: ['claude', 'cursor'],
           }),
         );
       });
@@ -380,7 +383,7 @@ describe('InstallUseCase', () => {
               files: [
                 {
                   path: '.packmind/recipes/my-recipe.md',
-                  agent: 'claude-code',
+                  agent: 'claude',
                 },
               ],
             },
@@ -1497,7 +1500,7 @@ Old packmind content
         const serverLockFile = {
           lockfileVersion: 1,
           packageSlugs: ['@space/test-package'],
-          agents: ['claude-code'],
+          agents: ['claude'],
           artifacts: {
             'artifact-1': {
               name: 'recipe-from-server',
@@ -1509,7 +1512,7 @@ Old packmind content
               files: [
                 {
                   path: '.packmind/recipes/recipe-from-server.md',
-                  agent: 'claude-code',
+                  agent: 'claude',
                 },
               ],
             },
@@ -1534,7 +1537,7 @@ Old packmind content
         expect(mockLockFileRepository.write).toHaveBeenCalledWith(
           '/test',
           expect.objectContaining({
-            agents: ['claude-code'],
+            agents: ['claude'],
             packageSlugs: ['@space/test-package'],
             cliVersion: '0.28.1-next',
           }),
