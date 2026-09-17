@@ -199,18 +199,16 @@ export function AddComponentsDrawer({
   );
 
   /*
-   * The type filter actually applied, resolved the way the coverage one is:
-   * only if the type it names is still among the candidates. A type can leave
-   * the list under it — the coverage chip is flipped, or the space gains a
-   * package while the drawer stands — and the chip that would undo the filter
-   * is drawn only for the types that are there. Holding the raw choice would
-   * leave the reader behind a filter with no control left to release it.
-   *
-   * The choice itself is kept rather than cleared, so flipping the coverage
-   * back returns the reader to the type they were working through.
+   * The type filter actually applied, resolved against every candidate rather
+   * than against what the coverage filter left: that is the population the
+   * chips are drawn from, so a type the reader can still see and click is a
+   * type the filter may still name. The guard remains for the one case that
+   * leaves no control behind — the space gains a package while the drawer
+   * stands and that type runs out of candidates entirely.
    */
   const typeFilter =
-    pickedType !== null && covered.some((group) => group.type === pickedType)
+    pickedType !== null &&
+    addable.groups.some((group) => group.type === pickedType)
       ? pickedType
       : null;
 
@@ -239,7 +237,19 @@ export function AddComponentsDrawer({
     [searched, typeFilter],
   );
 
-  const showTypeChips = covered.length > 1;
+  /*
+   * Drawn from every type the package is missing something of, not from what
+   * the coverage filter left. Derived from `covered`, the row disappeared as
+   * soon as the free components happened to be all of one type — which is the
+   * state the drawer opens in, so a reader whose orphans were all standards
+   * was shown no type filter at all and reported it missing. The row also has
+   * to hold still while the coverage chip under it is flipped: a control that
+   * comes and goes with another control cannot be learnt.
+   *
+   * Absent with one candidate type, which is the pane's rule too: there is
+   * nothing for the chips to narrow.
+   */
+  const showTypeChips = addable.groups.length > 1;
   const showCoverageChip =
     addable.freeTotal > 0 && addable.freeTotal < addable.total;
 
@@ -484,14 +494,12 @@ export function AddComponentsDrawer({
                         reach the skills was to type a word they happen to
                         share.
 
-                        One chip per type still among the candidates, rather
-                        than per type the query reached: a type that drops to
-                        zero says so in place, where disappearing would leave
-                        the reader to work out whether it has none or never
-                        existed.
-
-                        Absent with one type, which is the pane's rule too:
-                        there is nothing for them to narrow.
+                        One chip per type the package is missing something
+                        of, rather than per type the filters below reached: a
+                        type that drops to zero says so in place, where
+                        disappearing would leave the reader to work out whether
+                        it has none or never existed — and would take the whole
+                        row with it whenever the types happen to agree.
                       */}
                         {showTypeChips && (
                           <PMHStack gap={1} wrap="wrap">
@@ -501,7 +509,7 @@ export function AddComponentsDrawer({
                               isActive={typeFilter === null}
                               onClick={() => setPickedType(null)}
                             />
-                            {covered.map((group) => (
+                            {addable.groups.map((group) => (
                               <ContextChip
                                 key={group.type}
                                 label={group.label}
@@ -584,23 +592,42 @@ export function AddComponentsDrawer({
 
                     {groupedComponentCount(shown) === 0 ? (
                       /*
-                        Only ever reachable with something typed: a chip exists
-                        per type still among the candidates, and such a type has
-                        rows, so the type alone never empties the list.
+                        Two ways to empty the list, and they are different
+                        questions, so they get different answers.
 
-                        It names the type when one is picked, because a reader
+                        With something typed, the query is the answer: a reader
                         who searched "java" under the Skills chip is being told
                         there is no skill by that name, not that the word is
                         absent from the space.
+
+                        With nothing typed, the chips crossed: the type picked
+                        has candidates, but none of them in no package. Saying
+                        so names the good news, the way the inventory does under
+                        the same pair of filters, rather than reporting on a
+                        search nobody ran.
                       */
                       <PMText variant="small" color="faded">
-                        No{' '}
-                        {typeFilter
-                          ? COMPONENT_TYPE_LABELS_SINGULAR[
-                              typeFilter
-                            ].toLowerCase()
-                          : 'component'}{' '}
-                        matches “{query.trim()}”.
+                        {query.trim() ? (
+                          <>
+                            No{' '}
+                            {typeFilter
+                              ? COMPONENT_TYPE_LABELS_SINGULAR[
+                                  typeFilter
+                                ].toLowerCase()
+                              : 'component'}{' '}
+                            matches “{query.trim()}”.
+                          </>
+                        ) : (
+                          <>
+                            Every{' '}
+                            {typeFilter
+                              ? COMPONENT_TYPE_LABELS_SINGULAR[
+                                  typeFilter
+                                ].toLowerCase()
+                              : 'component'}{' '}
+                            {pkg.name} does not hold is already in a package.
+                          </>
+                        )}
                       </PMText>
                     ) : (
                       <PMVStack gap={5} alignItems="stretch">

@@ -11,6 +11,7 @@ import {
   createStandardId,
   type PackageResponse,
   type Skill,
+  type SkillId,
   type Standard,
   type StandardId,
 } from '@packmind/types';
@@ -94,6 +95,19 @@ const otherPackage = (holds: readonly StandardId[]): PackageResponse =>
     standards: holds,
     commands: [],
     skills: [],
+  }) as unknown as PackageResponse;
+
+/**
+ * A package carrying the skill rather than a standard, which is what makes a
+ * type have candidates and none of them free.
+ */
+const skillPackage = (holds: readonly SkillId[]): PackageResponse =>
+  ({
+    id: createPackageId('pkg-3'),
+    name: 'Review guidelines',
+    standards: [],
+    commands: [],
+    skills: holds,
   }) as unknown as PackageResponse;
 
 function renderDrawer({
@@ -359,6 +373,60 @@ describe('AddComponentsDrawer', () => {
 
       expect(
         screen.getByRole('button', { name: 'Add 1 standard' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The state the type filter was reported missing in, after it had shipped:
+   * the drawer opens on the components in no package, and a space whose free
+   * components happen to be all of one type opened on no chip row at all. The
+   * control was derived from what the coverage filter left, so the filter the
+   * reader never turned on hid the filter they were looking for.
+   */
+  describe('when the coverage filter leaves a single type', () => {
+    const oneTypeFree = {
+      catalogue: {
+        ...emptyCatalogue,
+        standards: [NAMING],
+        skills: [REVIEWING],
+      },
+      alongside: [skillPackage([REVIEWING.id])],
+    };
+
+    const chip = (name: string) => screen.getByRole('button', { name });
+
+    it('keeps one chip per type the package is missing something of', () => {
+      renderDrawer(oneTypeFree);
+
+      expect(chip('Standards, 1')).toBeInTheDocument();
+      expect(chip('Skills, 0')).toBeInTheDocument();
+    });
+
+    it('names the type rather than answering a search nobody typed', async () => {
+      renderDrawer(oneTypeFree);
+
+      await userEvent.click(chip('Skills, 0'));
+
+      expect(
+        screen.getByText(
+          'Every skill Backend guidelines does not hold is already in a package.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The pick is what the chip row is for; releasing the coverage filter is
+     * the way to reach the rows it counts.
+     */
+    it('shows the type once the coverage filter is released', async () => {
+      renderDrawer(oneTypeFree);
+
+      await userEvent.click(chip('Skills, 0'));
+      await userEvent.click(chip('In no package, 1'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Reviewing a diff/ }),
       ).toBeInTheDocument();
     });
   });
