@@ -307,9 +307,11 @@ Everything below this heading is already true and green. This section is the onl
 outstanding, and it is where a fresh orchestrator session starts.
 
 **The PR.** [PackmindHub/packmind#489](https://github.com/PackmindHub/packmind/pull/489),
-branch `feat/845-package-release-version`, 46 commits, checks passing. Every commit through
-S4 is already pushed — **a git hook pushes on commit in this repository**, so the branch is
-never behind and there is no push step to remember.
+branch `feat/845-package-release-version`, checks passing. S4's code commits reached `origin`
+without an explicit push from the orchestrator — the mechanism is **not** a git hook
+(`.husky/` holds only `pre-commit` and `pre-push`, neither of which pushes), and it is not
+established. **So check `git rev-list --count origin/<branch>..HEAD` before assuming the PR
+shows your work**, rather than trusting either that it pushes itself or that it does not.
 
 **The review.** One review, by `greptile-apps` — an **automated** reviewer, not a person —
 submitted 2026-09-16 at 10:55, plus one summary comment. It predates S3's close and all of
