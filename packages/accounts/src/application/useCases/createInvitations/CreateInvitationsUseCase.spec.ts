@@ -1,5 +1,5 @@
 import { UserNotFoundError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CreateInvitationsCommand,
   createOrganizationId,
@@ -80,9 +80,7 @@ describe('CreateInvitationsUseCase', () => {
       userId: createUserId('test'),
     });
 
-    mockSpacesPort = {
-      addMemberToDefaultSpace: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
 
     organization = organizationFactory({ id: organizationId });
 

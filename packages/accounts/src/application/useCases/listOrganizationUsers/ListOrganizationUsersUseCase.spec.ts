@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { MemberContext } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -18,10 +18,7 @@ describe('ListOrganizationUsersUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     mockUserService = {
       listUsersByOrganization: jest.fn(),
