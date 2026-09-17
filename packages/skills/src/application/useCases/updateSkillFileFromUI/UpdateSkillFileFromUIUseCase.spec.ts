@@ -5,7 +5,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -45,15 +45,9 @@ describe('UpdateSkillFileFromUIUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
 
     skillService = {
       getSkillById: jest.fn(),

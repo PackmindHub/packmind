@@ -3,7 +3,7 @@ import {
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -90,10 +90,7 @@ describe('ListSkillVersionsUseCase', () => {
   ];
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     mockSkillService = {
       getSkillById: jest.fn(),
