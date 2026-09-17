@@ -7,13 +7,14 @@ import {
   createSpaceId,
   createOrganizationId,
   createUserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test';
 import {
   SpaceMembershipRequiredError,
   UserNotFoundError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 
 describe('ListRecipesBySpaceUseCase', () => {
   let usecase: ListCommandsBySpaceUseCase;
@@ -26,21 +27,17 @@ describe('ListRecipesBySpaceUseCase', () => {
       listCommandsBySpace: jest.fn(),
     } as unknown as jest.Mocked<CommandService>;
 
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId: createUserId('00000000-0000-0000-0000-000000000001'),
-        spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
-        role: 'member',
-        createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
-        updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: createUserId('00000000-0000-0000-0000-000000000001'),
+      spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+      role: UserSpaceRole.MEMBER,
+      createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      pinned: false,
+    });
 
     usecase = new ListCommandsBySpaceUseCase(
       spacesPort,

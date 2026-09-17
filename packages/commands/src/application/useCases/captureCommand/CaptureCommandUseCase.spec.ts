@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
@@ -44,10 +45,7 @@ describe('CaptureRecipeUseCase', () => {
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     spacesPort = {
       getSpaceById: jest.fn(),

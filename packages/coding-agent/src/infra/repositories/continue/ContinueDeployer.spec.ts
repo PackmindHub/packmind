@@ -16,7 +16,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 
 describe('ContinueDeployer', () => {
   let deployer: ContinueDeployer;
@@ -25,9 +25,7 @@ describe('ContinueDeployer', () => {
   let mockTarget: Target;
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new ContinueDeployer(mockStandardsPort);
 

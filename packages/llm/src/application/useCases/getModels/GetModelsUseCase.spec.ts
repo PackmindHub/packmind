@@ -7,7 +7,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { MemberContext } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { GetModelsUseCase } from './GetModelsUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
@@ -25,10 +25,7 @@ describe('GetModelsUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     stubbedLogger = stubLogger();
 

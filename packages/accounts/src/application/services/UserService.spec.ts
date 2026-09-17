@@ -9,7 +9,7 @@ import {
 import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { userFactory } from '../../../test';
 import {
   EmailAlreadyExistsError,
@@ -30,20 +30,10 @@ describe('UserService', () => {
   let publishUserContextChangeEventSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    mockUserRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByEmail: jest.fn(),
-      findByEmailCaseInsensitive: jest.fn(),
-      listByOrganization: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IUserRepository>;
+    mockUserRepository = mockInterface<IUserRepository>();
 
-    mockMembershipRepository = {
-      removeMembership: jest.fn(),
-      updateRole: jest.fn(),
-    } as unknown as jest.Mocked<IUserOrganizationMembershipRepository>;
+    mockMembershipRepository =
+      mockInterface<IUserOrganizationMembershipRepository>();
 
     stubbedLogger = stubLogger();
 

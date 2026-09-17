@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createUserId,
   createUserMetadataId,
@@ -16,11 +16,7 @@ describe('UserMetadataService', () => {
   const userId = createUserId('user-1');
 
   beforeEach(() => {
-    mockRepository = {
-      findByUserId: jest.fn(),
-      add: jest.fn(),
-      save: jest.fn(),
-    } as unknown as jest.Mocked<IUserMetadataRepository>;
+    mockRepository = mockInterface<IUserMetadataRepository>();
 
     stubbedLogger = stubLogger();
 

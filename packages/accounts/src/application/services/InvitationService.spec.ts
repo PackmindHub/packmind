@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { InvitationService } from './InvitationService';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { MailService, Configuration } from '@packmind/node-utils';
@@ -25,9 +26,7 @@ describe('InvitationService', () => {
   let mockMailService: jest.Mocked<MailService>;
 
   beforeEach(() => {
-    mockInvitationRepository = {
-      addMany: jest.fn(),
-    } as unknown as jest.Mocked<IInvitationRepository>;
+    mockInvitationRepository = mockInterface<IInvitationRepository>();
 
     mockMailService = {
       isConfigured: jest.fn(),

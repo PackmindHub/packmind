@@ -17,7 +17,7 @@ import {
 import { SingleFileDeployer, DeployerConfig } from './SingleFileDeployer';
 import { v4 as uuidv4 } from 'uuid';
 import { IStandardsPort, IGitPort } from '@packmind/types';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 
 // Create a concrete test implementation of the abstract SingleFileDeployer
 class TestSingleFileDeployer extends SingleFileDeployer {
@@ -36,10 +36,8 @@ describe('SingleFileDeployer', () => {
   let vscodeTarget: Target;
 
   beforeEach(() => {
-    mockGitPort = {
-      getFileFromRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
-    mockStandardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
+    mockGitPort = mockInterface<IGitPort>();
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new TestSingleFileDeployer(mockStandardsPort, mockGitPort);
 

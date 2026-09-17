@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SignInSocialUserUseCase } from './SignInSocialUserUseCase';
 import { UserService } from '../../services/UserService';
@@ -57,9 +58,8 @@ describe('SignInSocialUserUseCase', () => {
       addSocialProvider: jest.fn(),
     } as unknown as jest.Mocked<UserMetadataService>;
 
-    signUpWithOrganizationUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<ISignUpWithOrganizationUseCase>;
+    signUpWithOrganizationUseCase =
+      mockInterface<ISignUpWithOrganizationUseCase>();
 
     mockEventEmitterService = {
       emit: jest.fn(),
