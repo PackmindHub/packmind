@@ -3,7 +3,7 @@ import { PackageRelease } from '@packmind/types';
 /** One component of a package, resolved to its current latest version. */
 export type PackageComponentSnapshot = {
   id: string;
-  latestVersionId: string;
+  latestVersionId: string | null;
 };
 
 /**
@@ -97,6 +97,10 @@ export const pinnedVersionsMatch = (
 
   // Check if every current component has the same latest version id as what was pinned
   for (const recipe of pkg.recipes) {
+    // A component with no version (null) never matches a pinned version
+    if (recipe.latestVersionId === null) {
+      return false;
+    }
     const key = `recipe:${recipe.id}`;
     const pinnedId = releasePinnedVersions.get(key);
     if (pinnedId !== recipe.latestVersionId) {
@@ -105,6 +109,10 @@ export const pinnedVersionsMatch = (
   }
 
   for (const standard of pkg.standards) {
+    // A component with no version (null) never matches a pinned version
+    if (standard.latestVersionId === null) {
+      return false;
+    }
     const key = `standard:${standard.id}`;
     const pinnedId = releasePinnedVersions.get(key);
     if (pinnedId !== standard.latestVersionId) {
@@ -113,6 +121,10 @@ export const pinnedVersionsMatch = (
   }
 
   for (const skill of pkg.skills) {
+    // A component with no version (null) never matches a pinned version
+    if (skill.latestVersionId === null) {
+      return false;
+    }
     const key = `skill:${skill.id}`;
     const pinnedId = releasePinnedVersions.get(key);
     if (pinnedId !== skill.latestVersionId) {

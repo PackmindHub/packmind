@@ -3247,3 +3247,159 @@ beginning "A package can now be released under a version". Touch nothing else in
 not the sibling Distribution-page entry, not `## Changed`, `## Fixed` or `## Removed`, not any
 numbered release section. Do not edit `apps/doc/`. Gated by `sweep`, per D-047: `CHANGELOG.MD` is
 prose at the repository root and there is no assertion to name.
+
+## D-059 — An unresolved component stays in the gate snapshot, with a null pinned version
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-17`
+- supersedes: D-036 (partial — the readiness read omits unresolved components from the snapshot it compares)
+- superseded-by: —
+- relates to: `AC-2`, `AC-3`, `AC-9`, `AC-10`, `D-007`, `D-014`, `D-034`, `D-036`
+
+**Decision.** `toGateSnapshot` receives the whole resolution, not `resolution.resolved`
+alone, and pushes every component into its family — an unresolved one with
+`latestVersionId: null`. `PackageComponentSnapshot.latestVersionId` becomes
+`string | null`, where `null` means "this component has no version at all".
+
+No new verdict, no new refusal code. The gate still answers the tri-state of D-029 and
+the cut still refuses with D-034's four codes.
+
+**Reasoning.** This is Greptile's third finding on PR #489, and it is a real defect that
+D-036 authorised by accident.
+
+D-036 decided the readiness read must not throw on an unresolved component, and that it
+would "simply omit an unresolved component from the snapshot it compares, which makes
+the package look different from its release and yields `ready`". The conclusion is right
+and the reason is only sometimes true. Omitting a component makes the package look
+different from its release **only when the release pinned that component**. Two cases it
+does not cover:
+
+- *The component was added after the last release.* The release never pinned it, and the
+  snapshot now drops it, so both sides of the comparison omit it and every other source
+  matches — the gate answers `no_change`, and the pane says "Nothing has changed since
+  0.1.0" about a package that has gained a component.
+- *It is the package's only component.* The snapshot is empty, so D-007's step 1 fires
+  and the gate answers `no_components` — "Add at least one component", shown to someone
+  who has one. The sentence is not merely wrong, it is unactionable: adding another
+  component does not clear it, because the broken one is still unresolvable.
+
+Both are the shape D-036 was trying to avoid. Keeping the component's identity in the
+snapshot gets D-036's intended behaviour for real: a component with no version differs
+from anything the release pinned and is absent from a release that predates it, so the
+gate says `ready`, the user acts, and D-014's throw says so loudly. The honest answer
+D-036 described is the one the code now gives.
+
+*Why `null` and not a sentinel string.* `latestVersionId: ''` would work — it compares
+unequal to every real version id — and it is a value someone will one day read as "not
+yet loaded" or trim away. `null` cannot be mistaken for a version id, and it makes the
+one case the type has to express visible in the type.
+
+*Why no fourth verdict.* D-036 rejected "inventing a readiness code for a case no
+acceptance criterion describes" and that still holds: this repair adds no state for the
+frontend to render and no sentence for anyone to write. It moves a component from
+invisible to present, and every existing verdict keeps its meaning.
+
+**Rejected.**
+
+- Leaving it, on D-014's grounds that a versionless component is close to impossible —
+  D-014 says that about the *cut*, where the consequence is a loud refusal. Here the
+  consequence is a wrong sentence on a successful read, and "close to impossible" is the
+  reason nobody would ever notice it.
+- A fourth verdict, `unresolved_component` — the case D-036 rejected, and it would add a
+  fifth sentence to D-011's file that no criterion asks for.
+- Throwing from the readiness read, matching the cut — D-036 rejected this for the right
+  reason: the pane has to render, and a package with one broken component would render
+  nothing rather than showing the problem.
+- Keeping `latestVersionId: string` and pushing `''` — see above.
+
+**Constrains implementation.** `toGateSnapshot` takes `ResolvedComponentVersions` (both
+halves) rather than `ResolvedComponentVersion[]`. `PackageComponentSnapshot.latestVersionId`
+is `string | null`. `pinnedVersionsMatch` must treat `null` as "does not match" — never as
+equal to a missing pin — and `componentListMatches` keeps using the `${family}:${id}` key,
+which does not read the version at all. `findOutdatedComponents` keeps taking
+`resolution.resolved` only: an unresolved component is not "behind", it is broken, and
+AC-4's sentence names two version numbers it does not have. Do not add a verdict, a
+refusal code or a sentence.
+
+---
+
+## D-060 — The release routes bind the package to the commanded space, and answer `PackageNotFoundError` when it does not belong
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-17`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-19`, `D-016`, `D-017`, `D-034`, `D-035`
+
+**Decision.** After loading the package, each of the three release use cases compares
+`pkg.spaceId` against `command.spaceId` and throws `PackageNotFoundError(packageId)` when
+they differ. No port is injected, no membership is consulted, and no new refusal code is
+added — the controller already maps `PackageNotFoundError` to a 404.
+
+**Reasoning.** This is the true half of Greptile's first finding on PR #489. The finding's
+headline — "space-scoped operations must use `AbstractSpaceMemberUseCase`" — is already
+decided against in D-035 and stays decided against. Its last clause is not: "the package
+must be bound to the requested space."
+
+D-035 states, as a fact about the implementation rather than as a thing to do, that "the
+command still carries `spaceId`, because the route is space-scoped and **the package is
+looked up within it** — that is addressing, not authorisation". That sentence is false of
+the code. `PackageService.findById(packageId)` takes one argument and its repository
+issues `WHERE package.id = :id` with no tenant filter; the use cases destructure
+`{ packageId, version }` and never read `command.spaceId` at all. So this entry decides
+nothing new about authorisation — it makes the code do what an active decision already
+says it does.
+
+The gap that closes is wider than the one D-035 accepted, and that is why it is worth a
+unit rather than a shrug. D-035 accepted a **cross-space** reach inside one organization:
+an org member who is not in a space can still release that space's package, because "no
+permission check" is an explicit scope item. It did not accept a **cross-organization**
+one. `AbstractMemberUseCase` validates only that the caller is a member of
+`command.organizationId`; nothing anywhere compares the *loaded package* to that
+organization, and `Package` has no `organizationId` field to compare against. A member of
+org A can therefore pass a packageId belonging to org B and read its releases, or cut one.
+Binding the package to the URL's space closes that without touching who may act.
+
+*Why `PackageNotFoundError` and not a refusal.* From this route's point of view the
+package genuinely is not there: the route addresses a package inside a space, and no such
+package is inside that space. It also discloses nothing across a tenant boundary — a 404
+is what a caller gets for a packageId that does not exist at all, so the two cases are
+indistinguishable from outside, which is the property this check exists to have. And it
+needs no new code: D-034 fixes the refusal union at four members, the controller already
+maps this error, and every release route already throws it for a missing package.
+
+*What this does not fix.* `GetPackageByIdUseCase` — the neighbouring read, which predates
+this feature — loads the package with the same unscoped `findById` and never compares
+`pkg.spaceId` to `command.spaceId` either. Its `AbstractSpaceMemberUseCase` base checks
+the caller's membership in the URL's space, not the resource's location, so the same
+cross-organization reach exists on the plain package read. That is a pre-existing defect
+on a route this feature does not own, and repairing it repo-wide is outside this charter.
+It is reported to the human rather than fixed here, and this entry exists partly so that
+the reader of a later audit finds the release routes already bound and knows the pattern.
+
+**Rejected.**
+
+- `AbstractSpaceMemberUseCase`, as the finding asks — refuses the member AC-19 requires,
+  and D-035 rejected it explicitly. It would also not fix this: that base checks the
+  caller against the URL's space and still never looks at the loaded package.
+- Adding an `organizationId` to `Package` and checking that instead — a change to a shared
+  type in service of one check, and the space already determines the organization.
+- Filtering inside `PackageService.findById` by adding a `spaceId` parameter — changes a
+  service every other package use case calls, which turns a four-line guard into a
+  repo-wide signature change and drags the neighbours' behaviour along with it.
+- A new refusal code, `wrong_space` — puts a fifth member in a union D-034 deliberately
+  fixed at four, and hands the frontend a sentence to write for a state no criterion
+  describes.
+- Leaving it on D-035's grounds — D-035 accepted cross-space, and asserted this binding
+  exists. Neither covers cross-organization.
+
+**Constrains implementation.** The comparison is `pkg.spaceId !== command.spaceId` and the
+throw is `PackageNotFoundError(packageId)`, placed immediately after the existing null
+check in each of the three release use cases. Do not inject `ISpacesPort`. Do not change
+`PackageService` or `PackageRepository`. Do not change `GetPackageByIdUseCase` or any use
+case outside this feature. Do not add a refusal code or a user-facing sentence. Each use
+case gets one named test that a package from another space is refused.
+
+---

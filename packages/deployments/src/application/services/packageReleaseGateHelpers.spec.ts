@@ -455,6 +455,48 @@ describe('packageReleaseGate', () => {
 
         expect(evaluatePackageReleaseGate(pkg, release)).toBe('ready');
       });
+
+      it('packageReleaseGate: a component with no version, added after the last release, yields ready', () => {
+        const pkg: PackageGateSnapshot = {
+          ...fp(),
+          recipes: [
+            ...fp().recipes,
+            {
+              id: 'cmd-no-version',
+              latestVersionId: null,
+            },
+          ],
+        };
+
+        const release = releaseBuilder();
+
+        expect(evaluatePackageReleaseGate(pkg, release)).toBe('ready');
+      });
+
+      it('packageReleaseGate: a package whose only component has no version does not report no_components', () => {
+        const pkg: PackageGateSnapshot = {
+          name: 'Package with unresolved component',
+          description: 'A package with one unresolved component',
+          recipes: [
+            {
+              id: 'cmd-no-version',
+              latestVersionId: null,
+            },
+          ],
+          standards: [],
+          skills: [],
+        };
+
+        const release = releaseBuilder({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [],
+        });
+
+        const verdict = evaluatePackageReleaseGate(pkg, release);
+        expect(verdict).not.toBe('no_components');
+        expect(verdict).toBe('ready');
+      });
     });
   });
 });

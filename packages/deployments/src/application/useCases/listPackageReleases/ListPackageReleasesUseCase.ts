@@ -22,6 +22,7 @@ import {
 } from '../../services/packageReleaseGateHelpers';
 import {
   ResolvedComponentVersion,
+  ResolvedComponentVersions,
   currentVersionOf,
   resolveLatestComponentVersions,
 } from '../../services/packageReleaseResolution';
@@ -75,7 +76,7 @@ const pinnedByComponent = (
 const toGateSnapshot = (
   name: string,
   description: string,
-  resolved: ResolvedComponentVersion[],
+  resolution: ResolvedComponentVersions,
 ): PackageGateSnapshot => {
   const snapshot: PackageGateSnapshot = {
     name,
@@ -85,10 +86,27 @@ const toGateSnapshot = (
     skills: [],
   };
 
-  for (const component of resolved) {
+  // Add resolved components with their version IDs
+  for (const component of resolution.resolved) {
     const entry = {
       id: component.componentId,
       latestVersionId: component.versionId,
+    };
+
+    if (component.family === 'recipe') {
+      snapshot.recipes.push(entry);
+    } else if (component.family === 'standard') {
+      snapshot.standards.push(entry);
+    } else {
+      snapshot.skills.push(entry);
+    }
+  }
+
+  // Add unresolved components with null version IDs
+  for (const component of resolution.unresolved) {
+    const entry = {
+      id: component.componentId,
+      latestVersionId: null,
     };
 
     if (component.family === 'recipe') {
@@ -173,7 +191,7 @@ export class ListPackageReleasesUseCase
 
     const currentSentinel = currentVersionOf(releases);
 
-    // An unresolved component is omitted, never thrown on (D-036).
+    // An unresolved component is reported as a snapshot component with no version (D-036, D-059).
     const resolution = await resolveLatestComponentVersions(
       {
         recipeIds: pkg.recipes ?? [],
@@ -187,11 +205,7 @@ export class ListPackageReleasesUseCase
       },
     );
 
-    const snapshot = toGateSnapshot(
-      pkg.name,
-      pkg.description,
-      resolution.resolved,
-    );
+    const snapshot = toGateSnapshot(pkg.name, pkg.description, resolution);
 
     const latestRelease =
       releases.find((release) => release.version === currentSentinel) ?? null;

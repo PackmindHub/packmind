@@ -373,6 +373,12 @@ describe('ListPackageReleasesUseCase', () => {
 
       expect(result.readiness.outdatedComponents).toEqual([]);
     });
+
+    it('ListPackageReleasesUseCase: returns ready verdict when an unresolved component differs from the release', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.readiness.verdict).toBe('ready');
+    });
   });
 
   it('raises PackageNotFoundError when the package does not exist', async () => {
