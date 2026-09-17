@@ -7,7 +7,13 @@ import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybook
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PlaybookChangeEntry } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../mocks/createMockGateways';
-import { ChangeProposalType, ChangeProposalCaptureMode } from '@packmind/types';
+import {
+  ChangeProposalCaptureMode,
+  ChangeProposalType,
+  createCommandId,
+  createSkillId,
+  createStandardId,
+} from '@packmind/types';
 import { CommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 
 jest.mock('../../utils/consoleLogger', () => ({
@@ -2787,7 +2793,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -2833,7 +2839,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -2898,7 +2904,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'other',
               name: 'Other Standard',
               description: '',
@@ -2926,7 +2932,13 @@ describe('playbookSubmitHandler', () => {
           }),
         ]);
         mockGateway.commands.list.mockResolvedValue({
-          recipes: [{ id: 'cmd-1', slug: 'my-command', name: 'My Command' }],
+          recipes: [
+            {
+              id: createCommandId('cmd-1'),
+              slug: 'my-command',
+              name: 'My Command',
+            },
+          ],
         });
       });
 
@@ -2950,7 +2962,7 @@ describe('playbookSubmitHandler', () => {
           }),
         ]);
         mockGateway.skills.list.mockResolvedValue([
-          { id: 'skill-1', slug: 'my-skill', name: 'My Skill' },
+          { id: createSkillId('skill-1'), slug: 'my-skill', name: 'My Skill' },
         ]);
       });
 
@@ -2978,7 +2990,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'taken-standard',
               name: 'Taken Standard',
               description: '',
@@ -3054,7 +3066,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -3130,7 +3142,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -3175,7 +3187,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -3243,7 +3255,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'shared-name',
               name: 'Shared Name',
               description: '',
@@ -3354,7 +3366,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -3397,7 +3409,7 @@ describe('playbookSubmitHandler', () => {
         mockGateway.standards.list.mockResolvedValue({
           standards: [
             {
-              id: 'std-1',
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
@@ -3428,7 +3440,7 @@ describe('playbookSubmitHandler', () => {
       mockGateway.changeProposals.batchApply.mockResolvedValue({
         success: true,
         created: {
-          standards: [{ id: 'std-1', slug: 'my-standard' }],
+          standards: [{ id: createStandardId('std-1'), slug: 'my-standard' }],
           commands: [],
           skills: [],
         },
@@ -3587,10 +3599,10 @@ describe('playbookSubmitHandler', () => {
           success: true,
           created: {
             standards: [
-              { id: 'std-1', slug: 'standard-one' },
-              { id: 'std-2', slug: 'standard-two' },
+              { id: createStandardId('std-1'), slug: 'standard-one' },
+              { id: createStandardId('std-2'), slug: 'standard-two' },
             ],
-            commands: [{ id: 'cmd-1', slug: 'my-command' }],
+            commands: [{ id: createCommandId('cmd-1'), slug: 'my-command' }],
             skills: [],
           },
           updated: {
@@ -3648,7 +3660,7 @@ describe('playbookSubmitHandler', () => {
           success: true,
           created: { standards: [], commands: [], skills: [] },
           updated: {
-            standards: ['std-1'],
+            standards: [createStandardId('std-1')],
             commands: [],
             skills: [],
           },
@@ -3669,13 +3681,13 @@ describe('playbookSubmitHandler', () => {
         mockGateway.changeProposals.batchApply.mockResolvedValue({
           success: true,
           created: {
-            standards: [{ id: 'std-1', slug: 'my-standard' }],
+            standards: [{ id: createStandardId('std-1'), slug: 'my-standard' }],
             commands: [],
             skills: [],
           },
           updated: {
             standards: [],
-            commands: ['cmd-1'],
+            commands: [createCommandId('cmd-1')],
             skills: [],
           },
         });

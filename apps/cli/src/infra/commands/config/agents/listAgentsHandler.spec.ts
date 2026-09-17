@@ -1,5 +1,9 @@
 import * as fsPromises from 'fs/promises';
-import { RenderMode } from '@packmind/types';
+import {
+  RenderMode,
+  createOrganizationId,
+  createRenderModeConfigurationId,
+} from '@packmind/types';
 import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
 import { createMockDeploymentGateway } from '../../../../mocks/createMockGateways';
@@ -327,8 +331,8 @@ describe('listAgentsHandler', () => {
         mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
         mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
           configuration: {
-            id: 'config-1',
-            organizationId: 'org-1',
+            id: createRenderModeConfigurationId('config-1'),
+            organizationId: createOrganizationId('org-1'),
             activeRenderModes: [RenderMode.CLAUDE, RenderMode.CURSOR],
           },
         });
@@ -397,8 +401,8 @@ describe('listAgentsHandler', () => {
           .mockResolvedValueOnce({ packages: {} });
         mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
           configuration: {
-            id: 'config-1',
-            organizationId: 'org-1',
+            id: createRenderModeConfigurationId('config-1'),
+            organizationId: createOrganizationId('org-1'),
             activeRenderModes: [RenderMode.CURSOR, RenderMode.PACKMIND],
           },
         });

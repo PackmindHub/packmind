@@ -1,3 +1,8 @@
+import {
+  createCommandId,
+  createSkillId,
+  createStandardId,
+} from '@packmind/types';
 import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../../mocks/createMockGateways';
 import {
@@ -75,7 +80,13 @@ describe('checkForDuplicateNames', () => {
   describe('when a standard name collides with an existing artifact', () => {
     it('returns one error', async () => {
       mockGateway.standards.list.mockResolvedValue({
-        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        standards: [
+          {
+            name: 'My Standard',
+            id: createStandardId('std-1'),
+            slug: 'my-standard',
+          },
+        ],
         total: 1,
       });
       const entries = [makeEntry({ artifactName: 'My Standard' })];
@@ -87,7 +98,13 @@ describe('checkForDuplicateNames', () => {
 
     it('mentions the artifact already exists', async () => {
       mockGateway.standards.list.mockResolvedValue({
-        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        standards: [
+          {
+            name: 'My Standard',
+            id: createStandardId('std-1'),
+            slug: 'my-standard',
+          },
+        ],
         total: 1,
       });
       const entries = [makeEntry({ artifactName: 'My Standard' })];
@@ -101,7 +118,13 @@ describe('checkForDuplicateNames', () => {
   describe('when a command name collides with an existing artifact', () => {
     it('returns one error', async () => {
       mockGateway.commands.list.mockResolvedValue({
-        recipes: [{ name: 'My Command', id: 'cmd-1', slug: 'my-command' }],
+        recipes: [
+          {
+            name: 'My Command',
+            id: createCommandId('cmd-1'),
+            slug: 'my-command',
+          },
+        ],
       });
       const entries = [
         makeEntry({
@@ -117,7 +140,13 @@ describe('checkForDuplicateNames', () => {
 
     it('mentions the artifact already exists', async () => {
       mockGateway.commands.list.mockResolvedValue({
-        recipes: [{ name: 'My Command', id: 'cmd-1', slug: 'my-command' }],
+        recipes: [
+          {
+            name: 'My Command',
+            id: createCommandId('cmd-1'),
+            slug: 'my-command',
+          },
+        ],
       });
       const entries = [
         makeEntry({
@@ -135,7 +164,7 @@ describe('checkForDuplicateNames', () => {
   describe('when a skill name collides with an existing artifact', () => {
     it('returns one error', async () => {
       mockGateway.skills.list.mockResolvedValue([
-        { name: 'My Skill', id: 'skill-1' },
+        { name: 'My Skill', id: createSkillId('skill-1') },
       ]);
       const entries = [
         makeEntry({
@@ -151,7 +180,7 @@ describe('checkForDuplicateNames', () => {
 
     it('mentions the artifact already exists', async () => {
       mockGateway.skills.list.mockResolvedValue([
-        { name: 'My Skill', id: 'skill-1' },
+        { name: 'My Skill', id: createSkillId('skill-1') },
       ]);
       const entries = [
         makeEntry({
@@ -216,7 +245,13 @@ describe('checkForDuplicateNames', () => {
   describe('when a collision is reported', () => {
     it('identifies the space it belongs to', async () => {
       mockGateway.standards.list.mockResolvedValue({
-        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        standards: [
+          {
+            name: 'My Standard',
+            id: createStandardId('std-1'),
+            slug: 'my-standard',
+          },
+        ],
         total: 1,
       });
       const entries = [makeEntry({ spaceId: 'space-abc' })];
@@ -228,7 +263,7 @@ describe('checkForDuplicateNames', () => {
 
     it('identifies the artifact type it belongs to', async () => {
       mockGateway.skills.list.mockResolvedValue([
-        { name: 'My Skill', id: 'skill-1' },
+        { name: 'My Skill', id: createSkillId('skill-1') },
       ]);
       const entries = [
         makeEntry({ artifactType: 'skill', artifactName: 'My Skill' }),
@@ -241,7 +276,13 @@ describe('checkForDuplicateNames', () => {
 
     it('identifies the artifact name', async () => {
       mockGateway.standards.list.mockResolvedValue({
-        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        standards: [
+          {
+            name: 'My Standard',
+            id: createStandardId('std-1'),
+            slug: 'my-standard',
+          },
+        ],
         total: 1,
       });
       const entries = [makeEntry({ artifactName: 'my standard' })];

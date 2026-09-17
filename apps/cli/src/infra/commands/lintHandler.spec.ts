@@ -28,6 +28,20 @@ jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
 }));
 
+/**
+ * `LintFilesFromConfigResult` carries a summary the handler never reads, so
+ * derive it from the violations rather than restating it at every call site.
+ */
+const lintResultFor = (violations: LintViolation[]) => ({
+  violations,
+  summary: {
+    totalFiles: violations.length,
+    violatedFiles: violations.filter((v) => v.violations.length > 0).length,
+    totalViolations: violations.reduce((n, v) => n + v.violations.length, 0),
+    standardsChecked: [] as string[],
+  },
+});
+
 describe('lintHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockHumanLogger: jest.Mocked<HumanReadableLogger>;
@@ -126,7 +140,8 @@ describe('lintHandler', () => {
         );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: false,
-          configs: [],
+          packages: {},
+          configPaths: [],
         });
         mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
           violations: [],
@@ -155,7 +170,8 @@ describe('lintHandler', () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+        packages: {},
+        configPaths: ['/project/packmind.json'],
       });
     });
 
@@ -194,9 +210,9 @@ describe('lintHandler', () => {
           },
         ];
 
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations,
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor(violations),
+        );
 
         await lintHandler(createArgs({ path: '/project' }), deps);
 
@@ -206,9 +222,9 @@ describe('lintHandler', () => {
 
     describe('when violations have undefined severity', () => {
       it('exits with code 1', async () => {
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [createLintViolation({ severity: undefined })],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([createLintViolation({ severity: undefined })]),
+        );
 
         await lintHandler(createArgs({ path: '/project' }), deps);
 
@@ -233,9 +249,9 @@ describe('lintHandler', () => {
           },
         ];
 
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations,
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor(violations),
+        );
 
         await lintHandler(createArgs({ path: '/project' }), deps);
 
@@ -267,9 +283,9 @@ describe('lintHandler', () => {
           },
         ];
 
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations,
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor(violations),
+        );
 
         await lintHandler(createArgs({ path: '/project' }), deps);
 
@@ -295,9 +311,9 @@ describe('lintHandler', () => {
             },
           ];
 
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations,
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor(violations),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', continueOnError: true }),
@@ -310,9 +326,9 @@ describe('lintHandler', () => {
 
       describe('when no violations and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([]),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', continueOnError: true }),
@@ -325,9 +341,9 @@ describe('lintHandler', () => {
 
       describe('when undefined severity violations and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [createLintViolation({ severity: undefined })],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([createLintViolation({ severity: undefined })]),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', continueOnError: true }),
@@ -355,9 +371,9 @@ describe('lintHandler', () => {
             },
           ];
 
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations,
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor(violations),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', continueOnError: true }),
@@ -398,9 +414,9 @@ describe('lintHandler', () => {
 
       describe('when --level is "warning"', () => {
         it('displays both warnings and errors', async () => {
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [warningViolation, errorViolation],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([warningViolation, errorViolation]),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', level: DetectionSeverity.WARNING }),
@@ -415,9 +431,9 @@ describe('lintHandler', () => {
 
         describe('when errors are present', () => {
           it('exits with code 1', async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [warningViolation, errorViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([warningViolation, errorViolation]),
+            );
 
             await lintHandler(
               createArgs({
@@ -434,9 +450,9 @@ describe('lintHandler', () => {
 
       describe('when --level is "error"', () => {
         it('displays only error violations', async () => {
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [warningViolation, errorViolation],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([warningViolation, errorViolation]),
+          );
 
           await lintHandler(
             createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
@@ -450,9 +466,9 @@ describe('lintHandler', () => {
 
         describe('when errors are present', () => {
           it('exits with code 1', async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [warningViolation, errorViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([warningViolation, errorViolation]),
+            );
 
             await lintHandler(
               createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
@@ -465,9 +481,9 @@ describe('lintHandler', () => {
 
         describe('when only warnings exist', () => {
           beforeEach(async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [warningViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([warningViolation]),
+            );
 
             await lintHandler(
               createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
@@ -492,9 +508,9 @@ describe('lintHandler', () => {
 
         describe('when --level is "error"', () => {
           it('includes undefined severity violations', async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [undefinedViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([undefinedViolation]),
+            );
 
             await lintHandler(
               createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
@@ -509,9 +525,9 @@ describe('lintHandler', () => {
 
         describe('when --level is "warning"', () => {
           it('includes undefined severity violations', async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [undefinedViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([undefinedViolation]),
+            );
 
             await lintHandler(
               createArgs({
@@ -529,9 +545,9 @@ describe('lintHandler', () => {
 
         describe('when mixed with warnings and --level is "error"', () => {
           it('keeps only undefined severity violations', async () => {
-            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-              violations: [undefinedViolation, warningViolation],
-            });
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+              lintResultFor([undefinedViolation, warningViolation]),
+            );
 
             await lintHandler(
               createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
@@ -547,9 +563,9 @@ describe('lintHandler', () => {
 
       describe('when --level is not specified', () => {
         it('displays all violations (default behavior)', async () => {
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [warningViolation, errorViolation],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([warningViolation, errorViolation]),
+          );
 
           await lintHandler(createArgs({ path: '/project' }), deps);
 
@@ -567,11 +583,12 @@ describe('lintHandler', () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+        packages: {},
+        configPaths: ['/project/packmind.json'],
       });
-      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-        violations: [],
-      });
+      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+        lintResultFor([]),
+      );
     });
 
     describe('when logger is "human"', () => {
@@ -611,7 +628,8 @@ describe('lintHandler', () => {
         );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: false,
-          configs: [],
+          packages: {},
+          configPaths: [],
         });
 
         await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
@@ -631,11 +649,12 @@ describe('lintHandler', () => {
         beforeEach(async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: true,
-            configs: [{ path: '/project/packmind.json' }],
+            packages: {},
+            configPaths: ['/project/packmind.json'],
           });
-          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-            violations: [],
-          });
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+            lintResultFor([]),
+          );
 
           await lintHandler(createArgs(), deps);
         });
@@ -655,7 +674,8 @@ describe('lintHandler', () => {
         it('throws error asking to install a package', async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: false,
-            configs: [],
+            packages: {},
+            configPaths: [],
           });
 
           await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
@@ -668,7 +688,8 @@ describe('lintHandler', () => {
         beforeEach(async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: true,
-            configs: [{ path: '/project/packmind.json' }],
+            packages: {},
+            configPaths: ['/project/packmind.json'],
           });
           mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
             violations: [],
@@ -722,11 +743,12 @@ describe('lintHandler', () => {
         );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: true,
-          configs: [{ path: '/project/packmind.json' }],
+          packages: {},
+          configPaths: ['/project/packmind.json'],
         });
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([]),
+        );
 
         await lintHandler(createArgs({ diff: DiffMode.FILES }), deps);
 
@@ -740,15 +762,16 @@ describe('lintHandler', () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+        packages: {},
+        configPaths: ['/project/packmind.json'],
       });
     });
 
     describe('when no errors are found', () => {
       it('logs completion message', async () => {
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([]),
+        );
 
         await lintHandler(createArgs(), deps);
 
@@ -760,9 +783,9 @@ describe('lintHandler', () => {
 
     describe('when errors are found', () => {
       it('logs failure message', async () => {
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [createLintViolation()],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([createLintViolation()]),
+        );
 
         await lintHandler(createArgs(), deps);
 
@@ -774,9 +797,9 @@ describe('lintHandler', () => {
 
     describe('when violations have undefined severity', () => {
       it('logs failure message', async () => {
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [createLintViolation({ severity: undefined })],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([createLintViolation({ severity: undefined })]),
+        );
 
         await lintHandler(createArgs(), deps);
 
@@ -792,11 +815,12 @@ describe('lintHandler', () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+        packages: {},
+        configPaths: ['/project/packmind.json'],
       });
-      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-        violations: [],
-      });
+      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+        lintResultFor([]),
+      );
       mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
         violations: [],
         summary: {
@@ -983,11 +1007,12 @@ describe('lintHandler', () => {
         mockIgnoreReader.readIgnorePatterns.mockResolvedValue(['generated/**']);
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: true,
-          configs: [{ path: '/project/packmind.json' }],
+          packages: {},
+          configPaths: ['/project/packmind.json'],
         });
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([]),
+        );
 
         await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
       });
@@ -1012,11 +1037,12 @@ describe('lintHandler', () => {
         );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: true,
-          configs: [{ path: '/project/packmind.json' }],
+          packages: {},
+          configPaths: ['/project/packmind.json'],
         });
-        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [],
-        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue(
+          lintResultFor([]),
+        );
 
         // resolvePath('src/file.ts') = '/absolute/src/file.ts'
         // directoryForOps = '/absolute/src'
@@ -1035,7 +1061,8 @@ describe('lintHandler', () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+        packages: {},
+        configPaths: ['/project/packmind.json'],
       });
     });
 
@@ -1087,7 +1114,8 @@ describe('lintHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: true,
-          configs: [{ path: '/project/packmind.json' }],
+          packages: {},
+          configPaths: ['/project/packmind.json'],
         });
         mockPackmindCliHexa.lintFilesFromConfig.mockRejectedValue(
           new NotLoggedInError(),
