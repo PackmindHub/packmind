@@ -1,26 +1,20 @@
 import * as fs from 'fs/promises';
 
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import {
+  createMockPackmindGateway,
+  MockTree,
+} from '../../mocks/createMockGateways';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { DeleteItemType } from '@packmind/types';
 jest.mock('fs/promises');
 
 describe('InstallPackagesUseCase', () => {
   let useCase: InstallPackagesUseCase;
-  let mockGateway: jest.Mocked<IPackmindGateway>;
+  let mockGateway: MockTree<IPackmindGateway>;
 
   beforeEach(() => {
-    mockGateway = {
-      deployment: {
-        pull: jest.fn(),
-        notifyDistribution: jest.fn(),
-      },
-      packages: {
-        list: jest.fn(),
-        getSummary: jest.fn(),
-        create: jest.fn(),
-      },
-    } as unknown as jest.Mocked<IPackmindGateway>;
+    mockGateway = createMockPackmindGateway();
 
     // Setup fs mocks using jest.Mock casting
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);

@@ -87,6 +87,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -114,6 +115,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -145,6 +147,7 @@ describe('resolveArtifactIdFromLockFile', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -373,6 +376,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -399,6 +403,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -462,6 +467,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -496,6 +502,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -532,6 +539,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',
@@ -657,6 +665,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -702,6 +711,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -764,6 +774,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -830,6 +841,7 @@ describe('buildProposals', () => {
       const lockFile = makeLockFile({
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'My Command',
             type: 'command',
             id: 'artifact-cmd-1',

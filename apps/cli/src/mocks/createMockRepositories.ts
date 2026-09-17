@@ -2,13 +2,18 @@ import { mockInterface } from '@packmind/test-utils';
 import { IPackmindRepositories } from '../domain/repositories/IPackmindRepositories';
 import { IConfigFileRepository } from '../domain/repositories/IConfigFileRepository';
 import { ILockFileRepository } from '../domain/repositories/ILockFileRepository';
-import { createMockPackmindGateway } from './createMockGateways';
+import { createMockPackmindGateway, MockTree } from './createMockGateways';
+import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { IOutput } from '../domain/repositories/IOutput';
 
 /** Each override is a whole sub-mock - see the note in `createMockGateways`. */
-export type MockRepositoriesOverrides = Partial<
-  jest.Mocked<IPackmindRepositories>
->;
+/** `packmindGateway` is a tree in its own right, so it keeps its nested mocks. */
+export type MockPackmindRepositoriesTree = Omit<
+  MockTree<IPackmindRepositories>,
+  'packmindGateway'
+> & { packmindGateway: MockTree<IPackmindGateway> };
+
+export type MockRepositoriesOverrides = Partial<MockPackmindRepositoriesTree>;
 
 /**
  * `IPackmindRepositories` is all data members, so `mockInterface` demands them
@@ -18,7 +23,7 @@ export type MockRepositoriesOverrides = Partial<
  */
 export function createMockPackmindRepositories(
   overrides?: MockRepositoriesOverrides,
-): jest.Mocked<IPackmindRepositories> {
+): MockPackmindRepositoriesTree {
   return {
     packmindGateway: createMockPackmindGateway(),
     configFileRepository: mockInterface<IConfigFileRepository>(),

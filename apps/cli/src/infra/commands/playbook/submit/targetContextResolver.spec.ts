@@ -203,6 +203,7 @@ describe('createTargetContextResolver', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',

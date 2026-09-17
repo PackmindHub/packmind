@@ -17,6 +17,7 @@ describe('lockFileToArtifactVersionEntries', () => {
       agents: [],
       artifacts: {
         'art-1': {
+          source: 'user',
           name: 'My Standard',
           type: 'standard',
           id: 'art-1',
@@ -129,6 +130,7 @@ describe('fetchDeployedFiles', () => {
         agents: ['claude'],
         artifacts: {
           'art-1': {
+            source: 'user',
             name: 'X',
             type: 'standard',
             id: 'art-1',

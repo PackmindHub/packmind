@@ -28,6 +28,7 @@ const LOCK_FILE_WITH_COMMAND = {
   targetId: 'target-456',
   artifacts: {
     'my-command': {
+      source: 'user',
       name: 'My Command',
       type: 'command' as const,
       id: 'artifact-cmd-1',
@@ -48,6 +49,7 @@ const LOCK_FILE_WITH_STANDARD = {
   ...LOCK_FILE_WITH_COMMAND,
   artifacts: {
     'my-standard': {
+      source: 'user',
       name: 'My Standard',
       type: 'standard' as const,
       id: 'artifact-std-1',
@@ -68,6 +70,7 @@ const LOCK_FILE_WITH_SKILL = {
   ...LOCK_FILE_WITH_COMMAND,
   artifacts: {
     'my-skill': {
+      source: 'user',
       name: 'My Skill',
       type: 'skill' as const,
       id: 'artifact-skill-1',

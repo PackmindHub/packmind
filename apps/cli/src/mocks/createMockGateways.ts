@@ -12,15 +12,21 @@ import { IOrganizationGateway } from '../domain/repositories/IOrganizationGatewa
 import { IRepositoryTrackingGateway } from '../domain/repositories/IRepositoryTrackingGateway';
 
 /**
+ * The shape a mock tree really has: every nested field is a mock, not the bare
+ * interface. `jest.Mocked<T>` does not recurse, so without this a spec reaching
+ * through the tree - `gateway.changeProposals.batchCreate.mockResolvedValue(...)` -
+ * sees the plain interface and has no `mockResolvedValue` to call.
+ */
+export type MockTree<T> = { [K in keyof T]: jest.Mocked<T[K]> };
+
+/**
  * Each override is a whole sub-mock, not a partial to merge. A `mockInterface`
  * mock is a proxy whose members are materialised lazily, so its own keys are
  * empty until something touches them - merging one into a fresh mock would
  * silently copy nothing. The supplied mock is used as-is instead, which is also
  * what callers want: they keep a reference and stub it after the tree is built.
  */
-export type MockPackmindGatewayOverrides = Partial<
-  jest.Mocked<IPackmindGateway>
->;
+export type MockPackmindGatewayOverrides = Partial<MockTree<IPackmindGateway>>;
 
 /**
  * `IPackmindGateway` is all data members - one nested gateway per field - so
@@ -31,7 +37,7 @@ export type MockPackmindGatewayOverrides = Partial<
  */
 export function createMockPackmindGateway(
   overrides?: MockPackmindGatewayOverrides,
-): jest.Mocked<IPackmindGateway> {
+): MockTree<IPackmindGateway> {
   return {
     changeProposals: mockInterface<IChangeProposalGateway>(),
     linter: createMockLinterGateway(),

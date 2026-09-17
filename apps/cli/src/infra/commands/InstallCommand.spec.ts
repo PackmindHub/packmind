@@ -178,8 +178,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'non/existing',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -208,8 +206,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '.claude/commands/my-command.md',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -247,8 +243,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'apps/frontend',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -280,8 +274,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -322,8 +314,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'apps/frontend',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -341,8 +331,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'apps/frontend',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -394,8 +382,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -457,8 +443,6 @@ describe('installCommand', () => {
           packages: ['@public-space/public', '@global/global'].map(
             parsePackageSlug,
           ),
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -523,8 +507,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'apps',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -586,8 +568,6 @@ describe('installCommand', () => {
         await handler({
           installPath: 'apps',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -644,8 +624,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@testing/cli-e2e'].map(parsePackageSlug),
-          list: false,
-          show: undefined,
           status: false,
         });
 
@@ -688,8 +666,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@testing/cli-e2e'].map(parsePackageSlug),
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -725,8 +701,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@testing/cli-e2e'].map(parsePackageSlug),
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -773,8 +747,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@a/x', '@b/y'].map(parsePackageSlug),
-          list: false,
-          show: undefined,
           status: false,
         });
 
@@ -812,7 +784,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@a/x'].map(parsePackageSlug),
-          show: undefined,
           status: false,
         });
 
@@ -844,8 +815,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -863,8 +832,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -880,8 +847,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -905,8 +870,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -932,8 +895,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -962,8 +923,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -995,8 +954,6 @@ describe('installCommand', () => {
         const handlerPromise = handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         }).then(() => {
           handlerReturned = true;
@@ -1062,16 +1019,12 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
 
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1093,8 +1046,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1131,8 +1082,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1160,8 +1109,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1211,8 +1158,6 @@ describe('installCommand', () => {
           await handler({
             installPath: '',
             packages: [],
-            list: false,
-            show: undefined,
             status: false,
           });
         });
@@ -1245,8 +1190,6 @@ describe('installCommand', () => {
           await handler({
             installPath: '',
             packages: [],
-            list: false,
-            show: undefined,
             status: false,
           });
         });
@@ -1274,8 +1217,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1307,8 +1248,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
 
@@ -1340,8 +1279,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1360,8 +1297,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1388,8 +1323,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1418,8 +1351,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1446,8 +1377,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1494,8 +1423,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1529,8 +1456,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1554,8 +1479,6 @@ describe('installCommand', () => {
       await handler({
         installPath: '',
         packages: [],
-        list: false,
-        show: undefined,
         status: false,
       });
 
@@ -1586,8 +1509,6 @@ describe('installCommand', () => {
       await handler({
         installPath: '',
         packages: [],
-        list: false,
-        show: undefined,
         status: false,
       });
 
@@ -1600,8 +1521,6 @@ describe('installCommand', () => {
       await handler({
         installPath: '',
         packages: [],
-        list: false,
-        show: undefined,
         status: false,
       });
 
@@ -1635,8 +1554,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1651,8 +1568,6 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: [],
-          list: false,
-          show: undefined,
           status: false,
         });
       });
@@ -1700,8 +1615,6 @@ describe('installCommand', () => {
       handler({
         installPath: '',
         packages: [],
-        list: false,
-        show: undefined,
         status: false,
       });
 

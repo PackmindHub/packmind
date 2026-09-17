@@ -1,4 +1,5 @@
 import { mockInterface } from '@packmind/test-utils';
+import { MockTree } from './createMockGateways';
 import { IPackmindServices } from '../domain/services/IPackmindServices';
 import { IDiffViolationFilterService } from '../domain/services/IDiffViolationFilterService';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
@@ -7,7 +8,7 @@ import { IGitService } from '../domain/services/IGitService';
 import { ISpaceService } from '../domain/services/ISpaceService';
 
 /** Each override is a whole sub-mock - see the note in `createMockGateways`. */
-export type MockServicesOverrides = Partial<jest.Mocked<IPackmindServices>>;
+export type MockServicesOverrides = Partial<MockTree<IPackmindServices>>;
 
 /**
  * `IPackmindServices` is all data members - one nested service per field - so
@@ -18,7 +19,7 @@ export type MockServicesOverrides = Partial<jest.Mocked<IPackmindServices>>;
  */
 export function createMockServices(
   overrides?: MockServicesOverrides,
-): jest.Mocked<IPackmindServices> {
+): MockTree<IPackmindServices> {
   return {
     listFiles: mockInterface<IListFiles>(),
     gitRemoteUrlService: mockInterface<IGitService>(),

@@ -250,6 +250,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -335,6 +336,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -453,6 +455,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Untracked standard',
           type: 'standard',
           id: 'artifact-1',
@@ -520,6 +523,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Missing standard',
           type: 'standard',
           id: 'artifact-1',
@@ -574,6 +578,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My command',
           type: 'command',
           id: 'artifact-1',
@@ -656,6 +661,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Already staged',
           type: 'standard',
           id: 'artifact-1',
@@ -736,6 +742,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -859,6 +866,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -947,6 +955,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Deleted standard',
           type: 'standard',
           id: 'artifact-1',
@@ -1015,6 +1024,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1097,6 +1107,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1224,6 +1235,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1304,6 +1316,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1387,6 +1400,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1515,6 +1529,7 @@ describe('playbookStatusHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'artifact-1': {
+            source: 'user',
             name: 'My standard',
             type: 'standard',
             id: 'artifact-1',
@@ -1605,6 +1620,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-sub',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Second standard',
           type: 'standard',
           id: 'artifact-1',
