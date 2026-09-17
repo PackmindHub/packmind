@@ -1,12 +1,14 @@
+import { mockInterface } from '@packmind/test-utils';
 import { UninstallUseCase } from './UninstallUseCase';
-import { createMockConfigFileRepository } from '../../mocks/createMockRepositories';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { spaceFactory } from '@packmind/spaces/test';
 import { createSpaceId } from '@packmind/types';
 import {
   IInstallResult,
   IInstallUseCase,
 } from '../../domain/useCases/IInstallUseCase';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 
 const installResultFactory = (
   overrides: Partial<IInstallResult> = {},
@@ -40,10 +42,8 @@ const installResultFactory = (
 
 describe('UninstallUseCase', () => {
   let useCase: UninstallUseCase;
-  let mockConfigFileRepository: ReturnType<
-    typeof createMockConfigFileRepository
-  >;
-  let mockSpaceService: ReturnType<typeof createMockSpaceService>;
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let mockInstallUseCase: jest.Mocked<IInstallUseCase>;
 
   const defaultSpace = spaceFactory({
@@ -53,8 +53,8 @@ describe('UninstallUseCase', () => {
   });
 
   beforeEach(() => {
-    mockConfigFileRepository = createMockConfigFileRepository();
-    mockSpaceService = createMockSpaceService();
+    mockConfigFileRepository = mockInterface<IConfigFileRepository>();
+    mockSpaceService = mockInterface<ISpaceService>();
     mockInstallUseCase = { execute: jest.fn() };
 
     mockSpaceService.getSpaces.mockResolvedValue([defaultSpace]);

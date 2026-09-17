@@ -38,9 +38,10 @@ describe('resolveDeployedContext', () => {
       .fn()
       .mockReturnValue('git@github.com:org/repo.git');
     mockGetCurrentBranch = jest.fn().mockReturnValue('main');
-    mockDeploymentGateway = createMockDeploymentGateway({
-      getDeployed: jest.fn().mockResolvedValue(deployedContentResponse),
-    });
+    mockDeploymentGateway = createMockDeploymentGateway();
+    mockDeploymentGateway.getDeployed.mockResolvedValue(
+      deployedContentResponse,
+    );
 
     packmindCliHexa = {
       getDefaultSpace: mockGetDefaultSpace,

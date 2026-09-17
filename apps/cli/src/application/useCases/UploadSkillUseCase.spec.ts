@@ -1,8 +1,5 @@
-import {
-  createMockPackmindGateway,
-  createMockSkillsGateway,
-} from '../../mocks/createMockGateways';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+import { mockInterface } from '@packmind/test-utils';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
 jest.mock('../../infra/utils/readSkillDirectory');
 
@@ -24,8 +21,8 @@ describe('UploadSkillUseCase', () => {
   let mockGateway: jest.Mocked<IPackmindGateway>;
 
   beforeEach(() => {
-    mockSpaceService = createMockSpaceService();
-    mockSkillsGateway = createMockSkillsGateway();
+    mockSpaceService = mockInterface<ISpaceService>();
+    mockSkillsGateway = mockInterface<ISkillsGateway>();
     mockGateway = createMockPackmindGateway({
       skills: mockSkillsGateway,
     });

@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   BatchCreateChangeProposalsResponse,
   ChangeProposalCaptureMode,
@@ -7,14 +8,12 @@ import {
 
 import { SubmitDiffsUseCase } from './SubmitDiffsUseCase';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import {
-  createMockChangeProposalGateway,
-  createMockPackmindGateway,
-} from '../../mocks/createMockGateways';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 
 describe('SubmitDiffsUseCase', () => {
   let useCase: SubmitDiffsUseCase;
-  const mockChangeProposals = createMockChangeProposalGateway();
+  const mockChangeProposals = mockInterface<IChangeProposalGateway>();
   const mockGateway = createMockPackmindGateway({
     changeProposals: mockChangeProposals,
   });

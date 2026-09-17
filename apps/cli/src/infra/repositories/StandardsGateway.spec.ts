@@ -1,5 +1,6 @@
+import { mockInterface } from '@packmind/test-utils';
 import { StandardsGateway } from './StandardsGateway';
-import { createMockHttpClient } from '../../mocks/createMockHttpClient';
+
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 
 describe('StandardsGateway', () => {
@@ -8,12 +9,12 @@ describe('StandardsGateway', () => {
   const mockOrganizationId = 'org-123';
 
   beforeEach(() => {
-    mockHttpClient = createMockHttpClient({
-      getAuthContext: jest.fn().mockReturnValue({
-        host: 'https://api.packmind.com',
-        jwt: 'mock-jwt',
-        organizationId: mockOrganizationId,
-      }),
+    mockHttpClient = mockInterface<PackmindHttpClient>();
+    mockHttpClient.getAuthContext.mockReturnValue({
+      host: 'https://api.packmind.com',
+      jwt: 'mock-jwt',
+      organizationId: mockOrganizationId,
+      role: null,
     });
 
     gateway = new StandardsGateway(mockHttpClient);

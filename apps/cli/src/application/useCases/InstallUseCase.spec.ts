@@ -1,12 +1,9 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs/promises';
 
 import { InstallUseCase } from './InstallUseCase';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
-import {
-  createMockConfigFileRepository,
-  createMockLockFileRepository,
-} from '../../mocks/createMockRepositories';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { spaceFactory } from '@packmind/spaces/test';
 import {
   createOrganizationId,
@@ -17,6 +14,9 @@ import {
 } from '@packmind/types';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../../infra/utils/execName';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 
 jest.mock('fs/promises');
 
@@ -56,17 +56,15 @@ const installResponseFactory = (
 describe('InstallUseCase', () => {
   let useCase: InstallUseCase;
   let mockGateway: ReturnType<typeof createMockPackmindGateway>;
-  let mockLockFileRepository: ReturnType<typeof createMockLockFileRepository>;
-  let mockConfigFileRepository: ReturnType<
-    typeof createMockConfigFileRepository
-  >;
-  let mockSpaceService: ReturnType<typeof createMockSpaceService>;
+  let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
 
   beforeEach(() => {
     mockGateway = createMockPackmindGateway();
-    mockLockFileRepository = createMockLockFileRepository();
-    mockConfigFileRepository = createMockConfigFileRepository();
-    mockSpaceService = createMockSpaceService();
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+    mockConfigFileRepository = mockInterface<IConfigFileRepository>();
+    mockSpaceService = mockInterface<ISpaceService>();
 
     // Setup fs mocks
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);

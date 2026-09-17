@@ -1,12 +1,8 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs/promises';
 import { InstallDefaultSkillsUseCase } from './InstallDefaultSkillsUseCase';
+import { createMockPackmindRepositories } from '../../mocks/createMockRepositories';
 import {
-  createMockPackmindRepositories,
-  createMockConfigFileRepository,
-  createMockLockFileRepository,
-} from '../../mocks/createMockRepositories';
-import {
-  createMockSkillsGateway,
   createMockPackmindGateway,
   createMockDeploymentGateway,
 } from '../../mocks/createMockGateways';
@@ -21,6 +17,9 @@ import {
   RENDER_MODE_TO_CODING_AGENT,
   RenderMode,
 } from '@packmind/types';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 
 jest.mock('fs/promises');
 
@@ -80,22 +79,20 @@ describe('InstallDefaultSkillsUseCase', () => {
     mockReadLockFile = jest.fn().mockResolvedValue(null);
     mockWriteLockFile = jest.fn().mockResolvedValue(undefined);
 
-    const skillsGateway = createMockSkillsGateway({
-      getDefaults: mockGetDefaults,
-    });
+    const skillsGateway = mockInterface<ISkillsGateway>();
+
+    skillsGateway.getDefaults = mockGetDefaults;
     const packmindGateway = createMockPackmindGateway({
       skills: skillsGateway,
     });
     // Default: an existing (but minimal) packmind.json short-circuits the
     // bootstrap path so existing tests exercise the post-bootstrap flow.
     // Dedicated bootstrap tests below override `readConfig` to return null.
-    const configRepo = createMockConfigFileRepository({
-      readConfig: jest.fn().mockResolvedValue({ packages: {} }),
-    });
-    const lockFileRepo = createMockLockFileRepository({
-      read: mockReadLockFile,
-      write: mockWriteLockFile,
-    });
+    const configRepo = mockInterface<IConfigFileRepository>();
+    configRepo.readConfig.mockResolvedValue({ packages: {} });
+    const lockFileRepo = mockInterface<ILockFileRepository>();
+    lockFileRepo.read = mockReadLockFile;
+    lockFileRepo.write = mockWriteLockFile;
     const repositories = createMockPackmindRepositories({
       packmindGateway,
       configFileRepository: configRepo,
@@ -975,24 +972,21 @@ describe('InstallDefaultSkillsUseCase', () => {
     let bootstrapGetDefaults: jest.Mock;
 
     function buildUseCase(): InstallDefaultSkillsUseCase {
-      const skillsGateway = createMockSkillsGateway({
-        getDefaults: bootstrapGetDefaults,
-      });
-      const deploymentGateway = createMockDeploymentGateway({
-        getRenderModeConfiguration: bootstrapGetRenderModeConfiguration,
-      });
+      const skillsGateway = mockInterface<ISkillsGateway>();
+      skillsGateway.getDefaults = bootstrapGetDefaults;
+      const deploymentGateway = createMockDeploymentGateway();
+      deploymentGateway.getRenderModeConfiguration =
+        bootstrapGetRenderModeConfiguration;
       const packmindGateway = createMockPackmindGateway({
         skills: skillsGateway,
         deployment: deploymentGateway,
       });
-      const configRepo = createMockConfigFileRepository({
-        readConfig: bootstrapReadConfig,
-        updateAgentsConfig: bootstrapUpdateAgentsConfig,
-      });
-      const lockFileRepo = createMockLockFileRepository({
-        read: bootstrapReadLockFile,
-        write: jest.fn().mockResolvedValue(undefined),
-      });
+      const configRepo = mockInterface<IConfigFileRepository>();
+      configRepo.readConfig = bootstrapReadConfig;
+      configRepo.updateAgentsConfig = bootstrapUpdateAgentsConfig;
+      const lockFileRepo = mockInterface<ILockFileRepository>();
+      lockFileRepo.read = bootstrapReadLockFile;
+      lockFileRepo.write.mockResolvedValue(undefined);
       const repositories = createMockPackmindRepositories({
         packmindGateway,
         configFileRepository: configRepo,
