@@ -1,3 +1,5 @@
+import { mockInterface } from '@packmind/test-utils';
+import { skillFactory } from '@packmind/skills/test';
 import { SkillsHexa } from '@packmind/skills';
 import {
   createOrganizationId,
@@ -10,6 +12,7 @@ import {
   SkillFile,
   SkillVersion,
   UpdateSkillFileFromUICommand,
+  IDeploymentPort,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 
@@ -22,6 +25,7 @@ describe('SkillsService', () => {
     updateSkillFileFromUI: jest.Mock;
   };
   let skillsHexa: jest.Mocked<SkillsHexa>;
+  let deploymentAdapter: jest.Mocked<IDeploymentPort>;
 
   const organizationId = createOrganizationId('org-123');
   const spaceId = createSpaceId('space-456');
@@ -40,7 +44,8 @@ describe('SkillsService', () => {
       getAdapter: jest.fn().mockReturnValue(mockAdapter),
     } as unknown as jest.Mocked<SkillsHexa>;
 
-    service = new SkillsService(skillsHexa);
+    deploymentAdapter = mockInterface<IDeploymentPort>();
+    service = new SkillsService(skillsHexa, deploymentAdapter);
   });
 
   afterEach(() => {
@@ -48,7 +53,7 @@ describe('SkillsService', () => {
   });
 
   describe('getSkillWithFilesById', () => {
-    const mockSkill: Skill = {
+    const mockSkill: Skill = skillFactory({
       id: skillId,
       slug: 'test-skill',
       name: 'Test Skill',
@@ -59,7 +64,7 @@ describe('SkillsService', () => {
       spaceId,
       createdAt: new Date('2026-01-01'),
       updatedAt: new Date('2026-01-01'),
-    };
+    });
 
     const skillVersionId = createSkillVersionId('version-1');
 

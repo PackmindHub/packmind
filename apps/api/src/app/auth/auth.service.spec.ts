@@ -1,3 +1,4 @@
+import { userFactory } from '@packmind/accounts/test';
 import { JwtService } from '@nestjs/jwt';
 import { createOrganizationId, createUserId, User } from '@packmind/types';
 import { AuthService, GetMeResponse } from './auth.service';
@@ -418,9 +419,7 @@ describe('AuthService - signInSocial method', () => {
   let mockAccountsAdapter: jest.Mocked<{
     signInSocialUser: jest.Mock;
   }>;
-  let signInSocial: (
-    ...args: Parameters<AuthService['signInSocial']>
-  ) => Promise<ReturnType<AuthService['signInSocial']>>;
+  let signInSocial: AuthService['signInSocial'];
 
   beforeEach(() => {
     mockJwtService = {
@@ -602,7 +601,7 @@ describe('AuthService - signInSocial method', () => {
   describe('when user does not exist', () => {
     let result: Awaited<ReturnType<typeof signInSocial>>;
 
-    const newUser: User = {
+    const newUser: User = userFactory({
       id: createUserId('new-user'),
       email: 'paul@example.com',
       passwordHash: null,
@@ -614,7 +613,7 @@ describe('AuthService - signInSocial method', () => {
           role: 'admin',
         },
       ],
-    };
+    });
     const createdOrg = {
       id: createOrganizationId('new-org'),
       name: "paul's organization",

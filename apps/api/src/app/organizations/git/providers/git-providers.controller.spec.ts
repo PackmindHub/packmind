@@ -92,7 +92,7 @@ describe('GitProvidersController', () => {
   const userId = createUserId('user-456');
   const mockRequest = {
     user: { userId },
-    clientSource: 'web',
+    clientSource: 'ui',
   } as Partial<AuthenticatedRequest> as AuthenticatedRequest;
 
   beforeEach(() => {
@@ -263,7 +263,7 @@ describe('GitProvidersController', () => {
           userId,
           installationId: 99,
           state: 'valid-state',
-          source: 'web',
+          source: 'ui',
         });
       });
     });
@@ -334,7 +334,11 @@ describe('GitProvidersController', () => {
   });
 
   describe('getGithubAppManifest', () => {
-    const manifestResponse = {
+    // The response type is not exported from the service, so derive it — the
+    // literal otherwise widens `'read'` to `string`.
+    const manifestResponse: Awaited<
+      ReturnType<GitProvidersService['buildGithubAppManifest']>
+    > = {
       manifest: {
         name: 'Packmind on Acme',
         url: 'https://app.example.com',

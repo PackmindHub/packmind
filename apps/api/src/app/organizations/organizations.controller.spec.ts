@@ -4,6 +4,10 @@ import {
   ArtifactVersionEntry,
   createOrganizationId,
   IPullContentResponse,
+  Space,
+  UserSpaceWithRole,
+  UserSpaceRole,
+  GetDeployedContentResponse,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -13,7 +17,7 @@ import {
   ISpacesPort,
   ListUserSpacesResponse,
 } from '@packmind/types';
-import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { InvalidArtifactIdError } from '@packmind/types';
 
 describe('OrganizationsController', () => {
@@ -248,7 +252,7 @@ describe('OrganizationsController', () => {
       user: { userId: 'user-123' },
       clientSource: 'cli',
     } as AuthenticatedRequest;
-    const mockResponse: IPullContentResponse = {
+    const mockResponse: GetDeployedContentResponse = {
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       resolvedAgents: [],
@@ -642,8 +646,13 @@ describe('OrganizationsController', () => {
     } as AuthenticatedRequest;
 
     describe('when the organization has spaces', () => {
-      const space1 = spaceFactory({ organizationId: orgId });
-      const space2 = spaceFactory({ organizationId: orgId });
+      const withRole = (space: Space): UserSpaceWithRole => ({
+        ...space,
+        role: UserSpaceRole.MEMBER,
+        pinned: false,
+      });
+      const space1 = withRole(spaceFactory({ organizationId: orgId }));
+      const space2 = withRole(spaceFactory({ organizationId: orgId }));
       const mockSpaces: ListUserSpacesResponse = { spaces: [space1, space2] };
 
       beforeEach(() => {

@@ -1,3 +1,4 @@
+import { standardFactory } from '@packmind/standards/test';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -13,7 +14,7 @@ import {
   SampleInput,
   Standard,
 } from '@packmind/types';
-import { StandardsService } from '../../../standards/standards.service';
+import { StandardsService } from './standards.service';
 import { OrganizationsSpacesStandardsController } from './standards.controller';
 
 describe('OrganizationsSpacesStandardsController', () => {
@@ -46,7 +47,7 @@ describe('OrganizationsSpacesStandardsController', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
       const mockStandards: Standard[] = [
-        {
+        standardFactory({
           id: createStandardId('standard-1'),
           slug: 'test-standard',
           name: 'Test Standard',
@@ -55,7 +56,7 @@ describe('OrganizationsSpacesStandardsController', () => {
           spaceId,
           version: 1,
           scope: null,
-        },
+        }),
       ];
 
       const request = {
@@ -194,7 +195,7 @@ describe('OrganizationsSpacesStandardsController', () => {
     };
 
     describe('when update is successful', () => {
-      const mockUpdatedStandard: Standard = {
+      const mockUpdatedStandard: Standard = standardFactory({
         id: standardId,
         slug: 'updated-standard',
         name: 'Updated Standard',
@@ -203,7 +204,7 @@ describe('OrganizationsSpacesStandardsController', () => {
         spaceId,
         version: 2,
         scope: 'backend',
-      };
+      });
       let result: Standard;
 
       beforeEach(async () => {
@@ -371,7 +372,7 @@ describe('OrganizationsSpacesStandardsController', () => {
         scope: null,
       };
 
-      const mockUpdatedStandard: Standard = {
+      const mockUpdatedStandard: Standard = standardFactory({
         id: standardId,
         slug: 'updated-standard',
         name: 'Updated Standard',
@@ -380,7 +381,7 @@ describe('OrganizationsSpacesStandardsController', () => {
         spaceId,
         version: 2,
         scope: null,
-      };
+      });
 
       let result: Standard;
 
@@ -438,7 +439,7 @@ describe('OrganizationsSpacesStandardsController', () => {
     describe('when samples are created successfully', () => {
       const mockResponse: CreateStandardSamplesResponse = {
         created: [
-          {
+          standardFactory({
             id: createStandardId('standard-1'),
             slug: 'java-standard',
             name: 'Java Standard',
@@ -447,8 +448,8 @@ describe('OrganizationsSpacesStandardsController', () => {
             spaceId,
             version: 1,
             scope: '**/*.java',
-          },
-          {
+          }),
+          standardFactory({
             id: createStandardId('standard-2'),
             slug: 'react-standard',
             name: 'React Standard',
@@ -457,7 +458,7 @@ describe('OrganizationsSpacesStandardsController', () => {
             spaceId,
             version: 1,
             scope: '**/*.tsx',
-          },
+          }),
         ],
         errors: [],
       };
@@ -491,7 +492,7 @@ describe('OrganizationsSpacesStandardsController', () => {
     describe('when some samples fail to create', () => {
       const mockResponse: CreateStandardSamplesResponse = {
         created: [
-          {
+          standardFactory({
             id: createStandardId('standard-1'),
             slug: 'java-standard',
             name: 'Java Standard',
@@ -500,7 +501,7 @@ describe('OrganizationsSpacesStandardsController', () => {
             spaceId,
             version: 1,
             scope: '**/*.java',
-          },
+          }),
         ],
         errors: [
           {

@@ -1,3 +1,4 @@
+import { standardFactory } from '@packmind/standards/test';
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -48,7 +49,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const standardId = createStandardId('standard-789');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -57,7 +58,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const mockRules: Rule[] = [
         {
@@ -176,7 +177,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const standardId = createStandardId('standard-789');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -185,7 +186,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId: differentSpaceId, // Different space!
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
@@ -236,7 +237,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const standardId = createStandardId('standard-789');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -245,7 +246,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
@@ -332,7 +333,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const standardId = createStandardId('standard-789');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -341,7 +342,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
@@ -377,7 +378,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const ruleId = createRuleId('rule-1');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -386,7 +387,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const mockRuleExamples: RuleExample[] = [
         {
@@ -526,7 +527,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const ruleId = createRuleId('rule-1');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -535,7 +536,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId: differentSpaceId, // Different space!
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
@@ -599,7 +600,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const ruleId = createRuleId('rule-1');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -608,7 +609,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
@@ -659,7 +660,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       const ruleId = createRuleId('rule-1');
       const userId = createUserId('user-1');
 
-      const mockStandard: Standard = {
+      const mockStandard: Standard = standardFactory({
         id: standardId,
         slug: 'test-standard',
         name: 'Test Standard',
@@ -668,7 +669,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         version: 1,
         spaceId,
         scope: null,
-      };
+      });
 
       const request = {
         organization: {
