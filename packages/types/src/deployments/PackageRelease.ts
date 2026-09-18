@@ -58,5 +58,33 @@ export type PackageReleaseRefusal =
  */
 export type PackageReleaseRefusalCode = PackageReleaseRefusal | 'no_components';
 
+/** One release, as a list read sees it: the version string and nothing else. */
+export type PackageReleaseSummary = {
+  version: string;
+};
+
+/** A pinned component whose family has a newer version than the release pins. */
+export type OutdatedPackageComponent = {
+  family: PackageComponentFamily;
+  id: string;
+  name: string;
+  pinnedVersion: number;
+  latestVersion: number;
+};
+
+/**
+ * What the release panel needs to draw itself: the current version, the gate's
+ * verdict, the three versions a cut will accept, and what has fallen behind.
+ */
+export type PackageReleaseReadiness = {
+  /** `null` when the package has never been released. */
+  currentVersion: string | null;
+  verdict: PackageReleaseVerdict;
+  /** patch, minor, major — the only three versions the cut will accept. */
+  nextVersions: [string, string, string];
+  /** Empty, never absent, when nothing is behind. */
+  outdatedComponents: OutdatedPackageComponent[];
+};
+
 /** The three component families a package holds. */
 export type PackageComponentFamily = 'recipe' | 'standard' | 'skill';
