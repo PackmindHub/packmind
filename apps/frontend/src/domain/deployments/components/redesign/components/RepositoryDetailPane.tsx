@@ -38,6 +38,7 @@ import {
 import {
   packageHasDrift,
   packageHasFailedDistribution,
+  packageIsWaiting,
 } from '../selectors/buildPackageDriftOverview';
 import {
   formatRelativeDate,
@@ -96,7 +97,7 @@ type RepositoryDetailPaneProps = {
   gitSettingsHref: string | null;
 };
 
-type PackageFilter = 'all' | 'drift' | 'failed' | 'aligned';
+type PackageFilter = 'all' | 'drift' | 'waiting' | 'failed' | 'aligned';
 
 type PackageRowKey = string;
 
@@ -153,29 +154,41 @@ export function RepositoryDetailPane({
 
   const packageCounts = useMemo(() => {
     let drift = 0;
+    let waiting = 0;
     let failed = 0;
     let total = 0;
     for (const t of repo.targets) {
       for (const p of t.packages) {
         total++;
-        if (packageHasDrift(p)) drift++;
+        /*
+         * Apart from `drift`, not inside it: a row that is being distributed
+         * right now wears a blue mark and takes no hand, and counting it under
+         * an orange segment is the reading the rail's band was just corrected
+         * for. `Aligned` loses it too, since the row does not claim to be.
+         */
+        if (packageIsWaiting(p)) waiting++;
+        else if (packageHasDrift(p)) drift++;
         if (packageHasFailedDistribution(p)) failed++;
       }
     }
     return {
       all: total,
       drift,
+      waiting,
       failed,
-      aligned: total - drift,
+      aligned: total - drift - waiting,
     };
   }, [repo]);
 
   const filteredTargets = useMemo(() => {
     const q = packageQuery.trim().toLowerCase();
     const matchesFilter = (p: PackageDrift): boolean => {
-      if (packageFilter === 'drift') return packageHasDrift(p);
+      if (packageFilter === 'drift')
+        return packageHasDrift(p) && !packageIsWaiting(p);
+      if (packageFilter === 'waiting') return packageIsWaiting(p);
       if (packageFilter === 'failed') return packageHasFailedDistribution(p);
-      if (packageFilter === 'aligned') return !packageHasDrift(p);
+      if (packageFilter === 'aligned')
+        return !packageHasDrift(p) && !packageIsWaiting(p);
       return true;
     };
     return repo.targets
@@ -1038,10 +1051,22 @@ function SummaryStat({
 
 type PackageFilterControlProps = {
   value: PackageFilter;
-  counts: { all: number; drift: number; failed: number; aligned: number };
+  counts: {
+    all: number;
+    drift: number;
+    waiting: number;
+    failed: number;
+    aligned: number;
+  };
   onChange: (value: PackageFilter) => void;
 };
 
+/**
+ * The states, in the order the rail's band lays out its own pills, and each
+ * with the mark the rows it selects wear: `PackageRowStateLine` paints the same
+ * four a few lines below. A segment headed by a colour none of its rows carry
+ * is what a reader caught in the band beside this one.
+ */
 const FILTER_ITEMS: Array<{
   value: PackageFilter;
   label: string;
@@ -1049,6 +1074,7 @@ const FILTER_ITEMS: Array<{
 }> = [
   { value: 'all', label: 'All' },
   { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'waiting', label: 'Waiting', dotColor: 'blue.300' },
   { value: 'failed', label: 'Failed', dotColor: 'red.500' },
   { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
 ];
@@ -1078,6 +1104,15 @@ function PackageFilterControl({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(item.value)}
+            /*
+             * The two spans below sit against each other, so this segment read
+             * `Drift1` to a screen reader. The state and its number are two
+             * things, and the colour that separates them for the eye says
+             * nothing out loud.
+             */
+            aria-label={`${item.label}, ${count} package${
+              count === 1 ? '' : 's'
+            }`}
             bg={active ? 'background.secondary' : 'transparent'}
             border="none"
             borderLeftWidth={idx === 0 ? 0 : '1px'}
@@ -1148,18 +1183,22 @@ function FilteredZero({
   const filterLabel =
     packageFilter === 'drift'
       ? 'drifted'
-      : packageFilter === 'failed'
-        ? 'failed'
-        : 'aligned';
+      : packageFilter === 'waiting'
+        ? 'waiting'
+        : packageFilter === 'failed'
+          ? 'failed'
+          : 'aligned';
   const message = packageQuery
     ? packageFilter === 'all'
       ? `No packages match “${packageQuery}”.`
       : `No ${filterLabel} packages match “${packageQuery}”.`
     : packageFilter === 'drift'
       ? 'No drifted packages on this repository.'
-      : packageFilter === 'failed'
-        ? 'No failed distributions on this repository.'
-        : 'No aligned packages on this repository.';
+      : packageFilter === 'waiting'
+        ? 'Nothing is being distributed to this repository.'
+        : packageFilter === 'failed'
+          ? 'No failed distributions on this repository.'
+          : 'No aligned packages on this repository.';
   return (
     <PMVStack gap={2} align="start" padding={6}>
       <PMText fontSize="sm" color="secondary">

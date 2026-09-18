@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const STEERING_DIR = '.kiro/steering/';
@@ -59,9 +59,7 @@ describe('KiroDeployer', () => {
   };
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new KiroDeployer(mockStandardsPort);
 

@@ -31,6 +31,7 @@ function makeGitRepo(branch: string): GitRepo {
     repo: 'my-repo',
     branch,
     providerId: 'provider-id' as GitRepo['providerId'],
+    type: 'standard',
     isTracked: true,
     trackingRemovedAt: null,
   };

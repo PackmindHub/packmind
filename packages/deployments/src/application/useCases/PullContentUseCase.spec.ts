@@ -1,6 +1,7 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  ICodingAgentDeployerRegistry,
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
@@ -96,18 +97,12 @@ describe('PullContentUseCase', () => {
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    commandsPort = {
-      listCommandVersions: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
 
-    standardsPort = {
-      getLatestStandardVersion: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
 
-    skillsPort = {
-      getLatestSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
@@ -117,36 +112,26 @@ describe('PullContentUseCase', () => {
       generateRemovalFileUpdates: jest.fn(),
     };
 
-    const mockRegistry = {
-      getDeployer: jest.fn().mockReturnValue(mockDeployer),
-    };
+    const mockRegistry = mockInterface<ICodingAgentDeployerRegistry>();
+    mockRegistry.getDeployer.mockReturnValue(mockDeployer);
 
-    codingAgentPort = {
-      prepareRecipesDeployment: jest.fn(),
-      prepareStandardsDeployment: jest.fn(),
-      getDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      generateRemovalUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getAgentFilePath: jest.fn(),
-      getAgentSkillPath: jest.fn(),
-      getSupportedAgents: jest.fn(),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.getDeployerRegistry.mockReturnValue(mockRegistry);
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     eventEmitterService = {
       emit: jest.fn(),
@@ -175,27 +160,19 @@ describe('PullContentUseCase', () => {
       [],
     );
 
-    distributionRepository = {
-      findActiveSkillVersionsByTargetAndPackages: jest
-        .fn()
-        .mockResolvedValue([]),
-      findActiveStandardVersionsByTargetAndPackages: jest
-        .fn()
-        .mockResolvedValue([]),
-      findActiveCommandVersionsByTargetAndPackages: jest
-        .fn()
-        .mockResolvedValue([]),
-      findActiveRenderModesByTarget: jest.fn().mockResolvedValue([]),
-      findActiveCommandVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.findActiveRenderModesByTarget.mockResolvedValue([]);
+    distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+      standardVersions: [],
+      commandVersions: [],
+      skillVersions: [],
+    });
 
     targetResolutionService = {
       findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(null),
       findPreviouslyDeployedVersions: jest.fn().mockResolvedValue({
         standardVersions: [],
-        recipeVersions: [],
+        commandVersions: [],
         skillVersions: [],
       }),
     } as unknown as jest.Mocked<TargetResolutionService>;
@@ -229,10 +206,9 @@ describe('PullContentUseCase', () => {
       isDefaultSpace: true,
     });
 
-    spacesPort = {
-      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
-      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
+    spacesPort.getSpaceBySlug.mockResolvedValue(defaultSpace);
 
     command = {
       organizationId: organizationId as unknown as string,
@@ -373,7 +349,7 @@ describe('PullContentUseCase', () => {
       });
     });
 
-    describe('when merging file updates from recipes and standards', () => {
+    describe('when merging file updates from commands and standards', () => {
       let result: Awaited<ReturnType<PullContentUseCase['execute']>>;
 
       beforeEach(async () => {
@@ -398,7 +374,7 @@ describe('PullContentUseCase', () => {
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [
-            { path: 'recipe.md', content: 'recipe content' },
+            { path: 'commandArtifact.md', content: 'commandArtifact content' },
             { path: 'standard.md', content: 'standard content' },
           ],
           delete: [],
@@ -416,7 +392,7 @@ describe('PullContentUseCase', () => {
       });
     });
 
-    describe('when recipe and standard lists are empty', () => {
+    describe('when command and standard lists are empty', () => {
       beforeEach(() => {
         const testPackage: PackageWithArtefacts = {
           id: createPackageId('test-package-id'),
@@ -888,36 +864,36 @@ describe('PullContentUseCase', () => {
       });
 
       describe('when artifacts have metadata', () => {
-        let recipe: Command;
-        let recipeVersion: CommandVersion;
+        let commandArtifact: Command;
+        let commandVersion: CommandVersion;
 
         beforeEach(() => {
-          recipe = commandFactory({
-            id: createCommandId('recipe-1'),
-            name: 'Test Recipe',
-            slug: 'test-recipe',
-            content: 'recipe content',
+          commandArtifact = commandFactory({
+            id: createCommandId('commandArtifact-1'),
+            name: 'Test Command',
+            slug: 'test-commandArtifact',
+            content: 'commandArtifact content',
             version: 1,
             userId: createUserId('user-1'),
             spaceId: createSpaceId('space-1'),
           });
 
-          recipeVersion = {
+          commandVersion = {
             id: createCommandVersionId('rv-1'),
-            recipeId: recipe.id,
-            name: 'Test Recipe',
-            slug: 'test-recipe',
-            content: 'recipe content',
+            recipeId: commandArtifact.id,
+            name: 'Test Command',
+            slug: 'test-commandArtifact',
+            content: 'commandArtifact content',
             version: 1,
             userId: null,
           };
 
-          testPackage.recipes = [recipe];
+          testPackage.recipes = [commandArtifact];
           packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
             [testPackage],
           );
 
-          commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
+          commandsPort.listCommandVersions.mockResolvedValue([commandVersion]);
         });
 
         it('calls buildLockFile with flattened artifact metadata', async () => {
@@ -926,10 +902,10 @@ describe('PullContentUseCase', () => {
           expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
             expect.objectContaining({
               artifactSpaceIds: expect.objectContaining({
-                [String(recipe.id)]: String(testPackage.spaceId),
+                [String(commandArtifact.id)]: String(testPackage.spaceId),
               }),
               artifactPackageIds: expect.objectContaining({
-                [String(recipe.id)]: [String(testPackage.id)],
+                [String(commandArtifact.id)]: [String(testPackage.id)],
               }),
             }),
           );
@@ -1408,7 +1384,7 @@ describe('PullContentUseCase', () => {
             targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
               {
                 standardVersions: [],
-                recipeVersions: [],
+                commandVersions: [],
                 skillVersions: [previouslyDeployedSkillVersion],
               },
             );
@@ -1454,7 +1430,7 @@ describe('PullContentUseCase', () => {
             targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
               {
                 standardVersions: [],
-                recipeVersions: [],
+                commandVersions: [],
                 skillVersions: [],
               },
             );
@@ -1482,7 +1458,7 @@ describe('PullContentUseCase', () => {
             targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
               {
                 standardVersions: [],
-                recipeVersions: [],
+                commandVersions: [],
                 skillVersions: [],
               },
             );
@@ -1590,7 +1566,7 @@ describe('PullContentUseCase', () => {
           targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
             {
               standardVersions: [previouslyDeployedStandardVersion],
-              recipeVersions: [],
+              commandVersions: [],
               skillVersions: [],
             },
           );
@@ -1651,7 +1627,7 @@ describe('PullContentUseCase', () => {
       });
     });
 
-    describe('when git info is provided for recipe distribution history lookup', () => {
+    describe('when git info is provided for commandArtifact distribution history lookup', () => {
       let testPackage: PackageWithArtefacts;
       let currentCommand: Command;
       let previouslyDeployedCommand: Command;
@@ -1660,41 +1636,43 @@ describe('PullContentUseCase', () => {
 
       beforeEach(() => {
         currentCommand = commandFactory({
-          id: createCommandId('current-recipe'),
-          name: 'Current Recipe',
-          slug: 'current-recipe',
-          content: 'Current recipe content',
+          id: createCommandId('current-commandArtifact'),
+          name: 'Current Command',
+          slug: 'current-commandArtifact',
+          content: 'Current commandArtifact content',
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
         });
 
         previouslyDeployedCommand = commandFactory({
-          id: createCommandId('previously-deployed-recipe'),
-          name: 'Previously Deployed Recipe',
-          slug: 'previously-deployed-recipe',
-          content: 'Previously deployed recipe content',
+          id: createCommandId('previously-deployed-commandArtifact'),
+          name: 'Previously Deployed Command',
+          slug: 'previously-deployed-commandArtifact',
+          content: 'Previously deployed commandArtifact content',
           version: 1,
           userId: createUserId('user-1'),
           spaceId: createSpaceId('space-1'),
         });
 
         currentCommandVersion = {
-          id: createCommandVersionId('current-recipe-version'),
+          id: createCommandVersionId('current-commandArtifact-version'),
           recipeId: currentCommand.id,
-          name: 'Current Recipe',
-          slug: 'current-recipe',
-          content: 'Current recipe content',
+          name: 'Current Command',
+          slug: 'current-commandArtifact',
+          content: 'Current commandArtifact content',
           version: 1,
           userId: null,
         };
 
         previouslyDeployedCommandVersion = {
-          id: createCommandVersionId('previously-deployed-recipe-version'),
+          id: createCommandVersionId(
+            'previously-deployed-commandArtifact-version',
+          ),
           recipeId: previouslyDeployedCommand.id,
-          name: 'Previously Deployed Recipe',
-          slug: 'previously-deployed-recipe',
-          content: 'Previously deployed recipe content',
+          name: 'Previously Deployed Command',
+          slug: 'previously-deployed-commandArtifact',
+          content: 'Previously deployed commandArtifact content',
           version: 1,
           userId: null,
         };
@@ -1735,12 +1713,12 @@ describe('PullContentUseCase', () => {
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
       });
 
-      describe('when previously deployed recipes exist in distribution history', () => {
+      describe('when previously deployed commands exist in distribution history', () => {
         beforeEach(() => {
           targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
             {
               standardVersions: [],
-              recipeVersions: [previouslyDeployedCommandVersion],
+              commandVersions: [previouslyDeployedCommandVersion],
               skillVersions: [],
             },
           );
@@ -1749,7 +1727,7 @@ describe('PullContentUseCase', () => {
             createOrUpdate: [],
             delete: [
               {
-                path: '.packmind/commands/previously-deployed-recipe.md',
+                path: '.packmind/commands/previously-deployed-commandArtifact.md',
                 type: DeleteItemType.File,
               },
             ],
@@ -1764,7 +1742,7 @@ describe('PullContentUseCase', () => {
           ).toHaveBeenCalled();
         });
 
-        it('calls generateRemovalUpdatesForAgents with previously deployed recipes', async () => {
+        it('calls generateRemovalUpdatesForAgents with previously deployed commands', async () => {
           await useCase.execute(command);
 
           expect(
@@ -1780,17 +1758,17 @@ describe('PullContentUseCase', () => {
           );
         });
 
-        it('includes deletion paths for previously deployed recipes', async () => {
+        it('includes deletion paths for previously deployed commands', async () => {
           const result = await useCase.execute(command);
 
           const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
           expect(deletedPaths).toContain(
-            '.packmind/commands/previously-deployed-recipe.md',
+            '.packmind/commands/previously-deployed-commandArtifact.md',
           );
         });
       });
 
-      describe('when no previously deployed recipes exist', () => {
+      describe('when no previously deployed commands exist', () => {
         it('does not call generateRemovalUpdatesForAgents', async () => {
           await useCase.execute(command);
 
@@ -1831,9 +1809,9 @@ describe('PullContentUseCase', () => {
       const userId = createUserId('user-1');
 
       sharedCommand = commandFactory({
-        id: createCommandId('shared-recipe-id'),
-        name: 'Shared Recipe',
-        slug: 'shared-recipe',
+        id: createCommandId('shared-commandArtifact-id'),
+        name: 'Shared Command',
+        slug: 'shared-commandArtifact',
         content: 'shared content',
         version: 1,
         userId,
@@ -1841,9 +1819,9 @@ describe('PullContentUseCase', () => {
       });
 
       uniqueCommand = commandFactory({
-        id: createCommandId('unique-recipe-id'),
-        name: 'Unique Recipe',
-        slug: 'unique-recipe',
+        id: createCommandId('unique-commandArtifact-id'),
+        name: 'Unique Command',
+        slug: 'unique-commandArtifact',
         content: 'unique content',
         version: 1,
         userId,
@@ -1897,8 +1875,8 @@ describe('PullContentUseCase', () => {
       sharedCommandVersion = {
         id: createCommandVersionId('rv-shared'),
         recipeId: sharedCommand.id,
-        name: 'Shared Recipe',
-        slug: 'shared-recipe',
+        name: 'Shared Command',
+        slug: 'shared-commandArtifact',
         content: 'shared content',
         version: 1,
         userId: null,
@@ -1907,8 +1885,8 @@ describe('PullContentUseCase', () => {
       uniqueCommandVersion = {
         id: createCommandVersionId('rv-unique'),
         recipeId: uniqueCommand.id,
-        name: 'Unique Recipe',
-        slug: 'unique-recipe',
+        name: 'Unique Command',
+        slug: 'unique-commandArtifact',
         content: 'unique content',
         version: 1,
         userId: null,
@@ -2045,7 +2023,7 @@ describe('PullContentUseCase', () => {
           createOrUpdate: [],
           delete: [
             {
-              path: '.packmind/commands/unique-recipe.md',
+              path: '.packmind/commands/unique-commandArtifact.md',
               type: DeleteItemType.File,
             },
             {
@@ -2060,12 +2038,12 @@ describe('PullContentUseCase', () => {
         });
       });
 
-      it('does not delete shared recipe files', async () => {
+      it('does not delete shared commandArtifact files', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
         expect(deletedPaths).not.toContain(
-          '.packmind/commands/shared-recipe.md',
+          '.packmind/commands/shared-commandArtifact.md',
         );
       });
 
@@ -2078,11 +2056,13 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('deletes unique recipe files from removed package', async () => {
+      it('deletes unique commandArtifact files from removed package', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
+        expect(deletedPaths).toContain(
+          '.packmind/commands/unique-commandArtifact.md',
+        );
       });
 
       it('deletes unique standard files from removed package', async () => {
@@ -2192,7 +2172,7 @@ describe('PullContentUseCase', () => {
           createOrUpdate: [],
           delete: [
             {
-              path: '.packmind/commands/unique-recipe.md',
+              path: '.packmind/commands/unique-commandArtifact.md',
               type: DeleteItemType.File,
             },
             {
@@ -2207,11 +2187,13 @@ describe('PullContentUseCase', () => {
         });
       });
 
-      it('deletes unique recipe from removed package', async () => {
+      it('deletes unique commandArtifact from removed package', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
+        expect(deletedPaths).toContain(
+          '.packmind/commands/unique-commandArtifact.md',
+        );
       });
 
       it('deletes unique standard from removed package', async () => {
@@ -2259,11 +2241,11 @@ describe('PullContentUseCase', () => {
           createOrUpdate: [],
           delete: [
             {
-              path: '.packmind/commands/shared-recipe.md',
+              path: '.packmind/commands/shared-commandArtifact.md',
               type: DeleteItemType.File,
             },
             {
-              path: '.packmind/commands/unique-recipe.md',
+              path: '.packmind/commands/unique-commandArtifact.md',
               type: DeleteItemType.File,
             },
             {
@@ -2326,18 +2308,22 @@ describe('PullContentUseCase', () => {
         });
       });
 
-      it('marks shared recipe for deletion', async () => {
+      it('marks shared commandArtifact for deletion', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/commands/shared-recipe.md');
+        expect(deletedPaths).toContain(
+          '.packmind/commands/shared-commandArtifact.md',
+        );
       });
 
-      it('marks unique recipe for deletion', async () => {
+      it('marks unique commandArtifact for deletion', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
+        expect(deletedPaths).toContain(
+          '.packmind/commands/unique-commandArtifact.md',
+        );
       });
 
       it('marks shared standard for deletion', async () => {
@@ -2528,10 +2514,10 @@ describe('PullContentUseCase', () => {
   });
 
   describe('when enriching file modifications with artifact metadata', () => {
-    let recipe: Command;
+    let commandArtifact: Command;
     let standard: Standard;
     let skill: Skill;
-    let recipeVersion: CommandVersion;
+    let commandVersion: CommandVersion;
     let standardVersion: StandardVersion;
     let skillVersion: SkillVersion;
 
@@ -2539,11 +2525,11 @@ describe('PullContentUseCase', () => {
       const spaceId = createSpaceId('space-enrichment');
       const userId = createUserId('user-1');
 
-      recipe = commandFactory({
-        id: createCommandId('recipe-enrich'),
-        name: 'Enriched Recipe',
-        slug: 'enriched-recipe',
-        content: 'recipe content',
+      commandArtifact = commandFactory({
+        id: createCommandId('commandArtifact-enrich'),
+        name: 'Enriched Command',
+        slug: 'enriched-commandArtifact',
+        content: 'commandArtifact content',
         version: 1,
         userId,
         spaceId,
@@ -2571,12 +2557,12 @@ describe('PullContentUseCase', () => {
         spaceId,
       });
 
-      recipeVersion = {
+      commandVersion = {
         id: createCommandVersionId('rv-enrich'),
-        recipeId: recipe.id,
-        name: 'Enriched Recipe',
-        slug: 'enriched-recipe',
-        content: 'recipe content',
+        recipeId: commandArtifact.id,
+        name: 'Enriched Command',
+        slug: 'enriched-commandArtifact',
+        content: 'commandArtifact content',
         version: 1,
         userId: null,
       };
@@ -2609,7 +2595,7 @@ describe('PullContentUseCase', () => {
         description: 'Test package description',
         spaceId,
         createdBy: userId,
-        recipes: [recipe],
+        recipes: [commandArtifact],
         standards: [standard],
         skills: [skill],
       };
@@ -2618,7 +2604,7 @@ describe('PullContentUseCase', () => {
         testPackage,
       ]);
 
-      commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
+      commandsPort.listCommandVersions.mockResolvedValue([commandVersion]);
       standardsPort.getLatestStandardVersion.mockResolvedValue(standardVersion);
       skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
     });
@@ -2628,11 +2614,11 @@ describe('PullContentUseCase', () => {
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [
             {
-              path: '.packmind/commands/enriched-recipe.md',
-              content: 'recipe content',
+              path: '.packmind/commands/enriched-commandArtifact.md',
+              content: 'commandArtifact content',
               artifactType: 'command',
-              artifactName: 'Enriched Recipe',
-              artifactId: recipe.id as string,
+              artifactName: 'Enriched Command',
+              artifactId: commandArtifact.id as string,
             },
             {
               path: '.packmind/standards/enriched-standard.md',
@@ -2653,22 +2639,22 @@ describe('PullContentUseCase', () => {
         } as FileUpdates);
       });
 
-      it('sets artifactId on recipe file modifications', async () => {
+      it('sets artifactId on commandArtifact file modifications', async () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
-        expect(commandFile?.artifactId).toBe(recipe.id as string);
+        expect(commandFile?.artifactId).toBe(commandArtifact.id as string);
       });
 
-      it('sets spaceId on recipe file modifications', async () => {
+      it('sets spaceId on commandArtifact file modifications', async () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
-        expect(commandFile?.spaceId).toBe(recipe.spaceId as string);
+        expect(commandFile?.spaceId).toBe(commandArtifact.spaceId as string);
       });
 
       it('sets artifactId on standard file modifications', async () => {
@@ -2707,13 +2693,13 @@ describe('PullContentUseCase', () => {
         expect(skillFile?.spaceId).toBe(skill.spaceId as string);
       });
 
-      it('sets artifactVersion on recipe file modifications', async () => {
+      it('sets artifactVersion on commandArtifact file modifications', async () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
-        expect(commandFile?.artifactVersion).toBe(recipeVersion.version);
+        expect(commandFile?.artifactVersion).toBe(commandVersion.version);
       });
 
       it('sets artifactVersion on standard file modifications', async () => {
@@ -2734,11 +2720,11 @@ describe('PullContentUseCase', () => {
         expect(skillFile?.artifactVersion).toBe(skillVersion.version);
       });
 
-      it('sets packageIds on recipe file modifications', async () => {
+      it('sets packageIds on commandArtifact file modifications', async () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
         expect(commandFile?.packageIds).toEqual(['package-enrich']);
       });
@@ -2767,8 +2753,8 @@ describe('PullContentUseCase', () => {
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [
             {
-              path: '.packmind/commands/enriched-recipe.md',
-              content: 'recipe content',
+              path: '.packmind/commands/enriched-commandArtifact.md',
+              content: 'commandArtifact content',
             },
           ],
           delete: [],
@@ -2779,7 +2765,7 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
         expect(commandFile?.artifactId).toBeUndefined();
       });
@@ -2788,7 +2774,7 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
         expect(commandFile?.spaceId).toBeUndefined();
       });
@@ -2797,7 +2783,7 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const commandFile = result.fileUpdates.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+          (f) => f.path === '.packmind/commands/enriched-commandArtifact.md',
         );
         expect(commandFile?.artifactVersion).toBeUndefined();
       });
@@ -2961,15 +2947,11 @@ describe('PullContentUseCase', () => {
         renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
           [CodingAgents.claude],
         );
-        distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-          [],
-        );
+        distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+          standardVersions: [],
+          commandVersions: [],
+          skillVersions: [],
+        });
         codingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [

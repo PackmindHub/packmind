@@ -1,7 +1,7 @@
 import { TargetService } from './TargetService';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   Target,
   createTargetId,
@@ -34,9 +34,7 @@ describe('TargetService', () => {
   };
 
   beforeEach(() => {
-    mockTargetRepository = {
-      findByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<ITargetRepository>;
+    mockTargetRepository = mockInterface<ITargetRepository>();
 
     service = new TargetService(mockTargetRepository, stubLogger());
   });

@@ -1,5 +1,5 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   IAccountsPort,
   ISpacesPort,
@@ -104,19 +104,15 @@ describe('TrackPluginDeletedUseCase', () => {
         .mockResolvedValue([pkg]),
     } as unknown as jest.Mocked<PackageService>;
 
-    spacesPort = {
-      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
-      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
+    spacesPort.getSpaceBySlug.mockResolvedValue(defaultSpace);
 
-    accountsPort = {
-      getUserById: jest
-        .fn()
-        .mockResolvedValue(
-          createUserWithMembership(userId, organization, 'admin'),
-        ),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(
+      createUserWithMembership(userId, organization, 'admin'),
+    );
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     eventEmitterService = {
       emit: jest.fn(),

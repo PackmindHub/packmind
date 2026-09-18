@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
 import { userFactory } from '@packmind/accounts/test';
 import { spaceFactory } from '@packmind/spaces/test';
-import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  SpaceMembershipRequiredError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -18,6 +22,7 @@ import {
   SpaceId,
   User,
   UserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -36,24 +41,17 @@ describe('GetSkillByIdUseCase', () => {
       getSkillById: jest.fn(),
     } as unknown as jest.Mocked<SkillService>;
 
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      createSpace: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId: createUserId('00000000-0000-0000-0000-000000000001'),
-        spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
-        role: 'member',
-        createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
-        updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: createUserId('00000000-0000-0000-0000-000000000001'),
+      spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+      role: UserSpaceRole.MEMBER,
+      createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      pinned: false,
+    });
 
     stubbedLogger = stubLogger();
 
@@ -353,8 +351,8 @@ describe('GetSkillByIdUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotFoundError,
         );
       });
     });
@@ -439,8 +437,8 @@ describe('GetSkillByIdUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotInOrganizationError,
         );
       });
     });

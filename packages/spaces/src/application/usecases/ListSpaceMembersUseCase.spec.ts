@@ -11,7 +11,7 @@ import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { ListSpaceMembersUseCase } from './ListSpaceMembersUseCase';
 
@@ -45,20 +45,18 @@ describe('ListSpaceMembersUseCase', () => {
       listSpaceMembers: jest.fn(),
     } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue(
-        userSpaceMembershipFactory({
-          spaceId,
-          userId,
-          role: UserSpaceRole.MEMBER,
-        }),
-      ),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue(
+      userSpaceMembershipFactory({
+        spaceId,
+        userId,
+        role: UserSpaceRole.MEMBER,
+      }),
+    );
 
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new ListSpaceMembersUseCase(
       membershipService,

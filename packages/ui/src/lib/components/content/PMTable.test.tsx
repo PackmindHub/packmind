@@ -1015,6 +1015,54 @@ describe('PMTable', () => {
       });
     });
 
+    describe('when a sortable header is used from the keyboard', () => {
+      // A `th` is not focusable and ignores Enter and Space, so the header has
+      // to carry a real button or sorting is mouse-only.
+      it('exposes the header as a button', () => {
+        renderPMTable({ columns: sortableColumns, data: mockData });
+
+        expect(
+          screen.getByRole('button', { name: /Name/ }),
+        ).toBeInTheDocument();
+      });
+
+      it('sorts on Enter', () => {
+        const onSort = jest.fn();
+        renderPMTable({ columns: sortableColumns, data: mockData, onSort });
+
+        const header = screen.getByRole('button', { name: /Name/ });
+        header.focus();
+        fireEvent.keyDown(header, { key: 'Enter', code: 'Enter' });
+        fireEvent.click(header);
+
+        expect(onSort).toHaveBeenCalledWith('name');
+      });
+    });
+
+    describe('the sort state', () => {
+      it('is announced on the header cell', () => {
+        renderPMTable({ columns: sortableColumns, data: mockData });
+
+        const headers = screen.getAllByRole('columnheader');
+        const byName = (name: string) =>
+          headers.find((header) => header.textContent?.includes(name));
+
+        expect(byName('Name')).toHaveAttribute('aria-sort', 'none');
+        expect(byName('Role')).toHaveAttribute('aria-sort', 'ascending');
+        expect(byName('Status')).toHaveAttribute('aria-sort', 'descending');
+      });
+
+      it('is absent on a column that cannot be sorted', () => {
+        renderPMTable({ columns: sortableColumns, data: mockData });
+
+        const email = screen
+          .getAllByRole('columnheader')
+          .find((header) => header.textContent?.includes('Email'));
+
+        expect(email).not.toHaveAttribute('aria-sort');
+      });
+    });
+
     describe('when non-sortable header is clicked', () => {
       it('does not call onSort', () => {
         const onSort = jest.fn();

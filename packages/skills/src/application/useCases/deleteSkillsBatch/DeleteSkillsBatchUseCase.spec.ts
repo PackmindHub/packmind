@@ -4,8 +4,10 @@ import { spaceFactory } from '@packmind/spaces/test';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -21,6 +23,7 @@ import {
   SpaceId,
   User,
   UserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -36,15 +39,17 @@ describe('DeleteSkillsBatchUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: createUserId('00000000-0000-0000-0000-000000000001'),
+      spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+    });
 
     skillService = {
       getSkillById: jest.fn(),
@@ -434,8 +439,8 @@ describe('DeleteSkillsBatchUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotFoundError,
         );
       });
 
@@ -560,8 +565,8 @@ describe('DeleteSkillsBatchUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotInOrganizationError,
         );
       });
 

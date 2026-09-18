@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../../domain/repositories/ILockFileRepository';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
@@ -41,17 +42,14 @@ describe('createTargetContextResolver', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
 
   beforeEach(() => {
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue({
-        lockfileVersion: 1,
-        packageSlugs: ['my-package'],
-        agents: ['packmind'],
-        targetId: 'target-456',
-        artifacts: {},
-      }),
-      write: jest.fn(),
-      delete: jest.fn(),
-    };
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+    mockLockFileRepository.read.mockResolvedValue({
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      targetId: 'target-456',
+      artifacts: {},
+    });
 
     mockPackmindCliHexa = {
       tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
@@ -203,6 +201,7 @@ describe('createTargetContextResolver', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'My Standard',
             type: 'standard',
             id: 'artifact-1',

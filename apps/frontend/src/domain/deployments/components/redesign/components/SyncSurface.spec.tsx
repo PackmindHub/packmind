@@ -427,4 +427,103 @@ describe('SyncSurface', () => {
       expect(screen.queryByText('Acme catalog')).not.toBeInTheDocument();
     });
   });
+  describe('when the batch holds a single package', () => {
+    /*
+     * The reader arrived from that package and its name is on the screen
+     * already. A grouping row for it would only fold away the destinations they
+     * came to check before confirming a commit.
+     */
+    it('lists its destinations straight away', () => {
+      renderSurface();
+
+      expect(screen.getByText('acme/webapp')).toBeInTheDocument();
+    });
+
+    it('draws no row that repeats the package name', () => {
+      renderSurface();
+
+      expect(
+        screen.queryByRole('button', {
+          name: `Expand ${STUB_PACKAGES[0].name}`,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('names it in the title rather than counting it', () => {
+      renderSurface({
+        scope: { kind: 'bulk', packageIds: [STUB_PACKAGES[0].id] },
+      });
+
+      expect(
+        screen.getByText(`Distribute ${STUB_PACKAGES[0].name}`),
+      ).toBeInTheDocument();
+    });
+
+    it('leaves the package count off the confirm button', () => {
+      renderSurface();
+
+      expect(
+        screen.getByRole('button', {
+          name: /^Distribute to \d+ distributions?$/,
+        }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('the selection control on the summary line', () => {
+    it('drops every destination at once', async () => {
+      const user = userEvent.setup();
+      renderSurface();
+
+      await user.click(screen.getByRole('button', { name: 'Unselect all' }));
+
+      expect(
+        screen.getByRole('button', {
+          name: 'Select at least one distribution',
+        }),
+      ).toBeDisabled();
+    });
+
+    it('takes them all back', async () => {
+      const user = userEvent.setup();
+      renderSurface();
+
+      await user.click(screen.getByRole('button', { name: 'Unselect all' }));
+      await user.click(screen.getByRole('button', { name: 'Select all' }));
+
+      expect(
+        await screen.findByRole('button', { name: /^Distribute to/ }),
+      ).toBeEnabled();
+    });
+  });
+  describe('when the batch groups several packages', () => {
+    const twoPackages = {
+      kind: 'bulk' as const,
+      packageIds: [STUB_PACKAGES[0].id, STUB_PACKAGES[1].id],
+    };
+
+    it('keeps the grouping row that tells them apart', () => {
+      renderSurface({ scope: twoPackages });
+
+      expect(
+        screen.getByRole('checkbox', {
+          name: `Select all repositories for ${STUB_PACKAGES[0].name}`,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The fold is for the batch that spans a space. A handful of rows under it
+     * only costs a click on what a commit is about to touch.
+     */
+    it('opens each of them on its destinations while the batch stays small', () => {
+      renderSurface({ scope: twoPackages });
+
+      expect(
+        screen.getByRole('button', {
+          name: `Collapse ${STUB_PACKAGES[0].name}`,
+        }),
+      ).toBeInTheDocument();
+    });
+  });
 });

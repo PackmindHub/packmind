@@ -11,7 +11,6 @@ import {
   PMTooltip,
   PMBox,
   PMHStack,
-  PMText,
   PMMenu,
   PMPortal,
   PMAvatar,
@@ -44,8 +43,9 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
 import { useSidebarCollapse } from './SidebarCollapseContext';
-import { SpaceNavModeSwitch } from './SpaceNavModeSwitch';
+import { useSpaceNavMode } from './SpaceNavModeContext';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
+import { SidebarSectionCaption } from './sidebar/SidebarSectionCaption';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
 import { BrowseSpaces } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpaces';
 import { CustomSpacesNavBlock } from '@packmind/proprietary/frontend/domain/spaces-management/components/CustomSpacesNavBlock';
@@ -195,6 +195,13 @@ export const SidebarNavigation: React.FunctionComponent<
   // space — except on org-only sections where we want no active space.
   const currentSpaceSlug = spaceSlug || fallbackSpaceSlug;
 
+  /*
+   * One boolean, decided in SpaceNavModeContext. The three conditions behind it
+   * live there on purpose: this file differs between the two editions, and a
+   * condition hand-applied twice is a condition that drifts.
+   */
+  const { shouldPointAtNewNavigation } = useSpaceNavMode();
+
   const sidebarWidth = isCollapsed
     ? SIDEBAR_WIDTH_COLLAPSED
     : SIDEBAR_WIDTH_EXPANDED;
@@ -279,7 +286,7 @@ export const SidebarNavigation: React.FunctionComponent<
         width={sidebarWidth}
         logo={!isCollapsed}
         logoAction={<SidebarCollapseToggle />}
-        overrideChildrenStackCss={{ minH: 0, paddingBottom: 0 }}
+        overrideChildrenStackCss={{ minH: 0, paddingTop: 2, paddingBottom: 0 }}
         footerNav={
           <>
             <PMSeparator borderColor={'border.tertiary'} />
@@ -294,15 +301,35 @@ export const SidebarNavigation: React.FunctionComponent<
                         SidebarAccountsMenuDataTestIds.OpenSubMenuCTA
                       }
                     >
-                      <PMAvatar.Root
-                        size="xs"
-                        backgroundColor="background.secondary"
-                        color="text.primary"
-                      >
-                        <PMAvatar.Fallback
-                          name={user?.displayName ?? user?.email}
-                        />
-                      </PMAvatar.Root>
+                      {/*
+                        Collapsed, the account entries are a menu and a menu
+                        item carries no badge, so the mark goes on what is
+                        actually on screen. Without it the readers who work with
+                        a narrow sidebar would be the ones never told, which is
+                        the gap moving the switch to the profile page just
+                        closed.
+                      */}
+                      <PMBox position="relative" display="inline-flex">
+                        <PMAvatar.Root
+                          size="xs"
+                          backgroundColor="background.secondary"
+                          color="text.primary"
+                        >
+                          <PMAvatar.Fallback
+                            name={user?.displayName ?? user?.email}
+                          />
+                        </PMAvatar.Root>
+                        {shouldPointAtNewNavigation && (
+                          <PMBox
+                            position="absolute"
+                            top="-2px"
+                            right="-2px"
+                            boxSize="1.5"
+                            borderRadius="full"
+                            bg="blue.300"
+                          />
+                        )}
+                      </PMBox>
                     </PMBox>
                   </PMMenu.Trigger>
                   <PMPortal>
@@ -366,17 +393,7 @@ export const SidebarNavigation: React.FunctionComponent<
               </PMBox>
             ) : (
               <PMBox paddingBottom={3}>
-                <PMBox pl={2} pr={4} py={1}>
-                  <PMText
-                    fontSize="10px"
-                    fontWeight="semibold"
-                    textTransform="uppercase"
-                    letterSpacing="wider"
-                    color="faded"
-                  >
-                    You
-                  </PMText>
-                </PMBox>
+                <SidebarSectionCaption>You</SidebarSectionCaption>
                 <PMVerticalNavSection
                   navEntries={[
                     <SidebarNavigationLink
@@ -384,6 +401,17 @@ export const SidebarNavigation: React.FunctionComponent<
                       url={routes.org.toProfile(orgSlug)}
                       label="Profile"
                       icon={<LuCircleUser />}
+                      /*
+                       * The only thing in the app that says the new navigation
+                       * exists. It points at the page holding the switch rather
+                       * than explaining anything, and the section it leads to
+                       * clears it on sight.
+                       */
+                      badge={
+                        shouldPointAtNewNavigation
+                          ? { text: 'Beta', colorScheme: 'blue' }
+                          : undefined
+                      }
                     />,
                     <SidebarNavigationLink
                       key="setup"
@@ -393,7 +421,6 @@ export const SidebarNavigation: React.FunctionComponent<
                       data-testid={SidebarNavigationDataTestId.IntegrationsLink}
                     />,
                     <SidebarHelpMenu key="help" />,
-                    <SpaceNavModeSwitch key="nav-mode" />,
                     <PMBox
                       key="logout"
                       as="button"
@@ -426,33 +453,11 @@ export const SidebarNavigation: React.FunctionComponent<
       >
         <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
           {/* Spaces -- scrollable */}
-          <PMBox
-            display="flex"
-            flexDirection="column"
-            gap={1}
-            overflowY="auto"
-            flex={1}
-            minH={0}
-          >
+          <PMBox display="flex" flexDirection="column" flex={1} minH={0}>
             {!isCollapsed && (
-              <PMBox
-                pl={2}
-                pr={4}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <PMText
-                  fontSize="10px"
-                  fontWeight="semibold"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  color="faded"
-                >
-                  Spaces
-                </PMText>
-                <BrowseSpaces />
-              </PMBox>
+              <SidebarSectionCaption action={<BrowseSpaces />}>
+                Spaces
+              </SidebarSectionCaption>
             )}
 
             <PMVStack

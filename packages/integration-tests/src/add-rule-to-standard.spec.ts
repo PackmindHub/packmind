@@ -1,5 +1,6 @@
 import { accountsSchemas } from '@packmind/accounts';
 import { gitSchemas } from '@packmind/git';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import {
@@ -121,9 +122,7 @@ describe('Add rule to standard integration', () => {
           userId: otherUser.id,
           spaceId: space.id,
         }),
-      ).rejects.toThrow(
-        `User ${otherUser.id} is not a member of space ${space.id}`,
-      );
+      ).rejects.toThrow(SpaceMembershipRequiredError);
     });
   });
 

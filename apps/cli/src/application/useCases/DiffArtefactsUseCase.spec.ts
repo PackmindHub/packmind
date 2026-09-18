@@ -1,9 +1,10 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs/promises';
 
 import { DiffArtefactsUseCase } from './DiffArtefactsUseCase';
 import { ChangeProposalType } from '@packmind/types';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
-import { createMockLockFileRepository } from '../../mocks/createMockRepositories';
+
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 
@@ -26,7 +27,7 @@ describe('DiffArtefactsUseCase', () => {
   };
 
   beforeEach(() => {
-    mockLockFileRepository = createMockLockFileRepository();
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
     mockLockFileRepository.read.mockResolvedValue(null);
     useCase = new DiffArtefactsUseCase(mockGateway, mockLockFileRepository);
   });
@@ -382,6 +383,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -465,6 +467,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -506,6 +509,7 @@ describe('DiffArtefactsUseCase', () => {
       );
 
       result = await useCase.execute({
+        ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
@@ -2313,6 +2317,8 @@ describe('DiffArtefactsUseCase', () => {
         id: 'artifact-lock-1',
         version: 3,
         spaceId: 'space-lock-1',
+        packageIds: [],
+        source: 'user' as const,
         files: [
           {
             path: '.packmind/standards/my-standard.md',
@@ -2326,6 +2332,8 @@ describe('DiffArtefactsUseCase', () => {
         id: 'artifact-lock-2',
         version: 1,
         spaceId: 'space-lock-2',
+        packageIds: [],
+        source: 'user' as const,
         files: [
           {
             path: '.packmind/commands/my-command.md',

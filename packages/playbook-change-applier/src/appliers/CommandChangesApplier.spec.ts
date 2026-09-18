@@ -9,6 +9,7 @@ import {
   createSpaceId,
   DiffService,
 } from '@packmind/types';
+import { mockInterface } from '@packmind/test-utils';
 import { CommandChangesApplier } from './CommandChangesApplier';
 
 describe('CommandChangesApplier', () => {
@@ -50,11 +51,7 @@ describe('CommandChangesApplier', () => {
   beforeEach(() => {
     diffService = new DiffService();
 
-    commandsPort = {
-      getCommandByIdInternal: jest.fn(),
-      getCommandVersion: jest.fn(),
-      updateCommandFromUI: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
 
     applier = new CommandChangesApplier(diffService, commandsPort);
   });

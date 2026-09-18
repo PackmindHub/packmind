@@ -90,7 +90,7 @@ export class DeploymentsService {
     const result: PublishArtifactsResponse =
       await this.deploymentAdapter.publishArtifacts({
         ...command,
-        recipeVersionIds: command.recipeVersionIds,
+        commandVersionIds: command.commandVersionIds,
         standardVersionIds: [],
         packagesSlugs: [],
         packageIds: [],
@@ -104,7 +104,7 @@ export class DeploymentsService {
     const result: PublishArtifactsResponse =
       await this.deploymentAdapter.publishArtifacts({
         ...command,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: command.standardVersionIds,
         packagesSlugs: [],
         packageIds: [],

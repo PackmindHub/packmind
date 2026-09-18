@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CodingAgent,
   ArtifactVersionEntry,
@@ -72,13 +72,12 @@ describe('GetContentByVersionsUseCase', () => {
   let orgSpaceId: ReturnType<typeof createSpaceId>;
 
   beforeEach(() => {
-    codingAgentPort = {
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
     renderModeConfigurationService = {
       resolveCodingAgents: jest
@@ -86,24 +85,18 @@ describe('GetContentByVersionsUseCase', () => {
         .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
-    skillsPort = {
-      getSkillVersionByNumber: jest.fn().mockResolvedValue(null),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillVersionByNumber.mockResolvedValue(null);
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    standardsPort = {
-      getStandardVersionByNumber: jest.fn().mockResolvedValue(null),
-      getRulesByVersionId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getStandardVersionByNumber.mockResolvedValue(null);
+    standardsPort.getRulesByVersionId.mockResolvedValue([]);
 
-    commandsPort = {
-      getCommandVersion: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
+    commandsPort.getCommandVersion.mockResolvedValue(null);
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     organizationId = createOrganizationId(uuidv4());
     orgSpaceId = createSpaceId(uuidv4());
@@ -113,13 +106,10 @@ describe('GetContentByVersionsUseCase', () => {
       slug: 'test-org',
     };
 
-    spacesPort = {
-      listSpacesByOrganization: jest
-        .fn()
-        .mockResolvedValue([
-          { id: orgSpaceId, name: 'Global', slug: 'global' } as Space,
-        ]),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([
+      { id: orgSpaceId, name: 'Global', slug: 'global' } as Space,
+    ]);
 
     command = {
       organizationId: organizationId as unknown as string,

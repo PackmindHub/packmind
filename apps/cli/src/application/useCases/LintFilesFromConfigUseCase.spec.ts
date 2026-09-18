@@ -8,25 +8,16 @@ import {
   LinterExecutionViolation,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintFilesFromConfigUseCase } from './LintFilesFromConfigUseCase';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
-import {
-  createMockExecuteLinterProgramsUseCase,
-  createMockGitService,
-  createMockListFiles,
-  createMockServices,
-} from '../../mocks/createMockServices';
+import { createMockServices } from '../../mocks/createMockServices';
 import {
   createMockLinterGateway,
   createMockPackmindGateway,
 } from '../../mocks/createMockGateways';
-import {
-  createMockConfigFileRepository,
-  createMockPackmindRepositories,
-} from '../../mocks/createMockRepositories';
+import { createMockPackmindRepositories } from '../../mocks/createMockRepositories';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 import { IListFiles } from '../../domain/services/IListFiles';
 import { IGitService } from '../../domain/services/IGitService';
@@ -40,17 +31,18 @@ describe('LintFilesFromConfigUseCase', () => {
   let mockListFiles: jest.Mocked<IListFiles>;
   let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
-  let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
+  let mockPackmindGateway: ReturnType<typeof createMockPackmindGateway>;
   let mockLinterGateway: jest.Mocked<ILinterGateway>;
 
   let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
   const logger = stubLogger();
 
   beforeEach(() => {
-    mockListFiles = createMockListFiles();
-    mockGitRemoteUrlService = createMockGitService();
-    mockLinterExecutionUseCase = createMockExecuteLinterProgramsUseCase({
-      execute: jest.fn(async (command: ExecuteLinterProgramsCommand) => ({
+    mockListFiles = mockInterface<IListFiles>();
+    mockGitRemoteUrlService = mockInterface<IGitService>();
+    mockLinterExecutionUseCase = mockInterface<IExecuteLinterProgramsUseCase>();
+    mockLinterExecutionUseCase.execute.mockImplementation(
+      async (command: ExecuteLinterProgramsCommand) => ({
         file: command.filePath,
         violations: command.programs.map<LinterExecutionViolation>(
           (program) => ({
@@ -61,15 +53,15 @@ describe('LintFilesFromConfigUseCase', () => {
             severity: program.severity,
           }),
         ),
-      })),
-    });
+      }),
+    );
 
     mockLinterGateway = createMockLinterGateway();
     mockPackmindGateway = createMockPackmindGateway({
       linter: mockLinterGateway,
     });
 
-    mockConfigFileRepository = createMockConfigFileRepository();
+    mockConfigFileRepository = mockInterface<IConfigFileRepository>();
 
     mockServices = createMockServices({
       listFiles: mockListFiles,

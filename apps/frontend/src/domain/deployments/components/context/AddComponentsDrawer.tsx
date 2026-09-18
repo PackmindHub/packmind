@@ -38,10 +38,12 @@ import {
 } from './buildSpaceInventory';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
+  COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
   componentSetKind,
   componentSetSubject,
   type ContextComponent,
+  type ContextComponentType,
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
@@ -144,6 +146,15 @@ export function AddComponentsDrawer({
     useState<InventoryCoverage>('none');
 
   /*
+   * Which kind of component the list is down to, held here for the same reason
+   * the coverage is: it is a step inside the gesture, not a place worth sending
+   * to someone.
+   */
+  const [pickedType, setPickedType] = useState<ContextComponentType | null>(
+    null,
+  );
+
+  /*
    * The filter actually applied: the picked one, unless it has nothing left to
    * show.
    *
@@ -182,10 +193,65 @@ export function AddComponentsDrawer({
     [addable.groups, coverage],
   );
   const coveredCount = groupedComponentCount(covered);
-  const shown = useMemo(
+  const searched = useMemo(
     () => filterAddableComponents(covered, query),
     [covered, query],
   );
+
+  /*
+   * The type filter actually applied, resolved against every candidate rather
+   * than against what the coverage filter left: that is the population the
+   * chips are drawn from, so a type the reader can still see and click is a
+   * type the filter may still name. The guard remains for the one case that
+   * leaves no control behind — the space gains a package while the drawer
+   * stands and that type runs out of candidates entirely.
+   */
+  const typeFilter =
+    pickedType !== null &&
+    addable.groups.some((group) => group.type === pickedType)
+      ? pickedType
+      : null;
+
+  /*
+   * What the chips are labelled with: the count of each type in what the
+   * coverage and the query left, which is where the results are rather than a
+   * restatement of the size of the space.
+   *
+   * The type is deliberately not applied here, the rule the package pane
+   * filters by: a chip that renumbered the moment it was clicked could not be
+   * used to compare one type against another.
+   */
+  const searchedByType = useMemo(
+    () => new Map(searched.map((group) => [group.type, group.entries.length])),
+    [searched],
+  );
+
+  /*
+   * The three filters compose, the type narrowing what the query left.
+   */
+  const shown = useMemo(
+    () =>
+      typeFilter === null
+        ? searched
+        : searched.filter((group) => group.type === typeFilter),
+    [searched, typeFilter],
+  );
+
+  /*
+   * Drawn from every type the package is missing something of, not from what
+   * the coverage filter left. Derived from `covered`, the row disappeared as
+   * soon as the free components happened to be all of one type — which is the
+   * state the drawer opens in, so a reader whose orphans were all standards
+   * was shown no type filter at all and reported it missing. The row also has
+   * to hold still while the coverage chip under it is flipped: a control that
+   * comes and goes with another control cannot be learnt.
+   *
+   * Absent with one candidate type, which is the pane's rule too: there is
+   * nothing for the chips to narrow.
+   */
+  const showTypeChips = addable.groups.length > 1;
+  const showCoverageChip =
+    addable.freeTotal > 0 && addable.freeTotal < addable.total;
 
   /*
    * Resolved against what the coverage filter left rather than against every
@@ -418,29 +484,80 @@ export function AddComponentsDrawer({
                       </PMHStack>
                     ) : null}
 
-                    {/*
-                      Absent when the two populations are not both there: with
-                      nothing to hide it would filter to the list it is already
-                      showing, and with nothing free it would empty the list —
-                      which is why the drawer did not open on it in that case.
-                      The chip and the count are the inventory's, so the same
-                      question about the same components is asked in the same
-                      words wherever it is asked.
-                    */}
-                    {addable.freeTotal > 0 &&
-                      addable.freeTotal < addable.total && (
-                        <PMHStack gap={1} wrap="wrap">
-                          <ContextChip
-                            label="In no package"
-                            count={addable.freeTotal}
-                            icon={<LuPackageX />}
-                            isActive={showingFree}
-                            onClick={() =>
-                              handleCoverageChange(showingFree ? 'all' : 'none')
-                            }
-                          />
-                        </PMHStack>
-                      )}
+                    {(showTypeChips || showCoverageChip) && (
+                      <PMBox>
+                        {/*
+                        Which kind of thing to pick, the same control the pane
+                        behind the drawer filters its own list with. A space of
+                        four hundred loose components arrives here as one list
+                        of every type, and until this existed the only way to
+                        reach the skills was to type a word they happen to
+                        share.
+
+                        One chip per type the package is missing something
+                        of, rather than per type the filters below reached: a
+                        type that drops to zero says so in place, where
+                        disappearing would leave the reader to work out whether
+                        it has none or never existed — and would take the whole
+                        row with it whenever the types happen to agree.
+                      */}
+                        {showTypeChips && (
+                          <PMHStack gap={1} wrap="wrap">
+                            <ContextChip
+                              label="All"
+                              count={groupedComponentCount(searched)}
+                              isActive={typeFilter === null}
+                              onClick={() => setPickedType(null)}
+                            />
+                            {addable.groups.map((group) => (
+                              <ContextChip
+                                key={group.type}
+                                label={group.label}
+                                count={searchedByType.get(group.type) ?? 0}
+                                icon={COMPONENT_TYPE_ICONS[group.type]}
+                                isActive={typeFilter === group.type}
+                                onClick={() => setPickedType(group.type)}
+                              />
+                            ))}
+                          </PMHStack>
+                        )}
+
+                        {/*
+                        Its own row, under the types, the way the inventory
+                        stacks the same two controls: which kind of thing, and
+                        whether anything carries it, are different questions
+                        about the same list and they compose, so they cannot
+                        share a row only one chip of can be active in.
+
+                        Absent when the two populations are not both there: with
+                        nothing to hide it would filter to the list it is already
+                        showing, and with nothing free it would empty the list —
+                        which is why the drawer did not open on it in that case.
+                        The chip and the count are the inventory's, so the same
+                        question about the same components is asked in the same
+                        words wherever it is asked.
+                      */}
+                        {showCoverageChip && (
+                          <PMHStack
+                            gap={1}
+                            wrap="wrap"
+                            paddingTop={showTypeChips ? 1 : 0}
+                          >
+                            <ContextChip
+                              label="In no package"
+                              count={addable.freeTotal}
+                              icon={<LuPackageX />}
+                              isActive={showingFree}
+                              onClick={() =>
+                                handleCoverageChange(
+                                  showingFree ? 'all' : 'none',
+                                )
+                              }
+                            />
+                          </PMHStack>
+                        )}
+                      </PMBox>
+                    )}
 
                     {/*
                       Counted on what the coverage filter left, not on every
@@ -474,8 +591,43 @@ export function AddComponentsDrawer({
                     )}
 
                     {groupedComponentCount(shown) === 0 ? (
+                      /*
+                        Two ways to empty the list, and they are different
+                        questions, so they get different answers.
+
+                        With something typed, the query is the answer: a reader
+                        who searched "java" under the Skills chip is being told
+                        there is no skill by that name, not that the word is
+                        absent from the space.
+
+                        With nothing typed, the chips crossed: the type picked
+                        has candidates, but none of them in no package. Saying
+                        so names the good news, the way the inventory does under
+                        the same pair of filters, rather than reporting on a
+                        search nobody ran.
+                      */
                       <PMText variant="small" color="faded">
-                        Nothing matches “{query.trim()}”.
+                        {query.trim() ? (
+                          <>
+                            No{' '}
+                            {typeFilter
+                              ? COMPONENT_TYPE_LABELS_SINGULAR[
+                                  typeFilter
+                                ].toLowerCase()
+                              : 'component'}{' '}
+                            matches “{query.trim()}”.
+                          </>
+                        ) : (
+                          <>
+                            Every{' '}
+                            {typeFilter
+                              ? COMPONENT_TYPE_LABELS_SINGULAR[
+                                  typeFilter
+                                ].toLowerCase()
+                              : 'component'}{' '}
+                            {pkg.name} does not hold is already in a package.
+                          </>
+                        )}
                       </PMText>
                     ) : (
                       <PMVStack gap={5} alignItems="stretch">

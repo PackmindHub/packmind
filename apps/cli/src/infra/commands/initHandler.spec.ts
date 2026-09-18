@@ -534,6 +534,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);

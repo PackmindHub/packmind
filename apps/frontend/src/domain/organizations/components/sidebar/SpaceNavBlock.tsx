@@ -59,6 +59,29 @@ export function getSpaceColorPalette(name: string): string {
   return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
 }
 
+/**
+ * The colour dot is 9px wide where the sidebar's icons are 13, so aligning
+ * their left edges still leaves it looking off the column: the eye tracks the
+ * middle of a round mark, not its left edge. Centre it in a box one icon wide
+ * so both land on the same axis, and let the margin match the icons' own.
+ */
+function SpaceColorDot({
+  name,
+}: Readonly<{ name: string }>): React.ReactElement {
+  return (
+    <PMStatus.Root
+      colorPalette={getSpaceColorPalette(name)}
+      as="span"
+      display="inline-flex"
+      justifyContent="center"
+      width="1em"
+      mr={2}
+    >
+      <PMStatus.Indicator />
+    </PMStatus.Root>
+  );
+}
+
 export function getSpaceInitials(name: string): string {
   return name
     .split(/\s+/)
@@ -186,7 +209,7 @@ function ExpandedSpaceNavBlock({
   const navigate = useNavigate();
 
   return (
-    <PMBox>
+    <PMBox paddingX={2}>
       {!isActive && (
         <SpaceNameRow
           space={space}
@@ -199,14 +222,15 @@ function ExpandedSpaceNavBlock({
       )}
 
       {isActive && (
-        <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
+        <PMBox bg="background.secondary" borderRadius="md" py={1}>
           <PMBox
-            pl={3}
+            pl={2}
             pr={2}
             paddingY={1}
             display="flex"
             alignItems="center"
             justifyContent="space-between"
+            gap={1}
           >
             <PMBox
               display="flex"
@@ -224,13 +248,7 @@ function ExpandedSpaceNavBlock({
                 whiteSpace="nowrap"
                 minW={0}
               >
-                <PMStatus.Root
-                  colorPalette={getSpaceColorPalette(space.name)}
-                  as="span"
-                  mr={1.5}
-                >
-                  <PMStatus.Indicator />
-                </PMStatus.Root>
+                <SpaceColorDot name={space.name} />
                 {space.name}
               </PMText>
               <SpaceVisibilityIcon type={space.type} />
@@ -242,6 +260,7 @@ function ExpandedSpaceNavBlock({
               onClick={() =>
                 navigate(routes.space.toSettings(orgSlug, space.slug))
               }
+              mr={-1}
               data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
             >
               <LuSlidersHorizontal />
@@ -396,13 +415,7 @@ function SpaceNameRow({
           whiteSpace="nowrap"
           minW={0}
         >
-          <PMStatus.Root
-            colorPalette={getSpaceColorPalette(space.name)}
-            as="span"
-            mr={1.5}
-          >
-            <PMStatus.Indicator />
-          </PMStatus.Root>
+          <SpaceColorDot name={space.name} />
           {space.name}
         </PMText>
         <SpaceVisibilityIcon type={space.type} />
@@ -416,6 +429,7 @@ function SpaceNameRow({
           e.stopPropagation();
           navigate(routes.space.toSettings(orgSlug, space.slug));
         }}
+        mr={-1}
         data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
       >
         <LuSlidersHorizontal />

@@ -137,7 +137,7 @@ describe('Broken access control - target ownership validation', () => {
         await expect(
           testApp.deploymentsHexa.getAdapter().publishArtifacts({
             ...orgA.packmindCommand(),
-            recipeVersionIds: [recipeVersionId],
+            commandVersionIds: [recipeVersionId],
             standardVersionIds: [standardVersionId],
             targetIds: [orgB.target.id],
             packagesSlugs: [orgAPackage.slug],
@@ -158,7 +158,7 @@ describe('Broken access control - target ownership validation', () => {
         await expect(
           testApp.deploymentsHexa.getAdapter().publishArtifacts({
             ...orgA.packmindCommand(),
-            recipeVersionIds: [recipeVersionId],
+            commandVersionIds: [recipeVersionId],
             standardVersionIds: [standardVersionId],
             targetIds: [orgA.target.id],
             packagesSlugs: [orgAPackage.slug],

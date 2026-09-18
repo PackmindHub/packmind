@@ -1,5 +1,9 @@
+import {
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -86,10 +90,7 @@ describe('ListSkillVersionsUseCase', () => {
   ];
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     mockSkillService = {
       getSkillById: jest.fn(),
@@ -261,8 +262,8 @@ describe('ListSkillVersionsUseCase', () => {
       });
 
       it('throws user not found error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User not found: ${userId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotFoundError,
         );
       });
     });
@@ -293,8 +294,8 @@ describe('ListSkillVersionsUseCase', () => {
       });
 
       it('throws membership error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `User ${userId} is not a member of organization ${organizationId}`,
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          UserNotInOrganizationError,
         );
       });
     });

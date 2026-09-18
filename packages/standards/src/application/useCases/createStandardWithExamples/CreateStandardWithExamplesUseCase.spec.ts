@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import {
   RuleAddedEvent,
@@ -60,37 +60,13 @@ describe('CreateStandardWithExamplesUseCase', () => {
     } as unknown as jest.Mocked<StandardVersionService>;
 
     // Mock RuleExampleRepository
-    ruleExampleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByRuleId: jest.fn(),
-      updateById: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      list: jest.fn(),
-      count: jest.fn(),
-    } as unknown as jest.Mocked<IRuleExampleRepository>;
+    ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
     // Mock RuleRepository
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-      updateById: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      list: jest.fn(),
-      count: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
     // Mock LinterAdapter
-    linterAdapter = {
-      updateRuleDetectionAssessmentAfterUpdate: jest.fn(),
-      copyLinterArtefacts: jest.fn(),
-      computeRuleLanguageDetectionStatus: jest.fn(),
-    } as unknown as jest.Mocked<ILinterPort>;
+    linterAdapter = mockInterface<ILinterPort>();
 
     // Mock EventEmitterService
     eventEmitterService = {

@@ -23,13 +23,14 @@ import {
   SpaceId,
   PackageId,
   Package,
+  UserSpaceRole,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
@@ -62,6 +63,7 @@ describe('UpdatePackageUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [
@@ -150,40 +152,25 @@ describe('UpdatePackageUseCase', () => {
       getRepositories: jest.fn(),
     } as unknown as jest.Mocked<DeploymentsServices>;
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockSpacesPort = {
-      getSpaceById: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId,
-        spaceId,
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
-    mockCommandsPort = {
-      getCommandByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getStandard: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getSkill: jest.fn(),
-      getSkillVersion: jest.fn(),
-      getLatestSkillVersion: jest.fn(),
-      listSkillVersions: jest.fn(),
-      listSkillsBySpace: jest.fn(),
-      findSkillBySlug: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
     mockEventEmitterService = {
       emit: jest.fn(),

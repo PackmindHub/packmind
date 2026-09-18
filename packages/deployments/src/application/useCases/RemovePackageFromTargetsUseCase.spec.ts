@@ -7,7 +7,7 @@ import { RenderModeConfigurationService } from '../services/RenderModeConfigurat
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { packageFactory } from '../../../test';
 import {
@@ -99,7 +99,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
   beforeEach(() => {
     mockPackageService = {
-      findById: jest.fn(),
+      findByIdInOrganization: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     mockTargetService = {
@@ -107,41 +107,20 @@ describe('RemovePackageFromTargetsUseCase', () => {
       findByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
-    mockDistributionRepository = {
-      listByTargetIds: jest.fn(),
-      add: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
-    mockCommandsPort = {
-      getCommandVersionById: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getStandardVersionById: jest.fn(),
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
-    mockGitPort = {
-      getRepositoryById: jest.fn(),
-      getFileFromRepo: jest.fn(),
-      commitToGit: jest.fn(),
-      getFilesInFolder: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
-    mockCodingAgentPort = {
-      renderArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    mockCodingAgentPort = mockInterface<ICodingAgentPort>();
 
     mockRenderModeConfigurationService = {
       getActiveRenderModes: jest.fn(),
@@ -180,13 +159,24 @@ describe('RemovePackageFromTargetsUseCase', () => {
       targetIds,
     };
 
-    beforeEach(() => {
-      mockPackageService.findById.mockResolvedValue(null);
+    beforeEach(async () => {
+      mockPackageService.findByIdInOrganization.mockResolvedValue(null);
+
+      await useCase.execute(command).catch(() => undefined);
     });
 
     it('throws PackageNotFoundError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         PackageNotFoundError,
+      );
+    });
+
+    // A package outside the caller's organization resolves to null just like
+    // an unknown one, so the caller cannot tell the two apart.
+    it('scopes the lookup to the caller organization', () => {
+      expect(mockPackageService.findByIdInOrganization).toHaveBeenCalledWith(
+        packageId,
+        organizationId,
       );
     });
   });
@@ -201,7 +191,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockRejectedValue(
           new TargetNotFoundError(targetIds[0]),
         );
@@ -223,7 +215,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockRejectedValue(
           new TargetNotFoundError(targetIds[1]),
         );
@@ -245,7 +239,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
       };
 
       beforeEach(() => {
-        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockPackageService.findByIdInOrganization.mockResolvedValue(
+          mockPackage,
+        );
         mockTargetService.findByIdsInOrganization.mockResolvedValue([
           mockTarget,
           mockTarget2,

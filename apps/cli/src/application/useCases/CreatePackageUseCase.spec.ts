@@ -1,6 +1,6 @@
+import { mockInterface } from '@packmind/test-utils';
 import { CreatePackageUseCase } from './CreatePackageUseCase';
-import { createMockPackagesGateway } from '../../mocks/createMockGateways';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ISpaceService } from '../../domain/services/ISpaceService';
 import { IPackagesGateway } from '../../domain/repositories/IPackagesGateway';
@@ -38,8 +38,8 @@ describe('CreatePackageUseCase', () => {
   });
 
   beforeEach(() => {
-    mockPackagesGateway = createMockPackagesGateway();
-    mockSpaceService = createMockSpaceService();
+    mockPackagesGateway = mockInterface<IPackagesGateway>();
+    mockSpaceService = mockInterface<ISpaceService>();
 
     mockGateway = {
       packages: mockPackagesGateway,

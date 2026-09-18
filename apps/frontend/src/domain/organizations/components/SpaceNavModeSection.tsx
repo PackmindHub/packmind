@@ -1,0 +1,105 @@
+import {
+  PMField,
+  PMFeatureFlag,
+  PMPageSection,
+  PMSwitch,
+  PMVStack,
+} from '@packmind/ui';
+import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY,
+} from '@packmind/feature-flags';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
+import { useEffect } from 'react';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useSpaceNavMode } from './SpaceNavModeContext';
+
+/**
+ * Flips a space's sidebar between the current information architecture and the
+ * plugin-first one. It sits on the profile page rather than in the space
+ * itself because it is a preference of the person looking, not a property of
+ * the space: the mode applies to every space at once, and a teammate opening
+ * the same space sees their own choice.
+ *
+ * It used to sit in the sidebar's "You" section, which only rendered it while
+ * the sidebar was expanded. The collapsed sidebar's account menu never carried
+ * it, so anyone working with a narrow sidebar had no way to reach the choice at
+ * all. The profile page is reachable from both states.
+ *
+ * The flag gates this section, not the mode. `?nav=plugin-first` keeps working
+ * for anyone, which is what makes a demo link portable.
+ */
+export function SpaceNavModeSection() {
+  const { user } = useAuthContext();
+  const { mode, setMode, markNewNavigationSeen } = useSpaceNavMode();
+
+  /*
+   * Marked here rather than on the profile route: this component only renders
+   * for somebody the flag covers, so the mark follows the offer having actually
+   * been on screen and not merely the page having been opened.
+   */
+  useEffect(() => {
+    markNewNavigationSeen();
+  }, [markNewNavigationSeen]);
+
+  return (
+    <PMFeatureFlag
+      featureKeys={[SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY]}
+      featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+      userEmail={user?.email}
+    >
+      {/*
+        `title` rather than `titleComponent`: the section already wraps whatever
+        it is given in a heading, so handing it one nests an `h3` inside an
+        `h3`. Several sections elsewhere still do exactly that.
+      */}
+      <PMPageSection backgroundColor="primary" title="Navigation (beta)">
+        <PMVStack align="stretch" gap={5} pt={4} w="lg">
+          <PMField.Root>
+            <PMSwitch
+              size="sm"
+              colorPalette="blue"
+              checked={mode === 'plugin-first'}
+              onCheckedChange={(details) => {
+                const next = details.checked ? 'plugin-first' : 'today';
+                /*
+                 * `switch` rather than `link`: this is somebody who already
+                 * knows the beta exists changing their mind, not somebody
+                 * following an invitation. Keeping the two apart is what says
+                 * whether the beta is spreading on its own.
+                 */
+                Analytics.track('navigation_mode_switched', {
+                  fromMode: mode,
+                  toMode: next,
+                  origin: 'switch',
+                });
+                setMode(next);
+              }}
+              /*
+               * On the hidden input rather than on the root: the root is the
+               * `<label>`, so naming it there leaves the checkbox itself
+               * unnamed and a screen reader announces nothing. It repeats the
+               * visible label word for word, so the accessible name and the
+               * name a person reads out loud are the same string.
+               */
+              inputProps={{ 'aria-label': 'New navigation' }}
+            >
+              New navigation
+            </PMSwitch>
+            {/*
+              This text is the whole explanation. There is no page documenting
+              the navigation, deliberately: one that needs documenting has a
+              problem the documentation would only hide. So it says what changes,
+              that the change is free to undo, and how far the choice reaches.
+            */}
+            <PMField.HelperText>
+              Replaces the per-object entries of a space with Context,
+              Distribution and Review changes. You can switch back at any time.
+              The choice applies to this browser, on every space at once.
+            </PMField.HelperText>
+          </PMField.Root>
+        </PMVStack>
+      </PMPageSection>
+    </PMFeatureFlag>
+  );
+}

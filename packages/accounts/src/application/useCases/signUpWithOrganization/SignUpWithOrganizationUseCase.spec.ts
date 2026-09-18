@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -43,10 +43,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    mockSpacesPort = {
-      createDefaultSpace: jest.fn().mockResolvedValue(undefined),
-      addMemberToDefaultSpace: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
 
     stubbedLogger = stubLogger();
 

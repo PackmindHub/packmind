@@ -1,3 +1,5 @@
+import { mockInterface } from '@packmind/test-utils';
+import { MockTree } from './createMockGateways';
 import { IPackmindServices } from '../domain/services/IPackmindServices';
 import { IDiffViolationFilterService } from '../domain/services/IDiffViolationFilterService';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
@@ -5,87 +7,25 @@ import { IListFiles } from '../domain/services/IListFiles';
 import { IGitService } from '../domain/services/IGitService';
 import { ISpaceService } from '../domain/services/ISpaceService';
 
-type MockServicesOverrides = {
-  listFiles?: Partial<jest.Mocked<IListFiles>>;
-  gitRemoteUrlService?: Partial<jest.Mocked<IGitService>>;
-  linterExecutionUseCase?: Partial<jest.Mocked<IExecuteLinterProgramsUseCase>>;
-  diffViolationFilterService?: Partial<
-    jest.Mocked<IDiffViolationFilterService>
-  >;
-  spaceService?: Partial<jest.Mocked<ISpaceService>>;
-};
+/** Each override is a whole sub-mock - see the note in `createMockGateways`. */
+export type MockServicesOverrides = Partial<MockTree<IPackmindServices>>;
 
+/**
+ * `IPackmindServices` is all data members - one nested service per field - so
+ * `mockInterface` cannot build it on its own: it demands them, rather than
+ * answering a `jest.fn()` where the interface declares an object. Mock a single
+ * service with `mockInterface<IFooService>()` directly; this factory is only for
+ * the whole tree.
+ */
 export function createMockServices(
   overrides?: MockServicesOverrides,
-): jest.Mocked<IPackmindServices> {
+): MockTree<IPackmindServices> {
   return {
-    listFiles: createMockListFiles(overrides?.listFiles),
-    gitRemoteUrlService: createMockGitService(overrides?.gitRemoteUrlService),
-    linterExecutionUseCase: createMockExecuteLinterProgramsUseCase(
-      overrides?.linterExecutionUseCase,
-    ),
-    diffViolationFilterService: createMockDiffViolationFilterService(
-      overrides?.diffViolationFilterService,
-    ),
-    spaceService: createMockSpaceService(overrides?.spaceService),
-  };
-}
-
-export function createMockSpaceService(
-  overrides?: Partial<jest.Mocked<ISpaceService>>,
-): jest.Mocked<ISpaceService> {
-  return {
-    getDefaultSpace: jest.fn(),
-    getSpaces: jest.fn(),
-    getSpaceBySlug: jest.fn(),
-    getApiContext: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockListFiles(
-  overrides?: Partial<jest.Mocked<IListFiles>>,
-): jest.Mocked<IListFiles> {
-  return {
-    listFilesInDirectory: jest.fn(),
-    readFileContent: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockGitService(
-  overrides?: Partial<jest.Mocked<IGitService>>,
-): jest.Mocked<IGitService> {
-  return {
-    getGitRepositoryRoot: jest.fn(),
-    tryGetGitRepositoryRoot: jest.fn(),
-    getGitRepositoryRootSync: jest.fn(),
-    getCurrentBranch: jest.fn(),
-    getCurrentBranches: jest.fn(),
-    branchExists: jest.fn(),
-    getGitRemoteUrl: jest.fn(),
-    getModifiedFiles: jest.fn(),
-    getUntrackedFiles: jest.fn(),
-    getModifiedLines: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockExecuteLinterProgramsUseCase(
-  overrides?: Partial<jest.Mocked<IExecuteLinterProgramsUseCase>>,
-): jest.Mocked<IExecuteLinterProgramsUseCase> {
-  return {
-    execute: jest.fn(),
-    ...overrides,
-  };
-}
-
-export function createMockDiffViolationFilterService(
-  overrides?: Partial<jest.Mocked<IDiffViolationFilterService>>,
-): jest.Mocked<IDiffViolationFilterService> {
-  return {
-    filterByFiles: jest.fn(),
-    filterByLines: jest.fn(),
+    listFiles: mockInterface<IListFiles>(),
+    gitRemoteUrlService: mockInterface<IGitService>(),
+    linterExecutionUseCase: mockInterface<IExecuteLinterProgramsUseCase>(),
+    diffViolationFilterService: mockInterface<IDiffViolationFilterService>(),
+    spaceService: mockInterface<ISpaceService>(),
     ...overrides,
   };
 }

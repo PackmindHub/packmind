@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { EnsureCliVersionUseCase } from './EnsureCliVersionUseCase';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { IInstallDefaultSkillsUseCase } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
@@ -23,21 +24,18 @@ describe('EnsureCliVersionUseCase', () => {
   const BASE_DIRECTORY = '/tmp/workspace';
 
   beforeEach(() => {
-    lockFileRepository = {
-      read: jest.fn(),
-      write: jest.fn().mockResolvedValue(undefined),
-    } as jest.Mocked<ILockFileRepository>;
+    lockFileRepository = mockInterface<ILockFileRepository>();
+    lockFileRepository.write.mockResolvedValue(undefined);
 
-    installDefaultSkillsUseCase = {
-      execute: jest.fn().mockResolvedValue({
-        filesCreated: 0,
-        filesUpdated: 0,
-        errors: [],
-        skippedSkillsCount: 0,
-        skippedIncompatibleSkillNames: [],
-        incompatibleInstalledSkills: [],
-      }),
-    } as jest.Mocked<IInstallDefaultSkillsUseCase>;
+    installDefaultSkillsUseCase = mockInterface<IInstallDefaultSkillsUseCase>();
+    installDefaultSkillsUseCase.execute.mockResolvedValue({
+      filesCreated: 0,
+      filesUpdated: 0,
+      errors: [],
+      skippedSkillsCount: 0,
+      skippedIncompatibleSkillNames: [],
+      incompatibleInstalledSkills: [],
+    });
 
     useCase = new EnsureCliVersionUseCase(
       lockFileRepository,

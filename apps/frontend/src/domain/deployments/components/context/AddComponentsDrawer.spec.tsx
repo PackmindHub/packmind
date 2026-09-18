@@ -6,9 +6,12 @@ import { UIProvider } from '@packmind/ui';
 import {
   createOrganizationId,
   createPackageId,
+  createSkillId,
   createSpaceId,
   createStandardId,
   type PackageResponse,
+  type Skill,
+  type SkillId,
   type Standard,
   type StandardId,
 } from '@packmind/types';
@@ -53,9 +56,20 @@ const standard = (id: string, name: string): Standard =>
     version: 1,
   }) as Standard;
 
+const skill = (id: string, name: string): Skill =>
+  ({
+    id: createSkillId(id),
+    name,
+    slug: name.toLowerCase().replace(/ /g, '-'),
+    description: '',
+    version: 1,
+  }) as Skill;
+
 const NAMING = standard('s1', 'Naming conventions');
 /** A candidate some other package already carries, so it is not an orphan. */
 const SHIPPED = standard('s2', 'Error handling');
+/** A second type, so the list has something for the type chips to narrow. */
+const REVIEWING = skill('k1', 'Reviewing a diff');
 
 const emptyCatalogue: SpaceCatalogue = {
   standards: [],
@@ -81,6 +95,19 @@ const otherPackage = (holds: readonly StandardId[]): PackageResponse =>
     standards: holds,
     commands: [],
     skills: [],
+  }) as unknown as PackageResponse;
+
+/**
+ * A package carrying the skill rather than a standard, which is what makes a
+ * type have candidates and none of them free.
+ */
+const skillPackage = (holds: readonly SkillId[]): PackageResponse =>
+  ({
+    id: createPackageId('pkg-3'),
+    name: 'Review guidelines',
+    standards: [],
+    commands: [],
+    skills: holds,
   }) as unknown as PackageResponse;
 
 function renderDrawer({
@@ -272,7 +299,7 @@ describe('AddComponentsDrawer', () => {
 
       withPackages([otherPackage([NAMING.id])]);
 
-      expect(screen.queryByText(/Nothing matches/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/matches/)).not.toBeInTheDocument();
     });
 
     it('says what the list has become', () => {
@@ -281,6 +308,136 @@ describe('AddComponentsDrawer', () => {
       withPackages([otherPackage([NAMING.id])]);
 
       expect(screen.getByText(/does not hold yet/)).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The reason the chips exist: a space of four hundred loose components
+   * arrives here as one list of every type, and reaching the skills meant
+   * typing a word they happen to share.
+   */
+  describe('when the candidates span several types', () => {
+    const mixed = {
+      catalogue: {
+        ...emptyCatalogue,
+        standards: [NAMING],
+        skills: [REVIEWING],
+      },
+    };
+
+    const chip = (name: string) => screen.getByRole('button', { name });
+
+    it('offers one chip per type among the candidates', () => {
+      renderDrawer(mixed);
+
+      expect(chip('Standards, 1')).toBeInTheDocument();
+      expect(chip('Skills, 1')).toBeInTheDocument();
+    });
+
+    it('narrows the list to the type picked', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(chip('Skills, 1'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Reviewing a diff/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('checkbox', { name: /Naming conventions/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('gives the whole list back', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(chip('Skills, 1'));
+      await userEvent.click(chip('All, 2'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * A pick is a decision about a component; narrowing the list is a way of
+     * reaching one. The second must not undo the first, or a reader working
+     * type by type loses everything at each chip.
+     */
+    it('keeps what was picked under another chip', async () => {
+      renderDrawer(mixed);
+
+      await userEvent.click(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      );
+      await userEvent.click(chip('Skills, 1'));
+
+      expect(
+        screen.getByRole('button', { name: 'Add 1 standard' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * The state the type filter was reported missing in, after it had shipped:
+   * the drawer opens on the components in no package, and a space whose free
+   * components happen to be all of one type opened on no chip row at all. The
+   * control was derived from what the coverage filter left, so the filter the
+   * reader never turned on hid the filter they were looking for.
+   */
+  describe('when the coverage filter leaves a single type', () => {
+    const oneTypeFree = {
+      catalogue: {
+        ...emptyCatalogue,
+        standards: [NAMING],
+        skills: [REVIEWING],
+      },
+      alongside: [skillPackage([REVIEWING.id])],
+    };
+
+    const chip = (name: string) => screen.getByRole('button', { name });
+
+    it('keeps one chip per type the package is missing something of', () => {
+      renderDrawer(oneTypeFree);
+
+      expect(chip('Standards, 1')).toBeInTheDocument();
+      expect(chip('Skills, 0')).toBeInTheDocument();
+    });
+
+    it('names the type rather than answering a search nobody typed', async () => {
+      renderDrawer(oneTypeFree);
+
+      await userEvent.click(chip('Skills, 0'));
+
+      expect(
+        screen.getByText(
+          'Every skill Backend guidelines does not hold is already in a package.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The pick is what the chip row is for; releasing the coverage filter is
+     * the way to reach the rows it counts.
+     */
+    it('shows the type once the coverage filter is released', async () => {
+      renderDrawer(oneTypeFree);
+
+      await userEvent.click(chip('Skills, 0'));
+      await userEvent.click(chip('In no package, 1'));
+
+      expect(
+        screen.getByRole('checkbox', { name: /Reviewing a diff/ }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the candidates are all of one type', () => {
+    it('offers no chip with nothing to narrow', () => {
+      renderDrawer();
+
+      expect(
+        screen.queryByRole('button', { name: /^All,/ }),
+      ).not.toBeInTheDocument();
     });
   });
 

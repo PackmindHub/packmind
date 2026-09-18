@@ -425,6 +425,28 @@ export function packageHasFailedDistribution(pkg: PackageDrift): boolean {
   );
 }
 
+/**
+ * Every place this package is installed is mid-distribution.
+ *
+ * The fourth state of a landing, beside aligned, drifted and failed: the copy
+ * out there is behind and the run that puts it right is already going, so it
+ * needs reading and not a hand. `buildPackageDestinations` has carried the same
+ * state under the same name since the Context pane was written, and
+ * `buildSpaceDestinations` now counts destinations by it.
+ *
+ * Nothing is ranked here. A location cannot be `in_progress` and `failure` at
+ * once, but a package can hold several, and which of the two wins is the
+ * caller's question.
+ */
+export function packageIsWaiting(pkg: PackageDrift): boolean {
+  return (
+    pkg.installLocations.length > 0 &&
+    pkg.installLocations.every(
+      (loc) => loc.lastDistributionStatus === DistributionStatus.in_progress,
+    )
+  );
+}
+
 export function packageFailedInstallCount(pkg: PackageDrift): number {
   let n = 0;
   for (const loc of pkg.installLocations) {

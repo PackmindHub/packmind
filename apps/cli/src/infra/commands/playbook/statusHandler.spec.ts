@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   playbookStatusHandler,
   PlaybookStatusHandlerDependencies,
@@ -63,19 +64,17 @@ describe('playbookStatusHandler', () => {
     mockReadFile = jest.fn();
     mockListDirectoryFiles = jest.fn().mockReturnValue([]);
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue(null),
-      write: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined),
-    };
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
+
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+
+    mockLockFileRepository.read.mockResolvedValue(null);
+
+    mockLockFileRepository.write.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -150,7 +149,7 @@ describe('playbookStatusHandler', () => {
 
       const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
       const standardLine = allCalls.find(
-        (msg: string) => typeof msg === 'string' && msg.includes('My standard'),
+        (msg) => typeof msg === 'string' && msg.includes('My standard'),
       );
       expect(standardLine).not.toContain('in space');
     });
@@ -250,6 +249,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -335,6 +335,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -453,6 +454,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Untracked standard',
           type: 'standard',
           id: 'artifact-1',
@@ -520,6 +522,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Missing standard',
           type: 'standard',
           id: 'artifact-1',
@@ -574,6 +577,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My command',
           type: 'command',
           id: 'artifact-1',
@@ -656,6 +660,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Already staged',
           type: 'standard',
           id: 'artifact-1',
@@ -706,7 +711,7 @@ describe('playbookStatusHandler', () => {
 
       const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
       const hasUntracked = allCalls.some(
-        (msg: string) =>
+        (msg) =>
           typeof msg === 'string' && msg.includes('Changes not tracked:'),
       );
       expect(hasUntracked).toBe(false);
@@ -736,6 +741,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -859,6 +865,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'My standard',
           type: 'standard',
           id: 'artifact-1',
@@ -947,6 +954,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Deleted standard',
           type: 'standard',
           id: 'artifact-1',
@@ -1015,6 +1023,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1073,7 +1082,7 @@ describe('playbookStatusHandler', () => {
 
       const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
       const skillMdUntracked = allCalls.some(
-        (msg: string) =>
+        (msg) =>
           typeof msg === 'string' &&
           msg.includes('SKILL.md') &&
           msg.includes('not tracked'),
@@ -1097,6 +1106,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1169,7 +1179,7 @@ describe('playbookStatusHandler', () => {
 
         const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
         const hasUntracked = allCalls.some(
-          (msg: string) =>
+          (msg) =>
             typeof msg === 'string' && msg.includes('Changes not tracked:'),
         );
         expect(hasUntracked).toBe(false);
@@ -1194,7 +1204,7 @@ describe('playbookStatusHandler', () => {
 
         const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
         const fileLine = allCalls.filter(
-          (msg: string) =>
+          (msg) =>
             typeof msg === 'string' && msg.includes('references/file.md'),
         );
         expect(fileLine).toHaveLength(1);
@@ -1207,7 +1217,7 @@ describe('playbookStatusHandler', () => {
 
         const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
         const fileLine = allCalls.filter(
-          (msg: string) =>
+          (msg) =>
             typeof msg === 'string' && msg.includes('references/file.md'),
         );
         expect(fileLine[0]).not.toContain('permissions changed');
@@ -1224,6 +1234,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1287,7 +1298,7 @@ describe('playbookStatusHandler', () => {
 
         const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
         const hasUntracked = allCalls.some(
-          (msg: string) =>
+          (msg) =>
             typeof msg === 'string' && msg.includes('Changes not tracked:'),
         );
         expect(hasUntracked).toBe(false);
@@ -1304,6 +1315,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1361,7 +1373,7 @@ describe('playbookStatusHandler', () => {
 
       const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
       const skillMdLine = allCalls.find(
-        (msg: string) =>
+        (msg) =>
           typeof msg === 'string' &&
           msg.includes('SKILL.md') &&
           msg.includes('not tracked'),
@@ -1387,6 +1399,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-456',
       artifacts: {
         'my-skill': {
+          source: 'user',
           name: 'My Skill',
           type: 'skill',
           id: 'artifact-skill-1',
@@ -1443,7 +1456,7 @@ describe('playbookStatusHandler', () => {
 
         const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
         const hasUntracked = allCalls.some(
-          (msg: string) =>
+          (msg) =>
             typeof msg === 'string' && msg.includes('Changes not tracked:'),
         );
         expect(hasUntracked).toBe(false);
@@ -1515,6 +1528,7 @@ describe('playbookStatusHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'artifact-1': {
+            source: 'user',
             name: 'My standard',
             type: 'standard',
             id: 'artifact-1',
@@ -1605,6 +1619,7 @@ describe('playbookStatusHandler', () => {
       targetId: 'target-sub',
       artifacts: {
         'artifact-1': {
+          source: 'user',
           name: 'Second standard',
           type: 'standard',
           id: 'artifact-1',

@@ -3,7 +3,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
@@ -19,6 +19,7 @@ import {
   createSpaceId,
   createUserId,
   createRuleId,
+  UserSpaceRole,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -77,18 +78,20 @@ describe('CreateStandardUseCase', () => {
     };
 
     // Mock SpacesPort
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({
-        userId: testUserId,
-        spaceId: createSpaceId(uuidv4()),
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: testUserId,
+      spaceId: createSpaceId(uuidv4()),
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: testUserId,
+      updatedBy: testUserId,
+    });
 
     // Mock AccountsPort
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     // Mock StandardService
     standardService = {
@@ -120,13 +123,7 @@ describe('CreateStandardUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-      updateById: jest.fn(),
-      deleteById: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
     stubbedLogger = stubLogger();
 
@@ -801,13 +798,8 @@ describe('CreateStandardUseCase', () => {
           emit: jest.fn().mockReturnValue(true),
         } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-        ruleRepository = {
-          add: jest.fn(),
-          findById: jest.fn(),
-          findByStandardVersionId: jest.fn().mockResolvedValue([]),
-          updateById: jest.fn(),
-          deleteById: jest.fn(),
-        } as unknown as jest.Mocked<IRuleRepository>;
+        ruleRepository = mockInterface<IRuleRepository>();
+        ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
         createStandardUseCase = new CreateStandardUseCase(
           spacesPort,

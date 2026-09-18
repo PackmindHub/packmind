@@ -11,7 +11,7 @@ import {
   PackmindEventEmitterService,
   SpaceAdminRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import {
@@ -59,10 +59,9 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       removeSpaceMembership: jest.fn(),
     } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),

@@ -23,7 +23,7 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 import { PackmindDeployer } from './PackmindDeployer';
 
 describe('PackmindDeployer', () => {
@@ -33,9 +33,7 @@ describe('PackmindDeployer', () => {
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
     deployer = new PackmindDeployer(mockStandardsPort);
 
     mockTarget = {

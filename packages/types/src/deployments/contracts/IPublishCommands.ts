@@ -4,7 +4,7 @@ import { TargetId } from '../TargetId';
 import { Distribution } from '../Distribution';
 
 export type PublishCommandsCommand = PackmindCommand & {
-  recipeVersionIds: CommandVersionId[];
+  commandVersionIds: CommandVersionId[];
   targetIds: TargetId[];
 };
 

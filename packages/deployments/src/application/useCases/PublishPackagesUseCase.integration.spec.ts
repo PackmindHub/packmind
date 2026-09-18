@@ -26,7 +26,7 @@ import { packageFactory } from '../../../test/packageFactory';
 import { distributionFactory } from '../../../test/distributionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 describe('PublishPackagesUseCase - Integration behavior', () => {
@@ -47,45 +47,28 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
 
-    mockCommandsPort = {
-      listCommandVersions: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
+    mockCommandsPort.getLatestCommandVersions.mockResolvedValue([]);
 
-    mockStandardsPort = {
-      getLatestStandardVersion: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
+    mockStandardsPort.getLatestStandardVersions.mockResolvedValue([]);
 
-    mockSkillsPort = {
-      getLatestSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
+    mockSkillsPort.getLatestSkillVersions.mockResolvedValue([]);
 
-    mockDeploymentPort = {
-      publishArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentPort>;
+    mockDeploymentPort = mockInterface<IDeploymentPort>();
 
     mockPackageService = {
-      findById: jest.fn(),
+      getPackagesByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByDistributionId: jest.fn(),
-      findByPackageId: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
-    mockSpacesPort = {
-      getSpaceById: jest
-        .fn()
-        .mockImplementation(async (spaceId) =>
-          spaceFactory({ id: spaceId, slug: 'test-space' }),
-        ),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.getSpaceById.mockImplementation(async (spaceId) =>
+      spaceFactory({ id: spaceId, slug: 'test-space' }),
+    );
 
     useCase = new PublishPackagesUseCase(
       mockCommandsPort,
@@ -129,21 +112,25 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         renderModes: [],
       });
 
-      mockPackageService.findById.mockResolvedValue(pkg);
-      mockCommandsPort.listCommandVersions.mockResolvedValue([
+      mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+        pkg,
+      ]);
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
         {
           id: createCommandVersionId(uuidv4()),
           recipeId,
           version: 1,
-        } as Awaited<ReturnType<ICommandsPort['listCommandVersions']>>[0],
+        } as Awaited<ReturnType<ICommandsPort['getLatestCommandVersions']>>[0],
       ]);
-      mockStandardsPort.getLatestStandardVersion.mockResolvedValue({
-        id: createStandardVersionId(uuidv4()),
-        standardId,
-        version: 1,
-      } as NonNullable<
-        Awaited<ReturnType<IStandardsPort['getLatestStandardVersion']>>
-      >);
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
+        {
+          id: createStandardVersionId(uuidv4()),
+          standardId,
+          version: 1,
+        } as Awaited<
+          ReturnType<IStandardsPort['getLatestStandardVersions']>
+        >[0],
+      ]);
 
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [distribution],

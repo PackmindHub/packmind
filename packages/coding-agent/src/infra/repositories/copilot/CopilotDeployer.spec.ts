@@ -12,7 +12,7 @@ import {
   Target,
 } from '@packmind/types';
 import { skillVersionFactory } from '@packmind/skills/test';
-import { contentOf, gitRepoFactory } from '@packmind/test-utils';
+import { contentOf, gitRepoFactory, mockInterface } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CopilotDeployer', () => {
@@ -22,9 +22,7 @@ describe('CopilotDeployer', () => {
   let mockTarget: Target;
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new CopilotDeployer(mockStandardsPort);
 

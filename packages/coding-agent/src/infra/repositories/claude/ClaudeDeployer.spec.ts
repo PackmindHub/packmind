@@ -22,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillFileFactory, skillVersionFactory } from '@packmind/skills/test';
-import { contentOf, gitRepoFactory } from '@packmind/test-utils';
+import { contentOf, gitRepoFactory, mockInterface } from '@packmind/test-utils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('ClaudeDeployer', () => {
@@ -32,9 +32,7 @@ describe('ClaudeDeployer', () => {
   let mockTarget: Target;
 
   beforeEach(() => {
-    mockStandardsPort = {
-      getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new ClaudeDeployer(mockStandardsPort);
 

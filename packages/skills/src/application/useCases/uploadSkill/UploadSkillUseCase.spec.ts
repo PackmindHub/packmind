@@ -7,7 +7,11 @@ import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRep
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SkillParseError } from '../../errors/SkillParseError';
 import { SkillValidationError } from '../../errors/SkillValidationError';
-import { createMockInstance, stubLogger } from '@packmind/test-utils';
+import {
+  createMockInstance,
+  mockInterface,
+  stubLogger,
+} from '@packmind/test-utils';
 import {
   createUserId,
   createOrganizationId,
@@ -67,24 +71,16 @@ describe('UploadSkillUseCase', () => {
   });
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(mockUser),
-      getOrganizationById: jest.fn().mockResolvedValue(mockOrganization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(mockUser);
+    mockAccountsPort.getOrganizationById.mockResolvedValue(mockOrganization);
 
-    mockSpacesPort = {
-      getSpaceById: jest.fn().mockResolvedValue(mockSpace),
-      createSpace: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
     mockSkillService = createMockInstance(SkillService);
     mockSkillVersionService = createMockInstance(SkillVersionService);
-    mockSkillFileRepository = {
-      findBySkillVersionId: jest.fn(),
-      addMany: jest.fn(),
-    } as unknown as jest.Mocked<ISkillFileRepository>;
+    mockSkillFileRepository = mockInterface<ISkillFileRepository>();
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     usecase = new UploadSkillUseCase(

@@ -6,7 +6,7 @@ import { PackmindLogger } from '@packmind/logger';
  * a stalled connection held the whole request open long after the browser had
  * given up on it, so the reader waited on a response nobody would ever read.
  */
-export const PROVIDER_REQUEST_TIMEOUT_MS = 10_000;
+export const PROVIDER_REQUEST_TIMEOUT_MS = 30_000;
 
 const RETRY_DELAY_MS = 500;
 

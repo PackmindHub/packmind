@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CodingAgent,
   CodingAgents,
@@ -82,19 +82,19 @@ describe('GetDeployedContentUseCase', () => {
       findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
-    distributionRepository = {
-      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveCommandVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+      standardVersions: [],
+      commandVersions: [],
+      skillVersions: [],
+    });
 
-    codingAgentPort = {
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
     renderModeConfigurationService = {
       resolveCodingAgents: jest
@@ -106,18 +106,13 @@ describe('GetDeployedContentUseCase', () => {
       getPackagesBySlugsWithArtefacts: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<PackageService>;
 
-    skillsPort = {
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    standardsPort = {
-      getRulesByVersionId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getRulesByVersionId.mockResolvedValue([]);
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     organizationId = createOrganizationId(uuidv4());
     organization = {
@@ -164,7 +159,7 @@ describe('GetDeployedContentUseCase', () => {
   describe('when target exists with deployed versions', () => {
     const spaceId = createSpaceId(uuidv4());
     const targetId = createTargetId(uuidv4());
-    const recipeId = createCommandId(uuidv4());
+    const commandId = createCommandId(uuidv4());
     const standardId = createStandardId(uuidv4());
     const skillId = createSkillId(uuidv4());
 
@@ -174,12 +169,12 @@ describe('GetDeployedContentUseCase', () => {
       path: '/',
     });
 
-    const recipeVersion: CommandVersion = {
+    const commandVersion: CommandVersion = {
       id: createCommandVersionId(uuidv4()),
-      recipeId,
-      name: 'test-recipe',
-      slug: 'test-recipe',
-      content: 'recipe content',
+      recipeId: commandId,
+      name: 'test-command',
+      slug: 'test-command',
+      content: 'command content',
       version: 1,
       userId: createUserId(uuidv4()),
     };
@@ -206,11 +201,11 @@ describe('GetDeployedContentUseCase', () => {
       userId: createUserId(uuidv4()),
     };
 
-    const recipe: Command = commandFactory({
-      id: recipeId,
-      name: 'test-recipe',
-      slug: 'test-recipe',
-      content: 'recipe content',
+    const commandArtifact: Command = commandFactory({
+      id: commandId,
+      name: 'test-command',
+      slug: 'test-command',
+      content: 'command content',
       version: 1,
       userId: createUserId(uuidv4()),
       spaceId,
@@ -245,22 +240,18 @@ describe('GetDeployedContentUseCase', () => {
       description: 'test package',
       spaceId,
       createdBy: createUserId(uuidv4()),
-      recipes: [recipe],
+      recipes: [commandArtifact],
       standards: [standard],
       skills: [skill],
     };
 
     beforeEach(() => {
       targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);
-      distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [recipeVersion],
-      );
-      distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [standardVersion],
-      );
-      distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue([
-        skillVersion,
-      ]);
+      distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+        standardVersions: [standardVersion],
+        commandVersions: [commandVersion],
+        skillVersions: [skillVersion],
+      });
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
         packageWithArtefacts,
       ]);
@@ -275,11 +266,11 @@ describe('GetDeployedContentUseCase', () => {
             artifactId: standardId as string,
           },
           {
-            path: '.packmind/commands/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
             artifactType: 'command',
-            artifactName: 'test-recipe',
-            artifactId: recipeId as string,
+            artifactName: 'test-command',
+            artifactId: commandId as string,
           },
         ],
         delete: [],
@@ -308,11 +299,11 @@ describe('GetDeployedContentUseCase', () => {
             artifactSlug: standardVersion.slug,
           }),
           expect.objectContaining({
-            path: '.packmind/commands/test-recipe.md',
-            artifactId: recipeId as string,
+            path: '.packmind/commands/test-command.md',
+            artifactId: commandId as string,
             spaceId: spaceId as string,
-            artifactVersion: recipeVersion.version,
-            artifactSlug: recipeVersion.slug,
+            artifactVersion: commandVersion.version,
+            artifactSlug: commandVersion.slug,
           }),
         ]),
       );
@@ -328,7 +319,7 @@ describe('GetDeployedContentUseCase', () => {
             packageIds: [packageWithArtefacts.id as string],
           }),
           expect.objectContaining({
-            path: '.packmind/commands/test-recipe.md',
+            path: '.packmind/commands/test-command.md',
             packageIds: [packageWithArtefacts.id as string],
           }),
         ]),
@@ -365,7 +356,7 @@ describe('GetDeployedContentUseCase', () => {
 
       expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipeVersions: [recipeVersion],
+          recipeVersions: [commandVersion],
           standardVersions: [
             expect.objectContaining({
               id: standardVersion.id,
@@ -397,27 +388,11 @@ describe('GetDeployedContentUseCase', () => {
       expect(result.skillFolders).toEqual([]);
     });
 
-    it('does not fetch deployed standard versions', async () => {
+    it('does not fetch deployed versions', async () => {
       await useCase.execute(command);
 
       expect(
-        distributionRepository.findActiveStandardVersionsByTarget,
-      ).not.toHaveBeenCalled();
-    });
-
-    it('does not fetch deployed recipe versions', async () => {
-      await useCase.execute(command);
-
-      expect(
-        distributionRepository.findActiveCommandVersionsByTarget,
-      ).not.toHaveBeenCalled();
-    });
-
-    it('does not fetch deployed skill versions', async () => {
-      await useCase.execute(command);
-
-      expect(
-        distributionRepository.findActiveSkillVersionsByTarget,
+        distributionRepository.findActiveVersionsByTarget,
       ).not.toHaveBeenCalled();
     });
   });
@@ -431,15 +406,11 @@ describe('GetDeployedContentUseCase', () => {
 
     beforeEach(() => {
       targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);
-      distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+        standardVersions: [],
+        commandVersions: [],
+        skillVersions: [],
+      });
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
         delete: [],

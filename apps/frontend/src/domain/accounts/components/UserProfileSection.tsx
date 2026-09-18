@@ -58,7 +58,7 @@ export const UserProfileSection: React.FC = () => {
   };
 
   return (
-    <PMPageSection backgroundColor="primary">
+    <PMPageSection backgroundColor="primary" title="Your details">
       <form onSubmit={handleSubmit}>
         <PMVStack align="flex-start" gap={5} maxWidth="400px">
           <PMField.Root>

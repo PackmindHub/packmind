@@ -13,6 +13,7 @@ import {
   OrganizationId,
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
+import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 
 const origin = 'PackageService';
 
@@ -50,6 +51,60 @@ export class PackageService {
     } catch (error) {
       this.logger.error('Failed to find package by ID', {
         packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByIdInOrganization(
+    packageId: PackageId,
+    organizationId: OrganizationId,
+  ): Promise<Package | null> {
+    const [pkg] = await this.packageRepository.findByIdsInOrganization(
+      [packageId],
+      organizationId,
+    );
+
+    return pkg ?? null;
+  }
+
+  async getPackagesByIdsInOrganization(
+    packageIds: PackageId[],
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    this.logger.info('Getting packages by IDs within organization', {
+      organizationId,
+      count: packageIds.length,
+    });
+
+    try {
+      const packages = await this.packageRepository.findByIdsInOrganization(
+        packageIds,
+        organizationId,
+      );
+
+      const uniqueIds = [...new Set(packageIds)];
+      if (packages.length !== uniqueIds.length) {
+        const foundIds = new Set(packages.map((pkg) => pkg.id));
+        const missingId = uniqueIds.find((id) => !foundIds.has(id));
+        throw new PackageNotFoundError(missingId ?? uniqueIds[0]);
+      }
+
+      this.logger.info('Packages retrieved by IDs within organization', {
+        organizationId,
+        requestedCount: uniqueIds.length,
+        foundCount: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      if (error instanceof PackageNotFoundError) {
+        throw error;
+      }
+      this.logger.error('Failed to get packages by IDs within organization', {
+        organizationId,
+        count: packageIds.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

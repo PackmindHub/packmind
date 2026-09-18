@@ -1,7 +1,7 @@
 import { CommandVersionService } from './CommandVersionService';
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { commandVersionFactory } from '../../../test/commandVersionFactory';
 import {
   createCommandId,
@@ -18,16 +18,7 @@ describe('RecipeVersionService', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockRepository = {
-      add: jest.fn(),
-      list: jest.fn(),
-      findById: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByCommandId: jest.fn(),
-      findLatestByCommandId: jest.fn(),
-      findByCommandIdAndVersion: jest.fn(),
-    } as unknown as jest.Mocked<ICommandVersionRepository>;
+    mockRepository = mockInterface<ICommandVersionRepository>();
 
     stubbedLogger = stubLogger();
   });
@@ -100,6 +91,61 @@ describe('RecipeVersionService', () => {
     });
 
     it('returns versions from repository', () => {
+      expect(result).toEqual(versions);
+    });
+  });
+
+  describe('getLatestCommandVersions', () => {
+    let recipeIds: ReturnType<typeof createCommandId>[];
+    let versions: CommandVersion[];
+    let result: CommandVersion[];
+
+    beforeEach(async () => {
+      service = new CommandVersionService(mockRepository, stubbedLogger);
+      recipeIds = [createCommandId(uuidv4()), createCommandId(uuidv4())];
+      versions = [
+        commandVersionFactory({ recipeId: recipeIds[0] }),
+        commandVersionFactory({ recipeId: recipeIds[1] }),
+      ];
+
+      mockRepository.findLatestByCommandIds.mockResolvedValue(versions);
+
+      result = await service.getLatestCommandVersions(recipeIds);
+    });
+
+    it('looks every command up in a single call', () => {
+      expect(mockRepository.findLatestByCommandIds).toHaveBeenCalledWith(
+        recipeIds,
+      );
+    });
+
+    it('returns the latest version of every command', () => {
+      expect(result).toEqual(versions);
+    });
+  });
+
+  describe('getCommandVersionsByIds', () => {
+    let versions: CommandVersion[];
+    let result: CommandVersion[];
+
+    beforeEach(async () => {
+      service = new CommandVersionService(mockRepository, stubbedLogger);
+      versions = [commandVersionFactory(), commandVersionFactory()];
+
+      mockRepository.findByIds.mockResolvedValue(versions);
+
+      result = await service.getCommandVersionsByIds(
+        versions.map((version) => version.id),
+      );
+    });
+
+    it('looks every version up in a single call', () => {
+      expect(mockRepository.findByIds).toHaveBeenCalledWith(
+        versions.map((version) => version.id),
+      );
+    });
+
+    it('returns every requested version', () => {
       expect(result).toEqual(versions);
     });
   });

@@ -1,3 +1,5 @@
+import { createSpaceId } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   showPackageHandler,
@@ -20,8 +22,16 @@ const mockLogConsole = logConsole as jest.Mock;
 const mockLogInfoConsole = logInfoConsole as jest.Mock;
 const mockLogErrorConsole = logErrorConsole as jest.Mock;
 
-const SPACE_GLOBAL = { id: 'space-1', slug: 'global', name: 'Global' };
-const SPACE_FRONTEND = { id: 'space-2', slug: 'frontend', name: 'Frontend' };
+const SPACE_GLOBAL = spaceFactory({
+  id: createSpaceId('space-1'),
+  slug: 'global',
+  name: 'Global',
+});
+const SPACE_FRONTEND = spaceFactory({
+  id: createSpaceId('space-2'),
+  slug: 'frontend',
+  name: 'Frontend',
+});
 
 const PACKAGE_SUMMARY_GLOBAL = {
   name: 'Backend',
@@ -30,6 +40,7 @@ const PACKAGE_SUMMARY_GLOBAL = {
   standards: [{ name: 'Standard 1', summary: 'A standard' }],
   recipes: [{ name: 'Command 1', summary: 'A command' }],
   commands: [{ name: 'Command 1', summary: 'A command' }],
+  skills: [],
 };
 
 const PACKAGE_SUMMARY_FRONTEND = {
@@ -39,6 +50,7 @@ const PACKAGE_SUMMARY_FRONTEND = {
   standards: [{ name: 'Frontend Standard', summary: 'A frontend standard' }],
   recipes: [{ name: 'Frontend Command', summary: 'A frontend command' }],
   commands: [{ name: 'Frontend Command', summary: 'A frontend command' }],
+  skills: [],
 };
 
 describe('showPackageHandler', () => {

@@ -25,6 +25,8 @@ import { useSpaceMarketplaces } from '@packmind/proprietary/frontend/domain/spac
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { MarketplaceDetailPane } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/MarketplaceDetailPane';
 import { routes } from '../../../../shared/utils/routes';
+import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
+import { packageHref } from '../context/buildComponentDetail';
 import { getEnvVar } from '../../../../shared/utils/getEnvVar';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { buildPackageDriftOverview } from '../redesign/selectors/buildPackageDriftOverview';
@@ -76,6 +78,7 @@ const DESTINATION_PARAM = 'destination';
  */
 export function SpaceDistributionSurface() {
   const { organization } = useAuthContext();
+  const { mode } = useSpaceNavMode();
   const { spaceId, spaceSlug, isReady } = useCurrentSpace();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -176,12 +179,23 @@ export function SpaceDistributionSurface() {
     [destinations],
   );
 
+  /*
+   * This surface only exists in the plugin-first sidebar, so a row of it
+   * pointing at the package's own page was a link out of the navigation it is
+   * part of. The builder answers for both, which keeps it honest if the route
+   * is ever reached the other way round.
+   */
   const packageHistoryHref = useCallback(
     (packageId: PackageId) =>
       organization && spaceSlug
-        ? `${routes.space.toPackage(organization.slug, spaceSlug, packageId)}?tab=distributions`
+        ? packageHref(
+            mode,
+            { orgSlug: organization.slug, spaceSlug },
+            packageId,
+            { distribution: true },
+          )
         : null,
-    [organization, spaceSlug],
+    [organization, spaceSlug, mode],
   );
 
   const handleSyncPackageOnTarget = useCallback(

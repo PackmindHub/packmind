@@ -45,7 +45,7 @@ import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import assert from 'assert';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
@@ -58,6 +58,19 @@ describe('PublishArtifactsUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
+  // The publish path fetches all three artifact types, for every target and
+  // in both scopes, through the single batched findActiveVersionsByTargets
+  // call. These per-artifact stubs let each test block seed the three types
+  // independently; the mock implementation in beforeEach assembles them into
+  // the batched per-target result.
+  let activeVersions: {
+    standardVersionsByTarget: jest.Mock;
+    commandVersionsByTarget: jest.Mock;
+    skillVersionsByTarget: jest.Mock;
+    standardVersionsByTargetAndPackages: jest.Mock;
+    commandVersionsByTargetAndPackages: jest.Mock;
+    skillVersionsByTargetAndPackages: jest.Mock;
+  };
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -82,54 +95,102 @@ describe('PublishArtifactsUseCase', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
 
-    mockCommandsPort = {
-      getCommandVersionById: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
+    mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([]);
 
-    mockStandardsPort = {
-      getStandardVersionById: jest.fn(),
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
+    mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([]);
 
-    mockSkillsPort = {
-      getSkillVersion: jest.fn(),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
+    mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([]);
 
-    mockGitPort = {
-      commitToGit: jest.fn(),
-      getRepositoryById: jest.fn(),
-      getFileFromRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
-    mockCodingAgentPort = {
-      renderArtifacts: jest.fn(),
-      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    mockCodingAgentPort = mockInterface<ICodingAgentPort>();
+    mockCodingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
 
-    mockDistributionRepository = {
-      add: jest.fn(),
-      findActiveStandardVersionsByTarget: jest.fn(),
-      findActiveCommandVersionsByTarget: jest.fn(),
-      findActiveSkillVersionsByTarget: jest.fn(),
-      findActiveStandardVersionsByTargetAndPackages: jest.fn(),
-      findActiveCommandVersionsByTargetAndPackages: jest.fn(),
-      findActiveSkillVersionsByTargetAndPackages: jest.fn(),
-      findActiveRenderModesByTarget: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
 
-    // Default empty arrays for skill-related methods (can be overridden in test blocks)
-    mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-      [],
-    );
-    mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-      [],
-    );
+    activeVersions = {
+      standardVersionsByTarget: jest.fn(),
+      commandVersionsByTarget: jest.fn(),
+      skillVersionsByTarget: jest.fn(),
+      standardVersionsByTargetAndPackages: jest.fn(),
+      commandVersionsByTargetAndPackages: jest.fn(),
+      skillVersionsByTargetAndPackages: jest.fn(),
+    };
+
+    // Default empty arrays for skill-related stubs (can be overridden in test blocks)
+    activeVersions.skillVersionsByTarget.mockResolvedValue([]);
+    activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
     mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
       [],
+    );
+    mockDistributionRepository.findActiveVersionsByTarget.mockImplementation(
+      async (orgId, tId) => {
+        const [standardVersions, commandVersions, skillVersions] =
+          await Promise.all([
+            activeVersions.standardVersionsByTarget(orgId, tId),
+            activeVersions.commandVersionsByTarget(orgId, tId),
+            activeVersions.skillVersionsByTarget(orgId, tId),
+          ]);
+        return { standardVersions, commandVersions, skillVersions };
+      },
+    );
+
+    mockDistributionRepository.findActiveVersionsByTargets.mockImplementation(
+      async (orgId, targetIds, packageIds) => {
+        const activeVersionsByTargetId = new Map();
+
+        for (const tId of targetIds) {
+          const [standardVersions, commandVersions, skillVersions] =
+            await Promise.all([
+              activeVersions.standardVersionsByTarget(orgId, tId),
+              activeVersions.commandVersionsByTarget(orgId, tId),
+              activeVersions.skillVersionsByTarget(orgId, tId),
+            ]);
+          const all = { standardVersions, commandVersions, skillVersions };
+
+          // Without a package filter the two scopes are the same thing, which
+          // is what the repository itself returns.
+          let fromPackages = all;
+          if (packageIds) {
+            const [
+              standardVersionsFromPackages,
+              commandVersionsFromPackages,
+              skillVersionsFromPackages,
+            ] = await Promise.all([
+              activeVersions.standardVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+              activeVersions.commandVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+              activeVersions.skillVersionsByTargetAndPackages(
+                orgId,
+                tId,
+                packageIds,
+              ),
+            ]);
+            fromPackages = {
+              standardVersions: standardVersionsFromPackages,
+              commandVersions: commandVersionsFromPackages,
+              skillVersions: skillVersionsFromPackages,
+            };
+          }
+
+          activeVersionsByTargetId.set(tId, { all, fromPackages });
+        }
+
+        return activeVersionsByTargetId;
+      },
     );
 
     mockTargetService = {
@@ -161,11 +222,13 @@ describe('PublishArtifactsUseCase', () => {
       addJob: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
 
-    mockDeployDefaultSkillsUseCase = {
-      execute: jest.fn().mockResolvedValue({
-        fileUpdates: { createOrUpdate: [], delete: [] },
-      }),
-    } as unknown as jest.Mocked<IDeployDefaultSkillsUseCase>;
+    mockDeployDefaultSkillsUseCase =
+      mockInterface<IDeployDefaultSkillsUseCase>();
+    mockDeployDefaultSkillsUseCase.execute.mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skippedSkillsCount: 0,
+      lockFileSlice: {},
+    });
 
     useCase = new PublishArtifactsUseCase(
       mockCommandsPort,
@@ -189,18 +252,18 @@ describe('PublishArtifactsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when deployment is successful with both recipes and standards', () => {
+  describe('when deployment is successful with both commands and standards', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -223,32 +286,26 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
         activeRenderModes,
       );
@@ -259,8 +316,8 @@ describe('PublishArtifactsUseCase', () => {
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
           {
             path: '.packmind/standards/test-standard.md',
@@ -282,6 +339,18 @@ describe('PublishArtifactsUseCase', () => {
         expect(result.distributions).toHaveLength(1);
       });
 
+      it('fetches every command version in a single call', () => {
+        expect(mockCommandsPort.getCommandVersionsByIds).toHaveBeenCalledWith([
+          commandVersion.id,
+        ]);
+      });
+
+      it('fetches every standard version in a single call', () => {
+        expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith(
+          [standardVersion.id],
+        );
+      });
+
       it('returns distributions with empty distributedPackages', () => {
         // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
         expect(result.distributions[0].distributedPackages).toEqual([]);
@@ -296,15 +365,27 @@ describe('PublishArtifactsUseCase', () => {
       it('stores distribution without git commit', () => {
         expect(result.distributions[0].gitCommit).toBeUndefined();
       });
+
+      it('emits a DeploymentCompletedEvent with the requested artifact counts', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              targetIds: [targetId],
+              recipeCount: 1,
+              standardCount: 1,
+            }),
+          }),
+        );
+      });
     });
 
-    it('calls renderArtifacts with both recipe and standard versions', async () => {
+    it('calls renderArtifacts with both command and standard versions', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
           installed: {
-            recipeVersions: [recipeVersion],
+            recipeVersions: [commandVersion],
             standardVersions: [
               expect.objectContaining({
                 ...standardVersion,
@@ -361,13 +442,13 @@ describe('PublishArtifactsUseCase', () => {
           gitRepoId: gitRepo.id,
           organizationId,
           userId,
-          recipeVersionIds: [recipeVersion.id],
+          commandVersionIds: [commandVersion.id],
           standardVersionIds: [standardVersion.id],
           skillVersionIds: [],
           fileUpdates: expect.objectContaining({
             createOrUpdate: expect.arrayContaining([
               expect.objectContaining({
-                path: expect.stringContaining('recipes'),
+                path: expect.stringContaining('commands'),
               }),
               expect.objectContaining({
                 path: expect.stringContaining('standards'),
@@ -389,12 +470,12 @@ describe('PublishArtifactsUseCase', () => {
         jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       });
 
-      it('includes recipe name in commit message', () => {
-        expect(jobInput.commitMessage).toContain('Test Recipe');
+      it('includes command name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Test Command');
       });
 
-      it('includes recipe slug in commit message', () => {
-        expect(jobInput.commitMessage).toContain('test-recipe');
+      it('includes command slug in commit message', () => {
+        expect(jobInput.commitMessage).toContain('test-command');
       });
 
       it('includes standard name in commit message', () => {
@@ -463,14 +544,14 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when deploying recipes only', () => {
+  describe('when deploying commands only', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
       });
 
@@ -481,33 +562,27 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/test.md', content: 'content' },
+          { path: '.packmind/commands/test.md', content: 'content' },
         ],
         delete: [],
       });
@@ -560,31 +635,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -610,7 +677,7 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('calls renderArtifacts with empty recipes array', async () => {
+    it('calls renderArtifacts with empty commands array', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -625,13 +692,13 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when enqueuing the job', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
       });
       standardVersion = standardVersionFactory({
@@ -645,36 +712,30 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/test.md', content: 'content' },
+          { path: '.packmind/commands/test.md', content: 'content' },
         ],
         delete: [],
       });
@@ -719,13 +780,13 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deployment fails', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
       });
       standardVersion = standardVersionFactory({
@@ -739,32 +800,26 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockRejectedValue(
         new Error('Rendering failed'),
@@ -788,11 +843,17 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(result.distributions[0].gitCommit).toBeUndefined();
     });
+
+    it('emits a DeploymentCompletedEvent despite the repository failure', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('when multiple targets share the same repository', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target1: ReturnType<typeof targetFactory>;
     let target2: ReturnType<typeof targetFactory>;
@@ -801,7 +862,7 @@ describe('PublishArtifactsUseCase', () => {
     const targetId2 = createTargetId(uuidv4());
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
       });
       standardVersion = standardVersionFactory({
@@ -826,17 +887,19 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId1, targetId2],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById
         .mockResolvedValueOnce(target1)
         .mockResolvedValueOnce(target2);
@@ -845,22 +908,14 @@ describe('PublishArtifactsUseCase', () => {
         target2,
       ]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/test.md', content: 'content' },
+          { path: '.packmind/commands/test.md', content: 'content' },
           { path: '.packmind/standards/test.md', content: 'content' },
         ],
         delete: [],
@@ -916,6 +971,20 @@ describe('PublishArtifactsUseCase', () => {
         expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
       });
 
+      it('fetches the active versions of every target in one call', () => {
+        // Both scopes, for both targets, out of a single batched read: the
+        // cost no longer grows with the number of targets.
+        expect(
+          mockDistributionRepository.findActiveVersionsByTargets,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      it('asks for both targets at once', () => {
+        expect(
+          mockDistributionRepository.findActiveVersionsByTargets,
+        ).toHaveBeenCalledWith(organizationId, [targetId1, targetId2], []);
+      });
+
       it('includes Production target name in commit message', () => {
         expect(jobInput.commitMessage).toContain('Production');
       });
@@ -936,19 +1005,19 @@ describe('PublishArtifactsUseCase', () => {
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      const recipeId = createCommandId(uuidv4());
+      const commandId = createCommandId(uuidv4());
       const standardId = createStandardId(uuidv4());
 
       newCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId,
-        name: 'Recipe A',
+        recipeId: commandId,
+        name: 'Command A',
         version: 2,
       });
       oldCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId,
-        name: 'Recipe A',
+        recipeId: commandId,
+        name: 'Command A',
         version: 1,
       });
 
@@ -972,45 +1041,41 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [newCommandVersion.id],
+        commandVersionIds: [newCommandVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
         newCommandVersion,
-      );
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         newStandardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [oldCommandVersion],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [oldStandardVersion],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([
+        oldCommandVersion,
+      ]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        oldStandardVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/test.md', content: 'content' },
+          { path: '.packmind/commands/test.md', content: 'content' },
           { path: '.packmind/standards/test.md', content: 'content' },
         ],
         delete: [],
       });
     });
 
-    it('combines previous and new recipe versions for rendering', async () => {
+    it('combines previous and new command versions for rendering', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -1051,7 +1116,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [nonExistentTargetId],
         packagesSlugs: [],
@@ -1074,7 +1139,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1091,7 +1156,7 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when recipe version does not exist', () => {
+  describe('when command version does not exist', () => {
     it('throws error', async () => {
       const target = targetFactory({ id: targetId });
       const gitRepo = gitRepoFactory();
@@ -1099,7 +1164,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [createCommandVersionId(uuidv4())],
+        commandVersionIds: [createCommandVersionId(uuidv4())],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1109,7 +1174,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(null);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Command version with ID',
@@ -1125,7 +1190,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [createStandardVersionId(uuidv4())],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1135,7 +1200,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(null);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Standard version with ID',
@@ -1148,7 +1213,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [],
         packagesSlugs: [],
@@ -1172,7 +1237,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [createCommandVersionId(uuidv4())],
+        commandVersionIds: [createCommandVersionId(uuidv4())],
         standardVersionIds: [],
         targetIds: [crossOrgTargetId],
         packagesSlugs: [],
@@ -1189,7 +1254,7 @@ describe('PublishArtifactsUseCase', () => {
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      const recipeVersion = commandVersionFactory({
+      const commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
       });
       const target = targetFactory({ id: targetId });
@@ -1198,7 +1263,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -1211,26 +1276,20 @@ describe('PublishArtifactsUseCase', () => {
       mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValueOnce(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/test.md', content: 'content' },
+          { path: '.packmind/commands/test.md', content: 'content' },
         ],
         delete: [],
       });
@@ -1261,21 +1320,21 @@ describe('PublishArtifactsUseCase', () => {
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      // New recipe to deploy (different recipeId than previous)
+      // New command to deploy (different recipeId than previous)
       newCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId: createCommandId('recipe-new'),
-        name: 'New Recipe',
-        slug: 'new-recipe',
+        recipeId: createCommandId('command-new'),
+        name: 'New Command',
+        slug: 'new-command',
         version: 1,
       });
 
-      // Previously deployed recipe that will NOT be in the new deployment (to be removed)
+      // Previously deployed command that will NOT be in the new deployment (to be removed)
       previousCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId: createCommandId('recipe-old'),
-        name: 'Old Recipe',
-        slug: 'old-recipe',
+        recipeId: createCommandId('command-old'),
+        name: 'Old Command',
+        slug: 'old-command',
         version: 1,
       });
 
@@ -1307,47 +1366,47 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [newCommandVersion.id],
+        commandVersionIds: [newCommandVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
         newCommandVersion,
-      );
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         newStandardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       // Return previously deployed versions that are NOT in the new deployment
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [previousCommandVersion],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [previousStandardVersion],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([
+        previousCommandVersion,
+      ]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        previousStandardVersion,
+      ]);
       // For removal calculation, return the same data from filtered methods
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [previousCommandVersion],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [previousStandardVersion],
-      );
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([
+        previousCommandVersion,
+      ]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([
+        previousStandardVersion,
+      ]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/new-recipe.md', content: 'content' },
+          { path: '.packmind/commands/new-command.md', content: 'content' },
           { path: '.packmind/standards/new-standard.md', content: 'content' },
         ],
         delete: [],
       });
     });
 
-    it('passes removed recipe versions to renderArtifacts', async () => {
+    it('passes removed command versions to renderArtifacts', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -1379,27 +1438,27 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('includes new recipes in installed', async () => {
+    it('includes new commands in installed', async () => {
       await useCase.execute(command);
 
       const renderArtifactsCall =
         mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
       const installedCommandIds =
         renderArtifactsCall.installed.recipeVersions.map(
-          (rv: { recipeId: string }) => rv.recipeId,
+          (cv: { recipeId: string }) => cv.recipeId,
         );
 
       expect(installedCommandIds).toContain(newCommandVersion.recipeId);
     });
 
-    it('excludes removed recipes from installed', async () => {
+    it('excludes removed commands from installed', async () => {
       await useCase.execute(command);
 
       const renderArtifactsCall =
         mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
       const installedCommandIds =
         renderArtifactsCall.installed.recipeVersions.map(
-          (rv: { recipeId: string }) => rv.recipeId,
+          (cv: { recipeId: string }) => cv.recipeId,
         );
 
       expect(installedCommandIds).not.toContain(
@@ -1438,17 +1497,17 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when no artifacts are removed', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId: createCommandId('recipe-1'),
-        name: 'Recipe',
-        slug: 'recipe',
+        recipeId: createCommandId('command-1'),
+        name: 'Command',
+        slug: 'command',
         version: 1,
       });
 
@@ -1468,37 +1527,31 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       // No previously deployed versions
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
-          { path: '.packmind/recipes/recipe.md', content: 'content' },
+          { path: '.packmind/commands/command.md', content: 'content' },
           { path: '.packmind/standards/standard.md', content: 'content' },
         ],
         delete: [],
@@ -1563,35 +1616,30 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
-        newStandardVersion,
+      mockStandardsPort.getStandardVersionsByIds.mockImplementation(
+        async (ids) =>
+          [
+            newStandardVersion,
+            { ...previousStandardVersion, rules: mockRules },
+          ].filter((version) => ids.includes(version.id)),
       );
-      mockStandardsPort.getRulesByStandardId = jest
-        .fn()
-        .mockResolvedValue(mockRules);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       // Return previously deployed standard WITHOUT rules
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [previousStandardVersion],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        previousStandardVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -1604,12 +1652,12 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('loads rules for previously deployed standards', async () => {
+    it('loads the rules of every rules-less standard in a single call', async () => {
       await useCase.execute(command);
 
-      expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        previousStandardVersion.standardId,
-      );
+      expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith([
+        previousStandardVersion.id,
+      ]);
     });
 
     it('passes standards with loaded rules to renderArtifacts', async () => {
@@ -1643,6 +1691,117 @@ describe('PublishArtifactsUseCase', () => {
         );
 
       expect(standardsWithoutRules).toHaveLength(0);
+    });
+  });
+
+  describe('when a previously deployed standard is behind its latest version', () => {
+    let command: PublishArtifactsCommand;
+    let deployedStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let latestStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const standardId = createStandardId('pinned-standard');
+    const deployedStandardVersionId = createStandardVersionId(uuidv4());
+    const latestStandardVersionId = createStandardVersionId(uuidv4());
+    const deployedRules: Rule[] = [
+      {
+        id: createRuleId(uuidv4()),
+        content: 'Rule as written in version 1',
+        standardVersionId: deployedStandardVersionId,
+      },
+    ];
+    const latestRules: Rule[] = [
+      {
+        id: createRuleId(uuidv4()),
+        content: 'Rule as rewritten in version 2',
+        standardVersionId: latestStandardVersionId,
+      },
+    ];
+
+    beforeEach(() => {
+      // Active on the target, and returned by the distribution repository
+      // without its rules relation.
+      deployedStandardVersion = standardVersionFactory({
+        id: deployedStandardVersionId,
+        standardId,
+        name: 'Pinned Standard',
+        slug: 'pinned-standard',
+        version: 1,
+        rules: undefined,
+      });
+
+      // Latest version of the same standard, which nobody asked to deploy.
+      latestStandardVersion = standardVersionFactory({
+        id: latestStandardVersionId,
+        standardId,
+        name: 'Pinned Standard',
+        slug: 'pinned-standard',
+        version: 2,
+        rules: latestRules,
+      });
+
+      gitRepo = gitRepoFactory();
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      command = {
+        userId,
+        organizationId,
+        commandVersionIds: [],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockStandardsPort.getStandardVersionsByIds.mockImplementation(
+        async (ids) =>
+          [
+            { ...deployedStandardVersion, rules: deployedRules },
+            latestStandardVersion,
+          ].filter((version) => ids.includes(version.id)),
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        deployedStandardVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/standards/pinned-standard.md',
+            content: 'standard content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    it('looks the rules up by standard version id', async () => {
+      await useCase.execute(command);
+
+      expect(mockStandardsPort.getStandardVersionsByIds).toHaveBeenCalledWith([
+        deployedStandardVersionId,
+      ]);
+    });
+
+    it('renders the deployed version with its own rules', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            standardVersions: [
+              { ...deployedStandardVersion, rules: deployedRules },
+            ],
+          }),
+        }),
+      );
     });
   });
 
@@ -1690,7 +1849,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [newSkillVersion.id],
         targetIds: [targetId],
@@ -1698,33 +1857,23 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
-      mockSkillsPort.getSkillFiles.mockImplementation(async (id) => {
-        if (id === previousSkillVersionId) return mockFiles;
-        return [];
-      });
+      mockSkillsPort.getSkillVersionsByIds.mockImplementation(async (ids) =>
+        [newSkillVersion, { ...previousSkillVersion, files: mockFiles }].filter(
+          (version) => ids.includes(version.id),
+        ),
+      );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       // Return previously deployed skill WITHOUT files
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [previousSkillVersion],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.skillVersionsByTarget.mockResolvedValue([
+        previousSkillVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -1740,9 +1889,9 @@ describe('PublishArtifactsUseCase', () => {
     it('loads files for previously deployed skills', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
+      expect(mockSkillsPort.getSkillVersionsByIds).toHaveBeenCalledWith([
         previousSkillVersion.id,
-      );
+      ]);
     });
 
     it('passes skills with loaded files to renderArtifacts', async () => {
@@ -1780,15 +1929,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deploying with packagesSlugs', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -1804,35 +1953,29 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-one', 'package-two'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -1906,15 +2049,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when existing packmind.json exists in repository', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -1930,29 +2073,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       // Return existing packmind.json with packages
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'existing-sha',
@@ -1966,8 +2103,8 @@ describe('PublishArtifactsUseCase', () => {
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2046,15 +2183,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when existing packmind.json has target path prefix', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2070,29 +2207,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'existing-sha',
         content: JSON.stringify({
@@ -2104,8 +2235,8 @@ describe('PublishArtifactsUseCase', () => {
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2126,15 +2257,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when target path has leading slash', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2150,29 +2281,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'existing-sha',
         content: JSON.stringify({
@@ -2185,8 +2310,8 @@ describe('PublishArtifactsUseCase', () => {
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2246,15 +2371,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when packmind.json does not exist in repository', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2270,36 +2395,30 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       // No existing packmind.json
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2331,6 +2450,8 @@ describe('PublishArtifactsUseCase', () => {
     let command: PublishArtifactsCommand;
     let skillVersion: ReturnType<typeof skillVersionFactory>;
     let skillFiles: SkillFile[];
+    let carriedSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let carriedSkillFiles: SkillFile[];
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
@@ -2362,6 +2483,32 @@ describe('PublishArtifactsUseCase', () => {
         },
       ];
 
+      // Carried over from a previous deployment (not part of this command's
+      // skillVersionIds): it reaches the installed list only through the
+      // unfiltered findActiveSkillVersionsByTarget history read, which never
+      // carries `files`. This is the only way to put a version into
+      // skillVersionIdsMissingFiles and exercise the batched hydration call,
+      // as opposed to the up-front fetch of skillVersion.id above.
+      const carriedSkillVersionId = createSkillVersionId(uuidv4());
+      carriedSkillVersion = skillVersionFactory({
+        id: carriedSkillVersionId,
+        name: 'Carried Skill',
+        slug: 'carried-skill',
+        version: 1,
+        files: undefined,
+      });
+
+      carriedSkillFiles = [
+        {
+          id: createSkillFileId(uuidv4()),
+          skillVersionId: carriedSkillVersionId,
+          path: 'carried.md',
+          content: 'Carried skill content',
+          permissions: '644',
+          isBase64: false,
+        },
+      ];
+
       gitRepo = gitRepoFactory();
 
       target = targetFactory({
@@ -2374,7 +2521,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [skillVersion.id],
         targetIds: [targetId],
@@ -2382,29 +2529,23 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(skillVersion);
-      mockSkillsPort.getSkillFiles.mockResolvedValue(skillFiles);
+      mockSkillsPort.getSkillVersionsByIds.mockImplementation(async (ids) =>
+        [
+          { ...skillVersion, files: skillFiles },
+          { ...carriedSkillVersion, files: carriedSkillFiles },
+        ].filter((version) => ids.includes(version.id)),
+      );
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.skillVersionsByTarget.mockResolvedValue([
+        carriedSkillVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -2425,12 +2566,12 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('fetches skill files for each skill version', async () => {
+    it('fetches missing skill version files through a dedicated hydration call', async () => {
       await useCase.execute(command);
 
-      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
-        skillVersion.id,
-      );
+      expect(mockSkillsPort.getSkillVersionsByIds).toHaveBeenCalledWith([
+        carriedSkillVersion.id,
+      ]);
     });
 
     it('passes skill versions with files to renderArtifacts', async () => {
@@ -2443,6 +2584,10 @@ describe('PublishArtifactsUseCase', () => {
               expect.objectContaining({
                 id: skillVersion.id,
                 files: skillFiles,
+              }),
+              expect.objectContaining({
+                id: carriedSkillVersion.id,
+                files: carriedSkillFiles,
               }),
             ]),
           }),
@@ -2467,7 +2612,7 @@ describe('PublishArtifactsUseCase', () => {
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [createSkillVersionId(uuidv4())],
         targetIds: [targetId],
@@ -2478,7 +2623,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockSkillsPort.getSkillVersion.mockResolvedValue(null);
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Skill version with ID',
@@ -2529,7 +2674,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [newSkillVersion.id],
         targetIds: [targetId],
@@ -2537,31 +2682,22 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
-      mockSkillsPort.getSkillFiles.mockResolvedValue([]);
+      mockSkillsPort.getSkillVersionsByIds.mockResolvedValue([newSkillVersion]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       // Return previously deployed skill with OLD slug
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [previousSkillVersion],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.skillVersionsByTarget.mockResolvedValue([
+        previousSkillVersion,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       // For removal calculation, return the old skill version
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [previousSkillVersion],
-      );
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([
+        previousSkillVersion,
+      ]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -2610,15 +2746,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deploying to root target', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2634,7 +2770,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -2655,28 +2791,22 @@ describe('PublishArtifactsUseCase', () => {
         lockFileSlice: {},
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2717,7 +2847,7 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deploying default skills to a repository with a lock file', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
@@ -2743,10 +2873,10 @@ describe('PublishArtifactsUseCase', () => {
       ).length;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2762,7 +2892,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -2783,27 +2913,21 @@ describe('PublishArtifactsUseCase', () => {
         lockFileSlice: {},
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -2897,7 +3021,7 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deploying to root target with packmind.json agents', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
     // Normalized: packmind is always added and agents are ordered
@@ -2908,10 +3032,10 @@ describe('PublishArtifactsUseCase', () => {
     ];
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -2927,7 +3051,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
@@ -2948,27 +3072,21 @@ describe('PublishArtifactsUseCase', () => {
         lockFileSlice: {},
       });
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -3077,7 +3195,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -3088,26 +3206,16 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       // Skill exists on target via Package B (all packages view)
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [skillVersionFromOtherPackage],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.skillVersionsByTarget.mockResolvedValue([
+        skillVersionFromOtherPackage,
+      ]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       // Package A has NO skills in its distribution (skill is only via Package B)
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
@@ -3144,22 +3252,22 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when recipe exists only via another package', () => {
+  describe('when command exists only via another package', () => {
     let command: PublishArtifactsCommand;
     let commandVersionFromOtherPackage: ReturnType<
       typeof commandVersionFactory
     >;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    const sharedCommandId = createCommandId('shared-recipe-id');
+    const sharedCommandId = createCommandId('shared-command-id');
 
     beforeEach(() => {
-      // Recipe version that exists ONLY in Package B (not in Package A)
+      // Command version that exists ONLY in Package B (not in Package A)
       commandVersionFromOtherPackage = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
         recipeId: sharedCommandId,
-        name: 'Shared Recipe',
-        slug: 'shared-recipe',
+        name: 'Shared Command',
+        slug: 'shared-command',
         version: 1,
       });
 
@@ -3171,7 +3279,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
@@ -3181,26 +3289,16 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      // Recipe exists on target via Package B (all packages view)
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [commandVersionFromOtherPackage],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      // Package A has NO recipes in its distribution (recipe is only via Package B)
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      // Command exists on target via Package B (all packages view)
+      activeVersions.commandVersionsByTarget.mockResolvedValue([
+        commandVersionFromOtherPackage,
+      ]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.skillVersionsByTarget.mockResolvedValue([]);
+      // Package A has NO commands in its distribution (command is only via Package B)
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
@@ -3208,7 +3306,7 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('does not pass recipe to removed.recipeVersions since it exists in another package', async () => {
+    it('does not pass command to removed.recipeVersions since it exists in another package', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -3220,7 +3318,7 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('keeps recipe in installed.recipeVersions', async () => {
+    it('keeps command in installed.recipeVersions', async () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -3265,7 +3363,7 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [],
+        commandVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
@@ -3275,26 +3373,16 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       // Standard exists on target via Package B (all packages view)
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [standardVersionFromOtherPackage],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.standardVersionsByTarget.mockResolvedValue([
+        standardVersionFromOtherPackage,
+      ]);
+      activeVersions.skillVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       // Package A has NO standards in its distribution (standard is only via Package B)
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
@@ -3333,15 +3421,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when deploying to non-root target', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -3357,35 +3445,29 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
           },
         ],
         delete: [],
@@ -3413,15 +3495,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when packmind.json has agents defined', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -3437,29 +3519,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
@@ -3594,16 +3670,16 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('render mode cleanup', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Cleanup Recipe',
-        slug: 'cleanup-recipe',
+        name: 'Cleanup Command',
+        slug: 'cleanup-command',
         version: 1,
       });
 
@@ -3626,17 +3702,19 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -3645,24 +3723,12 @@ describe('PublishArtifactsUseCase', () => {
         delete: [],
       });
 
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.skillVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
         [RenderMode.CLAUDE, RenderMode.CURSOR],
       );
@@ -3725,15 +3791,15 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when distribution render modes match packmind.json agents', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -3749,29 +3815,23 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
         packageIds: [],
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
@@ -3884,21 +3944,21 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when lock file includes artifact metadata from rendered files', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    const recipeId = createCommandId(uuidv4());
+    const commandId = createCommandId(uuidv4());
     const standardId = createStandardId(uuidv4());
     const spaceId = uuidv4();
     const pkgId = uuidv4();
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        recipeId,
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        recipeId: commandId,
+        name: 'Test Command',
+        slug: 'test-command',
         version: 3,
       });
 
@@ -3922,49 +3982,43 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: ['my-package'],
         packageIds: [createPackageId(pkgId)],
         artifactSpaceIds: {
-          [recipeId]: spaceId,
+          [commandId]: spaceId,
           [standardId]: spaceId,
         },
         artifactPackageIds: {
-          [recipeId]: [pkgId],
+          [commandId]: [pkgId],
           [standardId]: [pkgId],
         },
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
-      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
+      mockStandardsPort.getStandardVersionsByIds.mockResolvedValue([
         standardVersion,
-      );
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.packmind/commands/test-recipe.md',
-            content: 'recipe content',
+            path: '.packmind/commands/test-command.md',
+            content: 'command content',
             artifactType: 'command',
-            artifactId: recipeId,
-            artifactSlug: 'test-recipe',
+            artifactId: commandId,
+            artifactSlug: 'test-command',
             artifactVersion: 3,
           },
           {
@@ -3980,7 +4034,7 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('includes recipe artifact entry in lock file', async () => {
+    it('includes command artifact entry in lock file', async () => {
       await useCase.execute(command);
 
       const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
@@ -3992,12 +4046,12 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['user:command:test-recipe']).toEqual(
+      expect(parsed.artifacts['user:command:test-command']).toEqual(
         expect.objectContaining({
           type: 'command',
           version: 3,
-          name: 'Test Recipe',
-          id: recipeId,
+          name: 'Test Command',
+          id: commandId,
         }),
       );
     });
@@ -4051,7 +4105,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['user:command:test-recipe'].spaceId).toBe(
+      expect(parsed.artifacts['user:command:test-command'].spaceId).toBe(
         spaceId,
       );
     });
@@ -4068,7 +4122,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['user:command:test-recipe'].packageIds).toEqual([
+      expect(parsed.artifacts['user:command:test-command'].packageIds).toEqual([
         pkgId,
       ]);
     });
@@ -4076,7 +4130,7 @@ describe('PublishArtifactsUseCase', () => {
 
   describe('when existing lock file has entries from inaccessible packages', () => {
     let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let commandVersion: ReturnType<typeof commandVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
@@ -4086,16 +4140,16 @@ describe('PublishArtifactsUseCase', () => {
       agents: ['claude'],
       targetId: 'target-1',
       artifacts: {
-        'command:private-recipe': {
-          name: 'Private Recipe',
+        'command:private-command': {
+          name: 'Private Command',
           type: 'command',
-          id: 'recipe-private',
+          id: 'command-private',
           version: 5,
           spaceId: 'space-private',
           packageIds: ['pkg-private'],
           files: [
             {
-              path: '.claude/commands/private-recipe.md',
+              path: '.claude/commands/private-command.md',
               agent: 'claude',
             },
           ],
@@ -4104,10 +4158,10 @@ describe('PublishArtifactsUseCase', () => {
     };
 
     beforeEach(() => {
-      recipeVersion = commandVersionFactory({
+      commandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+        name: 'Test Command',
+        slug: 'test-command',
         version: 1,
       });
 
@@ -4123,33 +4177,27 @@ describe('PublishArtifactsUseCase', () => {
       command = {
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        commandVersionIds: [commandVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['@team-a/pkg-a'],
         packageIds: [createPackageId(uuidv4())],
-        artifactSpaceIds: { [String(recipeVersion.recipeId)]: 'space-a' },
+        artifactSpaceIds: { [String(commandVersion.recipeId)]: 'space-a' },
         artifactPackageIds: {
-          [String(recipeVersion.recipeId)]: ['pkg-a'],
+          [String(commandVersion.recipeId)]: ['pkg-a'],
         },
       };
 
-      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockCommandsPort.getCommandVersionsByIds.mockResolvedValue([
+        commandVersion,
+      ]);
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
+      activeVersions.commandVersionsByTarget.mockResolvedValue([]);
+      activeVersions.standardVersionsByTarget.mockResolvedValue([]);
+      activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
+      activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
 
       mockGitPort.getFileFromRepo.mockImplementation(
         async (_gitRepo, filePath) => {
@@ -4166,10 +4214,10 @@ describe('PublishArtifactsUseCase', () => {
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
           {
-            path: '.claude/commands/test-recipe.md',
-            content: 'recipe content',
+            path: '.claude/commands/test-command.md',
+            content: 'command content',
             artifactType: 'command',
-            artifactId: String(recipeVersion.recipeId),
+            artifactId: String(commandVersion.recipeId),
           },
         ],
         delete: [],
@@ -4188,8 +4236,8 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['command:private-recipe']).toEqual(
-        existingLockFileContent.artifacts['command:private-recipe'],
+      expect(parsed.artifacts['command:private-command']).toEqual(
+        existingLockFileContent.artifacts['command:private-command'],
       );
     });
 
@@ -4205,7 +4253,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['user:command:test-recipe']).toBeDefined();
+      expect(parsed.artifacts['user:command:test-command']).toBeDefined();
     });
 
     it('preserves inaccessible package slugs in lock file', async () => {
