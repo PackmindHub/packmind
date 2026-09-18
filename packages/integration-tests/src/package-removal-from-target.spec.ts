@@ -27,8 +27,6 @@ describe('Package removal from target integration', () => {
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -99,7 +97,6 @@ describe('Package removal from target integration', () => {
 
       commitToGit.mockClear();
 
-      // Execute removal once and store results
       await testApp.deploymentsHexa.getAdapter().removePackageFromTargets({
         ...dataFactory.packmindCommand(),
         packageId: packageToRemove.id,
@@ -227,7 +224,6 @@ describe('Package removal from target integration', () => {
 
       commitToGit.mockClear();
 
-      // Execute removal once and store results
       await testApp.deploymentsHexa.getAdapter().removePackageFromTargets({
         ...dataFactory.packmindCommand(),
         packageId: packageToRemove.id,

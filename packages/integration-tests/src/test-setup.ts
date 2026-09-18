@@ -7,8 +7,9 @@ import {
 import { Job, JobsOptions, Worker } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
 
-// Global setup for integration tests to mock Redis connections
-
+// Stands in for BullMQ so no Redis is needed. Jobs run inline inside `addJob`,
+// so a use case that enqueues work has already completed it by the time the
+// call returns — specs must not wait or poll for job completion.
 class SyncJob<Input, Output> implements IQueue<Input, Output> {
   private runner?: Runner<Input, Output>;
 
@@ -45,7 +46,6 @@ class SyncJob<Input, Output> implements IQueue<Input, Output> {
   }
 }
 
-// Mock the queueFactory, Configuration, and SSEEventPublisher from @packmind/node-utils
 jest.mock('@packmind/node-utils', () => {
   const actual = jest.requireActual('@packmind/node-utils');
 

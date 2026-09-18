@@ -31,14 +31,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
-// Mock the Git provider adapter for file retrieval
 jest.mock('@packmind/git', () => {
   const actual = jest.requireActual('@packmind/git');
   return {
     ...actual,
     GitProviderAdapter: jest.fn().mockImplementation(() => ({
       getFileFromRepo: jest.fn().mockImplementation((key: string) => {
-        // Return null to simulate file doesn't exist
         if (key.includes('nonexistent')) {
           return Promise.resolve(null);
         }
@@ -72,19 +70,14 @@ describe('Target-Specific Deployment Integration', () => {
   let vscodeTarget: Target;
   let rootTarget: Target;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
-    // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
 
-    // Create test data
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
@@ -95,7 +88,6 @@ describe('Target-Specific Deployment Integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
-    // Get the default "Global" space created during signup
     const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
@@ -103,7 +95,6 @@ describe('Target-Specific Deployment Integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    // Create test git repository (ide-plugins)
     gitRepo = gitRepoFactory({
       id: createGitRepoId(uuidv4()),
       owner: 'PackmindHub',
@@ -112,7 +103,6 @@ describe('Target-Specific Deployment Integration', () => {
       providerId: createGitProviderId('github-provider-id'),
     });
 
-    // Create test recipe about JetBrains services
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Writing Good JetBrains Services',
       content: `# Writing Good JetBrains Services
@@ -141,7 +131,6 @@ class MyService {
       spaceId: space.id,
     });
 
-    // Create test standard about code quality
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'IDE Code Quality Standards',
       description:
@@ -157,7 +146,6 @@ class MyService {
       spaceId: space.id,
     });
 
-    // Create targets for the repository
     jetbrainsTarget = {
       id: createTargetId(uuidv4()),
       name: 'jetbrains',
@@ -274,7 +262,6 @@ class MyService {
           },
         ];
 
-        // Deploy to jetbrains target for Claude
         standardUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,

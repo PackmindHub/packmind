@@ -35,18 +35,14 @@ describe('Claude Deployment Integration', () => {
   let user: User;
   let gitRepo: GitRepo;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
 
-    // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
 
@@ -71,14 +67,12 @@ describe('Claude Deployment Integration', () => {
       spaceId: space.id,
     };
 
-    // Create test recipe
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       ...basePackmindCommand,
       name: 'Test Recipe',
       content: 'This is test recipe content for deployment',
     });
 
-    // Create test standard
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       ...basePackmindCommand,
       name: 'Test Standard',
@@ -90,7 +84,6 @@ describe('Claude Deployment Integration', () => {
       scope: 'backend',
     });
 
-    // Create git provider and repository
     const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
       ...basePackmindCommand,
       gitProvider: {
@@ -124,14 +117,12 @@ describe('Claude Deployment Integration', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
@@ -357,7 +348,6 @@ describe('Claude Deployment Integration', () => {
           },
         ];
 
-        // Deploy recipes first
         const commandUpdates =
           await deployerService.aggregateCommandDeployments(
             recipeVersions,
@@ -366,7 +356,6 @@ describe('Claude Deployment Integration', () => {
             ['claude'],
           );
 
-        // Deploy standards second
         const standardsUpdates =
           await deployerService.aggregateStandardsDeployments(
             standardVersions,
@@ -375,7 +364,8 @@ describe('Claude Deployment Integration', () => {
             ['claude'],
           );
 
-        // Simulate the file merging that DeployerService does
+        // Mirrors DeployerService.mergeFileUpdates: last writer wins per path,
+        // so the standards pass overrides the commands pass on a shared file.
         const allUpdates = [commandUpdates, standardsUpdates];
         pathMap = new Map<string, FileModification>();
 
@@ -431,22 +421,20 @@ describe('Claude Deployment Integration', () => {
     });
   });
 
-  // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
-  // They don't check for existing content - that's handled by the merge layer.
-  // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
+  // Deployers always emit their sections and never read the file already in the
+  // repo, so nothing here can assert content preservation; that is the merge
+  // layer's job, covered by CommitToGitUseCase.spec.ts in @packmind/git.
 
   describe('when CLAUDE.md exists but is missing recipe instructions', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
@@ -642,7 +630,6 @@ describe('Claude Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // standardsPort and gitPort are already initialized in the main beforeEach
       claudeDeployer = new ClaudeDeployer(standardsPort, gitPort);
     });
 

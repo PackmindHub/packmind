@@ -50,8 +50,6 @@ describe('OpenCode Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
