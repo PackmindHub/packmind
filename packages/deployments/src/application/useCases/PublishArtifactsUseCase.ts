@@ -48,6 +48,7 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { v4 as uuidv4 } from 'uuid';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
+import { NoFileUpdatesForTargetsError } from '../../domain/errors/NoFileUpdatesForTargetsError';
 
 const origin = 'PublishArtifactsUseCase';
 
@@ -290,7 +291,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       );
 
       if (fileUpdatesPerTarget.size === 0) {
-        throw new Error('No file updates found for any target');
+        throw new NoFileUpdatesForTargetsError(repositoryId);
       }
 
       // All the targets of a repository share one commit, so the commit carries

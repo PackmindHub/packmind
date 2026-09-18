@@ -13,6 +13,7 @@ export * from './infra/schemas';
 
 // Re-export domain errors
 export * from './domain/errors/ConflictingTargetFilePathError';
+export * from './domain/errors/NoFileUpdatesForTargetsError';
 export * from './domain/errors/NoPackageSlugsProvidedError';
 export * from './domain/errors/PackageNotFoundError';
 export * from './domain/errors/PackagesNotFoundError';

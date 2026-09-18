@@ -35,6 +35,7 @@ import {
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { TargetService } from '../services/TargetService';
+import { NoFileUpdatesForTargetsError } from '../../domain/errors/NoFileUpdatesForTargetsError';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
@@ -138,7 +139,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
 
         try {
           if (removalDataPerTarget.size === 0) {
-            throw new Error('No file updates found for any target');
+            throw new NoFileUpdatesForTargetsError(repositoryId);
           }
 
           // All the targets of a repository share one commit, so the commit
