@@ -44,17 +44,14 @@ export class AddGitRepoUseCase
       allowTokenlessProvider = false,
     } = command;
 
-    // Business rule: gitProviderId is required
     if (!gitProviderId) {
       throw new Error('Git provider ID is required');
     }
 
-    // Business rule: repo data must be complete
     if (!owner || !repo || !branch) {
       throw new Error('Owner, repository name, and branch are all required');
     }
 
-    // Business rule: git provider must exist before adding a repo
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
@@ -66,7 +63,6 @@ export class AddGitRepoUseCase
       throw new GitProviderNotFoundError(gitProviderId);
     }
 
-    // Business rule: git provider must belong to the same organization
     if (gitProvider.organizationId !== organization.id) {
       this.logger.error('Git provider does not belong to organization', {
         gitProviderId,
@@ -80,9 +76,8 @@ export class AddGitRepoUseCase
       );
     }
 
-    // Business rule: token-auth providers must have a token configured (unless
-    // explicitly allowed). App-auth providers carry no token on the row — the
-    // installation token is minted on demand by GithubTokenResolverFactory.
+    // App-auth providers carry no token on the row: the installation token is
+    // minted on demand by GithubTokenResolverFactory.
     if (
       gitProvider.authMethod !== 'app' &&
       !gitProvider.token &&
@@ -96,7 +91,6 @@ export class AddGitRepoUseCase
       throw new GitProviderMissingTokenError(gitProviderId);
     }
 
-    // Business rule: check for duplicate repositories (same owner/repo/branch combination in same organization)
     const existingRepo =
       await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
         owner,
@@ -118,8 +112,7 @@ export class AddGitRepoUseCase
       throw new GitRepoAlreadyExistsError(owner, repo, branch, organization.id);
     }
 
-    // Create the repository with provider association. The standard type is
-    // explicit here so AddGitRepoUseCase never accidentally creates a
+    // The type is explicit so this use case can never create a
     // marketplace-typed row.
     const gitRepoWithProvider = {
       owner,

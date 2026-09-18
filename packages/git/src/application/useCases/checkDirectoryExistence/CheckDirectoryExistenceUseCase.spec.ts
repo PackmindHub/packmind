@@ -26,15 +26,12 @@ describe('CheckDirectoryExistenceUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    // Mock GitRepoService with its required methods
     mockGitRepoService = mockInterface<GitRepoService>();
 
     mockGitProviderRepository = mockInterface<IGitProviderRepository>();
 
-    // Mock IGitRepo instance with checkDirectoryExists method
     mockGitRepoInstance = mockInterface<IGitRepo>();
 
-    // Mock IGitRepoFactory
     mockGitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {
         if (provider.authMethod === 'token' && !provider.token) {
@@ -46,7 +43,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    // Initialize the UseCase with mocked dependencies
     useCase = new CheckDirectoryExistenceUseCase(
       mockGitRepoService,
       new ResolvedGitRepoService(
@@ -61,7 +57,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('execute', () => {
-    // Test data setup
     const gitRepoId = createGitRepoId('test-repo-id');
     const gitProviderId = createGitProviderId('test-provider-id');
     const organizationId = createOrganizationId('test-org-id');
@@ -93,7 +88,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
       let result: CheckDirectoryExistenceResult;
 
       beforeEach(async () => {
-        // Setup mocks for successful case
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGitRepoInstance.checkDirectoryExists.mockResolvedValue(true);
@@ -140,7 +134,6 @@ describe('CheckDirectoryExistenceUseCase', () => {
       let result: CheckDirectoryExistenceResult;
 
       beforeEach(async () => {
-        // Setup mocks for directory not existing
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGitRepoInstance.checkDirectoryExists.mockResolvedValue(false);

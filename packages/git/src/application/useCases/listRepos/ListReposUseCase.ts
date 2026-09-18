@@ -16,12 +16,10 @@ export class ListReposUseCase {
   async execute(input: ListReposUseCaseInput): Promise<GitRepo[]> {
     const { gitProviderId } = input;
 
-    // Business rule: gitProviderId is required
     if (!gitProviderId) {
       throw new Error('Git provider ID is required');
     }
 
-    // Business rule: git provider must exist
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {

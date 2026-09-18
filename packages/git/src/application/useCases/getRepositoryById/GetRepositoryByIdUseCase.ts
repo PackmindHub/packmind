@@ -11,7 +11,6 @@ export class GetRepositoryByIdUseCase {
   async execute(input: GetRepositoryByIdUseCaseInput): Promise<GitRepo | null> {
     const { repositoryId } = input;
 
-    // Business rule: repositoryId is required
     if (!repositoryId) {
       throw new Error('Repository ID is required');
     }
