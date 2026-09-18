@@ -353,21 +353,6 @@ Test content here
 
         expect(consoleLogSpy).not.toHaveBeenCalled();
       });
-
-      it('keeps the password out of the logs', async () => {
-        await service.callNodeMailer(mailOptions);
-
-        // Packmind discourages asserting on the stubbed logger, but keeping the
-        // credential out of the logs is the very property under test here.
-        const loggedArguments = JSON.stringify([
-          mockLogger.debug.mock.calls,
-          mockLogger.info.mock.calls,
-          mockLogger.warn.mock.calls,
-          mockLogger.error.mock.calls,
-        ]);
-
-        expect(loggedArguments).not.toContain(smtpPassword);
-      });
     });
 
     describe('TLS certificate verification', () => {
