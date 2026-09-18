@@ -20,50 +20,32 @@ export interface ICodingAgentPort {
     command: RenderArtifactsCommand,
   ): Promise<RenderArtifactsResponse>;
 
-  /**
-   * Deploy artifacts (recipes, standards, skills) for multiple coding agents
-   * This is the unified entry point for deployment operations
-   */
+  /** The unified entry point for deployment operations. */
   deployArtifactsForAgents(
     command: DeployArtifactsForAgentsCommand,
   ): Promise<DeployArtifactsForAgentsResponse>;
 
-  /**
-   * Generate file updates for removed artifacts
-   * Computes which files need to be deleted or updated when artifacts are removed
-   */
+  /** Computes both the deletions and the rewrites a removal implies. */
   generateRemovalUpdatesForAgents(
     command: GenerateRemovalUpdatesCommand,
   ): Promise<GenerateRemovalUpdatesResponse>;
 
-  /**
-   * Generate file updates to clean up agent-specific files when agents are removed
-   */
+  /** Cleans up agent-specific files when an agent itself is deconfigured. */
   generateAgentCleanupUpdatesForAgents(
     command: GenerateAgentCleanupUpdatesCommand,
   ): Promise<GenerateAgentCleanupUpdatesResponse>;
 
   /**
-   * Get the deployer registry for direct access to coding agent deployers
-   * Used for advanced deployment scenarios
    * @deprecated Use deployArtifactsForAgents or generateRemovalUpdatesForAgents instead
-   * @returns The coding agent deployer registry
    */
   getDeployerRegistry(): ICodingAgentDeployerRegistry;
 
-  /**
-   * Get the skills folder paths for multiple coding agents
-   * @param agents Array of coding agents to get skill folder paths for
-   * @returns Map of agent to skill folder path (undefined if agent doesn't support skills)
-   */
+  /** The map value is `undefined` for an agent that does not support skills. */
   getSkillsFolderPathForAgents(
     agents: CodingAgent[],
   ): Map<CodingAgent, string | undefined>;
 
-  /**
-   * Preview how artifacts render for a specific coding agent.
-   * Returns a zip file (base64-encoded) containing the rendered files.
-   */
+  /** Returns the rendered files as a base64-encoded zip. */
   previewArtifactRendering(
     command: PreviewArtifactRenderingCommand,
   ): Promise<PreviewArtifactRenderingResponse>;

@@ -16,28 +16,24 @@ export type HierarchicalConfigResult = {
 };
 
 /**
- * Represents a single packmind.json configuration with its target location.
- * The target is the directory containing the packmind.json file.
+ * One packmind.json, plus the directory it was found in — both paths point at
+ * that directory, not at the file.
  */
 export type ConfigWithTarget = {
-  /** Relative path from basePath to the directory containing packmind.json (e.g., "/" or "/apps/api") */
+  /** Relative to `AllConfigsResult.basePath`, e.g. "/" or "/apps/api". */
   targetPath: string;
-  /** Absolute path to the directory containing packmind.json */
   absoluteTargetPath: string;
-  /** Packages defined in this specific packmind.json */
   packages: { [slug: string]: string };
-  /** Optional agents to generate artifacts for (overrides org-level config) */
+  /** Overrides the org-level agent config when present. */
   agents?: CodingAgent[];
 };
 
 /**
- * Result of finding all packmind.json files in a tree (ancestors and descendants).
+ * Every packmind.json found in the tree — ancestors as well as descendants.
  */
 export type AllConfigsResult = {
-  /** All configs found, each with their target path */
   configs: ConfigWithTarget[];
-  /** Whether any configs were found */
   hasConfigs: boolean;
-  /** The base path used for computing relative target paths (git root or filesystem root) */
+  /** Git root, or the filesystem root when there is none. */
   basePath: string;
 };

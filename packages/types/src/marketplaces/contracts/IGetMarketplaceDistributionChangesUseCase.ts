@@ -5,16 +5,14 @@ import { MarketplaceId } from '../MarketplaceId';
 export type SourcePackageChangeKind = 'added' | 'updated' | 'removed';
 
 /**
- * Marketplace-facing artifact taxonomy used by the plugin detail "Changes"
- * tab. Maps Packmind's domain artifacts (recipes / standards / skills) onto
- * the vocabulary the marketplace prototype exposes to organisation members.
+ * Marketplace-facing artifact taxonomy: Packmind's domain `recipes` surface as
+ * `command` here, matching the vocabulary the marketplace exposes.
  */
 export type MarketplaceArtifactKind = 'command' | 'standard' | 'skill';
 
 /**
  * One artifact-level change between what a distribution captured at publish
- * time and what the source package currently looks like. Surfaced as a flat
- * list by `GetMarketplaceDistributionChangesUseCase`.
+ * time and what the source package currently looks like.
  *
  * `publishedVersion` is `null` for added artifacts; `currentVersion` is `null`
  * for removed artifacts. For updated artifacts both fields are populated.

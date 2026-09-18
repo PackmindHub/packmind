@@ -64,8 +64,8 @@ export type TrackPluginInstallHeartbeatCommand = PublicPackmindCommand & {
   verifiedUserId?: string | null;
   /**
    * Organization id extracted from the API key JWT — used by the use case to
-   * enforce the cross-org guard (spec §7.3, §9):
-   * "Cross-org API key → Ignore key, fall back to anonymous."
+   * enforce the cross-org guard: a cross-org API key is ignored and the
+   * heartbeat falls back to anonymous.
    * Null when no Authorization header is present or the key is invalid.
    */
   verifiedUserOrgId?: string | null;

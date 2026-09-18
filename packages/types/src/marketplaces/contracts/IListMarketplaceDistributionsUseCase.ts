@@ -28,10 +28,10 @@ import { MarketplaceId } from '../MarketplaceId';
  * steer the user to "Remove" instead.
  *
  * `revision` is the published content revision derived from the distribution's
- * `versionFingerprint` (`buildVersionRevision`). The frontend marks an install
- * outdated when its reported `installedRevision` differs from this value. Null
- * for distributions published before fingerprints existed (→ drift cannot be
- * determined; installs fall back to count-only display).
+ * `versionFingerprint`. The frontend marks an install outdated when its
+ * reported `installedRevision` differs from this value. Null for distributions
+ * published before fingerprints existed (→ drift cannot be determined; installs
+ * fall back to count-only display).
  */
 export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   packageName: string;
@@ -48,10 +48,6 @@ export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   revision: string | null;
 };
 
-/**
- * Command used by any organization member to list the distributions for a
- * given marketplace owned by the caller's organization.
- */
 export type ListMarketplaceDistributionsCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
 };

@@ -1,9 +1,9 @@
-// This type will be the main entrypoint for a program generation
 import { ProgrammingLanguage } from '../languages';
 import { Rule } from '../standards';
 import { RuleExample } from '../standards';
 
-// We gather it within a single type instead of having 3 distinct properties
+// The input to a detection-program generation, gathered into one type rather
+// than passed as separate arguments.
 export type DetectionProgramRuleInput = {
   rule: Rule;
   ruleExamples: RuleExample[]; // We assume that the ruleExamples are filtered based on the programmingLanguage, to avoid filtering operations everytime we need to compute examples

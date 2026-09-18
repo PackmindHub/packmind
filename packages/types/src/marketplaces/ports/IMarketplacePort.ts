@@ -54,36 +54,21 @@ export interface IMarketplacePort {
    * fetches and parses `marketplace.json`, persists a marketplace-typed
    * `GitRepo` together with a `Marketplace` row, emits
    * `MarketplaceLinkedEvent`, and seeds the reconciliation job.
-   *
-   * @param command - Command containing git provider, owner/repo/branch, and display name
-   * @returns Promise of the created marketplace enriched with `addedByUserName`
    */
   linkMarketplace(
     command: LinkMarketplaceCommand,
   ): Promise<LinkMarketplaceResponse>;
 
   /**
-   * Unlinks a marketplace from the caller's organization.
-   *
    * Admin-only. Soft-deletes the `Marketplace` row and the underlying
    * marketplace-typed `GitRepo`, removes the reconciliation job, and emits
-   * `MarketplaceUnlinkedEvent`. The underlying Git repository is never
-   * touched.
-   *
-   * @param command - Command containing the marketplace id
-   * @returns Promise resolving to the unlinked marketplace id
+   * `MarketplaceUnlinkedEvent`. The underlying Git repository is never touched.
    */
   unlinkMarketplace(
     command: UnlinkMarketplaceCommand,
   ): Promise<UnlinkMarketplaceResponse>;
 
-  /**
-   * Lists all marketplaces linked to the caller's organization. Open to any
-   * organization member.
-   *
-   * @param command - Command carrying the organization/user context
-   * @returns Promise of presentation DTOs enriched with `addedByUserName` and `pluginCount`
-   */
+  /** Open to any organization member. */
   listMarketplaces(
     command: ListMarketplacesCommand,
   ): Promise<ListMarketplacesResponse>;
@@ -92,9 +77,6 @@ export interface IMarketplacePort {
    * Pre-flight validation of a public marketplace URL. Resolves a tokenless
    * git provider for the URL host, fetches `marketplace.json` and validates
    * the descriptor through the parser registry.
-   *
-   * @param command - Command containing the marketplace URL
-   * @returns Promise of `{ kind: 'verified', repoPath, defaultBranch, pluginCount }`
    */
   validateMarketplaceUrl(
     command: ValidateMarketplaceUrlCommand,
@@ -111,8 +93,6 @@ export interface IMarketplacePort {
    * or `no_changes`) is written by the worker and observable through
    * `findMarketplaceDistributionById`.
    *
-   * @param command - Command containing marketplaceId, packageId and auth context
-   * @returns Promise resolving to the in-progress distribution metadata
    * @throws MarketplaceNotFoundError when the marketplace is missing or
    *         belongs to a different organization
    * @throws GitProviderTokenInvalidError when the marketplace git provider's
@@ -127,21 +107,17 @@ export interface IMarketplacePort {
   ): Promise<PublishPackageOnMarketplaceResponse>;
 
   /**
-   * Lists every marketplace distribution row attached to a package — newest
-   * first. Used by the frontend status helper to poll the publish lifecycle.
-   *
-   * @param command - Command containing packageId and auth context
-   * @returns Promise of the marketplace distribution rows (empty when none)
+   * Newest first. Used by the frontend status helper to poll the publish
+   * lifecycle.
    */
   listMarketplaceDistributionsForPackage(
     command: ListMarketplaceDistributionsForPackageCommand,
   ): Promise<ListMarketplaceDistributionsForPackageResponse>;
 
   /**
-   * Looks up a single marketplace distribution row by id, scoped to the
-   * caller's organization. The wrapped `marketplaceDistribution` is `null`
-   * when the row is missing or belongs to another organization (callers
-   * should map that to HTTP 404).
+   * Scoped to the caller's organization. The wrapped `marketplaceDistribution`
+   * is `null` when the row is missing or belongs to another organization
+   * (callers should map that to HTTP 404).
    */
   findMarketplaceDistributionById(
     command: FindMarketplaceDistributionByIdCommand,
@@ -154,10 +130,6 @@ export interface IMarketplacePort {
    * `packageId` (latest `success`-state distribution for the
    * `(package, marketplace)` pair). Emits
    * `MarketplacePluginRemovalInitiatedEvent` with `trigger='from_marketplace'`.
-   *
-   * @param command - Command containing the marketplace id and either
-   *                  `distributionId` or `packageId` (discriminated union)
-   * @returns Promise resolving to the mutated distribution row
    */
   markPluginForRemoval(
     command: MarkPluginForRemovalCommand,
@@ -168,9 +140,6 @@ export interface IMarketplacePort {
    * returns the resulting state. Member-scoped stop-gap so an org member can
    * refresh marketplace state (drift + `to_be_removed → removed` transitions)
    * without waiting for the next scheduled reconciliation sweep.
-   *
-   * @param command - Command carrying the marketplace id and auth context
-   * @returns Promise resolving to the new state and validation timestamp
    */
   syncMarketplaceNow(
     command: SyncMarketplaceNowCommand,
@@ -184,23 +153,14 @@ export interface IMarketplacePort {
    * the `driftedPluginSlugs` annotation, and flips the marketplace to
    * `healthy`. No-op when reconciliation surfaces a `healthy` /
    * `unreachable` / `bad_format` state.
-   *
-   * @param command - Command carrying the marketplace id and auth context
-   * @returns Promise resolving to the post-accept state and the list of
-   *          plugin slugs that were terminated as part of the operation
    */
   acceptMarketplaceDrift(
     command: AcceptMarketplaceDriftCommand,
   ): Promise<AcceptMarketplaceDriftResponse>;
 
   /**
-   * Lists all marketplace distributions for a given marketplace owned by the
-   * caller's organization, enriched with package name and author display name.
-   *
-   * Open to any organization member.
-   *
-   * @param command - Command carrying the marketplace id and auth context
-   * @returns Promise of presentation DTOs (`MarketplaceDistributionListItem[]`)
+   * Enriched with package name and author display name. Open to any
+   * organization member.
    */
   listMarketplaceDistributions(
     command: ListMarketplaceDistributionsCommand,
@@ -224,22 +184,12 @@ export interface IMarketplacePort {
    *
    * Public path — the `trackingToken` in the command is the sole credential.
    * The API layer pre-resolves `verifiedUserId` before calling this method.
-   *
-   * @param command - Heartbeat payload carrying token, slug, scope, and optional identity
-   * @returns Whether the row was created (first-seen) and the resolved marketplace id
    */
   trackPluginInstallHeartbeat(
     command: TrackPluginInstallHeartbeatCommand,
   ): Promise<TrackPluginInstallHeartbeatResponse>;
 
-  /**
-   * Lists all tracked plugin installations for a marketplace.
-   *
-   * Open to any org member (read-only). Enriches each row with user display names.
-   *
-   * @param command - Command carrying the marketplace id and auth context
-   * @returns Promise of presentation DTOs (`PluginInstallationListItem[]`)
-   */
+  /** Open to any org member (read-only). Enriches each row with user display names. */
   listMarketplacePluginInstalls(
     command: ListMarketplacePluginInstallsCommand,
   ): Promise<ListMarketplacePluginInstallsResponse>;
@@ -251,9 +201,6 @@ export interface IMarketplacePort {
    * code-repository distribution dates to show "last distribution" per
    * connection. Providers with no successful marketplace distribution are
    * absent from the returned map.
-   *
-   * @param command - Command containing the provider IDs to look up
-   * @returns Promise of map keyed by GitProviderId → ISO timestamp string
    */
   getLastMarketplaceDistributionDateByProviders(
     command: GetLastMarketplaceDistributionDateByProvidersCommand,

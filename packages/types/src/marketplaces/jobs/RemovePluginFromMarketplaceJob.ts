@@ -15,11 +15,8 @@ export const REMOVE_PLUGIN_FROM_MARKETPLACE_QUEUE =
   'remove-plugin-from-marketplace';
 
 /**
- * Input payload for the marketplace plugin removal BullMQ job.
- *
- * Mirrors {@link PublishPluginToMarketplaceJobInput}: the worker uses these
- * ids to (re)load the distribution row, marketplace, package, and acting user
- * so the Git deletion commit happens off the request thread.
+ * Mirrors {@link PublishPluginToMarketplaceJobInput}: ids only, which the worker
+ * re-loads so the Git deletion commit happens off the request thread.
  */
 export interface RemovePluginFromMarketplaceJobInput {
   marketplaceDistributionId: MarketplaceDistributionId;
@@ -30,9 +27,8 @@ export interface RemovePluginFromMarketplaceJobInput {
 }
 
 /**
- * Output payload — the job is fire-and-forget for the caller. The distribution
- * stays in `to_be_removed`; the terminal `removed` transition is owned by the
- * reconciliation job once the deletion PR merges. The void output is
- * intentional.
+ * Void on purpose — fire-and-forget. The distribution stays in `to_be_removed`;
+ * the terminal `removed` transition belongs to the reconciliation job, once the
+ * deletion PR merges.
  */
 export type RemovePluginFromMarketplaceJobOutput = void;

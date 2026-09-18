@@ -17,22 +17,11 @@ import { MarketplaceVendor } from '../MarketplaceVendor';
  * `canParse`'s content-shape guessing.
  */
 export interface IMarketplaceDescriptorParser {
-  /**
-   * The vendor this parser instance handles. Used by
-   * `MarketplaceDescriptorParserRegistry.parseForVendor` to look up the
-   * parser directly, bypassing `canParse`.
-   */
   readonly vendor: MarketplaceVendor;
 
-  /**
-   * Returns true when this parser claims responsibility for the given raw
-   * (already JSON-parsed) descriptor object.
-   */
+  /** `rawJson` is already JSON-parsed, not a string. */
   canParse(rawJson: unknown): boolean;
 
-  /**
-   * Converts the raw descriptor into the normalized `MarketplaceDescriptor`
-   * shape. Throws `MarketplaceDescriptorParseError` on validation failures.
-   */
+  /** Must throw `MarketplaceDescriptorParseError` on validation failures. */
   parse(rawJson: unknown): MarketplaceDescriptor;
 }

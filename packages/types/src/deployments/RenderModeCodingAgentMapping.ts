@@ -12,8 +12,9 @@ export const RENDER_MODE_TO_CODING_AGENT: Record<
   [RenderMode.GH_COPILOT]: CodingAgents.copilot,
   [RenderMode.CLAUDE]: CodingAgents.claude,
   [RenderMode.CLAUDE_PLUGIN]: CodingAgents.claude_plugin,
-  // No dedicated CodingAgent/deployer exists yet for the Copilot plugin
-  // format — wiring it up (and populating this entry) is a later task.
+  // `CopilotPluginDeployer` exists, but the `CodingAgent` union has no
+  // `copilot_plugin` member to map this render mode onto, so the entry stays
+  // undefined and `CODING_AGENT_TO_RENDER_MODE` below skips it.
   [RenderMode.COPILOT_PLUGIN]: undefined,
   [RenderMode.CURSOR]: CodingAgents.cursor,
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,

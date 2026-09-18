@@ -5,9 +5,6 @@ export interface OrganizationCreatedPayload {
   method: 'sign-up' | 'create';
 }
 
-/**
- * Event emitted when a new user signs up and creates an organization.
- */
 
 export class OrganizationCreatedEvent extends UserEvent<OrganizationCreatedPayload> {
   static override readonly eventName = 'accounts.organization.created';

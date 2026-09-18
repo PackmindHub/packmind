@@ -1,4 +1,4 @@
-// Type guard for V8-specific Error.captureStackTrace
+// Error.captureStackTrace is V8-only, so it is absent from the standard Error type.
 interface IErrorWithCaptureStackTrace {
   captureStackTrace: (
     error: Error,
@@ -15,9 +15,6 @@ function hasCaptureStackTrace(
   );
 }
 
-/**
- * Error thrown when attempting to create a recipe with a slug that already exists in a space
- */
 export class CommandSlugAlreadyExistsError extends Error {
   constructor(
     public readonly slug: string,
@@ -26,7 +23,6 @@ export class CommandSlugAlreadyExistsError extends Error {
     super(`A command with slug "${slug}" already exists in this space`);
     this.name = 'RecipeSlugAlreadyExistsError';
 
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (hasCaptureStackTrace(Error)) {
       Error.captureStackTrace(this, CommandSlugAlreadyExistsError);
     }

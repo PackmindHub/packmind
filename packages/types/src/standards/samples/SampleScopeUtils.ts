@@ -9,11 +9,8 @@ import {
 } from './SampleLanguageMapping';
 
 /**
- * Converts an array of ProgrammingLanguage values to a comma-separated glob pattern string.
- * Each language's file extensions are converted to **\/*.ext patterns.
- *
- * @param languages - Array of ProgrammingLanguage values
- * @returns Comma-separated glob pattern string (e.g., "**\/*.ts,**\/*.tsx")
+ * One `**\/*.ext` pattern per file extension of every language, joined by
+ * commas — e.g. `"**\/*.ts,**\/*.tsx"`.
  */
 export function languagesToGlobPattern(
   languages: ProgrammingLanguage[],
@@ -31,12 +28,9 @@ export function languagesToGlobPattern(
 }
 
 /**
- * Gets the scope glob pattern for a sample by its ID and type.
- * Combines language-based patterns with any hardcoded patterns.
- *
- * @param sampleId - The sample ID (e.g., "typescript", "react", "svelte")
- * @param type - Whether the sample is a language or framework
- * @returns The glob pattern string, or null if the sample ID is not found
+ * Combines a sample's hardcoded patterns with the ones derived from its
+ * languages. Null when `sampleId` matches no mapping of that type, which is
+ * distinct from a mapping that yields no pattern at all.
  */
 export function getSampleScope(
   sampleId: string,
@@ -52,12 +46,10 @@ export function getSampleScope(
 
   const patterns: string[] = [];
 
-  // Add hardcoded patterns first (they take priority)
   if (mapping.hardcodedPatterns) {
     patterns.push(...mapping.hardcodedPatterns);
   }
 
-  // Add language-derived patterns
   if (mapping.languages.length > 0) {
     const languagePattern = languagesToGlobPattern(mapping.languages);
     if (languagePattern) {
@@ -68,13 +60,7 @@ export function getSampleScope(
   return patterns.length > 0 ? patterns.join(',') : null;
 }
 
-/**
- * Gets the primary language to use for code examples in a sample's generated standards.
- *
- * @param sampleId - The sample ID (e.g., "typescript", "react", "svelte")
- * @param type - Whether the sample is a language or framework
- * @returns The ProgrammingLanguage for examples, or null if not found or not applicable
- */
+/** The language that code examples in the sample's generated standards use. */
 export function getSampleExampleLanguage(
   sampleId: string,
   type: 'language' | 'framework',
