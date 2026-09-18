@@ -187,7 +187,7 @@ describe('GetPackageReleaseUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('return the release with everything it pinned', async () => {
+  it('returns the release with everything it pinned', async () => {
     const release = buildRelease('1.0.0', {
       recipeVersions: [buildCommandVersion()],
       standardVersions: [buildStandardVersion()],
@@ -198,12 +198,18 @@ describe('GetPackageReleaseUseCase', () => {
 
     const result = await useCase.execute(buildCommand('1.0.0'));
 
-    expect(result.release.recipeVersions).toHaveLength(1);
-    expect(result.release.standardVersions).toHaveLength(1);
-    expect(result.release.skillVersions).toHaveLength(1);
+    expect([
+      result.release.recipeVersions,
+      result.release.standardVersions,
+      result.release.skillVersions,
+    ]).toEqual([
+      release.recipeVersions,
+      release.standardVersions,
+      release.skillVersions,
+    ]);
   });
 
-  it('return a release that pins a component which no longer exists', async () => {
+  it('returns a release that pins a component which no longer exists', async () => {
     const deletedCommandVersion: CommandVersion = {
       id: createCommandVersionId(uuidv4()),
       recipeId: createCommandId(uuidv4()),
