@@ -60,6 +60,18 @@ const cases = [
     expected: '11222111',
   },
   {
+    name: 'empty JSX braces hold no comment and stay code',
+    file: 'sample.tsx',
+    source: [
+      'export const C = () => (',
+      '  <div>',
+      '    {}',
+      '  </div>',
+      ');',
+    ].join('\n'),
+    expected: '11111',
+  },
+  {
     name: 'a byte-order mark does not turn the first line into code',
     file: 'sample.ts',
     source: '\ufeff// a header comment\nconst a = 1;\n',

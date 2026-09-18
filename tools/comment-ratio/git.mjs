@@ -94,10 +94,14 @@ export function readBlobs(repo, shas) {
         offset = end + 1; // skip the trailing newline git appends
       }
 
-      if (blobs.size !== new Set(shas).size) {
+      // Check the keys, not the count: git echoes the full sha, so an
+      // abbreviated input would pass a count check and then read back as
+      // undefined, which is the silent deflation this guard exists to stop.
+      const missing = [...new Set(shas)].filter((sha) => !blobs.has(sha));
+      if (missing.length > 0) {
         reject(
           new Error(
-            `git cat-file --batch returned ${blobs.size} of ${new Set(shas).size} blobs`,
+            `git cat-file --batch did not return ${missing.length} blob(s), starting with ${missing[0]}`,
           ),
         );
         return;
@@ -116,9 +120,33 @@ export function readBlobs(repo, shas) {
 export function headerPath(line, prefix) {
   const value = line.slice(4).replace(/\t.*$/, '');
   if (value === '/dev/null') return null;
-  return value.startsWith(prefix + '/')
-    ? value.slice(prefix.length + 1)
-    : value;
+  const path = unquote(value);
+  return path.startsWith(prefix + '/') ? path.slice(prefix.length + 1) : path;
+}
+
+/**
+ * Undo the C-style quoting git applies to a path holding a control character
+ * or, unless `core.quotePath=false`, a non-ASCII one. The octal escapes are
+ * bytes, so they are decoded as UTF-8 rather than as code points.
+ */
+function unquote(value) {
+  if (!value.startsWith('"') || !value.endsWith('"')) return value;
+  const body = value.slice(1, -1);
+  const bytes = [];
+  const SIMPLE = { n: 10, t: 9, r: 13, f: 12, b: 8, v: 11, a: 7 };
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] !== '\\') {
+      bytes.push(...Buffer.from(body[i], 'utf8'));
+      continue;
+    }
+    const next = body[++i];
+    if (next >= '0' && next <= '7') {
+      bytes.push(parseInt(body.slice(i, i + 3), 8));
+      i += 2;
+    } else if (next in SIMPLE) bytes.push(SIMPLE[next]);
+    else bytes.push(...Buffer.from(next, 'utf8'));
+  }
+  return Buffer.from(bytes).toString('utf8');
 }
 
 /**

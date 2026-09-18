@@ -58,8 +58,12 @@ function commentRanges(sourceFile, text) {
       node.expression === undefined
     ) {
       const open = node.getStart(sourceFile);
-      ranges.push({ pos: open, end: open + 1 });
-      ranges.push({ pos: node.end - 1, end: node.end });
+      // Only trivia can sit between the braces here, so a comment marker means
+      // a comment. An empty `{}` holds nothing and stays code.
+      if (/\/\*|\/\//.test(text.slice(open + 1, node.end - 1))) {
+        ranges.push({ pos: open, end: open + 1 });
+        ranges.push({ pos: node.end - 1, end: node.end });
+      }
     }
 
     const children = node.getChildren(sourceFile);

@@ -61,7 +61,10 @@ export function modelOf(message) {
       /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)\b/.exec(
         raw.trim(),
       );
-    if (match) named.add(`Claude ${match[1]} ${match[2]}`);
+    if (match)
+      named.add(
+        `Claude ${match[1][0].toUpperCase()}${match[1].slice(1).toLowerCase()} ${match[2]}`,
+      );
     else unversioned = true; // bare "Claude", "Claude (AI Assistant)", ...
   }
 
@@ -92,8 +95,9 @@ function streamHistory(repo, ref, onCommit) {
         '--full-index', // so `index <src>..<dst>` carries complete blob shas
         '--unified=0',
         '--patch',
-        // %x00 opens a commit record; the body runs to the %x02 sentinel.
-        '--format=%x00%H%x1f%cI%x1f%ae%x1f%an%x1f%B%x02',
+        // A commit message cannot contain a NUL (git refuses one), so NUL is
+        // the one delimiter the message itself can never forge.
+        '--format=%x00%H%x1f%cI%x1f%ae%x1f%an%x1f%B%x00',
         '--',
         '*.ts',
         '*.tsx',
@@ -135,7 +139,7 @@ function streamHistory(repo, ref, onCommit) {
 
     lines.on('line', (line) => {
       if (header !== null) {
-        const end = line.indexOf('\x02');
+        const end = line.indexOf('\0');
         header += '\n' + (end === -1 ? line : line.slice(0, end));
         if (end !== -1) {
           openCommit(header);
@@ -146,7 +150,7 @@ function streamHistory(repo, ref, onCommit) {
       if (line.startsWith('\0')) {
         closeCommit();
         const rest = line.slice(1);
-        const end = rest.indexOf('\x02');
+        const end = rest.indexOf('\0');
         if (end === -1) header = rest;
         else openCommit(rest.slice(0, end));
         return;
