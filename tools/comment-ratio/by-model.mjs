@@ -1,0 +1,393 @@
+#!/usr/bin/env node
+/**
+ * Comment ratio of added lines, broken down by the Claude model that
+ * co-authored the commit.
+ *
+ * Commits made through Claude Code carry a `Co-Authored-By: Claude <model>`
+ * trailer, so the model is recorded in the history itself. That turns "the
+ * ratio moved in the month a model shipped" into "commits attributed to that
+ * model have this ratio", which is a much stronger statement: it no longer
+ * depends on when in the month the model landed, and commits written by other
+ * models during the same month no longer pollute the bucket.
+ *
+ * Caveats the output reports rather than hides:
+ *   - Commits with no trailer are counted separately; early history has almost
+ *     none, so its attribution is unknown rather than "human".
+ *   - The repository squash-merges pull requests, so one trailer covers one
+ *     pull request's worth of work.
+ *   - The trailer records the model of the session that produced the commit,
+ *     not necessarily the model that wrote every line in it.
+ *
+ * Usage:
+ *   node tools/comment-ratio/by-model.mjs [--repo <path>] [--ref <ref>] [--out <dir>]
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+import readline from 'node:readline';
+import { classifyLines, CODE, COMMENT } from './classify.mjs';
+import { readBlobs } from './git.mjs';
+
+const SPEC_PATTERN = /\.(spec|test)\.tsx?$/;
+const EMPTY_BLOB = /^0+$/;
+const KEY_SEP = ' :: '; // month/model composite Map key
+const UNATTRIBUTED = 'no Claude trailer';
+const UNSPECIFIED = 'Claude (version not recorded)';
+
+function categoryOf(filePath) {
+  if (filePath.endsWith('.d.ts')) return null;
+  const isTsx = filePath.endsWith('.tsx');
+  if (!isTsx && !filePath.endsWith('.ts')) return null;
+  if (SPEC_PATTERN.test(filePath)) return isTsx ? 'spec.tsx' : 'spec.ts';
+  return isTsx ? 'tsx' : 'ts';
+}
+
+/** Pick the Claude model out of a commit's Co-Authored-By trailers. */
+function modelOf(trailers) {
+  for (const raw of trailers.split('\x1e')) {
+    const name = raw.replace(/<[^>]*>/g, '').trim();
+    if (!/^Claude\b/.test(name)) continue;
+    const match = /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)$/.exec(
+      name,
+    );
+    if (match) return `Claude ${match[1]} ${match[2]}`;
+    return UNSPECIFIED; // bare "Claude", "Claude (AI Assistant)", ...
+  }
+  return UNATTRIBUTED;
+}
+
+/**
+ * Stream the whole history as a patch and collect, per commit and per file,
+ * which line numbers were added and removed and which blobs to read them from.
+ */
+function streamHistory(repo, ref, onCommit) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      'git',
+      [
+        '-c',
+        'core.quotePath=false',
+        'log',
+        ref,
+        '--no-merges',
+        '--reverse',
+        '--find-renames',
+        '--full-index', // so `index <src>..<dst>` carries complete blob shas
+        '--unified=0',
+        '--patch',
+        '--format=%x00%H%x1f%cI%x1f%(trailers:key=Co-Authored-By,valueonly,separator=%x1e)',
+        '--',
+        '*.ts',
+        '*.tsx',
+      ],
+      { cwd: repo, stdio: ['ignore', 'pipe', 'inherit'] },
+    );
+
+    const lines = readline.createInterface({
+      input: child.stdout,
+      crlfDelay: Infinity,
+    });
+    let commit = null;
+    let file = null;
+
+    const closeFile = () => {
+      if (commit && file && (file.added.length || file.removed.length))
+        commit.files.push(file);
+      file = null;
+    };
+    const closeCommit = () => {
+      closeFile();
+      if (commit) onCommit(commit);
+      commit = null;
+    };
+
+    lines.on('line', (line) => {
+      if (line.startsWith('\0')) {
+        closeCommit();
+        const [sha, date, trailers] = line.slice(1).split('\x1f');
+        commit = { sha, date, model: modelOf(trailers ?? ''), files: [] };
+        return;
+      }
+      if (!commit) return;
+
+      if (line.startsWith('diff --git ')) {
+        closeFile();
+        file = {
+          oldPath: null,
+          newPath: null,
+          srcBlob: null,
+          dstBlob: null,
+          added: [],
+          removed: [],
+        };
+        return;
+      }
+      if (!file) return;
+
+      if (line.startsWith('index ')) {
+        const [src, dst] = line.slice(6).split(' ')[0].split('..');
+        file.srcBlob = EMPTY_BLOB.test(src) ? null : src;
+        file.dstBlob = EMPTY_BLOB.test(dst) ? null : dst;
+        return;
+      }
+      if (line.startsWith('--- ')) {
+        const value = line.slice(4);
+        file.oldPath = value === '/dev/null' ? null : value.replace(/^a\//, '');
+        return;
+      }
+      if (line.startsWith('+++ ')) {
+        const value = line.slice(4);
+        file.newPath = value === '/dev/null' ? null : value.replace(/^b\//, '');
+        return;
+      }
+      if (line.startsWith('@@')) {
+        const m = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
+        if (!m) return;
+        const removed = m[2] === undefined ? 1 : Number(m[2]);
+        const added = m[4] === undefined ? 1 : Number(m[4]);
+        if (removed > 0) file.removed.push([Number(m[1]), removed]);
+        if (added > 0) file.added.push([Number(m[3]), added]);
+      }
+    });
+
+    lines.on('close', () => {
+      closeCommit();
+      resolve();
+    });
+    child.on('error', reject);
+  });
+}
+
+function emptyBucket() {
+  return {
+    commits: 0,
+    addedCode: 0,
+    addedComment: 0,
+    removedCode: 0,
+    removedComment: 0,
+  };
+}
+
+function bucketFor(map, key) {
+  if (!map.has(key)) map.set(key, emptyBucket());
+  return map.get(key);
+}
+
+function expand(ranges) {
+  const out = [];
+  for (const [start, count] of ranges)
+    for (let i = 0; i < count; i++) out.push(start + i);
+  return out;
+}
+
+async function main() {
+  const options = { repo: process.cwd(), ref: 'HEAD', out: null };
+  const argv = process.argv.slice(2);
+  for (let i = 0; i < argv.length; i += 2)
+    options[argv[i].replace(/^--/, '')] = argv[i + 1];
+  options.out ??= path.join(options.repo, 'tools/comment-ratio/output');
+
+  // One work item per (blob, set of line numbers to classify inside it).
+  const work = [];
+  const byModel = new Map();
+  const byMonthModel = new Map();
+  // Per-commit totals, so the headline ratio can be checked against the median
+  // commit: a mean over pooled lines can be carried by a handful of large ones.
+  const perCommit = new Map();
+  let commitCount = 0;
+
+  process.stderr.write('Reading history...\n');
+  await streamHistory(options.repo, options.ref, (commit) => {
+    commitCount++;
+    const month = commit.date.slice(0, 7);
+    let touchedTs = false;
+
+    for (const file of commit.files) {
+      const addCategory = file.newPath && categoryOf(file.newPath);
+      const removeCategory = file.oldPath && categoryOf(file.oldPath);
+      if (addCategory && file.dstBlob && file.added.length) {
+        work.push({
+          blob: file.dstBlob,
+          path: file.newPath,
+          lines: expand(file.added),
+          model: commit.model,
+          month,
+          commentKey: 'addedComment',
+          codeKey: 'addedCode',
+          commit: commit.sha,
+        });
+        touchedTs = true;
+      }
+      if (removeCategory && file.srcBlob && file.removed.length) {
+        work.push({
+          blob: file.srcBlob,
+          path: file.oldPath,
+          lines: expand(file.removed),
+          model: commit.model,
+          month,
+          commentKey: 'removedComment',
+          codeKey: 'removedCode',
+          commit: commit.sha,
+        });
+        touchedTs = true;
+      }
+    }
+
+    if (touchedTs) {
+      bucketFor(byModel, commit.model).commits++;
+      bucketFor(byMonthModel, `${month}${KEY_SEP}${commit.model}`).commits++;
+      perCommit.set(commit.sha, {
+        model: commit.model,
+        addedCode: 0,
+        addedComment: 0,
+      });
+    }
+  });
+
+  process.stderr.write(
+    `${commitCount} commits, ${work.length} file revisions to classify\n`,
+  );
+
+  // Group by blob so each blob is read and parsed once.
+  const byBlob = new Map();
+  for (const item of work) {
+    if (!byBlob.has(item.blob)) byBlob.set(item.blob, []);
+    byBlob.get(item.blob).push(item);
+  }
+
+  const blobs = [...byBlob.keys()];
+  for (let i = 0; i < blobs.length; i += 1000) {
+    const batch = blobs.slice(i, i + 1000);
+    const contents = await readBlobs(options.repo, batch);
+    for (const blob of batch) {
+      const items = byBlob.get(blob);
+      const classes = classifyLines(items[0].path, contents.get(blob) ?? '');
+      for (const item of items) {
+        const model = bucketFor(byModel, item.model);
+        const monthly = bucketFor(
+          byMonthModel,
+          `${item.month}${KEY_SEP}${item.model}`,
+        );
+        for (const lineNumber of item.lines) {
+          const cls = classes[lineNumber - 1];
+          const key =
+            cls === COMMENT
+              ? item.commentKey
+              : cls === CODE
+                ? item.codeKey
+                : null;
+          if (!key) continue;
+          model[key]++;
+          monthly[key]++;
+          const commit = perCommit.get(item.commit);
+          if (commit && key.startsWith('added')) commit[key]++;
+        }
+      }
+      byBlob.delete(blob);
+    }
+    process.stderr.write(
+      `  classified ${Math.min(i + 1000, blobs.length)}/${blobs.length} blobs\r`,
+    );
+  }
+  process.stderr.write('\n');
+
+  /** Median comment ratio over commits that added at least `floor` lines. */
+  const commitDistribution = (model, floor = 50) => {
+    const ratios = [...perCommit.values()]
+      .filter((c) => c.model === model && c.addedCode + c.addedComment >= floor)
+      .map((c) => c.addedComment / (c.addedCode + c.addedComment))
+      .sort((a, b) => a - b);
+    if (ratios.length === 0)
+      return { commits: 0, median: null, p25: null, p75: null };
+    const at = (q) =>
+      ratios[Math.min(ratios.length - 1, Math.floor(q * ratios.length))];
+    return {
+      commits: ratios.length,
+      median: at(0.5),
+      p25: at(0.25),
+      p75: at(0.75),
+    };
+  };
+
+  const withRatio = (bucket) => ({
+    ...bucket,
+    addedTotal: bucket.addedCode + bucket.addedComment,
+    commentRatio:
+      bucket.addedCode + bucket.addedComment === 0
+        ? null
+        : bucket.addedComment / (bucket.addedCode + bucket.addedComment),
+  });
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    ref: options.ref,
+    commitsScanned: commitCount,
+    byModel: Object.fromEntries(
+      [...byModel].map(([k, v]) => [
+        k,
+        { ...withRatio(v), commitDistribution: commitDistribution(k) },
+      ]),
+    ),
+    byMonthAndModel: [...byMonthModel].map(([key, value]) => {
+      const [month, model] = key.split(KEY_SEP);
+      return { month, model, ...withRatio(value) };
+    }),
+  };
+
+  fs.mkdirSync(options.out, { recursive: true });
+  fs.writeFileSync(
+    path.join(options.out, 'by-model.json'),
+    JSON.stringify(report, null, 2),
+  );
+
+  const rows = [
+    'model,commits,added_code,added_comment,pooled_comment_ratio,median_commit_ratio,p25,p75,commits_over_50_lines,removed_code,removed_comment',
+  ];
+  const sorted = Object.entries(report.byModel).sort(
+    (a, b) => b[1].addedTotal - a[1].addedTotal,
+  );
+  for (const [model, bucket] of sorted) {
+    rows.push(
+      [
+        `"${model}"`,
+        bucket.commits,
+        bucket.addedCode,
+        bucket.addedComment,
+        bucket.commentRatio?.toFixed(6) ?? '',
+        bucket.commitDistribution.median?.toFixed(6) ?? '',
+        bucket.commitDistribution.p25?.toFixed(6) ?? '',
+        bucket.commitDistribution.p75?.toFixed(6) ?? '',
+        bucket.commitDistribution.commits,
+        bucket.removedCode,
+        bucket.removedComment,
+      ].join(','),
+    );
+  }
+  fs.writeFileSync(
+    path.join(options.out, 'by-model.csv'),
+    rows.join('\n') + '\n',
+  );
+
+  const pct = (v) =>
+    v === null ? '   n/a' : (v * 100).toFixed(2).padStart(6) + '%';
+  process.stderr.write(
+    '\n  model                          commits   +code  +comment   pooled  median(>=50)   p25    p75    n\n',
+  );
+  for (const [model, bucket] of sorted) {
+    if (bucket.addedTotal === 0) continue;
+    const d = bucket.commitDistribution;
+    process.stderr.write(
+      `  ${model.padEnd(30)} ${String(bucket.commits).padStart(7)} ${String(bucket.addedCode).padStart(7)} ` +
+        `${String(bucket.addedComment).padStart(9)}  ${pct(bucket.commentRatio)}  ${pct(d.median)}` +
+        `  ${pct(d.p25)} ${pct(d.p75)} ${String(d.commits).padStart(4)}\n`,
+    );
+  }
+  process.stderr.write(
+    `\nWrote ${path.join(options.out, 'by-model.json')} and by-model.csv\n`,
+  );
+}
+
+main().catch((error) => {
+  process.stderr.write(`${error.stack}\n`);
+  process.exit(1);
+});
