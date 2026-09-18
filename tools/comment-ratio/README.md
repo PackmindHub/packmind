@@ -26,7 +26,7 @@ pnpm install                                # provides the `typescript` parser
 node tools/comment-ratio/selftest.mjs       # check the line classifier
 node tools/comment-ratio/collect.mjs --until 2026-09-18   # stock + flow
 node tools/comment-ratio/by-model.mjs --until 2026-09-18  # per-model (~1 min)
-node tools/comment-ratio/daily.mjs --around 2026-07-24    # daily window
+node tools/comment-ratio/daily.mjs --around 2026-07-24 --days 45  # daily
 node tools/comment-ratio/render.mjs         # build the HTML report
 ```
 

@@ -143,58 +143,8 @@ const worked = flowMonths
     b.flow.all.addedComment > a.flow.all.addedComment ? b : a,
   );
 
-// The daily window around the Opus 5 release. Only the Opus models are
-// plotted: the window also holds Fable 5, Sonnet 5 and days with no version
-// recorded, and mixing them in answers a different question than "what did the
-// Opus line do when Opus 5 landed".
-const DAILY_MODELS = [
-  ['Claude Opus 4.8', 'Opus 4.8', 'var(--series-2)'],
-  ['Claude Opus 5', 'Opus 5', 'var(--series-1)'],
-];
-
-const dailyDays = daily.days.filter((d) =>
-  DAILY_MODELS.some(([model]) => model === d.model),
-);
-const dailyPoints = dailyDays.map((d) => {
-  const [, label, color] = DAILY_MODELS.find(([model]) => model === d.model);
-  return {
-    t: day(d.date),
-    ratio: d.commentRatio,
-    added: d.added,
-    label: dayEn(d.date) + ' ' + d.date.slice(2, 4),
-    model: label,
-    color,
-  };
-});
-const dailyLegend = DAILY_MODELS.filter(([model]) =>
-  dailyDays.some((d) => d.model === model),
-).map(([, model, color]) => ({ model, color }));
-
-// Bounds quoted in the prose, so the sentence cannot drift from the chart.
-// Small days are noisy at this resolution, hence the floor on the "after" side.
-const DAILY_FLOOR = 300;
-const releaseDay = daily.around;
-const before = dailyDays.filter((d) => d.date < releaseDay);
-const after = dailyDays.filter(
-  (d) => d.date > releaseDay && d.added >= DAILY_FLOOR,
-);
-const span = (rows) => {
-  const values = rows.map((d) => d.commentRatio).sort((a, b) => a - b);
-  return `${fmtPct(values[0])} and ${fmtPct(values.at(-1))}`;
-};
-
-const dailyTable = dailyDays.map((d) => [
-  dayEn(d.date) + ' ' + d.date.slice(2, 4),
-  fmtInt(d.commits),
-  fmtInt(d.added),
-  fmtPct(d.commentRatio),
-  d.model.replace('Claude ', ''),
-]);
-
-// The within-developer comparison: the same person, across every Opus model
-// they used. Picking a subset of the models would hide a developer's own
-// history — an earlier version of this chart showed 4.6, 4.7 and 5 only, and
-// every developer's Opus 4.5 and 4.8 work disappeared from it.
+// The Opus line, oldest first. Both the daily window and the per-developer
+// comparison walk it.
 const OPUS_ORDER = [
   'Claude Opus 4.5',
   'Claude Opus 4.6',
@@ -202,6 +152,83 @@ const OPUS_ORDER = [
   'Claude Opus 4.8',
   'Claude Opus 5',
 ];
+
+// The daily window around the Opus 5 release. Only the Opus models are
+// plotted: the window also holds Fable 5, Sonnet 5 and days with no version
+// recorded, and mixing them in answers a different question than "what did the
+// Opus line do when Opus 5 landed".
+//
+// Colour goes to the three most recent Opus models the window actually holds,
+// newest first, because three is what the palette separates safely. Anything
+// older folds into one muted class rather than inventing a fourth hue.
+const OPUS_BY_AGE = [...OPUS_ORDER].reverse();
+const DAILY_SLOTS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
+
+const presentOpus = OPUS_BY_AGE.filter((model) =>
+  daily.days.some((d) => d.model === model),
+);
+const dailyColour = new Map(
+  presentOpus
+    .slice(0, DAILY_SLOTS.length)
+    .map((model, i) => [model, DAILY_SLOTS[i]]),
+);
+const dailyLabel = (model) =>
+  dailyColour.has(model) ? model.replace('Claude ', '') : 'Earlier Opus';
+const colourFor = (model) => dailyColour.get(model) ?? 'var(--text-muted)';
+
+const dailyDays = daily.days.filter((d) => presentOpus.includes(d.model));
+const dailyPoints = dailyDays.map((d) => ({
+  t: day(d.date),
+  ratio: d.commentRatio,
+  added: d.added,
+  label: dayEn(d.date) + ' ' + d.date.slice(2, 4),
+  model: dailyLabel(d.model),
+  color: colourFor(d.model),
+}));
+const dailyLegend = [...new Set(dailyPoints.map((p) => p.model))].map(
+  (model) => ({
+    model,
+    color: dailyPoints.find((p) => p.model === model).color,
+  }),
+);
+
+// Days too small to mean anything at this resolution are left out of the
+// figures quoted in the prose, on both sides of the release.
+const DAILY_FLOOR = 300;
+const releaseDay = daily.around;
+const sized = dailyDays.filter((d) => d.added >= DAILY_FLOOR);
+const before = sized.filter((d) => d.date < releaseDay);
+const after = sized.filter((d) => d.date > releaseDay);
+const median = (rows) => {
+  const values = rows.map((d) => d.commentRatio).sort((a, b) => a - b);
+  const mid = (values.length - 1) / 2;
+  return (values[Math.floor(mid)] + values[Math.ceil(mid)]) / 2;
+};
+// The wider window shows the rise continuing rather than settling, so the two
+// halves of the post-release stretch are quoted separately.
+const afterHalf = (early) => {
+  const days = after.map((d) => d.date).sort();
+  const cut = days[Math.floor(days.length / 2)];
+  return after.filter((d) => (early ? d.date < cut : d.date >= cut));
+};
+
+const highest = (rows) =>
+  rows.reduce((a, b) => (b.commentRatio > a.commentRatio ? b : a));
+const lowest = (rows) =>
+  rows.reduce((a, b) => (b.commentRatio < a.commentRatio ? b : a));
+
+const dailyTable = dailyDays.map((d) => [
+  dayEn(d.date) + ' ' + d.date.slice(2, 4),
+  fmtInt(d.commits),
+  fmtInt(d.added),
+  fmtPct(d.commentRatio),
+  dailyLabel(d.model),
+]);
+
+// The within-developer comparison: the same person, across every Opus model
+// they used. Picking a subset of the models would hide a developer's own
+// history — an earlier version of this chart showed 4.6, 4.7 and 5 only, and
+// every developer's Opus 4.5 and 4.8 work disappeared from it.
 const MIN_LINES = 1000;
 const rowFor = (person, model) =>
   models.byPersonAndModel.find(
@@ -422,7 +449,7 @@ dominated by what was written months ago.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Day by day, two weeks either side of the Opus 5 release</h3>
+    <h3>Day by day, ${fmtInt(Math.round((day(daily.to) - day(daily.around)) / 86400000) - 1)} days either side of the Opus 5 release</h3>
     <p>One dot per day whose TypeScript lines came mostly from an Opus model; its area is how many lines were added.
     Days carried by Fable 5, Sonnet 5 or by commits with no version recorded are left out — they answer a different
     question. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend would
@@ -434,8 +461,13 @@ dominated by what was written months ago.</p>
 </div>
 
 <p>The fortnightly series cannot separate the week before a release from the week after it. Day by day, the switch and
-the change land together. Before the release, the Opus 4.8 days run between ${span(before)}; after it, every Opus 5
-day carrying more than ${fmtInt(DAILY_FLOOR)} lines runs between ${span(after)}. Opus 5 shipped on a Friday, so its first working days
+the change land together. Counting only days that carry more than ${fmtInt(DAILY_FLOOR)} lines, the median
+Opus day before the release is at ${fmtPct(median(before))} and the median after it at ${fmtPct(median(after))}. The
+two sets do overlap at their edges — ${dayEn(highest(before).date)} reaches ${fmtPct(highest(before).commentRatio)} on
+the old model and ${dayEn(lowest(after).date)} sits at ${fmtPct(lowest(after).commentRatio)} on the new one — so no
+single day proves anything; it is the bulk that moves. And it keeps moving: over the first half of the post-release
+stretch the median Opus 5 day is at ${fmtPct(median(afterHalf(true)))}, over the second half
+${fmtPct(median(afterHalf(false)))}. Whatever changed did not settle on the day the model shipped. Opus 5 shipped on a Friday, so its first working days
 are the Monday and Tuesday that follow — and the two instruction changes that might otherwise explain the move landed
 on the Wednesday and Thursday after that, once the rise had already started.</p>
 
