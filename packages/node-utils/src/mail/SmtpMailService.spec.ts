@@ -331,6 +331,16 @@ Test content here
       consoleLogSpy.mockRestore();
     });
 
+    describe('when SMTP_HOST or SMTP_PORT is missing', () => {
+      it('throws an error', async () => {
+        configureSmtp({ SMTP_HOST: '' });
+
+        await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+          'SMTP_HOST and SMTP_PORT are required',
+        );
+      });
+    });
+
     describe('credentials', () => {
       it('passes the credentials to the transport', async () => {
         const mailConfig = await buildMailConfig();
@@ -357,6 +367,92 @@ Test content here
         ]);
 
         expect(loggedArguments).not.toContain(smtpPassword);
+      });
+    });
+
+    describe('TLS certificate verification', () => {
+      it('verifies certificates by default', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is false', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'false' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+
+        it('skips verification regardless of case and surrounding spaces', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' FALSE ' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is true', () => {
+        it('verifies certificates', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'true' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
+        it('verifies certificates', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'nope' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+        });
+      });
+    });
+
+    describe('when the server is not an Exchange server', () => {
+      it('omits the legacy cipher override', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.ciphers).toBeUndefined();
+      });
+
+      it('keeps the configured secure flag', async () => {
+        configureSmtp({ SMTP_SECURE: 'true' });
+
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.secure).toBe(true);
+      });
+    });
+
+    describe('when the server is an Exchange server', () => {
+      beforeEach(() => {
+        configureSmtp({ SMTP_IS_EXCHANGE_SERVER: 'true', SMTP_SECURE: 'true' });
+      });
+
+      it('applies the legacy cipher override', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.ciphers).toBe('SSLv3');
+      });
+
+      it('disables implicit TLS', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.secure).toBe(false);
+      });
+
+      it('still verifies certificates', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
       });
     });
   });

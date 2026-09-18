@@ -131,6 +131,9 @@ ${content}
     const isExchangeServer = await Configuration.getConfig(
       'SMTP_IS_EXCHANGE_SERVER',
     );
+    const tlsRejectUnauthorized = await Configuration.getConfig(
+      'SMTP_TLS_REJECT_UNAUTHORIZED',
+    );
 
     if (!host || !port) {
       throw new Error('SMTP_HOST and SMTP_PORT are required');
@@ -151,12 +154,16 @@ ${content}
       };
     }
 
-    // Configure TLS settings
+    // Certificate verification stays on unless a deployment explicitly opts out
+    // with SMTP_TLS_REJECT_UNAUTHORIZED=false. Prefer trusting a private CA through
+    // NODE_EXTRA_CA_CERTS over disabling verification.
     mailConfig.tls = {
-      rejectUnauthorized: false,
+      rejectUnauthorized:
+        tlsRejectUnauthorized?.trim().toLowerCase() !== 'false',
     };
 
-    // Handle Exchange Server specific configuration
+    // Handle Exchange Server specific configuration. The legacy cipher and the
+    // downgrade to STARTTLS apply to this branch only.
     if (isExchangeServer === 'true') {
       mailConfig.tls.ciphers = 'SSLv3';
       mailConfig.secure = false;
