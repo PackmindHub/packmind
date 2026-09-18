@@ -41,6 +41,8 @@ import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
   getTargetPrefixedPath,
+  mergeFileUpdates,
+  mergeFileUpdatesAcrossTargets,
 } from '../utils/GitFileUtils';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
@@ -287,10 +289,15 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         addedPackmindSkills,
       );
 
-      const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-      if (!firstTargetUpdates) {
+      if (fileUpdatesPerTarget.size === 0) {
         throw new Error('No file updates found for any target');
       }
+
+      // All the targets of a repository share one commit, so the commit carries
+      // the files of every one of them.
+      const repositoryFileUpdates = mergeFileUpdatesAcrossTargets(
+        fileUpdatesPerTarget.values(),
+      );
 
       await this.createInProgressDistributions(
         command,
@@ -301,8 +308,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       );
       await this.enqueuePublishJob(
         ctx,
-        created[0],
-        firstTargetUpdates,
+        created,
+        repositoryFileUpdates,
         commitMessage,
       );
 
@@ -376,17 +383,17 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
   private async enqueuePublishJob(
     ctx: RepositoryPublishContext,
-    firstDistribution: Distribution,
+    distributions: Distribution[],
     fileUpdates: FileUpdates,
     commitMessage: string,
   ): Promise<void> {
     const { command, repositoryId, gitRepo, targets, requestedVersions } = ctx;
 
     await this.publishArtifactsDelayedJob.addJob({
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       organizationId: command.organizationId as OrganizationId,
       userId: command.userId as UserId,
-      targetId: targets[0].id,
+      targetIds: targets.map((target) => target.id),
       gitRepoId: gitRepo.id,
       fileUpdates,
       commitMessage,
@@ -400,7 +407,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     this.logger.info('Enqueued publish artifacts job for repository', {
       repositoryId,
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       targetsCount: targets.length,
     });
   }
@@ -550,7 +557,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
             },
           });
 
-        this.mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
+        mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
       }
 
       // Add packmind.json config file with merged packages (preserving agents if defined)
@@ -1047,7 +1054,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       gitRepo,
     );
 
-    this.mergeFileUpdates(fileUpdates, result.fileUpdates);
+    mergeFileUpdates(fileUpdates, result.fileUpdates);
 
     this.logger.info(
       'Packmind skills included via DeployDefaultSkillsUseCase',
@@ -1088,26 +1095,5 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     return addedSkills.sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * Merges source file updates into target, avoiding duplicates by path.
-   */
-  private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {
-    const existingPaths = new Set(target.createOrUpdate.map((f) => f.path));
-    for (const file of source.createOrUpdate) {
-      if (!existingPaths.has(file.path)) {
-        target.createOrUpdate.push(file);
-        existingPaths.add(file.path);
-      }
-    }
-
-    const existingDeletePaths = new Set(target.delete.map((f) => f.path));
-    for (const file of source.delete) {
-      if (!existingDeletePaths.has(file.path)) {
-        target.delete.push(file);
-        existingDeletePaths.add(file.path);
-      }
-    }
   }
 }

@@ -123,6 +123,57 @@ export async function fetchExistingFilesFromGit(
 }
 
 /**
+ * Merges source file updates into target, avoiding duplicates by path.
+ * The first entry claiming a path wins.
+ */
+export function mergeFileUpdates(
+  target: import('@packmind/types').FileUpdates,
+  source: import('@packmind/types').FileUpdates,
+): void {
+  const existingPaths = new Set(target.createOrUpdate.map((f) => f.path));
+  for (const file of source.createOrUpdate) {
+    if (!existingPaths.has(file.path)) {
+      target.createOrUpdate.push(file);
+      existingPaths.add(file.path);
+    }
+  }
+
+  const existingDeletePaths = new Set(target.delete.map((f) => f.path));
+  for (const file of source.delete) {
+    if (!existingDeletePaths.has(file.path)) {
+      target.delete.push(file);
+      existingDeletePaths.add(file.path);
+    }
+  }
+}
+
+/**
+ * Merges the per-target file updates of a repository group into the single set
+ * of updates that gets committed.
+ *
+ * Every target in the group shares one commit, so every target's files must be
+ * in it - taking one target's updates would silently drop the others'. Paths
+ * are target-prefixed by `applyTargetPrefixingToFileUpdates`, so two targets in
+ * the same repository cannot claim the same path unless they were configured
+ * with the same path; `mergeFileUpdates` then keeps the first target in the
+ * group, which is the same entry the commit would have carried before.
+ */
+export function mergeFileUpdatesAcrossTargets(
+  fileUpdatesPerTarget: Iterable<import('@packmind/types').FileUpdates>,
+): import('@packmind/types').FileUpdates {
+  const merged: import('@packmind/types').FileUpdates = {
+    createOrUpdate: [],
+    delete: [],
+  };
+
+  for (const targetFileUpdates of fileUpdatesPerTarget) {
+    mergeFileUpdates(merged, targetFileUpdates);
+  }
+
+  return merged;
+}
+
+/**
  * Applies target path prefixing to FileUpdates
  * Transforms base paths from coding-agent domain to target-prefixed paths
  */

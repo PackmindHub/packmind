@@ -12,10 +12,15 @@ import {
 } from '@packmind/types';
 
 export interface PublishArtifactsJobInput {
-  distributionId: DistributionId;
+  /**
+   * Every target of the repository is published by this single job, so the job
+   * carries one distribution per target: `fileUpdates` holds all of their files
+   * and each distribution has to reach its final status once the commit lands.
+   */
+  distributionIds: DistributionId[];
   organizationId: OrganizationId;
   userId: UserId;
-  targetId: TargetId;
+  targetIds: TargetId[];
   gitRepoId: GitRepoId;
   fileUpdates: FileUpdates;
   commitMessage: string;
@@ -28,7 +33,7 @@ export interface PublishArtifactsJobInput {
 }
 
 export interface PublishArtifactsJobOutput {
-  distributionId: DistributionId;
+  distributionIds: DistributionId[];
   organizationId: OrganizationId;
   success: boolean;
   status: DistributionStatus;

@@ -50,7 +50,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     _controller: AbortController, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<PublishArtifactsJobOutput> {
     this.logger.info(
-      `[${this.origin}] Processing job ${jobId} for distribution ${input.distributionId}`,
+      `[${this.origin}] Processing job ${jobId} for distributions ${input.distributionIds.join(', ')}`,
       {
         gitRepoId: input.gitRepoId,
         filesCount: input.fileUpdates.createOrUpdate.length,
@@ -88,7 +88,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     } catch (error) {
       if (error instanceof Error && error.message === 'NO_CHANGES_DETECTED') {
         this.logger.info(
-          `[${this.origin}] No changes detected for distribution ${input.distributionId}`,
+          `[${this.origin}] No changes detected for distributions ${input.distributionIds.join(', ')}`,
         );
         status = DistributionStatus.no_changes;
         gitCommit = undefined;
@@ -98,7 +98,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     }
 
     return {
-      distributionId: input.distributionId,
+      distributionIds: input.distributionIds,
       organizationId: input.organizationId,
       success: true,
       status,
@@ -107,11 +107,11 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
   }
 
   getJobName(input: PublishArtifactsJobInput): string {
-    return `publish-artifacts-${input.distributionId}`;
+    return `publish-artifacts-${input.distributionIds.join('-')}`;
   }
 
   jobStartedInfo(input: PublishArtifactsJobInput): string {
-    return `distributionId: ${input.distributionId}`;
+    return `distributionIds: ${input.distributionIds.join(', ')}`;
   }
 
   getWorkerListener(): Partial<
@@ -125,34 +125,37 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         this.logger.info(
           `[${this.origin}] Job ${job.id} completed successfully`,
           {
-            distributionId: result.distributionId,
+            distributionIds: result.distributionIds,
             status: result.status,
           },
         );
 
         try {
-          // Update distribution status in the database
-          await this.distributionRepository.updateStatus(
-            result.distributionId,
-            result.status,
-            result.gitCommit,
-          );
+          // One commit covers every target of the repository, so every one of
+          // their distributions moves out of in_progress together.
+          for (const distributionId of result.distributionIds) {
+            await this.distributionRepository.updateStatus(
+              distributionId,
+              result.status,
+              result.gitCommit,
+            );
 
-          this.logger.info(
-            `[${this.origin}] Updated distribution status for ${result.distributionId}`,
-            { status: result.status },
-          );
+            this.logger.info(
+              `[${this.origin}] Updated distribution status for ${distributionId}`,
+              { status: result.status },
+            );
 
-          // Publish SSE event to notify frontend of status change
-          await SSEEventPublisher.publishDistributionStatusChangeEvent(
-            result.distributionId,
-            result.status,
-            result.organizationId,
-          );
+            // Publish SSE event to notify frontend of status change
+            await SSEEventPublisher.publishDistributionStatusChangeEvent(
+              distributionId,
+              result.status,
+              result.organizationId,
+            );
 
-          this.logger.info(
-            `[${this.origin}] Published SSE event for distribution ${result.distributionId}`,
-          );
+            this.logger.info(
+              `[${this.origin}] Published SSE event for distribution ${distributionId}`,
+            );
+          }
         } catch (error) {
           this.logger.error(
             `[${this.origin}] Failed to update distribution status for job ${job.id}`,
@@ -168,28 +171,31 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         );
 
         try {
-          // Update distribution to failure status with error message
-          await this.distributionRepository.updateStatus(
-            job.data.distributionId,
-            DistributionStatus.failure,
-            undefined,
-            getErrorMessage(error),
-          );
+          // The commit failed for the whole repository, so every target's
+          // distribution fails with it.
+          for (const distributionId of job.data.distributionIds) {
+            await this.distributionRepository.updateStatus(
+              distributionId,
+              DistributionStatus.failure,
+              undefined,
+              getErrorMessage(error),
+            );
 
-          this.logger.info(
-            `[${this.origin}] Updated distribution ${job.data.distributionId} to failure status`,
-          );
+            this.logger.info(
+              `[${this.origin}] Updated distribution ${distributionId} to failure status`,
+            );
 
-          // Publish SSE event to notify frontend of failure
-          await SSEEventPublisher.publishDistributionStatusChangeEvent(
-            job.data.distributionId,
-            DistributionStatus.failure,
-            job.data.organizationId,
-          );
+            // Publish SSE event to notify frontend of failure
+            await SSEEventPublisher.publishDistributionStatusChangeEvent(
+              distributionId,
+              DistributionStatus.failure,
+              job.data.organizationId,
+            );
 
-          this.logger.info(
-            `[${this.origin}] Published SSE failure event for distribution ${job.data.distributionId}`,
-          );
+            this.logger.info(
+              `[${this.origin}] Published SSE failure event for distribution ${distributionId}`,
+            );
+          }
         } catch (updateError) {
           this.logger.error(
             `[${this.origin}] Failed to update distribution failure status for job ${job.id}`,

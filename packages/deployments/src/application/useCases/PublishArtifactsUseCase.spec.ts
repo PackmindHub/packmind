@@ -52,6 +52,7 @@ import {
 } from '@packmind/test-utils';
 import assert from 'assert';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
+import { PublishArtifactsJobInput } from '../../domain/jobs/PublishArtifactsJob';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 
 describe('PublishArtifactsUseCase', () => {
@@ -763,12 +764,12 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('enqueues a job with the distribution id', async () => {
+    it('enqueues a job with the distribution ids', async () => {
       await useCase.execute(command);
 
       expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledWith(
         expect.objectContaining({
-          distributionId: expect.any(String),
+          distributionIds: [expect.any(String)],
           organizationId,
           userId,
         }),
@@ -989,6 +990,90 @@ describe('PublishArtifactsUseCase', () => {
 
       it('includes Staging target name in commit message', () => {
         expect(jobInput.commitMessage).toContain('Staging');
+      });
+    });
+
+    describe('when the single commit is built', () => {
+      let jobInput: PublishArtifactsJobInput;
+
+      beforeEach(async () => {
+        await useCase.execute(command);
+        jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      });
+
+      it('commits the first target files', () => {
+        expect(jobInput.fileUpdates.createOrUpdate).toContainEqual(
+          expect.objectContaining({
+            path: 'docs/prod/.packmind/commands/test.md',
+          }),
+        );
+      });
+
+      it('commits the second target files', () => {
+        expect(jobInput.fileUpdates.createOrUpdate).toContainEqual(
+          expect.objectContaining({
+            path: 'docs/staging/.packmind/commands/test.md',
+          }),
+        );
+      });
+
+      it('commits the packmind.json of every target', () => {
+        expect(
+          jobInput.fileUpdates.createOrUpdate
+            .map((file) => file.path)
+            .filter((path) => path.endsWith('packmind.json')),
+        ).toEqual(['docs/prod/packmind.json', 'docs/staging/packmind.json']);
+      });
+
+      it('commits the packmind-lock.json of every target', () => {
+        expect(
+          jobInput.fileUpdates.createOrUpdate
+            .map((file) => file.path)
+            .filter((path) => path.endsWith('packmind-lock.json')),
+        ).toEqual([
+          'docs/prod/packmind-lock.json',
+          'docs/staging/packmind-lock.json',
+        ]);
+      });
+
+      it('carries the distribution of every target', () => {
+        expect(jobInput.distributionIds).toHaveLength(2);
+      });
+
+      it('carries every target', () => {
+        expect(jobInput.targetIds).toEqual([targetId1, targetId2]);
+      });
+    });
+
+    describe('when a target has files to delete', () => {
+      let jobInput: PublishArtifactsJobInput;
+
+      beforeEach(async () => {
+        mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [
+            {
+              path: '.packmind/commands/removed.md',
+              type: DeleteItemType.File,
+            },
+          ],
+        });
+
+        await useCase.execute(command);
+        jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      });
+
+      it('deletes the file under every target', () => {
+        expect(jobInput.fileUpdates.delete).toEqual([
+          {
+            path: 'docs/prod/.packmind/commands/removed.md',
+            type: DeleteItemType.File,
+          },
+          {
+            path: 'docs/staging/.packmind/commands/removed.md',
+            type: DeleteItemType.File,
+          },
+        ]);
       });
     });
   });
