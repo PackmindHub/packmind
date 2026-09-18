@@ -11,24 +11,9 @@ import {
 const origin = 'OpenAIAPICompatibleService';
 
 /**
- * OpenAI API-compatible service for custom endpoints.
- * This service allows using OpenAI-compatible APIs from other providers
- * (e.g., Google Gemini, Azure OpenAI, local models) by specifying
- * a custom base URL, API key, and model names.
- *
- * @example
- * ```typescript
- * // Using with Google Gemini
- * const geminiService = new OpenAIAPICompatibleService({
- *   provider: 'openai-compatible',
- *   llmEndpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/',
- *   llmApiKey: process.env.GEMINI_API_KEY!,
- *   model: 'gemini-1.5-flash',
- *   fastestModel: 'gemini-1.5-flash-8b',
- * });
- *
- * const result = await geminiService.executePrompt('Hello world');
- * ```
+ * For endpoints that speak the OpenAI wire format but have no provider of their
+ * own here - local models and the like. Gemini and Azure OpenAI each have a
+ * dedicated provider and config type, so use those instead.
  */
 export class OpenAIAPICompatibleService extends BaseOpenAIService {
   protected readonly defaultModel: string;
@@ -48,25 +33,17 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
   }
 
   /**
-   * Remove thinking tags from LLM response content.
-   * Some reasoning models (e.g., DeepSeek-R1, QwQ) output their reasoning
-   * process wrapped in <think>...</think> tags. This method removes those tags
-   * and their content from the response.
+   * Some reasoning models (e.g., DeepSeek-R1, QwQ) wrap their reasoning in
+   * <think>...</think> tags in the response body, which callers must not see.
    */
   private removeThinkingTags(content: string): string {
     return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   }
 
-  /**
-   * Check if the service is properly configured and ready to use
-   */
   async isConfigured(): Promise<boolean> {
     return !!this.apiKey && this.apiKey.length > 0;
   }
 
-  /**
-   * Initialize the OpenAI client with custom base URL and API key
-   */
   protected async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -96,9 +73,6 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
     }
   }
 
-  /**
-   * Execute a prompt with thinking tag removal
-   */
   async executePrompt<T = string>(
     prompt: string,
     options: AIPromptOptions = {},
@@ -116,9 +90,6 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
     return result;
   }
 
-  /**
-   * Execute a prompt with conversation history and thinking tag removal
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options: AIPromptOptions = {},
@@ -139,9 +110,6 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
     return result;
   }
 
-  /**
-   * Get a list of available model IDs from OpenAI-compatible endpoint
-   */
   async getModels(): Promise<string[]> {
     this.logger.info(
       'Fetching available models from OpenAI-compatible endpoint',
