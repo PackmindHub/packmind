@@ -237,7 +237,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
   | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing. *Closed 2026-09-17: four units, U-027..U-030, and six decisions, D-059..D-064* | S4 |
-  | S6 | — (no new AC; a second review pass and a red gate, neither a behaviour) | the defects a human-led review found in the release surface — a readiness query nothing invalidated, and a form with two dead ends — plus the two standards Greptile raised on #489, and the 76 `packmind-cli lint` errors this feature's own specs were carrying. **Not sized** — the findings are the sizing. *Closed 2026-09-18: six commits* | S5 |
+  | S6 | — (no new AC; a second review pass and a red gate, neither a behaviour) | the defects a human-led review found in the release surface — a readiness query nothing invalidated, and a form with two dead ends — plus the two standards Greptile raised on #489, and the 76 `packmind-cli lint` errors this feature's own specs were carrying. **Not sized** — the findings are the sizing. *Closed 2026-09-18: eight commits* | S5 |
 
   **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
@@ -459,8 +459,15 @@ The charter's `verified by` column is rewritten to name the tests as they now re
 `api`, `frontend`, `feature-flags`, `ui` and `migrations`: seven projects green,
 `--skip-nx-cache`. Each of the three defect fixes is mutation-checked — reverting the
 change fails the test that covers it, and the one negative test stays green. Playwright
-was not run. Neither was `packmind-cli lint .`: it needs an API key, the one on the
-machine is expired, and the gate's verdict therefore comes from CI.
+was not run. `packmind-cli lint .` was, once a working API key was available: **0 errors,
+exit 0**, against 76 when the session opened. The 18 warnings it still reports are raw SQL
+strings in nine repositories, none of them touched by this branch.
+
+That run earned its keep immediately. The restructuring commit had been checked by a
+hand-written sweep for the two rules, and the sweep was wrong — it looked for a test's
+closing brace and stopped at a fixture's, so it declared a three-expect test clean. The
+gate found it. Approximating a gate you cannot run is worth doing and is not worth
+trusting; the eighth commit is the difference between the two.
 
 ## Done
 
