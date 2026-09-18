@@ -28,7 +28,6 @@ import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeploy
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
 import { DeployerService } from './DeployerService';
 
-// Create test helper functions
 const createTestCommandId = (id: string): CommandId => id as CommandId;
 const createTestCommandVersionId = (id: string): CommandVersionId =>
   id as CommandVersionId;
@@ -41,7 +40,6 @@ const createTestGitProviderId = (id: string): GitProviderId =>
   id as GitProviderId;
 const createTestTargetId = (id: string): TargetId => id as TargetId;
 
-// Mock deployer
 class MockDeployer implements ICodingAgentDeployer {
   constructor(
     private commandResult: FileUpdates = { createOrUpdate: [], delete: [] },
@@ -148,7 +146,6 @@ class MockDeployer implements ICodingAgentDeployer {
   }
 }
 
-// Mock registry
 class MockRegistry implements ICodingAgentDeployerRegistry {
   private deployers = new Map<CodingAgent, ICodingAgentDeployer>();
 
@@ -165,7 +162,6 @@ class MockRegistry implements ICodingAgentDeployerRegistry {
   }
 }
 
-// Mock repositories
 class MockRepositories implements ICodingAgentRepositories {
   constructor(private readonly registry: MockRegistry) {}
 

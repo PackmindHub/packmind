@@ -2,24 +2,22 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddLanguageToDetectionProgram1756131626379 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Add language column
     await queryRunner.query(`
             ALTER TABLE "detection_programs" 
             ADD COLUMN "language" varchar NOT NULL DEFAULT 'javascript'
         `);
 
-    // Remove the default after adding the column
+    // The default exists only to populate the rows that already exist; once it is
+    // dropped, inserts must supply a language.
     await queryRunner.query(`
             ALTER TABLE "detection_programs" 
             ALTER COLUMN "language" DROP DEFAULT
         `);
 
-    // Drop the existing index
     await queryRunner.query(`
             DROP INDEX IF EXISTS "idx_detection_programs_rule_id"
         `);
 
-    // Populate language column from active_detection_programs
     await queryRunner.query(`
             UPDATE "detection_programs" dp
             SET "language" = adp."language"
@@ -37,7 +35,6 @@ export class AddLanguageToDetectionProgram1756131626379 implements MigrationInte
             )
         `);
 
-    // Create unique constraint on ruleId + language
     await queryRunner.query(`
             CREATE UNIQUE INDEX "idx_detection_programs_rule_language_unique_version" 
             ON "detection_programs" ("rule_id", "language", "version")
@@ -51,17 +48,14 @@ export class AddLanguageToDetectionProgram1756131626379 implements MigrationInte
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Drop the unique constraint
     await queryRunner.query(`
             DROP INDEX IF EXISTS "idx_detection_programs_rule_language_unique"
         `);
 
-    // Drop the rule_id index
     await queryRunner.query(`
             DROP INDEX IF EXISTS "idx_detection_programs_rule_id"
         `);
 
-    // Drop the language column
     await queryRunner.query(`
             ALTER TABLE "detection_programs" 
             DROP COLUMN "language"

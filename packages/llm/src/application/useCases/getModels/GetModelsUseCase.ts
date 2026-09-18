@@ -13,16 +13,15 @@ import { createLLMService } from '../../../factories/createLLMService';
 const origin = 'GetModelsUseCase';
 
 /**
- * Extract HTTP status code from SDK error objects.
- * This is a best-effort extraction - not all SDKs expose status codes reliably.
+ * Best-effort: the OpenAI and Anthropic SDKs put the HTTP status on the error
+ * object, but not every provider error reaching here does, hence the fallback
+ * to digging a `(4xx)` out of the message.
  */
 function extractStatusCode(error: unknown): number | undefined {
-  // All major SDK errors (OpenAI, Anthropic, Azure) expose a 'status' property
   if (error && typeof error === 'object' && 'status' in error) {
     return typeof error.status === 'number' ? error.status : undefined;
   }
 
-  // Fallback: parse from error message for backwards compatibility
   if (error instanceof Error) {
     const statusMatch = error.message.match(/\((\d{3})\)/);
     if (statusMatch) {
@@ -33,9 +32,6 @@ function extractStatusCode(error: unknown): number | undefined {
   return undefined;
 }
 
-/**
- * Classify error type from error message.
- */
 function classifyErrorType(error: unknown): AIServiceErrorType {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const lowerMessage = errorMessage.toLowerCase();
@@ -78,10 +74,7 @@ export class GetModelsUseCase
     });
 
     try {
-      // Create the LLM service from the configuration
       const llmService = createLLMService(config);
-
-      // Get available models
       const models = await llmService.getModels();
 
       this.logger.info('Successfully retrieved models', {
@@ -96,7 +89,6 @@ export class GetModelsUseCase
         success: true,
       };
     } catch (error) {
-      // Handle unexpected errors
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       const errorType = classifyErrorType(error);

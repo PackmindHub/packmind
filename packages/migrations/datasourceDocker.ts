@@ -1,7 +1,6 @@
 import { register } from 'tsconfig-paths';
 import { DataSource } from 'typeorm';
 
-// Register TypeScript path mappings
 register({
   baseUrl: '../../',
   paths: {
@@ -19,8 +18,7 @@ register({
 });
 
 /**
- * Docker DataSource configuration for local development migrations.
- * Uses environment variables and TypeScript migration files.
+ * Docker DataSource for local development migrations.
  */
 export default new DataSource({
   type: 'postgres',

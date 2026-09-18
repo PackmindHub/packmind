@@ -16,7 +16,6 @@ export default class SwiftParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('swift');
 
       for (const wasmPath of wasmPaths) {

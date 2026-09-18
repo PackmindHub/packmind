@@ -13,9 +13,8 @@ const packagesRoot = join(repoRoot, 'packages');
  *
  * Nothing about forgetting that call fails at runtime; the traces just stop
  * one level short, silently. That is the same failure mode
- * `instrumentUseCases.arch.spec.ts` guards against at the use-case level, and
- * it happened here too - three aggregators shipped without the call - so the
- * rule is checked rather than left to review.
+ * `instrumentUseCases.arch.spec.ts` guards against at the use-case level, so
+ * the rule is checked here rather than left to review.
  *
  * Only `packages/` is walked: `apps/api` holds no aggregator, and `apps/cli`
  * starts no OTel SDK.
@@ -127,8 +126,8 @@ describe('instrumentComponents coverage', () => {
           return;
         }
 
-        // Field name the package would list it under: PluginInstallationRepository
-        // is held as `pluginInstallationRepository`.
+        // Field name the package would list it under: the class name with a
+        // lowercased first letter.
         const className = basename(path, '.ts');
         const field = className[0].toLowerCase() + className.slice(1);
         const listed = new RegExp(

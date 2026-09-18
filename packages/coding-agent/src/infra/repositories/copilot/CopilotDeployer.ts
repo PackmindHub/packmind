@@ -65,7 +65,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
       const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       const targetPrefixedPath = getTargetPrefixedPath(promptFile.path, target);
@@ -78,7 +77,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(CopilotDeployer.RECIPES_INDEX_PATH, target),
       type: DeleteItemType.File,
@@ -104,7 +102,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Copilot configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCopilotConfigForStandard(standardVersion);
@@ -133,7 +130,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
       const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -145,7 +141,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: CopilotDeployer.RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
@@ -166,7 +161,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Copilot configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCopilotConfigForStandard(standardVersion);
@@ -199,7 +193,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCopilotSkillFiles(skillVersion);
       for (const skillFile of skillFiles) {
@@ -235,7 +228,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCopilotSkillFiles(skillVersion);
       for (const skillFile of skillFiles) {
@@ -274,7 +266,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
       const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -286,7 +277,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate individual Copilot configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCopilotConfigForStandard(standardVersion);
@@ -299,7 +289,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCopilotSkillFiles(skillVersion);
       for (const skillFile of skillFiles) {
@@ -316,7 +305,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       }
     }
 
-    // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: CopilotDeployer.RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
@@ -351,7 +339,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete individual Copilot prompt files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.prompt.md`,
@@ -359,8 +346,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete old index file (migration cleanup)
-    // This ensures clean migration from index-based to prompt-based approach
     if (
       removed.recipeVersions.length > 0 ||
       installed.recipeVersions.length === 0
@@ -371,7 +356,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete individual Copilot configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.ARTEFACT_PATHS.standard}packmind-${standardVersion.slug}.instructions.md`,
@@ -379,7 +363,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete skill directories for removed skills
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -428,7 +411,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${slug}`,
@@ -436,7 +418,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -447,9 +428,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  /**
-   * Generate GitHub Copilot configuration file for a specific standard
-   */
   private async generateCopilotConfigForStandard(
     standardVersion: StandardVersion,
   ): Promise<{
@@ -486,9 +464,6 @@ ${GenericStandardSectionWriter.formatStandardContent({
     };
   }
 
-  /**
-   * Generate GitHub Copilot prompt file for a specific recipe
-   */
   private generateCopilotPromptForCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
@@ -500,13 +475,11 @@ ${GenericStandardSectionWriter.formatStandardContent({
 
     const description = recipeVersion.name;
 
-    // Generate frontmatter with YAML format
     const frontmatter = `---
 description: '${this.escapeSingleQuotes(description)}'
 agent: 'agent'
 ---`;
 
-    // Content is the full recipe markdown
     const content = `${frontmatter}
 
 ${recipeVersion.content}`;
@@ -519,11 +492,6 @@ ${recipeVersion.content}`;
     };
   }
 
-  /**
-   * Generate GitHub Copilot skill files for a specific skill version
-   * Skills are deployed to the skill artifact path following the Agent Skills specification
-   * Returns an array of files including SKILL.md and any additional files
-   */
   private generateCopilotSkillFiles(
     skillVersion: SkillVersion,
   ): SkillFileOutput[] {
@@ -535,17 +503,15 @@ ${recipeVersion.content}`;
 
     const files: SkillFileOutput[] = [];
 
-    // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
       path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
       content: skillMdContent,
     });
 
-    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
     if (skillVersion.files && skillVersion.files.length > 0) {
       for (const file of skillVersion.files) {
-        // Skip SKILL.md as it's already generated from the prompt
+        // Already generated above from the skill prompt.
         if (file.path.toUpperCase() === 'SKILL.MD') {
           continue;
         }
@@ -562,11 +528,7 @@ ${recipeVersion.content}`;
     return files;
   }
 
-  /**
-   * Generate the SKILL.md content with frontmatter for a specific skill version
-   */
   private generateSkillMdContent(skillVersion: SkillVersion): string {
-    // Build frontmatter according to Agent Skills specification
     const frontmatterFields: string[] = [];
 
     if (skillVersion.name) {
@@ -613,7 +575,6 @@ ${recipeVersion.content}`;
       frontmatterFields.push(`metadata:\n${metadataYaml}`);
     }
 
-    // Emit supported additional properties
     if (
       skillVersion.additionalProperties &&
       Object.keys(skillVersion.additionalProperties).length > 0
@@ -632,15 +593,12 @@ ${recipeVersion.content}`;
 ${frontmatterFields.join('\n')}
 ---`;
 
-    // Content is the skill prompt (body)
     return `${frontmatter}
 
 ${skillVersion.prompt}`;
   }
 
-  /**
-   * Escape single quotes in YAML values to prevent parsing errors
-   */
+  // YAML single-quoted scalars escape a quote by doubling it.
   private escapeSingleQuotes(value: string): string {
     return value.replace(/'/g, "''");
   }

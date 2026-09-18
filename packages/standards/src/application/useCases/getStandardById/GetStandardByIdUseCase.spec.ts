@@ -304,7 +304,7 @@ describe('GetStandardByIdUseCase', () => {
       };
       const space: Space = spaceFactory({
         id: spaceId,
-        organizationId: otherOrganizationId, // Different organization
+        organizationId: otherOrganizationId,
       });
 
       const command: GetStandardByIdCommand = {
@@ -343,7 +343,6 @@ describe('GetStandardByIdUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      // Space belongs to a different organization
       const space: Space = spaceFactory({
         id: spaceId,
         organizationId: otherOrganizationId,
@@ -406,7 +405,7 @@ describe('GetStandardByIdUseCase', () => {
 
       const standard = standardFactory({
         id: standardId,
-        spaceId: otherSpaceId, // Different space
+        spaceId: otherSpaceId,
         slug: 'test-standard',
       });
 

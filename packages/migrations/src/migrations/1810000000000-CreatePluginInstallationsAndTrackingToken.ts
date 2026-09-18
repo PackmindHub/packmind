@@ -16,8 +16,6 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'CreatePluginInstallationsAndTrackingToken1810000000000';
 
 /**
- * Migration: CreatePluginInstallationsAndTrackingToken (rescheduled)
- *
  * Re-homes the work originally authored in
  * `1781624244359-CreatePluginInstallationsAndTrackingToken`, which carried a
  * timestamp earlier than `1804000000000-AddMarketplacesTableAndGitRepoType`
@@ -121,9 +119,8 @@ export class CreatePluginInstallationsAndTrackingToken1810000000000 implements M
     );
 
     try {
-      // 1. Create plugin_installations table with its foreign keys and indices.
-      //    ifNotExist=true makes the whole statement a no-op when the table
-      //    already exists (e.g. environments where the original migration ran).
+      // ifNotExist=true makes the whole statement a no-op when the table
+      // already exists (e.g. environments where the original migration ran).
       this.logger.debug('Creating plugin_installations table');
       await queryRunner.createTable(
         this.pluginInstallationsTable,
@@ -132,15 +129,13 @@ export class CreatePluginInstallationsAndTrackingToken1810000000000 implements M
         true,
       );
 
-      // 2. Add tracking_token column to marketplaces if it is not already there.
       if (!(await queryRunner.hasColumn('marketplaces', 'tracking_token'))) {
         this.logger.debug('Adding tracking_token column to marketplaces');
         await queryRunner.addColumn('marketplaces', this.trackingTokenColumn);
       }
 
-      // 3. Backfill tracking_token for marketplace rows that don't have one.
-      //    gen_random_uuid() is built-in (Postgres 13+); no extension required.
-      //    WHERE … IS NULL keeps this idempotent.
+      // gen_random_uuid() is built-in (Postgres 13+); no extension required.
+      // WHERE … IS NULL keeps the backfill idempotent.
       this.logger.debug(
         'Backfilling tracking_token for existing marketplace rows',
       );
@@ -150,7 +145,6 @@ export class CreatePluginInstallationsAndTrackingToken1810000000000 implements M
         WHERE "tracking_token" IS NULL
       `);
 
-      // 4. Create the tracking-token lookup index if it does not already exist.
       const marketplaces = await queryRunner.getTable('marketplaces');
       if (
         !marketplaces?.indices.some(
@@ -181,8 +175,6 @@ export class CreatePluginInstallationsAndTrackingToken1810000000000 implements M
     );
 
     try {
-      // Reverse order — remove the marketplaces additions, then the table.
-
       const marketplaces = await queryRunner.getTable('marketplaces');
       if (
         marketplaces?.indices.some(

@@ -283,9 +283,8 @@ describe('GithubTokenResolverFactory', () => {
     });
   });
 
-  // Reading one file used to build a whole resolver — mode, config or DB row,
-  // then a freshly minted token. Probing three descriptor paths therefore paid
-  // for it three times, which is what made linking a marketplace slow.
+  // Building a resolver costs a mode lookup, a config or DB read, and a freshly
+  // minted token, so a burst of reads inside one request should pay that once.
   describe('reusing a built App resolver', () => {
     const appProvider = () =>
       makeProvider({ authMethod: 'app', appInstallationId: 987654 });

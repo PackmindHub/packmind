@@ -20,15 +20,8 @@ export type CliLoginCode = {
   expiresAt: Date;
 };
 
-/**
- * Generates a random CLI login code using UUID.
- * Uses the same pattern as invitation tokens for consistency.
- */
 export function generateCliLoginCode(): CliLoginCodeToken {
   return createCliLoginCodeToken(uuidv4());
 }
 
-/**
- * CLI login code expiration time in minutes
- */
 export const CLI_LOGIN_CODE_EXPIRATION_MINUTES = 5;

@@ -4,10 +4,7 @@ import { Configuration } from '../index';
 
 const origin = 'RedisSSEClient';
 
-/**
- * Redis client specifically for SSE pub/sub operations
- * Reuses the same Redis connection configuration as BullMQ jobs
- */
+/** Redis pub/sub client for SSE, on the same REDIS_URI as the BullMQ queues. */
 export class RedisSSEClient {
   private static instance: RedisSSEClient;
 
@@ -29,23 +26,20 @@ export class RedisSSEClient {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  /**
-   * Initialize Redis clients using the same configuration as BullMQ
-   */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
     this.logger.info('Initializing Redis SSE clients');
 
     try {
-      // Use the same Redis configuration as BullMQ (from DelayedJobsFactory pattern)
       const redisURI = (await Configuration.getConfig('REDIS_URI')) || 'redis';
-      // Create separate clients for publisher and subscriber
-      // This is required for Redis pub/sub - you cannot use the same connection for both
+
+      // Two connections, not one: once a connection has SUBSCRIBEd, ioredis
+      // rejects `publish` on it with "Connection in subscriber mode, only
+      // subscriber commands may be used".
       this.publisherClient = new Redis(redisURI);
       this.subscriberClient = new Redis(redisURI);
 
-      // Set up error handling
       this.publisherClient.on('error', (error) => {
         this.logger.error('Redis publisher client error', {
           error: error.message,
@@ -58,7 +52,6 @@ export class RedisSSEClient {
         });
       });
 
-      // Test connections
       await this.publisherClient.ping();
       await this.subscriberClient.ping();
 
@@ -72,9 +65,6 @@ export class RedisSSEClient {
     }
   }
 
-  /**
-   * Publish a message to a Redis channel
-   */
   async publish(channel: string, message: string): Promise<number> {
     await this.initialize();
 
@@ -106,9 +96,6 @@ export class RedisSSEClient {
     }
   }
 
-  /**
-   * Subscribe to a Redis channel
-   */
   async subscribe(
     channel: string,
     callback: (message: string) => void,
@@ -145,9 +132,6 @@ export class RedisSSEClient {
     }
   }
 
-  /**
-   * Clean up Redis connections
-   */
   async disconnect(): Promise<void> {
     this.logger.info('Disconnecting Redis SSE clients');
 

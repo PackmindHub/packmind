@@ -204,9 +204,8 @@ describe('AddGitRepoUseCase', () => {
         mockProvider,
       );
 
-      // GitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization filters
-      // to type='standard' by default, so a same-coordinate marketplace row
-      // does NOT surface here and the duplicate check passes.
+      // The finder defaults to type='standard', so a marketplace row at the
+      // same coordinates never surfaces and the duplicate check passes.
       mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
         null,
       );
@@ -505,8 +504,7 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      // App-auth providers carry no token — the installation token is minted
-      // on demand by GithubTokenResolverFactory downstream.
+      // App-auth providers carry no token: it is minted on demand downstream.
       const mockProvider: GitProvider = gitProviderFactory({
         id: gitProviderId,
         source: GitProviderVendors.github,

@@ -56,7 +56,6 @@ export class UpdatePackageUseCase
       skillCount: skillsIds.length,
     });
 
-    // Validate package exists
     const existingPackage = await this.services
       .getPackageService()
       .findById(packageId);
@@ -64,7 +63,6 @@ export class UpdatePackageUseCase
       throw new Error(`Package with id ${packageId} not found`);
     }
 
-    // Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(existingPackage.spaceId);
     if (!space) {
       throw new Error(`Space with id ${existingPackage.spaceId} not found`);
@@ -76,7 +74,6 @@ export class UpdatePackageUseCase
       );
     }
 
-    // Validate all recipes belong to the space
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
@@ -97,7 +94,6 @@ export class UpdatePackageUseCase
       }
     }
 
-    // Validate all standards belong to the space
     if (standardIds.length > 0) {
       const standards = await Promise.all(
         standardIds.map((standardId) =>
@@ -118,7 +114,6 @@ export class UpdatePackageUseCase
       }
     }
 
-    // Validate all skills belong to the space
     if (skillsIds.length > 0) {
       const skills = await Promise.all(
         skillsIds.map((skillId) => this.skillsPort.getSkill(skillId)),
@@ -137,7 +132,6 @@ export class UpdatePackageUseCase
       }
     }
 
-    // Update package using the service
     const updatedPackage = await this.services
       .getPackageService()
       .updatePackage(
@@ -157,7 +151,6 @@ export class UpdatePackageUseCase
       skillCount: updatedPackage.skills?.length ?? 0,
     });
 
-    // Compute removed artefacts and emit events
     const removedStandards = (existingPackage.standards ?? []).filter(
       (id) => !standardIds.includes(id),
     );

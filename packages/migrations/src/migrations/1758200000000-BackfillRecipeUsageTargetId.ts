@@ -4,12 +4,9 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'BackfillRecipeUsageTargetId1758200000000';
 
 /**
- * Backfill recipe_usage.target_id for existing rows using the default target of the associated git repo.
- *
- * Rules:
- * - Only update rows where recipe_usage.target_id IS NULL
- * - Use the "Default" target (name='Default', path='/') attached to the same git_repo_id
- * - Do nothing for rows where git_repo_id IS NULL or no default target exists
+ * Backfills `recipe_usage.target_id` from the default target of the row's git
+ * repo. The default target is matched on `name = 'Default'` and `path = '/'`,
+ * so rows whose repo has no such target are left alone.
  */
 export class BackfillRecipeUsageTargetId1758200000000 implements MigrationInterface {
   constructor(
@@ -20,7 +17,6 @@ export class BackfillRecipeUsageTargetId1758200000000 implements MigrationInterf
     this.logger.info('Starting migration: BackfillRecipeUsageTargetId');
 
     try {
-      // Preview how many rows will be updated
       const [{ count }] = await queryRunner.query(`
         SELECT COUNT(*)::int AS count
         FROM recipe_usage ru
@@ -41,7 +37,6 @@ export class BackfillRecipeUsageTargetId1758200000000 implements MigrationInterf
 
       this.logger.info(`Backfilling target_id for ${count} recipe_usage rows`);
 
-      // Perform the backfill using a single UPDATE ... FROM statement
       await queryRunner.query(`
         UPDATE recipe_usage ru
         SET target_id = t.id
@@ -66,7 +61,8 @@ export class BackfillRecipeUsageTargetId1758200000000 implements MigrationInterf
     this.logger.info('Starting rollback: BackfillRecipeUsageTargetId');
 
     try {
-      // Revert only the rows that were set by this migration (i.e., set to the default target of their repo)
+      // Clears only rows pointing at a default target; a row moved to some other
+      // target since the backfill is left alone.
       await queryRunner.query(`
         UPDATE recipe_usage ru
         SET target_id = NULL

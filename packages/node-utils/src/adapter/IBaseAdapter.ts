@@ -1,128 +1,29 @@
 /**
  * Base interface that all domain adapters must implement.
  *
- * This interface standardizes adapter initialization and provides
- * health check capabilities across all domains.
- *
- * @template TPort - The port interface this adapter implements (e.g., IGitPort, IAccountsPort)
- *
- * @example
- * ```typescript
- * export class RecipesAdapter implements IBaseAdapter<IRecipesPort>, IRecipesPort {
- *   private gitPort: IGitPort | null = null;
- *   private accountsPort: IAccountsPort | null = null;
- *   private _captureRecipe!: CaptureRecipeUseCase;
- *
- *   public initialize(ports: {
- *     [IGitPortName]: IGitPort;
- *     [IAccountsPortName]: IAccountsPort;
- *   }): void {
- *     this.gitPort = ports[IGitPortName];
- *     this.accountsPort = ports[IAccountsPortName];
- *
- *     if (!this.isReady()) {
- *       throw new Error('RecipesAdapter: Required ports not provided');
- *     }
- *
- *     // Create use cases with non-null ports
- *     this._captureRecipe = new CaptureRecipeUseCase(
- *       this.services.getRecipeService(),
- *       this.gitPort!,
- *     );
- *
- *     instrumentUseCases(this);
- *   }
- *
- *   public isReady(): boolean {
- *     return this.gitPort != null && this.accountsPort != null;
- *   }
- *
- *   public getPort(): IRecipesPort {
- *     return this as IRecipesPort;
- *   }
- * }
- * ```
+ * Implementations declare their dependencies by narrowing the `ports` parameter
+ * to the exact port names they need, rather than accepting the wide
+ * `Record<string, unknown>` of the base signature.
  */
 export interface IBaseAdapter<TPort = void> {
   /**
-   * Initialize the adapter with required ports from the registry.
+   * Initialize the adapter with the ports the registry resolved for it.
    *
-   * Each adapter should explicitly type the ports parameter to document
-   * its dependencies. All ports in the signature are REQUIRED - adapters
-   * should not declare ports they don't need.
-   *
-   * This method should:
-   * 1. Set all port properties from the ports parameter
-   * 2. Validate all required ports are set using isReady()
-   * 3. Create all use cases with non-null ports
-   * 4. Call `instrumentUseCases(this)` so those use cases produce spans
-   * 5. Perform any async initialization (e.g., queue setup, external connections)
-   *
-   * Step 4 is not optional. A use case has no base class to instrument it the
-   * way repositories and services have, and roughly a third of them extend
-   * nothing at all - so the adapter is the only seam. Nothing fails at runtime
-   * when it is missing; the traces just stop one level short, silently. There
-   * is a test for it: instrumentUseCases.arch.spec.ts in @packmind/node-utils.
-   *
-   * @param ports - Record of port names to port instances
-   * @throws Error if required ports are not provided
-   *
-   * @example
-   * ```typescript
-   * public async initialize(ports: {
-   *   [IGitPortName]: IGitPort;           // Required
-   *   [IAccountsPortName]: IAccountsPort; // Required
-   * }): Promise<void> {
-   *   this.gitPort = ports[IGitPortName];
-   *   this.accountsPort = ports[IAccountsPortName];
-   *
-   *   if (!this.isReady()) {
-   *     throw new Error('RecipesAdapter: Required ports not provided');
-   *   }
-   *
-   *   this._someUseCase = new SomeUseCase(this.services, this.gitPort!);
-   *
-   *   instrumentUseCases(this);
-   *
-   *   // Perform async initialization if needed
-   *   await this.setupQueues();
-   * }
-   * ```
+   * Besides wiring ports and building use cases, implementations must call
+   * `instrumentUseCases(this)` here. A use case has no base class to instrument
+   * it the way repositories and services have, so the adapter is the only seam,
+   * and nothing fails at runtime when the call is missing — the traces just stop
+   * one level short, silently. `instrumentUseCases.arch.spec.ts` in this package
+   * is what catches an omission.
    */
   initialize(ports: Record<string, unknown>): Promise<void>;
 
-  /**
-   * Check if the adapter is ready to use.
-   *
-   * Validates that all required ports are properly set (non-null).
-   * This is used by initialize() to validate dependencies before creating
-   * use cases, and can be used for health checks.
-   *
-   * @returns true if all required ports are set, false otherwise
-   *
-   * @example
-   * ```typescript
-   * public isReady(): boolean {
-   *   return this.gitPort != null && this.accountsPort != null;
-   * }
-   * ```
-   */
+  /** Whether every port this adapter requires has been set (non-null). */
   isReady(): boolean;
 
   /**
-   * Get the port interface this adapter implements.
-   *
-   * Used by Hexa.getAdapter() to expose the business interface to other domains.
-   * Typically returns `this as TPort`.
-   *
-   * @returns The port implementation (the adapter itself typed as the port interface)
-   *
-   * @example
-   * ```typescript
-   * public getPort(): IRecipesPort {
-   *   return this as IRecipesPort;
-   * }
-   * ```
+   * The business interface other domains see. Each domain's Hexa returns this
+   * from its own `getAdapter()`; implementations typically return `this`.
    */
   getPort(): TPort;
 }

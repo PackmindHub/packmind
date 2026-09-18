@@ -54,16 +54,13 @@ const origin = 'RecipesAdapter';
 export class CommandsAdapter
   implements IBaseAdapter<ICommandsPort>, ICommandsPort
 {
-  // Required ports - all set via initialize()
   private gitPort: IGitPort | null = null;
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
 
-  // Delayed jobs - built internally from JobsService
   private commandsDelayedJobs: ICommandsDelayedJobs | null = null;
 
-  // Use cases - created in initialize()
   private _captureCommand!: CaptureCommandUseCase;
   private _captureCommandWithPackages!: CaptureCommandWithPackagesUseCase;
   private _updateCommandFromUI!: UpdateCommandFromUIUseCase;
@@ -82,11 +79,6 @@ export class CommandsAdapter
     this.logger.info('RecipesAdapter constructed - awaiting initialization');
   }
 
-  /**
-   * Initialize adapter with ports and JobsService from registry.
-   * All ports and JobsService in signature are REQUIRED.
-   * Can be called multiple times (e.g., when deploymentPort is updated due to circular dependency).
-   */
   public async initialize(ports: {
     [IGitPortName]: IGitPort;
     [IDeploymentPortName]: IDeploymentPort;
@@ -98,26 +90,22 @@ export class CommandsAdapter
   }): Promise<void> {
     this.logger.info('Initializing RecipesAdapter with ports and JobsService');
 
-    // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
 
-    // Step 2: Build delayed jobs
     this.commandsDelayedJobs = await this.buildDelayedJobs(
       ports.jobsService,
       this.deploymentPort,
     );
 
-    // Step 2: Validate all required ports/delayed jobs are set
     if (!this.isReady()) {
       throw new Error(
         'RecipesAdapter: Required ports/delayed jobs not provided.',
       );
     }
 
-    // Step 4: Create all use cases with non-null ports/services
     this._captureCommand = new CaptureCommandUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -185,16 +173,12 @@ export class CommandsAdapter
     this.logger.info('RecipesAdapter initialized successfully');
   }
 
-  /**
-   * Build and register all recipes delayed jobs
-   */
   private async buildDelayedJobs(
     jobsService: JobsService,
     deploymentPort: IDeploymentPort,
   ): Promise<ICommandsDelayedJobs> {
     this.logger.info('Building recipes delayed jobs');
 
-    // Create DeployRecipes job factory
     const deployCommandsJobFactory = new DeployCommandsJobFactory(
       deploymentPort,
     );
@@ -213,9 +197,6 @@ export class CommandsAdapter
     };
   }
 
-  /**
-   * Check if all required ports and delayed jobs are set.
-   */
   public isReady(): boolean {
     return (
       this.gitPort != null &&
@@ -226,9 +207,6 @@ export class CommandsAdapter
     );
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): ICommandsPort {
     return this as ICommandsPort;
   }
@@ -253,9 +231,6 @@ export class CommandsAdapter
     return this._deleteCommand.execute(command);
   }
 
-  /**
-   * Get recipe by ID with access control (public API)
-   */
   public async getCommandById(
     command: GetCommandByIdCommand,
   ): Promise<Command | null> {
@@ -264,8 +239,7 @@ export class CommandsAdapter
   }
 
   /**
-   * Get recipe by ID without access control (internal use only)
-   * Used by UpdateRecipeFromUI
+   * Bypasses the space and organization checks that getCommandById applies.
    */
   public getCommandByIdInternal(id: CommandId) {
     return this._getCommandById.getCommandById(id);
@@ -283,9 +257,6 @@ export class CommandsAdapter
     );
   }
 
-  /**
-   * List recipes by space with access control (public API)
-   */
   public async listCommandsBySpace(
     command: ListCommandsBySpaceCommand,
   ): Promise<Command[]> {
@@ -298,9 +269,8 @@ export class CommandsAdapter
   }
 
   /**
-   * List all commands across every space of an organization, bypassing space
-   * membership checks. Used for organization-scoped aggregations where the
-   * caller is already authorized at the organization level.
+   * Bypasses space membership checks: only safe for callers already
+   * authorized at the organization level.
    */
   public async listAllCommandsByOrganization(
     organizationId: OrganizationId,

@@ -60,23 +60,17 @@ describe('GitHub Copilot Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
-    // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
 
-    // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
 
-    // Create test data
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
@@ -87,7 +81,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
-    // Get the default "Global" space created during signup
     const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
@@ -95,7 +88,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    // Create test recipe
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for Copilot',
       content: 'This is test recipe content for GitHub Copilot deployment',
@@ -104,7 +96,6 @@ describe('GitHub Copilot Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create test standard
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'Test Standard for Copilot',
       description: 'A test standard for GitHub Copilot deployment',
@@ -118,7 +109,6 @@ describe('GitHub Copilot Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create test skill
     skill = await testApp.skillsHexa.getAdapter().createSkill({
       name: 'Test Skill for Copilot',
       description: 'A test skill for GitHub Copilot deployment',
@@ -132,7 +122,6 @@ describe('GitHub Copilot Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create git provider and repository
     const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
@@ -168,7 +157,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
@@ -473,7 +461,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
@@ -536,9 +523,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     let copilotDeployer: CopilotDeployer;
 
     beforeEach(async () => {
-      // Ensure hexas are initialized before getting adapters
-      // Hexas are already initialized by testApp.initialize()
-
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
@@ -1004,7 +988,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             defaultTarget,
           );
 
-          // Single quotes should be escaped as ''
           expect(fileUpdates.createOrUpdate[0].content).toContain(
             "description: 'This skill''s description has ''single quotes'''",
           );
@@ -1053,7 +1036,6 @@ See reference.md and forms.md for more information.`,
             });
           skillWithFiles = uploadResult.skill;
 
-          // Get the latest version with files
           const versions = await testApp.skillsHexa
             .getAdapter()
             .listSkillVersions(skillWithFiles.id);
@@ -1061,7 +1043,6 @@ See reference.md and forms.md for more information.`,
             (a, b) => b.version - a.version,
           )[0];
 
-          // Fetch skill files
           const files = await testApp.skillsHexa
             .getAdapter()
             .getSkillFiles(latestVersion.id);
@@ -1230,7 +1211,6 @@ See reference.md and forms.md for more information.`,
         });
 
         it('creates recipe, standard, and skill files', () => {
-          // 1 recipe + 1 standard + 1 skill = 3 files
           expect(fileUpdates.createOrUpdate).toHaveLength(3);
         });
 
@@ -1651,7 +1631,6 @@ See reference.md and forms.md for more information.`,
               },
             ];
 
-            // Attach files to skill version
             const skillVersionsWithFiles = [
               {
                 ...skillVersions[0],

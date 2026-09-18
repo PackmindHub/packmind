@@ -108,7 +108,6 @@ export abstract class AbstractQueue<Input, Output> implements IQueue<
     const job = await this.queue.getJob(jobId);
     if (job) {
       try {
-        // Check if the job is still active or waiting
         if ((await job.isActive()) || (await job.isWaiting())) {
           this._logger.info(
             `[${this.QUEUE_ID}] Attempt to cancel Job with ID ${jobId}`,

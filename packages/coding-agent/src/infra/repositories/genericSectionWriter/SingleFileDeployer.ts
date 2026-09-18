@@ -182,7 +182,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     const sortedStandardVersions = this.sortStandardVersions(standardVersions);
 
-    // Generate content without fetching existing content or using target prefixing
     const standardsSection = await Promise.all(
       sortedStandardVersions.map((standardVersion) =>
         this.formatStandardContent(
@@ -236,7 +235,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     };
 
     for (const skillVersion of skillVersions) {
-      // Generate SKILL.md with YAML frontmatter
       const skillMarkdown = this.generateSkillMarkdown(skillVersion);
       const basePath = this.getSkillBasePath(skillVersion.slug);
       const skillMdPath = `${basePath}/SKILL.md`;
@@ -249,7 +247,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         artifactId: skillVersion.skillId as string,
       });
 
-      // Deploy additional skill files from skillVersion.files first, fallback to skillFilesMap
+      // skillVersion.files is authoritative; skillFilesMap is the fallback.
       if (skillVersion.files && skillVersion.files.length > 0) {
         for (const file of skillVersion.files) {
           if (file.path.toUpperCase() === 'SKILL.MD') {
@@ -270,7 +268,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         const skillFiles = skillFilesMap.get(skillVersion.id);
         if (skillFiles) {
           for (const skillFile of skillFiles) {
-            // Skip SKILL.md as we already deployed it
+            // Already deployed above from the skill prompt.
             if (skillFile.path !== 'SKILL.md') {
               fileUpdates.createOrUpdate.push({
                 path: `${basePath}/${skillFile.path}`,
@@ -372,7 +370,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       { key: 'Packmind recipes', content: '' }, // Always clear recipes section
     ];
 
-    // Only clear standards section if there are removed standards AND no remaining installed standards
     if (wouldClearStandards) {
       sections.push({ key: 'Packmind standards', content: '' });
     }

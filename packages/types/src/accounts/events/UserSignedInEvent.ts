@@ -8,9 +8,6 @@ export interface UserSignedInPayload {
   socialProvider?: SocialProvider;
 }
 
-/**
- * Event emitted when a user signs in.
- */
 export class UserSignedInEvent extends UserEvent<UserSignedInPayload> {
   static override readonly eventName = 'accounts.user.signed-in';
 }

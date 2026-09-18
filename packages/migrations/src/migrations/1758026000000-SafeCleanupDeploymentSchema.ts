@@ -6,7 +6,6 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
   public async up(queryRunner: QueryRunner): Promise<void> {
     console.log('Safely cleaning up deployment schema...');
 
-    // Check and clean up orphaned deployments first
     console.log('Cleaning up orphaned deployments...');
     await queryRunner.query(
       `DELETE FROM standard_deployments WHERE target_id IS NULL OR status IS NULL`,
@@ -15,17 +14,14 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       `DELETE FROM deployments WHERE target_id IS NULL OR status IS NULL`,
     );
 
-    // Check and add NOT NULL constraints for standards if they don't exist
     console.log('Checking and adding NOT NULL constraints for standards...');
 
-    // Check if target_id is already NOT NULL
     const targetIdNotNull = await queryRunner.query(`
       SELECT is_nullable FROM information_schema.columns 
       WHERE table_name = 'standard_deployments' 
       AND column_name = 'target_id'
     `);
 
-    // Check if status is already NOT NULL
     const statusNotNull = await queryRunner.query(`
       SELECT is_nullable FROM information_schema.columns 
       WHERE table_name = 'standard_deployments' 
@@ -57,10 +53,8 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Check and add foreign key constraints for standards if they don't exist
     console.log('Checking and adding foreign key constraints for standards...');
 
-    // Check if FK_standard_deployment_git_commit exists
     const gitCommitConstraintExists = await queryRunner.query(`
       SELECT 1 FROM information_schema.table_constraints 
       WHERE constraint_name = 'FK_standard_deployment_git_commit' 
@@ -79,7 +73,6 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Check if FK_standard_deployment_target exists
     const targetConstraintExists = await queryRunner.query(`
       SELECT 1 FROM information_schema.table_constraints 
       WHERE constraint_name = 'FK_standard_deployment_target' 
@@ -98,17 +91,14 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Check and add NOT NULL constraints for recipes if they don't exist
     console.log('Checking and adding NOT NULL constraints for recipes...');
 
-    // Check if target_id is already NOT NULL
     const recipeTargetIdNotNull = await queryRunner.query(`
       SELECT is_nullable FROM information_schema.columns 
       WHERE table_name = 'deployments' 
       AND column_name = 'target_id'
     `);
 
-    // Check if status is already NOT NULL
     const recipeStatusNotNull = await queryRunner.query(`
       SELECT is_nullable FROM information_schema.columns 
       WHERE table_name = 'deployments' 
@@ -142,10 +132,8 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Check and add foreign key constraints for recipes if they don't exist
     console.log('Checking and adding foreign key constraints for recipes...');
 
-    // Check if FK_deployment_git_commit exists
     const recipeGitCommitConstraintExists = await queryRunner.query(`
       SELECT 1 FROM information_schema.table_constraints 
       WHERE constraint_name = 'FK_deployment_git_commit' 
@@ -167,7 +155,6 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Check if FK_deployment_target exists
     const recipeTargetConstraintExists = await queryRunner.query(`
       SELECT 1 FROM information_schema.table_constraints 
       WHERE constraint_name = 'FK_deployment_target' 
@@ -189,7 +176,6 @@ export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterf
       );
     }
 
-    // Safely remove old junction tables if they exist
     console.log('Removing old junction tables...');
     const junctionTables = [
       'deployment_git_repos',

@@ -5,25 +5,11 @@ import { BaseService, BaseServiceOpts } from '../BaseService';
 import type { HexaRegistry } from '../HexaRegistry';
 
 /**
- * Service for domain event emission and subscription.
+ * A Node `EventEmitter` behind an API keyed on event classes rather than
+ * strings, so a subscription cannot drift from what is emitted. Registered in
+ * the HexaRegistry like any other service.
  *
- * This service wraps Node.js EventEmitter to provide a type-safe API for
- * domain events. It should be registered in the HexaRegistry like any other service.
- *
- * @example
- * ```typescript
- * // Registration
- * registry.registerService(PackmindEventEmitterService);
- *
- * // Usage in a hexa
- * const eventService = registry.getService(PackmindEventEmitterService);
- * eventService.emit(new RecipeCreatedEvent({ recipeId, userId }));
- *
- * // Listening
- * eventService.on(RecipeCreatedEvent, (event) => {
- *   console.log('Recipe created:', event.payload.recipeId);
- * });
- * ```
+ * In-process only: listeners in another API instance never see these events.
  */
 export class PackmindEventEmitterService extends BaseService<BaseServiceOpts> {
   private readonly emitter: EventEmitter;
@@ -35,31 +21,19 @@ export class PackmindEventEmitterService extends BaseService<BaseServiceOpts> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async initialize(_registry: HexaRegistry): Promise<void> {
-    // No initialization needed - emitter is ready from construction
+    // Nothing to do - the emitter is built in the constructor.
   }
 
   destroy(): void {
     this.emitter.removeAllListeners();
   }
 
-  /**
-   * Emit an event to all registered listeners.
-   *
-   * @param event - The event instance to emit
-   * @returns true if the event had listeners, false otherwise
-   */
+  /** Returns false when the event had no listeners. */
   emit<T extends PackmindEvent>(event: T): boolean {
     const eventName = event.name;
     return this.emitter.emit(eventName, event);
   }
 
-  /**
-   * Register a listener for a specific event type.
-   *
-   * @param eventClass - The event class to listen for
-   * @param handler - The handler function to call when the event is emitted
-   * @returns this for chaining
-   */
   on<T extends PackmindEvent>(
     eventClass: PackmindEventClass<T>,
     handler: (event: T) => void | Promise<void>,
@@ -68,25 +42,13 @@ export class PackmindEventEmitterService extends BaseService<BaseServiceOpts> {
     return this;
   }
 
-  /**
-   * Get the number of listeners for a specific event type.
-   * Useful for testing and debugging.
-   *
-   * @param eventClass - The event class to check
-   * @returns The number of registered listeners
-   */
   listenerCount<T extends PackmindEvent>(
     eventClass: PackmindEventClass<T>,
   ): number {
     return this.emitter.listenerCount(eventClass.eventName);
   }
 
-  /**
-   * Remove all listeners for all events.
-   * Use with caution - typically only needed for cleanup during shutdown or tests.
-   *
-   * @returns this for chaining
-   */
+  /** Every event, not just one - intended for shutdown and tests. */
   removeAllListeners(): this {
     this.emitter.removeAllListeners();
     return this;

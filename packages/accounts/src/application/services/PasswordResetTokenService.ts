@@ -54,7 +54,7 @@ export class PasswordResetTokenService {
       userId: request.user.id,
     });
 
-    // Delete any existing tokens for this user
+    // Drop earlier tokens so only the newest reset link stays usable.
     await this.passwordResetTokenRepository.deleteByUserId(request.user.id);
 
     const token = this.buildPasswordResetToken(request.user.id);

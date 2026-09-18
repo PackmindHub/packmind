@@ -16,7 +16,6 @@ export default class GoParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('go');
 
       for (const wasmPath of wasmPaths) {

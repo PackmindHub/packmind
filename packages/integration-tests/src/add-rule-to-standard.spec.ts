@@ -30,16 +30,12 @@ describe('Add rule to standard integration', () => {
   let user: User;
   let space: Space;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
-    // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Create test data
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
@@ -50,7 +46,6 @@ describe('Add rule to standard integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
-    // Get the default "Global" space created during signup
     const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
@@ -58,7 +53,6 @@ describe('Add rule to standard integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    // Create a standard to work with
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'My Test Standard',
       description: 'A test standard for integration testing',
@@ -102,7 +96,6 @@ describe('Add rule to standard integration', () => {
 
   describe('when standard slug exists but belongs to different organization', () => {
     test('An error is thrown because user is not a member of the space', async () => {
-      // Create another organization and user
       const otherSignUpResult = await testApp.accountsHexa
         .getAdapter()
         .signUpWithOrganization({
@@ -112,7 +105,6 @@ describe('Add rule to standard integration', () => {
         });
       const otherUser = otherSignUpResult.user;
 
-      // Try to add rule to standard from the first organization using the second organization's context
       // Space membership check rejects before the slug check
       await expect(
         testApp.standardsHexa.getAdapter().addRuleToStandard({

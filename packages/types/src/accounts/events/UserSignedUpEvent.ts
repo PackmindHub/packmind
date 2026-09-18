@@ -7,9 +7,6 @@ export interface UserSignedUpPayload {
   socialProvider?: string;
 }
 
-/**
- * Event emitted when a new user signs up and creates an organization.
- */
 export class UserSignedUpEvent extends UserEvent<UserSignedUpPayload> {
   static override readonly eventName = 'accounts.user.signed-up';
 }

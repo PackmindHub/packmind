@@ -29,11 +29,10 @@ export class GitlabProvider implements IGitProvider {
     baseUrl?: string,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    // Handle both cases: user enters base GitLab URL or full API URL
+    // The configured URL may be either a GitLab base URL or a full API URL.
     const providedUrl =
       baseUrl || process.env['GITLAB_BASE_URL'] || 'https://gitlab.com';
 
-    // If the URL already includes /api/v4, use it as-is, otherwise append it
     this.baseUrl = providedUrl.includes('/api/v4')
       ? providedUrl
       : `${providedUrl.replace(/\/$/, '')}/api/v4`;
@@ -45,7 +44,6 @@ export class GitlabProvider implements IGitProvider {
         'Content-Type': 'application/json',
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab API docs
       },
-      // GitLab API documentation shows PRIVATE-TOKEN header authentication
       httpsAgent: providerHttpsAgent,
     });
   }
@@ -92,15 +90,15 @@ export class GitlabProvider implements IGitProvider {
   private async fetchProjectsPage(
     page: number,
   ): Promise<{ rawProjects: unknown; totalPages: number }> {
-    // Use the same approach as the working GitLab provider, starting with
-    // membership.
+    // `membership: true` is what scopes the listing to the token's own
+    // projects rather than every public project on the instance.
     const response = await withTransientRetry(
       () =>
         this.client.get('/projects', {
           params: {
             membership: true,
             archived: false,
-            order_by: 'last_activity_at', // Use last_activity_at like the working example
+            order_by: 'last_activity_at',
             per_page: PROJECTS_PER_PAGE,
             page,
           },

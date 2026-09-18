@@ -19,14 +19,6 @@ import { SkillsRepositories } from './infra/repositories/SkillsRepositories';
 
 const origin = 'SkillsHexa';
 
-/**
- * SkillsHexa - Facade for the Skills domain following the Hexa pattern.
- *
- * This class serves as the main entry point for skills-related functionality.
- * It manages dependency injection, service instantiation, and exposes the adapter.
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
- */
 export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
   public readonly skillsRepositories: SkillsRepositories;
   public readonly skillsServices: SkillsServices;
@@ -45,13 +37,10 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
         'Creating repository and service aggregators with DataSource',
       );
 
-      // Instantiate repositories
       this.skillsRepositories = new SkillsRepositories(this.dataSource);
-
-      // Instantiate services
       this.skillsServices = new SkillsServices(this.skillsRepositories);
 
-      // Create adapter in constructor - dependencies will be injected in initialize()
+      // Adapter is created here; cross-domain ports are injected later in initialize()
       this.logger.debug('Creating SkillsAdapter');
       this.adapter = new SkillsAdapter(
         this.skillsServices,
@@ -67,9 +56,6 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('SkillsHexa already initialized');
@@ -79,14 +65,13 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
     this.logger.info('Initializing SkillsHexa (adapter retrieval phase)');
 
     try {
-      // Get all required ports (let errors propagate if missing)
+      // Ports are required; let a missing one throw here rather than fail later
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
 
       this.logger.info('All required ports retrieved from registry');
 
-      // Get PackmindEventEmitterService (required) - for domain event emission
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
@@ -95,7 +80,6 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
         throw new Error('PackmindEventEmitterService not found in registry');
       }
 
-      // Initialize adapter with all ports and services
       await this.adapter.initialize({
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
@@ -112,28 +96,18 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
     }
   }
 
-  /**
-   * Get the Skills adapter for cross-domain access to skills data.
-   * This adapter implements ISkillsPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
-   */
+  // Implements ISkillsPort; available as soon as the hexa is constructed,
+  // ahead of initialize(), since other domains resolve it via the registry.
   public getAdapter(): SkillsAdapter {
     return this.adapter.getPort() as SkillsAdapter;
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ISkillsPortName;
   }
 
-  /**
-   * Destroys the SkillsHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying SkillsHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('SkillsHexa destroyed');
   }
 }

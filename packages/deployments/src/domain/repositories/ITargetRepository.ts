@@ -16,10 +16,9 @@ export interface ITargetRepository extends IRepository<Target> {
     organizationId: OrganizationId,
   ): Promise<Target[]>;
   /**
-   * Find all targets that have any distribution activity for packages in the
-   * given space, scoped to the organization. Used to surface the set of
-   * targets relevant to a space without first needing the list of distribution
-   * rows in the application layer.
+   * Targets with any distribution activity for a package in the given space,
+   * scoped to the organization — so the application layer never has to read the
+   * distribution rows itself.
    */
   findActiveInSpace(
     organizationId: OrganizationId,

@@ -42,7 +42,6 @@ export class ListSkillsBySpaceUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const spaceId = createSpaceId(command.spaceId);
       const space = await this.spacesPort.getSpaceById(spaceId);
       if (!space) {

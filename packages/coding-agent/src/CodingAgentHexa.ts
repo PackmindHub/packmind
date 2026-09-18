@@ -17,16 +17,6 @@ import { CodingAgentRepositories } from './infra/repositories/CodingAgentReposit
 
 const origin = 'CodingAgentHexa';
 
-/**
- * CodingAgentHexa - Hexagonal architecture facade for the CodingAgent domain.
- *
- * This class serves as the main entry point for coding agent deployment functionality.
- * It handles the preparation of file updates for deploying recipes and standards
- * across multiple coding agent platforms (like Packmind, Claude, Cursor, etc.).
- *
- * The class aggregates deployment logic from multiple coding agents and provides
- * unified file updates for git operations.
- */
 export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
   private codingAgentRepositories: ICodingAgentRepositories;
   private deployerService: DeployerService;
@@ -41,15 +31,14 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
     this.logger.info('Constructing CodingAgentHexa');
 
     try {
-      // Instantiate repositories without ports (will be recreated in initialize)
+      // Ports are not available until initialize(), so everything built here
+      // is rebuilt there once they are.
       this.codingAgentRepositories = new CodingAgentRepositories();
 
-      // Instantiate services
       this.deployerService = new DeployerService(this.codingAgentRepositories);
 
       this.codingAgentServices = new CodingAgentServices(this.deployerService);
 
-      // Instantiate adapter without dependencies (will be set in initialize)
       this.adapter = new CodingAgentAdapter(
         this.codingAgentRepositories,
         this.codingAgentServices,
@@ -64,30 +53,23 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for port retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing CodingAgentHexa (adapter retrieval phase)');
 
     try {
-      // Get all required ports - let errors propagate
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
 
-      // Recreate repositories with ports
       this.codingAgentRepositories = new CodingAgentRepositories(
         standardsPort,
         gitPort,
       );
 
-      // Recreate services with new repositories
       this.deployerService = new DeployerService(this.codingAgentRepositories);
 
       this.codingAgentServices = new CodingAgentServices(this.deployerService);
 
-      // Initialize adapter with ports, services, and repositories
       await this.adapter.initialize({
         [IStandardsPortName]: standardsPort,
         [IGitPortName]: gitPort,
@@ -102,33 +84,19 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
     }
   }
 
-  /**
-   * Destroys the CodingAgentHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying CodingAgentHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('CodingAgentHexa destroyed');
   }
 
-  /**
-   * Get the deployer service for direct access to deployment operations
-   */
   public getDeployerService(): DeployerService {
     return this.deployerService;
   }
 
-  /**
-   * Get the CodingAgent adapter for cross-domain access
-   * Following DDD monorepo architecture standard
-   */
   public getAdapter(): ICodingAgentPort {
     return this.adapter;
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ICodingAgentPortName;
   }

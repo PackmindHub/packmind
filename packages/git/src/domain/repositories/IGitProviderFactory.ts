@@ -24,20 +24,18 @@ export type GitProviderCredentials = Pick<
   id?: GitProvider['id'];
 };
 
-/**
- * IGitProviderFactory - Factory interface for creating IGitProvider instances
- *
- * This interface defines the contract for creating git provider instances
- * based on the provider type. It abstracts the instantiation logic from the
- * application layer, following the hexagonal architecture principle.
- */
 export interface IGitProviderFactory {
   /**
-   * Creates an IGitProvider instance based on the git provider configuration
+   * @throws Error if the provider source is unsupported, or if the credentials
+   * cannot be resolved into an authenticated client — a missing token, an
+   * unsaved provider under App auth, or GitHub App configuration that is
+   * absent or incomplete. `GithubTokenResolverFactory` holds the specifics.
+   * @throws GitHubAppRevokedError if the on-prem GitHub App bound to the
+   * provider has been revoked.
    *
-   * @param provider - The credentials containing source, token, and optional URL
-   * @returns IGitProvider instance configured for the specific provider
-   * @throws Error if the provider source is unsupported or configuration is invalid
+   * Anything that needs GitHub to answer — minting the App JWT, exchanging it
+   * for an installation token, a 401 — surfaces on the returned provider's
+   * first API call instead, never here.
    */
   createGitProvider(provider: GitProviderCredentials): Promise<IGitProvider>;
 }

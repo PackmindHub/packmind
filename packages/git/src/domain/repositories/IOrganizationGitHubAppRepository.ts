@@ -4,32 +4,24 @@ import { IRepository } from '@packmind/types';
 
 export interface IOrganizationGitHubAppRepository extends IRepository<OrganizationGitHubApp> {
   /**
-   * Returns the most recent (including revoked) record for the given org,
-   * or null if none exists. Prefer `findActiveByOrganizationId` for
-   * operational lookups that must exclude revoked entries.
+   * Most recent record for the org, revoked ones included. Prefer
+   * `findActiveByOrganizationId` for operational lookups.
    */
   findByOrganizationId(
     orgId: OrganizationId,
   ): Promise<OrganizationGitHubApp | null>;
 
-  /**
-   * Returns the active (non-revoked, non-deleted) record for the given org,
-   * or null if none exists.
-   */
+  /** Active meaning neither revoked nor deleted. */
   findActiveByOrganizationId(
     orgId: OrganizationId,
   ): Promise<OrganizationGitHubApp | null>;
 
-  /**
-   * Sets `revokedAt = now()` on the active row for the given org.
-   * No-ops if no active row exists.
-   */
+  /** No-ops if no active row exists. */
   markRevoked(orgId: OrganizationId): Promise<void>;
 
   /**
-   * Inserts a new record for the org. If an active record already exists,
-   * that record is marked revoked first (within a transaction), then the
-   * new record is inserted. Used by the re-register flow.
+   * Any already-active record is marked revoked before the insert, both in
+   * one transaction.
    */
   upsertForOrganization(
     app: OrganizationGitHubApp,

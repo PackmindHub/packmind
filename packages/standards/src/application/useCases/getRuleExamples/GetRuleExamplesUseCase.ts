@@ -30,7 +30,6 @@ export class GetRuleExamplesUseCase {
     });
 
     try {
-      // Validate that the rule exists
       const rule = await this.ruleRepository.findById(ruleId);
       if (!rule) {
         const error = new Error(`Rule with id ${ruleId} not found`);
@@ -43,7 +42,6 @@ export class GetRuleExamplesUseCase {
         ruleContent: rule.content.substring(0, 50) + '...',
       });
 
-      // Get rule examples
       const ruleExamples =
         await this.ruleExampleRepository.findByRuleId(ruleId);
 

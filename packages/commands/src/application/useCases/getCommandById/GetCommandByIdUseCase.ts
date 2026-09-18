@@ -67,9 +67,6 @@ export class GetCommandByIdUseCase
         return { recipe: null };
       }
 
-      // Verify the recipe belongs to the space
-      // Recipes are now always space-specific (spaceId is never null)
-      // Organization membership is verified through the space
       if (recipe.spaceId !== command.spaceId) {
         this.logger.warn('Recipe does not belong to space', {
           recipeId: command.recipeId,
@@ -95,8 +92,7 @@ export class GetCommandByIdUseCase
   }
 
   /**
-   * Legacy method for internal use (UpdateRecipeFromUI)
-   * This bypasses access control and should only be used internally
+   * Bypasses the space and organization checks executeForSpaceMembers applies.
    */
   public async getCommandById(id: CommandId): Promise<Command | null> {
     this.logger.info('Getting recipe by ID (internal)', { id });

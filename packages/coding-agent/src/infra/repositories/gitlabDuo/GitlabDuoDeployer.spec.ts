@@ -29,7 +29,6 @@ describe('GitlabDuoDeployer', () => {
   let mockTarget: Target;
 
   beforeEach(() => {
-    // Create deployer without StandardsHexa or GitHexa for basic tests
     deployer = new GitlabDuoDeployer();
 
     mockTarget = {

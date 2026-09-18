@@ -149,7 +149,6 @@ describe('CommitToGitUseCase', () => {
         source: 'UNSUPPORTED' as GitProviderVendor,
       };
 
-      // Mock provider service to return the unsupported provider
       mockGitProviderRepository.findById.mockResolvedValue(unsupportedProvider);
 
       await expect(
@@ -167,7 +166,6 @@ describe('CommitToGitUseCase', () => {
         token: null,
       };
 
-      // Mock provider service to return the provider without token
       mockGitProviderRepository.findById.mockResolvedValue(
         providerWithoutToken,
       );
@@ -182,7 +180,6 @@ describe('CommitToGitUseCase', () => {
     });
 
     it('throws error if provider is not found', async () => {
-      // Mock provider service to return null (provider not found)
       mockGitProviderRepository.findById.mockResolvedValue(null);
 
       await expect(
@@ -195,7 +192,6 @@ describe('CommitToGitUseCase', () => {
     });
 
     it('throws error if files array is empty', async () => {
-      // Mock provider service to return the provider
       mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
 
       await expect(
@@ -284,7 +280,6 @@ describe('CommitToGitUseCase', () => {
 
       describe('when sections result in empty content and file exists', () => {
         it('deletes the file instead of updating it', async () => {
-          // Existing file has only Packmind sections
           const existingContent = `<!-- start: Packmind standards -->
 # Packmind Standards
 Some content
@@ -396,7 +391,6 @@ Some standard content
 
       describe('when combining passed-in deleteFiles with empty files', () => {
         it('includes both in the delete list', async () => {
-          // Existing file has only Packmind sections
           const existingContent = `<!-- start: Packmind standards -->
 # Packmind Standards
 Some content
@@ -530,9 +524,8 @@ Some content
       };
 
       it('asks the provider once, whatever the number of directories', async () => {
-        // The provider is asked once per publish rather than once per
-        // directory, which is what keeps the `ref -> commit -> tree` request
-        // count independent of how many directories are being deleted.
+        // One ask per publish, not one per directory: that is what keeps the
+        // `ref -> commit -> tree` request count flat as deletions grow.
         const forOne = await askCount(1);
         jest.clearAllMocks();
         const forFifty = await askCount(50);

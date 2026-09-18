@@ -16,7 +16,6 @@ export default class TypeScriptParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('typescript');
 
       for (const wasmPath of wasmPaths) {

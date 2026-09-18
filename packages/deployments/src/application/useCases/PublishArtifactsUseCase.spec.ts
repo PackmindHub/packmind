@@ -62,11 +62,10 @@ describe('PublishArtifactsUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
-  // The publish path fetches all three artifact types, for every target and
-  // in both scopes, through the single batched findActiveVersionsByTargets
-  // call. These per-artifact stubs let each test block seed the three types
-  // independently; the mock implementation in beforeEach assembles them into
-  // the batched per-target result.
+  // findActiveVersionsByTargets returns all three artifact types, for every
+  // target and in both scopes, in one call. These per-artifact stubs let a test
+  // block seed the three types independently; the mock implementation in
+  // beforeEach assembles them into that batched per-target result.
   let activeVersions: {
     standardVersionsByTarget: jest.Mock;
     commandVersionsByTarget: jest.Mock;
@@ -127,7 +126,6 @@ describe('PublishArtifactsUseCase', () => {
       skillVersionsByTargetAndPackages: jest.fn(),
     };
 
-    // Default empty arrays for skill-related stubs (can be overridden in test blocks)
     activeVersions.skillVersionsByTarget.mockResolvedValue([]);
     activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
     mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
@@ -970,8 +968,6 @@ describe('PublishArtifactsUseCase', () => {
       });
 
       it('fetches the active versions of every target in one call', () => {
-        // Both scopes, for both targets, out of a single batched read: the
-        // cost no longer grows with the number of targets.
         expect(
           mockDistributionRepository.findActiveVersionsByTargets,
         ).toHaveBeenCalledTimes(1);
@@ -1318,7 +1314,6 @@ describe('PublishArtifactsUseCase', () => {
     let gitRepo: GitRepo;
 
     beforeEach(() => {
-      // New command to deploy (different recipeId than previous)
       newCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
         recipeId: createCommandId('command-new'),
@@ -1327,7 +1322,6 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      // Previously deployed command that will NOT be in the new deployment (to be removed)
       previousCommandVersion = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
         recipeId: createCommandId('command-old'),
@@ -1336,7 +1330,6 @@ describe('PublishArtifactsUseCase', () => {
         version: 1,
       });
 
-      // New standard to deploy (different standardId than previous)
       newStandardVersion = standardVersionFactory({
         id: createStandardVersionId(uuidv4()),
         standardId: createStandardId('standard-new'),
@@ -1346,7 +1339,6 @@ describe('PublishArtifactsUseCase', () => {
         rules: [],
       });
 
-      // Previously deployed standard that will NOT be in the new deployment (to be removed)
       previousStandardVersion = standardVersionFactory({
         id: createStandardVersionId(uuidv4()),
         standardId: createStandardId('standard-old'),
@@ -1360,7 +1352,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      // Deploy only new versions (not the previously deployed ones)
       command = {
         userId,
         organizationId,
@@ -1380,14 +1371,13 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      // Return previously deployed versions that are NOT in the new deployment
       activeVersions.commandVersionsByTarget.mockResolvedValue([
         previousCommandVersion,
       ]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([
         previousStandardVersion,
       ]);
-      // For removal calculation, return the same data from filtered methods
+      // Removal is computed from the package-filtered scope, so seed it too.
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([
         previousCommandVersion,
       ]);
@@ -1541,7 +1531,6 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      // No previously deployed versions
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
@@ -1597,14 +1586,14 @@ describe('PublishArtifactsUseCase', () => {
         rules: mockRules,
       });
 
-      // Previously deployed standard WITHOUT rules (simulating database fetch)
+      // Previously deployed standard whose rules relation was not loaded.
       previousStandardVersion = standardVersionFactory({
         id: previousStandardVersionId,
         standardId: createStandardId('standard-old'),
         name: 'Old Standard',
         slug: 'old-standard',
         version: 1,
-        rules: undefined, // Rules not populated from database
+        rules: undefined,
       });
 
       gitRepo = gitRepoFactory();
@@ -1632,7 +1621,6 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
-      // Return previously deployed standard WITHOUT rules
       activeVersions.standardVersionsByTarget.mockResolvedValue([
         previousStandardVersion,
       ]);
@@ -1830,7 +1818,7 @@ describe('PublishArtifactsUseCase', () => {
         files: [],
       });
 
-      // Previously deployed skill WITHOUT files (simulating database fetch)
+      // Previously deployed skill whose files were not loaded.
       previousSkillVersion = skillVersionFactory({
         id: previousSkillVersionId,
         skillId: createSkillId('skill-old'),
@@ -1865,7 +1853,6 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
-      // Return previously deployed skill WITHOUT files
       activeVersions.skillVersionsByTarget.mockResolvedValue([
         previousSkillVersion,
       ]);
@@ -2088,7 +2075,6 @@ describe('PublishArtifactsUseCase', () => {
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
-      // Return existing packmind.json with packages
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'existing-sha',
         content: JSON.stringify({
@@ -2410,7 +2396,6 @@ describe('PublishArtifactsUseCase', () => {
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
-      // No existing packmind.json
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -2481,12 +2466,11 @@ describe('PublishArtifactsUseCase', () => {
         },
       ];
 
-      // Carried over from a previous deployment (not part of this command's
-      // skillVersionIds): it reaches the installed list only through the
-      // unfiltered findActiveSkillVersionsByTarget history read, which never
-      // carries `files`. This is the only way to put a version into
-      // skillVersionIdsMissingFiles and exercise the batched hydration call,
-      // as opposed to the up-front fetch of skillVersion.id above.
+      // Carried over from a previous deployment (not in this command's
+      // skillVersionIds): it reaches the installed list through the unfiltered
+      // "all" scope of findActiveVersionsByTargets, which carries no `files`.
+      // That is what exercises the batched hydration fetch, as opposed to the
+      // up-front fetch of skillVersion.id above.
       const carriedSkillVersionId = createSkillVersionId(uuidv4());
       carriedSkillVersion = skillVersionFactory({
         id: carriedSkillVersionId,
@@ -2686,13 +2670,12 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
-      // Return previously deployed skill with OLD slug
       activeVersions.skillVersionsByTarget.mockResolvedValue([
         previousSkillVersion,
       ]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
-      // For removal calculation, return the old skill version
+      // Removal is computed from the package-filtered scope, so seed it too.
       activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([
         previousSkillVersion,
       ]);
@@ -3176,7 +3159,6 @@ describe('PublishArtifactsUseCase', () => {
     const sharedSkillId = createSkillId('shared-skill-id');
 
     beforeEach(() => {
-      // Skill version that exists ONLY in Package B (not in Package A)
       skillVersionFromOtherPackage = skillVersionFactory({
         id: createSkillVersionId(uuidv4()),
         skillId: sharedSkillId,
@@ -3189,7 +3171,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      // Package A is being redistributed (no skills in command)
       command = {
         userId,
         organizationId,
@@ -3206,13 +3187,13 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
-      // Skill exists on target via Package B (all packages view)
+      // Present in the all-packages scope.
       activeVersions.skillVersionsByTarget.mockResolvedValue([
         skillVersionFromOtherPackage,
       ]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
-      // Package A has NO skills in its distribution (skill is only via Package B)
+      // Absent from Package A's own scope.
       activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
@@ -3260,7 +3241,6 @@ describe('PublishArtifactsUseCase', () => {
     const sharedCommandId = createCommandId('shared-command-id');
 
     beforeEach(() => {
-      // Command version that exists ONLY in Package B (not in Package A)
       commandVersionFromOtherPackage = commandVersionFactory({
         id: createCommandVersionId(uuidv4()),
         recipeId: sharedCommandId,
@@ -3273,7 +3253,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      // Package A is being redistributed (no recipes in command)
       command = {
         userId,
         organizationId,
@@ -3287,13 +3266,13 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById.mockResolvedValue(target);
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      // Command exists on target via Package B (all packages view)
+      // Present in the all-packages scope.
       activeVersions.commandVersionsByTarget.mockResolvedValue([
         commandVersionFromOtherPackage,
       ]);
       activeVersions.standardVersionsByTarget.mockResolvedValue([]);
       activeVersions.skillVersionsByTarget.mockResolvedValue([]);
-      // Package A has NO commands in its distribution (command is only via Package B)
+      // Absent from Package A's own scope.
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
@@ -3343,7 +3322,6 @@ describe('PublishArtifactsUseCase', () => {
     const sharedStandardId = createStandardId('shared-standard-id');
 
     beforeEach(() => {
-      // Standard version that exists ONLY in Package B (not in Package A)
       standardVersionFromOtherPackage = standardVersionFactory({
         id: createStandardVersionId(uuidv4()),
         standardId: sharedStandardId,
@@ -3357,7 +3335,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      // Package A is being redistributed (no standards in command)
       command = {
         userId,
         organizationId,
@@ -3372,13 +3349,13 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       activeVersions.commandVersionsByTarget.mockResolvedValue([]);
-      // Standard exists on target via Package B (all packages view)
+      // Present in the all-packages scope.
       activeVersions.standardVersionsByTarget.mockResolvedValue([
         standardVersionFromOtherPackage,
       ]);
       activeVersions.skillVersionsByTarget.mockResolvedValue([]);
       activeVersions.commandVersionsByTargetAndPackages.mockResolvedValue([]);
-      // Package A has NO standards in its distribution (standard is only via Package B)
+      // Absent from Package A's own scope.
       activeVersions.standardVersionsByTargetAndPackages.mockResolvedValue([]);
       activeVersions.skillVersionsByTargetAndPackages.mockResolvedValue([]);
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -3553,7 +3530,6 @@ describe('PublishArtifactsUseCase', () => {
       ];
 
       beforeEach(() => {
-        // Return packmind.json with agents defined
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
           content: JSON.stringify({
@@ -3583,7 +3559,6 @@ describe('PublishArtifactsUseCase', () => {
 
     describe('when agents is an empty array in packmind.json', () => {
       beforeEach(() => {
-        // Return packmind.json with empty agents array
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
           content: JSON.stringify({
@@ -3606,7 +3581,6 @@ describe('PublishArtifactsUseCase', () => {
 
     describe('when agents do not include packmind in packmind.json', () => {
       beforeEach(() => {
-        // Return packmind.json with agents that don't include packmind
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
           content: JSON.stringify({
@@ -3629,7 +3603,6 @@ describe('PublishArtifactsUseCase', () => {
 
     describe('when agents is undefined in packmind.json', () => {
       beforeEach(() => {
-        // Return packmind.json without agents property
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
           content: JSON.stringify({

@@ -1,89 +1,38 @@
 /**
- * Redis channel constants for SSE pub/sub operations
+ * The two channels every API instance shares: an SSE connection lives on one
+ * instance, so both subscriptions and events have to reach all of them.
  */
 export const SSE_REDIS_CHANNELS = {
-  /**
-   * Channel for subscription management messages
-   * Used when clients subscribe/unsubscribe to specific event types
-   */
   SUBSCRIPTIONS: 'sse:subscriptions',
-
-  /**
-   * Channel for event notifications
-   * Used to broadcast SSE events to all API instances
-   */
   EVENTS: 'sse:events',
 } as const;
 
-/**
- * Redis pub/sub message for subscription management
- */
 export interface SSESubscriptionMessage {
-  /**
-   * User ID that owns the SSE connection
-   */
   userId: string;
-
-  /**
-   * Action to perform on the subscription
-   */
   action: 'subscribe' | 'unsubscribe';
-
-  /**
-   * Type of event to subscribe/unsubscribe to
-   */
   eventType: string;
 
-  /**
-   * Parameters for the event subscription (e.g., programId for program_status events)
-   */
+  /** Narrows the subscription to one instance of the event type. */
   params: string[];
 
-  /**
-   * Timestamp when the subscription message was created
-   */
   timestamp: string;
 }
 
-/**
- * Redis pub/sub message for event notifications
- */
 export interface SSEEventMessage {
-  /**
-   * Type of SSE event being published
-   */
   eventType: string;
-
-  /**
-   * Parameters that identify the specific event instance
-   */
   params: string[];
 
-  /**
-   * The actual SSE event data to send to clients
-   */
-  data: unknown; // Will be typed as AnySSEEvent when imported
+  /** An `AnySSEEvent` from @packmind/types, left `unknown` to avoid the import. */
+  data: unknown;
 
-  /**
-   * Optional array of user IDs that should receive this event
-   * If undefined, event is sent to all subscribers of this eventType+params
-   */
+  /** When undefined, every subscriber of this eventType+params receives it. */
   targetUserIds?: string[];
 
-  /**
-   * Timestamp when the event was published
-   */
   timestamp: string;
 }
 
-/**
- * Union type of all Redis pub/sub messages for SSE
- */
 export type SSERedisMessage = SSESubscriptionMessage | SSEEventMessage;
 
-/**
- * Type guard to check if a message is a subscription message
- */
 export function isSSESubscriptionMessage(
   message: SSERedisMessage,
 ): message is SSESubscriptionMessage {
@@ -93,18 +42,12 @@ export function isSSESubscriptionMessage(
   );
 }
 
-/**
- * Type guard to check if a message is an event message
- */
 export function isSSEEventMessage(
   message: SSERedisMessage,
 ): message is SSEEventMessage {
   return 'data' in message && !('action' in message);
 }
 
-/**
- * Helper function to create a subscription message
- */
 export function createSSESubscriptionMessage(
   userId: string,
   action: 'subscribe' | 'unsubscribe',
@@ -120,9 +63,6 @@ export function createSSESubscriptionMessage(
   };
 }
 
-/**
- * Helper function to create an event message
- */
 export function createSSEEventMessage(
   eventType: string,
   params: string[],
@@ -138,9 +78,6 @@ export function createSSEEventMessage(
   };
 }
 
-/**
- * Helper function to serialize Redis message to JSON string
- */
 export function serializeSSERedisMessage(message: SSERedisMessage): string {
   try {
     return JSON.stringify(message);
@@ -151,16 +88,12 @@ export function serializeSSERedisMessage(message: SSERedisMessage): string {
   }
 }
 
-/**
- * Helper function to deserialize JSON string to Redis message
- */
 export function deserializeSSERedisMessage(
   messageString: string,
 ): SSERedisMessage {
   try {
     const parsed = JSON.parse(messageString);
 
-    // Basic validation
     if (!parsed || typeof parsed !== 'object') {
       throw new Error('Invalid message format: not an object');
     }
@@ -169,7 +102,6 @@ export function deserializeSSERedisMessage(
       throw new Error('Invalid message format: missing or invalid timestamp');
     }
 
-    // Validate subscription message
     if ('action' in parsed) {
       if (!parsed.userId || typeof parsed.userId !== 'string') {
         throw new Error(
@@ -193,7 +125,6 @@ export function deserializeSSERedisMessage(
       }
     }
 
-    // Validate event message
     if ('data' in parsed) {
       if (!parsed.eventType || typeof parsed.eventType !== 'string') {
         throw new Error('Invalid event message: missing or invalid eventType');

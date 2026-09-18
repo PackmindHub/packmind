@@ -6,9 +6,6 @@ import { TargetId } from '../TargetId';
 import { Distribution } from '../Distribution';
 import { PackageId } from '../Package';
 
-/**
- * Command to publish commands, standards, and skills artifacts to targets
- */
 export type PublishArtifactsCommand = PackmindCommand & {
   commandVersionIds: CommandVersionId[];
   standardVersionIds: StandardVersionId[];
@@ -20,16 +17,11 @@ export type PublishArtifactsCommand = PackmindCommand & {
   artifactPackageIds?: Record<string, string[]>;
 };
 
-/**
- * Response contains distributions for each target
- */
 export type PublishArtifactsResponse = {
   distributions: Distribution[];
 };
 
-/**
- * UseCase for publishing commands, standards, and skills in a single unified operation
- */
+/** Publishes commands, standards and skills in one unified operation. */
 export type IPublishArtifactsUseCase = IUseCase<
   PublishArtifactsCommand,
   PublishArtifactsResponse

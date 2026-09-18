@@ -29,9 +29,7 @@ export interface IPackagesDeploymentRepository extends IRepository<PackagesDeplo
   ): Promise<PackagesDeployment[]>;
 
   /**
-   * Get all currently deployed packages for a specific target.
-   * This returns the latest deployed version of each unique package.
-   * Used to generate complete package deployments that include all deployed packages.
+   * Latest deployed version of each package currently on the target.
    */
   findActivePackagesByTarget(
     organizationId: OrganizationId,

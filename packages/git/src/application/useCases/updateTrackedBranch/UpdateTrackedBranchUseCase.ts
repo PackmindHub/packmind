@@ -77,8 +77,8 @@ export class UpdateTrackedBranchUseCase
 
     const fromBranch = existingTracked.branch;
 
-    // Resolve the vendor/url of the currently tracked repo's provider so the
-    // new-branch repo is resolved/created under the same provider.
+    // The new-branch repo must land under the same provider as the one being
+    // moved away from.
     const provider = await this.gitProviderService.findGitProviderById(
       existingTracked.providerId,
     );

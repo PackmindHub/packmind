@@ -14,7 +14,6 @@ export class GetOrganizationRepositoriesUseCase {
   ): Promise<GitRepo[]> {
     const { organizationId } = input;
 
-    // Business rule: organizationId is required
     if (!organizationId) {
       throw new Error('Organization ID is required');
     }

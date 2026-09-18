@@ -53,20 +53,15 @@ const origin = 'RenderPackageAsPluginUseCase';
 const PLUGIN_VERSION = '0.1.0';
 
 /**
- * Where a plugin's hooks file lives, relative to the plugin root. Matches what
- * the marketplace publish path emits alongside the rendered plugin.
+ * Where a plugin's hooks file lives, relative to the plugin root.
  */
 const PLUGIN_HOOKS_PATH = 'hooks/hooks.json';
 
 const DEFAULT_GIT_BRANCH = 'main';
 
 /**
- * Renders a single Packmind package as a Claude Code or GitHub Copilot
- * plugin, depending on `command.targetVendor`.
- *
- * The use case finds and validates the package, fetches the latest version of
- * each artefact, then delegates rendering to {@link ClaudePluginDeployer} or
- * {@link CopilotPluginDeployer}. Standards are intentionally skipped; the
+ * Renders a single Packmind package as a Claude Code or GitHub Copilot plugin,
+ * depending on `command.targetVendor`. Standards are intentionally skipped; the
  * count is surfaced to the caller.
  */
 export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<

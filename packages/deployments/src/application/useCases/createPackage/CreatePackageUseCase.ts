@@ -62,7 +62,6 @@ export class CreatePackageUseCase
       skillCount: skillIds.length,
     });
 
-    // Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
@@ -74,7 +73,6 @@ export class CreatePackageUseCase
       );
     }
 
-    // Generate unique slug from package name
     this.logger.info('Generating slug from package name', { name });
     const baseSlug = slug(name);
     this.logger.info('Base slug generated', { slug: baseSlug });
@@ -99,7 +97,6 @@ export class CreatePackageUseCase
     }
     this.logger.info('Resolved unique slug', { slug: packageSlug });
 
-    // Validate all recipes belong to the space
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
@@ -120,7 +117,6 @@ export class CreatePackageUseCase
       }
     }
 
-    // Validate all standards belong to the space
     if (standardIds.length > 0) {
       const standards = await Promise.all(
         standardIds.map((standardId) =>
@@ -141,7 +137,6 @@ export class CreatePackageUseCase
       }
     }
 
-    // Validate all skills belong to the space
     if (skillIds.length > 0) {
       const skills = await Promise.all(
         skillIds.map((skillId) => this.skillsPort.getSkill(skillId)),
@@ -160,7 +155,6 @@ export class CreatePackageUseCase
       }
     }
 
-    // Create package using the service
     const savedPackage = await this.services.getPackageService().createPackage(
       {
         id: createPackageId(uuidv4()),

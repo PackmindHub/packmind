@@ -9,10 +9,7 @@ export interface PluginRenderedPayload {
   mode: RenderPackageAsPluginMode;
   pluginRoot: string;
   marketplaceRepo?: string;
-  /**
-   * Vendor whose plugin format was rendered. Optional because not every
-   * render call site is updated to populate it yet.
-   */
+  /** Vendor whose plugin format was rendered. */
   vendor?: MarketplaceVendor;
 }
 

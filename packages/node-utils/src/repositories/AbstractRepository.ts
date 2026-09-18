@@ -28,14 +28,12 @@ export abstract class AbstractRepository<
     private readonly schema: EntitySchema<WithSoftDelete<Entity>>,
     protected readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    // Since the pg instrumentation is off (see apps/api/src/otel.ts), this is
-    // the only place a trace records database work at all: the repository
-    // method is the span, and its duration is the query's. Datadog Database
-    // Monitoring has the statement; this says which method asked for it.
-    //
-    // Covers the 26 subclasses of this class wherever they are constructed,
-    // including the localDataSource default-argument path. Repositories that
-    // do not extend it are instrumented by their *Repositories aggregator.
+    // Statement-level pg instrumentation defaults to off (see
+    // apps/api/src/otel.ts), so this is the only place a trace records database
+    // work at all: the repository method is the span and its duration is the
+    // query's. Instrumenting here covers every subclass however it is built,
+    // including the localDataSource default-argument path; repositories that do
+    // not extend this class rely on their *Repositories aggregator instead.
     instrumentMethods(this);
   }
 
@@ -52,7 +50,8 @@ export abstract class AbstractRepository<
       );
       return savedEntity;
     } catch (error) {
-      // Check if it's a unique constraint violation
+      // Matched on the driver's message text rather than an SQLSTATE, so a
+      // change in Postgres wording would silently turn this 400 into a 500.
       if (error instanceof Error && error.message.includes('duplicate key')) {
         const customError = this.handleDuplicateKeyError(entity);
         this.logger.error(`Failed to save ${this.entityName} - duplicate key`, {

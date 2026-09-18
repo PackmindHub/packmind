@@ -71,13 +71,11 @@ export class CodexDeployer extends SingleFileDeployer {
     skillVersions: SkillVersion[] = [],
     skillFilesMap?: Map<SkillVersionId, SkillFile[]>,
   ): Promise<FileUpdates> {
-    // Single-file deployment for standards (AGENTS.md)
     const singleFileUpdates = await super.deployArtifacts(
       recipeVersions,
       standardVersions,
     );
 
-    // Multi-file deployment for skills
     const skillFileUpdates = await super.generateFileUpdatesForSkills(
       skillVersions,
       skillFilesMap,
@@ -104,13 +102,11 @@ export class CodexDeployer extends SingleFileDeployer {
       skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
-    // Single-file removal for standards (AGENTS.md sections)
     const singleFileUpdates = await super.generateRemovalFileUpdates(
       removed,
       installed,
     );
 
-    // Multi-file removal for skills
     for (const skillVersion of removed.skillVersions) {
       singleFileUpdates.delete.push({
         path: `${CodexDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -126,10 +122,8 @@ export class CodexDeployer extends SingleFileDeployer {
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {
-    // Single-file cleanup for standards (AGENTS.md sections)
     const fileUpdates = await super.generateAgentCleanupFileUpdates(artifacts);
 
-    // Delete default skills
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       fileUpdates.delete.push({
         path: `${CodexDeployer.ARTEFACT_PATHS.skill}${slug}`,
@@ -137,7 +131,6 @@ export class CodexDeployer extends SingleFileDeployer {
       });
     }
 
-    // Delete user package skills
     for (const skillVersion of artifacts.skillVersions) {
       fileUpdates.delete.push({
         path: `${CodexDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,

@@ -28,12 +28,10 @@ import { PackageCommandsSchema } from '../schemas/PackageCommandsSchema';
 import { packageFactory } from '../../../test';
 
 /**
- * What a package's `updated_at` is worth.
- *
- * Membership is written straight into three join tables, which the row's
- * update-date column does not see on its own: before this, a package could gain
- * five components and still report the moment it was named. Seeded old on
- * purpose, so the assertions do not depend on the clock's resolution.
+ * Seeded well in the past on purpose, so the `updated_at` assertions do not
+ * depend on the clock's resolution. Membership is written straight into three
+ * join tables, which do not touch the package row on their own — see
+ * `PackageRepository.touch`.
  */
 const SEEDED_AT = new Date('2026-01-01T00:00:00.000Z');
 

@@ -14,20 +14,10 @@ import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource'
 import { TestApp } from './helpers/TestApp';
 
 /**
- * Integration tests for Claude Code cleanup during package removal.
- *
- * These tests verify the behavior when removing packages that deployed content
- * to Claude Code. The expected behavior is:
- *
- * 1. Individual recipe command files at .claude/commands/{slug}.md are deleted.
- *
- * 2. The legacy .claude/commands/packmind/ folder is always deleted when recipes are removed.
- *
- * 3. Individual standard rule files at .claude/rules/packmind/standard-{slug}.md are deleted.
- *
- * 4. The .claude/rules/packmind/ folder is deleted when all artifacts are removed.
- *
- * 5. CLAUDE.md legacy sections are cleared (Packmind standards and recipes sections set to empty).
+ * Removing a package must clean up the Claude Code layouts Packmind has ever
+ * emitted, not just the current one: the per-artifact files it writes today, and
+ * the `.claude/commands/packmind/` folder and `CLAUDE.md` sections that earlier
+ * versions used.
  */
 describe('CLAUDE.md cleanup on package removal', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
@@ -42,8 +32,6 @@ describe('CLAUDE.md cleanup on package removal', () => {
   let commitToGit: jest.Mock;
   let getFileFromRepo: jest.Mock;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -111,7 +99,6 @@ describe('CLAUDE.md cleanup on package removal', () => {
     let deleteFiles: { path: string }[];
 
     beforeEach(async () => {
-      // No pre-existing files
       getFileFromRepo.mockResolvedValue(null);
 
       const response = await testApp.deploymentsHexa
@@ -205,7 +192,6 @@ describe('CLAUDE.md cleanup on package removal', () => {
     let deleteFiles: { path: string }[];
 
     beforeEach(async () => {
-      // No pre-existing files
       getFileFromRepo.mockResolvedValue(null);
 
       const response = await testApp.deploymentsHexa

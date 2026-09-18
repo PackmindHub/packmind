@@ -32,16 +32,10 @@ export class OpenAIService extends BaseOpenAIService {
       config.fastestModel || DEFAULT_OPENAI_MODELS.fastestModel;
   }
 
-  /**
-   * Check if the OpenAI service is properly configured and ready to use
-   */
   async isConfigured(): Promise<boolean> {
     return !!this.apiKey;
   }
 
-  /**
-   * Initialize the OpenAI client with the injected API key
-   */
   protected async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -63,9 +57,6 @@ export class OpenAIService extends BaseOpenAIService {
     this.logger.info('OpenAI client initialized successfully');
   }
 
-  /**
-   * Get the service tier from options (OpenAI-specific)
-   */
   private getServiceTier(options: AIPromptOptions): ServiceTierType {
     if (options.service_tier) {
       const tier = options.service_tier.toLowerCase();
@@ -75,9 +66,6 @@ export class OpenAIService extends BaseOpenAIService {
     return 'auto';
   }
 
-  /**
-   * Execute a prompt with OpenAI-specific service_tier support
-   */
   async executePrompt<T = string>(
     prompt: string,
     options: AIPromptOptions = {},
@@ -154,16 +142,13 @@ export class OpenAIService extends BaseOpenAIService {
           tokensUsed: response.usage?.total_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -221,9 +206,6 @@ export class OpenAIService extends BaseOpenAIService {
     };
   }
 
-  /**
-   * Execute a prompt with conversation history and OpenAI-specific service_tier support
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options: AIPromptOptions = {},
@@ -266,7 +248,6 @@ export class OpenAIService extends BaseOpenAIService {
 
         const serviceTier = this.getServiceTier(options);
 
-        // Convert PromptConversation to OpenAI message format
         const messages = conversationHistory.map((conv) => ({
           role: this.mapRoleToOpenAI(conv.role),
           content: conv.message,
@@ -304,16 +285,13 @@ export class OpenAIService extends BaseOpenAIService {
           tokensUsed: response.usage?.total_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -371,9 +349,6 @@ export class OpenAIService extends BaseOpenAIService {
     };
   }
 
-  /**
-   * Get a list of available model IDs from OpenAI
-   */
   async getModels(): Promise<string[]> {
     this.logger.info('Fetching available models from OpenAI');
 

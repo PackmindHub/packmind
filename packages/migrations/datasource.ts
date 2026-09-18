@@ -1,7 +1,6 @@
 import { register } from 'tsconfig-paths';
 import { DataSource } from 'typeorm';
 
-// Register TypeScript path mappings
 register({
   baseUrl: '../../',
   paths: {

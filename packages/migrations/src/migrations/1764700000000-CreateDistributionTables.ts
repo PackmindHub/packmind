@@ -18,7 +18,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definitions
   private readonly distributionsTable = new Table({
     name: 'distributions',
     columns: [
@@ -112,7 +111,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     ],
   });
 
-  // Foreign key definitions for distributions table
   private readonly distributionsGitCommitFK = new TableForeignKey({
     columnNames: ['git_commit_id'],
     referencedTableName: 'git_commits',
@@ -137,7 +135,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     name: 'FK_distributions_organization',
   });
 
-  // Foreign key definitions for distributed_packages table
   private readonly distributedPackagesDistributionFK = new TableForeignKey({
     columnNames: ['distribution_id'],
     referencedTableName: 'distributions',
@@ -154,7 +151,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     name: 'FK_distributed_packages_package',
   });
 
-  // Foreign key definitions for junction tables
   private readonly dpsvDistributedPackageFK = new TableForeignKey({
     columnNames: ['distributed_package_id'],
     referencedTableName: 'distributed_packages',
@@ -191,7 +187,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     this.logger.info('Starting migration: CreateDistributionTables');
 
     try {
-      // Create distributions table
       await queryRunner.createTable(this.distributionsTable);
 
       await queryRunner.createIndex(
@@ -225,7 +220,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
 
       this.logger.info('Successfully created distributions table');
 
-      // Create distributed_packages table
       await queryRunner.createTable(this.distributedPackagesTable);
 
       await queryRunner.createIndex(
@@ -256,7 +250,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
 
       this.logger.info('Successfully created distributed_packages table');
 
-      // Create distributed_package_standard_versions junction table
       await queryRunner.createTable(
         this.distributedPackageStandardVersionsTable,
       );
@@ -283,7 +276,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
         'Successfully created distributed_package_standard_versions table',
       );
 
-      // Create distributed_package_recipe_versions junction table
       await queryRunner.createTable(this.distributedPackageRecipeVersionsTable);
 
       await queryRunner.createIndex(
@@ -323,7 +315,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
     this.logger.info('Starting rollback: CreateDistributionTables');
 
     try {
-      // Drop distributed_package_recipe_versions table
       await queryRunner.dropForeignKey(
         'distributed_package_recipe_versions',
         this.dprvRecipeVersionFK,
@@ -342,7 +333,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
         'Successfully dropped distributed_package_recipe_versions table',
       );
 
-      // Drop distributed_package_standard_versions table
       await queryRunner.dropForeignKey(
         'distributed_package_standard_versions',
         this.dpsvStandardVersionFK,
@@ -364,7 +354,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
         'Successfully dropped distributed_package_standard_versions table',
       );
 
-      // Drop distributed_packages table
       await queryRunner.dropForeignKey(
         'distributed_packages',
         this.distributedPackagesPackageFK,
@@ -385,7 +374,6 @@ export class CreateDistributionTables1764700000000 implements MigrationInterface
 
       this.logger.info('Successfully dropped distributed_packages table');
 
-      // Drop distributions table
       await queryRunner.dropForeignKey(
         'distributions',
         this.distributionsOrganizationFK,

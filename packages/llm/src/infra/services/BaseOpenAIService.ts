@@ -13,18 +13,11 @@ import {
 } from '@packmind/types';
 import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
 
-/**
- * Abstract base class for OpenAI and OpenAI-compatible services.
- * Provides shared logic for executing prompts, retry mechanisms, and error handling.
- */
 export abstract class BaseOpenAIService implements AIService {
   protected client: OpenAI | null = null;
   protected readonly maxRetries = 5;
   protected initialized = false;
 
-  /**
-   * Abstract properties that must be defined by subclasses
-   */
   protected abstract readonly defaultModel: string;
   protected abstract readonly defaultFastModel: string;
 
@@ -35,36 +28,18 @@ export abstract class BaseOpenAIService implements AIService {
     this.logger.info(`${this.serviceName} initialized`);
   }
 
-  /**
-   * Check if the service is properly configured and ready to use.
-   * Must be implemented by subclasses with their specific configuration checks.
-   */
   abstract isConfigured(): Promise<boolean>;
 
-  /**
-   * Initialize the OpenAI client with service-specific configuration.
-   * Must be implemented by subclasses with their specific initialization logic.
-   */
   protected abstract initialize(): Promise<void>;
 
-  /**
-   * Get a list of available model IDs for this provider.
-   * Must be implemented by subclasses with their provider-specific model listing logic.
-   */
   abstract getModels(): Promise<string[]>;
 
-  /**
-   * Get the appropriate model based on performance options
-   */
   protected getModel(options: AIPromptOptions): string {
     return options.performance === LLMModelPerformance.FAST
       ? this.defaultFastModel
       : this.defaultModel;
   }
 
-  /**
-   * Execute a prompt with retry mechanism and return typed result
-   */
   async executePrompt<T = string>(
     prompt: string,
     options: AIPromptOptions = {},
@@ -139,16 +114,13 @@ export abstract class BaseOpenAIService implements AIService {
           tokensUsed: response.usage?.total_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -206,9 +178,6 @@ export abstract class BaseOpenAIService implements AIService {
     };
   }
 
-  /**
-   * Execute a prompt with conversation history
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options: AIPromptOptions = {},
@@ -249,7 +218,6 @@ export abstract class BaseOpenAIService implements AIService {
           );
         }
 
-        // Convert PromptConversation to OpenAI message format
         const messages = conversationHistory.map((conv) => ({
           role: this.mapRoleToOpenAI(conv.role),
           content: conv.message,
@@ -285,16 +253,13 @@ export abstract class BaseOpenAIService implements AIService {
           tokensUsed: response.usage?.total_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -352,9 +317,6 @@ export abstract class BaseOpenAIService implements AIService {
     };
   }
 
-  /**
-   * Map PromptConversationRole to OpenAI role format
-   */
   protected mapRoleToOpenAI(
     role: PromptConversationRole,
   ): 'user' | 'assistant' | 'system' {
@@ -370,9 +332,6 @@ export abstract class BaseOpenAIService implements AIService {
     }
   }
 
-  /**
-   * Classify error type for retry logic
-   */
   protected classifyError(error: unknown): AIServiceErrorType {
     if (error instanceof AIServiceError) {
       return error.type;
@@ -396,9 +355,6 @@ export abstract class BaseOpenAIService implements AIService {
     return AIServiceErrorTypes.API_ERROR;
   }
 
-  /**
-   * Determine if we should retry based on error type and attempt number
-   */
   protected shouldRetry(
     errorType: AIServiceErrorType,
     attempt: number,
@@ -408,12 +364,10 @@ export abstract class BaseOpenAIService implements AIService {
       return false;
     }
 
-    // Don't retry authentication errors
     if (errorType === AIServiceErrorTypes.AUTHENTICATION_ERROR) {
       return false;
     }
 
-    // Retry rate limits, network errors, and general API errors
     return [
       AIServiceErrorTypes.RATE_LIMIT,
       AIServiceErrorTypes.NETWORK_ERROR,

@@ -4,16 +4,12 @@ export type ISampleLanguageMapping = {
   languages: ProgrammingLanguage[];
   hardcodedPatterns?: string[];
   /**
-   * The primary language to use for code examples in generated standards.
-   * This is typically the most popular/standardized language for the sample.
-   * Can be null for samples where no ProgrammingLanguage is appropriate (e.g., Terraform uses HCL).
+   * Language for code examples in the generated standards. Null where no
+   * `ProgrammingLanguage` fits — Terraform, whose HCL is not one.
    */
   exampleLanguage: ProgrammingLanguage | null;
 };
 
-/**
- * Maps language sample IDs to their associated ProgrammingLanguage values.
- */
 export const languageSampleMappings: Record<string, ISampleLanguageMapping> = {
   typescript: {
     languages: [ProgrammingLanguage.TYPESCRIPT],
@@ -74,8 +70,8 @@ export const languageSampleMappings: Record<string, ISampleLanguageMapping> = {
 };
 
 /**
- * Maps framework sample IDs to their associated ProgrammingLanguage values.
- * Some frameworks include hardcoded patterns for file types not in ProgrammingLanguage.
+ * Some frameworks add hardcoded patterns, for file types that have no
+ * `ProgrammingLanguage` of their own.
  */
 export const frameworkSampleMappings: Record<string, ISampleLanguageMapping> = {
   react: {

@@ -2,8 +2,8 @@ import { ChangeProposalId } from './ChangeProposalId';
 
 /**
  * A single unresolved region when a proposal is merged against the projected
- * artefact (HEAD + currently-selected proposals). The three competing texts
- * are pre-computed so a future 3-pane resolver can render them directly.
+ * artefact (HEAD + currently-selected proposals). The three competing texts are
+ * pre-computed so a resolver UI can render them without redoing the merge.
  */
 export type ProposalMergeConflictRegion = {
   /** The change type the conflict is on (e.g. "update-standard-name"). */

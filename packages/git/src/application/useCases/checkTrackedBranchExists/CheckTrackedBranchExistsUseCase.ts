@@ -11,22 +11,20 @@ import { CheckBranchExistsUseCase } from '../checkBranchExists/CheckBranchExists
 const origin = 'CheckTrackedBranchExistsUseCase';
 
 /**
- * How long an answer about a tracked branch is reused. A branch deleted with a
- * merged pull request does not come back, and a branch that exists rarely stops
- * existing, so freshness matters far less here than not spending one provider
- * API call per repository per page load.
+ * Tracked branches rarely appear or disappear, so freshness matters far less
+ * here than not spending one provider API call per repository per page load.
  */
 const CACHE_EXPIRATION_SECONDS = 300;
 
 /**
  * Whether the branch a repository is tracked on still exists on its Git
- * provider. The branch is read from the stored repository rather than supplied
- * by the caller, so the question can only ever be asked about the branch
- * Packmind actually records distributions on.
+ * provider. The branch comes from the stored repository, never from the caller,
+ * so the question can only be asked about the branch Packmind records
+ * distributions on.
  *
- * Cached deliberately at this level rather than inside CheckBranchExistsUseCase:
- * the marketplace publish flow asks that use case about a branch it creates and
- * deletes within one run, and must keep getting a live answer.
+ * Cached here rather than inside CheckBranchExistsUseCase: the marketplace
+ * publish flow asks that use case about a branch it creates and deletes within
+ * one run, and must keep getting a live answer.
  */
 export class CheckTrackedBranchExistsUseCase implements ICheckTrackedBranchExistsUseCase {
   private readonly cache: Cache;

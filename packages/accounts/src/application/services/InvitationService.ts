@@ -92,7 +92,6 @@ export class InvitationService {
     }));
   }
 
-  // Methods from our ListInvitations implementation
   async findByToken(token: InvitationToken): Promise<Invitation | null> {
     this.logger.debug('Finding invitation by token', {
       token: this.maskToken(token),

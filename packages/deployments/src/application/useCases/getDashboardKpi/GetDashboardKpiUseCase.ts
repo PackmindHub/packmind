@@ -48,7 +48,7 @@ export class GetDashboardKpiUseCase implements IGetDashboardKpi {
         total: recipes.length,
         active: activeCounts.recipes,
       },
-      // Command-named twin of `recipes` (superset); same value.
+      // Same value under the command-named field the type also requires.
       commands: {
         total: recipes.length,
         active: activeCounts.recipes,

@@ -38,7 +38,6 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
       throw new Error('Password must be at least 8 characters');
     }
 
-    // Count non-alphanumerical characters
     const nonAlphaNumCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
     if (nonAlphaNumCount < 2) {
       throw new Error(

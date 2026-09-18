@@ -36,7 +36,6 @@ export class UpdateRuleExampleLangToTYPESCRIPT1757012328880 implements Migration
     this.logger.info('Starting rollback: NormalizeRuleExampleLang');
 
     try {
-      // Revert the language values back to their original string format
       this.logger.debug('Reverting lang values to original format');
       await queryRunner.query(`
                 UPDATE rule_examples 

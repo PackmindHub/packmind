@@ -7,7 +7,6 @@ import type {
 import { forwardRef, type ReactNode } from 'react';
 
 export interface PMTagProps extends TagRootProps {
-  /** Content rendered inside the tag label. */
   children: ReactNode;
   /** Optional element rendered before the label (icon, avatar, status dot). */
   startElement?: ReactNode;
@@ -19,7 +18,6 @@ export interface PMTagProps extends TagRootProps {
   closeLabel?: string;
   /** Props forwarded to the label slot, e.g. `truncate`, `maxWidth`, `title`. */
   labelProps?: TagLabelProps;
-  /** Props forwarded to the close trigger slot. */
   closeTriggerProps?: TagCloseTriggerProps;
 }
 

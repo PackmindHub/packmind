@@ -14,28 +14,12 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'AddMarketplaceDistributionsTable1805000000000';
 
 /**
- * Migration: AddMarketplaceDistributionsTable
- *
  * Creates the `marketplace_distributions` table that records every attempt
  * to publish a Packmind package as a managed plugin on a linked
  * marketplace. Mirrors the code-repository `distributions` shape.
  *
- * Schema changes:
- *   1. Create the `marketplace_distributions` table with the columns
- *      described in `MarketplaceDistributionSchema`: organization_id,
- *      marketplace_id, package_id, plugin_slug, author_id, status, source,
- *      pr_url (nullable), git_commit (nullable), error (nullable),
- *      failure_reason (nullable), content_hash (nullable), plus timestamps
- *      and soft-delete columns.
- *   2. Foreign keys: organization (CASCADE), marketplace (CASCADE),
- *      package (CASCADE), users / author (RESTRICT).
- *   3. Indexes: marketplace_id, (package_id, marketplace_id), status.
- *
- * No ALTER on the `marketplaces` table — the new `packmindLock` field
- * lives inside the existing JSONB `descriptor` column. The
- * `failure_reason` column is a `varchar` rather than a PG enum so future
- * `PublishFailureReason` literals can be added without an ALTER TYPE
- * dance.
+ * `failure_reason` is a `varchar` rather than a PG enum so future
+ * `PublishFailureReason` literals can be added without an ALTER TYPE dance.
  */
 export class AddMarketplaceDistributionsTable1805000000000 implements MigrationInterface {
   constructor(
@@ -148,7 +132,6 @@ export class AddMarketplaceDistributionsTable1805000000000 implements MigrationI
     this.logger.info('Starting migration: AddMarketplaceDistributionsTable');
 
     try {
-      // 1. Create the marketplace_distributions table
       this.logger.debug('Creating marketplace_distributions table');
       await queryRunner.createTable(this.marketplaceDistributionsTable);
 
@@ -184,7 +167,6 @@ export class AddMarketplaceDistributionsTable1805000000000 implements MigrationI
         this.authorForeignKey,
       );
 
-      // 2. Create indexes on marketplace_distributions
       this.logger.debug(
         'Creating idx_marketplace_distributions_marketplace_id on marketplace_distributions (marketplace_id)',
       );

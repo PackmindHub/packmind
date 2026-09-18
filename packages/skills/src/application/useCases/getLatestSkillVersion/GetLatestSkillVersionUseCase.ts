@@ -44,7 +44,6 @@ export class GetLatestSkillVersionUseCase
       const skillId = createSkillId(command.skillId);
       const spaceId = createSpaceId(command.spaceId);
 
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: command.spaceId });
@@ -62,7 +61,6 @@ export class GetLatestSkillVersionUseCase
         );
       }
 
-      // Get the skill to verify it belongs to the space
       const skill = await this.skillService.getSkillById(skillId);
       if (!skill) {
         this.logger.warn('Skill not found', { skillId: command.skillId });

@@ -204,7 +204,6 @@ export class CommandVersionService {
     });
 
     try {
-      // Get all versions for this recipe
       const versions =
         await this.commandVersionRepository.findByCommandId(recipeId);
 
@@ -218,7 +217,6 @@ export class CommandVersionService {
         versionCount: versions.length,
       });
 
-      // Delete all versions
       for (const version of versions) {
         await this.commandVersionRepository.deleteById(version.id, deletedBy);
         this.logger.debug('Recipe version deleted', {

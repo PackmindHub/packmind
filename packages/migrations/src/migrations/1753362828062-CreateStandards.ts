@@ -18,7 +18,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definitions
   private readonly standardsTable = new Table({
     name: 'standards',
     columns: [
@@ -137,7 +136,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
     ],
   });
 
-  // Join tables
   private readonly standardDeploymentVersionsTable = new Table({
     name: 'standard_deployment_versions',
     columns: [
@@ -186,7 +184,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
     ],
   });
 
-  // Foreign key definitions
   private readonly standardsOrganizationForeignKey = new TableForeignKey({
     columnNames: ['organization_id'],
     referencedTableName: 'organizations',
@@ -236,7 +233,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
       name: 'FK_standard_deployments_organization',
     });
 
-  // Join table foreign keys
   private readonly standardDeploymentVersionsDeploymentForeignKey =
     new TableForeignKey({
       columnNames: ['standard_deployment_id'],
@@ -295,7 +291,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
     this.logger.info('Starting migration: CreateStandards');
 
     try {
-      // Create main tables
       this.logger.debug('Creating standards table');
       await queryRunner.createTable(this.standardsTable);
       this.logger.info('Successfully created standards table');
@@ -312,7 +307,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
       await queryRunner.createTable(this.standardDeploymentsTable);
       this.logger.info('Successfully created standard_deployments table');
 
-      // Create join tables
       this.logger.debug('Creating standard_deployment_versions join table');
       await queryRunner.createTable(this.standardDeploymentVersionsTable);
       this.logger.info(
@@ -331,7 +325,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
         'Successfully created standard_deployment_git_commits join table',
       );
 
-      // Create indices
       this.logger.debug('Creating indices for standards table');
       await queryRunner.createIndex(
         'standards',
@@ -440,7 +433,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
       );
       this.logger.info('Successfully created indices for join tables');
 
-      // Create foreign keys for main tables
       this.logger.debug('Adding foreign key constraints for standards table');
       await queryRunner.createForeignKey(
         'standards',
@@ -489,7 +481,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
         'Successfully added foreign key constraints for standard_deployments table',
       );
 
-      // Create foreign keys for join tables
       this.logger.debug(
         'Adding foreign key constraints for standard_deployment_versions table',
       );
@@ -594,7 +585,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
         'Successfully dropped foreign key constraints for standard_deployment_versions table',
       );
 
-      // Drop foreign keys for main tables
       this.logger.debug(
         'Dropping foreign key constraints for standard_deployments table',
       );
@@ -643,7 +633,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
         'Successfully dropped foreign key constraints for standards table',
       );
 
-      // Drop indices for join tables
       this.logger.debug('Dropping indices for join tables');
       await queryRunner.dropIndex(
         'standard_deployment_git_commits',
@@ -659,7 +648,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
       );
       this.logger.info('Successfully dropped indices for join tables');
 
-      // Drop indices for main tables
       this.logger.debug('Dropping indices for standard_deployments table');
       await queryRunner.dropIndex(
         'standard_deployments',
@@ -697,7 +685,6 @@ export class CreateStandards1753362828062 implements MigrationInterface {
       await queryRunner.dropIndex('standards', 'idx_standard_organization');
       this.logger.info('Successfully dropped indices for standards table');
 
-      // Drop join tables
       this.logger.debug('Dropping standard_deployment_git_commits join table');
       await queryRunner.dropTable('standard_deployment_git_commits', true);
       this.logger.info(

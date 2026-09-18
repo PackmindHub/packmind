@@ -16,7 +16,6 @@ export default class JSONParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('json');
 
       for (const wasmPath of wasmPaths) {

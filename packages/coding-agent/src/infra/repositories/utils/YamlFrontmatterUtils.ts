@@ -1,9 +1,5 @@
 import { escapeSingleQuotes } from './FileUtils';
 
-/**
- * Formats an additional property value as YAML frontmatter.
- * Handles nested objects, arrays, and scalar values recursively.
- */
 export function formatAdditionalPropertyYaml(
   key: string,
   value: unknown,
@@ -78,7 +74,6 @@ function formatEntryValue(
 ): string {
   if (value !== null && typeof value === 'object') {
     const nested = formatAdditionalPropertyYaml(key, value, indent);
-    // Replace the leading whitespace with the provided prefix for the first line
     return `${prefix}${nested.trimStart()}`;
   }
   return `${prefix}${key}: ${formatYamlScalar(value)}`;

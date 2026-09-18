@@ -135,20 +135,19 @@ export class DataFactory {
       await this.withUserAndOrganization();
     }
 
-    // Exclude slug from factory defaults - let captureRecipe auto-generate it from name
+    // Drop the factory's slug so captureCommand derives it from the name, as it
+    // does in production; a caller-supplied slug is put back below.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { slug: _factorySlug, ...factoryDefaults } = commandFactory({
       spaceId: this.space.id,
     });
 
-    // Also exclude slug from recipe override unless explicitly provided
     const { slug: commandSlug, ...commandWithoutSlug } = recipe || {};
 
     return this.testApp.commandsHexa.getAdapter().captureCommand({
       ...factoryDefaults,
       ...this.packmindCommand(),
       ...commandWithoutSlug,
-      // Only include slug if explicitly provided in the recipe parameter
       ...(commandSlug !== undefined ? { slug: commandSlug } : {}),
     });
   }

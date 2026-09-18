@@ -11,14 +11,13 @@ type MailOptionsTemplate = {
   html: string;
 };
 
-/**
- * SMTP Mail service implementation using nodemailer.
- *
- * This service provides email functionality through SMTP configuration
- * using environment variables for connection settings.
- */
 const origin = 'SmtpMailService';
 
+/**
+ * Nodemailer over SMTP, configured entirely from `SMTP_*` config. With no host
+ * or port configured it logs the message and reports success rather than
+ * throwing, so a deployment without mail set up still works.
+ */
 export class SmtpMailService implements MailService {
   constructor(
     private readonly _logger: PackmindLogger = new PackmindLogger(origin),
@@ -143,7 +142,6 @@ ${content}
       secure: secure === 'true', // true for 465, false for other ports
     };
 
-    // Add authentication if credentials are provided
     if (user && password) {
       mailConfig.auth = {
         user,
@@ -151,12 +149,10 @@ ${content}
       };
     }
 
-    // Configure TLS settings
     mailConfig.tls = {
       rejectUnauthorized: false,
     };
 
-    // Handle Exchange Server specific configuration
     if (isExchangeServer === 'true') {
       mailConfig.tls.ciphers = 'SSLv3';
       mailConfig.secure = false;

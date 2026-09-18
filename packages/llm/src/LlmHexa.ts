@@ -11,15 +11,6 @@ import { LlmAdapter } from './application/adapter/LlmAdapter';
 
 const origin = 'LlmHexa';
 
-/**
- * LlmHexa - Hexagonal architecture facade for the LLM domain.
- *
- * This class serves as the main entry point for LLM-related functionality.
- * It manages dependency injection, service instantiation, and exposes the adapter.
- *
- * Currently provides OpenAIService as the default LLM provider.
- * Future: Will support organization-specific LLM configurations stored in the database.
- */
 export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
   private readonly adapter: LlmAdapter;
   public isInitialized = false;
@@ -44,9 +35,6 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('LlmHexa already initialized');
@@ -56,13 +44,11 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
     this.logger.info('Initializing LlmHexa (adapter retrieval phase)');
 
     try {
-      // Get required ports from registry
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
       this.logger.info('Required ports retrieved from registry');
 
-      // Initialize adapter with ports
       await this.adapter.initialize({
         [IAccountsPortName]: accountsPort,
       });
@@ -77,11 +63,6 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
     }
   }
 
-  /**
-   * Get the LLM adapter for cross-domain access to LLM services.
-   * This adapter implements ILlmPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
-   */
   public getAdapter(): ILlmPort {
     if (!this.isInitialized) {
       this.logger.warn(
@@ -91,19 +72,12 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
     return this.adapter.getPort();
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ILlmPortName;
   }
 
-  /**
-   * Destroys the LlmHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying LlmHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('LlmHexa destroyed');
   }
 }
