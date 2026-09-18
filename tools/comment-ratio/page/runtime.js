@@ -321,7 +321,12 @@
       crosshair.setAttribute('x2', x(t));
       crosshair.setAttribute('opacity', 1);
 
-      var html = '<b>' + monthLabel(t) + '</b>';
+      // A point covers a fortnight, so naming its month would not tell two
+      // points of the same month apart. The caller supplies the exact label.
+      var heading = config.pointLabels
+        ? config.pointLabels[best]
+        : monthLabel(t);
+      var html = '<b>' + heading + '</b>';
       config.series.forEach(function (s) {
         var value = s.points[best] ? s.points[best][1] : null;
         html +=

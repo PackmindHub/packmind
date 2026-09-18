@@ -307,10 +307,26 @@ const personModelTable = [...personTotals.entries()]
       ]),
   );
 
+// Every point names the span it covers, so the tooltip can be exact where the
+// axis only carries a monthly scale.
+const flowLabels = flowMonths.map(
+  (m) => periodFr(m) + (m.partial ? ' (partial)' : ''),
+);
+const stockLabels = stock.map((s) =>
+  new Date(s.label + 'T00:00:00Z').toLocaleDateString('en-GB', {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }),
+);
+
 const payload = {
   tMin,
   tMax,
   annotations,
+  flowLabels,
+  stockLabels,
   headline: [series('all', 'All files', 'var(--series-1)')],
   byCategory: [
     series('ts', '.ts code', 'var(--series-1)'),
@@ -605,12 +621,14 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
 
   V.lineChart(document.getElementById('c-headline'), {
     series: D.headline, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
+    pointLabels: D.flowLabels,
     ariaLabel: "Comment ratio of added lines over time"
   });
   V.table(document.getElementById('t-headline'), FLOW_COLUMNS, D.monthTable);
 
   V.lineChart(document.getElementById('c-category'), {
     series: D.byCategory, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
+    pointLabels: D.flowLabels,
     ariaLabel: "Comment ratio by file type"
   });
   document.getElementById('l-category').innerHTML = D.byCategory.map(function (s) {
@@ -646,6 +664,7 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
 
   V.lineChart(document.getElementById('c-size'), {
     series: D.stockSize, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
+    pointLabels: D.stockLabels,
     yTick: function (v) { return V.int(Math.round(v)); },
     ariaLabel: "TypeScript lines of code over time"
   });
@@ -654,6 +673,7 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
 
   V.lineChart(document.getElementById('c-stockratio'), {
     series: D.stockRatio, tMin: D.tMin, tMax: D.tMax,
+    pointLabels: D.stockLabels,
     ariaLabel: "Comment ratio across the whole codebase"
   });
 
