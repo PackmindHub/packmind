@@ -1,4 +1,5 @@
 import { validatePackageReleaseVersion } from './packageReleaseVersionRules';
+import { InvalidPackageReleaseVersionError } from './InvalidPackageReleaseVersionError';
 
 describe('packageReleaseVersionRules', () => {
   describe('malformed', () => {
@@ -109,6 +110,14 @@ describe('packageReleaseVersionRules', () => {
   describe('the ordering trap', () => {
     it('accepts 0.10.0 over current 0.9.0', () => {
       expect(validatePackageReleaseVersion('0.10.0', '0.9.0')).toBe(null);
+    });
+  });
+
+  describe('when the current version does not parse', () => {
+    it('throws InvalidPackageReleaseVersionError', () => {
+      expect(() => validatePackageReleaseVersion('1.0.0', 'banana')).toThrow(
+        InvalidPackageReleaseVersionError,
+      );
     });
   });
 });

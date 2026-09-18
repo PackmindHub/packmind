@@ -4,6 +4,7 @@ import {
   nextVersions,
 } from './packageReleaseVersion';
 import { PackageReleaseRefusal } from './PackageRelease';
+import { InvalidPackageReleaseVersionError } from './InvalidPackageReleaseVersionError';
 
 /**
  * Whether a submitted version may be released over `currentVersion`.
@@ -24,7 +25,7 @@ export const validatePackageReleaseVersion = (
   // Check 2: submitted is not strictly greater than currentVersion → 'not_greater'
   const parsedCurrent = parsePackageReleaseVersion(currentVersion);
   if (!parsedCurrent) {
-    throw new Error(`Not a package release version: ${currentVersion}`);
+    throw new InvalidPackageReleaseVersionError(currentVersion);
   }
 
   const comparison = comparePackageReleaseVersions(

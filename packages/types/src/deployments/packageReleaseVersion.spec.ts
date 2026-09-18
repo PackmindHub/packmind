@@ -1,3 +1,4 @@
+import { InvalidPackageReleaseVersionError } from './InvalidPackageReleaseVersionError';
 import {
   comparePackageReleaseVersions,
   formatPackageReleaseVersion,
@@ -120,10 +121,18 @@ describe('packageReleaseVersion', () => {
       expect(nextVersions('1.2.3')).toEqual(['1.2.4', '1.3.0', '2.0.0']);
     });
 
-    it('throws for an argument that does not parse', () => {
-      expect(() => nextVersions('1.2.3.4')).toThrow(
-        'Not a package release version: 1.2.3.4',
-      );
+    describe('when the argument does not parse', () => {
+      it('throws InvalidPackageReleaseVersionError', () => {
+        expect(() => nextVersions('1.2.3.4')).toThrow(
+          InvalidPackageReleaseVersionError,
+        );
+      });
+
+      it('names the version it refused', () => {
+        expect(() => nextVersions('1.2.3.4')).toThrow(
+          'Not a package release version: 1.2.3.4',
+        );
+      });
     });
 
     describe('the order the three are returned in', () => {

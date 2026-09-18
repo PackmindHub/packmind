@@ -1,3 +1,5 @@
+import { InvalidPackageReleaseVersionError } from './InvalidPackageReleaseVersionError';
+
 export type PackageReleaseVersion = {
   major: number;
   minor: number;
@@ -48,7 +50,7 @@ export const comparePackageReleaseVersions = (
 export const nextVersions = (current: string): [string, string, string] => {
   const parsed = parsePackageReleaseVersion(current);
   if (!parsed) {
-    throw new Error(`Not a package release version: ${current}`);
+    throw new InvalidPackageReleaseVersionError(current);
   }
 
   const patch = formatPackageReleaseVersion({
