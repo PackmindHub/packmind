@@ -69,9 +69,6 @@ export class GitProviderService {
     gitProviderId: GitProviderId,
     page = 1,
   ): Promise<ListAvailableReposResponse> {
-    // NOTE: This method contains business logic and should be moved to a use case
-    // This is kept temporarily for backward compatibility
-    // Find the GitProvider linked in the database
     const gitProvider =
       await this.gitProviderRepository.findById(gitProviderId);
 
@@ -79,10 +76,8 @@ export class GitProviderService {
       throw new GitProviderNotFoundError(gitProviderId);
     }
 
-    // Create an instance of IGitProvider using the factory (token validation delegated)
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
-    // Always filters for write-only repositories
     const { repositories, totalPages, lastLoadedPage, partial } =
       await providerInstance.listAvailableRepositories(page);
     return {
@@ -126,9 +121,6 @@ export class GitProviderService {
     repo: string,
     branch: string,
   ): Promise<boolean> {
-    // NOTE: This method contains business logic and should be moved to a use case
-    // This is kept temporarily for backward compatibility
-    // Find the GitProvider linked in the database
     const gitProvider =
       await this.gitProviderRepository.findById(gitProviderId);
 
@@ -136,7 +128,6 @@ export class GitProviderService {
       throw new GitProviderNotFoundError(gitProviderId);
     }
 
-    // Create an instance of IGitProvider using the factory (token validation delegated)
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.checkBranchExists(owner, repo, branch);
@@ -149,10 +140,9 @@ export class GitProviderService {
     baseBranch: string,
     targetBranch: string,
   ): Promise<void> {
-    // Resolve provider + token, then build an IGitRepo bound to the BASE
-    // branch so the underlying client knows where to fork from. The factory
-    // only consumes owner/repo/branch from the GitRepo shape, so the synthetic
-    // id/providerId/type fields are inert here.
+    // The IGitRepo must be bound to the base branch so the client knows where
+    // to fork from. The factory only reads owner/repo/branch, which is why the
+    // synthetic GitRepo below can carry throwaway id/type fields.
     const gitProvider =
       await this.resolvedGitRepoService.getProvider(gitProviderId);
 
@@ -223,8 +213,8 @@ export class GitProviderService {
       body?: string;
     },
   ): Promise<{ url: string; number: number; wasCreated: boolean }> {
-    // Resolve provider + token, then build an IGitRepo bound to the BASE
-    // branch (the repo's configured `branch` field is the merge target).
+    // `gitRepo.branch` is the merge target, so resolving against it binds the
+    // IGitRepo to the PR's base.
     const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
@@ -309,7 +299,6 @@ export class GitProviderService {
     gitRepo: GitRepo,
     path?: string,
   ): Promise<string[]> {
-    // Find the specific git provider for this repository
     const gitProvider = await this.resolvedGitRepoService.getProvider(
       gitRepo.providerId,
     );
@@ -318,7 +307,6 @@ export class GitProviderService {
       throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
-    // Create an instance of IGitRepo using the factory (token validation delegated)
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
     return gitRepoInstance.listDirectoriesOnRepo(
       gitRepo.repo,

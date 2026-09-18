@@ -172,15 +172,14 @@ export class CreateInvitationsUseCase
       );
 
       if (existingUser) {
-        // Check if user is already active (completed signup)
+        // An active user has already completed signup, so there is nothing to
+        // invite them to: grant the membership straight away.
         if (existingUser.active) {
-          // For active users, add them directly to the organization instead of creating invitation
           const isMember = existingUser.memberships?.some(
             (membership) => membership.organizationId === organization.id,
           );
 
           if (isMember) {
-            // User is already a member of this organization
             skipped.push({
               email: candidate.original,
               reason: 'already-member',
@@ -188,7 +187,6 @@ export class CreateInvitationsUseCase
             continue;
           }
 
-          // Add organization membership directly for active users
           const userWithMembership =
             await this.userService.addOrganizationMembership(
               existingUser,
@@ -228,8 +226,8 @@ export class CreateInvitationsUseCase
 
         let userWithMembership: User;
         if (isMember) {
-          // If user is already a member and inactive, we should allow re-inviting
-          // The user is created as a member but hasn't completed signup yet
+          // Membership is granted when the invitation is first created, so an
+          // inactive member is mid-signup and must still be re-invitable.
           this.logger.info(
             'User is already a member but inactive, proceeding with invitation',
             {
@@ -237,9 +235,8 @@ export class CreateInvitationsUseCase
               email: candidate.original,
             },
           );
-          userWithMembership = existingUser; // User already has membership
+          userWithMembership = existingUser;
         } else {
-          // Add organization membership for new member
           userWithMembership = await this.userService.addOrganizationMembership(
             existingUser,
             organization.id,
@@ -310,7 +307,6 @@ export class CreateInvitationsUseCase
     const results: InvitationCreationRecord[] = [];
 
     for (const request of requests) {
-      // Check if user already has invitations
       const existingInvitation =
         await this.invitationService.findLatestByUserId(request.user.id);
 
@@ -319,7 +315,6 @@ export class CreateInvitationsUseCase
         const isExpired = existingInvitation.expirationDate < now;
 
         if (isExpired) {
-          // Create new invitation if expired
           this.logger.info(
             'Creating new invitation for user with expired invitation',
             {
@@ -334,7 +329,6 @@ export class CreateInvitationsUseCase
             );
           results.push(newRecord);
         } else {
-          // Resend email with existing invitation if not expired
           this.logger.info('Resending email for existing valid invitation', {
             userId: request.user.id,
             invitationId: existingInvitation.id,
@@ -351,7 +345,6 @@ export class CreateInvitationsUseCase
           });
         }
       } else {
-        // No existing invitation - create new one using the original service
         this.logger.info(
           'Creating new invitation for user without existing invitation',
           {

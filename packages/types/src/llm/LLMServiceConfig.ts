@@ -1,17 +1,7 @@
-/**
- * Configuration types for LLM service providers.
- * Uses discriminated union pattern for type-safe configuration.
- */
-
 import { LLMProvider } from './LLMProviderMetadata';
 
 export { LLMProvider };
 
-/**
- * OpenAI service configuration.
- * API key should be injected through the constructor.
- * Endpoint is hardcoded to OpenAI's official API.
- */
 export type OpenAIServiceConfig = {
   provider: LLMProvider.OPENAI;
   apiKey: string;
@@ -19,11 +9,6 @@ export type OpenAIServiceConfig = {
   fastestModel?: string;
 };
 
-/**
- * Anthropic service configuration.
- * API key should be injected through the constructor.
- * Endpoint is hardcoded to Anthropic's official API.
- */
 export type AnthropicServiceConfig = {
   provider: LLMProvider.ANTHROPIC;
   apiKey: string;
@@ -31,11 +16,6 @@ export type AnthropicServiceConfig = {
   fastestModel?: string;
 };
 
-/**
- * Gemini service configuration.
- * API key should be injected through the constructor.
- * Uses Google's Generative AI API.
- */
 export type GeminiServiceConfig = {
   provider: LLMProvider.GEMINI;
   apiKey: string;
@@ -44,9 +24,8 @@ export type GeminiServiceConfig = {
 };
 
 /**
- * OpenAI-compatible service configuration.
- * All fields are required including custom endpoint and API key.
- * Use this for providers like Google Gemini, Azure OpenAI, or local models.
+ * For local models (Ollama, LM Studio) and other OpenAI-compatible endpoints.
+ * Gemini and Azure OpenAI have their own config types above.
  */
 export type OpenAICompatibleServiceConfig = {
   provider: LLMProvider.OPENAI_COMPATIBLE;
@@ -57,11 +36,10 @@ export type OpenAICompatibleServiceConfig = {
 };
 
 /**
- * Azure OpenAI service configuration.
- * Requires explicit deployment names for models.
- * API key and endpoint can be provided in config or retrieved from environment variables:
- * - AZURE_OPENAI_API_KEY (if apiKey not provided)
- * - AZURE_OPENAI_ENDPOINT (if endpoint not provided)
+ * `model` and `fastestModel` are Azure *deployment* names, not model names.
+ * `apiKey` and `endpoint` are optional here because `AzureOpenAIService` falls
+ * back to the `AZURE_OPENAI_API_KEY` / `AZURE_OPENAI_ENDPOINT` config values
+ * when they are absent.
  */
 export type AzureOpenAIServiceConfig = {
   provider: LLMProvider.AZURE_OPENAI;
@@ -73,19 +51,13 @@ export type AzureOpenAIServiceConfig = {
 };
 
 /**
- * Packmind service configuration.
- * This is the default provider for the SaaS platform.
- * Delegates to a concrete provider based on PACKMIND_DEFAULT_PROVIDER environment variable.
- * Defaults to OpenAI if not configured.
+ * Carries no credentials: `PackmindService` resolves the concrete provider from
+ * `PACKMIND_DEFAULT_PROVIDER`, falling back to OpenAI.
  */
 export type PackmindServiceConfig = {
   provider: LLMProvider.PACKMIND;
 };
 
-/**
- * Discriminated union of all supported LLM service configurations.
- * The 'provider' field is used as the discriminator for type safety.
- */
 export type LLMServiceConfig =
   | OpenAIServiceConfig
   | AnthropicServiceConfig

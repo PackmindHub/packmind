@@ -64,14 +64,12 @@ export class GithubRepository implements IGitRepo {
       httpsAgent: providerHttpsAgent,
     });
 
-    // Inject token from resolver on every request
     this.axiosInstance.interceptors.request.use(async (config) => {
       const token = await resolver.getToken();
       config.headers['Authorization'] = `token ${token}`;
       return config;
     });
 
-    // Fire onUnauthorized hook on 401 responses
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -117,19 +115,10 @@ export class GithubRepository implements IGitRepo {
       const { owner, repo, branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Step 1: Walk ref -> commit -> tree, once.
-      //
-      // A recursive tree lists every path in the repository with its mode and
-      // the SHA of its content, which is all it takes to work out what
-      // changed: a blob SHA is a hash of the bytes, so hashing the content we
-      // mean to write and comparing answers the question without downloading
-      // anything.
-      //
-      // This walk used to sit *after* a `Promise.all` that asked the same
-      // question one file and one `GET /contents` at a time, and then kept
-      // only the modes off the tree and threw the SHAs away. On a 1,129-file
-      // package that was 1,129 uncapped requests taking over two minutes,
-      // usually to conclude that nothing had changed at all.
+      // One `ref -> commit -> tree` walk answers the whole diff: a recursive
+      // tree lists every path with its mode and content SHA, and a blob SHA is
+      // a hash of the bytes, so hashing the content to be written decides what
+      // changed without downloading anything.
       this.logger.debug('Getting reference to branch', {
         owner,
         repo,
@@ -167,26 +156,20 @@ export class GithubRepository implements IGitRepo {
           ]),
       );
 
-      // Step 2: Work out which files changed, by hash rather than by download.
-      //
-      // The hash is taken over the exact bytes we would write, with no
-      // normalisation, so a file differing from the repository copy only in
-      // its line endings counts as changed - which is also what the previous
-      // string comparison concluded.
+      // Hashed over the exact bytes to be written, with no normalisation, so
+      // a file differing only in its line endings counts as changed.
       const fileDifferenceCheck = files.map((file) => {
         const existingBlob = existingBlobs.get(file.path);
 
         return {
           path: file.path,
-          // Absent from the tree means new, which is what a 404 from
-          // `GET /contents` used to stand for.
+          // Absent from the tree means new.
           hasChanges:
             !existingBlob || existingBlob.sha !== gitBlobSha(file.content),
           hasPermissionsSpecified: !!file.permissions,
         };
       });
 
-      // Step 3: Filter delete files to only those that exist in the repo
       const existingDeleteFiles = deleteFiles
         ? deleteFiles.filter((file) => existingBlobs.has(file.path))
         : [];
@@ -201,8 +184,6 @@ export class GithubRepository implements IGitRepo {
         });
       }
 
-      // Step 4: Check if there are any changes to commit (file modifications, permission changes, or deletions)
-      // For permission changes, compare the existing tree mode with the desired mode
       const hasPermissionChanges = fileDifferenceCheck.some((check, i) => {
         if (!check.hasPermissionsSpecified) return false;
         const existingMode = existingBlobs.get(check.path)?.mode;
@@ -232,7 +213,6 @@ export class GithubRepository implements IGitRepo {
         };
       }
 
-      // Step 5: Prepare tree items - only add files with actual changes
       this.logger.debug('Preparing tree items', {
         owner,
         repo,
@@ -248,7 +228,6 @@ export class GithubRepository implements IGitRepo {
         sha?: null;
       }[] = [];
 
-      // Add files that have content changes or permission changes
       for (let i = 0; i < files.length; i++) {
         const hasContentChanges = fileDifferenceCheck[i].hasChanges;
         const existingMode = existingBlobs.get(files[i].path)?.mode;
@@ -257,8 +236,8 @@ export class GithubRepository implements IGitRepo {
           files[i].permissions && existingMode !== desiredMode;
 
         if (hasContentChanges || hasModeChange) {
-          // When permissions is not specified, preserve the existing mode
-          // to avoid accidentally resetting 100755 files to 100644
+          // With no permissions requested, keep the existing mode rather than
+          // resetting a 100755 file to 100644.
           const mode = files[i].permissions
             ? desiredMode
             : existingMode
@@ -273,7 +252,7 @@ export class GithubRepository implements IGitRepo {
         }
       }
 
-      // Add delete items to tree (sha: null tells GitHub to delete the file)
+      // `sha: null` is how GitHub is told to delete a path in a tree.
       if (existingDeleteFiles.length > 0) {
         this.logger.info('Adding files for deletion to commit', {
           deleteFileCount: existingDeleteFiles.length,
@@ -292,7 +271,6 @@ export class GithubRepository implements IGitRepo {
         }
       }
 
-      // Step 6: Create a new tree with all file changes
       this.logger.debug('Creating new tree with all file changes', {
         owner,
         repo,
@@ -300,7 +278,6 @@ export class GithubRepository implements IGitRepo {
         treeItemCount: treeItems.length,
       });
 
-      // Create a new tree with all file changes
       const createTreeResponse = await this.axiosInstance.post(
         `/repos/${owner}/${repo}/git/trees`,
         {
@@ -311,7 +288,6 @@ export class GithubRepository implements IGitRepo {
 
       const newTreeSha = createTreeResponse.data.sha;
 
-      // Step 7: Create a new commit pointing to the new tree
       this.logger.debug('Creating new commit pointing to the new tree', {
         owner,
         repo,
@@ -330,7 +306,6 @@ export class GithubRepository implements IGitRepo {
 
       const newCommitSha = createCommitResponse.data.sha;
 
-      // Step 8: Update the reference to point to the new commit
       this.logger.debug('Updating reference to point to the new commit', {
         owner,
         repo,
@@ -346,7 +321,6 @@ export class GithubRepository implements IGitRepo {
         },
       );
 
-      // Extract commit information from GitHub API response
       const commitInfo = {
         sha: createCommitResponse.data.sha,
         message: commitMessage,
@@ -394,8 +368,6 @@ export class GithubRepository implements IGitRepo {
       targetBranch,
     });
 
-    // Step 1: Check if the target branch already exists. If GitHub returns
-    // 2xx, the branch is present and no work is needed.
     try {
       await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
@@ -422,7 +394,7 @@ export class GithubRepository implements IGitRepo {
           `Failed to ensure branch '${targetBranch}' on GitHub: ${errorMessage}`,
         );
       }
-      // 404 -> branch missing, proceed to create it from the base branch.
+      // 404 is the only tolerated failure: the branch is simply missing.
       this.logger.debug('Target branch missing, will create from base', {
         owner,
         repo,
@@ -431,7 +403,6 @@ export class GithubRepository implements IGitRepo {
       });
     }
 
-    // Step 2: Fetch the base branch SHA so we know where to fork from.
     let baseSha: string;
     try {
       const baseRefResponse = await this.axiosInstance.get(
@@ -452,7 +423,6 @@ export class GithubRepository implements IGitRepo {
       );
     }
 
-    // Step 3: Create the target branch ref pointing at the base SHA.
     try {
       await this.axiosInstance.post(`/repos/${owner}/${repo}/git/refs`, {
         ref: `refs/heads/${targetBranch}`,
@@ -540,9 +510,8 @@ export class GithubRepository implements IGitRepo {
       base: baseBranch,
     });
 
-    // Step 1: Look up any existing open PR matching head -> base. When one is
-    // open we refresh its title + body rather than leaving stale text behind —
-    // the marketplace sync PR recomputes its description on every publish.
+    // An open PR gets its title and body refreshed rather than keeping stale
+    // text: the rolling sync PR recomputes its description on every publish.
     const existing = await this.findOpenPullRequestForBase(head, baseBranch);
     if (existing) {
       this.logger.debug('Existing open pull request found, updating it', {
@@ -556,9 +525,8 @@ export class GithubRepository implements IGitRepo {
       return { url: existing.url, number: existing.number, wasCreated: false };
     }
 
-    // Step 2: Create a new PR. GitHub may race a concurrent creator and
-    // respond with a 422 "A pull request already exists" — in that case we
-    // re-run the lookup and surface the existing PR.
+    // A concurrent creator makes GitHub answer 422 "A pull request already
+    // exists", which is handled by re-running the lookup below.
     try {
       const createResponse = await this.axiosInstance.post(
         `/repos/${owner}/${repo}/pulls`,
@@ -600,8 +568,8 @@ export class GithubRepository implements IGitRepo {
             wasCreated: false,
           };
         }
-        // Fallthrough: fall back to a generic error if the post-race lookup
-        // still finds nothing (extremely unlikely, but defensive).
+        // Falls through to the generic error when even the post-race lookup
+        // finds nothing.
       }
 
       const errorMessage =
@@ -620,12 +588,8 @@ export class GithubRepository implements IGitRepo {
   }
 
   /**
-   * Refresh an open pull request's title and body.
-   *
-   * Deliberately non-throwing: the caller already holds a usable PR URL, and
-   * the rolling marketplace sync PR treats its description as cosmetic. Losing
-   * the URL because a PATCH failed would be strictly worse than showing a
-   * slightly stale description, so a failure is logged and swallowed.
+   * Deliberately non-throwing: the caller already holds a usable PR URL, and a
+   * slightly stale description beats losing that URL to a failed PATCH.
    */
   private async updatePullRequest(
     pullNumber: number,
@@ -880,7 +844,6 @@ export class GithubRepository implements IGitRepo {
 
       return null;
     } catch (error) {
-      // If we get a 404, the file doesn't exist
       if (
         error &&
         typeof error === 'object' &&
@@ -899,7 +862,6 @@ export class GithubRepository implements IGitRepo {
         return null;
       }
 
-      // Re-throw other errors
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to fetch file from repository', {
@@ -927,14 +889,12 @@ export class GithubRepository implements IGitRepo {
     });
 
     try {
-      // Step 1: Get the SHA of the tree from the branch
       const branchResponse = await this.axiosInstance.get(
         `/repos/${owner}/${name}/branches/${branch}`,
       );
 
       const treeSha = branchResponse.data.commit.commit.tree.sha;
 
-      // Step 2: Get the entire tree recursively and filter for directories
       const treeResponse = await this.axiosInstance.get(
         `/repos/${owner}/${name}/git/trees/${treeSha}`,
         {
@@ -946,7 +906,8 @@ export class GithubRepository implements IGitRepo {
         .filter((item: { type: string }) => item.type === 'tree')
         .map((item: { path: string }) => item.path);
 
-      // If a specific path is provided (and not root "/"), show all subdirectories recursively
+      // GitHub returns entries from within the requested path, so the prefix
+      // has to be re-applied to report them as repository paths.
       if (path && path !== '/') {
         const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
         const pathPrefix = normalizedPath.endsWith('/')
@@ -1004,22 +965,19 @@ export class GithubRepository implements IGitRepo {
     const { owner, repo } = this.options;
 
     try {
-      // Use GitHub's contents API to check if the directory exists
-      // For directories, GitHub returns an array of directory contents
+      // The contents API answers with an array for a directory and a single
+      // object for a file, which is the whole test below.
       const response = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/contents/${directoryPath}`,
         { params: { ref: branch } },
       );
 
-      // If we get a successful response with an array, it's a directory
       if (Array.isArray(response.data)) {
         return true;
       }
 
-      // If we get a single object, it's a file, not a directory
       return false;
     } catch (error) {
-      // If we get a 404, the directory doesn't exist
       if (
         error &&
         typeof error === 'object' &&
@@ -1032,7 +990,6 @@ export class GithubRepository implements IGitRepo {
         return false;
       }
 
-      // Re-throw other errors
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to check directory existence in repository', {
@@ -1053,28 +1010,23 @@ export class GithubRepository implements IGitRepo {
     const { owner, repo } = this.options;
 
     try {
-      // Get the branch ref to find the tree SHA
       const refResponse = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
       );
       const refSha = refResponse.data.object.sha;
 
-      // Get the commit to find the tree SHA
       const commitResponse = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/commits/${refSha}`,
       );
       const baseTreeSha = commitResponse.data.tree.sha;
 
-      // Fetch full tree recursively
       const treeResponse = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
         { params: { recursive: 1 } },
       );
 
-      // Normalize path to ensure it ends with /
       const normalizedPath = path.endsWith('/') ? path : `${path}/`;
 
-      // Filter for files (blobs) under the given path
       const files = treeResponse.data.tree
         .filter(
           (item: { type: string; path?: string }) =>
@@ -1099,7 +1051,6 @@ export class GithubRepository implements IGitRepo {
         branch,
         error: errorMessage,
       });
-      // Return empty array if directory doesn't exist
       return [];
     }
   }
@@ -1115,10 +1066,8 @@ export class GithubRepository implements IGitRepo {
     }
 
     try {
-      // One `ref -> commit -> tree` walk for every path, not one per path.
-      // The recursive tree covers the whole repository, so the per-directory
-      // loop this replaced was re-downloading the same listing and throwing
-      // all but one directory's worth away.
+      // One `ref -> commit -> tree` walk for every path, not one per path:
+      // the recursive tree already covers the whole repository.
       const refResponse = await this.axiosInstance.get(
         `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
       );
@@ -1142,8 +1091,8 @@ export class GithubRepository implements IGitRepo {
         .map((item: { path: string }) => item.path);
 
       // Filtered per path rather than once against all prefixes, so the
-      // result is ordered and duplicated exactly as calling the singular form
-      // for each path in turn would have been.
+      // result keeps the order and the duplicates that calling the singular
+      // form for each path produces.
       const files = paths.flatMap((path) => {
         const normalizedPath = path.endsWith('/') ? path : `${path}/`;
         return blobPaths
@@ -1168,8 +1117,8 @@ export class GithubRepository implements IGitRepo {
         branch,
         error: errorMessage,
       });
-      // Matches the singular form: an unreachable or missing tree means
-      // "nothing to expand", not a failed publish.
+      // An unreachable or missing tree means "nothing to expand", not a
+      // failed publish.
       return [];
     }
   }

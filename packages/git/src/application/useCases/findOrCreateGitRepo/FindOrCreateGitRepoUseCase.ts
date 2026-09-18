@@ -15,12 +15,10 @@ import { extractBaseUrl, parseGitProviderVendor } from '@packmind/node-utils';
 const origin = 'FindOrCreateGitRepoUseCase';
 
 /**
- * Finds an existing git repository for the given owner/repo/branch within an
- * organization, or creates it — auto-creating a tokenless provider when no
- * token provider can host it.
- *
- * The provider/repo resolution logic is extracted from the deployments
- * TargetResolutionService so both domains share a single implementation.
+ * Finds the git repository for an owner/repo/branch within an organization, or
+ * creates it — auto-creating a tokenless provider when no token provider can
+ * host it. Shared with the deployments domain, whose TargetResolutionService
+ * delegates its provider/repo resolution here.
  */
 export class FindOrCreateGitRepoUseCase
   extends AbstractMemberUseCase<
@@ -68,14 +66,14 @@ export class FindOrCreateGitRepoUseCase
       (p) => p.source === providerVendor,
     );
 
-    // Only check token providers for known vendors (github, gitlab).
-    // Unknown vendors don't have API access to list available repos.
+    // Unknown vendors expose no API to list repositories, so there is nothing
+    // to probe a token against.
     if (providerVendor !== 'unknown') {
       const tokenProviders = vendorProviders.filter((p) => p.hasAuth);
 
-      // First pass: check ALL token providers for an existing repo and collect
-      // providers whose token can access the repo. We must check all providers
-      // before creating to avoid duplicate-repo errors.
+      // Every provider is probed before anything is created: creating on the
+      // first match would raise a duplicate-repo error when a later provider
+      // already hosts the repo.
       type ProviderInfo = (typeof tokenProviders)[number];
       const providersWithAccess: ProviderInfo[] = [];
 
@@ -116,11 +114,11 @@ export class FindOrCreateGitRepoUseCase
             providerId: provider.id,
             error: error instanceof Error ? error.message : String(error),
           });
-          // Continue to next provider - this one's token may be expired/invalid
+          // Swallowed: this provider's token may be expired or revoked, which
+          // only rules out this provider.
         }
       }
 
-      // Second pass: create the repo under the first provider with access.
       if (providersWithAccess.length > 0) {
         const provider = providersWithAccess[0];
         this.logger.info(
@@ -138,7 +136,6 @@ export class FindOrCreateGitRepoUseCase
       }
     }
 
-    // Fall back to a tokenless provider.
     this.logger.info('No token provider has access, falling back to tokenless');
 
     let expectedProviderUrl: string;

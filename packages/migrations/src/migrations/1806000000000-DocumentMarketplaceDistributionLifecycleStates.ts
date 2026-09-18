@@ -4,10 +4,8 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'DocumentMarketplaceDistributionLifecycleStates1806000000000';
 
 /**
- * Migration: DocumentMarketplaceDistributionLifecycleStates
- *
  * No-op migration that documents the introduction of two new
- * `DistributionStatus` values for marketplace distributions:
+ * `MarketplaceDistributionStatus` values:
  *
  *   - `to_be_removed`: a successful distribution that has been flagged for
  *     retirement. The plugin still exists on the marketplace until a CLI

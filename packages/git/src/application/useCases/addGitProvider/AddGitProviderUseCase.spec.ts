@@ -669,8 +669,8 @@ describe('AddGitProviderUseCase', () => {
     });
 
     // The route has no runtime DTO validation, so a hand-rolled client can omit
-    // authMethod entirely. That used to create a working token connection; the
-    // probe must not turn it into a spurious "could not reach the provider".
+    // authMethod entirely and still expect a working token connection: the
+    // probe must not turn that into a spurious "could not reach the provider".
     describe('when the request omits authMethod', () => {
       beforeEach(async () => {
         mockGitProviderService.addGitProvider.mockResolvedValue(

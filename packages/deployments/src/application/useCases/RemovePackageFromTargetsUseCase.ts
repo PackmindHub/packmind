@@ -88,14 +88,12 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       command.organizationId as OrganizationId,
     );
 
-    // Resolve artifacts for each target
     const artifactResolutions = await this.resolveArtifactsForTargets(
       command.organizationId as OrganizationId,
       command.targetIds,
       pkg,
     );
 
-    // Get active render modes and coding agents
     const activeRenderModes =
       await this.renderModeConfigurationService.getActiveRenderModes(
         command.organizationId as OrganizationId,
@@ -105,20 +103,16 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         activeRenderModes,
       );
 
-    // Group targets by repository
     const repositoryTargetsMap = await this.groupTargetsByRepository(
       command.targetIds,
     );
 
     const results: RemovePackageFromTargetsResult[] = [];
-
-    // Process each repository
     for (const [
       repositoryId,
       { repository: gitRepo, targets },
     ] of repositoryTargetsMap) {
       try {
-        // Prepare removal deployment for all targets
         const removalDataPerTarget = await this.prepareRemovalDeployment(
           command.userId as UserId,
           command.organizationId as OrganizationId,
@@ -128,15 +122,12 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
           codingAgents,
           pkg.slug,
         );
-
-        // Build commit message
         const commitMessage = this.buildRemovalCommitMessage(pkg.slug, targets);
 
         let gitCommit: GitCommit | undefined;
         let distributionStatus = DistributionStatus.success;
 
         try {
-          // Get file updates from first target
           const firstTargetData = removalDataPerTarget.values().next().value;
           if (!firstTargetData) {
             throw new Error('No file updates found for any target');
@@ -164,7 +155,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
           }
         }
 
-        // Create distribution records and results for each target
         for (const target of targets) {
           const targetData = removalDataPerTarget.get(target.id);
           if (!targetData) {
@@ -203,7 +193,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
           error: errorMessage,
         });
 
-        // Create failure results for all targets in this repository
         for (const target of targets) {
           await this.createDistribution(
             command,
@@ -263,9 +252,8 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
   }
 
   /**
-   * Prepares the removal deployment by rendering artifacts for all targets.
-   * Uses remaining artifacts as "installed" and exclusive artifacts as "removed".
-   * Returns both the file updates and the removed artifact versions for each target.
+   * Renders each target with the remaining artifacts as "installed" and the
+   * artifacts exclusive to the removed package as "removed".
    */
   private async prepareRemovalDeployment(
     userId: UserId,
@@ -286,15 +274,13 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         throw new Error(`No artifact resolution found for target ${target.id}`);
       }
 
-      // Fetch existing packmind.json to check for per-target agents
       const existingPackmindJson = await this.fetchExistingPackmindJson(
         gitRepo,
         target,
       );
       const existingPackages = existingPackmindJson?.packages ?? {};
 
-      // Use per-target agents if defined in packmind.json, otherwise use org-level agents
-      // Note: empty array [] means "no agents" (intentional), undefined means "use org-level"
+      // An explicit empty array means "no agents"; undefined falls back to the org-level list.
       const targetCodingAgents =
         existingPackmindJson?.agents !== undefined
           ? existingPackmindJson.agents
@@ -308,7 +294,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         });
       }
 
-      // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
         gitRepo,
@@ -317,7 +302,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         this.logger,
       );
 
-      // Fetch recipe, standard, and skill versions for installed (remaining) artifacts
       const installedCommandVersions = await this.fetchCommandVersionsByIds(
         resolution.remainingArtifacts.recipeVersionIds,
       );
@@ -328,7 +312,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         resolution.remainingArtifacts.skillVersionIds,
       );
 
-      // Fetch recipe, standard, and skill versions for removed (exclusive) artifacts
       const removedCommandVersions = await this.fetchCommandVersionsByIds(
         resolution.exclusiveArtifacts.recipeVersionIds,
       );
@@ -339,7 +322,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         resolution.exclusiveArtifacts.skillVersionIds,
       );
 
-      // Call renderArtifacts with remaining as installed and exclusive as removed
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
@@ -357,7 +339,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         existingFiles,
       });
 
-      // Create config file with package removed (preserving agents if defined)
       const configFile =
         this.packmindConfigService.createRemovalConfigFileModification(
           packageSlugToRemove,
@@ -366,7 +347,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
-      // Apply target path prefixing
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(
         baseFileUpdates,
         target,
@@ -393,9 +373,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return removalDataPerTarget;
   }
 
-  /**
-   * Fetches and parses the existing packmind.json from the git repository
-   */
   private async fetchExistingPackmindJson(
     gitRepo: GitRepo,
     target: Target,
@@ -416,9 +393,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     }
   }
 
-  /**
-   * Groups targets by their repository for batch processing
-   */
   private async groupTargetsByRepository(
     targetIds: TargetId[],
   ): Promise<Map<string, { repository: GitRepo; targets: Target[] }>> {
@@ -447,9 +421,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return map;
   }
 
-  /**
-   * Fetches recipe versions by their IDs
-   */
   private async fetchCommandVersionsByIds(
     recipeVersionIds: CommandVersionId[],
   ): Promise<CommandVersion[]> {
@@ -463,9 +434,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  /**
-   * Fetches standard versions by their IDs, including rules
-   */
   private async fetchStandardVersionsByIds(
     standardVersionIds: StandardVersionId[],
   ): Promise<StandardVersion[]> {
@@ -473,7 +441,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     for (const id of standardVersionIds) {
       const version = await this.standardsPort.getStandardVersionById(id);
       if (version) {
-        // Load rules if not populated
         if (version.rules === undefined || version.rules === null) {
           const rules = await this.standardsPort.getRulesByStandardId(
             version.standardId,
@@ -487,9 +454,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  /**
-   * Fetches skill versions by their IDs
-   */
   private async fetchSkillVersionsByIds(
     skillVersionIds: SkillVersionId[],
   ): Promise<SkillVersion[]> {
@@ -503,9 +467,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  /**
-   * Builds the commit message for package removal
-   */
   private buildRemovalCommitMessage(
     packageSlug: string,
     targets: Target[],
@@ -518,9 +479,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     return parts.join('\n');
   }
 
-  /**
-   * Creates a distribution record for the removal operation
-   */
   private async createDistribution(
     command: RemovePackageFromTargetsCommand,
     target: Target,
@@ -535,7 +493,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
   ): Promise<Distribution> {
     const distributionId = createDistributionId(uuidv4());
 
-    // Save distribution first (without distributedPackages - will be added separately)
+    // Insert the distribution first: distributed_packages.distribution_id references it.
     const distribution: Distribution = {
       id: distributionId,
       distributedPackages: [],
@@ -551,8 +509,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     };
 
     await this.distributionRepository.add(distribution);
-
-    // Save distributed package separately (like PublishPackagesUseCase does)
     const distributedPackageId = createDistributedPackageId(uuidv4());
     await this.distributedPackageRepository.add({
       id: distributedPackageId,
@@ -564,7 +520,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       operation: 'remove',
     });
 
-    // Link standard versions
     if (removedStandardVersions.length > 0) {
       await this.distributedPackageRepository.addStandardVersions(
         distributedPackageId,
@@ -572,7 +527,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       );
     }
 
-    // Link recipe versions
     if (removedCommandVersions.length > 0) {
       await this.distributedPackageRepository.addCommandVersions(
         distributedPackageId,
@@ -580,7 +534,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       );
     }
 
-    // Link skill versions
     if (removedSkillVersions.length > 0) {
       await this.distributedPackageRepository.addSkillVersions(
         distributedPackageId,
@@ -592,11 +545,9 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
   }
 
   /**
-   * Resolves artifacts for a single target.
-   * 1. Gets all distributions for this target, sorted by createdAt DESC (newest first)
-   * 2. For each package, only considers the LATEST distribution
-   * 3. If a package's latest distribution has operation === 'remove', excludes that package
-   * 4. Computes exclusive artifacts (only in removed package, not shared with remaining packages)
+   * Only each package's latest distribution on the target counts: if that one was a
+   * removal, the package is treated as absent. Exclusive artifacts are those the
+   * removed package does not share with the packages that remain.
    */
   private async resolveArtifactsForTarget(
     organizationId: OrganizationId,
@@ -608,13 +559,11 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       [targetId],
     );
 
-    // Sort distributions by createdAt DESC to process newest first
     const sortedDistributions = [...distributions].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
-    // Track the latest distribution for each package
     const latestDistributionPerPackage = new Map<
       string,
       {
@@ -627,7 +576,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
 
     for (const distribution of sortedDistributions) {
       for (const distributedPackage of distribution.distributedPackages) {
-        // Only keep the first (latest) occurrence of each package
+        // Sorted newest-first, so the first occurrence is the latest.
         if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
           latestDistributionPerPackage.set(distributedPackage.packageId, {
             operation: distributedPackage.operation ?? 'add',
@@ -639,7 +588,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       }
     }
 
-    // Classify artifacts based on latest state
     const removedPackageCommandVersionIds = new Set<CommandVersionId>();
     const removedPackageStandardVersionIds = new Set<StandardVersionId>();
     const removedPackageSkillVersionIds = new Set<SkillVersionId>();
@@ -648,7 +596,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     const remainingPackageSkillVersionIds = new Set<SkillVersionId>();
 
     for (const [packageId, data] of latestDistributionPerPackage) {
-      // Skip packages whose latest distribution was a removal
       if (data.operation === 'remove') {
         continue;
       }
@@ -680,7 +627,6 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       }
     }
 
-    // Compute exclusive artifacts (only in removed package)
     const exclusiveCommandVersionIds = Array.from(
       removedPackageCommandVersionIds,
     ).filter((id) => !remainingPackageCommandVersionIds.has(id));
@@ -697,14 +643,14 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       targetId,
       exclusiveArtifacts: {
         recipeVersionIds: exclusiveCommandVersionIds,
-        // Command-named twin of `recipeVersionIds` (superset); same value.
+        // Same value under the command-named field the contract also requires.
         commandVersionIds: exclusiveCommandVersionIds,
         standardVersionIds: exclusiveStandardVersionIds,
         skillVersionIds: exclusiveSkillVersionIds,
       },
       remainingArtifacts: {
         recipeVersionIds: Array.from(remainingPackageCommandVersionIds),
-        // Command-named twin of `recipeVersionIds` (superset); same value.
+        // Same value under the command-named field the contract also requires.
         commandVersionIds: Array.from(remainingPackageCommandVersionIds),
         standardVersionIds: Array.from(remainingPackageStandardVersionIds),
         skillVersionIds: Array.from(remainingPackageSkillVersionIds),

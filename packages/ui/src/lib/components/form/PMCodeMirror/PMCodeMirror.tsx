@@ -28,16 +28,12 @@ export interface IPMCodeMirrorProps extends ReactCodeMirrorProps {
   language?: string;
 }
 
-/**
- * Maps language string to CodeMirror language extensions
- */
 const getLanguageExtensions = (language?: string) => {
   if (!language) return [];
 
-  // Convert to uppercase and handle common variations
   let normalizedLanguage = language.toUpperCase();
 
-  // Handle common legacy values that might exist in database
+  // Normalizes legacy/alias values that may still be stored in the database.
   switch (normalizedLanguage) {
     case 'JAVASCRIPT':
     case 'JS':
@@ -164,8 +160,7 @@ const getLanguageExtensions = (language?: string) => {
     case 'CSHARP':
       return [csharp()];
     case 'KOTLIN':
-      // Note: Kotlin support requires @codemirror/lang-kotlin package
-      // For now, fallback to Java syntax highlighting
+      // No @codemirror/lang-kotlin package here; Java highlighting is close enough.
       return [java()];
     case 'VUE':
       return [vue()];
@@ -226,7 +221,6 @@ export const PMCodeMirror = (props: IPMCodeMirrorProps) => {
         ? defaultBasicSetup
         : false;
 
-  // Combine language extensions with any additional extensions passed as props
   const languageExtensions = getLanguageExtensions(language);
   const allExtensions = [...languageExtensions, ...extensions];
 

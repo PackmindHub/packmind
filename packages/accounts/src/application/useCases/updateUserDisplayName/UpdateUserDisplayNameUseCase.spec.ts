@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   IAccountsPort,
   UpdateUserDisplayNameCommand,
@@ -24,9 +28,7 @@ describe('UpdateUserDisplayNameUseCase', () => {
   beforeEach(() => {
     mockAccountsPort = mockInterface<IAccountsPort>();
 
-    mockUserService = {
-      updateUser: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
     stubbedLogger = stubLogger();
 

@@ -4,10 +4,8 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
   public async up(queryRunner: QueryRunner): Promise<void> {
     console.log('Starting deployment data migration to target model...');
 
-    // Step 1: Migrate RecipesDeployment data
     await this.migrateRecipesDeployments(queryRunner);
 
-    // Step 2: Migrate StandardsDeployment data
     await this.migrateStandardsDeployments(queryRunner);
 
     console.log('Deployment data migration completed successfully.');
@@ -16,9 +14,8 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
   public async down(queryRunner: QueryRunner): Promise<void> {
     console.log('Reverting deployment data migration...');
 
-    // This migration is not easily reversible as it involves data duplication
-    // In a real scenario, we would need to implement complex logic to merge back
-    // For now, we'll just clear the new fields
+    // Not cleanly reversible: up() duplicated deployment rows across targets and
+    // deleted orphaned ones. Clearing the new fields is as far as the rollback goes.
     await queryRunner.query(`
             UPDATE deployments 
             SET git_commit_id = NULL, target_id = NULL, status = NULL, error = NULL
@@ -37,7 +34,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
   ): Promise<void> {
     console.log('Migrating recipes deployments...');
 
-    // Get all existing deployments with their targets and commits
     const deployments = await queryRunner.query(`
             SELECT 
                 d.id,
@@ -62,7 +58,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
         (id: string | null) => id !== null,
       );
 
-      // Handle deployments without targets or commits
       if (targetIds.length === 0 || commitIds.length === 0) {
         console.log(
           `Deployment ${deployment.id} has no targets or commits - deleting orphaned record`,
@@ -75,11 +70,10 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
         continue;
       }
 
-      // Assume one commit per deployment (as per user story requirements)
+      // Assume one commit per deployment.
       const gitCommitId = commitIds[0];
 
       if (targetIds.length === 1) {
-        // Single target: Update existing deployment record
         await queryRunner.query(
           `
                     UPDATE deployments 
@@ -89,8 +83,8 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
           [gitCommitId, targetIds[0], deployment.id],
         );
       } else {
-        // Multiple targets: Keep first target in original record, create new records for others
-        // Update original deployment for first target
+        // Multiple targets: keep the first in the original row, fan the rest out
+        // into new rows.
         await queryRunner.query(
           `
                     UPDATE deployments 
@@ -100,11 +94,9 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
           [gitCommitId, targetIds[0], deployment.id],
         );
 
-        // Create new deployment records for remaining targets
         for (let i = 1; i < targetIds.length; i++) {
           const newDeploymentId = await this.generateUUID(queryRunner);
 
-          // Create new deployment record
           await queryRunner.query(
             `
                         INSERT INTO deployments (
@@ -126,7 +118,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
             ],
           );
 
-          // Copy recipe version relationships
           await queryRunner.query(
             `
                         INSERT INTO deployment_recipe_versions (deployment_id, recipe_version_id)
@@ -148,7 +139,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
   ): Promise<void> {
     console.log('Migrating standards deployments...');
 
-    // Get all existing standard deployments with their targets and commits
     const deployments = await queryRunner.query(`
             SELECT 
                 d.id,
@@ -173,7 +163,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
         (id: string | null) => id !== null,
       );
 
-      // Handle deployments without targets or commits
       if (targetIds.length === 0 || commitIds.length === 0) {
         console.log(
           `Standard deployment ${deployment.id} has no targets or commits - deleting orphaned record`,
@@ -187,11 +176,10 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
         continue;
       }
 
-      // Assume one commit per deployment (as per user story requirements)
+      // Assume one commit per deployment.
       const gitCommitId = commitIds[0];
 
       if (targetIds.length === 1) {
-        // Single target: Update existing deployment record
         await queryRunner.query(
           `
                     UPDATE standard_deployments 
@@ -201,8 +189,8 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
           [gitCommitId, targetIds[0], deployment.id],
         );
       } else {
-        // Multiple targets: Keep first target in original record, create new records for others
-        // Update original deployment for first target
+        // Multiple targets: keep the first in the original row, fan the rest out
+        // into new rows.
         await queryRunner.query(
           `
                     UPDATE standard_deployments 
@@ -212,11 +200,9 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
           [gitCommitId, targetIds[0], deployment.id],
         );
 
-        // Create new deployment records for remaining targets
         for (let i = 1; i < targetIds.length; i++) {
           const newDeploymentId = await this.generateUUID(queryRunner);
 
-          // Create new deployment record
           await queryRunner.query(
             `
                         INSERT INTO standard_deployments (
@@ -238,7 +224,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
             ],
           );
 
-          // Copy standard version relationships
           await queryRunner.query(
             `
                         INSERT INTO standard_deployment_versions (standard_deployment_id, standard_version_id)
@@ -256,7 +241,6 @@ export class MigrateDeploymentDataToTargetModel1758015936490 implements Migratio
   }
 
   private async generateUUID(queryRunner: QueryRunner): Promise<string> {
-    // Generate a UUID using PostgreSQL's built-in gen_random_uuid() function
     const result = await queryRunner.query('SELECT gen_random_uuid() as uuid');
     return result[0].uuid;
   }

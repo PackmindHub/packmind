@@ -18,7 +18,11 @@ import {
   SpaceMembershipRequiredError,
   UserNotFoundError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 
 describe('GetRecipeByIdUseCase', () => {
   let usecase: GetCommandByIdUseCase;
@@ -27,9 +31,7 @@ describe('GetRecipeByIdUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
 
   beforeEach(() => {
-    commandService = {
-      getCommandById: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
     accountsAdapter = mockInterface<IAccountsPort>();
 
@@ -355,9 +357,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        // Space belongs to the correct organization
         const space = spaceFactory({ id: spaceId, organizationId });
-        // But recipe's spaceId doesn't match the requested spaceId
         const differentSpaceId = createSpaceId('space-2');
         const recipe = commandFactory({
           id: recipeId,

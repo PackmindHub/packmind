@@ -20,9 +20,6 @@ export abstract class BaseParser {
     BaseParser.externalWasmDirectory = directory;
   }
 
-  /**
-   * Helper to locate tree-sitter WASM files for CLI executable
-   */
   protected static getTreeSitterWasmPaths(): string[] {
     const paths: string[] = [];
 
@@ -41,12 +38,11 @@ export abstract class BaseParser {
       : process.cwd();
 
     paths.push(
-      // Next to the main script (for npm packages like @packmind/scan)
+      // Next to the main script (for npm packages)
       scriptDir,
       join(scriptDir, 'tree-sitter'),
-      // Next to the Bun executable in tree-sitter/ subdirectory
+      // Next to the Bun executable
       join(execDir, 'tree-sitter'),
-      // Fallback paths
       join(process.cwd(), 'tree-sitter'),
       join(process.cwd(), 'dist/apps/cli-executables/tree-sitter'),
       resolve(__dirname, 'tree-sitter'),
@@ -57,28 +53,20 @@ export abstract class BaseParser {
     return paths;
   }
 
-  /**
-   * Get the locateFile function for TreeSitter Parser initialization
-   */
   protected static getTreeSitterLocateFile(): (fileName: string) => string {
     const wasmDirs = BaseParser.getTreeSitterWasmPaths();
 
     return (fileName: string) => {
-      // Search for tree-sitter.wasm in known locations
       for (const dir of wasmDirs) {
         const fullPath = join(dir, fileName);
         if (existsSync(fullPath)) {
           return fullPath;
         }
       }
-      // Fallback to current directory
       return join(process.cwd(), fileName);
     };
   }
 
-  /**
-   * Get all possible paths for a language-specific WASM file
-   */
   protected static getLanguageWasmPaths(languageName: string): string[] {
     const wasmDirs = BaseParser.getTreeSitterWasmPaths();
     const wasmFileName = `tree-sitter-${languageName}.wasm`;
@@ -86,7 +74,6 @@ export abstract class BaseParser {
     return wasmDirs
       .map((dir) => join(dir, wasmFileName))
       .concat([
-        // Additional fallback paths
         resolve(__dirname, `tree-sitter/${wasmFileName}`),
         resolve(__dirname, wasmFileName),
         resolve(__dirname, `res/${wasmFileName}`),

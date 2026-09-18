@@ -38,7 +38,7 @@ export function formatConsoleLine(
   return `${timestamp} [${label}]${traceStr} ${level}: ${message}${metaStr}`;
 }
 
-/** Fields rendered explicitly above, so they must not be repeated in `meta`. */
+/** Already accounted for above — shown directly, or deliberately dropped — so they must not leak into `meta` too. */
 const RENDERED_FIELDS = [
   'timestamp',
   'level',
@@ -57,7 +57,6 @@ export class PackmindLogger {
   constructor(name: string, level: LogLevel = LogLevel.INFO) {
     this.name = name;
 
-    // Check for environment variable override
     const envLogLevel = process.env['PACKMIND_LOG_LEVEL'];
     let finalLevel = level;
 
@@ -70,7 +69,6 @@ export class PackmindLogger {
 
     this.currentLevel = finalLevel;
 
-    // Only create winston logger if not in silent mode
     if (finalLevel !== LogLevel.SILENT) {
       this.logger = winston.createLogger({
         level: finalLevel,

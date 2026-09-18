@@ -10,8 +10,6 @@ const origin = 'AddIsTrackedToGitRepos1813000000000';
  * (`packmind track` / `packmind init`). It defaults to `false`; the
  * single-tracked-branch invariant is enforced in the use case layer, not at
  * the schema level.
- *
- * The `down` method drops the column, fully reversing the change.
  */
 export class AddIsTrackedToGitRepos1813000000000 implements MigrationInterface {
   constructor(

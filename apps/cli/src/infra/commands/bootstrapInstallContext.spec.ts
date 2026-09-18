@@ -20,6 +20,13 @@ jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
 }));
 
+import { mockInterface } from '@packmind/test-utils';
+import {
+  createMockPackmindGateway,
+  MockTree,
+} from '../../mocks/createMockGateways';
+import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway';
+import { IOrganizationGateway } from '../../domain/repositories/IOrganizationGateway';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
@@ -27,9 +34,12 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { InitHandlerResult } from './initHandler';
 import {
   CodingAgent,
+  createOrganizationId,
+  createRenderModeConfigurationId,
   HierarchicalConfigResult,
   PackmindFileConfig,
   RenderMode,
+  RenderModeConfiguration,
   UserOrganizationRole,
 } from '@packmind/types';
 
@@ -62,53 +72,35 @@ function makeConfigRepository(
 function makeDetectionService(
   artifacts: Array<{ agent: CodingAgent; artifactPath: string }> = [],
 ): jest.Mocked<IAgentArtifactDetectionService> {
-  return {
-    detectAgentArtifacts: jest.fn().mockResolvedValue(artifacts),
-  };
+  const service = mockInterface<IAgentArtifactDetectionService>();
+  service.detectAgentArtifacts.mockResolvedValue(artifacts);
+  return service;
 }
 
-function makeDeploymentGatewayFragment(
-  overrides: {
-    getRenderModeConfiguration?: jest.Mock;
-    updateRenderModeConfiguration?: jest.Mock;
-  } = {},
-): IPackmindGateway['deployment'] {
-  return {
-    pull: jest.fn(),
-    install: jest.fn(),
-    getDeployed: jest.fn(),
-    getContentByVersions: jest.fn(),
-    notifyDistribution: jest.fn(),
-    notifyArtefactsDistribution: jest.fn(),
-    getRenderModeConfiguration: jest.fn().mockResolvedValue({
-      configuration: { activeRenderModes: [RenderMode.PACKMIND] },
-    }),
-    updateRenderModeConfiguration: jest.fn().mockResolvedValue(undefined),
-    getLatestVersion: jest.fn(),
-    ...overrides,
-  } as unknown as IPackmindGateway['deployment'];
-}
-
-function makeOrganizationGatewayFragment(
-  role: UserOrganizationRole | null = 'admin',
-): IPackmindGateway['organization'] {
-  return {
-    getOrganization: jest.fn(),
-    getCurrentUserRole: jest.fn().mockReturnValue(role),
-  } as unknown as IPackmindGateway['organization'];
-}
+const renderModeConfiguration = (
+  activeRenderModes: RenderMode[],
+): RenderModeConfiguration => ({
+  id: createRenderModeConfigurationId('render-mode-config-1'),
+  organizationId: createOrganizationId('org-1'),
+  activeRenderModes,
+});
 
 function makeGateway(
-  deploymentOverrides: {
-    getRenderModeConfiguration?: jest.Mock;
-    updateRenderModeConfiguration?: jest.Mock;
-  } = {},
+  deploymentOverrides: Partial<jest.Mocked<IDeploymentGateway>> = {},
   currentUserRole: UserOrganizationRole | null = 'admin',
-): jest.Mocked<IPackmindGateway> {
-  return {
-    deployment: makeDeploymentGatewayFragment(deploymentOverrides),
-    organization: makeOrganizationGatewayFragment(currentUserRole),
-  } as unknown as jest.Mocked<IPackmindGateway>;
+): MockTree<IPackmindGateway> {
+  const deployment = mockInterface<IDeploymentGateway>();
+  deployment.getRenderModeConfiguration.mockResolvedValue({
+    configuration: renderModeConfiguration([RenderMode.PACKMIND]),
+  });
+  deployment.updateRenderModeConfiguration.mockResolvedValue(undefined);
+  // Each override replaces the whole member, as spreading the literal did.
+  Object.assign(deployment, deploymentOverrides);
+
+  const organization = mockInterface<IOrganizationGateway>();
+  organization.getCurrentUserRole.mockReturnValue(currentUserRole);
+
+  return createMockPackmindGateway({ deployment, organization });
 }
 
 const baseDirectory = '/test/project';

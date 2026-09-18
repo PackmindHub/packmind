@@ -39,7 +39,6 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
         recipeId: id,
         error: error instanceof Error ? error.message : String(error),
       });
-      // Re-throw to ensure the error is not silently swallowed
       throw error;
     }
   };
@@ -60,7 +59,6 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
         skillId,
         error: error instanceof Error ? error.message : String(error),
       });
-      // Re-throw to ensure the error is not silently swallowed
       throw error;
     }
   };
@@ -81,7 +79,6 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
         standardId,
         error: error instanceof Error ? error.message : String(error),
       });
-      // Re-throw to ensure the error is not silently swallowed
       throw error;
     }
   };

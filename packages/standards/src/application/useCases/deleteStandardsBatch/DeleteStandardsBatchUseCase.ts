@@ -50,14 +50,12 @@ export class DeleteStandardsBatchUseCase
       standardIds.map((id) => this.standardService.getStandardById(id)),
     );
 
-    // Delete all standards
     await Promise.all(
       standardIds.map((id) =>
         this.standardService.deleteStandard(id, brandedUserId),
       ),
     );
 
-    // Emit events for each deleted standard
     for (let i = 0; i < standardIds.length; i++) {
       const standard = standards[i];
       if (standard) {

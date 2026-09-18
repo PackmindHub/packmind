@@ -18,7 +18,6 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definition
   private readonly targetsTable = new Table({
     name: 'targets',
     columns: [
@@ -42,7 +41,6 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
     ],
   });
 
-  // Foreign key definition
   private readonly targetsGitRepoForeignKey = new TableForeignKey({
     columnNames: ['git_repo_id'],
     referencedTableName: 'git_repos',
@@ -55,12 +53,10 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
     this.logger.info('Starting migration: CreateTargetsTable');
 
     try {
-      // Create targets table
       this.logger.debug('Creating targets table');
       await queryRunner.createTable(this.targetsTable);
       this.logger.info('Successfully created targets table');
 
-      // Create index on git_repo_id for efficient queries
       this.logger.debug('Creating index on git_repo_id');
       await queryRunner.createIndex(
         'targets',
@@ -71,7 +67,6 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
       );
       this.logger.info('Successfully created index on git_repo_id');
 
-      // Create foreign key constraint
       this.logger.debug('Adding foreign key constraint to git_repos table');
       await queryRunner.createForeignKey(
         'targets',
@@ -94,7 +89,6 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
     this.logger.info('Starting rollback: CreateTargetsTable');
 
     try {
-      // Drop foreign key constraint first
       this.logger.debug('Dropping foreign key constraint from targets table');
       await queryRunner.dropForeignKey(
         'targets',
@@ -104,12 +98,10 @@ export class CreateTargetsTable1757596420000 implements MigrationInterface {
         'Successfully dropped foreign key constraint from targets table',
       );
 
-      // Drop index
       this.logger.debug('Dropping index on git_repo_id');
       await queryRunner.dropIndex('targets', 'idx_targets_git_repo_id');
       this.logger.info('Successfully dropped index on git_repo_id');
 
-      // Drop targets table
       this.logger.debug('Dropping targets table');
       await queryRunner.dropTable('targets', true);
       this.logger.info('Successfully dropped targets table');

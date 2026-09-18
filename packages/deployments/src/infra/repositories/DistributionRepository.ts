@@ -1137,7 +1137,7 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
-      // Group by target, track latest operation per package per target
+      // target -> package -> its latest operation.
       const targetPackageData = new Map<
         string,
         Map<
@@ -1172,7 +1172,6 @@ export class DistributionRepository implements IDistributionRepository {
         }
       }
 
-      // Collect unique artifact IDs from active packages across all targets
       const standardIds = new Set<StandardId>();
       const commandIds = new Set<CommandId>();
       const skillIds = new Set<SkillId>();
@@ -1273,6 +1272,14 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
+  /**
+   * Latest successful 'add' distribution per (target, package) within the space.
+   * DISTINCT ON collapses history to one row per pair at the SQL layer, so we
+   * never hydrate the heavy version content for older distributions.
+   * Correctness relies on DISTINCT ON, which TypeORM only emits for a
+   * Postgres-family driver and silently drops otherwise, degrading this to
+   * "every historical row". This repository is Postgres-only.
+   */
   private async findLatestAddedPackagesBySpace(
     organizationId: OrganizationId,
     spaceId: SpaceId,

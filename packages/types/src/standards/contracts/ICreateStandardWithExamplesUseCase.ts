@@ -15,9 +15,6 @@ export type CreateStandardWithExamplesCommand = PackmindCommand & {
    * Useful for bulk imports where assessment would be too expensive.
    */
   disableTriggerAssessment?: boolean;
-  /**
-   * The method used to create this standard.
-   */
   method?: StandardCreationMethod;
   directUpdate?: boolean;
 };

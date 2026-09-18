@@ -1,4 +1,8 @@
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   GitProviderListItem,
   GitProviderVendors,
@@ -64,10 +68,7 @@ describe('TargetResolutionService', () => {
   beforeEach(() => {
     gitPort = mockInterface<IGitPort>();
 
-    targetService = {
-      getTargetsByGitRepoId: jest.fn(),
-      addTarget: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    targetService = createMockInstance(TargetService);
 
     distributionRepository = mockInterface<IDistributionRepository>();
 

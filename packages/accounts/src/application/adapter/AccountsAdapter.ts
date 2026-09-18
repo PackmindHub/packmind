@@ -171,10 +171,6 @@ export class AccountsAdapter
     this.logger.info('AccountsAdapter constructed - awaiting initialization');
   }
 
-  /**
-   * Initialize adapter with optional ports from registry.
-   * All ports are optional - adapter can function without any of them.
-   */
   public async initialize(ports: {
     [ISpacesPortName]: ISpacesPort;
     [IGitPortName]: IGitPort;
@@ -184,7 +180,6 @@ export class AccountsAdapter
   }): Promise<void> {
     this.logger.info('Initializing AccountsAdapter with optional ports');
 
-    // Set all optional ports
     this.spacesPort = ports[ISpacesPortName];
     this.gitPort = ports[IGitPortName];
     this.standardsPort = ports[IStandardsPortName];
@@ -199,7 +194,6 @@ export class AccountsAdapter
       throw new Error('Required ports are missing');
     }
 
-    // Create all use cases with ports
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
@@ -307,7 +301,8 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
     );
 
-    // API key use cases are optional since they require additional dependencies
+    // Only the API layer can supply this service (it needs a JWT signer), so
+    // where it is missing the use cases below stay undefined.
     const apiKeyService = this.accountsServices.getApiKeyService?.();
     if (apiKeyService) {
       this._generateApiKey = new GenerateApiKeyUseCase(
@@ -318,7 +313,6 @@ export class AccountsAdapter
       this._getCurrentApiKey = new GetCurrentApiKeyUseCase();
       this.logger.debug('API key use cases initialized');
 
-      // CLI login use cases require API key service
       this._createCliLoginCode = new CreateCliLoginCodeUseCase(
         this.accountsServices.getCliLoginCodeRepository(),
       );
@@ -341,10 +335,6 @@ export class AccountsAdapter
     this.logger.info('AccountsAdapter initialized successfully');
   }
 
-  /**
-   * Check if adapter is ready.
-   * AccountsAdapter is always ready since all ports are optional.
-   */
   public isReady(): boolean {
     return (
       this.gitPort !== null &&
@@ -354,9 +344,6 @@ export class AccountsAdapter
     );
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): IAccountsPort {
     return this;
   }
@@ -370,7 +357,6 @@ export class AccountsAdapter
     return this._signInUser.execute(command);
   }
 
-  // Method overloads for getUserById
   public async getUserById(command: GetUserByIdCommand): Promise<User | null>;
   public async getUserById(userId: UserId): Promise<User | null>;
   public async getUserById(
@@ -417,7 +403,6 @@ export class AccountsAdapter
     return result.organization;
   }
 
-  // Method overloads for getOrganizationById
   public async getOrganizationById(
     command: GetOrganizationByIdCommand,
   ): Promise<Organization | null>;

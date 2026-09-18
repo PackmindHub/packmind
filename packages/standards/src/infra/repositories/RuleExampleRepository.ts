@@ -26,8 +26,8 @@ export class RuleExampleRepository
       id: entity.id,
       ruleId: entity.ruleId,
       lang: entity.lang,
-      positive: entity.positive.substring(0, 100) + '...', // Log first 100 chars
-      negative: entity.negative.substring(0, 100) + '...', // Log first 100 chars
+      positive: entity.positive.substring(0, 100) + '...',
+      negative: entity.negative.substring(0, 100) + '...',
     };
   }
 
@@ -109,21 +109,18 @@ export class RuleExampleRepository
     this.logger.info('Updating rule example by ID', { id, updates });
 
     try {
-      // Find the existing example
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existingExample = await this.repository.findOneBy({ id } as any);
       if (!existingExample) {
         throw new Error(`Rule example with id ${id} not found`);
       }
 
-      // Merge the updates
       const updatedExample: RuleExample = {
         ...existingExample,
         ...updates,
         id: id as RuleExampleId, // Ensure ID is preserved with correct type
       };
 
-      // Save the updated example
       const result = await this.repository.save(updatedExample);
 
       this.logger.info('Rule example updated successfully', { id });

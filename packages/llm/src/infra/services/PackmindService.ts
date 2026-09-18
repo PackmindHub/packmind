@@ -15,15 +15,9 @@ import { GeminiService } from './GeminiService';
 const origin = 'PackmindService';
 
 /**
- * PackmindService is the default LLM provider for the Packmind SaaS platform.
- * It acts as a configurable proxy that delegates to a concrete provider based on
- * the PACKMIND_DEFAULT_PROVIDER environment variable.
- *
- * This design allows Packmind to switch the underlying LLM provider (OpenAI, Anthropic, etc.)
- * without code changes, simply by updating the environment variable.
- *
- * If PACKMIND_DEFAULT_PROVIDER is not set or contains an invalid value,
- * it defaults to OpenAI.
+ * Carries no credentials of its own: every call is delegated to the concrete
+ * provider named by `PACKMIND_DEFAULT_PROVIDER`, falling back to OpenAI when
+ * that value is missing or unusable.
  */
 export class PackmindService implements AIService {
   private underlyingService: AIService | null = null;
@@ -37,14 +31,9 @@ export class PackmindService implements AIService {
       LogLevel.INFO,
     ),
   ) {
-    // Config parameter is for consistency with other services
-    // but PackmindService doesn't use it directly
+    // `config` is accepted only to match the other services' constructors.
   }
 
-  /**
-   * Initialize the underlying provider based on PACKMIND_DEFAULT_PROVIDER env variable.
-   * This is called lazily on first use to avoid initialization issues.
-   */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -68,10 +57,6 @@ export class PackmindService implements AIService {
     }
   }
 
-  /**
-   * Get the configured provider from environment variable.
-   * Validates the value and defaults to OpenAI if not set or invalid.
-   */
   private async getConfiguredProvider(): Promise<LLMProvider> {
     try {
       const providerValue = await Configuration.getConfig(
@@ -85,10 +70,10 @@ export class PackmindService implements AIService {
         return LLMProvider.OPENAI;
       }
 
-      // Validate that the provider value matches one of the enum values
       const validProviders = Object.values(LLMProvider);
       if (validProviders.includes(providerValue as LLMProvider)) {
-        // Don't allow PACKMIND as the underlying provider (would cause infinite loop)
+        // `createUnderlyingService` rejects PACKMIND, so self-delegation is
+        // turned into the default here rather than a failed initialization.
         if (providerValue === LLMProvider.PACKMIND) {
           this.logger.warn(
             'PACKMIND_DEFAULT_PROVIDER cannot be "packmind", defaulting to OpenAI',
@@ -117,11 +102,6 @@ export class PackmindService implements AIService {
     }
   }
 
-  /**
-   * Create the underlying service instance based on the provider.
-   * Only supports OpenAI, Anthropic, and Gemini as underlying providers.
-   * Retrieves the appropriate API key from configuration.
-   */
   private async createUnderlyingService(
     provider: LLMProvider,
   ): Promise<AIService> {
@@ -162,9 +142,6 @@ export class PackmindService implements AIService {
     }
   }
 
-  /**
-   * Check if the underlying service is properly configured and ready to use.
-   */
   async isConfigured(): Promise<boolean> {
     try {
       await this.initialize();
@@ -180,9 +157,6 @@ export class PackmindService implements AIService {
     }
   }
 
-  /**
-   * Execute a prompt using the underlying provider.
-   */
   async executePrompt<T = string>(
     prompt: string,
     options?: AIPromptOptions,
@@ -219,9 +193,6 @@ export class PackmindService implements AIService {
     }
   }
 
-  /**
-   * Execute a prompt with conversation history using the underlying provider.
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options?: AIPromptOptions,
@@ -262,8 +233,8 @@ export class PackmindService implements AIService {
   }
 
   /**
-   * Get a list of available model IDs.
-   * For PackmindService, returns empty array since models are managed internally.
+   * Returns nothing to choose from: the provider and its models are fixed by
+   * `PACKMIND_DEFAULT_PROVIDER`, not selectable per organization.
    */
   async getModels(): Promise<string[]> {
     this.logger.info(

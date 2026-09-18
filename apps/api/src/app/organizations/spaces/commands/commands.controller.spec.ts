@@ -1,7 +1,8 @@
+import { commandFactory } from '@packmind/commands/test';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -9,6 +10,7 @@ import {
   Command,
   createCommandId,
   createCommandVersionId,
+  CommandVersion,
 } from '@packmind/types';
 import { CommandsService } from './commands.service';
 import { OrganizationsSpacesCommandsController } from './commands.controller';
@@ -19,15 +21,7 @@ describe('OrganizationsSpacesRecipesController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    commandsService = {
-      getCommandsBySpace: jest.fn(),
-      getCommandById: jest.fn(),
-      getCommandVersionsById: jest.fn(),
-      updateCommandFromUI: jest.fn(),
-      deleteCommand: jest.fn(),
-      deleteCommandsBatch: jest.fn(),
-      getLatestVersionNumber: jest.fn(),
-    } as unknown as jest.Mocked<CommandsService>;
+    commandsService = createMockInstance(CommandsService);
 
     logger = stubLogger();
     controller = new OrganizationsSpacesCommandsController(
@@ -46,7 +40,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
       const mockCommands: Command[] = [
-        {
+        commandFactory({
           id: createCommandId('recipe-1'),
           slug: 'test-recipe',
           name: 'Test Recipe',
@@ -54,7 +48,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId,
           version: 1,
           spaceId,
-        },
+        }),
       ];
       const request = {
         organization: {
@@ -156,7 +150,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       const spaceId = createSpaceId('space-456');
       const recipeId = createCommandId('recipe-1');
       const userId = createUserId('user-1');
-      const mockCommand: Command = {
+      const mockCommand: Command = commandFactory({
         id: recipeId,
         slug: 'test-recipe',
         name: 'Test Recipe',
@@ -164,7 +158,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         userId,
         version: 1,
         spaceId,
-      };
+      });
       const request = {
         organization: {
           id: orgId,
@@ -260,7 +254,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createCommandId('recipe-1');
-      const mockVersions = [
+      const mockVersions: CommandVersion[] = [
         {
           id: createCommandVersionId('version-1'),
           recipeId,
@@ -343,7 +337,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         name: 'Updated Recipe',
         content: 'Updated content',
       };
-      const mockUpdatedCommand: Command = {
+      const mockUpdatedCommand: Command = commandFactory({
         id: recipeId,
         slug: 'test-recipe',
         name: updateData.name,
@@ -351,7 +345,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         userId,
         version: 2,
         spaceId,
-      };
+      });
       const request = {
         organization: {
           id: orgId,

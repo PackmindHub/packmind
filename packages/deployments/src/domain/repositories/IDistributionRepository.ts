@@ -67,9 +67,7 @@ export interface IDistributionRepository {
   ): Promise<Distribution[]>;
 
   /**
-   * Get all currently distributed standard versions for a specific target.
-   * This returns the latest distributed version of each unique standard.
-   * Used to generate complete standard books that include all distributed standards.
+   * Latest distributed version of each standard currently on the target.
    */
   findActiveStandardVersionsByTarget(
     organizationId: OrganizationId,
@@ -77,13 +75,8 @@ export interface IDistributionRepository {
   ): Promise<StandardVersion[]>;
 
   /**
-   * Get all currently distributed standard, command and skill versions for a
-   * specific target, returning the latest distributed version of each unique
-   * artifact. Used to generate the complete artifact books for a target.
-   *
-   * Resolves the active distributed packages ONCE and hydrates all three
-   * artifact types from those same rows, so the underlying query runs once
-   * rather than once per artifact type.
+   * Latest distributed version of each standard, command and skill currently on
+   * the target.
    *
    * Pass `packageIds` to restrict the result to artifacts belonging to those
    * packages, which is what computing removed artifacts from the packages
@@ -102,10 +95,7 @@ export interface IDistributionRepository {
   ): Promise<Map<TargetId, ActiveArtifactVersionsByScope>>;
 
   /**
-   * Get all currently active (not removed) package IDs for a specific target.
-   * This looks at the latest distribution operation for each package
-   * and returns packages where the latest operation is NOT 'remove'.
-   * Used to detect which packages have been removed during a new distribution.
+   * Packages whose latest distribution operation on the target is not 'remove'.
    */
   findActivePackageIdsByTarget(
     organizationId: OrganizationId,
@@ -113,8 +103,8 @@ export interface IDistributionRepository {
   ): Promise<PackageId[]>;
 
   /**
-   * Get render modes used by the latest successful distribution per active package.
-   * Aggregates render modes across active packages for a target.
+   * Render modes of the latest successful distribution of each package still
+   * active on the target, aggregated.
    */
   findActiveRenderModesByTarget(
     organizationId: OrganizationId,
@@ -122,9 +112,8 @@ export interface IDistributionRepository {
   ): Promise<RenderMode[]>;
 
   /**
-   * Update the status of a distribution after async processing completes.
-   * Used by background jobs to update distributions from 'in_progress' to
-   * final status (success, failure, or no_changes).
+   * Moves a distribution out of 'in_progress' once the background job finishes,
+   * to success, failure or no_changes.
    */
   updateStatus(
     id: DistributionId,
@@ -156,11 +145,13 @@ export interface IDistributionRepository {
   }>;
 
   /**
-   * For each target within a space, return every artifact currently
-   * deployed there as a lightweight DTO, with the version written by the
-   * most recent successful 'add' distribution containing that artifact.
-   * An artifact shipped by several packages on the same target therefore
-   * reports the last write, whichever package it came from.
+   * For each target within a space, every artifact currently deployed there as
+   * a lightweight DTO, carrying the version written by the most recent
+   * successful 'add' distribution that contained it. An artifact shipped by
+   * several packages reports the last write, whichever package it came from.
+   *
+   * Despite the name, nothing is filtered here: callers compare against the
+   * latest versions to decide what is actually outdated.
    */
   findOutdatedDeploymentsBySpace(
     organizationId: OrganizationId,
@@ -168,10 +159,9 @@ export interface IDistributionRepository {
   ): Promise<OutdatedDeploymentsByTarget[]>;
 
   /**
-   * For each (target, package) pair within a space, return the latest
-   * distribution by createdAt, filtered to only those whose latest operation
-   * leaves the package actively distributed (successful add OR failed remove).
-   * Aggregation and the active-distribution predicate both run in SQL.
+   * For each (target, package) pair within a space, the latest distribution by
+   * createdAt, minus the pairs whose latest operation was a successful removal.
+   * A failed removal therefore still counts as active.
    */
   findActivePackageOperationsBySpace(
     spaceId: SpaceId,
@@ -181,7 +171,7 @@ export interface IDistributionRepository {
    * For each given Git provider, return the createdAt of the most recent
    * successful distribution whose target resolves (via git_repo.provider_id)
    * to that provider. Providers with no successful distribution are absent
-   * from the returned map — callers treat absence as "never deployed".
+   * from the returned map.
    */
   findLastSuccessfulDistributionDateByProviderIds(
     organizationId: OrganizationId,

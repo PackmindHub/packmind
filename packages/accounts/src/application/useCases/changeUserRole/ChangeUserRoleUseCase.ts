@@ -39,7 +39,6 @@ export class ChangeUserRoleUseCase
       requesterId: command.userId,
     });
 
-    // Prevent admin from changing their own role (business rule)
     if (command.targetUserId === command.userId) {
       this.logger.warn('Admin attempted to change their own role', {
         userId: command.userId,
@@ -50,7 +49,6 @@ export class ChangeUserRoleUseCase
 
     const targetUserId = createUserId(command.targetUserId);
     const organizationId = createOrganizationId(command.organizationId);
-    // Check if the target user exists and is a member of the organization
     const targetUser = await this.userService.getUserById(targetUserId);
     if (!targetUser) {
       this.logger.error('Target user not found', { targetUserId });
@@ -72,9 +70,7 @@ export class ChangeUserRoleUseCase
       });
     }
 
-    // Business rule: Prevent demoting the last admin
     if (targetMembership.role === 'admin' && command.newRole !== 'admin') {
-      // Count current admins in the organization
       const orgUsers =
         await this.userService.listUsersByOrganization(organizationId);
       const orgAdmins = orgUsers.filter((user) =>
@@ -97,7 +93,6 @@ export class ChangeUserRoleUseCase
       }
     }
 
-    // Update the user's role
     const success = await this.userService.changeUserRole(
       targetUserId,
       organizationId,

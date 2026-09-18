@@ -91,7 +91,6 @@ export class CreateStandardWithExamplesUseCase {
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
       this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
         spaceId,
@@ -111,7 +110,6 @@ export class CreateStandardWithExamplesUseCase {
       }
       this.logger.info('Resolved unique slug', { slug: standardSlug });
 
-      // Business logic: Create standard with initial version 1
       const initialVersion = 1;
 
       this.logger.info('Creating standard entity');
@@ -132,7 +130,6 @@ export class CreateStandardWithExamplesUseCase {
         userId,
       });
 
-      // Process rules and prepare examples
       const processedRules = await this.processRulesWithExamples(rules);
 
       this.logger.info(
@@ -146,7 +143,7 @@ export class CreateStandardWithExamplesUseCase {
         version: initialVersion,
         rules: processedRules,
         scope,
-        userId, // Track the user who created this standard
+        userId,
       };
 
       const standardVersion =
@@ -167,7 +164,6 @@ export class CreateStandardWithExamplesUseCase {
         },
       );
 
-      // Validate detection programs for all rules with examples
       if (!disableTriggerAssessment) {
         await this.assessRulesDetections(
           standardVersion.id,
@@ -251,7 +247,6 @@ export class CreateStandardWithExamplesUseCase {
 
         for (const exampleInput of rule.examples) {
           try {
-            // Validate language parameter (following CreateRuleExampleUseCase pattern)
             if (!exampleInput.language) {
               this.logger.warn('Example missing language, skipping', {
                 ruleContent: rule.content.substring(0, 50) + '...',
@@ -273,7 +268,7 @@ export class CreateStandardWithExamplesUseCase {
               language: ruleExample.lang,
             });
           } catch (exampleError) {
-            // Log failure but continue (as per requirement: "Just log failures")
+            // Swallowed: one unusable example must not fail the creation
             this.logger.error('Failed to process rule example, skipping', {
               ruleContent: rule.content.substring(0, 50) + '...',
               language: exampleInput.language,
@@ -315,7 +310,6 @@ export class CreateStandardWithExamplesUseCase {
       },
     );
 
-    // Query the created rules from the repository
     const createdRules =
       await this.ruleRepository.findByStandardVersionId(standardVersionId);
 
@@ -323,7 +317,6 @@ export class CreateStandardWithExamplesUseCase {
       createdRulesCount: createdRules.length,
     });
 
-    // Fetch examples for all rules in parallel
     const rulesWithExamples = await Promise.all(
       createdRules.map(async (rule) => {
         const examples = await this.ruleExampleRepository.findByRuleId(rule.id);
@@ -331,11 +324,9 @@ export class CreateStandardWithExamplesUseCase {
       }),
     );
 
-    // Build validation tasks for all rule-language pairs
     const validationPromises: Promise<void>[] = [];
 
     for (const { rule, examples } of rulesWithExamples) {
-      // Skip rules without examples
       if (!examples || examples.length === 0) {
         this.logger.debug('Skipping rule without examples', {
           ruleId: rule.id,
@@ -343,7 +334,6 @@ export class CreateStandardWithExamplesUseCase {
         continue;
       }
 
-      // Collect unique languages from examples
       const uniqueLanguages = new Set<ProgrammingLanguage>();
       for (const example of examples) {
         uniqueLanguages.add(example.lang);
@@ -355,7 +345,6 @@ export class CreateStandardWithExamplesUseCase {
         languages: Array.from(uniqueLanguages),
       });
 
-      // Create validation promises for each language
       for (const language of uniqueLanguages) {
         validationPromises.push(
           this.validateDetectionProgramsForRuleAndLanguage(
@@ -372,10 +361,8 @@ export class CreateStandardWithExamplesUseCase {
       validationCount: validationPromises.length,
     });
 
-    // Run all validations in parallel
     const results = await Promise.allSettled(validationPromises);
 
-    // Log any failures
     const failures = results.filter((r) => r.status === 'rejected');
     if (failures.length > 0) {
       this.logger.warn('Some detection program validations failed', {

@@ -47,14 +47,12 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
     this.logger.info('Starting migration: AddOrganizationAndUserToRecipes');
 
     try {
-      // Add organization_id column
       this.logger.debug('Adding organization_id column to recipes table');
       await queryRunner.addColumn('recipes', this.organizationIdColumn);
       this.logger.info(
         'Successfully added organization_id column to recipes table',
       );
 
-      // Add user_id column
       this.logger.debug('Adding user_id column to recipes table');
       await queryRunner.addColumn('recipes', this.userIdColumn);
       this.logger.info('Successfully added user_id column to recipes table');
@@ -77,7 +75,6 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
         'Successfully updated existing recipes with organization and user IDs',
       );
 
-      // Make columns NOT NULL
       this.logger.debug('Making organization_id and user_id columns NOT NULL');
       await queryRunner.query(
         'ALTER TABLE "recipes" ALTER COLUMN "organization_id" SET NOT NULL',
@@ -89,7 +86,6 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
         'Successfully made organization_id and user_id columns NOT NULL',
       );
 
-      // Add foreign key constraints
       this.logger.debug('Adding foreign key constraint for organization');
       await queryRunner.createForeignKey(
         'recipes',
@@ -103,7 +99,6 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
       await queryRunner.createForeignKey('recipes', this.userForeignKey);
       this.logger.info('Successfully added foreign key constraint for user');
 
-      // Add indices for performance
       this.logger.debug('Creating indices on organization_id and user_id');
       await queryRunner.query(
         'CREATE INDEX "idx_recipe_organization" ON "recipes" ("organization_id")',
@@ -133,14 +128,12 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
     this.logger.info('Starting rollback: AddOrganizationAndUserToRecipes');
 
     try {
-      // Drop indices
       this.logger.debug('Dropping indices from recipes table');
       await queryRunner.query('DROP INDEX "idx_recipe_org_user"');
       await queryRunner.query('DROP INDEX "idx_recipe_user"');
       await queryRunner.query('DROP INDEX "idx_recipe_organization"');
       this.logger.info('Successfully dropped indices from recipes table');
 
-      // Drop foreign key constraints
       this.logger.debug('Dropping foreign key constraints from recipes table');
       await queryRunner.dropForeignKey('recipes', this.userForeignKey);
       await queryRunner.dropForeignKey('recipes', this.organizationForeignKey);
@@ -148,7 +141,6 @@ export class AddOrganizationAndUserToRecipes1753017705748 implements MigrationIn
         'Successfully dropped foreign key constraints from recipes table',
       );
 
-      // Drop columns
       this.logger.debug('Dropping user_id column from recipes table');
       await queryRunner.dropColumn('recipes', 'user_id');
       this.logger.info(

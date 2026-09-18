@@ -16,9 +16,6 @@ import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromR
 
 const logOrigin = 'FetchFileContentDelayedJob';
 
-/**
- * Callback function type for job completion
- */
 export type FetchFileContentCallback = (
   result: FetchFileContentOutput,
 ) => Promise<void> | void;
@@ -29,10 +26,8 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
 > {
   readonly origin = logOrigin;
 
-  /**
-   * In-memory registry of callbacks keyed by job ID
-   * Callbacks are stored here because they cannot be serialized to Redis
-   */
+  // Kept in memory rather than on the job payload: callbacks cannot be
+  // serialized to Redis.
   private readonly callbacks = new Map<string, FetchFileContentCallback>();
 
   constructor(
@@ -46,14 +41,6 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
     super(queueFactory, logger);
   }
 
-  /**
-   * Add a job with an optional completion callback.
-   * The callback will be executed when the job completes successfully.
-   *
-   * @param input - The job input data
-   * @param onComplete - Optional callback to execute when the job completes
-   * @returns The job ID
-   */
   async addJobWithCallback(
     input: FetchFileContentInput,
     onComplete?: FetchFileContentCallback,
@@ -73,7 +60,6 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
       `[${this.origin}] Job ${jobId} failed - file content could not be fetched`,
     );
 
-    // Clean up callback on failure
     if (this.callbacks.has(jobId)) {
       this.callbacks.delete(jobId);
       this.logger.info(
@@ -95,14 +81,12 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
       },
     );
 
-    // Fetch the git repository
     const gitRepo = await this.gitRepoService.findGitRepoById(input.gitRepoId);
 
     if (!gitRepo) {
       throw new Error(`Git repository not found with id: ${input.gitRepoId}`);
     }
 
-    // Process each file and fetch its content
     const filesWithContent = [];
 
     for (const file of input.files) {
@@ -110,7 +94,6 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
         `[${this.origin}] Fetching content for file: ${file.filePath} at commit: ${file.gitCommit.sha}`,
       );
 
-      // Get the file content from the repository at the specific commit
       const fileData = await this.getFileFromRepo.getFileFromRepo(
         gitRepo,
         file.filePath,
@@ -121,7 +104,7 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
         this.logger.warn(
           `[${this.origin}] File not found at path: ${file.filePath} in commit: ${file.gitCommit.sha}`,
         );
-        // Skip files that are not found instead of failing the entire job
+        // A missing file must not fail the whole batch.
         continue;
       }
 
@@ -178,7 +161,6 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
           },
         );
 
-        // Execute callback if one was registered
         if (job.id && this.callbacks.has(job.id)) {
           const callback = this.callbacks.get(job.id);
 
@@ -196,11 +178,10 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
               this.logger.error(
                 `[${this.origin}] Callback failed for job ${job.id}: ${getErrorMessage(error)}`,
               );
-              // Don't throw - callback errors shouldn't fail the job
+              // Swallowed: a broken callback must not fail the job.
             }
           }
 
-          // Clean up callback after execution
           this.callbacks.delete(job.id);
           this.logger.info(
             `[${this.origin}] Removed callback for completed job ${job.id}`,

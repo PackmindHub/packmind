@@ -5,9 +5,6 @@ import { decodeApiKey, encodeApiKey } from '../../domain/utils/api-key.utils';
 
 const origin = 'ApiKeyService';
 
-/**
- * JWT payload structure expected in API keys
- */
 interface JwtPayload {
   user: {
     name: string;
@@ -23,9 +20,6 @@ interface JwtPayload {
   iat?: number;
 }
 
-/**
- * Type guard to check if a value is a valid JWT payload
- */
 function isValidJwtPayload(value: unknown): value is JwtPayload {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -33,7 +27,6 @@ function isValidJwtPayload(value: unknown): value is JwtPayload {
 
   const obj = value as Record<string, unknown>;
 
-  // Check user object
   if (
     !('user' in obj) ||
     typeof obj['user'] !== 'object' ||
@@ -47,7 +40,6 @@ function isValidJwtPayload(value: unknown): value is JwtPayload {
     return false;
   }
 
-  // Check organization object
   if (
     !('organization' in obj) ||
     typeof obj['organization'] !== 'object' ||
@@ -69,9 +61,7 @@ function isValidJwtPayload(value: unknown): value is JwtPayload {
   return true;
 }
 
-/**
- * JWT service interface to be provided by the implementing layer (API)
- */
+// Port implemented in apps/api, which adapts Nest's JwtService to it.
 export interface IJwtService {
   sign(
     payload: Record<string, unknown>,
@@ -80,9 +70,6 @@ export interface IJwtService {
   verify(token: string): Record<string, unknown>;
 }
 
-/**
- * Service for managing API keys
- */
 export class ApiKeyService {
   constructor(
     private readonly jwtService: IJwtService,
@@ -94,13 +81,6 @@ export class ApiKeyService {
     this.logger.info('ApiKeyService initialized');
   }
 
-  /**
-   * Generates an API key for a user with 3-month validity
-   * @param user The user to generate the API key for
-   * @param organization The user's organization
-   * @param host The API host URL
-   * @returns The generated API key string
-   */
   generateApiKey(
     user: User,
     organization: Organization,
@@ -115,7 +95,8 @@ export class ApiKeyService {
     });
 
     try {
-      // Create JWT payload with same structure as regular auth
+      // Must match the cookie sign-in token's shape: the API AuthGuard reads
+      // both through one JwtPayload type.
       const jwtPayload = {
         user: {
           name: user.email,
@@ -129,16 +110,13 @@ export class ApiKeyService {
         },
       };
 
-      // Generate JWT with 3-month expiration (90 days)
       const jwt = this.jwtService.sign(jwtPayload, { expiresIn: '90d' });
 
-      // Create API key payload
       const apiKeyPayload: ApiKeyPayload = {
         host,
         jwt,
       };
 
-      // Encode to base64
       const apiKey = encodeApiKey(apiKeyPayload);
 
       this.logger.info('API key generated successfully', {
@@ -155,16 +133,10 @@ export class ApiKeyService {
     }
   }
 
-  /**
-   * Validates an API key and extracts user information
-   * @param apiKey The API key to validate
-   * @returns Decoded and validated API key information
-   */
   validateApiKey(apiKey: string): DecodedApiKey {
     this.logger.info('Validating API key');
 
     try {
-      // First decode the API key structure
       const decoded = decodeApiKey(apiKey);
 
       if (!decoded.isValid) {
@@ -172,7 +144,6 @@ export class ApiKeyService {
         return decoded;
       }
 
-      // Validate the embedded JWT token
       try {
         const rawPayload = this.jwtService.verify(decoded.payload.jwt);
 
@@ -217,11 +188,6 @@ export class ApiKeyService {
     }
   }
 
-  /**
-   * Extracts user information from a valid API key
-   * @param apiKey The API key to extract user info from
-   * @returns User and organization information, or null if invalid
-   */
   extractUserFromApiKey(apiKey: string): {
     user: { name: string; userId: string };
     organization: { id: string; name: string; slug: string; role: string };
@@ -264,11 +230,6 @@ export class ApiKeyService {
     }
   }
 
-  /**
-   * Gets the expiration date from an API key's JWT token
-   * @param apiKey The API key to check
-   * @returns Expiration date or null if invalid
-   */
   getApiKeyExpiration(apiKey: string): Date | null {
     const decoded = this.validateApiKey(apiKey);
 

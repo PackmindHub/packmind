@@ -23,7 +23,7 @@ export function itHandlesDuplicateKeys<Entity extends { id: string }>({
     it('throws error for duplicate key constraint violation', async () => {
       const firstEntity = entityFactory();
 
-      // Create duplicate entity with same values for duplicate fields
+      // Same values in the duplicate-key fields, differing elsewhere.
       const duplicateOverrides = duplicateFields.reduce((acc, field) => {
         acc[field] = firstEntity[field];
         return acc;
@@ -45,7 +45,6 @@ export function itHandlesDuplicateKeys<Entity extends { id: string }>({
       beforeEach(() => {
         firstEntity = entityFactory();
 
-        // Create different entity with modified values for duplicate fields
         const timestamp = Date.now();
         differentOverrides = duplicateFields.reduce((acc, field) => {
           const value = firstEntity[field];

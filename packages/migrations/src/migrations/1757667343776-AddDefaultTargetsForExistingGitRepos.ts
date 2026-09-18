@@ -15,7 +15,6 @@ export class AddDefaultTargetsForExistingGitRepos1757667343776 implements Migrat
     );
 
     try {
-      // Find all git repositories that don't already have a default target
       this.logger.debug('Finding git repositories without default targets');
       const gitReposWithoutDefaultTargets = await queryRunner.query(`
         SELECT gr.id, gr.created_at, gr.updated_at
@@ -34,7 +33,6 @@ export class AddDefaultTargetsForExistingGitRepos1757667343776 implements Migrat
         return;
       }
 
-      // Insert default target for each git repository
       this.logger.debug('Creating default targets for git repositories');
       for (const gitRepo of gitReposWithoutDefaultTargets) {
         const targetId = uuidv4();
@@ -72,7 +70,6 @@ export class AddDefaultTargetsForExistingGitRepos1757667343776 implements Migrat
     this.logger.info('Starting rollback: AddDefaultTargetsForExistingGitRepos');
 
     try {
-      // Remove all default targets that were created by this migration
       this.logger.debug('Removing default targets created by this migration');
       const result = await queryRunner.query(`
         DELETE FROM targets 

@@ -49,14 +49,12 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       relativePath: command.relativePath,
     });
 
-    // Step 1: Resolve coding agents
     const codingAgents =
       await this.renderModeConfigurationService.resolveCodingAgents(
         command.agents,
         command.organization.id,
       );
 
-    // Step 2: Resolve target from git info
     const target = await this.targetResolutionService.findTargetFromGitInfo(
       command.organization.id,
       command.userId,
@@ -65,7 +63,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       command.relativePath,
     );
 
-    // Step 3: If no target found, return empty response
     if (!target) {
       this.logger.info('No target found, returning empty response');
       return {
@@ -75,7 +72,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       };
     }
 
-    // Step 4: Fetch deployed versions
     const {
       standardVersions,
       commandVersions,
@@ -91,7 +87,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillCount: activeSkillVersions.length,
     });
 
-    // Step 5: Fetch rules for each standard version
     const standardVersionsWithRules = await Promise.all(
       standardVersions.map(async (sv) => {
         const rules = await this.standardsPort.getRulesByVersionId(sv.id);
@@ -99,7 +94,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       }),
     );
 
-    // Step 6: Fetch skill files for each skill version
     const skillVersions = await Promise.all(
       activeSkillVersions.map(async (skillVersion) => {
         const files = await this.skillsPort.getSkillFiles(skillVersion.id);
@@ -107,7 +101,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       }),
     );
 
-    // Step 7: Render artifacts for coding agents
     const fileUpdates = await this.codingAgentPort.deployArtifactsForAgents({
       recipeVersions: commandVersions,
       standardVersions: standardVersionsWithRules,
@@ -120,7 +113,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 8: Build artifact metadata from packages and enrich file modifications
     let packages: PackageWithArtefacts[] = [];
     if (command.packagesSlugs.length > 0) {
       packages = await this.packageService.getPackagesBySlugsWithArtefacts(
@@ -138,7 +130,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       ];
       const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
-      // Build packageIdMap per artifact type (artifact can belong to multiple packages)
+      // An artifact can belong to several packages, hence the array value.
       const commandPackageIdMap = new Map<string, string[]>();
       const standardPackageIdMap = new Map<string, string[]>();
       const skillPackageIdMap = new Map<string, string[]>();
@@ -200,7 +192,6 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       );
     }
 
-    // Step 9: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -216,13 +207,11 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolderCount: skillFolders.length,
     });
 
-    // Step 10: Extract package IDs
     let packageIds: PackageId[] = [];
     if (target) {
       packageIds = packages.map((pkg) => pkg.id);
     }
 
-    // Step 11: Return response
     return {
       fileUpdates,
       skillFolders,

@@ -1,4 +1,5 @@
 import { EmailData, MailService } from './MailService';
+import { SmtpConfigurationError } from './SmtpConfigurationError';
 import { Configuration } from '..';
 import { PackmindLogger } from '@packmind/logger';
 import nodemailer from 'nodemailer';
@@ -11,14 +12,13 @@ type MailOptionsTemplate = {
   html: string;
 };
 
-/**
- * SMTP Mail service implementation using nodemailer.
- *
- * This service provides email functionality through SMTP configuration
- * using environment variables for connection settings.
- */
 const origin = 'SmtpMailService';
 
+/**
+ * Nodemailer over SMTP, configured entirely from `SMTP_*` config. With no host
+ * or port configured it logs the message and reports success rather than
+ * throwing, so a deployment without mail set up still works.
+ */
 export class SmtpMailService implements MailService {
   constructor(
     private readonly _logger: PackmindLogger = new PackmindLogger(origin),
@@ -122,6 +122,31 @@ ${content}
 **** END MESSAGE ****`;
   }
 
+  /**
+   * Certificate verification is opt-in: it stays off unless a deployment sets
+   * SMTP_TLS_REJECT_UNAUTHORIZED=true, so upgrading does not break instances whose
+   * mail server presents a certificate Node cannot verify. Turning it on is
+   * recommended, and a private CA is best trusted through NODE_EXTRA_CA_CERTS.
+   *
+   * Anything other than 'true' or 'false' is rejected rather than silently read as
+   * an opt-out: this flag is the only guard against SMTP interception, so a typo
+   * like '1' or 'yes' must not leave an operator believing it is on.
+   */
+  private parseTlsRejectUnauthorized(value: string | null): boolean {
+    const normalized = value?.trim().toLowerCase() ?? '';
+
+    if (normalized === '' || normalized === 'false') {
+      return false;
+    }
+    if (normalized === 'true') {
+      return true;
+    }
+
+    throw new SmtpConfigurationError(
+      `SMTP_TLS_REJECT_UNAUTHORIZED must be 'true' or 'false', got '${value}'`,
+    );
+  }
+
   private async buildMailConfig(): Promise<SMTPPool.Options> {
     const host = await Configuration.getConfig('SMTP_HOST');
     const port = await Configuration.getConfig('SMTP_PORT');
@@ -131,9 +156,12 @@ ${content}
     const isExchangeServer = await Configuration.getConfig(
       'SMTP_IS_EXCHANGE_SERVER',
     );
+    const tlsRejectUnauthorized = await Configuration.getConfig(
+      'SMTP_TLS_REJECT_UNAUTHORIZED',
+    );
 
     if (!host || !port) {
-      throw new Error('SMTP_HOST and SMTP_PORT are required');
+      throw new SmtpConfigurationError('SMTP_HOST and SMTP_PORT are required');
     }
 
     const mailConfig: SMTPPool.Options = {
@@ -143,7 +171,6 @@ ${content}
       secure: secure === 'true', // true for 465, false for other ports
     };
 
-    // Add authentication if credentials are provided
     if (user && password) {
       mailConfig.auth = {
         user,
@@ -151,18 +178,16 @@ ${content}
       };
     }
 
-    // Configure TLS settings
     mailConfig.tls = {
-      rejectUnauthorized: false,
+      rejectUnauthorized: this.parseTlsRejectUnauthorized(
+        tlsRejectUnauthorized,
+      ),
     };
 
-    // Handle Exchange Server specific configuration
     if (isExchangeServer === 'true') {
       mailConfig.tls.ciphers = 'SSLv3';
       mailConfig.secure = false;
     }
-
-    console.log(JSON.stringify(mailConfig));
 
     return mailConfig;
   }

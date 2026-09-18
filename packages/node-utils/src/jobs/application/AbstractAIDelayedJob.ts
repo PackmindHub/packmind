@@ -25,7 +25,7 @@ export abstract class AbstractAIDelayedJob<
       defaultOrigin,
     ),
   ) {
-    // Initialization is now deferred to async init method
+    // The queue and its worker are built lazily by ensureInitialized().
   }
 
   private async ensureInitialized(): Promise<void> {
@@ -85,15 +85,14 @@ export abstract class AbstractAIDelayedJob<
   }
 
   private parseTimeout(configuredTimeout: string | null): number {
-    // Handle null, undefined, or empty string
+    // Anything unset, unparseable or non-positive falls back to the default
+    // rather than throwing, so a bad env value cannot stop jobs being queued.
     if (!configuredTimeout || typeof configuredTimeout !== 'string') {
       return this.DEFAULT_JOB_TIMEOUT;
     }
 
-    // Parse the timeout value
     const parsedTimeout = Number(configuredTimeout.trim());
 
-    // Check if it's a valid positive number and within reasonable bounds
     if (
       isNaN(parsedTimeout) ||
       !isFinite(parsedTimeout) ||

@@ -14,22 +14,11 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'AddMarketplacesTableAndGitRepoType1804000000000';
 
 /**
- * Migration: AddMarketplacesTableAndGitRepoType
+ * Adds `git_repos.type` and creates the `marketplaces` table.
  *
- * Schema changes:
- *   1. Add `type` column to `git_repos` (varchar NOT NULL DEFAULT 'standard').
- *      Uses the standard nullable-add → backfill → NOT NULL pattern so the
- *      column lands cleanly on existing rows.
- *   2. Create the `marketplaces` table mirroring `MarketplaceSchema`:
- *      `id`, `organization_id` (FK → organizations CASCADE),
- *      `git_repo_id` (FK → git_repos CASCADE),
- *      `name`, `vendor`, `added_by` (FK → users RESTRICT),
- *      `linked_at`, `state` (default 'healthy'), `last_validated_at`,
- *      `descriptor` (jsonb), `plugin_count` (default 0),
- *      plus timestamps + soft-delete columns.
- *      Indexes: `idx_marketplaces_organization_id` on `(organization_id)`;
- *      unique partial `uq_marketplaces_org_gitrepo_active`
- *      on `(organization_id, git_repo_id) WHERE deleted_at IS NULL`.
+ * `git_repos.type` goes through the nullable-add → backfill → NOT NULL →
+ * default sequence rather than a single statement, so the NOT NULL constraint
+ * never rejects the rows that already exist.
  */
 export class AddMarketplacesTableAndGitRepoType1804000000000 implements MigrationInterface {
   constructor(
@@ -125,31 +114,26 @@ export class AddMarketplacesTableAndGitRepoType1804000000000 implements Migratio
     this.logger.info('Starting migration: AddMarketplacesTableAndGitRepoType');
 
     try {
-      // 1. Add `type` column to git_repos as nullable
       this.logger.debug('Adding nullable `type` column to git_repos table');
       await queryRunner.query(
         `ALTER TABLE "git_repos" ADD COLUMN "type" varchar NULL`,
       );
 
-      // 2. Backfill existing rows to 'standard'
       this.logger.debug(
         "Backfilling existing git_repos rows with type = 'standard'",
       );
       await queryRunner.query(`UPDATE "git_repos" SET "type" = 'standard'`);
 
-      // 3. Make column NOT NULL
       this.logger.debug('Setting NOT NULL constraint on git_repos.type column');
       await queryRunner.query(
         `ALTER TABLE "git_repos" ALTER COLUMN "type" SET NOT NULL`,
       );
 
-      // 4. Set default for future inserts
       this.logger.debug("Setting default 'standard' on git_repos.type column");
       await queryRunner.query(
         `ALTER TABLE "git_repos" ALTER COLUMN "type" SET DEFAULT 'standard'`,
       );
 
-      // 5. Create marketplaces table
       this.logger.debug('Creating marketplaces table');
       await queryRunner.createTable(this.marketplacesTable);
 
@@ -171,7 +155,6 @@ export class AddMarketplacesTableAndGitRepoType1804000000000 implements Migratio
         this.addedByForeignKey,
       );
 
-      // 6. Create indexes on marketplaces
       this.logger.debug(
         'Creating idx_marketplaces_organization_id on marketplaces (organization_id)',
       );
@@ -201,8 +184,6 @@ export class AddMarketplacesTableAndGitRepoType1804000000000 implements Migratio
     this.logger.info('Starting rollback: AddMarketplacesTableAndGitRepoType');
 
     try {
-      // Reverse order — drop marketplaces table (drops its indexes automatically),
-      // then drop the type column from git_repos.
       this.logger.debug(
         'Dropping unique partial index uq_marketplaces_org_gitrepo_active',
       );

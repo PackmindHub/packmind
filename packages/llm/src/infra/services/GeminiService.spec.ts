@@ -5,11 +5,9 @@ import {
   PromptConversationRole,
 } from '@packmind/types';
 
-// Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getPrivateAccess = (service: GeminiService) => service as any;
 
-// Mock Google Generative AI
 jest.mock('@google/genai');
 
 import { GoogleGenAI } from '@google/genai';
@@ -26,7 +24,6 @@ describe('GeminiService', () => {
   };
 
   beforeEach(() => {
-    // Create mock Gemini instance
     mockGeminiInstance = {
       models: {
         generateContent: jest.fn(),

@@ -29,7 +29,6 @@ export interface GitlabProject {
   };
 }
 
-// GitLab access levels
 export const GITLAB_ACCESS_LEVELS = {
   NO_ACCESS: 0,
   GUEST: 10,
@@ -39,5 +38,4 @@ export const GITLAB_ACCESS_LEVELS = {
   OWNER: 50,
 } as const;
 
-// Minimum access level required to push to repositories
 export const MIN_PUSH_ACCESS_LEVEL = GITLAB_ACCESS_LEVELS.DEVELOPER;

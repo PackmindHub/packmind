@@ -65,7 +65,6 @@ export class CreateSkillUseCase extends AbstractSpaceMemberUseCase<
       spaceId,
     });
 
-    // Verify the space belongs to the organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       this.logger.warn('Space not found', { spaceId });
@@ -88,7 +87,7 @@ export class CreateSkillUseCase extends AbstractSpaceMemberUseCase<
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
+      // Ensure slug is unique per space
       this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
         spaceId,
@@ -106,7 +105,6 @@ export class CreateSkillUseCase extends AbstractSpaceMemberUseCase<
       }
       this.logger.info('Resolved unique slug', { slug: skillSlug });
 
-      // Business logic: Create skill with initial version 1
       const initialVersion = 1;
 
       this.logger.info('Creating skill entity');

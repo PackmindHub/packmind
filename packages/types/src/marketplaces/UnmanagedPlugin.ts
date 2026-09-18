@@ -26,12 +26,10 @@ export type UnmanagedPlugin = {
 /**
  * Returns the descriptor entries Packmind does not manage, in descriptor order.
  *
- * Lives in the shared types rather than next to either of its callers because
- * both sides of the product answer this question and must answer it the same
- * way: the marketplace list counts these plugins per marketplace, the
- * marketplace detail view lists them. Two implementations of the rule is how
- * the two surfaces came to disagree on how many plugins a marketplace holds in
- * the first place.
+ * Lives in the shared types rather than beside either caller because the
+ * marketplace list (which counts these) and the detail view (which lists them)
+ * must answer the question identically; two implementations of the rule let the
+ * two surfaces disagree.
  *
  * "Managed" is decided by slug against the distributions Packmind tracks, not
  * against `packmind-lock.json`. The lock is the canonical answer but never
@@ -47,9 +45,6 @@ export type UnmanagedPlugin = {
  * appears in neither list. A `pending_merge` publish is the mirror case: the
  * distribution row exists while the descriptor entry does not yet, so again
  * nothing is listed.
- *
- * @param descriptorPlugins entries of the marketplace descriptor, in its order
- * @param managedSlugs plugin slugs Packmind tracks a distribution for
  */
 export function deriveUnmanagedPlugins(
   descriptorPlugins: readonly PluginRef[] | undefined,

@@ -8,13 +8,6 @@ import { UserSpaceMembershipRepository } from './UserSpaceMembershipRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
 import { UserSpaceMembershipSchema } from '../schemas/UserSpaceMembershipSchema';
 
-/**
- * SpacesRepositories - Repository aggregator implementation for the Spaces domain
- *
- * This class serves as the main repository access point, aggregating all
- * individual repositories. It handles the instantiation of repositories
- * using the shared DataSource and provides them through getter methods.
- */
 export class SpacesRepositories implements ISpacesRepositories {
   private readonly spaceRepository: ISpaceRepository;
   private readonly userSpaceMembershipRepository: IUserSpaceMembershipRepository;

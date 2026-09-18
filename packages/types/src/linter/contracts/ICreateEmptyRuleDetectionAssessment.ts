@@ -14,9 +14,6 @@ export type CreateEmptyRuleDetectionAssessmentCommand = PackmindCommand & {
    * Use SUCCESS when importing detection programs that are ready to use.
    */
   status?: RuleDetectionAssessmentStatus;
-  /**
-   * Optional details for the assessment.
-   */
   details?: string;
 };
 

@@ -37,14 +37,12 @@ export class GithubProvider implements IGitProvider {
       httpsAgent: providerHttpsAgent,
     });
 
-    // Inject token from resolver on every request
     this.client.interceptors.request.use(async (config) => {
       const token = await resolver.getToken();
       config.headers['Authorization'] = `token ${token}`;
       return config;
     });
 
-    // Fire onUnauthorized hook on 401 responses
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -93,8 +91,6 @@ export class GithubProvider implements IGitProvider {
     }
   }
 
-  // Validates, access-filters and maps one raw provider page into the shared
-  // ExternalRepository shape.
   private mapAccessibleRepos(
     rawRepos: unknown,
     kind: 'user' | 'installation',
@@ -107,14 +103,11 @@ export class GithubProvider implements IGitProvider {
       (repo) => repo && repo.name && repo.owner && repo.owner.login,
     );
 
-    // For `/user/repos` the response includes read-only repos the user has
-    // visibility into, so we filter by `permissions.push === true`.
-    // For `/installation/repositories` GitHub already only returns repos
-    // the App was explicitly granted access to. The per-repo `permissions`
-    // object for installation tokens does not reliably reflect the App's
-    // contents:write grant (e.g. `push` may be false or absent), so the
-    // same filter would silently drop every repo — the bug we are fixing.
-    // Trust the App-installation list as-is.
+    // `/user/repos` includes read-only repos the user merely has visibility
+    // into, hence the `permissions.push` filter. `/installation/repositories`
+    // is trusted as-is: GitHub already returns only repos the App was granted,
+    // and its per-repo `permissions` does not reliably reflect the App's
+    // contents:write grant, so the same filter would drop every one of them.
     const filteredRepos =
       kind === 'installation'
         ? baseRepos
@@ -247,7 +240,6 @@ export class GithubProvider implements IGitProvider {
       return true;
     } catch (error) {
       if (isNativeError(error)) {
-        // Check for specific GitHub API errors
         if (error.message.includes('404')) {
           this.logger.debug('Branch not found on GitHub', {
             owner,

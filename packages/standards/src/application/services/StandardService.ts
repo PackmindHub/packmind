@@ -32,7 +32,7 @@ export type CreateStandardData = {
   gitCommit?: GitCommit;
   userId: UserId;
   scope: string | null;
-  spaceId: SpaceId; // Required space ID for space-specific standards
+  spaceId: SpaceId;
 };
 
 export type UpdateStandardData = {
@@ -197,7 +197,6 @@ export class StandardService {
     });
 
     try {
-      // Check if the standard exists
       this.logger.debug('Checking if standard exists', { standardId });
       const existingStandard =
         await this.standardRepository.findById(standardId);
@@ -206,7 +205,6 @@ export class StandardService {
         throw new Error(`Standard with id ${standardId} not found`);
       }
 
-      // Update the standard
       const updatedStandard: Standard = {
         id: standardId,
         ...standardData,
@@ -235,7 +233,6 @@ export class StandardService {
     this.logger.info('Deleting standard and all its versions', { standardId });
 
     try {
-      // Check if the standard exists
       this.logger.debug('Checking if standard exists for deletion', {
         standardId,
       });
@@ -245,7 +242,6 @@ export class StandardService {
         throw new Error(`Standard with id ${standardId} not found`);
       }
 
-      // Delete the standard (versions will be automatically deleted by SQL CASCADE)
       this.logger.debug('Deleting standard', { standardId });
       await this.standardRepository.deleteById(standardId, userId);
 

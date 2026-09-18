@@ -1,7 +1,4 @@
-/**
- * Script to generate sample coding standards using LLM.
- * Run with: nx run standards:generate-samples
- */
+// Run with: nx run standards:generate-samples
 
 import * as fs from 'fs';
 import * as path from 'path';

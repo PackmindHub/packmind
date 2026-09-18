@@ -15,7 +15,6 @@ export default class CPPParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('cpp');
 
       for (const wasmPath of wasmPaths) {

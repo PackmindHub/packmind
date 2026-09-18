@@ -3,7 +3,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
@@ -34,7 +38,6 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { CreateStandardUseCase } from './CreateStandardUseCase';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -77,7 +80,6 @@ describe('CreateStandardUseCase', () => {
       slug: 'test-org',
     };
 
-    // Mock SpacesPort
     spacesPort = mockInterface<ISpacesPort>();
     spacesPort.findMembership.mockResolvedValue({
       userId: testUserId,
@@ -88,40 +90,20 @@ describe('CreateStandardUseCase', () => {
       updatedBy: testUserId,
     });
 
-    // Mock AccountsPort
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    // Mock StandardService
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsBySpace: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     ruleRepository = mockInterface<IRuleRepository>();
 
@@ -768,35 +750,18 @@ describe('CreateStandardUseCase', () => {
       let stubbedLogger: jest.Mocked<PackmindLogger>;
 
       beforeEach(() => {
-        standardService = {
-          addStandard: jest.fn(),
-          getStandardById: jest.fn(),
-          findStandardBySlug: jest.fn(),
-          updateStandard: jest.fn(),
-          deleteStandard: jest.fn(),
-          listStandardsBySpace: jest.fn(),
-          listStandardsByUser: jest.fn(),
-        } as unknown as jest.Mocked<StandardService>;
+        standardService = createMockInstance(StandardService);
 
-        standardVersionService = {
-          addStandardVersion: jest.fn(),
-          listStandardVersions: jest.fn(),
-          getStandardVersion: jest.fn(),
-          getLatestStandardVersion: jest.fn(),
-          getStandardVersionById: jest.fn(),
-          prepareForGitPublishing: jest.fn(),
-        } as unknown as jest.Mocked<StandardVersionService>;
+        standardVersionService = createMockInstance(StandardVersionService);
 
         stubbedLogger = stubLogger();
 
-        // Default slug mock: lowercased with hyphens
         (slug as jest.MockedFunction<typeof slug>).mockImplementation(
           (input: string) => input.toLowerCase().replace(/\s+/g, '-'),
         );
 
-        eventEmitterService = {
-          emit: jest.fn().mockReturnValue(true),
-        } as unknown as jest.Mocked<PackmindEventEmitterService>;
+        eventEmitterService = createMockInstance(PackmindEventEmitterService);
+        eventEmitterService.emit.mockReturnValue(true);
 
         ruleRepository = mockInterface<IRuleRepository>();
         ruleRepository.findByStandardVersionId.mockResolvedValue([]);

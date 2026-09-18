@@ -35,7 +35,6 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
     });
 
     try {
-      // 1. Find invitation by token
       const invitationToken = createInvitationToken(command.token);
       const invitation =
         await this.invitationService.findByToken(invitationToken);
@@ -47,7 +46,6 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         throw new InvitationNotFoundError();
       }
 
-      // 2. Check if invitation is expired
       const now = new Date();
       if (invitation.expirationDate < now) {
         this.logger.warn('Invitation expired', {
@@ -57,7 +55,6 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         throw new InvitationExpiredError();
       }
 
-      // 3. Get the user associated with the invitation
       const user = await this.userService.getUserById(invitation.userId);
 
       if (!user) {
@@ -68,13 +65,18 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         throw new UserNotFoundError({ userId: String(invitation.userId) });
       }
 
-      // 4. Check if user is already active (shouldn't happen but safety check)
+      // Load-bearing, not a formality. The update and the invitation delete
+      // below are separate writes, so a delete that fails leaves the token
+      // resolving against an already-active user, and two concurrent
+      // activations can both pass the lookup above. Without this guard those
+      // cases fall through and rewrite the password from `command`, letting
+      // whoever holds a spent token take the account over.
       if (user.active) {
         this.logger.warn('User is already active', {
           userId: user.id,
           email: maskEmail(user.email),
         });
-        // Still return success but don't generate new token
+        // Report success anyway rather than failing an already-done activation.
         return {
           success: true,
           user: {
@@ -85,12 +87,10 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         };
       }
 
-      // 5. Hash the password
       const passwordHash = await this.userService.hashPassword(
         command.password,
       );
 
-      // 6. Update user as active with password hash
       const updatedUser = {
         ...user,
         passwordHash,
@@ -99,7 +99,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
 
       await this.userService.updateUser(updatedUser);
 
-      // 7. Hard delete the invitation
+      // Hard delete, not a soft one: the token must stop resolving.
       await this.invitationService.delete(invitation.id);
 
       this.logger.info('User account activated successfully', {
@@ -107,7 +107,6 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         email: maskEmail(updatedUser.email),
       });
 
-      // Emit event for user joining organization
       const organizationId = updatedUser.memberships[0]?.organizationId;
       if (organizationId) {
         this.eventEmitterService.emit(

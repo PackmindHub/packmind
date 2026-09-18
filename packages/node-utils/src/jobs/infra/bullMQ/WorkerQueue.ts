@@ -18,7 +18,8 @@ export class WorkerQueue<Input, Output> extends AbstractQueue<Input, Output> {
 
         let timeout: NodeJS.Timeout | undefined;
         try {
-          // Get timeout from configuration or use default
+          // Per-job `timeout` wins over AI_REQUEST_TIMEOUT, which in turn wins
+          // over this default.
           const defaultTimeout = 60000 * 10; // 10 minutes
           const configuredTimeout =
             await Configuration.getConfig('AI_REQUEST_TIMEOUT');
@@ -115,8 +116,9 @@ export class WorkerQueue<Input, Output> extends AbstractQueue<Input, Output> {
 
     if (events.failed) {
       worker.on('failed', (job, error) => {
-        // BullMQ's failed event can have job as undefined, but our interface expects Job
-        // We handle both cases in the wrapper
+        // BullMQ types this `job` as possibly undefined while WorkerListeners
+        // does not, so the cast below can hand a listener undefined - a
+        // listener that dereferences `job` must guard for it.
         if (events.failed) {
           events.failed(job as Job<Input, Output>, error);
         }

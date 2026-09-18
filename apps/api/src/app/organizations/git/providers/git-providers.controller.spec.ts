@@ -64,7 +64,10 @@ import {
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { GitProvidersController } from './git-providers.controller';
-import { GitProvidersService } from './git-providers.service';
+import {
+  BuildGithubAppManifestResponse,
+  GitProvidersService,
+} from './git-providers.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
@@ -92,7 +95,7 @@ describe('GitProvidersController', () => {
   const userId = createUserId('user-456');
   const mockRequest = {
     user: { userId },
-    clientSource: 'web',
+    clientSource: 'ui',
   } as Partial<AuthenticatedRequest> as AuthenticatedRequest;
 
   beforeEach(() => {
@@ -263,7 +266,7 @@ describe('GitProvidersController', () => {
           userId,
           installationId: 99,
           state: 'valid-state',
-          source: 'web',
+          source: 'ui',
         });
       });
     });
@@ -334,7 +337,7 @@ describe('GitProvidersController', () => {
   });
 
   describe('getGithubAppManifest', () => {
-    const manifestResponse = {
+    const manifestResponse: BuildGithubAppManifestResponse = {
       manifest: {
         name: 'Packmind on Acme',
         url: 'https://app.example.com',

@@ -21,8 +21,9 @@ import { isPackmindProviderAvailable } from '../utils';
 const origin = 'TestSavedLLMConfigurationUseCase';
 
 /**
- * Extract HTTP status code from SDK error objects.
- * This is a best-effort extraction - not all SDKs expose status codes reliably.
+ * Best-effort: the OpenAI and Anthropic SDKs put the HTTP status on the error
+ * object, but not every provider error reaching here does, hence the fallback
+ * to digging a `(4xx)` out of the message.
  */
 function extractStatusCode(error: unknown): number | undefined {
   if (error && typeof error === 'object' && 'status' in error) {
@@ -39,9 +40,6 @@ function extractStatusCode(error: unknown): number | undefined {
   return undefined;
 }
 
-/**
- * Classify error type from error message.
- */
 function classifyErrorType(error: unknown): AIServiceErrorType {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const lowerMessage = errorMessage.toLowerCase();
@@ -133,8 +131,8 @@ export class TestSavedLLMConfigurationUseCase
   }
 
   /**
-   * Handle the case when no stored configuration exists.
-   * Falls back to testing Packmind provider if available in cloud environment.
+   * With nothing stored, tests the Packmind provider instead when it is
+   * available, so the caller still gets a real verdict rather than an error.
    */
   private async handleNoStoredConfiguration(
     organizationId: string,
@@ -182,9 +180,6 @@ export class TestSavedLLMConfigurationUseCase
     };
   }
 
-  /**
-   * Test a specific model by executing a simple prompt.
-   */
   private async testModel(
     llmService: AIService,
     performance: LLMModelPerformance,
@@ -247,10 +242,6 @@ export class TestSavedLLMConfigurationUseCase
     }
   }
 
-  /**
-   * Determine if we should test the fast model separately.
-   * Only test if it's defined and different from the standard model.
-   */
   private shouldTestFastModel(config: LLMServiceConfig): boolean {
     if (config.provider === LLMProvider.PACKMIND) {
       return false;

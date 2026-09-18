@@ -44,10 +44,7 @@ export interface ISkillsPort {
    * where the caller has already been authorized at the organization level.
    */
   listAllSkillsByOrganization(organizationId: OrganizationId): Promise<Skill[]>;
-  /**
-   * Count skills grouped by space ID, omitting spaces with zero skills.
-   * Used for management listing aggregations.
-   */
+  /** Spaces with no skill are absent from the Map, not zero. */
   countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   findSkillBySlug(
     slug: string,

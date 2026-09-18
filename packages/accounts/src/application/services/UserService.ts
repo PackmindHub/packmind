@@ -51,22 +51,18 @@ export class UserService {
     });
 
     try {
-      // Validate input
       if (!email || !password || !organizationId) {
         throw new Error('Email, password, and organizationId are required');
       }
 
-      // Check if user already exists (case-insensitive)
       const existingUser = await this.getUserByEmailCaseInsensitive(email);
       if (existingUser) {
         throw new EmailAlreadyExistsError();
       }
 
-      // Hash password
       const saltRounds = 10;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Create user
       const id = createUserId(uuidv4());
       const membership: UserOrganizationMembership = {
         userId: id,

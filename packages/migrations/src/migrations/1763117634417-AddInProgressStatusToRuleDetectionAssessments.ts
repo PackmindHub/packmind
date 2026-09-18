@@ -48,25 +48,21 @@ export class AddInProgressStatusToRuleDetectionAssessments1763117634417 implemen
         'Removing IN_PROGRESS value from rule_detection_assessments status enum',
       );
 
-      // PostgreSQL does not support removing enum values directly
-      // We need to recreate the enum type without IN_PROGRESS
-      // First, alter the column to use varchar temporarily
+      // PostgreSQL cannot drop a value from an enum type, so the column detours
+      // through varchar while the type is recreated without IN_PROGRESS.
       await queryRunner.query(`
         ALTER TABLE rule_detection_assessments
         ALTER COLUMN status TYPE varchar USING status::varchar
       `);
 
-      // Drop the old enum type
       await queryRunner.query(`
         DROP TYPE rule_detection_assessments_status_enum
       `);
 
-      // Recreate the enum type without IN_PROGRESS
       await queryRunner.query(`
         CREATE TYPE rule_detection_assessments_status_enum AS ENUM ('NOT_STARTED', 'SUCCEEDED', 'FAILED')
       `);
 
-      // Convert the column back to enum
       await queryRunner.query(`
         ALTER TABLE rule_detection_assessments
         ALTER COLUMN status TYPE rule_detection_assessments_status_enum USING status::rule_detection_assessments_status_enum

@@ -53,7 +53,6 @@ export class DeleteStandardUseCase
 
     await this.standardService.deleteStandard(standardId, brandedUserId);
 
-    // Emit event to notify other domains
     const event = new StandardDeletedEvent({
       standardId,
       spaceId: standard.spaceId,

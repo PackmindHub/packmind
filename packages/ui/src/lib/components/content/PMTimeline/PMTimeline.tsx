@@ -15,7 +15,6 @@ export const PMTimeline = ({ children, ...rest }: PMTimelineProps) => {
   return <Timeline.Root {...rest}>{children}</Timeline.Root>;
 };
 
-// Export slot components for composition
 export {
   PMTimelineItem,
   PMTimelineContent,

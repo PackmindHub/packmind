@@ -20,12 +20,8 @@ const origin = 'CopilotPluginDeployer';
 
 const EMPTY_UPDATES: FileUpdates = { createOrUpdate: [], delete: [] };
 
-/**
- * Returns the plugin-root prefix for paths emitted by this deployer.
- * - '/' or empty target.path => '' (no prefix)
- * - 'plugins/security' => 'plugins/security/'
- * - 'plugins/security/' => 'plugins/security/'
- */
+// A target path of '/' means the repository root, so it yields no prefix
+// rather than a leading slash.
 function pluginRoot(target: Target): string {
   const path = target.path ?? '';
   if (path === '' || path === '/') return '';
@@ -33,21 +29,18 @@ function pluginRoot(target: Target): string {
 }
 
 export class CopilotPluginDeployer implements ICodingAgentDeployer {
-  /**
-   * Skills are rendered under `<plugin-root>/skills/<slug>/`. The folder path is
-   * relative to the plugin root and is used by the burn-and-rebuild strategy to
-   * clean up stale skill files.
-   */
+  // Relative to the plugin root, not the repo root: the burn-and-rebuild
+  // strategy in CodingAgentServices deletes this directory to clear stale
+  // skill files.
   private static readonly SKILLS_FOLDER_PATH = 'skills/';
 
   /**
-   * Where Copilot CLI looks for a plugin manifest.
-   *
-   * Its loader probes `.plugin/`, `.github/plugin/` and `.claude-plugin/` — it
-   * implements the same agent-plugins.org schema Claude Code does, so the Claude
-   * path would work too. `.github/plugin/` is the sibling of the
-   * `.github/plugin/marketplace.json` descriptor Packmind already writes for
-   * this vendor, which makes the intent unambiguous to anyone reading the repo.
+   * Where Copilot CLI looks for a plugin manifest. Its loader probes
+   * `.plugin/`, `.github/plugin/` and `.claude-plugin/` — it implements the
+   * same agent-plugins.org schema Claude Code does, so the Claude path would
+   * work too. `.github/plugin/` is chosen because it is the sibling of the
+   * `.github/plugin/marketplace.json` descriptor Packmind recognises for this
+   * vendor (`MARKETPLACE_DESCRIPTOR_CANDIDATES`).
    */
   private static readonly MANIFEST_PATH = '.github/plugin/plugin.json';
 
@@ -92,12 +85,9 @@ export class CopilotPluginDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * GitHub Copilot has no first-party "skill" concept equivalent to Claude's
-   * Agent Skills. Pending real product/design confirmation of Copilot's actual
-   * skill-equivalent rendered output (the user story has no concrete example for
-   * this yet), this method is a best-effort mirror of Claude's
-   * `skills/<slug>/SKILL.md` (+ extra files) layout under the plugin root, and
-   * should be revisited once that format is specified.
+   * Copilot's plugin skill format is not settled, so this mirrors Claude's
+   * `skills/<slug>/SKILL.md` (+ extra files) layout under the plugin root as a
+   * placeholder. Revisit once Copilot specifies its own.
    */
   async deploySkills(
     skillVersions: SkillVersion[],
@@ -176,21 +166,19 @@ export class CopilotPluginDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * Returns the number of standards skipped by the most recent
-   * `deployStandards` invocation. Plugins do not support standards (Rule 3);
-   * callers surface this count to users as a "skipped" notice.
+   * Plugins do not support standards (Rule 3), so `deployStandards` emits
+   * nothing and records the count here; callers surface it to users as a
+   * "skipped" notice.
    */
   getLastSkippedStandardsCount(): number {
     return this.lastSkippedStandardsCount;
   }
 
   /**
-   * Emits the Copilot plugin manifest at `<plugin-root>/.github/plugin/plugin.json`.
-   *
-   * Copilot discovers a plugin's hooks through this file's `hooks` key, so
-   * without a manifest an install-tracking hook has nowhere to be declared and
-   * never runs. Like its Claude counterpart, this is specific to plugin
-   * rendering and sits outside the shared `ICodingAgentDeployer` contract.
+   * Copilot discovers a plugin's hooks through this manifest's `hooks` key, so
+   * without the manifest an install-tracking hook has nowhere to be declared
+   * and never runs. Specific to plugin rendering, hence outside the shared
+   * `ICodingAgentDeployer` contract.
    */
   deployPluginManifest(
     input: PluginManifestInput,

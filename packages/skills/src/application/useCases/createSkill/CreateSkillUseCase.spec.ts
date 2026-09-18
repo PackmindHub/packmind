@@ -7,7 +7,11 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -51,18 +55,11 @@ describe('CreateSkillUseCase', () => {
       updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
     });
 
-    skillService = {
-      addSkill: jest.fn(),
-      listSkillsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    skillService = createMockInstance(SkillService);
 
-    skillVersionService = {
-      addSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<SkillVersionService>;
+    skillVersionService = createMockInstance(SkillVersionService);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     stubbedLogger = stubLogger();
 

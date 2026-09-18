@@ -15,13 +15,10 @@ import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource
 import { TestApp } from '../helpers/TestApp';
 
 /**
- * Note: With async deployment using delayed jobs, commitToGit is now called
- * asynchronously by the background job worker. These tests have been updated
- * to verify:
- * 1. Distributions are created with in_progress status
- * 2. Jobs are enqueued (mocked in integration tests)
- *
- * File content verification is covered by unit tests in PublishArtifactsUseCase.spec.ts
+ * `publishPackages` records its distributions as `in_progress` and returns those
+ * rows before handing the commit to a job, so the status it returns never
+ * reflects the job's outcome — hence the assertions below stop at the rows. The
+ * emitted file content is asserted in `PublishArtifactsUseCase.spec.ts`.
  */
 describe('Packmind Deployment Spec', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
@@ -37,8 +34,6 @@ describe('Packmind Deployment Spec', () => {
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -102,7 +97,6 @@ describe('Packmind Deployment Spec', () => {
     let standardsPackage1: Package;
 
     beforeEach(async () => {
-      // Mock the git commit to prevent actual git operations
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       const gitAdapter = testApp.gitHexa.getAdapter();
@@ -186,7 +180,6 @@ describe('Packmind Deployment Spec', () => {
     let commandsPackage1: Package;
 
     beforeEach(async () => {
-      // Mock the git commit to prevent actual git operations
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       const gitAdapter = testApp.gitHexa.getAdapter();

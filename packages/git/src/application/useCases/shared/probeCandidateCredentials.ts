@@ -8,10 +8,10 @@ import { GitProviderCredentials } from '../../../domain/repositories/IGitProvide
 import { GitProviderService } from '../../GitProviderService';
 
 /**
- * Only these vendors can be probed. `GitProviderFactory` throws a raw
- * "Unsupported git provider source" for anything else — CLI-managed providers
- * are recorded with source 'unknown' — and an update that used to succeed must
- * not start returning a 500.
+ * Only these vendors can be probed: `GitProviderFactory` throws a raw
+ * "Unsupported git provider source" for anything else, and CLI-managed
+ * providers are recorded with source 'unknown', so probing them would turn an
+ * ordinary update into a 500.
  */
 const PROBEABLE_SOURCES: string[] = [
   GitProviderVendors.github,
@@ -38,12 +38,10 @@ const FAILURE_MESSAGE: Record<CheckAuthFailureReason, string> = {
 };
 
 /**
- * Verify a candidate credential against the provider and throw unless it works.
- *
- * The re-authentication UI tells the user the token is validated against their
- * instance before it replaces the stored one, so an unverified token must never
- * be persisted — including when the probe itself could not run, since reporting
- * "validated" for a token nobody checked is the very thing being fixed.
+ * Throws unless the candidate credential actually works. A probe that could not
+ * run fails too: the re-authentication UI promises the token was validated, so
+ * reporting "validated" for a token nobody checked is exactly what must not
+ * happen.
  */
 export async function assertCandidateCredentialsWork(
   gitProviderService: Pick<GitProviderService, 'checkAuthForProviderConfig'>,
@@ -54,10 +52,10 @@ export async function assertCandidateCredentialsWork(
   try {
     result = await gitProviderService.checkAuthForProviderConfig(candidate);
   } catch (error) {
-    // Anything thrown here — a real outage, but equally a misconfigured
-    // candidate the resolver refuses to build — becomes the same "could not
-    // reach the provider" message. Record what it actually was, so a defect on
-    // our side is not indistinguishable from the provider being down.
+    // Everything thrown here collapses into one "could not reach the provider"
+    // message, a real outage and a candidate the resolver refuses to build
+    // alike. Log the cause so a defect on our side stays distinguishable from
+    // the provider being down.
     logger?.warn('Candidate git credentials could not be verified', {
       source: candidate.source,
       authMethod: candidate.authMethod,

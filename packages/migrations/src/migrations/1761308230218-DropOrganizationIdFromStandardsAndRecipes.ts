@@ -28,7 +28,6 @@ export class DropOrganizationIdFromStandardsAndRecipes1761308230218 implements M
       await queryRunner.query(`DROP INDEX IF EXISTS idx_recipe_org_user`);
       await queryRunner.query(`DROP INDEX IF EXISTS idx_recipe_slug`);
 
-      // Drop organization_id columns
       this.logger.debug('Dropping organization_id column from standards table');
       await queryRunner.query(
         `ALTER TABLE standards DROP COLUMN organization_id`,
@@ -72,7 +71,6 @@ export class DropOrganizationIdFromStandardsAndRecipes1761308230218 implements M
         ADD COLUMN organization_id uuid NULL
       `);
 
-      // Recreate indices
       this.logger.debug('Recreating indices on standards table');
       await queryRunner.query(`
         CREATE INDEX idx_standard_organization ON standards(organization_id)

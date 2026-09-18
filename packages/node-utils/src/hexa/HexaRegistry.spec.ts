@@ -2,7 +2,6 @@ import { HexaRegistry } from './HexaRegistry';
 import { BaseHexa, BaseHexaOpts } from './BaseHexa';
 import { DataSource } from 'typeorm';
 
-// Mock implementation of BaseHexa for testing
 class TestHexa extends BaseHexa {
   public destroyCalled = false;
 
@@ -53,7 +52,6 @@ class AnotherTestHexa extends BaseHexa {
   }
 }
 
-// Hexa that depends on another hexa for testing cross-hexa dependencies
 class DependentHexa extends BaseHexa {
   public destroyCalled = false;
   public dependencyHexa: TestHexa | null = null;
@@ -83,7 +81,6 @@ class DependentHexa extends BaseHexa {
     this.destroyCalled = true;
   }
 
-  // Method that uses the dependency
   public useDependency(): string {
     if (!this.dependencyHexa) {
       throw new Error('Dependency not available');
@@ -153,7 +150,6 @@ describe('HexaRegistry', () => {
   beforeEach(() => {
     registry = new HexaRegistry();
 
-    // Create a mock DataSource for testing
     mockDataSource = {
       isInitialized: true,
       options: {},
@@ -388,7 +384,6 @@ describe('HexaRegistry', () => {
       });
 
       it('resolves dependency during initialization', () => {
-        // Dependencies are resolved during initialize(), so order doesn't matter
         expect(dependentHexa.dependencyHexa).toBeInstanceOf(TestHexa);
       });
 

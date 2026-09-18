@@ -216,10 +216,6 @@ export class DeploymentsAdapter
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  /**
-   * Initialize adapter with ports and services from registry.
-   * All ports and services in signature are REQUIRED.
-   */
   public async initialize(ports: {
     [IGitPortName]: IGitPort;
     [ICommandsPortName]: ICommandsPort;
@@ -231,7 +227,6 @@ export class DeploymentsAdapter
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
-    // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
     this.commandsPort = ports[ICommandsPortName];
     this.codingAgentPort = ports[ICodingAgentPortName];
@@ -240,12 +235,10 @@ export class DeploymentsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
 
-    // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
       ports.jobsService,
     );
 
-    // Step 3: Validate all required ports are set
     if (
       !this.gitPort &&
       !this.commandsPort &&
@@ -259,7 +252,6 @@ export class DeploymentsAdapter
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
-    // Step 4: Create all use cases with non-null ports
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
     this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
       this.deploymentsServices.getRenderModeConfigurationService(),
@@ -580,10 +572,6 @@ export class DeploymentsAdapter
     instrumentUseCases(this);
   }
 
-  /**
-   * Build delayed jobs from JobsService.
-   * This is called internally during initialize().
-   */
   private async buildDelayedJobs(
     jobsService: JobsService,
   ): Promise<IDeploymentsDelayedJobs> {

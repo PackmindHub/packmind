@@ -26,8 +26,13 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
+import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
@@ -130,26 +135,17 @@ describe('AddArtefactsToPackageUseCase', () => {
   });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      addCommands: jest.fn(),
-      addStandards: jest.fn(),
-      addSkills: jest.fn(),
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageRepository>;
+    mockPackageRepository = createMockInstance(PackageRepository);
 
-    mockPackageService = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
-    mockServices = {
-      getPackageService: jest.fn().mockReturnValue(mockPackageService),
-      getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      getTargetService: jest.fn(),
-      getRenderModeConfigurationService: jest.fn(),
-      getRepositories: jest.fn().mockReturnValue({
-        getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      }),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    mockServices = createMockInstance(DeploymentsServices);
+    mockServices.getPackageService.mockReturnValue(mockPackageService);
+    const mockRepositories = mockInterface<IDeploymentsRepositories>();
+    mockRepositories.getPackageRepository.mockReturnValue(
+      mockPackageRepository,
+    );
+    mockServices.getRepositories.mockReturnValue(mockRepositories);
 
     mockAccountsPort = mockInterface<IAccountsPort>();
     mockAccountsPort.getUserById.mockResolvedValue(buildUser());

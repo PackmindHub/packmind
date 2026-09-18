@@ -52,23 +52,17 @@ describe('Junie Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
-    // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
 
-    // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
 
-    // Create test data
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
@@ -79,7 +73,6 @@ describe('Junie Deployment Integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
-    // Get the default "Global" space created during signup
     const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
@@ -87,7 +80,6 @@ describe('Junie Deployment Integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    // Create test recipe
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe',
       content: 'This is test recipe content for deployment',
@@ -96,7 +88,6 @@ describe('Junie Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create test standard
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'Test Standard',
       description: 'A test standard for deployment',
@@ -110,7 +101,6 @@ describe('Junie Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create git provider and repository
     const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
@@ -146,15 +136,12 @@ describe('Junie Deployment Integration', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -373,23 +360,21 @@ describe('Junie Deployment Integration', () => {
     });
   });
 
-  // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
-  // They don't check for existing content - that's handled by the merge layer.
-  // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
+  // NOTE: Deployers ALWAYS generate sections and never read the repository.
+  // Existing content is fetched and merged at commit time by CommitToGitUseCase,
+  // so content-preservation tests live in
+  // packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.spec.ts
 
   describe('when .junie/guidelines.md exists but is missing recipe instructions', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
-      // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -526,9 +511,6 @@ describe('Junie Deployment Integration', () => {
     let junieDeployer: JunieDeployer;
 
     beforeEach(async () => {
-      // Ensure hexas are initialized before getting adapters
-      // Hexas are already initialized by testApp.initialize()
-
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
@@ -545,8 +527,6 @@ describe('Junie Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         const recipeVersions: CommandVersion[] = [
           {
             id: 'recipe-version-1' as CommandVersionId,
@@ -589,8 +569,6 @@ describe('Junie Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await junieDeployer.deployStandards(
           [],
           gitRepo,

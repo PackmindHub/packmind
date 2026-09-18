@@ -17,7 +17,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
     this.logger.info('Starting migration: UpdateRecipeGitCommit');
 
     try {
-      // Add gitCommitId column to recipes table
       this.logger.debug('Adding git_commit_id column to recipes table');
       await queryRunner.addColumn(
         'recipes',
@@ -28,7 +27,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         }),
       );
 
-      // Add gitCommitId column to recipe_versions table
       this.logger.debug('Adding git_commit_id column to recipe_versions table');
       await queryRunner.addColumn(
         'recipe_versions',
@@ -39,7 +37,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         }),
       );
 
-      // Add foreign key constraint for recipes table
       this.logger.debug(
         'Adding foreign key constraint for recipes.gitCommitId',
       );
@@ -53,7 +50,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         }),
       );
 
-      // Add foreign key constraint for recipe_versions table
       this.logger.debug(
         'Adding foreign key constraint for recipe_versions.gitCommitId',
       );
@@ -67,7 +63,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         }),
       );
 
-      // Remove old columns from recipes table (if they exist)
       this.logger.debug('Removing old columns from recipes table');
       await queryRunner.query(
         'ALTER TABLE "recipes" DROP COLUMN IF EXISTS "author"',
@@ -79,7 +74,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         'ALTER TABLE "recipes" DROP COLUMN IF EXISTS "git_repo"',
       );
 
-      // Remove old columns from recipe_versions table (if they exist)
       this.logger.debug('Removing old columns from recipe_versions table');
       await queryRunner.query(
         'ALTER TABLE "recipe_versions" DROP COLUMN IF EXISTS "author"',
@@ -106,7 +100,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
     this.logger.info('Starting rollback: UpdateRecipeGitCommit');
 
     try {
-      // Add back old columns to recipes table (if they don't exist)
       this.logger.debug('Adding back old columns to recipes table');
       await queryRunner.query(`
         DO $$
@@ -133,7 +126,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         END $$;
       `);
 
-      // Add back old columns to recipe_versions table (if they don't exist)
       this.logger.debug('Adding back old columns to recipe_versions table');
       await queryRunner.query(`
         DO $$
@@ -160,7 +152,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         END $$;
       `);
 
-      // Drop foreign key constraints (if they exist)
       this.logger.debug('Checking and dropping foreign key constraints');
       const recipesTable = await queryRunner.getTable('recipes');
       const recipeVersionsTable = await queryRunner.getTable('recipe_versions');
@@ -195,7 +186,6 @@ export class UpdateRecipeGitCommit1753088052269 implements MigrationInterface {
         );
       }
 
-      // Drop gitCommitId columns (if they exist)
       this.logger.debug('Dropping gitCommitId columns');
       await queryRunner.query(
         'ALTER TABLE "recipes" DROP COLUMN IF EXISTS "git_commit_id"',

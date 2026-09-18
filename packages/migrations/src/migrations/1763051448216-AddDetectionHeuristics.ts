@@ -19,7 +19,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definition
   private readonly detectionHeuristicsTable = new Table({
     name: 'detection_heuristics',
     columns: [
@@ -44,7 +43,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
     ],
   });
 
-  // Index definitions
   private readonly ruleIdIndex = new TableIndex({
     name: 'idx_detection_heuristics_rule_id',
     columnNames: ['rule_id'],
@@ -57,7 +55,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
     where: 'deleted_at IS NULL',
   });
 
-  // Foreign key definition
   private readonly detectionHeuristicsRuleForeignKey = new TableForeignKey({
     columnNames: ['rule_id'],
     referencedTableName: 'rules',
@@ -70,12 +67,10 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
     this.logger.info('Starting migration: AddDetectionHeuristics');
 
     try {
-      // Create detection_heuristics table
       this.logger.info('Creating detection_heuristics table');
       await queryRunner.createTable(this.detectionHeuristicsTable);
       this.logger.info('Successfully created detection_heuristics table');
 
-      // Create indices
       this.logger.info('Creating indices for detection_heuristics table');
       await queryRunner.createIndex('detection_heuristics', this.ruleIdIndex);
       await queryRunner.createIndex(
@@ -86,7 +81,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
         'Successfully created indices for detection_heuristics table',
       );
 
-      // Create foreign key
       this.logger.info(
         'Adding foreign key constraint for detection_heuristics table',
       );
@@ -113,7 +107,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
     this.logger.info('Starting rollback: AddDetectionHeuristics');
 
     try {
-      // Drop foreign key
       this.logger.info(
         'Dropping foreign key constraint for detection_heuristics table',
       );
@@ -125,7 +118,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
         'Successfully dropped foreign key constraint for detection_heuristics table',
       );
 
-      // Drop indices
       this.logger.info('Dropping indices for detection_heuristics table');
       await queryRunner.dropIndex(
         'detection_heuristics',
@@ -139,7 +131,6 @@ export class AddDetectionHeuristics1763051448216 implements MigrationInterface {
         'Successfully dropped indices for detection_heuristics table',
       );
 
-      // Drop table
       this.logger.info('Dropping detection_heuristics table');
       await queryRunner.dropTable('detection_heuristics', true);
       this.logger.info('Successfully dropped detection_heuristics table');

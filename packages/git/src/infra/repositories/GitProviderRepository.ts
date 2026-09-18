@@ -37,9 +37,6 @@ export class GitProviderRepository
     };
   }
 
-  /**
-   * Get or create the EncryptionService with the encryption key from Configuration
-   */
   private async getEncryptionService(): Promise<EncryptionService> {
     if (!this.encryptionService) {
       const encryptionKey =
@@ -50,10 +47,8 @@ export class GitProviderRepository
   }
 
   /**
-   * Encrypt sensitive fields (token) in a GitProvider before saving to the
-   * database. Empty/null token values pass through unchanged, and
-   * already-encrypted values (3-part iv:enc:tag envelope) are not
-   * re-encrypted.
+   * Empty tokens pass through, and an already-encrypted one (the 3-part
+   * iv:enc:tag envelope) is not encrypted twice.
    */
   private async encryptGitProvider(
     gitProvider: GitProvider,
@@ -74,9 +69,8 @@ export class GitProviderRepository
   }
 
   /**
-   * Decrypt sensitive fields (token) in a GitProvider after reading from the
-   * database. Plaintext / empty values pass through unchanged, matching the
-   * existing backward-compatibility behavior of EncryptionService.decrypt.
+   * A plaintext token passes through unchanged, so rows written before
+   * encryption existed are still readable.
    */
   private async decryptGitProvider(
     gitProvider: GitProvider,
@@ -152,7 +146,6 @@ export class GitProviderRepository
         relations: ['repos'],
       });
 
-      // Decrypt all results
       const decryptedResults = await Promise.all(
         results.map((result) => this.decryptGitProvider(result)),
       );
@@ -218,7 +211,6 @@ export class GitProviderRepository
     this.logger.info('Updating git provider', { id });
 
     try {
-      // Find the existing provider to ensure it exists
       const existingProvider = await this.repository.findOneBy({
         id: id as GitProviderId,
       });
@@ -226,20 +218,16 @@ export class GitProviderRepository
         throw new Error(`Git provider with id ${id} not found`);
       }
 
-      // Merge the existing provider with the update data
       const updatedProvider: GitProvider = {
         ...existingProvider,
         ...gitProvider,
         id: id as GitProviderId, // Ensure id is preserved
       };
 
-      // Encrypt the provider if token is being updated
       const encryptedProvider = await this.encryptGitProvider(updatedProvider);
 
-      // Save the updated provider
       const result = await this.repository.save(encryptedProvider);
 
-      // Return the decrypted provider
       const decryptedResult = await this.decryptGitProvider(result);
       this.logger.info('Git provider updated successfully', { id });
       return decryptedResult;

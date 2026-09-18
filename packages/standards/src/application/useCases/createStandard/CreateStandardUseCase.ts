@@ -80,7 +80,6 @@ export class CreateStandardUseCase
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
       this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
         spaceId,
@@ -100,7 +99,6 @@ export class CreateStandardUseCase
       }
       this.logger.info('Resolved unique slug', { slug: standardSlug });
 
-      // Business logic: Create standard with initial version 1
       const initialVersion = 1;
 
       this.logger.info('Creating standard entity');
@@ -131,7 +129,7 @@ export class CreateStandardUseCase
         version: initialVersion,
         rules: rules.map((r) => ({ content: r.content, examples: [] })),
         scope,
-        userId, // Track the user who created this through Web UI
+        userId,
       };
 
       const standardVersion =
@@ -158,7 +156,6 @@ export class CreateStandardUseCase
         rulesCount: rules.length,
       });
 
-      // Determine the method: use provided method, or default based on source
       const creationMethod = method ?? (source === 'cli' ? 'cli' : 'blank');
 
       this.eventEmitterService.emit(

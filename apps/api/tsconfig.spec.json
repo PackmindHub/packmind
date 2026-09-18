@@ -6,6 +6,7 @@
     "moduleResolution": "node10",
     "types": ["jest", "node"]
   },
+  "exclude": [],
   "include": [
     "./jest.config.ts",
     "src/**/*.test.ts",

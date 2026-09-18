@@ -1,11 +1,9 @@
 import { AnthropicService } from './AnthropicService';
 import { AIServiceErrorTypes, LLMProvider } from '@packmind/types';
 
-// Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getPrivateAccess = (service: AnthropicService) => service as any;
 
-// Mock Anthropic
 jest.mock('@anthropic-ai/sdk');
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -22,7 +20,6 @@ describe('AnthropicService', () => {
   };
 
   beforeEach(() => {
-    // Create mock Anthropic instance
     mockAnthropicInstance = {
       messages: {
         create: jest.fn(),

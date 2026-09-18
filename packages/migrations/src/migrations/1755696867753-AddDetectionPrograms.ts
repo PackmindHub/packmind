@@ -19,7 +19,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definitions
   private readonly detectionProgramsTable = new Table({
     name: 'detection_programs',
     columns: [
@@ -75,7 +74,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
     ],
   });
 
-  // Foreign key definitions
   private readonly detectionProgramsRuleForeignKey = new TableForeignKey({
     columnNames: ['rule_id'],
     referencedTableName: 'rules',
@@ -105,17 +103,14 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
     this.logger.info('Starting migration: AddDetectionPrograms');
 
     try {
-      // Create detection_programs table
       this.logger.debug('Creating detection_programs table');
       await queryRunner.createTable(this.detectionProgramsTable);
       this.logger.info('Successfully created detection_programs table');
 
-      // Create active_detection_programs table
       this.logger.debug('Creating active_detection_programs table');
       await queryRunner.createTable(this.activeDetectionProgramsTable);
       this.logger.info('Successfully created active_detection_programs table');
 
-      // Create indices for detection_programs table
       this.logger.debug('Creating indices for detection_programs table');
       await queryRunner.createIndex(
         'detection_programs',
@@ -128,7 +123,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
         'Successfully created indices for detection_programs table',
       );
 
-      // Create indices for active_detection_programs table
       this.logger.debug('Creating indices for active_detection_programs table');
       await queryRunner.createIndex(
         'active_detection_programs',
@@ -149,7 +143,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
         'Successfully created indices for active_detection_programs table',
       );
 
-      // Create foreign keys
       this.logger.debug(
         'Adding foreign key constraints for detection_programs table',
       );
@@ -189,7 +182,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
     this.logger.info('Starting rollback: AddDetectionPrograms');
 
     try {
-      // Drop foreign keys for active_detection_programs table
       this.logger.debug(
         'Dropping foreign key constraints for active_detection_programs table',
       );
@@ -205,7 +197,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
         'Successfully dropped foreign key constraints for active_detection_programs table',
       );
 
-      // Drop foreign keys for detection_programs table
       this.logger.debug(
         'Dropping foreign key constraints for detection_programs table',
       );
@@ -217,7 +208,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
         'Successfully dropped foreign key constraints for detection_programs table',
       );
 
-      // Drop indices for active_detection_programs table
       this.logger.debug('Dropping indices for active_detection_programs table');
       await queryRunner.dropIndex(
         'active_detection_programs',
@@ -231,7 +221,6 @@ export class AddDetectionPrograms1755696867753 implements MigrationInterface {
         'Successfully dropped indices for active_detection_programs table',
       );
 
-      // Drop indices for detection_programs table
       this.logger.debug('Dropping indices for detection_programs table');
       await queryRunner.dropIndex(
         'detection_programs',

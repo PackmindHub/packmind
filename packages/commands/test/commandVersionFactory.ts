@@ -22,7 +22,7 @@ export const commandVersionFactory: Factory<CommandVersion> = (
 4. Repeat the cycle
 5. Keep tests small and focused`,
       version: 1,
-      userId: null, // Default to null (git commits), can be overridden
+      userId: null,
     },
     {
       id: createCommandVersionId(uuidv4()),
@@ -36,7 +36,7 @@ export const commandVersionFactory: Factory<CommandVersion> = (
 4. Add repository methods for persistence
 5. Write comprehensive tests`,
       version: 1,
-      userId: null, // Default to null (git commits), can be overridden
+      userId: null,
     },
     {
       id: createCommandVersionId(uuidv4()),
@@ -50,7 +50,7 @@ export const commandVersionFactory: Factory<CommandVersion> = (
 4. Implement the functional component
 5. Export and test your component`,
       version: 1,
-      userId: null, // Default to null (git commits), can be overridden
+      userId: null,
     },
     {
       id: createCommandVersionId(uuidv4()),
@@ -64,7 +64,7 @@ export const commandVersionFactory: Factory<CommandVersion> = (
 4. Pull and rebase regularly
 5. Create a PR with clear description`,
       version: 1,
-      userId: null, // Default to null (git commits), can be overridden
+      userId: null,
     },
     {
       id: createCommandVersionId(uuidv4()),
@@ -78,7 +78,7 @@ export const commandVersionFactory: Factory<CommandVersion> = (
 4. Check for null/undefined values
 5. Use the 'as' keyword cautiously`,
       version: 1,
-      userId: null, // Default to null (git commits), can be overridden
+      userId: null,
     },
   ];
 

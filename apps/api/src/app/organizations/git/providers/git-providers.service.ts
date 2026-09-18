@@ -80,7 +80,7 @@ type BuildGithubAppManifestCommand = {
   displayName?: string;
 };
 
-type BuildGithubAppManifestResponse = {
+export type BuildGithubAppManifestResponse = {
   manifest: GitHubAppManifest;
   state: string;
   manifestPostUrl: string;

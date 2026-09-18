@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
@@ -31,7 +31,6 @@ import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { CaptureCommandUseCase } from './CaptureCommandUseCase';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -55,35 +54,17 @@ describe('CaptureRecipeUseCase', () => {
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as Partial<jest.Mocked<ISpacesPort>> as jest.Mocked<ISpacesPort>;
 
-    // Mock RecipeService
-    commandService = {
-      addCommand: jest.fn(),
-      listCommandsBySpace: jest.fn(),
-      getCommandById: jest.fn(),
-      findCommandBySlug: jest.fn(),
-      updateRecipe: jest.fn(),
-      deleteCommand: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
-    // Mock RecipeVersionService
-    commandVersionService = {
-      addCommandVersion: jest.fn(),
-      listCommandVersions: jest.fn(),
-      getCommandVersion: jest.fn(),
-      getLatestCommandVersion: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<CommandVersionService>;
+    commandVersionService = createMockInstance(CommandVersionService);
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
-    // Default: no existing recipes (can be overridden in individual tests)
     commandService.listCommandsBySpace.mockResolvedValue([]);
 
     captureCommandUseCase = new CaptureCommandUseCase(

@@ -1,26 +1,23 @@
 import { UserOrganizationRole } from '../accounts/User';
 import { PublishFailureReason } from '../deployments/PublishFailureReason';
 
-// Base SSE Event structure
 export interface SSEEvent<TData = unknown> {
   type: string;
   data: TData;
   timestamp: string;
 }
 
-// Hello World event for testing
+// Test-only, with no domain meaning.
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
   type: 'hello_world';
 }
 
-// Generic data change events
 export interface DataChangeEvent<
   TPayload = unknown,
 > extends SSEEvent<TPayload> {
   type: 'PUT' | 'DELETE' | 'CREATE' | 'UPDATE';
 }
 
-// Notification event
 export interface NotificationEvent extends SSEEvent<{
   title: string;
   message: string;
@@ -29,7 +26,7 @@ export interface NotificationEvent extends SSEEvent<{
   type: 'NOTIFICATION';
 }
 
-// Program status change event for cache invalidation
+// Drives client cache invalidation.
 export interface ProgramStatusChangeEvent extends SSEEvent<{
   ruleId: string;
   language: string;
@@ -37,7 +34,7 @@ export interface ProgramStatusChangeEvent extends SSEEvent<{
   type: 'PROGRAM_STATUS_CHANGE';
 }
 
-// Assessment status change event for cache invalidation
+// Drives client cache invalidation.
 export interface AssessmentStatusChangeEvent extends SSEEvent<{
   ruleId: string;
   language: string;
@@ -45,7 +42,7 @@ export interface AssessmentStatusChangeEvent extends SSEEvent<{
   type: 'ASSESSMENT_STATUS_CHANGE';
 }
 
-// Detection heuristics updated event for cache invalidation
+// Drives client cache invalidation.
 export interface DetectionHeuristicsUpdatedEvent extends SSEEvent<{
   ruleId: string;
   language: string;
@@ -65,7 +62,7 @@ export interface UserContextChangeEvent extends SSEEvent<{
   type: 'USER_CONTEXT_CHANGE';
 }
 
-// Distribution status change event for cache invalidation
+// Drives client cache invalidation.
 export interface DistributionStatusChangeEvent extends SSEEvent<{
   distributionId: string;
   status: string;
@@ -74,7 +71,7 @@ export interface DistributionStatusChangeEvent extends SSEEvent<{
   type: 'DISTRIBUTION_STATUS_CHANGE';
 }
 
-// Change proposal update event for cache invalidation
+// Drives client cache invalidation.
 export interface ChangeProposalUpdateEvent extends SSEEvent<{
   organizationId: string;
   spaceId: string;
@@ -87,7 +84,7 @@ export type MarketplacePublishCompletedStatus =
   | 'no_changes'
   | 'failure';
 
-// Marketplace publish completed event for user-facing notifications
+// Shown to the user as a notification, not merely a cache-invalidation hint.
 export interface MarketplacePublishCompletedEvent extends SSEEvent<{
   marketplaceDistributionId: string;
   marketplaceId: string;
@@ -102,7 +99,6 @@ export interface MarketplacePublishCompletedEvent extends SSEEvent<{
   type: 'MARKETPLACE_PUBLISH_COMPLETED';
 }
 
-// Union type of all possible SSE events
 export type AnySSEEvent =
   | HelloWorldEvent
   | DataChangeEvent
@@ -115,7 +111,6 @@ export type AnySSEEvent =
   | ChangeProposalUpdateEvent
   | MarketplacePublishCompletedEvent;
 
-// Event creation helpers
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
   return {
     type: 'hello_world',

@@ -28,13 +28,6 @@ import {
   DistributedPackage,
 } from '@packmind/types';
 
-/**
- * DeploymentsRepositories - Repository aggregator implementation for the Deployments domain
- *
- * This class serves as the main repository access point, aggregating all
- * individual repositories. It handles the instantiation of repositories
- * using the shared DataSource and provides them through getter methods.
- */
 export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly targetRepository: ITargetRepository;
   private readonly packagesDeploymentRepository: IPackagesDeploymentRepository;
@@ -44,7 +37,6 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly distributedPackageRepository: IDistributedPackageRepository;
 
   constructor(private readonly dataSource: DataSource) {
-    // Initialize all repositories with their respective schemas
     this.targetRepository = new TargetRepository(
       this.dataSource.getRepository(TargetSchema) as Repository<Target>,
     );

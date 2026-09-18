@@ -9,17 +9,13 @@ export class ConsoleLogRemovalService {
   }
 
   /**
-   * Removes all console method calls from JavaScript source code using AST parsing
-   * @param sourceCode The source code to clean
-   * @param language The programming language (must be JAVASCRIPT)
-   * @returns The cleaned source code with console statements removed
+   * Removes console method-call statements from JavaScript source code using AST parsing.
    * @throws Error if language is not JAVASCRIPT
    */
   async removeConsoleLogStatements(
     sourceCode: string,
     language: ProgrammingLanguage,
   ): Promise<string> {
-    // Only support JavaScript
     if (language !== ProgrammingLanguage.JAVASCRIPT) {
       throw new Error(
         `ConsoleLogRemovalService only supports JAVASCRIPT, received: ${language}`,
@@ -27,11 +23,11 @@ export class ConsoleLogRemovalService {
     }
 
     try {
-      // Parse with the JavaScript parser to get raw tree-sitter nodes
+      // parseRaw (not parse) is needed here: the tree-sitter nodes carry
+      // startIndex/endIndex byte offsets, which ASTNode does not expose.
       const tree = await this.jsParser.parseRaw(sourceCode);
       const ast = tree.rootNode;
 
-      // Collect all console statement ranges
       const ranges: [number, number][] = [];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +42,6 @@ export class ConsoleLogRemovalService {
           }
         }
 
-        // Traverse all children
         for (let i = 0; i < node.childCount; i++) {
           visit(node.child(i));
         }
@@ -54,7 +49,6 @@ export class ConsoleLogRemovalService {
 
       visit(ast);
 
-      // Calculate line ranges for each console statement
       const lineRanges: [number, number][] = [];
       for (const [start, end] of ranges) {
         // Find the start of the line (including indentation)
@@ -63,7 +57,7 @@ export class ConsoleLogRemovalService {
           lineStart--;
         }
 
-        // Find the end of the line (including newline)
+        // Find the end of the line
         let lineEnd = end;
         while (lineEnd < sourceCode.length && sourceCode[lineEnd] !== '\n') {
           lineEnd++;
@@ -88,8 +82,6 @@ export class ConsoleLogRemovalService {
       return cleaned;
     } catch (error) {
       throw new Error(`Can not parse JS CODE ${error}`);
-      // If parsing fails, return the original code unchanged
-      //return sourceCode;
     }
   }
 }

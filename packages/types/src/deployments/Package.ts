@@ -61,16 +61,13 @@ export type PackageWithStandards = Omit<
 /**
  * Whether a package carries content that can become a marketplace plugin.
  *
- * Standards are intentionally excluded from plugin rendering, so a package
- * made of standards only would produce an empty (manifest-only) plugin. A
- * package is therefore publishable as a plugin iff it has at least one skill
- * or one recipe.
+ * Standards are intentionally excluded from plugin rendering, so a package made
+ * of standards only would produce an empty, manifest-only plugin — hence at
+ * least one skill or recipe is required.
  *
- * Single source of truth shared by the frontend gate, the synchronous publish
- * use case, the publish job (re-checked at render time), and the
- * degrade-to-removal cascade. Accepts any object exposing skill/recipe arrays
- * so both `Package` (id arrays) and `PackageWithArtefacts` (entity arrays)
- * satisfy it.
+ * Kept here, rather than beside any one caller, so every publish gate answers
+ * this identically. The structural parameter type is what lets both `Package`
+ * (id arrays) and `PackageWithArtefacts` (entity arrays) satisfy it.
  */
 export const isPackagePublishableAsPlugin = (pkg: {
   skills?: unknown[];

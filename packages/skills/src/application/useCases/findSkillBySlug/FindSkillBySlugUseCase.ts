@@ -37,7 +37,6 @@ export class FindSkillBySlugUseCase
     });
 
     try {
-      // Verify the space belongs to the organization if spaceId is provided
       const commandWithSpace = command as FindSkillBySlugCommand & {
         spaceId?: string;
       };

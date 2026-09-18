@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   DeleteItemType,
   FileUpdates,
@@ -48,9 +48,7 @@ describe('RenderArtifactsUseCase', () => {
 
   beforeEach(() => {
     mockLogger = stubLogger();
-    mockCodingAgentServices = {
-      renderArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<CodingAgentServices>;
+    mockCodingAgentServices = createMockInstance(CodingAgentServices);
 
     useCase = new RenderArtifactsUseCase(mockCodingAgentServices, mockLogger);
   });

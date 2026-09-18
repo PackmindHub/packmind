@@ -48,9 +48,9 @@ export function isDefaultSkillId(id: string): boolean {
 }
 
 // Matches the *slug* form of a default-skill identifier (e.g.
-// `'packmind-create-skill'`). Pre-316404566 lockfiles stored slugs in the
-// artifact `id` field, so the API still has to accept them — see the validation
-// in GetContentByVersionsUseCase.
+// `'packmind-create-skill'`). Older lockfiles stored slugs in the artifact `id`
+// field, so the API still has to accept them — see the validation in
+// GetContentByVersionsUseCase.
 export function isDefaultSkillSlug(id: string): boolean {
   return DEFAULT_SKILL_SLUG_SET.has(id);
 }

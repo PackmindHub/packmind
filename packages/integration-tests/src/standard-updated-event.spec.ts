@@ -29,8 +29,6 @@ describe('StandardUpdatedEvent integration', () => {
   let stubAdapter: jest.Mocked<StubStandardsAdapter>;
   let listener: StubStandardsListener;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -43,7 +41,6 @@ describe('StandardUpdatedEvent integration', () => {
       PackmindEventEmitterService,
     );
 
-    // Create test data using factory
     await dataFactory.withUserAndOrganization();
     standard = await dataFactory.withStandard({
       name: 'My Test Standard',
@@ -53,8 +50,8 @@ describe('StandardUpdatedEvent integration', () => {
     fixture.snapshot();
   });
 
-  // The listener is torn down after every test, so it is re-attached per test
-  // rather than in beforeAll. Wiring it is in-memory and costs nothing.
+  // afterEach drops every listener from the emitter, so this one is re-attached
+  // per test rather than alongside the seed in beforeAll.
   beforeEach(() => {
     stubAdapter = {
       onStandardUpdated: jest.fn(),

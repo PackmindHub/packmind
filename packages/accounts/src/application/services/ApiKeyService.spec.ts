@@ -4,7 +4,6 @@ import { Organization, createOrganizationId } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { organizationFactory, userFactory } from '../../../test';
 
-// Mock JWT service
 class MockJwtService implements IJwtService {
   private mockTokens: Map<string, Record<string, unknown>> = new Map();
   private tokenCounter = 0;
@@ -15,7 +14,6 @@ class MockJwtService implements IJwtService {
   ): string {
     const token = `mock-jwt-${++this.tokenCounter}`;
 
-    // Calculate expiration based on options
     let exp: number | undefined;
     if (options?.expiresIn === '90d') {
       exp = Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60; // 90 days from now
@@ -39,7 +37,6 @@ class MockJwtService implements IJwtService {
       throw new Error('JsonWebTokenError: invalid token');
     }
 
-    // Check if token is expired
     if (
       payload.exp &&
       typeof payload.exp === 'number' &&
@@ -51,7 +48,6 @@ class MockJwtService implements IJwtService {
     return payload;
   }
 
-  // Helper method to create expired tokens for testing
   createExpiredToken(payload: Record<string, unknown>): string {
     const token = `expired-token-${++this.tokenCounter}`;
     this.mockTokens.set(token, {

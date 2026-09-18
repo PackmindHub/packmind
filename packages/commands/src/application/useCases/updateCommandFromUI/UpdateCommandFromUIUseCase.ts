@@ -67,7 +67,6 @@ export class UpdateCommandFromUIUseCase
       );
     }
 
-    // Get the existing recipe and validate it belongs to the specified space
     this.logger.info('Fetching existing recipe', { recipeId });
     const existingCommand = await this.commandService.getCommandById(recipeId);
 
@@ -86,14 +85,12 @@ export class UpdateCommandFromUIUseCase
       throw new Error(`Recipe ${recipeId} does not belong to space ${spaceId}`);
     }
 
-    // Business logic: Increment version number (same as Git flow)
     const nextVersion = existingCommand.version + 1;
     this.logger.info('Incrementing version number', {
       currentVersion: existingCommand.version,
       nextVersion,
     });
 
-    // Update the recipe entity (no gitCommit for UI updates)
     const updatedCommand = await this.commandService.updateCommand(
       existingCommand.id,
       {
@@ -106,7 +103,6 @@ export class UpdateCommandFromUIUseCase
       },
     );
 
-    // Create new recipe version with editor's userId
     this.logger.info('Creating new recipe version');
     const newCommandVersion =
       await this.commandVersionService.addCommandVersion({

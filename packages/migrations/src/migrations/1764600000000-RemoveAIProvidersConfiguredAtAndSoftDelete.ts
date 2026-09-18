@@ -25,7 +25,6 @@ export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements 
         `DROP INDEX IF EXISTS idx_ai_providers_organization`,
       );
 
-      // Drop configured_at column
       this.logger.debug(
         'Dropping configured_at column from ai_providers table',
       );
@@ -33,7 +32,6 @@ export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements 
         `ALTER TABLE ai_providers DROP COLUMN configured_at`,
       );
 
-      // Drop soft delete columns
       this.logger.debug('Dropping deleted_at column from ai_providers table');
       await queryRunner.query(
         `ALTER TABLE ai_providers DROP COLUMN deleted_at`,
@@ -73,7 +71,6 @@ export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements 
     );
 
     try {
-      // Drop unique index
       this.logger.debug(
         'Dropping unique index idx_ai_providers_organization from ai_providers table',
       );
@@ -81,7 +78,6 @@ export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements 
         `DROP INDEX IF EXISTS idx_ai_providers_organization`,
       );
 
-      // Recreate configured_at column
       this.logger.debug(
         'Recreating configured_at column in ai_providers table',
       );
@@ -90,7 +86,6 @@ export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements 
         ADD COLUMN configured_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
       `);
 
-      // Recreate soft delete columns
       this.logger.debug('Recreating deleted_at column in ai_providers table');
       await queryRunner.query(`
         ALTER TABLE ai_providers

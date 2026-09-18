@@ -1,7 +1,6 @@
 import { ParserRegistry } from './ParserRegistry';
 import { ParserNotAvailableError } from './ParserError';
 
-// Skip these tests as they require WASM files which are not available in test environment
 describe.skip('ParserRegistry', () => {
   let registry: ParserRegistry;
 

@@ -26,7 +26,11 @@ import { packageFactory } from '../../../test/packageFactory';
 import { distributionFactory } from '../../../test/distributionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 describe('PublishPackagesUseCase - Integration behavior', () => {
@@ -58,9 +62,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
 
     mockDeploymentPort = mockInterface<IDeploymentPort>();
 
-    mockPackageService = {
-      getPackagesByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
     mockDistributedPackageRepository =
       mockInterface<IDistributedPackageRepository>();

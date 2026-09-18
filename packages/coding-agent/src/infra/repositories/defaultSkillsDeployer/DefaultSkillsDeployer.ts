@@ -5,13 +5,9 @@ import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
 import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
 
 /**
- * Per-skill metadata emitted by `DefaultSkillsDeployer.deployDefaultSkills`
- * for each concrete deployer that actually ran.
- *
- * Consumed by `DefaultSkillsMetadataEnricher` to stamp artifact metadata
- * onto the deployer's `FileModification[]` so downstream lockfile entries
- * carry `artifactType`, `artifactSlug`, `artifactName`, `artifactVersion`
- * and `source: 'default'` markers.
+ * Consumed by `enrichDefaultSkillsFileModifications`, which stamps these
+ * values onto emitted `FileModification[]` so lockfile entries match the
+ * shape of user/package artifact entries.
  */
 export type DefaultSkillMetadata = {
   slug: string;
@@ -23,10 +19,9 @@ export type DefaultSkillsDeployResult = {
   fileUpdates: FileUpdates;
   skippedSkillsCount: number;
   /**
-   * Metadata for the default skills that were actually deployed in this run.
-   * Filtered by the same `filterDeployers` pass used to compute `fileUpdates`,
-   * so the deployed slugs here are 1:1 with the files emitted in
-   * `fileUpdates.createOrUpdate`.
+   * Derived from the same `filterDeployers` pass as `fileUpdates`, so these
+   * slugs are 1:1 with the files in `fileUpdates.createOrUpdate` — the
+   * enricher's path matching depends on that.
    */
   deployedSkills: DefaultSkillMetadata[];
 };
@@ -43,14 +38,10 @@ export class DefaultSkillsDeployer {
   ) {}
 
   /**
-   * Slugs of every default skill that Packmind has ever shipped, used by the
-   * agent deployers to purge managed default-skill directories from existing
-   * installations. This list is intentionally broader than `skillDeployers`:
-   * skills that have been removed or deprecated (e.g. `packmind-create-skill`,
-   * `packmind-create-standard`, `packmind-create-command`,
-   * `packmind-create-package`, `packmind-cli-list-commands`) are no longer
-   * deployed but must remain here so they are cleaned up from users' machines
-   * on the next deployment.
+   * Every default skill Packmind has ever shipped, deliberately broader than
+   * `skillDeployers`: agent deployers purge these directories, so a slug that
+   * is no longer deployed must stay listed or it is never cleaned up from
+   * existing installations.
    */
   public static getDefaultSkillSlugs(): string[] {
     return [

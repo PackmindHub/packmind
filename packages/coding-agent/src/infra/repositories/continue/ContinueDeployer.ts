@@ -23,7 +23,6 @@ const origin = 'ContinueDeployer';
 
 export class ContinueDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.continue;
-  /** Packmind-managed subdirectory within the broader standard path */
   private static readonly STANDARD_DEPLOY_DIR =
     CODING_AGENT_ARTEFACT_PATHS.continue.standard + 'packmind/';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
@@ -52,7 +51,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Continue command files for each recipe
     for (const recipeVersion of recipeVersions) {
       const commandFile = this.generateContinueCommand(recipeVersion);
       const targetPrefixedPath = getTargetPrefixedPath(
@@ -68,7 +66,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(
         ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
@@ -97,7 +94,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Continue configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateContinueConfigForStandard(standardVersion);
@@ -126,7 +122,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Continue command files for each recipe (without target prefix)
     for (const recipeVersion of recipeVersions) {
       const commandFile = this.generateContinueCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -138,7 +133,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
@@ -159,7 +153,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Continue configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateContinueConfigForStandard(standardVersion);
@@ -211,7 +204,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Continue command files for each recipe
     for (const recipeVersion of recipeVersions) {
       const commandFile = this.generateContinueCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -223,7 +215,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate individual Continue configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateContinueConfigForStandard(standardVersion);
@@ -236,7 +227,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
@@ -270,7 +260,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete individual Continue command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${ContinueDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -278,21 +267,18 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete commands folder if all recipes are removed and something was actually removed
     const hasRemovedCommands = removed.recipeVersions.length > 0;
     if (hasRemovedCommands && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: ContinueDeployer.ARTEFACT_PATHS.command,
         type: DeleteItemType.Directory,
       });
-      // Also delete the legacy recipes-index.md if it exists
       fileUpdates.delete.push({
         path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
         type: DeleteItemType.File,
       });
     }
 
-    // Delete individual Continue configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
@@ -300,7 +286,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete rules/packmind folder if all standards are removed and something was actually removed
     const hasRemovedArtifacts =
       removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
     if (
@@ -359,9 +344,6 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  /**
-   * Generate Continue command file for a specific recipe
-   */
   private generateContinueCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
@@ -386,16 +368,11 @@ ${recipeVersion.content}`;
     };
   }
 
-  /**
-   * Format globs value for YAML frontmatter.
-   * Parses comma-separated globs and formats them as a YAML array.
-   * Quotes individual globs that start with one or two asterisks/stars to prevent YAML syntax issues.
-   * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single glob).
-   */
+  // A YAML scalar starting with `*` parses as an alias node, so any glob
+  // beginning with a star has to be quoted.
   private formatGlobsValue(scope: string): string {
     const globs = splitScopeGlobs(scope);
 
-    // If only one glob, check if it needs quoting
     if (globs.length === 1) {
       const glob = globs[0];
       if (glob.startsWith('**/') || glob.startsWith('*')) {
@@ -404,7 +381,6 @@ ${recipeVersion.content}`;
       return glob;
     }
 
-    // Multiple globs: format as YAML array
     const quotedGlobs = globs.map((glob) => {
       if (glob.startsWith('**/') || glob.startsWith('*')) {
         return `"${glob}"`;
@@ -415,9 +391,6 @@ ${recipeVersion.content}`;
     return `[${quotedGlobs.join(', ')}]`;
   }
 
-  /**
-   * Generate Continue configuration file for a specific standard
-   */
   private async generateContinueConfigForStandard(
     standardVersion: StandardVersion,
   ): Promise<{
@@ -447,7 +420,6 @@ ${recipeVersion.content}`;
     let frontmatter: string;
 
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
-      // When the scope is not null or empty
       frontmatter = `---
 name: '${escapeSingleQuotes(standardVersion.name)}'
 globs: ${this.formatGlobsValue(standardVersion.scope)}
@@ -455,7 +427,6 @@ alwaysApply: false
 description: '${escapeSingleQuotes(summary)}'
 ---`;
     } else {
-      // When the scope is empty
       frontmatter = `---
 name: '${escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
