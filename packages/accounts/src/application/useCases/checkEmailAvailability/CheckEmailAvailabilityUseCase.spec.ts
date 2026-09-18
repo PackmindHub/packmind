@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import { CheckEmailAvailabilityUseCase } from './CheckEmailAvailabilityUseCase';
 import { UserService } from '../../services/UserService';
 import { userFactory } from '../../../../test';
@@ -9,14 +10,7 @@ describe('CheckEmailAvailabilityUseCase', () => {
   let mockUserService: jest.Mocked<UserService>;
 
   beforeEach(() => {
-    mockUserService = {
-      createUser: jest.fn(),
-      getUserById: jest.fn(),
-      getUserByEmail: jest.fn(),
-      getUserByEmailCaseInsensitive: jest.fn(),
-      hashPassword: jest.fn(),
-      validatePassword: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
     checkEmailAvailabilityUseCase = new CheckEmailAvailabilityUseCase(
       mockUserService,

@@ -35,7 +35,11 @@ import {
   createSpaceId,
   SpaceId,
 } from '@packmind/types';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -67,24 +71,9 @@ describe('UpdateStandardUseCase', () => {
   let mockSpace: Space;
 
   beforeEach(() => {
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsByOrganization: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
     ruleRepository = mockInterface<IRuleRepository>();
 
@@ -143,14 +132,11 @@ describe('UpdateStandardUseCase', () => {
       pinned: false,
     });
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-      on: jest.fn().mockReturnThis(),
-      off: jest.fn().mockReturnThis(),
-      once: jest.fn().mockReturnThis(),
-      listenerCount: jest.fn().mockReturnValue(0),
-      removeAllListeners: jest.fn().mockReturnThis(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
+    eventEmitterService.on.mockReturnThis();
+    eventEmitterService.listenerCount.mockReturnValue(0);
+    eventEmitterService.removeAllListeners.mockReturnThis();
 
     updateStandardUseCase = new UpdateStandardUseCase(
       spacesPort,

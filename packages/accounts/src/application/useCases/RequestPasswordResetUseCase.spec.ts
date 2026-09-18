@@ -2,7 +2,7 @@ import { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
 import { UserService } from '../services/UserService';
 import { UserMetadataService } from '../services/UserMetadataService';
 import { PasswordResetTokenService } from '../services/PasswordResetTokenService';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { userFactory } from '../../../test/userFactory';
 import { createUserMetadataId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,18 +14,13 @@ describe('RequestPasswordResetUseCase', () => {
   let mockUserMetadataService: jest.Mocked<UserMetadataService>;
 
   beforeEach(() => {
-    mockUserService = {
-      getUserByEmailCaseInsensitive: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
-    mockPasswordResetTokenService = {
-      createPasswordResetToken: jest.fn(),
-      sendSocialLoginReminderEmail: jest.fn(),
-    } as unknown as jest.Mocked<PasswordResetTokenService>;
+    mockPasswordResetTokenService = createMockInstance(
+      PasswordResetTokenService,
+    );
 
-    mockUserMetadataService = {
-      getOrCreateMetadata: jest.fn(),
-    } as unknown as jest.Mocked<UserMetadataService>;
+    mockUserMetadataService = createMockInstance(UserMetadataService);
 
     useCase = new RequestPasswordResetUseCase(
       mockUserService,

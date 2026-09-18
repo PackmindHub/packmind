@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -37,14 +37,12 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       getOrganizationById: mockGetOrganizationById,
     } as unknown as IAccountsPort;
 
-    userService = {
-      getUserById: mockGetUserById,
-      listUsersByOrganization: mockListUsersByOrganization,
-    } as unknown as jest.Mocked<UserService>;
+    userService = createMockInstance(UserService);
+    userService.getUserById = mockGetUserById;
+    userService.listUsersByOrganization = mockListUsersByOrganization;
 
-    invitationService = {
-      findByUserIds: mockFindByUserIds,
-    } as unknown as jest.Mocked<InvitationService>;
+    invitationService = createMockInstance(InvitationService);
+    invitationService.findByUserIds = mockFindByUserIds;
 
     mockLogger = stubLogger();
 

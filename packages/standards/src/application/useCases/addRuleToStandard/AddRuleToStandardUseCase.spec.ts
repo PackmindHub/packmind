@@ -14,7 +14,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   AddRuleToStandardCommand,
   AddRuleToStandardResponse,
@@ -84,31 +88,16 @@ describe('AddRuleToStandardUseCase', () => {
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
     ruleRepository = mockInterface<IRuleRepository>();
 
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     stubbedLogger = stubLogger();
 

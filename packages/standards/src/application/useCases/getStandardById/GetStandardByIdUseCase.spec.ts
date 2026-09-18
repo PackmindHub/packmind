@@ -4,7 +4,11 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -32,9 +36,7 @@ describe('GetStandardByIdUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    standardService = {
-      getStandardById: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
     accountsAdapter = mockInterface<IAccountsPort>();
 

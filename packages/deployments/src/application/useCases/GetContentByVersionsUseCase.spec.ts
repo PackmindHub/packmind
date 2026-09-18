@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CodingAgent,
   ArtifactVersionEntry,
@@ -79,11 +83,13 @@ describe('GetContentByVersionsUseCase', () => {
     });
     codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
-    renderModeConfigurationService = {
-      resolveCodingAgents: jest
-        .fn()
-        .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+      CodingAgents.packmind,
+      CodingAgents.claude,
+    ]);
 
     skillsPort = mockInterface<ISkillsPort>();
     skillsPort.getSkillVersionByNumber.mockResolvedValue(null);

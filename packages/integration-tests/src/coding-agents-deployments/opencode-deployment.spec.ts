@@ -12,7 +12,6 @@ import {
   FileModification,
   GitProviderVendors,
   GitRepo,
-  IGitPort,
   Organization,
   Command,
   CommandVersion,
@@ -40,7 +39,6 @@ describe('OpenCode Deployment Integration', () => {
   ]);
 
   let testApp: TestApp;
-  let gitPort: IGitPort;
   let deployerService: DeployerService;
 
   let recipe: Command;
@@ -57,7 +55,6 @@ describe('OpenCode Deployment Integration', () => {
     await testApp.initialize();
 
     deployerService = testApp.codingAgentHexa.getDeployerService();
-    gitPort = testApp.gitHexa.getAdapter();
 
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
@@ -144,7 +141,6 @@ describe('OpenCode Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const recipeVersions: CommandVersion[] = [
         {
@@ -209,7 +205,6 @@ describe('OpenCode Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const standardVersions: StandardVersion[] = [
         {

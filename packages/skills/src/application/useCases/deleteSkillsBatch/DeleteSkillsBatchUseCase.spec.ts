@@ -7,7 +7,11 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -51,14 +55,9 @@ describe('DeleteSkillsBatchUseCase', () => {
       updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
     });
 
-    skillService = {
-      getSkillById: jest.fn(),
-      deleteSkill: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    skillService = createMockInstance(SkillService);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     stubbedLogger = stubLogger();
 

@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
@@ -54,30 +54,16 @@ describe('CaptureRecipeUseCase', () => {
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as Partial<jest.Mocked<ISpacesPort>> as jest.Mocked<ISpacesPort>;
 
-    commandService = {
-      addCommand: jest.fn(),
-      listCommandsBySpace: jest.fn(),
-      getCommandById: jest.fn(),
-      findCommandBySlug: jest.fn(),
-      updateRecipe: jest.fn(),
-      deleteCommand: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
-    commandVersionService = {
-      addCommandVersion: jest.fn(),
-      listCommandVersions: jest.fn(),
-      getCommandVersion: jest.fn(),
-      getLatestCommandVersion: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<CommandVersionService>;
+    commandVersionService = createMockInstance(CommandVersionService);
 
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     commandService.listCommandsBySpace.mockResolvedValue([]);
 

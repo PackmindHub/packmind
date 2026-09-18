@@ -31,21 +31,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
-jest.mock('@packmind/git', () => {
-  const actual = jest.requireActual('@packmind/git');
-  return {
-    ...actual,
-    GitProviderAdapter: jest.fn().mockImplementation(() => ({
-      getFileFromRepo: jest.fn().mockImplementation((key: string) => {
-        if (key.includes('nonexistent')) {
-          return Promise.resolve(null);
-        }
-        return Promise.resolve(null);
-      }),
-    })),
-  };
-});
-
 describe('Target-Specific Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,

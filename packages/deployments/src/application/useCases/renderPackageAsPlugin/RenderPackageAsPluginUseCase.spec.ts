@@ -1,5 +1,9 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   Distribution,
   DistributionStatus,
@@ -201,9 +205,10 @@ describe('RenderPackageAsPluginUseCase', () => {
       isDefaultSpace: true,
     });
 
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+      [],
+    );
 
     commandsPort = mockInterface<ICommandsPort>();
     commandsPort.listCommandVersions.mockResolvedValue([]);
@@ -225,9 +230,10 @@ describe('RenderPackageAsPluginUseCase', () => {
     );
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    targetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    targetResolutionService = createMockInstance(TargetResolutionService);
+    targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      buildTarget(),
+    );
 
     distributionRepository = mockInterface<IDistributionRepository>();
     distributionRepository.add.mockImplementation((d: Distribution) =>
@@ -244,9 +250,7 @@ describe('RenderPackageAsPluginUseCase', () => {
     );
     distributedPackageRepository.addSkillVersions.mockResolvedValue(undefined);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new RenderPackageAsPluginUseCase(
       packageService,

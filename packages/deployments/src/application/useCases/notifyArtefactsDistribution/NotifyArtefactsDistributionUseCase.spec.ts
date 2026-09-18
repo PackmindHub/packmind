@@ -1,5 +1,6 @@
 import { NotifyArtefactsDistributionUseCase } from './NotifyArtefactsDistributionUseCase';
 import {
+  RenderMode,
   createOrganizationId,
   createPackageId,
   createGitRepoId,
@@ -24,7 +25,11 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -191,17 +196,19 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     mockDistributedPackageRepository =
       mockInterface<IDistributedPackageRepository>();
 
-    mockRenderModeConfigurationService = {
-      mapCodingAgentsToRenderModes: jest.fn().mockReturnValue(['cursor']),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+      [RenderMode.CURSOR],
+    );
 
-    mockTargetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    mockTargetResolutionService = createMockInstance(TargetResolutionService);
+    mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      buildTarget(),
+    );
 
-    mockEventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,

@@ -7,7 +7,11 @@ import { RenderModeConfigurationService } from '../services/RenderModeConfigurat
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { packageFactory } from '../../../test';
 import {
@@ -98,14 +102,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
   });
 
   beforeEach(() => {
-    mockPackageService = {
-      findByIdInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
-    mockTargetService = {
-      findById: jest.fn(),
-      findByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
     mockDistributionRepository = mockInterface<IDistributionRepository>();
 
@@ -122,14 +121,11 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
     mockCodingAgentPort = mockInterface<ICodingAgentPort>();
 
-    mockRenderModeConfigurationService = {
-      getActiveRenderModes: jest.fn(),
-      mapRenderModesToCodingAgents: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
 
-    mockPackmindConfigService = {
-      createRemovalConfigFileModification: jest.fn(),
-    } as unknown as jest.Mocked<PackmindConfigService>;
+    mockPackmindConfigService = createMockInstance(PackmindConfigService);
 
     useCase = new RemovePackageFromTargetsUseCase(
       mockPackageService,

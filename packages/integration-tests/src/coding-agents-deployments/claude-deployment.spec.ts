@@ -123,7 +123,6 @@ describe('Claude Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -421,9 +420,10 @@ describe('Claude Deployment Integration', () => {
     });
   });
 
-  // Deployers always emit their sections and never read the file already in the
-  // repo, so nothing here can assert content preservation; that is the merge
-  // layer's job, covered by CommitToGitUseCase.spec.ts in @packmind/git.
+  // NOTE: Deployers ALWAYS generate sections and never read the repository.
+  // Existing content is fetched and merged at commit time by CommitToGitUseCase,
+  // so content-preservation tests live in
+  // packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.spec.ts
 
   describe('when CLAUDE.md exists but is missing recipe instructions', () => {
     let defaultTarget: Target;
@@ -435,7 +435,6 @@ describe('Claude Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -640,8 +639,6 @@ describe('Claude Deployment Integration', () => {
       };
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await claudeDeployer.deployCommands(
           [],
           gitRepo,
@@ -680,8 +677,6 @@ describe('Claude Deployment Integration', () => {
       };
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await claudeDeployer.deployStandards(
           [],
           gitRepo,
@@ -702,15 +697,19 @@ describe('Claude Deployment Integration', () => {
       });
     });
 
+    // The deployer never reads the repository, so a failing git read cannot
+    // affect its output. This pins that down: the assertions below must hold
+    // even with getFileFromRepo rejecting, and it must never be called.
     describe('when GitHexa errors occur', () => {
       let fileUpdates: {
         createOrUpdate: FileModification[];
         delete: { path: string }[];
       };
       let commandFile: FileModification | undefined;
+      let getFileFromRepo: jest.SpyInstance;
 
       beforeEach(async () => {
-        jest
+        getFileFromRepo = jest
           .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
           .mockRejectedValue(new Error('GitHub API error'));
 
@@ -736,6 +735,10 @@ describe('Claude Deployment Integration', () => {
           (f) =>
             f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
         );
+      });
+
+      it('never reads the repository', () => {
+        expect(getFileFromRepo).not.toHaveBeenCalled();
       });
 
       it('creates two files to update', () => {

@@ -3,7 +3,11 @@ import {
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -92,22 +96,9 @@ describe('ListSkillVersionsUseCase', () => {
   beforeEach(() => {
     mockAccountsPort = mockInterface<IAccountsPort>();
 
-    mockSkillService = {
-      getSkillById: jest.fn(),
-      findSkillBySlug: jest.fn(),
-      listSkillsBySpace: jest.fn(),
-      addSkill: jest.fn(),
-      updateSkill: jest.fn(),
-      deleteSkill: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    mockSkillService = createMockInstance(SkillService);
 
-    mockSkillVersionService = {
-      listSkillVersions: jest.fn(),
-      getLatestSkillVersion: jest.fn(),
-      getSkillVersionById: jest.fn(),
-      getSkillVersion: jest.fn(),
-      addSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<SkillVersionService>;
+    mockSkillVersionService = createMockInstance(SkillVersionService);
 
     usecase = new ListSkillVersionsUseCase(
       mockAccountsPort,

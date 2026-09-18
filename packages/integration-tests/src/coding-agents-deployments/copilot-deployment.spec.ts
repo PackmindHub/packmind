@@ -163,7 +163,6 @@ describe('GitHub Copilot Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -541,8 +540,6 @@ describe('GitHub Copilot Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await copilotDeployer.deployCommands(
           [],
           gitRepo,
@@ -582,12 +579,16 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
     });
 
+    // The deployer never reads the repository, so a failing git read cannot
+    // affect its output. This pins that down: the assertions below must hold
+    // even with getFileFromRepo rejecting, and it must never be called.
     describe('when GitHexa throws an error', () => {
       let fileUpdates: FileUpdates;
       let copilotFile: FileModification;
+      let getFileFromRepo: jest.SpyInstance;
 
       beforeEach(async () => {
-        jest
+        getFileFromRepo = jest
           .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
           .mockRejectedValue(new Error('GitHub API error'));
 
@@ -610,6 +611,10 @@ describe('GitHub Copilot Deployment Integration', () => {
         );
 
         copilotFile = fileUpdates.createOrUpdate[0];
+      });
+
+      it('never reads the repository', () => {
+        expect(getFileFromRepo).not.toHaveBeenCalled();
       });
 
       it('still creates one prompt file', () => {
