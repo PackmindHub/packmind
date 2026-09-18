@@ -4,13 +4,8 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'DropRecipeUsageTable1766069228144';
 
 /**
- * Migration to drop the recipe_usage table.
- *
- * This migration removes the recipe_usage table as the analytics feature
- * is being removed from the system.
- *
- * Tables dropped:
- * - recipe_usage (main table with all its foreign keys and constraints)
+ * Drops the `recipe_usage` table, the analytics feature it backed having been
+ * removed from the system.
  */
 export class DropRecipeUsageTable1766069228144 implements MigrationInterface {
   constructor(
@@ -21,7 +16,6 @@ export class DropRecipeUsageTable1766069228144 implements MigrationInterface {
     this.logger.info('Starting migration: DropRecipeUsageTable');
 
     try {
-      // Drop foreign key constraints first
       this.logger.info('Dropping foreign key constraints on recipe_usage');
       await queryRunner.query(`
         ALTER TABLE IF EXISTS "recipe_usage"
@@ -40,7 +34,6 @@ export class DropRecipeUsageTable1766069228144 implements MigrationInterface {
         DROP CONSTRAINT IF EXISTS "FK_recipe_usage_user"
       `);
 
-      // Drop the table
       this.logger.info('Dropping recipe_usage table');
       await queryRunner.query(`DROP TABLE IF EXISTS "recipe_usage"`);
       this.logger.info('Successfully dropped recipe_usage table');

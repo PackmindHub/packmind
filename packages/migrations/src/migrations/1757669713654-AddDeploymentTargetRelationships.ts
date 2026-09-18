@@ -17,7 +17,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
     this.logger.info('Starting migration: AddDeploymentTargetRelationships');
 
     try {
-      // Create deployment_targets junction table for recipes deployments
       this.logger.debug('Creating deployment_targets junction table');
       await queryRunner.createTable(
         new Table({
@@ -52,7 +51,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         }),
       );
 
-      // Create standard_deployment_targets junction table for standards deployments
       this.logger.debug('Creating standard_deployment_targets junction table');
       await queryRunner.createTable(
         new Table({
@@ -87,7 +85,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         }),
       );
 
-      // Create foreign keys for deployment_targets
       this.logger.debug('Adding foreign keys for deployment_targets');
       await queryRunner.createForeignKey(
         'deployment_targets',
@@ -111,7 +108,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         }),
       );
 
-      // Create foreign keys for standard_deployment_targets
       this.logger.debug('Adding foreign keys for standard_deployment_targets');
       await queryRunner.createForeignKey(
         'standard_deployment_targets',
@@ -135,7 +131,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         }),
       );
 
-      // Populate deployment_targets with data based on existing git repo relationships
       this.logger.debug(
         'Populating deployment_targets from existing git repo relationships',
       );
@@ -151,7 +146,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         )
       `);
 
-      // Populate standard_deployment_targets with data based on existing git repo relationships
       this.logger.debug(
         'Populating standard_deployment_targets from existing git repo relationships',
       );
@@ -195,7 +189,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
     this.logger.info('Starting rollback: AddDeploymentTargetRelationships');
 
     try {
-      // Drop foreign keys first
       this.logger.debug('Dropping foreign keys');
       await queryRunner.dropForeignKey(
         'deployment_targets',
@@ -214,7 +207,6 @@ export class AddDeploymentTargetRelationships1757669713654 implements MigrationI
         'FK_standard_deployment_targets_target',
       );
 
-      // Drop junction tables
       this.logger.debug('Dropping junction tables');
       await queryRunner.dropTable('deployment_targets');
       await queryRunner.dropTable('standard_deployment_targets');

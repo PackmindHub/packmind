@@ -11,8 +11,6 @@ const origin = 'AddTrackedBranchLookupIndexToGitRepos1817000000000';
  * The index is partial on `is_tracked = true AND deleted_at IS NULL`, so it
  * holds at most one row per tracked repository and stays small no matter how
  * many branches accumulate history over time.
- *
- * The `down` method drops the index, fully reversing the change.
  */
 export class AddTrackedBranchLookupIndexToGitRepos1817000000000 implements MigrationInterface {
   constructor(

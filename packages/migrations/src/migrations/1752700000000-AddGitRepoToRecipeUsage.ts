@@ -20,7 +20,6 @@ export class AddGitRepoToRecipeUsage1752700000000 implements MigrationInterface 
     this.logger.info('Starting migration: AddGitRepoToRecipeUsage');
 
     try {
-      // Check if gitRepoId column already exists
       const columnExists = await queryRunner.query(`
         SELECT column_name 
         FROM information_schema.columns 
@@ -41,7 +40,6 @@ export class AddGitRepoToRecipeUsage1752700000000 implements MigrationInterface 
         );
       }
 
-      // Check if foreign key already exists
       const foreignKeyExists = await queryRunner.query(`
         SELECT constraint_name 
         FROM information_schema.table_constraints 
@@ -76,7 +74,6 @@ export class AddGitRepoToRecipeUsage1752700000000 implements MigrationInterface 
     this.logger.info('Starting rollback: AddGitRepoToRecipeUsage');
 
     try {
-      // Check if foreign key exists before trying to drop it
       const foreignKeyExists = await queryRunner.query(`
         SELECT constraint_name 
         FROM information_schema.table_constraints 
@@ -94,7 +91,6 @@ export class AddGitRepoToRecipeUsage1752700000000 implements MigrationInterface 
         );
       }
 
-      // Check if column exists before trying to drop it
       const columnExists = await queryRunner.query(`
         SELECT column_name 
         FROM information_schema.columns 

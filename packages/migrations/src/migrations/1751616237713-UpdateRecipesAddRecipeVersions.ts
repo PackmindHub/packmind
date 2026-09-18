@@ -57,19 +57,16 @@ export class UpdateRecipesAddRecipeVersions1751616237713 implements MigrationInt
     this.logger.info('Starting migration: UpdateRecipesAddRecipeVersions');
 
     try {
-      // Create the recipe_versions table
       this.logger.debug('Creating recipe_versions table');
       await queryRunner.createTable(this.recipeVersionsTable);
       this.logger.info('Successfully created recipe_versions table');
 
-      // Add foreign key
       this.logger.debug(
         'Adding foreign key constraint between recipe_versions and recipes',
       );
       await queryRunner.createForeignKey('recipe_versions', this.foreignKey);
       this.logger.info('Successfully added foreign key constraint');
 
-      // Drop name and content columns from recipes table
       this.logger.debug('Dropping name column from recipes table');
       await queryRunner.dropColumn('recipes', 'name');
       this.logger.debug('Successfully dropped name column');
@@ -93,19 +90,16 @@ export class UpdateRecipesAddRecipeVersions1751616237713 implements MigrationInt
     this.logger.info('Starting rollback: UpdateRecipesAddRecipeVersions');
 
     try {
-      // Drop foreign key
       this.logger.debug(
         'Dropping foreign key constraint between recipe_versions and recipes',
       );
       await queryRunner.dropForeignKey('recipe_versions', this.foreignKey);
       this.logger.info('Successfully dropped foreign key constraint');
 
-      // Drop the recipe_versions table
       this.logger.debug('Dropping recipe_versions table');
       await queryRunner.dropTable(this.recipeVersionsTable);
       this.logger.info('Successfully dropped recipe_versions table');
 
-      // Add back name and content columns to recipes table
       this.logger.debug('Adding back name column to recipes table');
       await queryRunner.addColumn(
         'recipes',
