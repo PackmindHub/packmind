@@ -19,7 +19,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { IStandardsPort, IGitPort } from '@packmind/types';
 import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 
-// Create a concrete test implementation of the abstract SingleFileDeployer
 class TestSingleFileDeployer extends SingleFileDeployer {
   protected readonly config: DeployerConfig = {
     filePath: 'TEST_AGENT.md',

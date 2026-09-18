@@ -33,7 +33,6 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
     return content.join('\n\n');
   }
 
-  // Static methods for backward compatibility
   public static generateStandardsSection(
     opts: GenericStandardSectionWriterOpts,
   ): string {

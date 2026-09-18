@@ -3,7 +3,6 @@ import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeploy
 import { CodingAgent, FileUpdates } from '@packmind/types';
 import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
 
-// Mock deployer for testing
 class MockDeployer implements ICodingAgentDeployer {
   async deployCommands(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
