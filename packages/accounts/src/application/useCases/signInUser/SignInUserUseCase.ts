@@ -32,10 +32,8 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new MissingEmailError();
     }
 
-    // Check if user is allowed to attempt login (rate limiting)
     await this.loginRateLimiterService.checkLoginAllowed(command.email);
 
-    // Find user by email (case-insensitive)
     const user = await this.userService.getUserByEmailCaseInsensitive(
       command.email,
     );
@@ -43,7 +41,6 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new InvalidEmailOrPasswordError();
     }
 
-    // Validate password
     const isPasswordValid = await this.userService.validatePassword(
       command.password,
       user.passwordHash,
@@ -54,7 +51,6 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new InvalidEmailOrPasswordError();
     }
 
-    // Successful login - clear any previous failed attempts
     await this.loginRateLimiterService.clearAttempts(command.email);
 
     let resolved;

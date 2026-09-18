@@ -54,7 +54,6 @@ export class RemoveArtefactsFromPackageUseCase
       skillCount: skillIds.length,
     });
 
-    // Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
@@ -66,7 +65,6 @@ export class RemoveArtefactsFromPackageUseCase
       );
     }
 
-    // Validate package exists
     const existingPackage = await this.services
       .getPackageService()
       .findById(packageId);
@@ -106,7 +104,6 @@ export class RemoveArtefactsFromPackageUseCase
       (skillId) => !currentSkillIds.includes(skillId),
     );
 
-    // Remove artefacts from package
     const packageRepository = this.services
       .getRepositories()
       .getPackageRepository();
@@ -123,7 +120,6 @@ export class RemoveArtefactsFromPackageUseCase
       await packageRepository.removeSkills(packageId, removedSkillIds);
     }
 
-    // Fetch updated package
     const updatedPackage = await this.services
       .getPackageService()
       .findById(packageId);

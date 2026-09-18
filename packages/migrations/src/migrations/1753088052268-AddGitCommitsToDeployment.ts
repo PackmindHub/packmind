@@ -20,7 +20,6 @@ export class AddGitCommitsToDeployment1753088052268 implements MigrationInterfac
     this.logger.info('Starting migration: AddGitCommitsToDeployment');
 
     try {
-      // Create deployment_git_commits join table
       await queryRunner.createTable(
         new Table({
           name: 'deployment_git_commits',
@@ -47,7 +46,6 @@ export class AddGitCommitsToDeployment1753088052268 implements MigrationInterfac
         true,
       );
 
-      // Create foreign keys for deployment_git_commits
       await queryRunner.createForeignKey(
         'deployment_git_commits',
         new TableForeignKey({
@@ -83,7 +81,6 @@ export class AddGitCommitsToDeployment1753088052268 implements MigrationInterfac
     this.logger.info('Rolling back migration: AddGitCommitsToDeployment');
 
     try {
-      // Drop the join table
       await queryRunner.dropTable('deployment_git_commits');
 
       this.logger.info(

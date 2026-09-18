@@ -16,7 +16,6 @@ export default class PHPParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       // PHP has two grammars: php_only (standalone) and php (with HTML support)
       // We prefer php_only as it doesn't require HTML grammar dependencies
       const wasmPaths = BaseParser.getLanguageWasmPaths('php_only').concat(

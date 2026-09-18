@@ -93,7 +93,7 @@ describe('ResolvedGitRepoService', () => {
     });
   });
 
-  // Both miss, both resolve, and the slower one used to overwrite the faster —
+  // Without a shared in-flight promise the slower miss overwrites the faster,
   // putting a client built from stale credentials back in front.
   describe('when two reads race on the same repository', () => {
     let first: IGitRepo;

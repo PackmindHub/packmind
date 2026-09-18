@@ -226,11 +226,9 @@ export class GitRepoRepository
       const updated = await this.repository.save({
         ...gitRepo,
         isTracked,
-        // Setting tracking clears any earlier removal — re-tracking is exactly
-        // what restores a repository's hidden history. Doing it here rather
-        // than in the use cases keeps both re-tracking entry points
-        // (SetTrackedRepositoryUseCase, UpdateTrackedBranchUseCase) correct
-        // without either having to remember.
+        // Re-tracking is what restores a repository's hidden history, so the
+        // removal stamp is cleared here rather than in each of the two
+        // re-tracking use cases.
         trackingRemovedAt: isTracked ? null : gitRepo.trackingRemovedAt,
       });
 

@@ -4,8 +4,6 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'AddAgentToPluginInstallations1820000000000';
 
 /**
- * Migration: AddAgentToPluginInstallations
- *
  * Adds `agent` and `identity_source` to `plugin_installations`, and widens the
  * heartbeat UNIQUE index to include `agent`.
  *

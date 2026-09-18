@@ -22,8 +22,6 @@ const origin = 'AddTrackingRemovedAtToGitRepos1818000000000';
  * `is_tracked = true`. Both are needed: the governance predicate now matches a
  * governing sibling branch on `is_tracked = true OR tracking_removed_at IS NOT
  * NULL`, and neither partial index covers both arms of that disjunction alone.
- *
- * The `down` method drops both, fully reversing the change.
  */
 export class AddTrackingRemovedAtToGitRepos1818000000000 implements MigrationInterface {
   constructor(

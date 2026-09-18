@@ -19,10 +19,6 @@ const FRONTMATTER_DELIMITER = '---';
  */
 export class SkillParser {
   /**
-   * Parses a SKILL.md file content and returns the metadata and body.
-   *
-   * @param content - The raw content of a SKILL.md file
-   * @returns The parsed skill with metadata and body
    * @throws {SkillParseError} If frontmatter is missing, unclosed, or contains invalid YAML
    */
   parse(content: string): ParsedSkill {

@@ -12,17 +12,14 @@ export type CheckAuthResult =
 
 export type ListAvailableRepositoriesResult = {
   repositories: ExternalRepository[];
-  // Total number of pages the provider exposes for the current listing, so
-  // callers can paginate without fetching everything up front.
   totalPages: number;
-  // The last provider page actually fetched to satisfy this request. Because we
-  // drop repositories we lack write access to, a single logical page may consume
-  // several provider pages, so callers must resume pagination from
-  // `lastLoadedPage + 1` rather than from the requested page.
+  // Because repositories we lack write access to are dropped, one logical page
+  // may consume several provider pages: callers must resume pagination from
+  // `lastLoadedPage + 1`, not from the page they requested.
   lastLoadedPage: number;
-  // True when a provider page failed partway through and the batch was cut
-  // short. The repositories returned are still usable — the rest can be
-  // fetched by resuming pagination — but the list is not the full batch.
+  // A provider page failed partway through, so the batch was cut short. The
+  // repositories returned are still usable; the rest come from resuming
+  // pagination.
   partial: boolean;
 };
 

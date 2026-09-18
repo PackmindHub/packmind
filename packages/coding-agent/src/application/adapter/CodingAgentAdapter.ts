@@ -48,22 +48,15 @@ export class CodingAgentAdapter
     );
   }
 
-  /**
-   * Initialize adapter with ports and services from registry.
-   * All ports in signature are REQUIRED.
-   * Services are provided by Hexa after recreating with ports.
-   */
   public async initialize(ports: {
     [IStandardsPortName]: IStandardsPort;
     [IGitPortName]: IGitPort;
   }): Promise<void> {
     this.logger.info('Initializing CodingAgentAdapter with ports and services');
 
-    // Step 1: Set all ports
     this.standardsPort = ports[IStandardsPortName];
     this.gitPort = ports[IGitPortName];
 
-    // Step 2: Validate all required dependencies are set
     if (!this.standardsPort || !this.gitPort) {
       throw new Error(
         'CodingAgentAdapter: Required ports/services not provided',
@@ -86,9 +79,6 @@ export class CodingAgentAdapter
     this.logger.info('CodingAgentAdapter initialized successfully');
   }
 
-  /**
-   * Check if adapter is ready (all required ports and services are set).
-   */
   public isReady(): boolean {
     return (
       this.standardsPort != null &&
@@ -98,9 +88,6 @@ export class CodingAgentAdapter
     );
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): ICodingAgentPort {
     return this as ICodingAgentPort;
   }

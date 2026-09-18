@@ -23,22 +23,18 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
   ): Promise<string[]> {
     const { organizationId, gitRepo, path } = command;
 
-    // Business rule: GitRepo must be provided
     if (!gitRepo) {
       throw new Error('Git repository is required');
     }
 
-    // Business rule: organizationId must be valid
     if (!organizationId) {
       throw new Error('Organization ID is required');
     }
 
-    // Business rule: GitRepo must have a provider
     if (!gitRepo.providerId) {
       throw new Error('Git repository must have a provider ID');
     }
 
-    // Create cache key based on git repository ID and path (for different results per path)
     const pathString = path && path !== '/' ? path : 'root';
     const cacheKey = `available-remote-directories:${gitRepo.id}:${pathString}`;
 
@@ -53,7 +49,6 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
     });
 
     try {
-      // First, try to get from cache
       const cachedTargets = await this.cache.get<string[]>(cacheKey);
 
       if (cachedTargets !== null) {
@@ -66,7 +61,6 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
         return cachedTargets;
       }
 
-      // Cache miss - get available targets using the specific git provider for this repository
       const availableTargets =
         await this.gitProviderService.listAvailableTargets(gitRepo, path);
 

@@ -30,7 +30,6 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
     });
 
     try {
-      // Get user and organization data
       const user = await this.userService.getUserById(command.userId);
       if (!user) {
         throw new Error('User not found');
@@ -50,10 +49,8 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
         throw new Error('Organization not found');
       }
 
-      // Get host from configuration
       const host = await this.getApplicationUrl();
 
-      // Generate API key using the service
       const apiKey = this.apiKeyService.generateApiKey(
         user,
         organization,

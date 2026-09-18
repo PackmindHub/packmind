@@ -46,12 +46,10 @@ export class UpdateGitProviderUseCase
   ): Promise<UpdateGitProviderResponse> {
     const { id, gitProvider, organization } = command;
 
-    // Business rule: id is required
     if (!id) {
       throw new Error('Git provider ID is required');
     }
 
-    // Business rule: gitProvider update data is required
     if (!gitProvider || Object.keys(gitProvider).length === 0) {
       throw new Error('Git provider update data is required');
     }
@@ -138,18 +136,12 @@ export class UpdateGitProviderUseCase
       patch.displayName = normalizedDisplayName;
     }
 
-    // The re-authentication panel promises the token is validated against the
-    // instance before it replaces the stored one, but nothing above this line
-    // ever contacts the provider — validateProviderCredentials only checks that
-    // the credential fields are coherent. Probe a supplied token for real, so a
-    // dead one is refused instead of being saved and reported as accepted.
-    //
-    // Deliberately narrow: it fires only when the caller actually sends a token
-    // and the connection ends up token-authenticated. A rename sends no token,
-    // and a GitHub App rebind resolves to authMethod 'app', so neither pays for
-    // a network round trip nor gains a new way to fail. It also runs last, after
-    // the local and display-name checks, so a request that fails anyway never
-    // reaches the provider.
+    // Nothing above this line contacts the provider — validateProviderCredentials
+    // only checks that the credential fields are coherent — yet the
+    // re-authentication panel promises the token was validated against the
+    // instance. So probe it for real, narrowly: only a caller-supplied token on
+    // a token-authenticated connection, and only last, so a rename, an App
+    // rebind, or a request that fails anyway never pays a round trip.
     const suppliedToken = gitProvider.token;
     if (
       typeof suppliedToken === 'string' &&

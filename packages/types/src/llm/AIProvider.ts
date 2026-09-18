@@ -3,11 +3,10 @@ import { OrganizationId } from '../accounts/Organization';
 import { LLMServiceConfig } from './LLMServiceConfig';
 
 /**
- * AI Provider entity stored in the database.
- * Each organization can have one active AI provider configuration.
- * The config field stores the provider-specific configuration as JSON.
- * Secrets (API keys) are encrypted at the repository layer.
- * Uses standard createdAt/updatedAt timestamps from WithTimestamps.
+ * At most one active provider configuration per organization. `config` holds the
+ * provider-specific shape as JSON, whose secrets (API keys) are encrypted and
+ * decrypted in `AIProviderRepository`, not here — so an instance of this type
+ * holds them in clear.
  */
 export type AIProvider = {
   id: AIProviderId;

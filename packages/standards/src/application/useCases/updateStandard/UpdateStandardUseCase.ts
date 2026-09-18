@@ -78,7 +78,6 @@ export class UpdateStandardUseCase
     });
 
     try {
-      // Validate that space belongs to organization
       const space = await this.spacesPort.getSpaceById(spaceId);
       if (!space) {
         this.logger.error('Space not found', { spaceId });
@@ -95,7 +94,6 @@ export class UpdateStandardUseCase
         );
       }
 
-      // Check if the standard exists
       const existingStandard =
         await this.standardService.getStandardById(standardId);
       if (!existingStandard) {
@@ -103,7 +101,6 @@ export class UpdateStandardUseCase
         throw new Error(`Standard with id ${standardId} not found`);
       }
 
-      // Validate that standard belongs to the specified space
       if (existingStandard.spaceId !== spaceId) {
         this.logger.error('Standard does not belong to space', {
           standardId,
@@ -121,7 +118,6 @@ export class UpdateStandardUseCase
         existingName: existingStandard.name,
       });
 
-      // Get the latest version to compare content
       const latestVersion =
         await this.standardVersionService.getLatestStandardVersion(standardId);
 
@@ -130,12 +126,10 @@ export class UpdateStandardUseCase
         throw new Error(`No versions found for standard ${standardId}`);
       }
 
-      // Get existing rules for content comparison
       const existingRules = await this.ruleRepository.findByStandardVersionId(
         latestVersion.id,
       );
 
-      // Check if content has changed (strict content equality)
       const contentHasChanged = this.hasContentChanged(
         {
           name: latestVersion.name,
@@ -166,14 +160,12 @@ export class UpdateStandardUseCase
         preservedOriginalSlug: true,
       });
 
-      // Business logic: Increment version number
       const nextVersion = existingStandard.version + 1;
       this.logger.debug('Incrementing version number', {
         currentVersion: existingStandard.version,
         nextVersion,
       });
 
-      // Update the standard entity
       const brandedUserId = createUserId(userId);
       const brandedOrganizationId = createOrganizationId(organizationId);
 
@@ -199,7 +191,6 @@ export class UpdateStandardUseCase
       for (const r of rules) {
         const persisted = existingRulesById.get(r.id);
         if (persisted) {
-          // Copy examples from the persisted rule
           const examples = await this.ruleExampleRepository.findByRuleId(
             persisted.id,
           );
@@ -209,12 +200,10 @@ export class UpdateStandardUseCase
             oldRuleId: persisted.id,
           });
         } else {
-          // New rule or id not found: no examples to copy
           rulesWithExamples.push({ content: r.content, examples: [] });
         }
       }
 
-      // Create new standard version with updated rules
       const standardVersionData: CreateStandardVersionData = {
         standardId,
         name,
@@ -223,8 +212,8 @@ export class UpdateStandardUseCase
         version: nextVersion,
         rules: rulesWithExamples,
         scope,
-        userId: brandedUserId, // Track the user who updated this through Web UI
-        organizationId: brandedOrganizationId, // Pass organization context for detection program copying
+        userId: brandedUserId,
+        organizationId: brandedOrganizationId,
       };
 
       const newStandardVersion =
@@ -264,7 +253,6 @@ export class UpdateStandardUseCase
         newVersion: nextVersion,
       });
 
-      // Detect and emit rule change events
       const ruleChanges = this.detectRuleChanges(existingRules, rules);
       const brandedStandardId = createStandardId(standardId);
       const brandedStandardVersionId = createStandardVersionId(
@@ -332,7 +320,6 @@ export class UpdateStandardUseCase
       rules: Array<{ content: string }>;
     },
   ): boolean {
-    // Compare name
     if (existing.name !== updated.name) {
       this.logger.debug('Name has changed', {
         existingName: existing.name,
@@ -341,13 +328,11 @@ export class UpdateStandardUseCase
       return true;
     }
 
-    // Compare description
     if (existing.description !== updated.description) {
       this.logger.debug('Description has changed');
       return true;
     }
 
-    // Compare scope
     if (existing.scope !== updated.scope) {
       this.logger.debug('Scope has changed', {
         existingScope: existing.scope,
@@ -356,7 +341,6 @@ export class UpdateStandardUseCase
       return true;
     }
 
-    // Compare rules (strict content equality)
     if (existing.rules.length !== updated.rules.length) {
       this.logger.debug('Rules count has changed', {
         existingCount: existing.rules.length,
@@ -365,7 +349,7 @@ export class UpdateStandardUseCase
       return true;
     }
 
-    // Sort both arrays by content for comparison
+    // Compared in sorted order: reordering rules alone is not a content change.
     const existingRulesSorted = [...existing.rules].sort((a, b) =>
       a.content.localeCompare(b.content),
     );

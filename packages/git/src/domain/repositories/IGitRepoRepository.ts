@@ -7,12 +7,9 @@ import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 
 /**
- * Type filter accepted by repository finders.
- *
- * - A concrete `GitRepoType` value (`'standard'` | `'marketplace'`) restricts
- *   the query to that type only.
- * - `'any'` opts out of the type filter entirely — used by the marketplace
- *   link pre-flight collision check.
+ * A concrete `GitRepoType` restricts the query to that type; `'any'` opts out
+ * of the type filter entirely, so a lookup can detect a collision with a repo
+ * of either type.
  */
 export type GitRepoTypeFilter = GitRepoType | 'any';
 

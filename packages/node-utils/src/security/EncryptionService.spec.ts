@@ -84,7 +84,6 @@ describe('EncryptionService', () => {
     it('returns invalid encrypted format as-is for backward compatibility', () => {
       const invalidEncrypted = 'invalid:format';
       const result = encryptionService.decrypt(invalidEncrypted);
-      // Should return as-is for backward compatibility since it doesn't have 3 parts
       expect(result).toBe(invalidEncrypted);
     });
 
@@ -125,7 +124,8 @@ describe('EncryptionService', () => {
     it('maintains consistency across multiple encrypt/decrypt cycles', () => {
       const plaintext = 'test-token-12345';
 
-      // Multiple round trips should produce the same result
+      // Each pass encrypts under a fresh random IV, so this checks the IV is
+      // carried in the output rather than fixed.
       for (let i = 0; i < 5; i++) {
         const encrypted = encryptionService.encrypt(plaintext);
         const decrypted = encryptionService.decrypt(encrypted);

@@ -70,8 +70,6 @@ export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
       });
       await this.packageService.deletePackages(packageIds, userId as UserId);
 
-      // Emit PackagesDeletedEvent so downstream deployments-domain listeners
-      // can react to package deletion (e.g. cascading cleanup).
       this.eventEmitterService.emit(
         new PackagesDeletedEvent({
           userId: createUserId(userId),

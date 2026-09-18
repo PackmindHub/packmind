@@ -8,13 +8,6 @@ import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 
 import { IOrganizationGitHubAppRepository } from '../domain/repositories/IOrganizationGitHubAppRepository';
 
-/**
- * GitServices - Service aggregator for the Git application layer
- *
- * This class serves as the main service access point, aggregating all
- * individual services. It handles the instantiation of services
- * using the repository aggregator and provides them through getter methods.
- */
 export class GitServices {
   private readonly gitProviderService: GitProviderService;
   private readonly gitRepoService: GitRepoService;
@@ -22,8 +15,7 @@ export class GitServices {
   private readonly resolvedGitRepoService: ResolvedGitRepoService;
 
   constructor(private readonly gitRepositories: IGitRepositories) {
-    // One per domain, so the reuse reaches across call sites. Built first:
-    // GitProviderService resolves through it.
+    // Built first: GitProviderService resolves through it.
     this.resolvedGitRepoService = new ResolvedGitRepoService(
       this.gitRepositories.getGitProviderRepository(),
       this.gitRepositories.getGitRepoFactory(),
@@ -40,8 +32,8 @@ export class GitServices {
       this.gitRepositories.getGitCommitRepository(),
     );
 
-    // Services are where the domain logic that is not a query lives, and they
-    // have no shared base class to hook - so the aggregator is the seam.
+    // Services have no shared base class to hook, so the aggregator is the
+    // only seam where all of them can be instrumented at once.
     instrumentComponents([
       this.gitProviderService,
       this.gitRepoService,

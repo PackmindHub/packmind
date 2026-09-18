@@ -16,7 +16,6 @@ const meta: Meta<typeof PMHeader> = {
 export default meta;
 type Story = StoryObj<typeof PMHeader>;
 
-// Default story
 export const Default: Story = {
   parameters: {
     docs: {
@@ -27,7 +26,6 @@ export const Default: Story = {
   },
 };
 
-// Story with actions
 export const WithActions: Story = {
   args: {
     actions: (

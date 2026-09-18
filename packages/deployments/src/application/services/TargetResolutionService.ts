@@ -29,9 +29,6 @@ export class TargetResolutionService {
     ),
   ) {}
 
-  /**
-   * Finds a target from git info by looking up the repository and path.
-   */
   async findTargetFromGitInfo(
     organizationId: OrganizationId,
     userId: string,
@@ -89,7 +86,8 @@ export class TargetResolutionService {
   }
 
   /**
-   * Finds a target from git info, creating the provider, repo, and target if they don't exist.
+   * Creates the target when it does not exist yet, delegating provider and repo
+   * resolution to the git domain's `findOrCreateGitRepo`.
    */
   async findOrCreateTargetFromGitInfo(
     organizationId: OrganizationId,
@@ -130,8 +128,7 @@ export class TargetResolutionService {
   }
 
   /**
-   * Finds previously deployed versions for all artifact types (standards, commands, skills)
-   * by resolving a target from git info and querying distribution history.
+   * Reads the distribution history of the target the git info resolves to.
    */
   async findPreviouslyDeployedVersions(
     organizationId: OrganizationId,

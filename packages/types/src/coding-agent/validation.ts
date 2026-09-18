@@ -1,9 +1,6 @@
 import { CodingAgent } from './CodingAgent';
 
-/**
- * Array of all valid coding agent values.
- * Keep in sync with the CodingAgent type.
- */
+/** Must be kept in sync by hand with the `CodingAgent` union. */
 export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
   'packmind',
   'junie',
@@ -19,23 +16,18 @@ export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
   'kiro',
 ] as const;
 
-/**
- * The coding agent that must always be included in any agent configuration.
- */
+/** Always included in any agent configuration; see normalizeCodingAgents. */
 export const REQUIRED_CODING_AGENT: CodingAgent = 'packmind';
 
-/**
- * Type guard to check if a string is a valid CodingAgent.
- */
 export function isValidCodingAgent(value: string): value is CodingAgent {
   return VALID_CODING_AGENTS.includes(value as CodingAgent);
 }
 
 /**
- * Validates agents and returns info about invalid ones for warning purposes.
- *
- * @param agents - The value to validate
- * @returns Object with valid agents and invalid agent strings
+ * `validAgents` is `null` — not `[]` — when the input is absent or not an
+ * array, so a caller can tell "nothing was configured" from "everything
+ * configured was rejected". Non-string entries are dropped without being
+ * reported in `invalidAgents`.
  */
 export function validateAgentsWithWarnings(agents: unknown): {
   validAgents: CodingAgent[] | null;
@@ -66,24 +58,18 @@ export function validateAgentsWithWarnings(agents: unknown): {
 }
 
 /**
- * Normalizes a list of coding agents by:
- * 1. Adding the required 'packmind' agent if not present
- * 2. Removing duplicates
- *
- * @param agents - Array of CodingAgents to normalize
- * @returns Normalized array with 'packmind' always included, preserving user order
+ * Adds `packmind` if absent and drops duplicates, otherwise preserving the
+ * caller's order. When added, `packmind` is prepended rather than appended.
  */
 export function normalizeCodingAgents(agents: CodingAgent[]): CodingAgent[] {
   const seen = new Set<CodingAgent>();
   const result: CodingAgent[] = [];
 
-  // Add 'packmind' first if not already in list
   if (!agents.includes(REQUIRED_CODING_AGENT)) {
     result.push(REQUIRED_CODING_AGENT);
     seen.add(REQUIRED_CODING_AGENT);
   }
 
-  // Preserve user order, removing duplicates
   for (const agent of agents) {
     if (!seen.has(agent)) {
       seen.add(agent);

@@ -1,21 +1,19 @@
 /**
- * Extract the base URL from a git remote URL
- * @param gitRemoteUrl The git remote URL
- * @returns The base URL (e.g., https://bitbucket.org)
+ * The host part of a git remote URL, always as `https://host`: an SSH remote is
+ * rewritten to that form so the result can be compared against a stored git
+ * provider URL whatever scheme the remote used.
  */
 export function extractBaseUrl(gitRemoteUrl: string): string {
-  // Handle HTTPS format: https://host.com/owner/repo.git
   const httpsMatch = gitRemoteUrl.match(/^(https?:\/\/[^/]+)/i);
   if (httpsMatch) {
     return httpsMatch[1];
   }
 
-  // Handle SSH format: git@host.com:owner/repo.git
   const sshMatch = gitRemoteUrl.match(/^git@([^:]+):/i);
   if (sshMatch) {
     return `https://${sshMatch[1]}`;
   }
 
-  // Fallback: return the original URL
+  // Neither shape matched: hand back the input rather than throwing.
   return gitRemoteUrl;
 }

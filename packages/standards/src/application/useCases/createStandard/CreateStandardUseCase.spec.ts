@@ -38,7 +38,6 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { CreateStandardUseCase } from './CreateStandardUseCase';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -81,7 +80,6 @@ describe('CreateStandardUseCase', () => {
       slug: 'test-org',
     };
 
-    // Mock SpacesPort
     spacesPort = mockInterface<ISpacesPort>();
     spacesPort.findMembership.mockResolvedValue({
       userId: testUserId,
@@ -92,18 +90,14 @@ describe('CreateStandardUseCase', () => {
       updatedBy: testUserId,
     });
 
-    // Mock AccountsPort
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    // Mock StandardService
     standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
     standardVersionService = createMockInstance(StandardVersionService);
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
@@ -762,7 +756,6 @@ describe('CreateStandardUseCase', () => {
 
         stubbedLogger = stubLogger();
 
-        // Default slug mock: lowercased with hyphens
         (slug as jest.MockedFunction<typeof slug>).mockImplementation(
           (input: string) => input.toLowerCase().replace(/\s+/g, '-'),
         );

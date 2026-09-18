@@ -37,7 +37,6 @@ export class GetSkillByIdUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: command.spaceId });
@@ -62,7 +61,6 @@ export class GetSkillByIdUseCase
         return { skill: null };
       }
 
-      // Verify the skill belongs to the space
       if (skill.spaceId !== command.spaceId) {
         this.logger.warn('Skill does not belong to space', {
           skillId: command.skillId,

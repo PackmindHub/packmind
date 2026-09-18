@@ -1,4 +1,3 @@
-// Re-export individual use cases
 export { ActivateUserAccountUseCase } from './activateUserAccount/ActivateUserAccountUseCase';
 export { ChangeUserRoleUseCase } from './changeUserRole/ChangeUserRoleUseCase';
 export { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEmailAvailabilityUseCase';

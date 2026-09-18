@@ -15,7 +15,6 @@ export class NormalizeOrganizationNames1758808119000 implements MigrationInterfa
     this.logger.info('Starting migration: NormalizeOrganizationNames');
 
     try {
-      // First, let's create a temporary table to store original names for rollback
       this.logger.debug('Creating temporary table for rollback data');
       await queryRunner.query(`
         CREATE TABLE IF NOT EXISTS organization_name_backup (
@@ -25,14 +24,12 @@ export class NormalizeOrganizationNames1758808119000 implements MigrationInterfa
         )
       `);
 
-      // Store original names for rollback
       this.logger.debug('Backing up original organization names');
       await queryRunner.query(`
         INSERT INTO organization_name_backup (id, original_name)
         SELECT id, name FROM organizations
       `);
 
-      // Find organizations that would have duplicate slugs when their names are slugified
       this.logger.debug('Finding organizations with potential slug conflicts');
       const duplicateGroups = await queryRunner.query(`
         WITH slugified_names AS (
@@ -86,7 +83,6 @@ export class NormalizeOrganizationNames1758808119000 implements MigrationInterfa
         },
       );
 
-      // Group the duplicates and rename all but the first one (which keeps original name)
       interface OrganizationRecord {
         id: string;
         name: string;
@@ -106,7 +102,6 @@ export class NormalizeOrganizationNames1758808119000 implements MigrationInterfa
           {} as Record<string, OrganizationRecord[]>,
         );
 
-      // Process each group of duplicates
       for (const [wouldBeSlug, orgsInGroup] of Object.entries(slugGroups)) {
         this.logger.debug(`Processing slug group: ${wouldBeSlug}`, {
           organizationsInGroup: orgsInGroup.length,
@@ -150,7 +145,6 @@ export class NormalizeOrganizationNames1758808119000 implements MigrationInterfa
     this.logger.info('Starting rollback: NormalizeOrganizationNames');
 
     try {
-      // Check if backup table exists
       const backupTableExists = await queryRunner.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables

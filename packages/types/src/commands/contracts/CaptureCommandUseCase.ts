@@ -10,7 +10,7 @@ export type CommandStep = {
 
 export type CaptureCommandCommand = PackmindCommand & {
   name: string;
-  spaceId: SpaceId; // Required space ID for space-specific recipes
+  spaceId: SpaceId;
   slug?: string; // Optional user-provided slug; if not provided, auto-generated from name
   // New structured format (preferred)
   summary?: string;

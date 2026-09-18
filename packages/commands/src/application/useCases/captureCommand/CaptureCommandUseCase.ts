@@ -99,7 +99,6 @@ export class CaptureCommandUseCase
       );
       this.logger.info('Resolved slug', { slug: commandSlug });
 
-      // Determine content: use new structured format if provided, otherwise use legacy content
       const content =
         providedSummary !== undefined
           ? this.assembleCommandContent(
@@ -110,7 +109,6 @@ export class CaptureCommandUseCase
             )
           : legacyContent || '';
 
-      // Business logic: Create recipe with initial version 1
       const initialVersion = 1;
       const recipe = await this.commandService.addCommand({
         name,
@@ -194,7 +192,6 @@ export class CaptureCommandUseCase
       return sanitized;
     }
 
-    // Auto-generate from name
     const baseSlug = slug(name);
     let commandSlug = baseSlug;
 
@@ -226,13 +223,11 @@ export class CaptureCommandUseCase
   ): string {
     let content = summary;
 
-    // Add "When to Use" section only if not empty
     if (whenToUse.length > 0) {
       content += '\n\n## When to Use\n\n';
       content += whenToUse.map((scenario) => `- ${scenario}`).join('\n');
     }
 
-    // Add "Context Validation Checkpoints" section only if not empty
     if (contextValidationCheckpoints.length > 0) {
       content += '\n\n## Context Validation Checkpoints\n\n';
       content += contextValidationCheckpoints
@@ -240,7 +235,6 @@ export class CaptureCommandUseCase
         .join('\n');
     }
 
-    // Add "Command Steps" section only if not empty
     if (steps.length > 0) {
       content += '\n\n## Command Steps\n\n';
       steps.forEach((step, index) => {

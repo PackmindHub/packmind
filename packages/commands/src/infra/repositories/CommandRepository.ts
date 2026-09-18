@@ -46,8 +46,6 @@ export class CommandRepository
     });
 
     try {
-      // Query recipes by slug across all spaces in the organization
-      // Join with spaces table to filter by organizationId
       let queryBuilder = this.repository
         .createQueryBuilder('recipe')
         .innerJoin('spaces', 'space', 'recipe.space_id = space.id')
@@ -56,7 +54,6 @@ export class CommandRepository
           organizationId,
         });
 
-      // Include deleted recipes if requested
       if (opts?.includeDeleted) {
         queryBuilder = queryBuilder.withDeleted();
       }
@@ -115,7 +112,6 @@ export class CommandRepository
     });
 
     try {
-      // First, get all recipes for the space with user information
       const recipes = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],

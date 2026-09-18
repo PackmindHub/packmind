@@ -16,11 +16,6 @@ export type MarketplacePluginRemovalTrigger =
   | 'from_marketplace'
   | 'from_packmind_package';
 
-/**
- * Payload emitted when a marketplace plugin removal is initiated (either
- * manually by an admin or via the package-delete cascade). `userId` and
- * `organizationId` are merged in via the `UserEvent` base.
- */
 export interface MarketplacePluginRemovalInitiatedPayload {
   marketplaceId: MarketplaceId;
   distributionId: MarketplaceDistributionId;

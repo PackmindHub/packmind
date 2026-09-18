@@ -19,12 +19,10 @@ export class GetCurrentApiKeyUseCase implements IGetCurrentApiKeyUseCase {
       userId: command.userId,
     });
 
-    // For now, this is a simplified implementation since we don't store API keys
-    // In a full implementation, you might want to track issued keys and their expiration
-    // This could involve storing API key metadata in the database
-
+    // API keys are stateless signed tokens with no persisted record, so there
+    // is nothing to look up and this is always false.
     return {
-      hasApiKey: false, // We don't track existing keys in this simplified version
+      hasApiKey: false,
     };
   }
 }

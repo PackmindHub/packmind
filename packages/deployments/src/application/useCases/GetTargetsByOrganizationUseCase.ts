@@ -27,7 +27,6 @@ export class GetTargetsByOrganizationUseCase implements IGetTargetsByOrganizatio
     });
 
     try {
-      // First, get all repositories for the organization
       const repositories = await this.gitPort.getOrganizationRepositories(
         command.organizationId as OrganizationId,
       );
@@ -37,7 +36,6 @@ export class GetTargetsByOrganizationUseCase implements IGetTargetsByOrganizatio
         repositoryCount: repositories.length,
       });
 
-      // Then, get all targets for all repositories with repository information
       const allTargetsWithRepository: TargetWithRepository[] = [];
 
       for (const repository of repositories) {
@@ -45,7 +43,6 @@ export class GetTargetsByOrganizationUseCase implements IGetTargetsByOrganizatio
           repository.id,
         );
 
-        // Map targets to include repository information
         const targetsWithRepo = targets.map((target) => ({
           ...target,
           repository: {

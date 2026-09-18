@@ -15,16 +15,9 @@ const origin = 'RenameRecipesToCommands1811000000000';
  * (The auto-generated FKs / PKs whose names are opaque hashes are left as-is —
  * their column/table references are updated automatically by Postgres.)
  *
- * Objects covered (all verified to currently exist):
- *   Tables : recipes, recipe_versions, package_recipes,
- *            distributed_package_recipe_versions
- *   Columns: <command_versions>.recipe_id, <package_commands>.recipe_id,
- *            <distributed_package_command_versions>.recipe_version_id
- *   Indexes: idx_recipe_user, idx_recipe_space, idx_package_recipes_unique,
- *            idx_dprv_unique
- *   FKs    : FK_recipe_user, FK_recipe_space, FK_package_recipes_package,
- *            FK_package_recipes_recipe, FK_dprv_recipe_version,
- *            FK_dprv_distributed_package
+ * Order matters within each direction: `up()` renames the tables first and
+ * `down()` restores them last, so every column and constraint statement in
+ * between addresses the tables by their `command*` names.
  */
 export class RenameRecipesToCommands1811000000000 implements MigrationInterface {
   constructor(
@@ -35,7 +28,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
     this.logger.info('Starting migration: RenameRecipesToCommands');
 
     try {
-      // 1) Rename tables
       this.logger.debug('Renaming tables recipe* -> command*');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "recipes" RENAME TO "commands"',
@@ -50,7 +42,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER TABLE IF EXISTS "distributed_package_recipe_versions" RENAME TO "distributed_package_command_versions"',
       );
 
-      // 2) Rename columns (referencing the NEW table names)
       this.logger.debug('Renaming recipe_id / recipe_version_id columns');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "command_versions" RENAME COLUMN "recipe_id" TO "command_id"',
@@ -62,7 +53,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER TABLE IF EXISTS "distributed_package_command_versions" RENAME COLUMN "recipe_version_id" TO "command_version_id"',
       );
 
-      // 3) Rename indexes
       this.logger.debug('Renaming indexes idx_recipe* -> idx_command*');
       await queryRunner.query(
         'ALTER INDEX IF EXISTS "idx_recipe_user" RENAME TO "idx_command_user"',
@@ -77,7 +67,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER INDEX IF EXISTS "idx_dprv_unique" RENAME TO "idx_dpcv_unique"',
       );
 
-      // 4) Rename foreign-key constraints (referencing the NEW table names)
       this.logger.debug('Renaming foreign-key constraints');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "commands" RENAME CONSTRAINT "FK_recipe_user" TO "FK_command_user"',
@@ -113,7 +102,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
     this.logger.info('Starting rollback: RenameRecipesToCommands');
 
     try {
-      // 4') Restore foreign-key constraint names (tables still named command*)
       this.logger.debug('Restoring foreign-key constraint names');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "distributed_package_command_versions" RENAME CONSTRAINT "FK_dpcv_distributed_package" TO "FK_dprv_distributed_package"',
@@ -134,7 +122,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER TABLE IF EXISTS "commands" RENAME CONSTRAINT "FK_command_user" TO "FK_recipe_user"',
       );
 
-      // 3') Restore index names
       this.logger.debug('Restoring index names');
       await queryRunner.query(
         'ALTER INDEX IF EXISTS "idx_dpcv_unique" RENAME TO "idx_dprv_unique"',
@@ -149,7 +136,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER INDEX IF EXISTS "idx_command_user" RENAME TO "idx_recipe_user"',
       );
 
-      // 2') Restore column names (tables still named command*)
       this.logger.debug('Restoring column names');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "distributed_package_command_versions" RENAME COLUMN "command_version_id" TO "recipe_version_id"',
@@ -161,7 +147,6 @@ export class RenameRecipesToCommands1811000000000 implements MigrationInterface 
         'ALTER TABLE IF EXISTS "command_versions" RENAME COLUMN "command_id" TO "recipe_id"',
       );
 
-      // 1') Restore table names
       this.logger.debug('Restoring table names');
       await queryRunner.query(
         'ALTER TABLE IF EXISTS "distributed_package_command_versions" RENAME TO "distributed_package_recipe_versions"',

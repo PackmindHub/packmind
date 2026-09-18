@@ -4,8 +4,6 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'AddInstalledRevisionToPluginInstallations1811000000000';
 
 /**
- * Migration: AddInstalledRevisionToPluginInstallations
- *
  * Adds the `installed_revision` column to `plugin_installations`. The revision
  * is a content hash derived from the distribution's version fingerprint, baked
  * into the tracking-hook env sidecar at publish and reported back by the

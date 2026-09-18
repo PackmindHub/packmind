@@ -6,7 +6,6 @@ import { Configuration } from '../config/config/Configuration';
 import nodemailer, { SentMessageInfo } from 'nodemailer';
 import SMTPPool from 'nodemailer/lib/smtp-pool';
 
-// Mock external dependencies
 jest.mock('../config/config/Configuration');
 jest.mock('nodemailer');
 
@@ -138,7 +137,6 @@ Test content here
 
     describe('when SMTP is not configured', () => {
       beforeEach(() => {
-        // Mock isConfigured to return false
         MockedConfiguration.getConfig.mockImplementation((key: string) => {
           if (key === 'SMTP_HOST') return Promise.resolve(null);
           if (key === 'SMTP_PORT') return Promise.resolve(null);
@@ -157,7 +155,6 @@ Test content here
       });
 
       it('calls buildMessageForLogging', async () => {
-        // Spy on buildMessageForLogging method
         const buildMessageSpy = jest.spyOn(service, 'buildMessageForLogging');
 
         await service.sendEmail({ recipient, subject, contentHtml });
@@ -177,7 +174,8 @@ Test content here
           contentHtml,
         );
 
-        // Packmind does not allow testing mockLogger, but here this is a business decision to check ;)
+        // Asserting on the logger, against the usual rule: logging the whole
+        // message is the behaviour being specified here, not a side effect.
         const infoStub = mockLogger.info;
         expect(infoStub).toHaveBeenCalledWith(expectedMessage);
       });
@@ -242,7 +240,8 @@ Test content here
           contentHtml,
         );
 
-        // Packmind does not allow testing mockLogger, but here this is a business decision to check ;)
+        // Asserting on the logger, against the usual rule: logging the whole
+        // message is the behaviour being specified here, not a side effect.
         const infoStub = mockLogger.info;
         expect(infoStub).toHaveBeenCalledWith(expectedMessage);
       });

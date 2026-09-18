@@ -181,18 +181,15 @@ export class TargetRepository
     this.logger.info('Updating target by ID', { id, updates });
 
     try {
-      // First check if target exists
       const existingTarget = await this.findById(id);
       if (!existingTarget) {
         throw new Error(`No target with id ${id} found`);
       }
 
-      // Prevent updating Root target (path '/')
       if (existingTarget.path === '/') {
         throw new Error('Root target cannot be updated');
       }
 
-      // Update the target
       const result = await this.repository
         .createQueryBuilder()
         .update()
@@ -204,7 +201,6 @@ export class TargetRepository
         throw new Error(`No target with id ${id} found`);
       }
 
-      // Fetch and return the updated target
       const updatedTarget = await this.findById(id);
       if (!updatedTarget) {
         throw new Error(`Failed to retrieve updated target with id ${id}`);

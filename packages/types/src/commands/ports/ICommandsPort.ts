@@ -17,68 +17,43 @@ import { Command } from '../Command';
 import { CommandId } from '../CommandId';
 import { CommandVersion, CommandVersionId } from '../CommandVersion';
 
-// QueryOption is now exported from @packmind/types/database/types
 import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces';
 
 export const ICommandsPortName = 'ICommandsPort' as const;
 
-/**
- * Port interface for the Recipes domain.
- * Defines all public methods that can be consumed by other domains.
- */
 export interface ICommandsPort {
-  // ===========================
-  // CORE RECIPE MANAGEMENT
-  // ===========================
-
-  /**
-   * Capture a new recipe with initial content
-   */
   captureCommand(command: CaptureCommandCommand): Promise<Command>;
 
-  /**
-   * Capture a new recipe and add it to packages in a single operation
-   */
+  /** Captures the command and adds it to its packages in one operation. */
   captureCommandWithPackages(
     command: CaptureCommandWithPackagesCommand,
   ): Promise<CaptureCommandWithPackagesResponse>;
 
-  /**
-   * Delete a recipe and all its versions
-   */
+  /** Takes every version of the command with it. */
   deleteCommand(command: DeleteCommandCommand): Promise<DeleteCommandResponse>;
 
-  /**
-   * Delete multiple recipes in batch
-   */
   deleteCommandsBatch(
     command: DeleteCommandsBatchCommand,
   ): Promise<DeleteCommandsBatchResponse>;
 
-  /**
-   * Get a recipe by its ID (public API - with access control)
-   */
+  /** Access-controlled; use getCommandByIdInternal to bypass the checks. */
   getCommandById(command: GetCommandByIdCommand): Promise<Command | null>;
 
   /**
-   * Get a recipe by its ID (internal use - no access control)
-   * Used by UpdateRecipeFromUI
+   * No access control. For callers already authorized elsewhere — the
+   * package use cases and the change appliers, which resolve commands by id
+   * outside any space context.
    */
   getCommandByIdInternal(id: CommandId): Promise<Command | null>;
 
-  /**
-   * Find a recipe by its slug within an organization
-   */
   findCommandBySlug(
     slug: string,
     organizationId: OrganizationId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Command | null>;
 
-  /**
-   * List recipes by space (public API - with access control)
-   */
+  /** Access-controlled; use listAllCommandsByOrganization to bypass the checks. */
   listCommandsBySpace(command: ListCommandsBySpaceCommand): Promise<Command[]>;
 
   /**
@@ -90,24 +65,11 @@ export interface ICommandsPort {
     organizationId: OrganizationId,
   ): Promise<Command[]>;
 
-  /**
-   * Count recipes grouped by space ID, omitting spaces with zero recipes.
-   * Used for management listing aggregations.
-   */
+  /** Spaces with no command are absent from the Map, not zero. */
   countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
 
-  // ===========================
-  // RECIPE VERSION MANAGEMENT
-  // ===========================
-
-  /**
-   * List all versions of a recipe
-   */
   listCommandVersions(recipeId: CommandId): Promise<CommandVersion[]>;
 
-  /**
-   * Get a specific version of a recipe
-   */
   getCommandVersion(
     recipeId: CommandId,
     version: number,
@@ -116,35 +78,24 @@ export interface ICommandsPort {
 
   getLatestCommandVersions(recipeIds: CommandId[]): Promise<CommandVersion[]>;
 
-  /**
-   * Get a recipe version by its ID
-   */
   getCommandVersionById(id: string): Promise<CommandVersion | null>;
 
   getCommandVersionsByIds(
     commandVersionIds: CommandVersionId[],
   ): Promise<CommandVersion[]>;
 
-  /**
-   * Update a recipe from UI with new content (creates new version)
-   */
+  /** Creates a new CommandVersion rather than mutating the current one. */
   updateCommandFromUI(
     command: UpdateCommandFromUICommand,
   ): Promise<UpdateCommandFromUIResponse>;
 
-  /**
-   * Hard-delete a recipe (permanent, no soft-delete). Used for rollback only.
-   */
+  /** Permanent, not a soft delete. Used for rollback only. */
   hardDeleteCommand(recipeId: CommandId): Promise<void>;
 
-  /**
-   * Hard-delete a recipe version (permanent). Used for rollback only.
-   */
+  /** Permanent, not a soft delete. Used for rollback only. */
   hardDeleteCommandVersion(versionId: CommandVersionId): Promise<void>;
 
-  /**
-   * Duplicate a recipe and its full entity graph into a destination space.
-   */
+  /** Copies the full entity graph, not just the Command row. */
   duplicateCommandToSpace(
     recipeId: CommandId,
     destinationSpaceId: SpaceId,

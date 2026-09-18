@@ -31,7 +31,6 @@ export class ListUserOrganizationsUseCase implements IListUserOrganizationsUseCa
         return { organizations: [] };
       }
 
-      // Extract organizations from user memberships
       const organizations: Organization[] = user.memberships
         .filter((membership) => membership.organization)
         .map((membership) => membership.organization as Organization);

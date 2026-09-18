@@ -31,7 +31,6 @@ export class ListPackagesUseCase
     });
 
     try {
-      // Get all packages for the organization
       const packages = await this.services
         .getPackageService()
         .getPackagesByOrganizationId(command.organizationId);

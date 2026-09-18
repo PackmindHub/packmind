@@ -42,7 +42,6 @@ export class GetSkillVersionUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       if (!this.spacesPort) {
         this.logger.error('SpacesPort not available for space validation');
         throw new Error('SpacesPort not available');
@@ -68,7 +67,6 @@ export class GetSkillVersionUseCase
 
       const skillId = createSkillId(command.skillId);
 
-      // Verify the skill exists and belongs to the space
       const skill = await this.skillService.getSkillById(skillId);
       if (!skill) {
         this.logger.warn('Skill not found', { skillId: command.skillId });

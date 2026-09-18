@@ -19,7 +19,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definitions
   private readonly packagesTable = new Table({
     name: 'packages',
     columns: [
@@ -86,7 +85,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
     ],
   });
 
-  // Foreign key definitions
   private readonly packagesSpaceForeignKey = new TableForeignKey({
     columnNames: ['space_id'],
     referencedTableName: 'spaces',
@@ -131,12 +129,10 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
     this.logger.info('Starting migration: CreatePackagesTable');
 
     try {
-      // Create packages table
       this.logger.debug('Creating packages table');
       await queryRunner.createTable(this.packagesTable);
       this.logger.info('Successfully created packages table');
 
-      // Create index on space_id for efficient queries
       this.logger.debug('Creating index on space_id');
       await queryRunner.createIndex(
         'packages',
@@ -147,7 +143,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
       );
       this.logger.info('Successfully created index on space_id');
 
-      // Create unique index on slug
       this.logger.debug('Creating unique index on slug');
       await queryRunner.createIndex(
         'packages',
@@ -159,7 +154,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
       );
       this.logger.info('Successfully created unique index on slug');
 
-      // Create foreign key constraint to spaces table
       this.logger.debug('Adding foreign key constraint to spaces table');
       await queryRunner.createForeignKey(
         'packages',
@@ -169,12 +163,10 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully added foreign key constraint to spaces table',
       );
 
-      // Create package_recipes join table
       this.logger.debug('Creating package_recipes join table');
       await queryRunner.createTable(this.packageRecipesTable);
       this.logger.info('Successfully created package_recipes join table');
 
-      // Create unique index on package_recipes
       this.logger.debug('Creating unique index on package_recipes');
       await queryRunner.createIndex(
         'package_recipes',
@@ -186,7 +178,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
       );
       this.logger.info('Successfully created unique index on package_recipes');
 
-      // Create foreign keys for package_recipes
       this.logger.debug(
         'Adding foreign key constraints to package_recipes table',
       );
@@ -202,12 +193,10 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully added foreign key constraints to package_recipes table',
       );
 
-      // Create package_standards join table
       this.logger.debug('Creating package_standards join table');
       await queryRunner.createTable(this.packageStandardsTable);
       this.logger.info('Successfully created package_standards join table');
 
-      // Create unique index on package_standards
       this.logger.debug('Creating unique index on package_standards');
       await queryRunner.createIndex(
         'package_standards',
@@ -221,7 +210,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully created unique index on package_standards',
       );
 
-      // Create foreign keys for package_standards
       this.logger.debug(
         'Adding foreign key constraints to package_standards table',
       );
@@ -250,7 +238,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
     this.logger.info('Starting rollback: CreatePackagesTable');
 
     try {
-      // Drop foreign keys for package_standards first
       this.logger.debug(
         'Dropping foreign key constraints from package_standards table',
       );
@@ -266,7 +253,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully dropped foreign key constraints from package_standards table',
       );
 
-      // Drop index on package_standards
       this.logger.debug('Dropping index on package_standards');
       await queryRunner.dropIndex(
         'package_standards',
@@ -274,12 +260,10 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
       );
       this.logger.info('Successfully dropped index on package_standards');
 
-      // Drop package_standards table
       this.logger.debug('Dropping package_standards table');
       await queryRunner.dropTable('package_standards', true);
       this.logger.info('Successfully dropped package_standards table');
 
-      // Drop foreign keys for package_recipes
       this.logger.debug(
         'Dropping foreign key constraints from package_recipes table',
       );
@@ -295,7 +279,6 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully dropped foreign key constraints from package_recipes table',
       );
 
-      // Drop index on package_recipes
       this.logger.debug('Dropping index on package_recipes');
       await queryRunner.dropIndex(
         'package_recipes',
@@ -303,12 +286,10 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
       );
       this.logger.info('Successfully dropped index on package_recipes');
 
-      // Drop package_recipes table
       this.logger.debug('Dropping package_recipes table');
       await queryRunner.dropTable('package_recipes', true);
       this.logger.info('Successfully dropped package_recipes table');
 
-      // Drop foreign key constraint from packages table
       this.logger.debug('Dropping foreign key constraint from packages table');
       await queryRunner.dropForeignKey(
         'packages',
@@ -318,13 +299,11 @@ export class CreatePackagesTable1761400000000 implements MigrationInterface {
         'Successfully dropped foreign key constraint from packages table',
       );
 
-      // Drop indices
       this.logger.debug('Dropping indices on packages');
       await queryRunner.dropIndex('packages', 'idx_packages_slug');
       await queryRunner.dropIndex('packages', 'idx_packages_space');
       this.logger.info('Successfully dropped indices on packages');
 
-      // Drop packages table
       this.logger.debug('Dropping packages table');
       await queryRunner.dropTable('packages', true);
       this.logger.info('Successfully dropped packages table');

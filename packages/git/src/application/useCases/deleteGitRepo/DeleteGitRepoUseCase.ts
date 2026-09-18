@@ -33,28 +33,23 @@ export class DeleteGitRepoUseCase
   ): Promise<DeleteGitRepoResponse> {
     const { repositoryId, userId, providerId, organization } = command;
 
-    // Business rule: repository ID is required
     if (!repositoryId) {
       throw new Error('Repository ID is required');
     }
 
-    // Business rule: repository must exist. We use the type-ignoring finder
-    // here so this use case can serve both standard and marketplace deletion
-    // paths — `UnlinkMarketplaceUseCase` routes through `IGitPort.deleteGitRepo`
-    // to soft-delete the marketplace-typed `GitRepo`, and the default
-    // `findGitRepoById` filters those out.
+    // Type-ignoring finder: this use case serves both the standard and the
+    // marketplace deletion path, and the default `findGitRepoById` filters
+    // marketplace-typed rows out.
     const repository =
       await this.gitRepoService.findGitRepoByIdIgnoringType(repositoryId);
     if (!repository) {
       throw new GitRepoNotFoundError(repositoryId);
     }
 
-    // Business rule: if providerId is specified, validate ownership
     if (providerId && repository.providerId !== providerId) {
       throw new Error('Repository does not belong to the specified provider');
     }
 
-    // Business rule: validate that the associated provider exists
     const gitProvider = await this.gitProviderService.findGitProviderById(
       repository.providerId,
     );
@@ -69,7 +64,6 @@ export class DeleteGitRepoUseCase
       );
     }
 
-    // Delete the repository
     await this.gitRepoService.deleteGitRepo(repositoryId, createUserId(userId));
 
     return {};

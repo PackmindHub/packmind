@@ -38,44 +38,25 @@ export interface IGitRepo {
 
   /**
    * Batched sibling of `listFilesInDirectory`: the files under each of
-   * `paths`, concatenated in the order the paths were given.
+   * `paths`, concatenated in the order the paths were given. Overlapping
+   * paths (`a` and `a/b`) report the nested files under both, exactly as
+   * calling the singular form for each would.
    *
-   * Exists because expanding a directory deletion into file deletions used to
-   * call the singular form once per directory, and on GitHub each of those
-   * calls walks `ref -> commit -> tree?recursive=1` and then filters a
-   * listing of the *whole* repository down to one directory. Deleting 112
-   * directories therefore cost 336 requests, run one after another, to answer
-   * a question a single tree already answers. Implementations that can serve
-   * every path from one listing must do so, which makes the request count
-   * independent of how many directories are being deleted.
-   *
-   * A path with no files under it contributes nothing. Overlapping paths
-   * (`a` and `a/b`) report the nested files under both, exactly as calling the
-   * singular form for each would.
+   * Implementations that can serve every path from a single provider listing
+   * MUST do so: on GitHub the singular form walks
+   * `ref -> commit -> tree?recursive=1` per call, so expanding a directory
+   * deletion would otherwise cost requests proportional to the number of
+   * directories to answer a question one recursive tree already answers.
    */
   listFilesInDirectories(
     paths: string[],
     branch: string,
   ): Promise<{ path: string }[]>;
 
-  /**
-   * Ensure a target branch exists on the repository, creating it from the
-   * repository's configured base branch when missing.
-   *
-   * No-op when the target branch already exists.
-   *
-   * @param targetBranch - The branch name to ensure exists
-   */
+  /** No-op when the target branch already exists. */
   createBranchFromBase(targetBranch: string): Promise<void>;
 
-  /**
-   * Delete a branch on the repository. No-op when the branch is already
-   * absent (404 from the provider). Used by the marketplace accept-drift
-   * flow to retire the rolling `packmind/sync` branch so the next publish
-   * starts from a clean merge-base against the default branch.
-   *
-   * @param targetBranch - The branch name to delete
-   */
+  /** No-op when the branch is already absent (404 from the provider). */
   deleteBranch(targetBranch: string): Promise<void>;
 
   /**
@@ -84,12 +65,8 @@ export interface IGitRepo {
    * (rolling-PR semantics).
    *
    * On the update path the existing PR's title and body are refreshed so a
-   * recomputed description (e.g. the marketplace sync PR's change summary)
-   * replaces the previous one. A failure to refresh is swallowed by the
-   * implementations — the caller still gets the existing PR's URL.
-   *
-   * @param command - PR head / title / body
-   * @returns The PR URL, provider-side number, and whether it was created
+   * recomputed description replaces the previous one. A failure to refresh is
+   * swallowed — the caller still gets the existing PR's URL.
    */
   openOrUpdatePullRequest(command: {
     head: string;
@@ -98,9 +75,8 @@ export interface IGitRepo {
   }): Promise<{ url: string; number: number; wasCreated: boolean }>;
 
   /**
-   * Find an OPEN pull request whose head is `head` targeting the repo's
-   * configured base branch. Returns `null` when none is open. Used by the
-   * marketplace reconcile to surface a pending "Packmind sync" PR.
+   * Open pull request from `head` to the repository's configured base branch,
+   * or `null` when none is open.
    */
   findOpenPullRequest(
     head: string,
@@ -108,21 +84,16 @@ export interface IGitRepo {
 
   /**
    * File-level diff of `head` against `base`, i.e. what a pull request from
-   * `head` into `base` would change.
-   *
-   * Used by the marketplace sync PR to describe its own contents. Returns an
-   * empty, non-truncated comparison when either branch is missing — an absent
-   * branch means "nothing to compare", not an error.
-   *
-   * @param base - The branch changes are measured against (the merge target)
-   * @param head - The branch carrying the changes
+   * `head` into `base` would change. Returns an empty, non-truncated
+   * comparison when either branch is missing — an absent branch means
+   * "nothing to compare", not an error.
    */
   compareBranches(base: string, head: string): Promise<GitBranchComparison>;
 
   /**
    * Probe whether the repository is currently reachable with the configured
-   * credentials. Distinguishes the three failure modes the marketplaces page
-   * surfaces, so the caller never has to infer them from raw exceptions.
+   * credentials, mapping provider exceptions onto the failure modes callers
+   * report instead of letting them leak.
    */
   checkRepositoryExists(): Promise<{
     exists: boolean;

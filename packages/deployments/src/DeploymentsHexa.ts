@@ -35,11 +35,8 @@ const origin = 'DeploymentsHexa';
 export type DeploymentsHexaOpts = BaseHexaOpts;
 
 /**
- * DeploymentsHexa - Facade for the Deployments domain following the Hexa pattern.
- *
- * This class serves as the main entry point for deployment functionality.
- * It handles the deployment of recipes and standards to git repositories
- * and tracks deployment history.
+ * Facade for the Deployments domain: distributes commands, standards and skills
+ * to git repositories, and records the distribution history.
  */
 export class DeploymentsHexa extends BaseHexa<
   DeploymentsHexaOpts,
@@ -58,20 +55,17 @@ export class DeploymentsHexa extends BaseHexa<
     this.logger.info('Constructing DeploymentsHexa');
 
     try {
-      // Initialize repositories aggregator
       this.repositories = new DeploymentsRepositories(this.dataSource);
 
-      // Initialize services (no longer depends on GitPort)
       this.services = new DeploymentsServices(this.repositories);
 
-      // Create adapter in constructor - ports will be set during initialize()
+      // Adapter and listener are constructed bare; initialize() wires their ports.
       this.adapter = new DeploymentsAdapter(
         this.services,
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
       );
 
-      // Create listener - will be initialized during initialize()
       this.listener = new DeploymentsListener(
         this.repositories.getPackageRepository(),
       );
@@ -85,14 +79,10 @@ export class DeploymentsHexa extends BaseHexa<
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing DeploymentsHexa (adapter retrieval phase)');
 
     try {
-      // Get all required ports - let errors propagate
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
       const commandsPort =
         registry.getAdapter<ICommandsPort>(ICommandsPortName);
@@ -109,7 +99,6 @@ export class DeploymentsHexa extends BaseHexa<
         PackmindEventEmitterService,
       );
 
-      // Initialize adapter with all ports
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
         [ICommandsPortName]: commandsPort,
@@ -122,7 +111,6 @@ export class DeploymentsHexa extends BaseHexa<
         eventEmitterService,
       });
 
-      // Initialize listener with event emitter service
       this.listener.initialize(eventEmitterService);
 
       this.logger.info('DeploymentsHexa initialized successfully');
@@ -134,26 +122,15 @@ export class DeploymentsHexa extends BaseHexa<
     }
   }
 
-  /**
-   * Destroys the DeploymentsHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying DeploymentsHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('DeploymentsHexa destroyed');
   }
 
-  /**
-   * Get the Deployments adapter for cross-domain access to deployments data.
-   * This adapter implements IDeploymentPort and can be injected into other domains.
-   */
   public getAdapter(): IDeploymentPort {
     return this.adapter.getPort();
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return IDeploymentPortName;
   }

@@ -3,24 +3,6 @@ import { MarketplaceErrorKind } from '../MarketplaceErrorKind';
 import { MarketplaceId } from '../MarketplaceId';
 import { MarketplaceState } from '../MarketplaceState';
 
-/**
- * Applies the current repository descriptor as the new Packmind-side baseline,
- * resolving an active drift on a marketplace. Always re-fetches the descriptor
- * first (no freshness debounce) so the accept never persists a stale snapshot,
- * then:
- *   - transitions every `success` distribution whose slug vanished from the
- *     descriptor to `removed` (terminal),
- *   - strips the `driftedPluginSlugs` annotation from the stored descriptor,
- *   - flips the marketplace state to `healthy`.
- *
- * No-op when the reconciliation shows the drift has self-resolved
- * (`state === 'healthy'`). When the reconciliation lands on `unreachable` or
- * `bad_format`, returns that state without mutating anything so the caller can
- * surface the right error message.
- *
- * Member-scoped: any org member who can see the marketplace can accept its
- * drift (mirrors the existing on-demand "Sync now" access model).
- */
 export type AcceptMarketplaceDriftCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
 };
@@ -41,6 +23,15 @@ export type AcceptMarketplaceDriftResponse = {
   acceptedRemovedSlugs: string[];
 };
 
+/**
+ * Always re-fetches the descriptor first (no freshness debounce) so the accept
+ * never persists a stale snapshot. When the re-fetch lands on `unreachable` or
+ * `bad_format`, that state is returned without mutating anything, so the caller
+ * can surface the right error message; a drift that resolved itself is a no-op.
+ *
+ * Member-scoped, mirroring the on-demand "Sync now" access model: any org
+ * member who can see the marketplace can accept its drift.
+ */
 export type IAcceptMarketplaceDriftUseCase = IUseCase<
   AcceptMarketplaceDriftCommand,
   AcceptMarketplaceDriftResponse

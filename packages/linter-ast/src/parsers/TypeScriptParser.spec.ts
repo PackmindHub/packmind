@@ -1,6 +1,5 @@
 import TypeScriptParser from './TypeScriptParser';
 
-// Skip these tests as they require WASM files which are not available in test environment
 describe.skip('TypeScriptParser', () => {
   let parser: TypeScriptParser;
 

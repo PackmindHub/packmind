@@ -55,7 +55,6 @@ export class AddArtefactsToPackageUseCase
       skillCount: skillIds.length,
     });
 
-    // Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
@@ -67,7 +66,6 @@ export class AddArtefactsToPackageUseCase
       );
     }
 
-    // Validate package exists
     const existingPackage = await this.services
       .getPackageService()
       .findById(packageId);
@@ -81,12 +79,10 @@ export class AddArtefactsToPackageUseCase
       );
     }
 
-    // Get current artefacts to filter out duplicates
     const currentCommandIds = existingPackage.recipes || [];
     const currentStandardIds = existingPackage.standards || [];
     const currentSkillIds = existingPackage.skills || [];
 
-    // Filter out artefacts that are already in the package
     const newCommandIds = recipeIds.filter(
       (recipeId) => !currentCommandIds.includes(recipeId),
     );
@@ -108,7 +104,6 @@ export class AddArtefactsToPackageUseCase
       currentSkillIds.includes(skillId),
     );
 
-    // Validate all new recipes belong to the space
     if (newCommandIds.length > 0) {
       const recipes = await Promise.all(
         newCommandIds.map((recipeId) =>
@@ -129,7 +124,6 @@ export class AddArtefactsToPackageUseCase
       }
     }
 
-    // Validate all new standards belong to the space
     if (newStandardIds.length > 0) {
       const standards = await Promise.all(
         newStandardIds.map((standardId) =>
@@ -150,7 +144,6 @@ export class AddArtefactsToPackageUseCase
       }
     }
 
-    // Validate all new skills belong to the space
     if (newSkillIds.length > 0) {
       const skills = await Promise.all(
         newSkillIds.map((skillId) => this.skillsPort.getSkill(skillId)),
@@ -169,7 +162,6 @@ export class AddArtefactsToPackageUseCase
       }
     }
 
-    // Add new artefacts to package
     const packageRepository = this.services
       .getRepositories()
       .getPackageRepository();
@@ -186,7 +178,6 @@ export class AddArtefactsToPackageUseCase
       await packageRepository.addSkills(packageId, newSkillIds);
     }
 
-    // Fetch updated package
     const updatedPackage = await this.services
       .getPackageService()
       .findById(packageId);

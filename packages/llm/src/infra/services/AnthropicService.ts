@@ -39,16 +39,10 @@ export class AnthropicService implements AIService {
     this.logger.info('AnthropicService initialized');
   }
 
-  /**
-   * Check if the Anthropic service is properly configured and ready to use
-   */
   async isConfigured(): Promise<boolean> {
     return !!this.apiKey;
   }
 
-  /**
-   * Initialize the Anthropic client with the injected API key
-   */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -64,7 +58,7 @@ export class AnthropicService implements AIService {
 
     this.client = new Anthropic({
       apiKey: this.apiKey,
-      timeout: 60 * 1000, // 1 minute timeout in milliseconds
+      timeout: 60 * 1000,
     });
 
     this.initialized = true;
@@ -77,9 +71,6 @@ export class AnthropicService implements AIService {
       : this.defaultModel;
   }
 
-  /**
-   * Execute a prompt with retry mechanism and return typed result
-   */
   async executePrompt<T = string>(
     prompt: string,
     options: AIPromptOptions = {},
@@ -165,16 +156,13 @@ export class AnthropicService implements AIService {
             response.usage.input_tokens + response.usage.output_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -230,9 +218,6 @@ export class AnthropicService implements AIService {
     };
   }
 
-  /**
-   * Execute a prompt with conversation history
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options: AIPromptOptions = {},
@@ -272,7 +257,6 @@ export class AnthropicService implements AIService {
           );
         }
 
-        // Convert PromptConversation to Anthropic message format
         const messages = conversationHistory.map((conv) => ({
           role: this.mapRoleToAnthropic(conv.role),
           content: conv.message,
@@ -317,16 +301,13 @@ export class AnthropicService implements AIService {
             response.usage.input_tokens + response.usage.output_tokens,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -382,9 +363,6 @@ export class AnthropicService implements AIService {
     };
   }
 
-  /**
-   * Map PromptConversationRole to Anthropic role format
-   */
   private mapRoleToAnthropic(
     role: PromptConversationRole,
   ): 'user' | 'assistant' {
@@ -394,16 +372,14 @@ export class AnthropicService implements AIService {
       case PromptConversationRole.ASSISTANT:
         return 'assistant';
       case PromptConversationRole.SYSTEM:
-        // Anthropic handles system messages differently, map to user for now
+        // Anthropic takes the system prompt in a top-level `system` parameter,
+        // not as a message role, so a system turn is folded into the user role.
         return 'user';
       default:
         return 'user';
     }
   }
 
-  /**
-   * Classify error type for retry logic
-   */
   private classifyError(error: unknown): AIServiceErrorType {
     if (error instanceof AIServiceError) {
       return error.type;
@@ -427,9 +403,6 @@ export class AnthropicService implements AIService {
     return AIServiceErrorTypes.API_ERROR;
   }
 
-  /**
-   * Determine if we should retry based on error type and attempt number
-   */
   private shouldRetry(
     errorType: AIServiceErrorType,
     attempt: number,
@@ -439,12 +412,10 @@ export class AnthropicService implements AIService {
       return false;
     }
 
-    // Don't retry authentication errors
     if (errorType === AIServiceErrorTypes.AUTHENTICATION_ERROR) {
       return false;
     }
 
-    // Retry rate limits, network errors, and general API errors
     return [
       AIServiceErrorTypes.RATE_LIMIT,
       AIServiceErrorTypes.NETWORK_ERROR,
@@ -452,9 +423,6 @@ export class AnthropicService implements AIService {
     ].includes(errorType);
   }
 
-  /**
-   * Get a list of available model IDs from Anthropic
-   */
   async getModels(): Promise<string[]> {
     this.logger.info('Fetching available models from Anthropic');
 

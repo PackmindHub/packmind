@@ -23,8 +23,6 @@ describe('Package deployment integration', () => {
   let standard2: Standard;
   let commit: Awaited<ReturnType<typeof createGitCommit>>;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -46,9 +44,8 @@ describe('Package deployment integration', () => {
     fixture.snapshot();
   });
 
-  // Mock the git commit to prevent actual git operations during tests.
-  // With async deployment, the actual commit happens in the background job.
-  // Spies are restored after each test, so they are re-installed per test.
+  // The publish job runs inline in these tests, so the commit must be stubbed;
+  // spies are restored after each test, hence beforeEach rather than beforeAll.
   beforeEach(() => {
     jest
       .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')

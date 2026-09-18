@@ -4,9 +4,7 @@ export interface UserJoinedOrganizationPayload {
   email: string;
 }
 
-/**
- * Event emitted when an invited user activates their account and joins an organization.
- */
+/** Emitted on invitation acceptance, not on the signup that creates an org. */
 export class UserJoinedOrganizationEvent extends UserEvent<UserJoinedOrganizationPayload> {
   static override readonly eventName = 'accounts.user.joined-organization';
 }

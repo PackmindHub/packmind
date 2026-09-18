@@ -3,35 +3,16 @@ import { DefaultSkillMetadata } from '@packmind/coding-agent';
 import { getDefaultSkillId } from './defaultSkillIdUtils';
 
 /**
- * Pure-function enricher that stamps default-skill artifact metadata onto the
- * `FileModification[]` produced by `DefaultSkillsDeployer.deployDefaultSkills`.
+ * Stamps default-skill artifact metadata onto the `FileModification[]` produced
+ * by `DefaultSkillsDeployer.deployDefaultSkills`, matching a file to the
+ * deployed skill whose slug appears as one of its path segments. Unmatched
+ * files are returned untouched, so a foreign file can never be mis-tagged.
  *
- * Mirrors {@link enrichFileModificationsWithMetadata} (used by the user/package
- * install flow) but scoped to default-skill data the deployers already expose
- * — there are no DB lookups.
+ * The default-skill counterpart of {@link enrichFileModificationsWithMetadata},
+ * with no DB lookups: `deployedSkills` already carries everything needed.
  *
- * Matching strategy
- * -----------------
- * Default-skill deployers emit every file under a per-skill `basePath` that
- * embeds the skill's slug (e.g. `.test/skills/packmind-create-skill/SKILL.md`).
- * We match by checking whether the path contains a deployed-skill slug as a
- * `/`-bounded segment. The set of deployed slugs is provided by the caller via
- * `deployedSkills`, so the enricher never invents metadata for files it does
- * not own.
- *
- * Output guarantees
- * -----------------
- * - Files matched to a deployed skill receive `artifactType: 'skill'`,
- *   `artifactId: getDefaultSkillId(slug)` (a deterministic UUID — the
- *   content-by-versions endpoint queries a uuid-typed column, so even
- *   synthetic default-skill ids must be valid UUIDs), `artifactSlug: slug`,
- *   `artifactName`, `artifactVersion`, `source: 'default'`, plus zeroed
- *   `spaceId: ''` and `packageIds: []` (default skills are not scoped to a
- *   Packmind space or package).
- * - Files NOT matched to any deployed skill are returned untouched. This is
- *   defensive — in practice the deployer's output and `deployedSkills` should
- *   be 1:1 — but it guarantees the enricher can never accidentally mis-tag a
- *   foreign file.
+ * `spaceId` and `packageIds` come out empty because default skills belong to no
+ * Packmind space or package; on `artifactId`, see `defaultSkillIdUtils`.
  */
 export function enrichDefaultSkillsFileModifications(
   fileUpdates: FileUpdates,

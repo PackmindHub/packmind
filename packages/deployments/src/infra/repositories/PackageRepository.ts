@@ -65,7 +65,6 @@ export class PackageRepository
     this.logger.info('Finding packages by space ID', { spaceId });
 
     try {
-      // Fetch packages first
       const packages = await this.repository
         .createQueryBuilder('package')
         .where('package.space_id = :spaceId', { spaceId })
@@ -79,28 +78,25 @@ export class PackageRepository
 
       const packageIds = packages.map((p) => p.id);
 
-      // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
+      // Junction rows are deleted with their artifact (see DeploymentsListener).
       const commandRelations: PackageCommand[] = await this.repository.manager
         .getRepository(PackageCommandsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Fetch standard relations (relationships are cleaned up when standards are deleted)
       const standardRelations: PackageStandard[] = await this.repository.manager
         .getRepository(PackageStandardsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Fetch skill relations (relationships are cleaned up when skills are deleted)
       const skillRelations: PackageSkill[] = await this.repository.manager
         .getRepository(PackageSkillsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Group relations by package ID
       const commandsByPackage = commandRelations.reduce(
         (acc, rel) => {
           if (!acc[rel.package_id]) acc[rel.package_id] = [];
@@ -158,7 +154,6 @@ export class PackageRepository
     });
 
     try {
-      // Fetch packages first
       const packages = await this.repository
         .createQueryBuilder('package')
         .innerJoin('spaces', 'space', 'package.space_id = space.id')
@@ -175,28 +170,25 @@ export class PackageRepository
 
       const packageIds = packages.map((p) => p.id);
 
-      // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
+      // Junction rows are deleted with their artifact (see DeploymentsListener).
       const commandRelations: PackageCommand[] = await this.repository.manager
         .getRepository(PackageCommandsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Fetch standard relations (relationships are cleaned up when standards are deleted)
       const standardRelations: PackageStandard[] = await this.repository.manager
         .getRepository(PackageStandardsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Fetch skill relations (relationships are cleaned up when skills are deleted)
       const skillRelations: PackageSkill[] = await this.repository.manager
         .getRepository(PackageSkillsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
 
-      // Group relations by package ID
       const commandsByPackage = commandRelations.reduce(
         (acc, rel) => {
           if (!acc[rel.package_id]) acc[rel.package_id] = [];
@@ -336,7 +328,6 @@ export class PackageRepository
     this.logger.info('Finding package by ID', { packageId: id });
 
     try {
-      // Fetch package first
       const pkg = await this.repository
         .createQueryBuilder('package')
         .where('package.id = :id', { id })
@@ -347,7 +338,7 @@ export class PackageRepository
         return null;
       }
 
-      // Fetch recipe IDs separately (relationships are cleaned up when recipes are deleted)
+      // Junction rows are deleted with their artifact (see DeploymentsListener).
       const commandRelations = await this.repository.manager
         .createQueryBuilder()
         .select('pr.command_id', 'recipe_id')
@@ -355,7 +346,6 @@ export class PackageRepository
         .where('pr.package_id = :packageId', { packageId: id })
         .getRawMany();
 
-      // Fetch standard IDs separately (relationships are cleaned up when standards are deleted)
       const standardRelations = await this.repository.manager
         .createQueryBuilder()
         .select('ps.standard_id', 'standard_id')
@@ -363,7 +353,6 @@ export class PackageRepository
         .where('ps.package_id = :packageId', { packageId: id })
         .getRawMany();
 
-      // Fetch skill IDs separately (relationships are cleaned up when skills are deleted)
       const skillRelations = await this.repository.manager
         .createQueryBuilder()
         .select('psk.skill_id', 'skill_id')
@@ -492,10 +481,9 @@ export class PackageRepository
       return [];
     }
 
-    // Callers legitimately repeat a pair — the detection-programs use case
-    // keeps one entry per requested slug so it can emit one target each — and
-    // a repeated pair would only add a redundant branch to the `where` below.
-    // The entries are distinct objects, so the composite key does the keying.
+    // Callers may repeat a (space, slug) pair, which would only add a redundant
+    // branch to the `where` below. The entries are distinct objects, so the
+    // composite key does the keying.
     const uniqueEntries = [
       ...new Map(
         entries.map((entry) => [`${entry.spaceId}:${entry.slug}`, entry]),
@@ -507,10 +495,10 @@ export class PackageRepository
     });
 
     try {
-      // An array of conditions is an OR of ANDs, so every (slug, space) pair
-      // is matched exactly, in one query and with no cross-product to narrow
-      // down afterwards. Postgres tuple IN would say the same thing more
-      // tersely, but the in-memory database the tests run on lacks it.
+      // An array of conditions is an OR of ANDs, so every (slug, space) pair is
+      // matched exactly, with no cross-product to narrow down afterwards. A
+      // Postgres tuple IN would be terser, but pg-mem, which the tests run on,
+      // cannot cast a tuple to a list.
       const packages = await this.repository.find({
         where: uniqueEntries.map(({ slug, spaceId }) => ({ slug, spaceId })),
       });
@@ -726,7 +714,7 @@ export class PackageRepository
         const id = row.package_id as PackageId;
         counts.set(id, {
           recipes: commandCounts.get(id) ?? 0,
-          // Command-named twin of `recipes` (superset); same value.
+          // Same value under the command-named field the type also requires.
           commands: commandCounts.get(id) ?? 0,
           standards: standardCounts.get(id) ?? 0,
           skills: skillCounts.get(id) ?? 0,
@@ -744,21 +732,16 @@ export class PackageRepository
   }
 
   /**
-   * Records that the package changed, when what changed is what it holds.
-   *
-   * Membership lives in three join tables and is written straight into them,
-   * which the row's update-date column never sees: a package that had gained
-   * five components today still read as last touched the day it was named. The
-   * column had no reader at all before this, so this is what it now means for a
-   * package - the last time someone changed it as a package, by renaming it,
-   * describing it, or changing its contents.
+   * Membership lives in three join tables written straight into, which the
+   * package row's update date never sees. Every membership write calls this, so
+   * `updatedAt` means the last time someone changed the package as a package:
+   * renamed it, described it, or changed its contents.
    *
    * Here rather than in the use cases, next to the writes it has to accompany,
-   * so no caller can add a component and forget to say so. It is one statement
-   * per membership change rather than per component, and the callers already
-   * batch.
+   * so no caller can add a component and forget to say so. One statement per
+   * membership change rather than per component, and the callers already batch.
    *
-   * The three `remove...FromAllPackages` cascades deliberately do not touch:
+   * The three `remove...FromAllPackages` cascades deliberately do not call it:
    * they fire when a component is deleted from the space, which is not
    * something anyone did to the packages that happened to hold it, and it would
    * be one write per package on a delete.

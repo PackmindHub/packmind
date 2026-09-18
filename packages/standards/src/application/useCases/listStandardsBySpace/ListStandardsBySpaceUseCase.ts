@@ -40,7 +40,6 @@ export class ListStandardsBySpaceUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', {
@@ -60,8 +59,6 @@ export class ListStandardsBySpaceUseCase
         );
       }
 
-      // Get standards in the specified space
-      // Standards are now always space-specific, no organization-level standards
       const standardsInSpace = await this.standardService.listStandardsBySpace(
         command.spaceId,
         { includeDeleted: command.includeDeleted },

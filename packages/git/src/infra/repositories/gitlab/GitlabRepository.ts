@@ -16,11 +16,11 @@ const origin = 'GitlabRepository';
 /**
  * One entry of a GitLab recursive tree listing.
  *
- * `id` is the blob's SHA-1 - the same hash `gitBlobSha` computes from content
- * we hold locally - and `mode` is the Unix mode string, `100755` for an
- * executable file. Both are optional here because nothing in the response
- * guarantees them, and the callers treat a missing one as "cannot tell"
- * rather than as a value.
+ * `id` is the blob's SHA-1 — the same hash `gitBlobSha` computes from content
+ * held locally — and `mode` is the Unix mode string, `100755` for an
+ * executable file. Both are optional because nothing in the response
+ * guarantees them; callers read a missing one as "cannot tell", not as a
+ * value.
  */
 type GitlabTreeItem = {
   path: string;
@@ -61,14 +61,12 @@ export class GitlabRepository implements IGitRepo {
       branch: options.branch,
     });
 
-    // Handle both cases: user enters base GitLab URL or full API URL
+    // The configured URL may be either a GitLab base URL or a full API URL.
     const providedUrl = baseUrl || 'https://gitlab.com';
 
-    // If the URL already includes /api/v4, use it as-is, otherwise append it
     this.baseUrl = providedUrl.includes('/api/v4')
       ? providedUrl
       : `${providedUrl.replace(/\/$/, '')}/api/v4`;
-    // For GitLab, intelligently construct project path
     const normalizedRepo = this.normalizeRepo(options.repo);
 
     this.projectPath = `${options.owner}/${normalizedRepo}`;
@@ -90,9 +88,8 @@ export class GitlabRepository implements IGitRepo {
       timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
-        'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab docs
+        'PRIVATE-TOKEN': this.token,
       },
-      // Note: GitLab API docs show PRIVATE-TOKEN header authentication
       httpsAgent: providerHttpsAgent,
     });
 
@@ -102,19 +99,17 @@ export class GitlabRepository implements IGitRepo {
   }
 
   private normalizeRepo(repoName: string): string {
-    // For GitLab, if repo name has spaces, convert to kebab-case (GitLab standard)
+    // GitLab project paths are kebab-case, never spaced.
     return repoName.includes(' ')
       ? repoName.toLowerCase().replace(/\s+/g, '-')
       : repoName;
   }
 
   private normalizePath(path: string): string {
-    // Trim leading slashes
     let start = 0;
     while (start < path.length && path[start] === '/') {
       start++;
     }
-    // Trim trailing slashes
     let end = path.length;
     while (end > start && path[end - 1] === '/') {
       end--;
@@ -123,11 +118,9 @@ export class GitlabRepository implements IGitRepo {
   }
 
   /**
-   * Every blob in the repository, from one paginated walk.
-   *
-   * Shared by the commit diff and the directory listings: each used to run
-   * this loop for itself, so expanding N directory deletions walked the whole
-   * repository N times to answer what one listing already holds.
+   * Every blob in the repository, from one paginated walk. Shared by the
+   * commit diff and the directory listings so neither walks the repository
+   * for itself.
    */
   private async walkRepositoryTree(branch: string): Promise<GitlabTreeItem[]> {
     const allTreeItems: GitlabTreeItem[] = [];
@@ -157,7 +150,6 @@ export class GitlabRepository implements IGitRepo {
         allTreeItems.push(...treeResponse.data);
       }
 
-      // Check for pagination headers
       const headers = treeResponse.headers as Record<string, string>;
       nextPage = null;
 
@@ -178,7 +170,6 @@ export class GitlabRepository implements IGitRepo {
 
       pageNumber++;
 
-      // Safety check to prevent infinite loops
       if (pageNumber > 1000) {
         this.logger.warn(
           'Reached maximum page limit (1000) for GitLab tree listing',
@@ -198,14 +189,10 @@ export class GitlabRepository implements IGitRepo {
 
   /**
    * The repository's blobs keyed by normalised path, keeping the SHA and mode
-   * the listing already reported.
-   *
-   * Those two fields are what let `commitFiles` work out which files changed
-   * without downloading any of them: a blob SHA is a hash of the bytes, so
-   * hashing the content we mean to write answers the question locally. The
-   * walk used to be reduced to a bare set of paths with everything else
-   * discarded, which is why the diff then had to fetch every existing file
-   * back one request at a time.
+   * the listing reported. Those two fields are what let `commitFiles` decide
+   * which files changed without downloading any of them: a blob SHA is a hash
+   * of the bytes, so hashing the content to be written answers the question
+   * locally.
    */
   private async fetchRepositoryTree(
     branch: string,
@@ -221,13 +208,9 @@ export class GitlabRepository implements IGitRepo {
   }
 
   /**
-   * Which files changed, worked out from the tree alone.
-   *
-   * Every existing file used to be downloaded through the files API - batched
-   * ten at a time, batch after batch - so its decoded text could be compared
-   * with ours. The tree already carries a SHA per path, so the same question
-   * is a local hash: 1,129 files stop costing 1,129 requests, and a publish
-   * that changes nothing stops costing what one that rewrites everything does.
+   * Which files changed, worked out from the tree alone: it carries a SHA per
+   * path, so comparing against local content is a hash rather than one files
+   * API request per file.
    */
   private analyzeFilesForCommit(
     files: CommitFile[],
@@ -237,8 +220,7 @@ export class GitlabRepository implements IGitRepo {
       const existing = existingBlobs.get(this.normalizePath(file.path));
 
       if (!existing) {
-        // Absent from the tree means new, which is what a 404 from the files
-        // API used to stand for.
+        // Absent from the tree means new.
         return {
           path: file.path,
           hasChanges: true,
@@ -261,10 +243,9 @@ export class GitlabRepository implements IGitRepo {
   }
 
   /**
-   * Executable in the sense the tree reports it: mode `100755` rather than
-   * `100644`. This is the same bit the files API returns as
-   * `execute_filemode`, and reading it off the tree is what removes the
-   * request that used to be made per file to learn it.
+   * Executable as the tree reports it: mode `100755` rather than `100644`. The
+   * same bit the files API returns as `execute_filemode`, but readable without
+   * a request per file.
    */
   private isExecutableMode(mode: string | undefined): boolean {
     if (!mode) {
@@ -302,9 +283,8 @@ export class GitlabRepository implements IGitRepo {
       const { branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Deduplicate files by path (keep last occurrence to get most recent content)
-      // GitLab's commit API fails with "A file with this name doesn't exist" when
-      // duplicate paths are present in a single commit
+      // GitLab's commit API fails with "A file with this name doesn't exist"
+      // when one commit carries the same path twice; the last occurrence wins.
       const deduplicatedFiles = Array.from(
         files
           .reduce((map, file) => {
@@ -314,7 +294,6 @@ export class GitlabRepository implements IGitRepo {
           .values(),
       );
 
-      // Deduplicate deleteFiles by path
       const deduplicatedDeleteFiles = deleteFiles
         ? Array.from(
             deleteFiles
@@ -330,8 +309,6 @@ export class GitlabRepository implements IGitRepo {
       // exist, what they contain and how they are permissioned.
       const existingBlobs = await this.fetchRepositoryTree(targetBranch);
 
-      // Create/update, content changes and existing permissions all come from
-      // that one listing - no request is made per file.
       const fileAnalysis = this.analyzeFilesForCommit(
         deduplicatedFiles,
         existingBlobs,
@@ -339,8 +316,6 @@ export class GitlabRepository implements IGitRepo {
 
       const fileDifferenceCheck = fileAnalysis;
 
-      // Prepare actions with correct create/update types
-      // Only include files with content changes or new files (skip unchanged updates)
       const actions: Array<
         | { action: 'create' | 'update'; file_path: string; content: string }
         | { action: 'delete'; file_path: string }
@@ -359,7 +334,6 @@ export class GitlabRepository implements IGitRepo {
           content: file.content,
         }));
 
-      // Filter deleteFiles using the same tree listing
       let existingDeleteFiles: { path: string }[] = [];
       if (deduplicatedDeleteFiles && deduplicatedDeleteFiles.length > 0) {
         existingDeleteFiles = deduplicatedDeleteFiles.filter((file) =>
@@ -375,7 +349,6 @@ export class GitlabRepository implements IGitRepo {
           });
         }
 
-        // Add delete actions for existing files
         if (existingDeleteFiles.length > 0) {
           this.logger.info('Adding files for deletion to commit', {
             deleteFileCount: existingDeleteFiles.length,
@@ -392,13 +365,12 @@ export class GitlabRepository implements IGitRepo {
         }
       }
 
-      // Add chmod actions for permission changes
-      // (must come after create/update actions)
+      // chmod actions must come after the create/update ones that put the
+      // files there.
       for (let i = 0; i < deduplicatedFiles.length; i++) {
         const file = deduplicatedFiles[i];
         const analysis = fileAnalysis[i];
         if (file.permissions && this.isExecutable(file.permissions)) {
-          // Skip chmod if the existing file already has execute_filemode
           if (analysis.existingExecuteFilemode) {
             continue;
           }
@@ -412,7 +384,6 @@ export class GitlabRepository implements IGitRepo {
           !this.isExecutable(file.permissions) &&
           analysis.existingExecuteFilemode
         ) {
-          // Remove executable bit when file is currently executable but desired permissions are not
           actions.push({
             action: 'chmod' as const,
             file_path: file.path,
@@ -421,7 +392,6 @@ export class GitlabRepository implements IGitRepo {
         }
       }
 
-      // Check if there are any changes to commit (content, permissions, or deletions)
       const hasFileChanges = fileDifferenceCheck.some(
         (file) => file.hasChanges,
       );
@@ -429,7 +399,6 @@ export class GitlabRepository implements IGitRepo {
         if (!file.permissions) return false;
         const wantsExecutable = this.isExecutable(file.permissions);
         const isAlreadyExecutable = fileAnalysis[index].existingExecuteFilemode;
-        // Permission change if adding or removing executable bit
         return wantsExecutable !== isAlreadyExecutable;
       });
       const hasDeletions = existingDeleteFiles.length > 0;
@@ -459,7 +428,6 @@ export class GitlabRepository implements IGitRepo {
         projectPath: this.projectPath,
       });
 
-      // Create commit using GitLab Commits API
       const commitResponse = await this.axiosInstance.post(
         `/projects/${this.encodedProjectPath}/repository/commits`,
         {
@@ -467,10 +435,8 @@ export class GitlabRepository implements IGitRepo {
           commit_message: commitMessage,
           actions: actions,
         },
-        // No need for query params since we use PRIVATE-TOKEN header
       );
 
-      // Extract commit information from GitLab API response
       const commitInfo = {
         sha: commitResponse.data.id,
         message: commitMessage,
@@ -494,7 +460,6 @@ export class GitlabRepository implements IGitRepo {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      // Check if this is a permission or not found error
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as {
           response?: { status: number; data?: { message?: string } };
@@ -538,8 +503,6 @@ export class GitlabRepository implements IGitRepo {
       targetBranch,
     });
 
-    // Step 1: Check if the target branch already exists. If GitLab returns
-    // 2xx, the branch is present and no work is needed.
     const encodedTargetBranch = encodeURIComponent(targetBranch);
     try {
       await this.axiosInstance.get(
@@ -565,7 +528,7 @@ export class GitlabRepository implements IGitRepo {
           `Failed to ensure branch '${targetBranch}' on GitLab: ${errorMessage}`,
         );
       }
-      // 404 -> branch missing, proceed to create it from the base branch.
+      // 404 is the only tolerated failure: the branch is simply missing.
       this.logger.debug('Target branch missing, will create from base', {
         projectPath: this.projectPath,
         baseBranch,
@@ -573,9 +536,8 @@ export class GitlabRepository implements IGitRepo {
       });
     }
 
-    // Step 2: Create the target branch from the base branch. GitLab's branch
-    // creation endpoint validates that `ref` (the base) exists; propagate any
-    // failure verbatim so the caller can surface it.
+    // GitLab validates that `ref` exists, so a missing base branch surfaces
+    // as a failure here rather than silently creating nothing.
     try {
       await this.axiosInstance.post(
         `/projects/${this.encodedProjectPath}/repository/branches`,
@@ -660,7 +622,6 @@ export class GitlabRepository implements IGitRepo {
       base: baseBranch,
     });
 
-    // Step 1: Look up any open MR matching source -> target.
     try {
       const lookupResponse = await this.axiosInstance.get(
         `/projects/${this.encodedProjectPath}/merge_requests`,
@@ -707,7 +668,6 @@ export class GitlabRepository implements IGitRepo {
       );
     }
 
-    // Step 2: Create a new MR.
     try {
       const createResponse = await this.axiosInstance.post(
         `/projects/${this.encodedProjectPath}/merge_requests`,
@@ -959,7 +919,6 @@ export class GitlabRepository implements IGitRepo {
 
       return null;
     } catch (error) {
-      // If we get a 404, the file doesn't exist
       if (
         error &&
         typeof error === 'object' &&
@@ -978,7 +937,6 @@ export class GitlabRepository implements IGitRepo {
         return null;
       }
 
-      // Re-throw other errors
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to fetch file from repository', {
@@ -1006,7 +964,6 @@ export class GitlabRepository implements IGitRepo {
     });
 
     try {
-      // For GitLab, we need to construct the project path and use recursive pagination
       const normalizedRepo = this.normalizeRepo(name);
 
       const projectPath = `${owner}/${normalizedRepo}`;
@@ -1018,7 +975,6 @@ export class GitlabRepository implements IGitRepo {
       const perPage = 100;
 
       do {
-        // Construct the URL for the current request
         const url = nextPage
           ? nextPage
           : `/projects/${encodedProjectPath}/repository/tree`;
@@ -1029,7 +985,6 @@ export class GitlabRepository implements IGitRepo {
           per_page: perPage,
         };
 
-        // If a specific path is provided, add it to the API request
         if (path && path !== '/') {
           const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
           params['path'] = normalizedPath;
@@ -1045,7 +1000,6 @@ export class GitlabRepository implements IGitRepo {
           params: nextPage ? undefined : params,
         });
 
-        // Validate that the response is a JSON array
         if (!Array.isArray(response.data)) {
           if (
             typeof response.data === 'object' &&
@@ -1059,13 +1013,12 @@ export class GitlabRepository implements IGitRepo {
           );
         }
 
-        // Filter directories and add their paths
         let pageDirectories = response.data
           .filter((item: { type: string }) => item.type === 'tree')
           .map((item: { path: string }) => item.path);
 
-        // If a specific path was provided, GitLab API returns items within that path
-        // Show all subdirectories recursively under the specified path
+        // GitLab returns entries from within the requested path, so the
+        // prefix has to be re-applied to report them as repository paths.
         if (path && path !== '/') {
           const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
           const pathPrefix = normalizedPath.endsWith('/')
@@ -1091,14 +1044,12 @@ export class GitlabRepository implements IGitRepo {
           branch,
         });
 
-        // Check for pagination headers
         const headers = response.headers as Record<string, string>;
         nextPage = null;
 
         // Check for offset pagination (x-next-page header)
         const xNextPage = headers['x-next-page'];
         if (xNextPage && xNextPage.trim() !== '') {
-          // Build next page URL with the same parameters
           let nextPageUrl = `/projects/${encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
           if (path && path !== '/') {
             const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
@@ -1118,7 +1069,6 @@ export class GitlabRepository implements IGitRepo {
 
         pageNumber++;
 
-        // Safety check to prevent infinite loops
         if (pageNumber > 1000) {
           this.logger.warn(
             'Reached maximum page limit (1000) for GitLab tree listing',
@@ -1147,7 +1097,6 @@ export class GitlabRepository implements IGitRepo {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      // Check if this is a permission or not found error
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as {
           response?: { status: number; data?: { message?: string } };
@@ -1190,8 +1139,6 @@ export class GitlabRepository implements IGitRepo {
     branch: string,
   ): Promise<boolean> {
     try {
-      // Use GitLab's repository tree API to check if the directory exists
-      // We'll get the tree for the specific path to see if it exists
       const response = await this.axiosInstance.get(
         `/projects/${this.encodedProjectPath}/repository/tree`,
         {
@@ -1203,19 +1150,18 @@ export class GitlabRepository implements IGitRepo {
         },
       );
 
-      // If we get a successful response with an array, the directory exists
       if (Array.isArray(response.data) && response.data.length > 0) {
         return true;
       }
 
-      // If we get an empty array, the directory exists but is empty
+      // An empty array still means the directory exists, just with nothing
+      // in it.
       if (Array.isArray(response.data) && response.data.length === 0) {
         return true;
       }
 
       return false;
     } catch (error) {
-      // If we get a 404, the directory doesn't exist
       if (
         error &&
         typeof error === 'object' &&
@@ -1228,7 +1174,6 @@ export class GitlabRepository implements IGitRepo {
         return false;
       }
 
-      // Re-throw other errors
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to check directory existence in repository', {
@@ -1250,14 +1195,9 @@ export class GitlabRepository implements IGitRepo {
   }
 
   /**
-   * The files under every requested directory, from one tree walk.
-   *
-   * This used to be a loop over the singular form, and the singular form ran
-   * the whole paginated walk for itself - so expanding 112 directory
-   * deletions downloaded a listing of the entire repository 112 times, one
-   * after another, to answer what a single listing already holds. GitLab's
-   * tree endpoint paginating is what made collapsing this a ticket of its
-   * own; it changes nothing about the answer.
+   * The files under every requested directory, from one tree walk — rather
+   * than one full paginated walk per directory, which is what looping over
+   * the singular form would cost.
    */
   async listFilesInDirectories(
     paths: string[],
@@ -1271,8 +1211,8 @@ export class GitlabRepository implements IGitRepo {
       const blobs = await this.walkRepositoryTree(branch);
 
       // Filtered per path rather than once against all prefixes, so the
-      // result is ordered and duplicated exactly as looping the singular form
-      // over these paths produced.
+      // result keeps the order and the duplicates that looping the singular
+      // form produces.
       const files = paths.flatMap((path) => {
         const normalizedPath = path.endsWith('/') ? path : `${path}/`;
 
@@ -1298,8 +1238,8 @@ export class GitlabRepository implements IGitRepo {
         branch,
         error: errorMessage,
       });
-      // Matches what the per-directory form did: an unreachable or missing
-      // tree means "nothing to expand", not a failed publish.
+      // An unreachable or missing tree means "nothing to expand", not a
+      // failed publish.
       return [];
     }
   }

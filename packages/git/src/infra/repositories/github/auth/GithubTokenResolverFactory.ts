@@ -10,19 +10,14 @@ import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
 const origin = 'GithubTokenResolverFactory';
 
 /**
- * How long a built App resolver is reused before it is built again.
+ * How long a built App resolver is reused. Building one resolves the hosting
+ * mode, reads either two config values or an `OrganizationGitHubApp` row, and
+ * mints an installation token on first use, so a burst of reads inside one
+ * request should pay for that once.
  *
- * Building one is not cheap: it resolves the hosting mode, then reads either
- * two config values or an `OrganizationGitHubApp` row, and the resolver it
- * hands back mints an installation token on first use. Building a fresh one per
- * call threw all of that away every time — so reading three files from one
- * repository paid for it three times over, which is most of why linking a
- * marketplace took as long as it did.
- *
- * The window is deliberately short. `build()` is also where an on-prem App's
- * revocation is noticed, and a reused resolver does not re-check it, so a
- * minute bounds how long a revoked App keeps working while still covering the
- * bursts this exists for: several reads inside one request, milliseconds apart.
+ * Deliberately short: `build()` is also where an on-prem App's revocation is
+ * noticed, and a reused resolver does not re-check it, so the window bounds
+ * how long a revoked App keeps working.
  */
 const APP_RESOLVER_REUSE_MS = 60_000;
 
@@ -45,9 +40,8 @@ type CachedAppResolver = {
  * credentials in env vars) or on-prem (each organization registers its own
  * GitHub App via the manifest flow, same as OSS).
  *
- * The mode is inferred from the presence of `GITHUB_APP_SLUG`:
- *   - set       → 'shared'  (read env-configured GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY)
- *   - not set   → 'on-prem' (read the OrganizationGitHubApp record bound to the GitProvider)
+ * The mode is inferred from the presence of `GITHUB_APP_SLUG`: set means
+ * 'shared', absent means 'on-prem'.
  */
 export type GithubAppMode = 'on-prem' | 'shared';
 
@@ -62,19 +56,9 @@ export interface IConfigProvider {
 /**
  * Resolves which `IGithubTokenResolver` to use for a given GitProvider row.
  *
- * Contract:
- * - The `GitProvider` passed to `build()` MUST already be fully decrypted
- *   by `GitProviderRepository` — i.e. `token` is plaintext PAT and
- *   `appPrivateKey` is plaintext PEM. This factory will NOT decrypt anything.
- * - For `authMethod === 'token'`, returns a `PatTokenResolver` wrapping
- *   `provider.token`.
- * - For `authMethod === 'app'`:
- *   - in `'shared'` mode, reads `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`
- *     from the config port (env + Infisical), and uses
- *     `provider.appInstallationId` from the row.
- *   - in `'on-prem'` mode, reads `appId` and `appPrivateKey` from the
- *     `OrganizationGitHubApp` record referenced by `provider.organizationGitHubAppId`,
- *     and uses `provider.appInstallationId` from the row.
+ * Decrypts nothing: credentials must arrive in plaintext, `provider.token`
+ * from `GitProviderRepository` and an on-prem App's `appPrivateKey` from
+ * `OrganizationGitHubAppRepository`.
  */
 export class GithubTokenResolverFactory {
   /**
@@ -164,11 +148,10 @@ export class GithubTokenResolverFactory {
           );
         }
       } else {
-        // on-prem: read app credentials from the OrganizationGitHubApp record
-        // referenced by the GitProvider's FK. Using a FK (not "the active App
-        // for this org") binds each install to the App it was originally
-        // installed against, so re-running the manifest never silently rebinds
-        // old installations to a different App — that would 404 at JWT exchange.
+        // Keyed on the GitProvider's FK rather than "the active App for this
+        // org", so each installation stays bound to the App it was installed
+        // against: re-running the manifest would otherwise rebind old
+        // installations to a new App and 404 at JWT exchange.
         if (!this.orgGitHubAppRepository) {
           throw new Error(
             'GithubTokenResolverFactory: orgGitHubAppRepository is required for on-prem mode with app auth',

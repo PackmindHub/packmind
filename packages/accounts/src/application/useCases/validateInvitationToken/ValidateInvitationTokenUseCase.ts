@@ -27,7 +27,6 @@ export class ValidateInvitationTokenUseCase implements IValidateInvitationTokenU
     });
 
     try {
-      // 1. Find invitation by token
       const invitationToken = createInvitationToken(command.token);
       const invitation =
         await this.invitationService.findByToken(invitationToken);
@@ -42,7 +41,6 @@ export class ValidateInvitationTokenUseCase implements IValidateInvitationTokenU
         };
       }
 
-      // 2. Check if invitation is expired
       const now = new Date();
       if (invitation.expirationDate < now) {
         this.logger.warn('Invitation expired', {
@@ -55,7 +53,6 @@ export class ValidateInvitationTokenUseCase implements IValidateInvitationTokenU
         };
       }
 
-      // 3. Get the user associated with the invitation to get email
       const user = await this.userService.getUserById(invitation.userId);
 
       if (!user) {
@@ -69,7 +66,6 @@ export class ValidateInvitationTokenUseCase implements IValidateInvitationTokenU
         };
       }
 
-      // 4. Check if user is already active (invitation already used)
       if (user.active) {
         this.logger.warn('User is already active (invitation already used)', {
           userId: user.id,

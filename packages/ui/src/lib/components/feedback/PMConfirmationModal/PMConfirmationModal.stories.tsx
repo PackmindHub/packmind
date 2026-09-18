@@ -48,7 +48,6 @@ const WithLoadingComponent = (args: typeof Default.args) => {
 
   const handleConfirm = () => {
     setIsLoading(true);
-    // Simulate async operation
     setTimeout(() => {
       setIsLoading(false);
       setIsOpen(false);

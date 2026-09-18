@@ -244,7 +244,6 @@ export class NotifyDistributionUseCase
     const distributedPackages: DistributedPackageWithVersionIds[] = [];
     const currentPackageIds = new Set(packages.map((p) => p.id));
 
-    // Create 'add' entries for current packages
     for (const pkg of packages) {
       const standardVersionIds = await this.getLatestStandardVersionIds(
         pkg.standards,
@@ -268,7 +267,7 @@ export class NotifyDistributionUseCase
       });
     }
 
-    // Create 'remove' entries for packages that were previously active but are not in current distribution
+    // Previously active but absent from this distribution: recorded as removals.
     for (const prevPackageId of previouslyActivePackageIds) {
       if (!currentPackageIds.has(prevPackageId)) {
         this.logger.info('Package removed from distribution', {

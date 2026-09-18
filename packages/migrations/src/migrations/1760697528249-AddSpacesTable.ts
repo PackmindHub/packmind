@@ -101,7 +101,6 @@ export class AddSpacesTable1760697528249 implements MigrationInterface {
         return;
       }
 
-      // Insert "Global" space for each organization
       this.logger.debug('Creating default "Global" spaces for organizations');
       for (const org of organizations) {
         const spaceId = uuidv4();

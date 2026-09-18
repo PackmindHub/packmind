@@ -3,7 +3,6 @@ import { PMConfirmationModal } from './PMConfirmationModal';
 import { PMButton } from '../../form/PMButton/PMButton';
 import { UIProvider } from '../../../UIProvider';
 
-// Mock PMButton to avoid dependency issues
 jest.mock('../../form/PMButton/PMButton', () => ({
   PMButton: ({
     children,
@@ -14,7 +13,6 @@ jest.mock('../../form/PMButton/PMButton', () => ({
   }) => <button {...props}>{children}</button>,
 }));
 
-// Helper function to render with UIProvider
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<UIProvider>{ui}</UIProvider>);
 };
@@ -72,7 +70,6 @@ describe('PMConfirmationModal', () => {
       />,
     );
 
-    // Get all Delete buttons and find the one inside the dialog footer
     const deleteButtons = screen.getAllByText('Delete');
     expect(deleteButtons.length).toBeGreaterThan(1);
     expect(deleteButtons[0]).toBeInTheDocument();

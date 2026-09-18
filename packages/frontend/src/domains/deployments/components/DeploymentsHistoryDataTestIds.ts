@@ -1,11 +1,9 @@
 /**
  * The parts of the distribution log the e2e suite reads.
  *
- * Named rather than counted. The suite used to find these by cell index, which
- * held until two columns it knew nothing about were dropped from the table: the
- * destination then read as a repository glued to its branch, and the author
- * column it was pointing at had become the status. A name survives a column
- * moving, being added, or going away.
+ * Named rather than counted: index-based lookups silently broke when the
+ * table's columns were reshuffled. A name survives a column moving, being
+ * added, or going away.
  */
 export enum DeploymentsHistoryDataTestId {
   /** The repository a distribution landed in, first line of the destination. */

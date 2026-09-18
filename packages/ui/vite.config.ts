@@ -13,27 +13,19 @@ export default defineConfig(() => ({
     nxCopyAssetsPlugin(['*.md']),
     tsconfigPaths(),
   ],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/packages/packmind-ui',
     emptyOutDir: true,
     reportCompressedSize: true,
     lib: {
-      // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
       name: 'packmind-ui',
       fileName: 'index',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
       formats: ['es' as const],
     },
     rolldownOptions: {
-      // External packages that should not be bundled into your library.
+      // Keep external anything that isn't a relative/absolute/virtual module id,
+      // so consumers' own dependencies aren't bundled into the library.
       external: (id: string) =>
         !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0'),
     },

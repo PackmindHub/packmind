@@ -10,15 +10,6 @@ export class GetFileFromRepoUseCase {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  /**
-   * Retrieves a file from the git repository and returns its decoded content.
-   *
-   * @param gitRepo - The git repository to fetch from
-   * @param filePath - Path to the file in the repository
-   * @param branch - Optional branch name (defaults to repository's default branch)
-   * @returns Object containing file SHA and decoded UTF-8 content, or null if file not found
-   * @throws Error if git provider is not found, token not configured, or content cannot be decoded
-   */
   public async getFileFromRepo(
     gitRepo: GitRepo,
     filePath: string,

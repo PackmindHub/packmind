@@ -229,7 +229,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       };
       const space: Space = spaceFactory({
         id: spaceId,
-        organizationId: otherOrganizationId, // Different organization
+        organizationId: otherOrganizationId,
       });
 
       const command: ListStandardsBySpaceCommand = {

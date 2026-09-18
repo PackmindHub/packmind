@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import {
   BadRequestException,
   UnprocessableEntityException,
@@ -21,9 +22,7 @@ describe('PlaybookController', () => {
   const proposals: ApplyPlaybookProposalItem[] = [];
 
   beforeEach(() => {
-    service = {
-      applyPlaybook: jest.fn(),
-    } as unknown as jest.Mocked<PlaybookService>;
+    service = createMockInstance(PlaybookService);
     controller = new PlaybookController(service);
   });
 

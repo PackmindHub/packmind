@@ -40,10 +40,6 @@ import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 import { RemoveMemberFromSpaceUseCase } from '../usecases/RemoveMemberFromSpaceUseCase';
 import { UpdateMemberRoleUseCase } from '../usecases/UpdateMemberRoleUseCase';
 
-/**
- * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
- * Following the Port/Adapter pattern from DDD monorepo architecture standard
- */
 export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   private accountsPort!: IAccountsPort;
   private eventEmitterService!: PackmindEventEmitterService;
@@ -295,9 +291,6 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return useCase.execute(command);
   }
 
-  /**
-   * Initialize the adapter with ports from registry.
-   */
   public async initialize(ports: Record<string, unknown>): Promise<void> {
     this.accountsPort = ports[IAccountsPortName] as IAccountsPort;
     this.eventEmitterService = ports[
@@ -305,16 +298,10 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     ] as PackmindEventEmitterService;
   }
 
-  /**
-   * Check if the adapter is ready to use.
-   */
   public isReady(): boolean {
     return !!this.accountsPort && !!this.eventEmitterService;
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): ISpacesPort {
     return this as ISpacesPort;
   }

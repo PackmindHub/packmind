@@ -1,4 +1,3 @@
-// Export schemas array for TypeORM configuration
 import { SpaceSchema } from './SpaceSchema';
 import { UserSpaceMembershipSchema } from './UserSpaceMembershipSchema';
 

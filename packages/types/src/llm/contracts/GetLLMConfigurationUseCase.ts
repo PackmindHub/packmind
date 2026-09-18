@@ -3,10 +3,7 @@ import { LLMProvider } from '../LLMServiceConfig';
 
 export type GetLLMConfigurationCommand = SystemPackmindCommand;
 
-/**
- * LLM Configuration DTO for display purposes.
- * Note: API keys and secrets are stripped from this response.
- */
+/** For display: API keys and other secrets are stripped before this is built. */
 export type LLMConfigurationDTO = {
   provider: LLMProvider;
   model: string;

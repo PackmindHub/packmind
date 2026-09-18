@@ -118,7 +118,6 @@ describe('StandardVersionRepository', () => {
   });
 
   it('can find a standard version by id', async () => {
-    // Create standard first
     const standard = await standardRepo.save(
       standardFactory({ slug: `standard-${uuidv4()}` }),
     );
@@ -133,7 +132,6 @@ describe('StandardVersionRepository', () => {
   });
 
   it('can find latest standard version by standard id', async () => {
-    // Create standard first
     const standard = await standardRepo.save(
       standardFactory({ slug: `standard-${uuidv4()}` }),
     );
@@ -256,7 +254,6 @@ describe('StandardVersionRepository', () => {
   });
 
   it('can find standard version by standard id and version number', async () => {
-    // Create standard first
     const standard = await standardRepo.save(
       standardFactory({ slug: `standard-${uuidv4()}` }),
     );
@@ -525,7 +522,6 @@ describe('StandardVersionRepository', () => {
     let testStandard: Standard;
 
     beforeEach(async () => {
-      // Create standard for soft delete tests
       testStandard = await standardRepo.save(
         standardFactory({ slug: `standard-${uuidv4()}` }),
       );

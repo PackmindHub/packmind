@@ -84,18 +84,14 @@ describe('AddRuleToStandardUseCase', () => {
       updatedBy: userId,
     });
 
-    // Mock AccountsPort
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    // Mock StandardService
     standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
     standardVersionService = createMockInstance(StandardVersionService);
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
@@ -179,7 +175,7 @@ describe('AddRuleToStandardUseCase', () => {
           name: existingStandard.name,
           slug: existingStandard.slug,
           description: existingStandard.description,
-          version: 3, // Incremented version
+          version: 3,
           userId,
           scope: existingStandard.scope,
         });
@@ -194,7 +190,6 @@ describe('AddRuleToStandardUseCase', () => {
           scope: existingStandard.scope,
         });
 
-        // Setup mocks
         standardService.findStandardBySlug.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -234,7 +229,7 @@ describe('AddRuleToStandardUseCase', () => {
             name: existingStandard.name,
             description: existingStandard.description,
             slug: existingStandard.slug,
-            version: 3, // Incremented from 2 to 3
+            version: 3,
             gitCommit: undefined,
             userId,
             scope: existingStandard.scope,
@@ -281,7 +276,6 @@ describe('AddRuleToStandardUseCase', () => {
         };
 
         const existingStandard = standardFactory({
-          // Same organization
           slug: 'test-standard',
           spaceId,
         });
@@ -461,7 +455,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         existingStandard = standardFactory({
           slug: 'test-standard',
-          version: 5, // Start from version 5
+          version: 5,
           spaceId,
         });
 
@@ -473,7 +467,7 @@ describe('AddRuleToStandardUseCase', () => {
         const existingRules = [ruleFactory()];
         const updatedStandard = standardFactory({
           id: existingStandard.id,
-          version: 6, // Should increment to 6
+          version: 6,
         });
         const newVersion = standardVersionFactory({
           standardId: existingStandard.id,
@@ -495,7 +489,7 @@ describe('AddRuleToStandardUseCase', () => {
         expect(standardService.updateStandard).toHaveBeenCalledWith(
           existingStandard.id,
           expect.objectContaining({
-            version: 6, // Should be incremented to 6
+            version: 6,
           }),
         );
       });
@@ -503,7 +497,7 @@ describe('AddRuleToStandardUseCase', () => {
       it('creates standard version with incremented version number', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            version: 6, // Should be incremented to 6
+            version: 6,
           }),
         );
       });
@@ -553,7 +547,7 @@ describe('AddRuleToStandardUseCase', () => {
               { content: 'Existing rule 1', examples: [] },
               { content: 'Existing rule 2', examples: [] },
               { content: 'Existing rule 3', examples: [] },
-              { content: 'New coding rule', examples: [] }, // New rule appended
+              { content: 'New coding rule', examples: [] },
             ],
           }),
         );
@@ -577,7 +571,7 @@ describe('AddRuleToStandardUseCase', () => {
           standardId: existingStandard.id,
         });
 
-        const existingRules: Rule[] = []; // No existing rules
+        const existingRules: Rule[] = [];
 
         const updatedStandard = standardFactory({ version: 2 });
         const newVersion = standardVersionFactory({ version: 2 });
@@ -594,9 +588,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            rules: [
-              { content: 'First rule for this standard', examples: [] }, // Only the new rule
-            ],
+            rules: [{ content: 'First rule for this standard', examples: [] }],
           }),
         );
       });

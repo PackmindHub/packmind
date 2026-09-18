@@ -43,29 +43,21 @@ describe('CreateStandardWithExamplesUseCase', () => {
   const userId = createUserId(uuidv4());
 
   beforeEach(() => {
-    // Mock StandardService
     standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
     standardVersionService = createMockInstance(StandardVersionService);
 
-    // Mock RuleExampleRepository
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
-    // Mock LinterAdapter
     linterAdapter = mockInterface<ILinterPort>();
 
-    // Mock EventEmitterService
     eventEmitterService = createMockInstance(PackmindEventEmitterService);
     eventEmitterService.emit.mockReturnValue(true);
 
-    // Use stubLogger from shared test utils
     logger = stubLogger();
 
-    // Default mock for findByStandardVersionId - returns empty array (no rules)
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     usecase = new CreateStandardWithExamplesUseCase(

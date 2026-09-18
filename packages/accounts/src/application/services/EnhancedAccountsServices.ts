@@ -11,11 +11,8 @@ import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCode
 import { PackmindLogger } from '@packmind/logger';
 import { instrumentComponents, SmtpMailService } from '@packmind/node-utils';
 
-/**
- * Enhanced AccountsServices that can accept an optional API key service
- * This allows external systems (like the API layer) to provide the API key service
- * with their own dependencies (like JWT service)
- */
+// The API key service is injected rather than built here because it needs a JWT
+// signer, which only the API layer has.
 export class EnhancedAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
@@ -31,7 +28,6 @@ export class EnhancedAccountsServices {
     apiKeyService?: ApiKeyService,
   ) {
     const logger = new PackmindLogger('EnhancedAccountsServices');
-    // Initialize standard services
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),
       this.accountsRepositories.getUserOrganizationMembershipRepository(),
@@ -55,7 +51,6 @@ export class EnhancedAccountsServices {
       this.accountsRepositories.getUserMetadataRepository(),
     );
 
-    // Store optional API key service if provided
     this.apiKeyService = apiKeyService;
 
     logger.info('EnhancedAccountsServices initialized', {

@@ -23,7 +23,6 @@ export class PackmindConfigService {
 
     const config: PackmindFileConfig = { packages };
 
-    // Preserve existing agents if present
     if (existingAgents !== undefined) {
       config.agents = existingAgents;
     }
@@ -58,7 +57,6 @@ export class PackmindConfigService {
 
     const config: PackmindFileConfig = { packages };
 
-    // Preserve existing agents if present
     if (existingAgents !== undefined) {
       config.agents = existingAgents;
     }

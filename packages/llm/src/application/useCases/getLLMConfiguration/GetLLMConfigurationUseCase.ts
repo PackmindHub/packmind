@@ -75,7 +75,7 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
   }
 
   /**
-   * Convert stored configuration to DTO, stripping secrets.
+   * Deliberately omits `apiKey` / `llmApiKey`: this response reaches the client.
    */
   private toDTO(storedConfig: StoredAIProvider): LLMConfigurationDTO {
     const { config } = storedConfig;

@@ -6,15 +6,9 @@ import { PackageId } from '../deployments/Package';
 import { PluginInstallationId } from './PluginInstallationId';
 
 /**
- * Scope at which a Packmind plugin is enabled in the coding agent.
- *
- * Both agents expose the same three-rung ladder, so the values are shared:
- *
- * | Scope     | Claude Code                        | GitHub Copilot CLI                             |
- * |-----------|------------------------------------|------------------------------------------------|
- * | `local`   | `.claude/settings.local.json`      | `.github/copilot/settings.local.json`           |
- * | `project` | `.claude/settings.json`            | `.github/copilot/settings.json`                 |
- * | `user`    | `~/.claude/settings.json`          | `~/.copilot/settings.json`                      |
+ * Scope at which a Packmind plugin is enabled in the coding agent. Claude Code
+ * and Copilot CLI expose the same three-rung ladder, so one set of values
+ * serves both.
  */
 export type PluginInstallScope = 'user' | 'project' | 'local';
 
@@ -51,17 +45,11 @@ export type PluginInstallIdentitySource = 'claude-account' | 'git-config';
  * earliest value on merge); `updatedAt` is bumped to the last-seen time on every
  * heartbeat.
  *
- * ### Absent-field key rule (§7.1)
- * Both `identityKey` and `repoKey` are NOT NULL — the domain guarantees a
- * non-null string. They may be empty-string (`''`) per the semantics below:
- *
- * - `identityKey` = `userId` ?? `anonymousIdHash` ?? `''`
- * - `repoKey`     = `''` when `scope === 'user'`, else the normalized `owner/repo`
- *   slug of `repoRemoteUrl` ?? the raw `repoRemoteUrl` ?? `''`
- *
- * This forces all identity-less heartbeats for the same (plugin, scope, repo)
- * into one row and lets the UNIQUE index work correctly (Postgres treats NULLs
- * as distinct, so a nullable key would defeat the index).
+ * Both `identityKey` and `repoKey` are NOT NULL and fall back to empty string
+ * rather than null (see their own docs for the exact values). That forces all
+ * identity-less heartbeats for the same (plugin, scope, repo) into one row and
+ * lets the UNIQUE index work: Postgres treats NULLs as distinct, so a nullable
+ * key would defeat it.
  */
 export type PluginInstallation = WithSoftDelete<
   WithTimestamps<{

@@ -11,18 +11,16 @@ describe('Configuration', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
-    // Store original env and reset Configuration singleton
     originalEnv = { ...process.env };
-    // Reset the singleton instance
+    // Configuration caches its initialization on the singleton, so without
+    // clearing it a later test would reuse the first test's mode.
     (
       Configuration as unknown as { instance: Configuration | undefined }
     ).instance = undefined;
   });
 
   afterEach(() => {
-    // Restore original environment
     process.env = originalEnv;
-    // Clear all mocks
     jest.clearAllMocks();
   });
 

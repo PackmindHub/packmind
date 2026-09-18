@@ -29,7 +29,6 @@ export class CheckEmailAvailabilityUseCase implements ICheckEmailAvailabilityUse
     });
 
     try {
-      // Check if user already exists (case-insensitive)
       const existingUser =
         await this.userService.getUserByEmailCaseInsensitive(email);
 

@@ -21,8 +21,6 @@ describe('Tracked repository integration', () => {
   let testApp: TestApp;
   let admin: DataFactory;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -182,8 +180,6 @@ describe('Tracked repository integration', () => {
   describe('when the tracked branch is changed twice in succession (last-one-wins)', () => {
     beforeEach(async () => {
       await setTracked('main');
-      // Two admins move the tracked branch one after another; the last
-      // committed change is the effective tracked branch, with no error.
       await updateTracked('dev');
       await updateTracked('feature-x');
     });

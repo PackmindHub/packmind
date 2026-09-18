@@ -12,7 +12,6 @@ import { gitRepoFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
 import { GetAvailableRemoteDirectoriesUseCase } from './GetAvailableRemoteDirectoriesUseCase';
 
-// Mock Cache
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
   Cache: {
@@ -20,7 +19,6 @@ jest.mock('@packmind/node-utils', () => ({
   },
 }));
 
-// Get the mocked Cache after the mock
 const mockCacheInstance = mockInterface<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
@@ -31,7 +29,6 @@ describe('GetAvailableTargetsUseCase', () => {
   beforeEach(() => {
     mockGitProviderService = mockInterface<GitProviderService>();
 
-    // Setup cache mock
     MockedCache.getInstance.mockReturnValue(mockCacheInstance);
     mockCacheInstance.get.mockResolvedValue(null); // Default to cache miss
     mockCacheInstance.set.mockResolvedValue(undefined);
