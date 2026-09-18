@@ -437,7 +437,11 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
   delta n'est pas un mois de développement et est exclu des courbes.</li>
   <li>Le trailer indique le modèle de la session qui a produit le commit, pas nécessairement l'auteur de chaque ligne.
   Les pull requests étant écrasées à la fusion, un trailer couvre une PR.</li>
-  <li>Septembre 2026 est un mois partiel (arrêté au dernier commit analysé).</li>
+  <li>La dernière période est partielle (arrêtée au dernier commit analysé) et n'est pas lisible comme les
+  autres : une passe de réécriture des commentaires y pèse près de la moitié des commentaires ajoutés tout en en
+  supprimant bien davantage. Une ligne modifiée compte pour git comme une suppression plus un ajout, donc « lignes
+  ajoutées » inclut les réécritures — le taux répond à « quand ce code a été écrit, quelle part était du commentaire »,
+  pas à « combien de documentation nette a été produite ».</li>
   <li>Les commits sans trailer (l'essentiel de 2025) sont d'attribution inconnue, pas « humains ».</li>
 </ul>
 
