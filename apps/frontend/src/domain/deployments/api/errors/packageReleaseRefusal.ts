@@ -1,4 +1,7 @@
-import type { PackageReleaseRefusalCode } from '@packmind/types';
+import {
+  parsePackageReleaseVersion,
+  type PackageReleaseRefusalCode,
+} from '@packmind/types';
 import { isPackmindError } from '../../../../services/api/errors/PackmindError';
 
 /**
@@ -36,7 +39,19 @@ export function readPackageReleaseRefusal(
     currentVersion?: unknown;
   };
 
-  if (typeof data.currentVersion !== 'string') return null;
+  /*
+   * Parsed, not merely typed as a string: the drawer feeds this version to
+   * `nextVersions` to rebuild its suggestions, and that throws on anything that
+   * is not an X.Y.Z triple. A server that sent one would take the open form
+   * down mid-render rather than show a refusal. Refusing to read it here drops
+   * the caller back to its generic handling, which is a toast.
+   */
+  if (
+    typeof data.currentVersion !== 'string' ||
+    parsePackageReleaseVersion(data.currentVersion) === null
+  ) {
+    return null;
+  }
   if (
     typeof data.code !== 'string' ||
     !REFUSAL_CODES.includes(data.code as PackageReleaseRefusalCode)

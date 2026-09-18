@@ -293,6 +293,26 @@ describe('CreatePackageReleaseDrawer', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  describe('when the server names a current version that is not X.Y.Z', () => {
+    it('falls back to generic handling rather than taking the form down', async () => {
+      renderDrawer({
+        readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+        mutateAsync: vi
+          .fn()
+          .mockRejectedValue(serverRefusal('not_greater', 'banana')),
+      });
+
+      await typeVersion('0.2.0');
+      await userEvent.click(submit());
+
+      // The suggestions are still the ones readiness carried: nothing tried to
+      // build increments over 'banana', which would have thrown mid-render.
+      expect(
+        await screen.findByRole('button', { name: '0.1.1' }),
+      ).toBeVisible();
+    });
+  });
+
   it('tracks a refusal', async () => {
     renderDrawer({
       readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
