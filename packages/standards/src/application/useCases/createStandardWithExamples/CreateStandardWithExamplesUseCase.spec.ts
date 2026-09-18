@@ -39,7 +39,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
   const userId = createUserId(uuidv4());
 
   beforeEach(() => {
-    // Mock StandardService
     standardService = {
       addStandard: jest.fn(),
       getStandardById: jest.fn(),
@@ -50,7 +49,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
       listStandardsByUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
-    // Mock StandardVersionService
     standardVersionService = {
       addStandardVersion: jest.fn(),
       listStandardVersions: jest.fn(),
@@ -59,24 +57,18 @@ describe('CreateStandardWithExamplesUseCase', () => {
       getStandardVersionById: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock RuleExampleRepository
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
-    // Mock LinterAdapter
     linterAdapter = mockInterface<ILinterPort>();
 
-    // Mock EventEmitterService
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    // Use stubLogger from shared test utils
     logger = stubLogger();
 
-    // Default mock for findByStandardVersionId - returns empty array (no rules)
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     usecase = new CreateStandardWithExamplesUseCase(

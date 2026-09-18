@@ -18,7 +18,7 @@ export const standardVersionFactory: Factory<StandardVersion> = (
     description: 'Test standard version description',
     version: 1,
     gitCommit: undefined,
-    userId: createUserId(uuidv4()), // Default to having a userId, can be overridden
+    userId: createUserId(uuidv4()),
     scope: null,
     ...standardVersion,
   };

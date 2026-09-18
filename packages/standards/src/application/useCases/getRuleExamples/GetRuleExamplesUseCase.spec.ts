@@ -19,10 +19,8 @@ describe('GetRuleExamplesUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    // Mock RuleExampleRepository
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
     stubbedLogger = stubLogger();

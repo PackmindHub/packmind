@@ -25,7 +25,7 @@ export class RuleRepository
     return {
       id: entity.id,
       standardVersionId: entity.standardVersionId,
-      content: entity.content.substring(0, 100) + '...', // Log first 100 chars
+      content: entity.content.substring(0, 100) + '...',
     };
   }
 

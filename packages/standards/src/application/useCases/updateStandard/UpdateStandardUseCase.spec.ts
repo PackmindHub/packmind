@@ -47,7 +47,6 @@ import {
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -68,7 +67,6 @@ describe('UpdateStandardUseCase', () => {
   let mockSpace: Space;
 
   beforeEach(() => {
-    // Mock StandardService
     standardService = {
       addStandard: jest.fn(),
       getStandardById: jest.fn(),
@@ -79,7 +77,6 @@ describe('UpdateStandardUseCase', () => {
       listStandardsByUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
-    // Mock StandardVersionService
     standardVersionService = {
       addStandardVersion: jest.fn(),
       listStandardVersions: jest.fn(),
@@ -89,13 +86,10 @@ describe('UpdateStandardUseCase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
-    // Mock RuleExampleRepository
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
@@ -104,7 +98,6 @@ describe('UpdateStandardUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    // Setup user, organization, and membership mocks
     const mockUserId = createUserId(uuidv4());
     const mockOrgId = createOrganizationId(uuidv4());
 
@@ -134,7 +127,6 @@ describe('UpdateStandardUseCase', () => {
     accountsAdapter.getUserById.mockResolvedValue(mockUser);
     accountsAdapter.getOrganizationById.mockResolvedValue(mockOrganization);
 
-    // Setup space mock
     mockSpace = spaceFactory({
       id: createSpaceId(uuidv4()),
       organizationId: mockOrgId,
@@ -184,11 +176,10 @@ describe('UpdateStandardUseCase', () => {
 
     beforeEach(() => {
       standardId = createStandardId(uuidv4());
-      organizationId = mockMembership.organizationId; // Use the mock organization ID
-      userId = mockUser.id; // Use the mock user ID
-      spaceId = mockSpace.id; // Use the mock space ID
+      organizationId = mockMembership.organizationId;
+      userId = mockUser.id;
+      spaceId = mockSpace.id;
 
-      // Update organization and user providers with the test IDs
       accountsAdapter.getUserById = jest.fn().mockResolvedValue(mockUser);
       accountsAdapter.getOrganizationById = jest.fn().mockResolvedValue({
         ...mockOrganization,
@@ -255,7 +246,7 @@ describe('UpdateStandardUseCase', () => {
         updatedStandard = standardFactory({
           id: standardId,
           name: inputData.name,
-          slug: 'original-standard-name', // Should preserve original slug
+          slug: 'original-standard-name',
           description: inputData.description,
           version: 3,
         });
@@ -263,12 +254,11 @@ describe('UpdateStandardUseCase', () => {
         newStandardVersion = standardVersionFactory({
           standardId,
           name: inputData.name,
-          slug: 'original-standard-name', // Should preserve original slug
+          slug: 'original-standard-name',
           description: inputData.description,
           version: 3,
         });
 
-        // Setup mocks
         standardService.getStandardById.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -311,8 +301,8 @@ describe('UpdateStandardUseCase', () => {
           {
             name: inputData.name,
             description: inputData.description,
-            slug: 'original-standard-name', // Should preserve original slug
-            version: 3, // Original version was 2, so incremented to 3
+            slug: 'original-standard-name',
+            version: 3,
             gitCommit: undefined,
             userId: createUserId(inputData.userId),
             scope: inputData.scope,
@@ -417,7 +407,6 @@ describe('UpdateStandardUseCase', () => {
           }),
         ];
 
-        // Setup mocks
         standardService.getStandardById.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -460,12 +449,11 @@ describe('UpdateStandardUseCase', () => {
       let existingRules: Rule[];
 
       beforeEach(async () => {
-        // Use the same name but change description to trigger content change
         inputData = {
           standardId: standardId,
-          name: 'Original Standard Name', // Same name as existing
-          description: 'Updated description', // Different description
-          rules: [{ id: createRuleId(uuidv4()), content: 'Updated rule 1' }], // Different rules
+          name: 'Original Standard Name',
+          description: 'Updated description',
+          rules: [{ id: createRuleId(uuidv4()), content: 'Updated rule 1' }],
           organizationId: organizationId,
           userId: userId.toString(),
           spaceId: spaceId,
@@ -475,7 +463,7 @@ describe('UpdateStandardUseCase', () => {
         existingStandard = standardFactory({
           id: standardId,
           name: 'Original Standard Name',
-          slug: 'original-standard-name', // Original slug
+          slug: 'original-standard-name',
           description: 'Original description',
           version: 1,
           spaceId: spaceId,
@@ -500,7 +488,7 @@ describe('UpdateStandardUseCase', () => {
         const updatedStandard = standardFactory({
           id: standardId,
           name: 'Original Standard Name',
-          slug: 'original-standard-name', // Should preserve original slug
+          slug: 'original-standard-name',
           description: 'Updated description',
           version: 2,
         });
@@ -508,12 +496,11 @@ describe('UpdateStandardUseCase', () => {
         const newVersion = standardVersionFactory({
           standardId,
           name: 'Original Standard Name',
-          slug: 'original-standard-name', // Should preserve original slug
+          slug: 'original-standard-name',
           description: 'Updated description',
           version: 2,
         });
 
-        // Setup mocks
         standardService.getStandardById.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -529,7 +516,7 @@ describe('UpdateStandardUseCase', () => {
         expect(standardService.updateStandard).toHaveBeenCalledWith(
           standardId,
           expect.objectContaining({
-            slug: 'original-standard-name', // Should preserve original slug
+            slug: 'original-standard-name',
             name: 'Original Standard Name',
           }),
         );
@@ -538,7 +525,7 @@ describe('UpdateStandardUseCase', () => {
       it('preserves the original slug in new version', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            slug: 'original-standard-name', // Should preserve original slug
+            slug: 'original-standard-name',
             name: 'Original Standard Name',
           }),
         );
@@ -550,7 +537,7 @@ describe('UpdateStandardUseCase', () => {
           {
             name: inputData.name,
             description: inputData.description,
-            slug: 'original-standard-name', // Should preserve original slug
+            slug: 'original-standard-name',
             version: 2,
             gitCommit: undefined,
             userId: createUserId(inputData.userId),
@@ -639,7 +626,6 @@ describe('UpdateStandardUseCase', () => {
           version: 2,
         });
 
-        // Setup mocks
         standardService.getStandardById.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -754,7 +740,7 @@ describe('UpdateStandardUseCase', () => {
 
           const inputData: UpdateStandardCommand = {
             standardId: standardId,
-            name: 'Different Name', // Changed
+            name: 'Different Name',
             description: 'Original description',
             rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
             organizationId: organizationId,
@@ -793,7 +779,7 @@ describe('UpdateStandardUseCase', () => {
           const inputData: UpdateStandardCommand = {
             standardId: standardId,
             name: 'Original Name',
-            description: 'Different description', // Changed
+            description: 'Different description',
             rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
             organizationId: organizationId,
             userId: userId.toString(),
@@ -835,7 +821,7 @@ describe('UpdateStandardUseCase', () => {
             standardId: standardId,
             name: 'Original Name',
             description: 'Original description',
-            rules: [{ id: createRuleId(uuidv4()), content: 'Rule 1' }], // Fewer rules
+            rules: [{ id: createRuleId(uuidv4()), content: 'Rule 1' }],
             organizationId: organizationId,
             userId: userId.toString(),
             spaceId: spaceId,
@@ -877,7 +863,7 @@ describe('UpdateStandardUseCase', () => {
             description: 'Original description',
             rules: [
               { id: createRuleId(uuidv4()), content: 'Modified rule content' },
-            ], // Changed content
+            ],
             organizationId: organizationId,
             userId: userId.toString(),
             spaceId: spaceId,
@@ -911,12 +897,11 @@ describe('UpdateStandardUseCase', () => {
             existingRules,
           );
 
-          // Update the latestVersion to have an original scope
           latestVersion = standardVersionFactory({
             standardId,
             name: 'Original Name',
             description: 'Original description',
-            scope: 'original-scope', // Original scope value
+            scope: 'original-scope',
             version: 1,
           });
           standardVersionService.getLatestStandardVersion.mockResolvedValue(
@@ -931,7 +916,7 @@ describe('UpdateStandardUseCase', () => {
             organizationId: organizationId,
             userId: userId.toString(),
             spaceId: spaceId,
-            scope: 'updated-scope', // Changed scope
+            scope: 'updated-scope',
           };
 
           const updatedStandard = standardFactory({ version: 2 });
@@ -968,7 +953,7 @@ describe('UpdateStandardUseCase', () => {
             description: 'Test description',
             rules: [{ id: createRuleId(uuidv4()), content: 'Test rule' }],
             organizationId: organizationId,
-            userId: userId.toString(), // Valid userId
+            userId: userId.toString(),
             spaceId: spaceId,
             scope: null,
           };

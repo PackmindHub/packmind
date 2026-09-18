@@ -59,7 +59,6 @@ export class CreateStandardWithPackagesUseCase
       packageSlugsCount: packageSlugs.length,
     });
 
-    // Step 1: Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
@@ -71,7 +70,6 @@ export class CreateStandardWithPackagesUseCase
       );
     }
 
-    // Step 2: Create the standard using CreateStandardWithExamplesUseCase
     this.logger.info('Creating standard with examples', { name });
     const standard =
       await this.createStandardWithExamplesUseCase.createStandardWithExamples({
@@ -91,7 +89,6 @@ export class CreateStandardWithPackagesUseCase
       name,
     });
 
-    // Step 3: If packageSlugs provided, add standard to packages
     if (packageSlugs.length > 0) {
       this.logger.info('Adding standard to packages', {
         standardId: standard.id,
@@ -99,14 +96,12 @@ export class CreateStandardWithPackagesUseCase
       });
 
       try {
-        // Fetch packages by slugs to validate they exist and get their IDs
         const packages = await this.fetchPackagesBySlugs(
           packageSlugs,
           organizationId,
           userId,
         );
 
-        // Validate all packages belong to the same space as the standard
         for (const pkg of packages) {
           if (pkg.spaceId !== spaceId) {
             this.logger.warn(
@@ -120,7 +115,6 @@ export class CreateStandardWithPackagesUseCase
             continue;
           }
 
-          // Add standard to package
           await this.deploymentsPort.addArtefactsToPackage({
             userId,
             spaceId,
@@ -136,7 +130,7 @@ export class CreateStandardWithPackagesUseCase
           });
         }
       } catch (error) {
-        // Log error but don't fail the standard creation
+        // Swallowed: the standard exists, only its package links failed
         this.logger.error(
           'Failed to add standard to packages, standard created successfully but package associations failed',
           {
@@ -144,7 +138,6 @@ export class CreateStandardWithPackagesUseCase
             error: error instanceof Error ? error.message : String(error),
           },
         );
-        // Don't throw - standard was created successfully
       }
     }
 
@@ -167,18 +160,15 @@ export class CreateStandardWithPackagesUseCase
       organizationId,
     });
 
-    // List all packages for the organization
     const { packages } = await this.deploymentsPort.listPackages({
       userId,
       organizationId: createOrganizationId(organizationId),
     });
 
-    // Filter to only the requested slugs
     const requestedPackages = packages.filter((pkg) =>
       slugs.includes(pkg.slug),
     );
 
-    // Log any missing packages
     const foundSlugs = new Set(requestedPackages.map((p) => p.slug));
     const missingSlugs = slugs.filter((slug) => !foundSlugs.has(slug));
     if (missingSlugs.length > 0) {
