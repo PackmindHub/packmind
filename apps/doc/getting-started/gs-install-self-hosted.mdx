@@ -170,15 +170,16 @@ Redis Configuration:
 - `SMTP_PASSWORD` - Password for SMTP authentication
 - `SMTP_FROM` - Default sender email address for outgoing emails
 - `SMTP_IS_EXCHANGE_SERVER` - Flag indicating if the SMTP server is a Microsoft Exchange server
-- `SMTP_TLS_REJECT_UNAUTHORIZED` - Whether the SMTP server's TLS certificate must be valid and trusted. Defaults to `true`; set it to `false` only if your SMTP server uses a certificate Packmind cannot verify
+- `SMTP_TLS_REJECT_UNAUTHORIZED` - Whether the SMTP server's TLS certificate must be valid and trusted. Defaults to `false`; set it to `true` to enable certificate verification
 
 <Warning>
-  Setting `SMTP_TLS_REJECT_UNAUTHORIZED` to `false` disables certificate
-  verification for outgoing mail, which exposes your messages to
-  man-in-the-middle interception. If your SMTP server uses a self-signed
-  certificate or a private Certificate Authority, prefer trusting that CA with
-  `NODE_EXTRA_CA_CERTS` (see [Add custom CA
-  certificates](#add-custom-ca-certificates-docker-compose)) instead.
+  By default Packmind does **not** verify the TLS certificate of your SMTP
+  server, which leaves outgoing mail open to man-in-the-middle interception. Set
+  `SMTP_TLS_REJECT_UNAUTHORIZED` to `true` to turn verification on. If your SMTP
+  server uses a self-signed certificate or a private Certificate Authority,
+  trust that CA with `NODE_EXTRA_CA_CERTS` (see [Add custom CA
+  certificates](#add-custom-ca-certificates-docker-compose)) so you can enable
+  verification rather than leaving it off.
 </Warning>
 
 Authentication & Security:

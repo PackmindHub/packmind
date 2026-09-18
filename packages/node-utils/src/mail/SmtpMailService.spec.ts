@@ -356,28 +356,10 @@ Test content here
     });
 
     describe('TLS certificate verification', () => {
-      it('verifies certificates by default', async () => {
+      it('skips verification when SMTP_TLS_REJECT_UNAUTHORIZED is unset', async () => {
         const mailConfig = await buildMailConfig();
 
-        expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
-      });
-
-      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is false', () => {
-        it('skips verification', async () => {
-          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'false' });
-
-          const mailConfig = await buildMailConfig();
-
-          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
-        });
-
-        it('skips verification regardless of case and surrounding spaces', async () => {
-          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' FALSE ' });
-
-          const mailConfig = await buildMailConfig();
-
-          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
-        });
+        expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
       });
 
       describe('when SMTP_TLS_REJECT_UNAUTHORIZED is true', () => {
@@ -388,15 +370,33 @@ Test content here
 
           expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
         });
-      });
 
-      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
-        it('verifies certificates', async () => {
-          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'nope' });
+        it('verifies certificates regardless of case and surrounding spaces', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' TRUE ' });
 
           const mailConfig = await buildMailConfig();
 
           expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is false', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'false' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'nope' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
         });
       });
     });
@@ -434,7 +434,12 @@ Test content here
         expect(mailConfig.secure).toBe(false);
       });
 
-      it('still verifies certificates', async () => {
+      it('honours the verification opt-in', async () => {
+        configureSmtp({
+          SMTP_IS_EXCHANGE_SERVER: 'true',
+          SMTP_TLS_REJECT_UNAUTHORIZED: 'true',
+        });
+
         const mailConfig = await buildMailConfig();
 
         expect(mailConfig.tls?.rejectUnauthorized).toBe(true);

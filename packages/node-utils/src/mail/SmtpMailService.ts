@@ -154,12 +154,13 @@ ${content}
       };
     }
 
-    // Certificate verification stays on unless a deployment explicitly opts out
-    // with SMTP_TLS_REJECT_UNAUTHORIZED=false. Prefer trusting a private CA through
-    // NODE_EXTRA_CA_CERTS over disabling verification.
+    // Certificate verification is opt-in: it stays off unless a deployment sets
+    // SMTP_TLS_REJECT_UNAUTHORIZED=true, so upgrading does not break instances whose
+    // mail server presents a certificate Node cannot verify. Turning it on is
+    // recommended, and a private CA is best trusted through NODE_EXTRA_CA_CERTS.
     mailConfig.tls = {
       rejectUnauthorized:
-        tlsRejectUnauthorized?.trim().toLowerCase() !== 'false',
+        tlsRejectUnauthorized?.trim().toLowerCase() === 'true',
     };
 
     // Handle Exchange Server specific configuration. The legacy cipher and the
