@@ -13,7 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const options = { out: path.join(here, 'output') };
+const options = { out: path.join(here, 'output'), target: 'standalone' };
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i += 2)
   options[argv[i].replace(/^--/, '')] = argv[i + 1];
@@ -197,21 +197,19 @@ const generated = new Date(monthly.generatedAt).toLocaleDateString('fr-FR', {
   year: 'numeric',
 });
 
-const html = `<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Taux de commentaires Packmind</title>
-<style>${css}</style>
-</head>
-<body>
-<main>
+const head = `<title>Taux de commentaires Packmind</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>${css}</style>`;
+
+const body = `<main>
 
 <header>
   <h1>Le taux de commentaires dans le code, mois par mois</h1>
-  <p class="lede">Codebase Packmind, fichiers TypeScript (<code>.ts</code>, <code>.tsx</code> et tests <code>.spec.*</code>),
-  d'octobre 2025 à septembre 2026, rapproché des dates de sortie des modèles Anthropic.</p>
+  <p class="lede">Le taux est resté entre 1 et 6 % pendant onze mois, puis a été multiplié par dix en août 2026.
+  Le basculement ne suit pas une consigne interne — aucune n'a changé — mais l'arrivée d'Opus 5 : en attribuant chaque
+  ligne au modèle qui l'a produite, toute la famille Opus 4.5 → 4.8 se tient sous 2,5 %, Opus 5 est à 19,6 %.</p>
+  <p>Codebase Packmind, fichiers TypeScript (<code>.ts</code>, <code>.tsx</code> et tests <code>.spec.*</code>),
+  d'octobre 2025 à septembre 2026.</p>
   <p class="meta">Généré le ${generated} · ${fmtInt(models.commitsScanned)} commits analysés ·
   ${fmtInt(headScope.files)} fichiers et ${fmtInt(headScope.code)} lignes de code au dernier relevé.</p>
 </header>
@@ -223,6 +221,7 @@ const html = `<!doctype html>
   <div class="tile"><span class="value">${fmtPct(headScope.commentRatio)}</span><span class="label">taux sur l'ensemble du code existant aujourd'hui</span></div>
 </div>
 
+<span class="eyebrow">Le flux</span>
 <h2>1. Ce qui est écrit chaque mois</h2>
 <p>Pour chaque mois, le diff net entre le 1<sup>er</sup> du mois et le 1<sup>er</sup> du mois suivant : sur les lignes
 <em>ajoutées</em>, quelle part est du commentaire. C'est la mesure qui reflète la façon dont le code est écrit — le taux
@@ -247,6 +246,7 @@ sur l'ensemble de la codebase, lui, bouge lentement parce qu'il est dominé par 
   <details><summary>Voir les données</summary><div id="t-category"></div></details>
 </div>
 
+<span class="eyebrow">L'attribution</span>
 <h2>2. Par modèle, directement</h2>
 <p>Les commits produits via Claude Code portent un trailer <code>Co-Authored-By: Claude &lt;modèle&gt;</code>. On peut donc
 attribuer chaque ligne ajoutée au modèle de la session qui l'a produite, au lieu de se contenter d'une corrélation
@@ -267,6 +267,7 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
   <details><summary>Voir les données</summary><div id="t-models"></div></details>
 </div>
 
+<span class="eyebrow">Le stock</span>
 <h2>3. Le stock, pour mémoire</h2>
 <p>La taille de la codebase et le taux de commentaires calculé sur l'ensemble des fichiers existants à chaque relevé.</p>
 
@@ -284,9 +285,11 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
   <div class="chart" id="c-stockratio"></div>
 </div>
 
+<span class="eyebrow">Référentiel</span>
 <h2>Dates de sortie retenues</h2>
 <div class="card"><div id="t-releases"></div></div>
 
+<span class="eyebrow">Comment c'est mesuré</span>
 <h2>Méthode et limites</h2>
 <ul>
   <li>Une ligne est comptée <em>commentaire</em> quand tous ses caractères non blancs appartiennent à un commentaire —
@@ -349,13 +352,23 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
 
   V.table(document.getElementById('t-releases'), ['Modèle', 'Date de sortie', 'Source'], D.releaseTable);
 })();
-</script>
-</body>
-</html>
-`;
+</script>`;
+
+// Two shapes of the same page. The standalone file is a complete document that
+// opens from disk; the artifact fragment leaves out the document skeleton,
+// which the Artifact runtime supplies.
+const html =
+  options.target === 'artifact'
+    ? `${head}\n${body}\n`
+    : `<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n` +
+      `<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
+      `${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
 
 fs.mkdirSync(options.out, { recursive: true });
-const target = path.join(options.out, 'comment-ratio.html');
+const target = path.join(
+  options.out,
+  options.target === 'artifact' ? 'comment-ratio.artifact.html' : 'comment-ratio.html',
+);
 fs.writeFileSync(target, html);
 process.stderr.write(
   `Wrote ${target} (${(html.length / 1024).toFixed(0)} KB)\n`,
