@@ -718,28 +718,40 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
       );
     });
 
-    // X axis ticks, one per month point of the first series. Two snapshots can
-    // fall in the same month (the 1st, and the head commit), so a label is only
-    // drawn when it differs from the previous one.
-    var lastLabel = null;
+    // Month labels sit on the 1st of their month, not on a data point. A
+    // fortnightly series puts its first July point around the 8th, so labelling
+    // it "Jul" moved the whole axis half a month and made a reference line on
+    // the 24th read as the 15th.
     var lastLabelX = -Infinity;
-    config.series[0].points.forEach(function (p) {
-      if (monthLabel(p[0]) === lastLabel) return;
-      // Two samples a fortnight apart sit close enough for their labels to
-      // collide, so a new one is only drawn once there is room for it.
-      if (x(p[0]) - lastLabelX < 44) return;
-      lastLabel = monthLabel(p[0]);
-      lastLabelX = x(p[0]);
-      svg.appendChild(
-        text(monthLabel(p[0]), {
-          x: x(p[0]),
-          y: m.top + plotH + 20,
-          fill: 'var(--text-muted)',
-          'font-size': 11.5,
-          'text-anchor': 'middle',
-        }),
-      );
-    });
+    var cursor = new Date(t0);
+    cursor = Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth(), 1);
+    for (; cursor <= t1;) {
+      var at = new Date(cursor);
+      if (cursor >= t0 && x(cursor) - lastLabelX >= 44) {
+        lastLabelX = x(cursor);
+        svg.appendChild(
+          text(monthLabel(cursor), {
+            x: x(cursor),
+            y: m.top + plotH + 20,
+            fill: 'var(--text-muted)',
+            'font-size': 11.5,
+            'text-anchor': 'middle',
+          }),
+        );
+        svg.appendChild(
+          el('line', {
+            x1: x(cursor),
+            x2: x(cursor),
+            y1: m.top + plotH,
+            y2: m.top + plotH + 4,
+            stroke: 'var(--axis)',
+            'stroke-width': 1,
+          }),
+        );
+      }
+      cursor = Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + 1, 1);
+    }
+
     svg.appendChild(
       el('line', {
         x1: m.left,
