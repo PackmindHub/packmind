@@ -8,10 +8,10 @@ import { GitProviderCredentials } from '../../../domain/repositories/IGitProvide
 import { GitProviderService } from '../../GitProviderService';
 
 /**
- * Only these vendors can be probed. `GitProviderFactory` throws a raw
- * "Unsupported git provider source" for anything else — CLI-managed providers
- * are recorded with source 'unknown' — and an update that used to succeed must
- * not start returning a 500.
+ * Only these vendors can be probed: `GitProviderFactory` throws a raw
+ * "Unsupported git provider source" for anything else, and CLI-managed
+ * providers are recorded with source 'unknown', so probing them would turn an
+ * ordinary update into a 500.
  */
 const PROBEABLE_SOURCES: string[] = [
   GitProviderVendors.github,
