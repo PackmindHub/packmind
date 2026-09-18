@@ -24,8 +24,8 @@ A third view attributes the flow to the model that produced it, using the
 ```bash
 pnpm install                                # provides the `typescript` parser
 node tools/comment-ratio/selftest.mjs       # check the line classifier
-node tools/comment-ratio/collect.mjs        # monthly stock + flow
-node tools/comment-ratio/by-model.mjs       # per-model flow (~1 min)
+node tools/comment-ratio/collect.mjs --until 2026-09-18   # stock + flow
+node tools/comment-ratio/by-model.mjs --until 2026-09-18  # per-model (~1 min)
 node tools/comment-ratio/render.mjs         # build the HTML report
 ```
 
@@ -37,8 +37,11 @@ Everything lands in `tools/comment-ratio/output/`:
 | `by-model.json` / `.csv`      | per-model flow, with per-commit distribution  |
 | `comment-ratio.html`          | self-contained report, no external dependency |
 
-`collect.mjs` takes `--repo`, `--ref`, `--to YYYY-MM` and `--out`; `by-model.mjs`
-takes `--repo`, `--ref` and `--out`. The full history must be present — a shallow
+`collect.mjs` takes `--repo`, `--ref`, `--to YYYY-MM`, `--until YYYY-MM-DD`,
+`--step` and `--out`; `by-model.mjs` takes `--repo`, `--ref`, `--until` and
+`--out`. `--until` stops the walk before a given day; the published figures use
+`--until 2026-09-18`, because a deliberate comment-rewriting pass landed that
+day and would have dominated the final period. The full history must be present — a shallow
 clone silently produces a truncated series, so run `git fetch --unshallow` first
 if needed.
 

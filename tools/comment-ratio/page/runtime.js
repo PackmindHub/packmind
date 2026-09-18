@@ -4,43 +4,32 @@
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var MONTHS = [
-    'janv.',
-    'févr.',
-    'mars',
-    'avr.',
-    'mai',
-    'juin',
-    'juil.',
-    'août',
-    'sept.',
-    'oct.',
-    'nov.',
-    'déc.',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   function pct(value, digits) {
     if (value === null || value === undefined) return '—';
-    return (
-      (value * 100)
-        .toFixed(digits === undefined ? 1 : digits)
-        .replace('.', ',') + ' %'
-    );
+    return (value * 100).toFixed(digits === undefined ? 1 : digits) + '%';
   }
 
   function int(value) {
-    return value.toLocaleString('fr-FR');
+    return value.toLocaleString('en-US');
   }
 
   function monthLabel(ms) {
     var d = new Date(ms);
     return MONTHS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
-  }
-
-  function dayLabel(ms) {
-    var d = new Date(ms);
-    return (
-      d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear()
-    );
   }
 
   function el(name, attrs, children) {
@@ -187,48 +176,33 @@
       }),
     );
 
-    // Model-release annotations: dashed reference lines, labelled in two staggered rows.
+    // Model-release reference lines, labelled in two staggered rows so that
+    // two releases a few weeks apart do not overprint each other.
     (config.annotations || []).forEach(function (a, i) {
       if (a.t < t0 || a.t > t1) return;
       var ax = x(a.t);
-      if (a.major) {
-        svg.appendChild(
-          el('line', {
-            x1: ax,
-            x2: ax,
-            y1: m.top - 6,
-            y2: m.top + plotH,
-            stroke: 'var(--annotation)',
-            'stroke-width': 1,
-            'stroke-dasharray': '3 4',
-            opacity: 0.85,
-          }),
-        );
-        var row = i % 2 === 0 ? 0 : 16;
-        svg.appendChild(
-          text(a.label, {
-            x: Math.max(m.left + 2, Math.min(m.left + plotW - 2, ax)),
-            y: m.top - 34 + row,
-            fill: 'var(--text-secondary)',
-            'font-size': 11.5,
-            'font-weight': 500,
-            'text-anchor': 'middle',
-          }),
-        );
-      } else {
-        var tick = el('line', {
+      svg.appendChild(
+        el('line', {
           x1: ax,
           x2: ax,
-          y1: m.top + plotH - 7,
+          y1: m.top - 6,
           y2: m.top + plotH,
           stroke: 'var(--annotation)',
-          'stroke-width': 1.5,
-          opacity: 0.7,
-        });
-        tick.appendChild(el('title', {}, [])).textContent =
-          a.label + ' — ' + dayLabel(a.t);
-        svg.appendChild(tick);
-      }
+          'stroke-width': 1,
+          'stroke-dasharray': '3 4',
+          opacity: 0.85,
+        }),
+      );
+      svg.appendChild(
+        text(a.label, {
+          x: Math.max(m.left + 2, Math.min(m.left + plotW - 2, ax)),
+          y: m.top - 34 + (i % 2 === 0 ? 0 : 16),
+          fill: 'var(--text-secondary)',
+          'font-size': 11.5,
+          'font-weight': 500,
+          'text-anchor': 'middle',
+        }),
+      );
     });
 
     // Series
@@ -484,7 +458,7 @@
         tip.innerHTML =
           '<b>' +
           d.label +
-          '</b><div>Taux poolé <b>' +
+          '</b><div>Pooled <b>' +
           pct(d.value) +
           '</b></div>' +
           (d.median !== null && d.median !== undefined
@@ -500,7 +474,7 @@
           int(d.commits) +
           ' commits · +' +
           int(d.added) +
-          ' lignes</div>';
+          ' lines</div>';
         tip.classList.add('on');
         place(
           tip,
@@ -521,6 +495,10 @@
   // ---------------------------------------------------------------- table view
 
   function table(container, columns, rows) {
+    // A table of figures cannot wrap without becoming unreadable, so it gets
+    // its own scroller rather than pushing the page sideways on a phone.
+    var scroller = document.createElement('div');
+    scroller.className = 'table-scroll';
     var node = document.createElement('table');
     var head = document.createElement('tr');
     columns.forEach(function (c) {
@@ -538,7 +516,8 @@
       });
       node.appendChild(tr);
     });
-    container.appendChild(node);
+    scroller.appendChild(node);
+    container.appendChild(scroller);
   }
 
   window.VIZ = {

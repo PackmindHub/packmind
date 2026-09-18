@@ -19,6 +19,7 @@
  *   --repo <path>    repository to analyse            (default: cwd)
  *   --ref <ref>      branch/ref to walk               (default: HEAD)
  *   --to <YYYY-MM>   last month to include            (default: current month)
+ *   --until <D>      stop before this day, YYYY-MM-DD  (default: none)
  *   --out <dir>      output directory                 (default: tools/comment-ratio/output)
  */
 import fs from 'node:fs';
@@ -50,6 +51,8 @@ function parseArgs(argv) {
     repo: process.cwd(),
     ref: 'HEAD',
     to: null,
+    // Stop before this day (YYYY-MM-DD), so a known outlier can be cut out.
+    until: null,
     out: null,
     // Models ship mid-month, so a monthly sample cannot separate the weeks
     // before a release from the weeks after it. Sample twice a month.
@@ -297,9 +300,14 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const toMonth = options.to ?? new Date().toISOString().slice(0, 7);
 
+  const ref = options.until
+    ? commitBefore(options.repo, options.ref, `${options.until}T00:00:00+00:00`)
+    : options.ref;
+  if (!ref) throw new Error(`No commit before ${options.until}`);
+
   const boundaries = resolveBoundaries(
     options.repo,
-    options.ref,
+    ref,
     toMonth,
     options.step,
   );
@@ -352,7 +360,8 @@ async function main() {
   const report = {
     generatedAt: new Date().toISOString(),
     repo: git(options.repo, ['rev-parse', '--show-toplevel']).trim(),
-    ref: options.ref,
+    ref,
+    until: options.until,
     categories: CATEGORIES,
     groups: GROUPS,
     snapshots: snapshots.map(({ tree, ...rest }) => rest),

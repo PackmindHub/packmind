@@ -1,82 +1,82 @@
 {
-  "note": "Release dates of the Anthropic models available over the lifetime of this repository. Dates marked source=announcement come from Anthropic's own launch announcement or contemporary press coverage. Dates marked source=derived are taken from the retirement commitment published on https://platform.claude.com/docs/en/about-claude/model-deprecations, where the commitment is 'not sooner than <release date + 1 year>'; that rule was verified against the four dates confirmed independently, which all matched exactly.",
+  "note": "Release dates of the Anthropic models available over the lifetime of this repository, as published in Anthropic's release notes (https://support.claude.com/en/articles/12138966-release-notes, mirrored at https://platform.claude.com/docs/en/release-notes/overview). Every date was cross-checked against the retirement commitments on https://platform.claude.com/docs/en/about-claude/model-deprecations, where the commitment runs to one year after release; all eleven agreed.",
   "releases": [
     {
       "date": "2025-09-29",
       "model": "Claude Sonnet 4.5",
       "family": "Sonnet",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2025-10-15",
       "model": "Claude Haiku 4.5",
       "family": "Haiku",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2025-11-24",
       "model": "Claude Opus 4.5",
       "family": "Opus",
       "major": true,
-      "source": "announcement"
+      "source": "release-notes"
     },
     {
       "date": "2026-02-05",
       "model": "Claude Opus 4.6",
       "family": "Opus",
       "major": true,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2026-02-17",
       "model": "Claude Sonnet 4.6",
       "family": "Sonnet",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2026-04-16",
       "model": "Claude Opus 4.7",
       "family": "Opus",
       "major": true,
-      "source": "announcement"
+      "source": "release-notes"
     },
     {
       "date": "2026-05-28",
       "model": "Claude Opus 4.8",
       "family": "Opus",
       "major": true,
-      "source": "announcement"
+      "source": "release-notes"
     },
     {
       "date": "2026-06-09",
       "model": "Claude Fable 5",
       "family": "Fable",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2026-06-30",
       "model": "Claude Sonnet 5",
       "family": "Sonnet",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     },
     {
       "date": "2026-07-24",
       "model": "Claude Opus 5",
       "family": "Opus",
       "major": true,
-      "source": "announcement"
+      "source": "release-notes"
     },
     {
       "date": "2026-09-01",
       "model": "Claude Fable 5.1",
       "family": "Fable",
       "major": false,
-      "source": "derived"
+      "source": "release-notes"
     }
   ]
 }

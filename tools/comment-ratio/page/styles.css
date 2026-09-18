@@ -229,6 +229,51 @@ p {
   gap: 7px;
 }
 
+.formula {
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 14px 0 18px;
+  overflow-x: auto;
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.frac .num {
+  padding: 0 14px 7px;
+}
+
+.frac .den {
+  padding: 7px 14px 0;
+  border-top: 1px solid var(--text-secondary);
+}
+
+.frac-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.formula .note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 14px 0 0;
+  font-family: var(--font-sans);
+  max-width: 62ch;
+  white-space: normal;
+}
+
 details {
   margin-top: 12px;
   border-top: 1px solid var(--border);
@@ -253,6 +298,11 @@ summary::before {
 
 details[open] summary::before {
   content: '▾ ';
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 table {
@@ -309,5 +359,19 @@ code {
   }
   .card {
     padding: 16px 12px 12px;
+  }
+  /* The fraction cannot shrink below its longest term, so the label moves
+     above it rather than squeezing it off the edge. */
+  .frac-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .frac,
+  .frac-row {
+    font-size: 11.5px;
+  }
+  .formula {
+    padding: 16px 14px;
   }
 }

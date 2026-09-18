@@ -1,4 +1,4 @@
-<title>Taux de commentaires Packmind</title>
+<title>Packmind comment ratio</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>:root {
@@ -232,6 +232,51 @@ p {
   gap: 7px;
 }
 
+.formula {
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 14px 0 18px;
+  overflow-x: auto;
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.frac .num {
+  padding: 0 14px 7px;
+}
+
+.frac .den {
+  padding: 7px 14px 0;
+  border-top: 1px solid var(--text-secondary);
+}
+
+.frac-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.formula .note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 14px 0 0;
+  font-family: var(--font-sans);
+  max-width: 62ch;
+  white-space: normal;
+}
+
 details {
   margin-top: 12px;
   border-top: 1px solid var(--border);
@@ -256,6 +301,11 @@ summary::before {
 
 details[open] summary::before {
   content: '▾ ';
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 table {
@@ -313,136 +363,180 @@ code {
   .card {
     padding: 16px 12px 12px;
   }
+  /* The fraction cannot shrink below its longest term, so the label moves
+     above it rather than squeezing it off the edge. */
+  .frac-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .frac,
+  .frac-row {
+    font-size: 11.5px;
+  }
+  .formula {
+    padding: 16px 14px;
+  }
 }
 </style>
 <main>
 
 <header>
-  <h1>Le taux de commentaires dans le code, quinzaine par quinzaine</h1>
-  <p class="lede">Sur les dix premiers mois, chaque quinzaine tient entre 0,8 % et
-  7,5 % ; à partir d'août 2026 le flux passe de 2,9 % à
-  18,8 %, soit ×6,4. Aucune consigne interne sur les
-  commentaires n'a changé sur la période.</p>
-  <p class="lede">Une seconde mesure, indépendante de la première — chaque ligne ajoutée attribuée au modèle de la
-  session qui l'a produite, commit par commit — désigne la sortie d'Opus 5 le 24 juillet : la famille Opus 4.5 → 4.8 se
-  tient entre 1,3 % et 3,3 %, Opus 5 est à 18,0 %,
-  soit ×10,6.</p>
-  <p>Codebase Packmind, fichiers TypeScript (<code>.ts</code>, <code>.tsx</code> et tests <code>.spec.*</code>),
-  d'octobre 2025 à septembre 2026.</p>
-  <p class="meta">Généré le 18 septembre 2026 · 3 559 commits analysés ·
-  3 453 fichiers et 443 129 lignes de code au dernier relevé.</p>
+  <h1>Comment ratio in the code, fortnight by fortnight</h1>
+  <p class="lede">Until August 2026 every fortnight sits between 0.8% and
+  7.5%; from August 2026 the flow moves from 2.7% to
+  17.5%, a factor of 6.5. No internal instruction about comments
+  changed over the period.</p>
+  <p class="lede">A second measure, independent of the first — every added line attributed, commit by commit, to the
+  model of the session that produced it — points at the release of Opus 5 on 24 July: the Opus 4.5 → 4.8 family sits
+  between 1.3% and 3.3%, Opus 5 is at 16.6%, a
+  factor of 9.9.</p>
+  <p>Packmind codebase, TypeScript files (<code>.ts</code>, <code>.tsx</code> and <code>.spec.*</code> tests), from
+  November 2025 to September 2026. The repository's first two months are
+  left out: it was still being imported and its volumes are not comparable.</p>
+  <p class="meta">Generated 18 September 2026 · 3,555 commits scanned ·
+  3,451 files and 443,378 lines of code at the last snapshot.</p>
 </header>
 
 <div class="tiles">
-  <div class="tile"><span class="value">18,0 %</span><span class="label">des lignes ajoutées par <b>Opus 5</b> sont des commentaires</span></div>
-  <div class="tile"><span class="value">1,7 %</span><span class="label">pour toute la famille <b>Opus 4.5 → 4.8</b></span></div>
-  <div class="tile"><span class="value">×10,6</span><span class="label">écart entre les deux générations, à la ligne attribuée</span></div>
-  <div class="tile"><span class="value">4,7 %</span><span class="label">taux sur l'ensemble du code existant aujourd'hui</span></div>
+  <div class="tile"><span class="value">16.6%</span><span class="label">of the lines added by <b>Opus 5</b> are comments</span></div>
+  <div class="tile"><span class="value">1.7%</span><span class="label">for the whole <b>Opus 4.5 → 4.8</b> family</span></div>
+  <div class="tile"><span class="value">×9.9</span><span class="label">between the two generations, per attributed line</span></div>
+  <div class="tile"><span class="value">5.8%</span><span class="label">across all the code that exists today</span></div>
 </div>
 
-<span class="eyebrow">Le flux</span>
-<h2>1. Ce qui est écrit chaque mois</h2>
-<p>Pour chaque quinzaine — les modèles sortent en milieu de mois, un pas mensuel ne séparerait pas l'avant de l'après — le diff net entre les deux bornes : sur les lignes
-<em>ajoutées</em>, quelle part est du commentaire. C'est la mesure qui reflète la façon dont le code est écrit — le taux
-sur l'ensemble de la codebase, lui, bouge lentement parce qu'il est dominé par l'existant.</p>
+<span class="eyebrow">The flow</span>
+<h2>1. What gets written</h2>
+<p>For each fortnight — models ship mid-month, so a monthly step would not separate the weeks before a release from
+the weeks after it — the net diff between the two boundaries: of the lines <em>added</em>, what share is comment. This
+is the measure that reflects how code is being written. The ratio over the whole codebase moves slowly, because it is
+dominated by what was written months ago.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Taux de commentaires des lignes ajoutées</h3>
-    <p>Les traits verticaux marquent les sorties de modèles Opus ; les repères en bas de l'axe, les autres modèles (survolez-les).</p>
+    <h3>Comment ratio of added lines</h3>
+    <p>The dashed lines mark the Opus releases. Every release, Opus or not, is listed in the reference table below.</p>
   </div>
   <div class="chart" id="c-headline"></div>
-  <details><summary>Voir les données</summary><div id="t-headline"></div></details>
+  <details><summary>See the data</summary><div id="t-headline"></div></details>
 </div>
 
 <div class="card">
   <div class="card-head">
-    <h3>Par type de fichier</h3>
-    <p>Le code applicatif backend, le front React, et les fichiers de test suivent la même trajectoire.</p>
+    <h3>By file type</h3>
+    <p>Backend code, the React front end and the test files all follow the same path.</p>
   </div>
   <div class="chart" id="c-category"></div>
   <div class="legend" id="l-category"></div>
-  <details><summary>Voir les données</summary><div id="t-category"></div></details>
+  <details><summary>See the data</summary><div id="t-category"></div></details>
 </div>
 
-<span class="eyebrow">L'attribution</span>
-<h2>2. Par modèle, directement</h2>
-<p>Les commits produits via Claude Code portent un trailer <code>Co-Authored-By: Claude &lt;modèle&gt;</code>. On peut donc
-attribuer chaque ligne ajoutée au modèle de la session qui l'a produite, au lieu de se contenter d'une corrélation
-avec le calendrier. La barre donne le taux poolé ; le point et le trait donnent la médiane et l'écart
-interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas porté par quelques gros commits.</p>
+<span class="eyebrow">Attribution</span>
+<h2>2. By model, directly</h2>
+<p>Commits produced through Claude Code carry a <code>Co-Authored-By: Claude &lt;model&gt;</code> trailer, so every
+added line can be attributed to the model of the session that produced it, rather than left to a correlation with the
+calendar. The bar is the pooled ratio; the dot and the line are the median and the interquartile range
+<em>per commit</em>, which is how you check that the result is not carried by a handful of large commits.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Taux de commentaires des lignes ajoutées, par modèle</h3>
-    <p>Modèles avec au moins 1 000 lignes ajoutées sur la période.</p>
+    <h3>Comment ratio of added lines, by model</h3>
+    <p>Buckets with at least 1,000 added lines over the period.</p>
   </div>
   <div class="chart" id="c-models"></div>
   <div class="legend">
-    <span><i class="swatch" style="background:var(--series-1);height:9px;border-radius:3px"></i>Taux poolé sur toutes les lignes</span>
-    <span><i class="swatch" style="background:var(--text-primary);width:9px;height:9px;border-radius:50%"></i>Médiane par commit</span>
-    <span><i class="swatch" style="background:var(--text-primary);opacity:.55"></i>P25 – P75 par commit</span>
+    <span><i class="swatch" style="background:var(--series-1);height:9px;border-radius:3px"></i>Pooled over all lines</span>
+    <span><i class="swatch" style="background:var(--text-primary);width:9px;height:9px;border-radius:50%"></i>Median per commit</span>
+    <span><i class="swatch" style="background:var(--text-primary);opacity:.55"></i>P25 – P75 per commit</span>
   </div>
-  <details><summary>Voir les données</summary><div id="t-models"></div></details>
+  <details><summary>See the data</summary><div id="t-models"></div></details>
 </div>
 
-<span class="eyebrow">Par développeur</span>
-<h2>3. Le même développeur, d'une génération à l'autre</h2>
-<p>Les commits Opus 5 ne sont pas répartis uniformément dans l'équipe, donc la comparaison entre modèles pourrait
-n'être qu'une comparaison entre personnes. Elle ne l'est pas : chaque développeur qui a utilisé les deux générations
-monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à l'autre.</p>
+<span class="eyebrow">By developer</span>
+<h2>3. The same developer, one generation apart</h2>
+<p>Opus 5 commits are not spread evenly across the team, so a comparison between models could have been a comparison
+between people. It is not one: every developer who used both generations moves the same way, by a factor of 4 to 20.
+How far they move, though, varies a great deal from one person to the next.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Taux de commentaires par développeur et par modèle</h3>
-    <p>Développeurs ayant au moins 1 000 lignes ajoutées avec Opus 5 et avec au moins un modèle de la génération précédente.</p>
+    <h3>Comment ratio by developer and model</h3>
+    <p>Developers with at least 1,000 lines added with Opus 5 and with at least one model of the previous generation.</p>
   </div>
   <div class="chart" id="c-authors"></div>
-  <details><summary>Voir la répartition complète des modèles par développeur</summary><div id="t-authors"></div></details>
+  <details><summary>See the full model breakdown per developer</summary><div id="t-authors"></div></details>
 </div>
 
-<span class="eyebrow">Le stock</span>
-<h2>4. Le stock, pour mémoire</h2>
-<p>La taille de la codebase et le taux de commentaires calculé sur l'ensemble des fichiers existants à chaque relevé.</p>
+<span class="eyebrow">The stock</span>
+<h2>4. The stock, for reference</h2>
+<p>The size of the codebase, and the comment ratio computed over every file that exists at each snapshot.</p>
 
 <div class="card">
-  <div class="card-head"><h3>Lignes de code TypeScript (hors commentaires et lignes vides)</h3></div>
+  <div class="card-head"><h3>TypeScript lines of code (comments and blank lines excluded)</h3></div>
   <div class="chart" id="c-size"></div>
-  <details><summary>Voir les données</summary><div id="t-size"></div></details>
+  <details><summary>See the data</summary><div id="t-size"></div></details>
 </div>
 
 <div class="card">
   <div class="card-head">
-    <h3>Taux de commentaires sur l'ensemble de la codebase</h3>
-    <p>Beaucoup plus inerte que le flux : un mois de code très commenté ne déplace le stock que de quelques dixièmes de point.</p>
+    <h3>Comment ratio across the whole codebase</h3>
+    <p>Far more inert than the flow: a fortnight of heavily commented code moves the stock by a few tenths of a point.</p>
   </div>
   <div class="chart" id="c-stockratio"></div>
 </div>
 
-<span class="eyebrow">Référentiel</span>
-<h2>Dates de sortie retenues</h2>
+<span class="eyebrow">Reference</span>
+<h2>Release dates used</h2>
 <div class="card"><div id="t-releases"></div></div>
 
-<span class="eyebrow">Comment c'est mesuré</span>
-<h2>Méthode et limites</h2>
+<span class="eyebrow">How it is measured</span>
+<h2>Method and limits</h2>
+
+<p>Every line of a file goes into exactly one bucket — blank, code, or comment — and the ratio is then comments over
+non-blank lines:</p>
+
+<div class="formula">
+  <div class="frac-row">
+    <span>comment ratio =</span>
+    <span class="frac">
+      <span class="num">comment lines</span>
+      <span class="den">comment lines + code lines</span>
+    </span>
+  </div>
+  <p class="note">Blank lines count <b>neither in the numerator nor in the denominator</b>. A line is a comment only
+  when <b>every</b> non-whitespace character on it belongs to one: <code>const a = 1; // why</code> is therefore code.
+  That is the convention <code>cloc</code> uses.</p>
+</div>
+
+<p>Two sets of lines feed into it, and that is the only difference between the report's two measures. The <b>flow</b>
+takes the lines <em>added</em> during a period; the <b>stock</b> takes every line of every file at a date. Worked on
+the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
+
+<div class="formula">
+  <div class="frac-row">
+    <span>17.9% =</span>
+    <span class="frac">
+      <span class="num">6,276</span>
+      <span class="den">6,276 + 28,799</span>
+    </span>
+  </div>
+</div>
+
 <ul>
-  <li>Une ligne est comptée <em>commentaire</em> quand tous ses caractères non blancs appartiennent à un commentaire —
-  convention de <code>cloc</code>. <code>const a = 1; // pourquoi</code> compte donc comme du code.</li>
-  <li>Les commentaires sont repérés avec le parser TypeScript officiel, pas avec une expression régulière : les
-  chaînes, les littéraux de gabarit, les expressions régulières et le texte JSX contenant <code>//</code> ne sont pas
-  pris pour des commentaires. L'idiome JSX <code>{'{/* ... */}'}</code> est compté comme commentaire.</li>
-  <li>Les fichiers <code>.d.ts</code> sont exclus. Les renommages sont détectés, donc déplacer un fichier ne compte pas
-  comme du code neuf.</li>
-  <li>L'historique public du dépôt commence le 5 septembre 2025 par un import d'une base déjà existante. Ce premier
-  delta n'est pas un mois de développement et est exclu des courbes.</li>
-  <li>Le trailer indique le modèle de la session qui a produit le commit, pas nécessairement l'auteur de chaque ligne.
-  Les pull requests étant écrasées à la fusion, un trailer couvre une PR.</li>
-  <li>La dernière période est partielle (arrêtée au dernier commit analysé) et n'est pas lisible comme les
-  autres : une passe de réécriture des commentaires y pèse près de la moitié des commentaires ajoutés tout en en
-  supprimant bien davantage. Une ligne modifiée compte pour git comme une suppression plus un ajout, donc « lignes
-  ajoutées » inclut les réécritures — le taux répond à « quand ce code a été écrit, quelle part était du commentaire »,
-  pas à « combien de documentation nette a été produite ».</li>
-  <li>Les commits sans trailer (l'essentiel de 2025) sont d'attribution inconnue, pas « humains ».</li>
+  <li>Comments are located with the official TypeScript parser rather than a regular expression, so strings, template
+  literals, regex literals and JSX text containing <code>//</code> are not mistaken for comments. The JSX idiom
+  <code>{'{/* ... */}'}</code> counts as a comment, on every line it spans.</li>
+  <li><code>.d.ts</code> files are excluded. Renames are detected, so moving a file does not look like new code.</li>
+  <li>The repository's public history starts on 5 September 2025 with an import of an already existing codebase. That
+  first delta is not a period of development and is left out of the charts.</li>
+  <li>The trailer records the model of the session that produced a commit, not necessarily the author of every line in
+  it. Pull requests are squashed on merge, so one trailer covers one pull request.</li>
+  <li>Commits from 18 September 2026 onwards are excluded (<code>--until 2026-09-18</code>): a deliberate
+  comment-rewriting pass landed that day, and it would have accounted for nearly half of the final period's added
+  comment lines while removing far more.</li>
+  <li>A modified line reaches git as a removal plus an addition, so "added lines" includes rewrites. The ratio answers
+  "when this code was written, what share was comment", not "how much net documentation was produced".</li>
+  <li>Commits with no trailer (most of 2025) are of unknown attribution, not "human".</li>
 </ul>
 
 </main>
@@ -452,43 +546,32 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var MONTHS = [
-    'janv.',
-    'févr.',
-    'mars',
-    'avr.',
-    'mai',
-    'juin',
-    'juil.',
-    'août',
-    'sept.',
-    'oct.',
-    'nov.',
-    'déc.',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   function pct(value, digits) {
     if (value === null || value === undefined) return '—';
-    return (
-      (value * 100)
-        .toFixed(digits === undefined ? 1 : digits)
-        .replace('.', ',') + ' %'
-    );
+    return (value * 100).toFixed(digits === undefined ? 1 : digits) + '%';
   }
 
   function int(value) {
-    return value.toLocaleString('fr-FR');
+    return value.toLocaleString('en-US');
   }
 
   function monthLabel(ms) {
     var d = new Date(ms);
     return MONTHS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
-  }
-
-  function dayLabel(ms) {
-    var d = new Date(ms);
-    return (
-      d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear()
-    );
   }
 
   function el(name, attrs, children) {
@@ -635,48 +718,33 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
       }),
     );
 
-    // Model-release annotations: dashed reference lines, labelled in two staggered rows.
+    // Model-release reference lines, labelled in two staggered rows so that
+    // two releases a few weeks apart do not overprint each other.
     (config.annotations || []).forEach(function (a, i) {
       if (a.t < t0 || a.t > t1) return;
       var ax = x(a.t);
-      if (a.major) {
-        svg.appendChild(
-          el('line', {
-            x1: ax,
-            x2: ax,
-            y1: m.top - 6,
-            y2: m.top + plotH,
-            stroke: 'var(--annotation)',
-            'stroke-width': 1,
-            'stroke-dasharray': '3 4',
-            opacity: 0.85,
-          }),
-        );
-        var row = i % 2 === 0 ? 0 : 16;
-        svg.appendChild(
-          text(a.label, {
-            x: Math.max(m.left + 2, Math.min(m.left + plotW - 2, ax)),
-            y: m.top - 34 + row,
-            fill: 'var(--text-secondary)',
-            'font-size': 11.5,
-            'font-weight': 500,
-            'text-anchor': 'middle',
-          }),
-        );
-      } else {
-        var tick = el('line', {
+      svg.appendChild(
+        el('line', {
           x1: ax,
           x2: ax,
-          y1: m.top + plotH - 7,
+          y1: m.top - 6,
           y2: m.top + plotH,
           stroke: 'var(--annotation)',
-          'stroke-width': 1.5,
-          opacity: 0.7,
-        });
-        tick.appendChild(el('title', {}, [])).textContent =
-          a.label + ' — ' + dayLabel(a.t);
-        svg.appendChild(tick);
-      }
+          'stroke-width': 1,
+          'stroke-dasharray': '3 4',
+          opacity: 0.85,
+        }),
+      );
+      svg.appendChild(
+        text(a.label, {
+          x: Math.max(m.left + 2, Math.min(m.left + plotW - 2, ax)),
+          y: m.top - 34 + (i % 2 === 0 ? 0 : 16),
+          fill: 'var(--text-secondary)',
+          'font-size': 11.5,
+          'font-weight': 500,
+          'text-anchor': 'middle',
+        }),
+      );
     });
 
     // Series
@@ -932,7 +1000,7 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
         tip.innerHTML =
           '<b>' +
           d.label +
-          '</b><div>Taux poolé <b>' +
+          '</b><div>Pooled <b>' +
           pct(d.value) +
           '</b></div>' +
           (d.median !== null && d.median !== undefined
@@ -948,7 +1016,7 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
           int(d.commits) +
           ' commits · +' +
           int(d.added) +
-          ' lignes</div>';
+          ' lines</div>';
         tip.classList.add('on');
         place(
           tip,
@@ -969,6 +1037,10 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
   // ---------------------------------------------------------------- table view
 
   function table(container, columns, rows) {
+    // A table of figures cannot wrap without becoming unreadable, so it gets
+    // its own scroller rather than pushing the page sideways on a phone.
+    var scroller = document.createElement('div');
+    scroller.className = 'table-scroll';
     var node = document.createElement('table');
     var head = document.createElement('tr');
     columns.forEach(function (c) {
@@ -986,7 +1058,8 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
       });
       node.appendChild(tr);
     });
-    container.appendChild(node);
+    scroller.appendChild(node);
+    container.appendChild(scroller);
   }
 
   window.VIZ = {
@@ -1001,52 +1074,51 @@ monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à
 </script>
 <script>
 (function () {
-  var D = {"tMin":1757376000000,"tMax":1790208000000,"annotations":[{"t":1759104000000,"label":"Sonnet 4.5","major":false},{"t":1760486400000,"label":"Haiku 4.5","major":false},{"t":1763942400000,"label":"Opus 4.5","major":true},{"t":1770249600000,"label":"Opus 4.6","major":true},{"t":1771286400000,"label":"Sonnet 4.6","major":false},{"t":1776297600000,"label":"Opus 4.7","major":true},{"t":1779926400000,"label":"Opus 4.8","major":true},{"t":1780963200000,"label":"Fable 5","major":false},{"t":1782777600000,"label":"Sonnet 5","major":false},{"t":1784851200000,"label":"Opus 5","major":true},{"t":1788220800000,"label":"Fable 5.1","major":false}],"headline":[{"name":"Tous fichiers","color":"var(--series-1)","points":[[1758585600000,0.04501306182597629],[1759881600000,0.022421029379279877],[1761220800000,0.06056144017479694],[1762560000000,0.07497331910352188],[1763856000000,0.04590163934426229],[1765152000000,0.03765776950134492],[1766491200000,0.028366567226670854],[1767830400000,0.024442636289666395],[1769169600000,0.019251601132670708],[1770508800000,0.02118287982845055],[1771718400000,0.015939206057446982],[1772928000000,0.013830822223975178],[1774267200000,0.014453427843615018],[1775606400000,0.00976658245031864],[1776902400000,0.013121446274967197],[1778198400000,0.007916181606519208],[1779537600000,0.03180083590768672],[1780876800000,0.02108315036874402],[1782172800000,0.02928446449949351],[1783468800000,0.027777777777777776],[1784808000000,0.054923413566739604],[1786147200000,0.19155497568497212],[1787486400000,0.17502834008097165],[1788825600000,0.17893086243763365],[1789560000000,0.2332919083126208]]}],"byCategory":[{"name":"Code .ts","color":"var(--series-1)","points":[[1758585600000,0.06486286137879911],[1759881600000,0.03615196078431373],[1761220800000,0.09146735617323852],[1762560000000,0.1063702323104573],[1763856000000,0.09567122560084983],[1765152000000,0.062169524114725205],[1766491200000,0.07238831037957676],[1767830400000,0.06081824547364209],[1769169600000,0.04796791856250482],[1770508800000,0.05047687601223682],[1771718400000,0.041707749950700056],[1772928000000,0.033164158207910396],[1774267200000,0.040143798681845415],[1775606400000,0.02318441668431082],[1776902400000,0.015899581589958158],[1778198400000,0.024390243902439025],[1779537600000,0.08805309734513274],[1780876800000,0.07777777777777778],[1782172800000,0.08070175438596491],[1783468800000,0.058823529411764705],[1784808000000,0.12379807692307693],[1786147200000,0.3517672517432075],[1787486400000,0.3694868714604428],[1788825600000,0.30603566529492454],[1789560000000,0.5467067367893814]]},{"name":"Code .tsx","color":"var(--series-2)","points":[[1758585600000,0.027552953332185295],[1759881600000,0.019517584238630085],[1761220800000,0.017964071856287425],[1762560000000,0.0013157894736842105],[1763856000000,0.012706855791962174],[1765152000000,0.017857142857142856],[1766491200000,0.014208721215090642],[1767830400000,0.014701470147014702],[1769169600000,0.025989508822126847],[1770508800000,0.012444690265486726],[1771718400000,0.016646223935517786],[1772928000000,0.00809750396527256],[1774267200000,0.006520450503852994],[1775606400000,0.00423728813559322],[1776902400000,0.014912280701754385],[1778198400000,0.000774593338497289],[1779537600000,0.001738563511898294],[1780876800000,0.002932981375568265],[1782172800000,0.007454739084132056],[1783468800000,0.03482587064676617],[1784808000000,0.03522205206738132],[1786147200000,0.2534246575342466],[1787486400000,0.18900622799891686],[1788825600000,0.281244583116658],[1789560000000,0.36213634389926186]]},{"name":"Tests .spec.*","color":"var(--series-3)","points":[[1758585600000,0.029258592936274974],[1759881600000,0.010408196454708083],[1761220800000,0.01582014987510408],[1762560000000,0.014465937762825905],[1763856000000,0.007577124300920079],[1765152000000,0.010047095761381476],[1766491200000,0.0073794096472282215],[1767830400000,0.005403851681517678],[1769169600000,0.00795307123921259],[1770508800000,0.004949576192538514],[1771718400000,0.0030579555382972525],[1772928000000,0.0034190371991247265],[1774267200000,0.0014720547034522058],[1775606400000,0.00213993904416056],[1776902400000,0.008222932846048425],[1778198400000,0.0038294613224406433],[1779537600000,0.022719389524800553],[1780876800000,0.007113387395077536],[1782172800000,0],[1783468800000,0.004454342984409799],[1784808000000,0.010937830781172818],[1786147200000,0.027872031022782354],[1787486400000,0.044667185675360065],[1788825600000,0.04923985966639995],[1789560000000,0.04421104054714216]]}],"stockRatio":[{"name":"Stock","color":"var(--series-1)","points":[[1757894400000,0.04447394178298004],[1759276800000,0.04545787584127948],[1760486400000,0.04222974514330556],[1761955200000,0.04610392180141676],[1763164800000,0.047598211876581566],[1764547200000,0.04786470016564084],[1765756800000,0.04724034951885853],[1767225600000,0.045237123170983724],[1768435200000,0.042669226042848625],[1769904000000,0.038826990976853666],[1771113600000,0.03716701285097923],[1772323200000,0.0350614478983786],[1773532800000,0.033147517566554346],[1775001600000,0.03321398964353081],[1776211200000,0.03171546839480202],[1777593600000,0.031419369603197196],[1778803200000,0.030730489878349723],[1780272000000,0.03075575771834889],[1781481600000,0.03013431879103376],[1782864000000,0.03002832861189802],[1784073600000,0.03002419917933218],[1785542400000,0.03242912851606909],[1786752000000,0.035601590776204076],[1788220800000,0.04532493278657361],[1789430400000,0.05491691180265263],[1789689600000,0.0470139142777264]]}],"stockSize":[{"name":"Lignes de code","color":"var(--series-1)","points":[[1757894400000,71266],[1759276800000,91196],[1760486400000,104963],[1761955200000,120520],[1763164800000,130600],[1764547200000,155776],[1765756800000,172278],[1767225600000,189424],[1768435200000,213457],[1769904000000,245003],[1771113600000,270247],[1772323200000,298992],[1773532800000,326246],[1775001600000,321874],[1776211200000,342459],[1777593600000,347056],[1778803200000,346036],[1780272000000,370765],[1781481600000,399445],[1782864000000,404032],[1784073600000,405640],[1785542400000,395751],[1786752000000,399151],[1788220800000,421848],[1789430400000,439509],[1789689600000,443129]]}],"modelItems":[{"label":"Opus 5","muted":false,"value":0.17961465376287064,"median":0.18655097613882862,"p25":0.09876543209876543,"p75":0.27586206896551724,"commits":399,"added":90516},{"label":"Fable 5","muted":false,"value":0.1455656203918264,"median":0.038202247191011236,"p25":0.017857142857142856,"p75":0.08108108108108109,"commits":25,"added":9494},{"label":"Sonnet 5","muted":false,"value":0.06908890723919625,"median":0.05554228380315337,"p25":0.022856838851305947,"p75":0.11022727272727273,"commits":29,"added":3633},{"label":"(version not recorded)","muted":true,"value":0.05144910599509174,"median":0.04161248374512354,"p25":0.009255577089258598,"p75":0.06367110214532334,"commits":135,"added":34228},{"label":"no trailer","muted":true,"value":0.044433476262454884,"median":0.01674641148325359,"p25":0,"p75":0.05846153846153846,"commits":1152,"added":324170},{"label":"Opus 4.8","muted":false,"value":0.03314950245773888,"median":0,"p25":0,"p75":0.051587301587301584,"commits":79,"added":16682},{"label":"Sonnet 4.5","muted":false,"value":0.028415725963409886,"median":0.012537612838515547,"p25":0,"p75":0.04576659038901602,"commits":108,"added":28259},{"label":"Opus 4.5","muted":false,"value":0.021263289555972485,"median":0.012477718360071301,"p25":0,"p75":0.0327987595776226,"commits":357,"added":83148},{"label":"Opus 4.7","muted":false,"value":0.013688075800793417,"median":0,"p25":0,"p75":0.012560310467799454,"commits":247,"added":61002},{"label":"Opus 4.6","muted":false,"value":0.013072735845013072,"median":0,"p25":0,"p75":0.011904761904761904,"commits":793,"added":116655},{"label":"Sonnet 4.6","muted":false,"value":0.012617129705737301,"median":0,"p25":0,"p75":0.015888825649781824,"commits":189,"added":24332},{"label":"several models named","muted":true,"value":0.011842105263157895,"median":0.014649190439475714,"p25":0.006842105263157895,"p75":0.020080321285140562,"commits":10,"added":11400},{"label":"Haiku 4.5","muted":false,"value":0.0036224976167778837,"median":0.0017658488457550161,"p25":0,"p75":0.0073467747571458525,"commits":29,"added":5245}],"authorItems":[{"label":"Cédric Teyton · Opus 4.6","value":0.018269747447608814,"muted":true,"commits":99,"added":18610,"median":null},{"label":"Cédric Teyton · Opus 5","value":0.35069868403201737,"muted":false,"commits":27,"added":7371,"median":null},{"label":"Joan Racenet · Opus 4.6","value":0.017219435501983977,"muted":true,"commits":58,"added":13357,"median":null},{"label":"Joan Racenet · Opus 4.7","value":0.007123544093178036,"muted":true,"commits":125,"added":38464,"median":null},{"label":"Joan Racenet · Opus 5","value":0.21708523181239067,"muted":false,"commits":190,"added":46309,"median":null},{"label":"Quentin Le Bourles · Opus 4.6","value":0.007670738389144938,"muted":true,"commits":265,"added":31027,"median":null},{"label":"Quentin Le Bourles · Opus 4.7","value":0.0176522506619594,"muted":true,"commits":71,"added":9064,"median":null},{"label":"Quentin Le Bourles · Opus 5","value":0.12266857962697274,"muted":false,"commits":110,"added":15334,"median":null},{"label":"Malo Couaran · Opus 4.6","value":0.008895159806146863,"muted":true,"commits":193,"added":16301,"median":null},{"label":"Malo Couaran · Opus 5","value":0.11414441147378833,"muted":false,"commits":15,"added":5055,"median":null},{"label":"Vincent Pretre · Opus 4.6","value":0.011825192802056555,"muted":true,"commits":6,"added":1945,"median":null},{"label":"Vincent Pretre · Opus 4.7","value":0.07478148268047911,"muted":true,"commits":10,"added":3089,"median":null},{"label":"Vincent Pretre · Opus 5","value":0.0814081408140814,"muted":false,"commits":26,"added":8181,"median":null},{"label":"Steven Drouet · Opus 4.6","value":0.015501905972045744,"muted":true,"commits":172,"added":35415,"median":null},{"label":"Steven Drouet · Opus 4.7","value":0.01464684821525442,"muted":true,"commits":21,"added":9217,"median":null},{"label":"Steven Drouet · Opus 5","value":0.053940786805461674,"muted":false,"commits":22,"added":7397,"median":null}],"personModelTable":[["Quentin Le Bourles","Opus 4.6","265","31 %","31 027","0,8 %"],["Quentin Le Bourles","Opus 4.5","140","16 %","21 466","2,3 %"],["Quentin Le Bourles","Sonnet 4.6","119","14 %","8 811","1,0 %"],["Quentin Le Bourles","Opus 5","110","13 %","15 334","12,3 %"],["Quentin Le Bourles","Opus 4.7","71","8 %","9 064","1,8 %"],["Quentin Le Bourles","no trailer","69","8 %","11 084","4,5 %"],["Quentin Le Bourles","Sonnet 5","29","3 %","3 633","6,9 %"],["Quentin Le Bourles","Haiku 4.5","24","3 %","3 954","0,5 %"],["Quentin Le Bourles","Sonnet 4.5","10","1 %","2 082","4,1 %"],["Quentin Le Bourles","Opus 4.8","7","1 %","1 167","5,0 %"],["Quentin Le Bourles","Fable 5","7","1 %","1 409","7,1 %"],["Quentin Le Bourles","(version not recorded)","2","0 %","118","27,1 %"],["Vincent Pretre","no trailer","323","52 %","19 278","1,5 %"],["Vincent Pretre","Opus 4.5","107","17 %","19 739","2,4 %"],["Vincent Pretre","Sonnet 4.6","62","10 %","14 549","1,1 %"],["Vincent Pretre","(version not recorded)","46","7 %","16 267","3,1 %"],["Vincent Pretre","Sonnet 4.5","30","5 %","12 438","3,4 %"],["Vincent Pretre","Opus 5","26","4 %","8 181","8,1 %"],["Vincent Pretre","Opus 4.7","10","2 %","3 089","7,5 %"],["Vincent Pretre","Opus 4.6","6","1 %","1 945","1,2 %"],["Vincent Pretre","Opus 4.8","6","1 %","1 001","8,8 %"],["Malo Couaran","Opus 4.6","193","33 %","16 301","0,9 %"],["Malo Couaran","no trailer","175","30 %","29 706","6,2 %"],["Malo Couaran","(version not recorded)","71","12 %","16 139","7,2 %"],["Malo Couaran","Sonnet 4.5","45","8 %","11 629","2,1 %"],["Malo Couaran","Opus 4.5","43","7 %","28 820","1,1 %"],["Malo Couaran","Opus 4.8","36","6 %","9 659","2,5 %"],["Malo Couaran","Opus 5","15","3 %","5 055","11,4 %"],["Malo Couaran","Opus 4.7","13","2 %","477","4,2 %"],["Joan Racenet","Opus 5","190","33 %","46 309","21,7 %"],["Joan Racenet","no trailer","164","28 %","17 181","8,6 %"],["Joan Racenet","Opus 4.7","125","21 %","38 464","0,7 %"],["Joan Racenet","Opus 4.6","58","10 %","13 357","1,7 %"],["Joan Racenet","Opus 4.5","19","3 %","1 321","1,1 %"],["Joan Racenet","Sonnet 4.5","12","2 %","959","3,2 %"],["Joan Racenet","(version not recorded)","8","1 %","855","2,2 %"],["Joan Racenet","Opus 4.8","4","1 %","1 735","1,6 %"],["Joan Racenet","Sonnet 4","2","0 %","541","0,0 %"],["Joan Racenet","Haiku 4.5","1","0 %","37","0,0 %"],["Joan Racenet","Sonnet 4.6","1","0 %","221","5,9 %"],["Steven Drouet","no trailer","234","45 %","63 067","3,3 %"],["Steven Drouet","Opus 4.6","172","33 %","35 415","1,6 %"],["Steven Drouet","Opus 4.5","33","6 %","7 742","3,2 %"],["Steven Drouet","Opus 5","22","4 %","7 397","5,4 %"],["Steven Drouet","Opus 4.7","21","4 %","9 217","1,5 %"],["Steven Drouet","Fable 5","18","3 %","8 085","15,9 %"],["Steven Drouet","Opus 4.8","14","3 %","1 880","3,7 %"],["Steven Drouet","Fable 5.1","3","1 %","292","1,4 %"],["Cédric Teyton","no trailer","163","45 %","27 116","5,0 %"],["Cédric Teyton","Opus 4.6","99","28 %","18 610","1,8 %"],["Cédric Teyton","Opus 5","27","8 %","7 371","35,1 %"],["Cédric Teyton","Opus 4.5","15","4 %","4 060","5,6 %"],["Cédric Teyton","Sonnet 4.5","11","3 %","1 151","2,3 %"],["Cédric Teyton","Opus 4.8","11","3 %","1 177","5,9 %"],["Cédric Teyton","several models named","10","3 %","11 400","1,2 %"],["Cédric Teyton","Sonnet 4.6","7","2 %","751","6,5 %"],["Cédric Teyton","Opus 4.7","7","2 %","691","2,2 %"],["Cédric Teyton","(version not recorded)","6","2 %","493","9,7 %"],["Cédric Teyton","Haiku 4.5","4","1 %","1 254","0,0 %"],["compte packmind (automatisation)","no trailer","24","100 %","156 738","4,4 %"],["Claude (commit direct)","Opus 5","9","82 %","869","11,2 %"],["Claude (commit direct)","(version not recorded)","2","18 %","356","0,8 %"],["Michel Agent","Opus 4.8","1","100 %","63","4,8 %"]],"monthTable":[["15 sept. → 1 oct. 25","29 858","4,5 %","6,5 %","2,8 %","2,9 %","3,6 %"],["1 oct. → 15 oct. 25","18 108","2,2 %","3,6 %","2,0 %","1,0 %","3,0 %"],["15 oct. → 1 nov. 25","21 053","6,1 %","9,1 %","1,8 %","1,6 %","3,8 %"],["1 nov. → 15 nov. 25","22 488","7,5 %","10,6 %","0,1 %","1,4 %","8,4 %"],["15 nov. → 1 déc. 25","35 075","4,6 %","9,6 %","1,3 %","0,8 %","3,6 %"],["1 déc. → 15 déc. 25","24 165","3,8 %","6,2 %","1,8 %","1,0 %","2,9 %"],["15 déc. → 1 janv. 26","19 107","2,8 %","7,2 %","1,4 %","0,7 %","7,1 %"],["1 janv. → 15 janv. 26","30 725","2,4 %","6,1 %","1,5 %","0,5 %","3,4 %"],["15 janv. → 1 févr. 26","52 619","1,9 %","4,8 %","2,6 %","0,8 %","3,0 %"],["1 févr. → 15 févr. 26","34 509","2,1 %","5,0 %","1,2 %","0,5 %","2,2 %"],["15 févr. → 1 mars 26","36 451","1,6 %","4,2 %","1,7 %","0,3 %","2,0 %"],["1 mars → 15 mars 26","38 031","1,4 %","3,3 %","0,8 %","0,3 %","2,0 %"],["15 mars → 1 avr. 26","36 116","1,4 %","4,0 %","0,7 %","0,1 %","1,6 %"],["1 avr. → 15 avr. 26","26 519","1,0 %","2,3 %","0,4 %","0,2 %","1,7 %"],["15 avr. → 1 mai 26","6 859","1,3 %","1,6 %","1,5 %","0,8 %","2,2 %"],["1 mai → 15 mai 26","8 590","0,8 %","2,4 %","0,1 %","0,4 %","3,6 %"],["15 mai → 1 juin 26","27 515","3,2 %","8,8 %","0,2 %","2,3 %","4,1 %"],["1 juin → 15 juin 26","35 526","2,1 %","7,8 %","0,3 %","0,7 %","1,7 %"],["15 juin → 1 juil. 26","10 859","2,9 %","8,1 %","0,7 %","0,0 %","3,6 %"],["1 juil. → 15 juil. 26","1 728","2,8 %","5,9 %","3,5 %","0,4 %","0,0 %"],["15 juil. → 1 août 26","27 420","5,5 %","12,4 %","3,5 %","1,1 %","2,2 %"],["1 août → 15 août 26","8 431","19,2 %","35,2 %","25,3 %","2,8 %","4,0 %"],["15 août → 1 sept. 26","30 875","17,5 %","36,9 %","18,9 %","4,5 %","3,8 %"],["1 sept. → 15 sept. 26","35 075","17,9 %","30,6 %","28,1 %","4,9 %","6,4 %"],["15 sept. → 18 sept. 26 (partiel)","14 484","23,3 %","54,7 %","36,2 %","4,4 %","48,5 %"]],"stockTable":[["2025-09-15","935","71 266","3 317","4,4 %"],["2025-10-01","1 074","91 196","4 343","4,5 %"],["2025-10-15","1 190","104 963","4 628","4,2 %"],["2025-11-01","1 370","120 520","5 825","4,6 %"],["2025-11-15","1 517","130 600","6 527","4,8 %"],["2025-12-01","1 702","155 776","7 831","4,8 %"],["2025-12-15","1 835","172 278","8 542","4,7 %"],["2026-01-01","1 929","189 424","8 975","4,5 %"],["2026-01-15","2 083","213 457","9 514","4,3 %"],["2026-02-01","2 207","245 003","9 897","3,9 %"],["2026-02-15","2 477","270 247","10 432","3,7 %"],["2026-03-01","2 629","298 992","10 864","3,5 %"],["2026-03-15","2 862","326 246","11 185","3,3 %"],["2026-04-01","2 824","321 874","11 058","3,3 %"],["2026-04-15","2 946","342 459","11 217","3,2 %"],["2026-05-01","2 998","347 056","11 258","3,1 %"],["2026-05-15","3 029","346 036","10 971","3,1 %"],["2026-06-01","3 155","370 765","11 765","3,1 %"],["2026-06-15","3 254","399 445","12 411","3,0 %"],["2026-07-01","3 278","404 032","12 508","3,0 %"],["2026-07-15","3 287","405 640","12 556","3,0 %"],["2026-08-01","3 163","395 751","13 264","3,2 %"],["2026-08-15","3 222","399 151","14 735","3,6 %"],["2026-09-01","3 347","421 848","20 028","4,5 %"],["2026-09-15","3 422","439 509","25 539","5,5 %"],["2026-09-18","3 453","443 129","21 861","4,7 %"]],"modelTable":[["Opus 5","399","90 516","18,0 %","18,7 %","9,9 % – 27,6 %"],["Fable 5","25","9 494","14,6 %","3,8 %","1,8 % – 8,1 %"],["Sonnet 5","29","3 633","6,9 %","5,6 %","2,3 % – 11,0 %"],["(version not recorded)","135","34 228","5,1 %","4,2 %","0,9 % – 6,4 %"],["no trailer","1 152","324 170","4,4 %","1,7 %","0,0 % – 5,8 %"],["Opus 4.8","79","16 682","3,3 %","0,0 %","0,0 % – 5,2 %"],["Sonnet 4.5","108","28 259","2,8 %","1,3 %","0,0 % – 4,6 %"],["Opus 4.5","357","83 148","2,1 %","1,2 %","0,0 % – 3,3 %"],["Opus 4.7","247","61 002","1,4 %","0,0 %","0,0 % – 1,3 %"],["Opus 4.6","793","116 655","1,3 %","0,0 %","0,0 % – 1,2 %"],["Sonnet 4.6","189","24 332","1,3 %","0,0 %","0,0 % – 1,6 %"],["several models named","10","11 400","1,2 %","1,5 %","0,7 % – 2,0 %"],["Haiku 4.5","29","5 245","0,4 %","0,2 %","0,0 % – 0,7 %"]],"releaseTable":[["Claude Sonnet 4.5","29 septembre 2025","déduit de la date de retrait"],["Claude Haiku 4.5","15 octobre 2025","déduit de la date de retrait"],["Claude Opus 4.5","24 novembre 2025","annonce Anthropic"],["Claude Opus 4.6","5 février 2026","déduit de la date de retrait"],["Claude Sonnet 4.6","17 février 2026","déduit de la date de retrait"],["Claude Opus 4.7","16 avril 2026","annonce Anthropic"],["Claude Opus 4.8","28 mai 2026","annonce Anthropic"],["Claude Fable 5","9 juin 2026","déduit de la date de retrait"],["Claude Sonnet 5","30 juin 2026","déduit de la date de retrait"],["Claude Opus 5","24 juillet 2026","annonce Anthropic"],["Claude Fable 5.1","1 septembre 2026","déduit de la date de retrait"]]};
+  var D = {"tMin":1761436800000,"tMax":1790121600000,"annotations":[{"t":1763942400000,"label":"Opus 4.5"},{"t":1770249600000,"label":"Opus 4.6"},{"t":1776297600000,"label":"Opus 4.7"},{"t":1779926400000,"label":"Opus 4.8"},{"t":1784851200000,"label":"Opus 5"}],"headline":[{"name":"All files","color":"var(--series-1)","points":[[1762560000000,0.07497331910352188],[1763856000000,0.04590163934426229],[1765152000000,0.03765776950134492],[1766491200000,0.028366567226670854],[1767830400000,0.024442636289666395],[1769169600000,0.019251601132670708],[1770508800000,0.02118287982845055],[1771718400000,0.015939206057446982],[1772928000000,0.013830822223975178],[1774267200000,0.014453427843615018],[1775606400000,0.00976658245031864],[1776902400000,0.013121446274967197],[1778198400000,0.007916181606519208],[1779537600000,0.03180083590768672],[1780876800000,0.02108315036874402],[1782172800000,0.02928446449949351],[1783468800000,0.027777777777777776],[1784808000000,0.054923413566739604],[1786147200000,0.19155497568497212],[1787486400000,0.17502834008097165],[1788825600000,0.17893086243763365],[1789516800000,0.15328221117384344]]}],"byCategory":[{"name":".ts code","color":"var(--series-1)","points":[[1762560000000,0.1063702323104573],[1763856000000,0.09567122560084983],[1765152000000,0.062169524114725205],[1766491200000,0.07238831037957676],[1767830400000,0.06081824547364209],[1769169600000,0.04796791856250482],[1770508800000,0.05047687601223682],[1771718400000,0.041707749950700056],[1772928000000,0.033164158207910396],[1774267200000,0.040143798681845415],[1775606400000,0.02318441668431082],[1776902400000,0.015899581589958158],[1778198400000,0.024390243902439025],[1779537600000,0.08805309734513274],[1780876800000,0.07777777777777778],[1782172800000,0.08070175438596491],[1783468800000,0.058823529411764705],[1784808000000,0.12379807692307693],[1786147200000,0.3517672517432075],[1787486400000,0.3694868714604428],[1788825600000,0.30603566529492454],[1789516800000,0.290843081887858]]},{"name":".tsx code","color":"var(--series-2)","points":[[1762560000000,0.0013157894736842105],[1763856000000,0.012706855791962174],[1765152000000,0.017857142857142856],[1766491200000,0.014208721215090642],[1767830400000,0.014701470147014702],[1769169600000,0.025989508822126847],[1770508800000,0.012444690265486726],[1771718400000,0.016646223935517786],[1772928000000,0.00809750396527256],[1774267200000,0.006520450503852994],[1775606400000,0.00423728813559322],[1776902400000,0.014912280701754385],[1778198400000,0.000774593338497289],[1779537600000,0.001738563511898294],[1780876800000,0.002932981375568265],[1782172800000,0.007454739084132056],[1783468800000,0.03482587064676617],[1784808000000,0.03522205206738132],[1786147200000,0.2534246575342466],[1787486400000,0.18900622799891686],[1788825600000,0.281244583116658],[1789516800000,0.36019163763066203]]},{"name":".spec.* tests","color":"var(--series-3)","points":[[1762560000000,0.014465937762825905],[1763856000000,0.007577124300920079],[1765152000000,0.010047095761381476],[1766491200000,0.0073794096472282215],[1767830400000,0.005403851681517678],[1769169600000,0.00795307123921259],[1770508800000,0.004949576192538514],[1771718400000,0.0030579555382972525],[1772928000000,0.0034190371991247265],[1774267200000,0.0014720547034522058],[1775606400000,0.00213993904416056],[1776902400000,0.008222932846048425],[1778198400000,0.0038294613224406433],[1779537600000,0.022719389524800553],[1780876800000,0.007113387395077536],[1782172800000,0],[1783468800000,0.004454342984409799],[1784808000000,0.010937830781172818],[1786147200000,0.027872031022782354],[1787486400000,0.044667185675360065],[1788825600000,0.04923985966639995],[1789516800000,0.03821206993795826]]}],"stockRatio":[{"name":"Stock","color":"var(--series-1)","points":[[1761955200000,0.04610392180141676],[1763164800000,0.047598211876581566],[1764547200000,0.04786470016564084],[1765756800000,0.04724034951885853],[1767225600000,0.045237123170983724],[1768435200000,0.042669226042848625],[1769904000000,0.038826990976853666],[1771113600000,0.03716701285097923],[1772323200000,0.0350614478983786],[1773532800000,0.033147517566554346],[1775001600000,0.03321398964353081],[1776211200000,0.03171546839480202],[1777593600000,0.031419369603197196],[1778803200000,0.030730489878349723],[1780272000000,0.03075575771834889],[1781481600000,0.03013431879103376],[1782864000000,0.03002832861189802],[1784073600000,0.03002419917933218],[1785542400000,0.03242912851606909],[1786752000000,0.035601590776204076],[1788220800000,0.04532493278657361],[1789430400000,0.05491691180265263],[1789603200000,0.05757094606802235]]}],"stockSize":[{"name":"Lines of code","color":"var(--series-1)","points":[[1761955200000,120520],[1763164800000,130600],[1764547200000,155776],[1765756800000,172278],[1767225600000,189424],[1768435200000,213457],[1769904000000,245003],[1771113600000,270247],[1772323200000,298992],[1773532800000,326246],[1775001600000,321874],[1776211200000,342459],[1777593600000,347056],[1778803200000,346036],[1780272000000,370765],[1781481600000,399445],[1782864000000,404032],[1784073600000,405640],[1785542400000,395751],[1786752000000,399151],[1788220800000,421848],[1789430400000,439509],[1789603200000,443378]]}],"modelItems":[{"label":"Opus 5","muted":false,"value":0.16629610626532124,"median":0.18655097613882862,"p25":0.10077519379844961,"p75":0.27564102564102566,"commits":395,"added":87705},{"label":"Fable 5","muted":false,"value":0.1455656203918264,"median":0.038202247191011236,"p25":0.017857142857142856,"p75":0.08108108108108109,"commits":25,"added":9494},{"label":"Sonnet 5","muted":false,"value":0.06908890723919625,"median":0.05554228380315337,"p25":0.022856838851305947,"p75":0.11022727272727273,"commits":29,"added":3633},{"label":"(version not recorded)","muted":true,"value":0.05144910599509174,"median":0.04161248374512354,"p25":0.009255577089258598,"p75":0.06367110214532334,"commits":135,"added":34228},{"label":"no trailer","muted":true,"value":0.044433476262454884,"median":0.01674641148325359,"p25":0,"p75":0.05846153846153846,"commits":1152,"added":324170},{"label":"Opus 4.8","muted":false,"value":0.03314950245773888,"median":0,"p25":0,"p75":0.051587301587301584,"commits":79,"added":16682},{"label":"Sonnet 4.5","muted":false,"value":0.028415725963409886,"median":0.012537612838515547,"p25":0,"p75":0.04576659038901602,"commits":108,"added":28259},{"label":"Opus 4.5","muted":false,"value":0.021263289555972485,"median":0.012477718360071301,"p25":0,"p75":0.0327987595776226,"commits":357,"added":83148},{"label":"Opus 4.7","muted":false,"value":0.013688075800793417,"median":0,"p25":0,"p75":0.012560310467799454,"commits":247,"added":61002},{"label":"Opus 4.6","muted":false,"value":0.013072735845013072,"median":0,"p25":0,"p75":0.011904761904761904,"commits":793,"added":116655},{"label":"Sonnet 4.6","muted":false,"value":0.012617129705737301,"median":0,"p25":0,"p75":0.015888825649781824,"commits":189,"added":24332},{"label":"several models named","muted":true,"value":0.011842105263157895,"median":0.014649190439475714,"p25":0.006842105263157895,"p75":0.020080321285140562,"commits":10,"added":11400},{"label":"Haiku 4.5","muted":false,"value":0.0036224976167778837,"median":0.0017658488457550161,"p25":0,"p75":0.0073467747571458525,"commits":29,"added":5245}],"authorItems":[{"label":"Joan Racenet · Opus 4.6","value":0.017219435501983977,"muted":true,"commits":58,"added":13357,"median":null},{"label":"Joan Racenet · Opus 4.7","value":0.007123544093178036,"muted":true,"commits":125,"added":38464,"median":null},{"label":"Joan Racenet · Opus 5","value":0.21708523181239067,"muted":false,"commits":190,"added":46309,"median":null},{"label":"Cédric Teyton · Opus 4.6","value":0.018269747447608814,"muted":true,"commits":99,"added":18610,"median":null},{"label":"Cédric Teyton · Opus 5","value":0.16952751725358345,"muted":false,"commits":25,"added":5651,"median":null},{"label":"Quentin Le Bourles · Opus 4.6","value":0.007670738389144938,"muted":true,"commits":265,"added":31027,"median":null},{"label":"Quentin Le Bourles · Opus 4.7","value":0.0176522506619594,"muted":true,"commits":71,"added":9064,"median":null},{"label":"Quentin Le Bourles · Opus 5","value":0.12266857962697274,"muted":false,"commits":110,"added":15334,"median":null},{"label":"Malo Couaran · Opus 4.6","value":0.008895159806146863,"muted":true,"commits":193,"added":16301,"median":null},{"label":"Malo Couaran · Opus 5","value":0.11414441147378833,"muted":false,"commits":15,"added":5055,"median":null},{"label":"Vincent Pretre · Opus 4.6","value":0.011825192802056555,"muted":true,"commits":6,"added":1945,"median":null},{"label":"Vincent Pretre · Opus 4.7","value":0.07478148268047911,"muted":true,"commits":10,"added":3089,"median":null},{"label":"Vincent Pretre · Opus 5","value":0.08744710860366714,"muted":false,"commits":24,"added":7090,"median":null},{"label":"Steven Drouet · Opus 4.6","value":0.015501905972045744,"muted":true,"commits":172,"added":35415,"median":null},{"label":"Steven Drouet · Opus 4.7","value":0.01464684821525442,"muted":true,"commits":21,"added":9217,"median":null},{"label":"Steven Drouet · Opus 5","value":0.053940786805461674,"muted":false,"commits":22,"added":7397,"median":null}],"personModelTable":[["Quentin Le Bourles","Opus 4.6","265","31%","31,027","0.8%"],["Quentin Le Bourles","Opus 4.5","140","16%","21,466","2.3%"],["Quentin Le Bourles","Sonnet 4.6","119","14%","8,811","1.0%"],["Quentin Le Bourles","Opus 5","110","13%","15,334","12.3%"],["Quentin Le Bourles","Opus 4.7","71","8%","9,064","1.8%"],["Quentin Le Bourles","no trailer","69","8%","11,084","4.5%"],["Quentin Le Bourles","Sonnet 5","29","3%","3,633","6.9%"],["Quentin Le Bourles","Haiku 4.5","24","3%","3,954","0.5%"],["Quentin Le Bourles","Sonnet 4.5","10","1%","2,082","4.1%"],["Quentin Le Bourles","Opus 4.8","7","1%","1,167","5.0%"],["Quentin Le Bourles","Fable 5","7","1%","1,409","7.1%"],["Quentin Le Bourles","(version not recorded)","2","0%","118","27.1%"],["Vincent Pretre","no trailer","323","53%","19,278","1.5%"],["Vincent Pretre","Opus 4.5","107","17%","19,739","2.4%"],["Vincent Pretre","Sonnet 4.6","62","10%","14,549","1.1%"],["Vincent Pretre","(version not recorded)","46","7%","16,267","3.1%"],["Vincent Pretre","Sonnet 4.5","30","5%","12,438","3.4%"],["Vincent Pretre","Opus 5","24","4%","7,090","8.7%"],["Vincent Pretre","Opus 4.7","10","2%","3,089","7.5%"],["Vincent Pretre","Opus 4.6","6","1%","1,945","1.2%"],["Vincent Pretre","Opus 4.8","6","1%","1,001","8.8%"],["Malo Couaran","Opus 4.6","193","33%","16,301","0.9%"],["Malo Couaran","no trailer","175","30%","29,706","6.2%"],["Malo Couaran","(version not recorded)","71","12%","16,139","7.2%"],["Malo Couaran","Sonnet 4.5","45","8%","11,629","2.1%"],["Malo Couaran","Opus 4.5","43","7%","28,820","1.1%"],["Malo Couaran","Opus 4.8","36","6%","9,659","2.5%"],["Malo Couaran","Opus 5","15","3%","5,055","11.4%"],["Malo Couaran","Opus 4.7","13","2%","477","4.2%"],["Joan Racenet","Opus 5","190","33%","46,309","21.7%"],["Joan Racenet","no trailer","164","28%","17,181","8.6%"],["Joan Racenet","Opus 4.7","125","21%","38,464","0.7%"],["Joan Racenet","Opus 4.6","58","10%","13,357","1.7%"],["Joan Racenet","Opus 4.5","19","3%","1,321","1.1%"],["Joan Racenet","Sonnet 4.5","12","2%","959","3.2%"],["Joan Racenet","(version not recorded)","8","1%","855","2.2%"],["Joan Racenet","Opus 4.8","4","1%","1,735","1.6%"],["Joan Racenet","Sonnet 4","2","0%","541","0.0%"],["Joan Racenet","Haiku 4.5","1","0%","37","0.0%"],["Joan Racenet","Sonnet 4.6","1","0%","221","5.9%"],["Steven Drouet","no trailer","234","45%","63,067","3.3%"],["Steven Drouet","Opus 4.6","172","33%","35,415","1.6%"],["Steven Drouet","Opus 4.5","33","6%","7,742","3.2%"],["Steven Drouet","Opus 5","22","4%","7,397","5.4%"],["Steven Drouet","Opus 4.7","21","4%","9,217","1.5%"],["Steven Drouet","Fable 5","18","3%","8,085","15.9%"],["Steven Drouet","Opus 4.8","14","3%","1,880","3.7%"],["Steven Drouet","Fable 5.1","3","1%","292","1.4%"],["Cédric Teyton","no trailer","163","46%","27,116","5.0%"],["Cédric Teyton","Opus 4.6","99","28%","18,610","1.8%"],["Cédric Teyton","Opus 5","25","7%","5,651","17.0%"],["Cédric Teyton","Opus 4.5","15","4%","4,060","5.6%"],["Cédric Teyton","Sonnet 4.5","11","3%","1,151","2.3%"],["Cédric Teyton","Opus 4.8","11","3%","1,177","5.9%"],["Cédric Teyton","several models named","10","3%","11,400","1.2%"],["Cédric Teyton","Sonnet 4.6","7","2%","751","6.5%"],["Cédric Teyton","Opus 4.7","7","2%","691","2.2%"],["Cédric Teyton","(version not recorded)","6","2%","493","9.7%"],["Cédric Teyton","Haiku 4.5","4","1%","1,254","0.0%"],["packmind account (automation)","no trailer","24","100%","156,738","4.4%"],["Claude (direct commit)","Opus 5","9","82%","869","11.2%"],["Claude (direct commit)","(version not recorded)","2","18%","356","0.8%"],["Michel Agent","Opus 4.8","1","100%","63","4.8%"]],"monthTable":[["1 Nov → 15 Nov 25","22,488","7.5%","10.6%","0.1%","1.4%","8.4%"],["15 Nov → 1 Dec 25","35,075","4.6%","9.6%","1.3%","0.8%","3.6%"],["1 Dec → 15 Dec 25","24,165","3.8%","6.2%","1.8%","1.0%","2.9%"],["15 Dec → 1 Jan 26","19,107","2.8%","7.2%","1.4%","0.7%","7.1%"],["1 Jan → 15 Jan 26","30,725","2.4%","6.1%","1.5%","0.5%","3.4%"],["15 Jan → 1 Feb 26","52,619","1.9%","4.8%","2.6%","0.8%","3.0%"],["1 Feb → 15 Feb 26","34,509","2.1%","5.0%","1.2%","0.5%","2.2%"],["15 Feb → 1 Mar 26","36,451","1.6%","4.2%","1.7%","0.3%","2.0%"],["1 Mar → 15 Mar 26","38,031","1.4%","3.3%","0.8%","0.3%","2.0%"],["15 Mar → 1 Apr 26","36,116","1.4%","4.0%","0.7%","0.1%","1.6%"],["1 Apr → 15 Apr 26","26,519","1.0%","2.3%","0.4%","0.2%","1.7%"],["15 Apr → 1 May 26","6,859","1.3%","1.6%","1.5%","0.8%","2.2%"],["1 May → 15 May 26","8,590","0.8%","2.4%","0.1%","0.4%","3.6%"],["15 May → 1 Jun 26","27,515","3.2%","8.8%","0.2%","2.3%","4.1%"],["1 Jun → 15 Jun 26","35,526","2.1%","7.8%","0.3%","0.7%","1.7%"],["15 Jun → 1 Jul 26","10,859","2.9%","8.1%","0.7%","0.0%","3.6%"],["1 Jul → 15 Jul 26","1,728","2.8%","5.9%","3.5%","0.4%","0.0%"],["15 Jul → 1 Aug 26","27,420","5.5%","12.4%","3.5%","1.1%","2.2%"],["1 Aug → 15 Aug 26","8,431","19.2%","35.2%","25.3%","2.8%","4.0%"],["15 Aug → 1 Sept 26","30,875","17.5%","36.9%","18.9%","4.5%","3.8%"],["1 Sept → 15 Sept 26","35,075","17.9%","30.6%","28.1%","4.9%","6.4%"],["15 Sept → 17 Sept 26 (partial)","11,867","15.3%","29.1%","36.0%","3.8%","4.2%"]],"stockTable":[["2025-11-01","1,370","120,520","5,825","4.6%"],["2025-11-15","1,517","130,600","6,527","4.8%"],["2025-12-01","1,702","155,776","7,831","4.8%"],["2025-12-15","1,835","172,278","8,542","4.7%"],["2026-01-01","1,929","189,424","8,975","4.5%"],["2026-01-15","2,083","213,457","9,514","4.3%"],["2026-02-01","2,207","245,003","9,897","3.9%"],["2026-02-15","2,477","270,247","10,432","3.7%"],["2026-03-01","2,629","298,992","10,864","3.5%"],["2026-03-15","2,862","326,246","11,185","3.3%"],["2026-04-01","2,824","321,874","11,058","3.3%"],["2026-04-15","2,946","342,459","11,217","3.2%"],["2026-05-01","2,998","347,056","11,258","3.1%"],["2026-05-15","3,029","346,036","10,971","3.1%"],["2026-06-01","3,155","370,765","11,765","3.1%"],["2026-06-15","3,254","399,445","12,411","3.0%"],["2026-07-01","3,278","404,032","12,508","3.0%"],["2026-07-15","3,287","405,640","12,556","3.0%"],["2026-08-01","3,163","395,751","13,264","3.2%"],["2026-08-15","3,222","399,151","14,735","3.6%"],["2026-09-01","3,347","421,848","20,028","4.5%"],["2026-09-15","3,422","439,509","25,539","5.5%"],["2026-09-17","3,451","443,378","27,085","5.8%"]],"modelTable":[["Opus 5","395","87,705","16.6%","18.7%","10.1% – 27.6%"],["Fable 5","25","9,494","14.6%","3.8%","1.8% – 8.1%"],["Sonnet 5","29","3,633","6.9%","5.6%","2.3% – 11.0%"],["(version not recorded)","135","34,228","5.1%","4.2%","0.9% – 6.4%"],["no trailer","1,152","324,170","4.4%","1.7%","0.0% – 5.8%"],["Opus 4.8","79","16,682","3.3%","0.0%","0.0% – 5.2%"],["Sonnet 4.5","108","28,259","2.8%","1.3%","0.0% – 4.6%"],["Opus 4.5","357","83,148","2.1%","1.2%","0.0% – 3.3%"],["Opus 4.7","247","61,002","1.4%","0.0%","0.0% – 1.3%"],["Opus 4.6","793","116,655","1.3%","0.0%","0.0% – 1.2%"],["Sonnet 4.6","189","24,332","1.3%","0.0%","0.0% – 1.6%"],["several models named","10","11,400","1.2%","1.5%","0.7% – 2.0%"],["Haiku 4.5","29","5,245","0.4%","0.2%","0.0% – 0.7%"]],"releaseTable":[["Claude Sonnet 4.5","29 September 2025","Anthropic release notes"],["Claude Haiku 4.5","15 October 2025","Anthropic release notes"],["Claude Opus 4.5","24 November 2025","Anthropic release notes"],["Claude Opus 4.6","5 February 2026","Anthropic release notes"],["Claude Sonnet 4.6","17 February 2026","Anthropic release notes"],["Claude Opus 4.7","16 April 2026","Anthropic release notes"],["Claude Opus 4.8","28 May 2026","Anthropic release notes"],["Claude Fable 5","9 June 2026","Anthropic release notes"],["Claude Sonnet 5","30 June 2026","Anthropic release notes"],["Claude Opus 5","24 July 2026","Anthropic release notes"],["Claude Fable 5.1","1 September 2026","Anthropic release notes"]]};
   var V = window.VIZ;
+  var FLOW_COLUMNS = ['Period', 'Lines added', 'All', '.ts', '.tsx', 'Tests', 'Ratio of removed lines'];
 
   V.lineChart(document.getElementById('c-headline'), {
     series: D.headline, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
-    ariaLabel: "Taux de commentaires des lignes ajoutees par mois"
+    ariaLabel: "Comment ratio of added lines over time"
   });
-  V.table(document.getElementById('t-headline'),
-    ['Période', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
+  V.table(document.getElementById('t-headline'), FLOW_COLUMNS, D.monthTable);
 
   V.lineChart(document.getElementById('c-category'), {
     series: D.byCategory, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
-    ariaLabel: "Taux de commentaires par type de fichier"
+    ariaLabel: "Comment ratio by file type"
   });
   document.getElementById('l-category').innerHTML = D.byCategory.map(function (s) {
     return '<span><i class="swatch" style="background:' + s.color + '"></i>' + s.name + '</span>';
   }).join('');
-  V.table(document.getElementById('t-category'),
-    ['Période', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
+  V.table(document.getElementById('t-category'), FLOW_COLUMNS, D.monthTable);
 
   V.barChart(document.getElementById('c-models'), {
-    items: D.modelItems, ariaLabel: "Taux de commentaires par modele"
+    items: D.modelItems, ariaLabel: "Comment ratio by model"
   });
   V.table(document.getElementById('t-models'),
-    ['Modèle', 'Commits', 'Lignes ajoutées', 'Taux poolé', 'Médiane/commit', 'P25 – P75'], D.modelTable);
+    ['Model', 'Commits', 'Lines added', 'Pooled ratio', 'Median/commit', 'P25 – P75'], D.modelTable);
 
   V.barChart(document.getElementById('c-authors'), {
-    items: D.authorItems, ariaLabel: "Taux de commentaires par developpeur et par modele"
+    items: D.authorItems, ariaLabel: "Comment ratio by developer and model"
   });
   V.table(document.getElementById('t-authors'),
-    ['Développeur', 'Modèle', 'Commits', 'Part de ses commits', 'Lignes ajoutées', 'Taux de commentaires'],
+    ['Developer', 'Model', 'Commits', 'Share of their commits', 'Lines added', 'Comment ratio'],
     D.personModelTable);
 
   V.lineChart(document.getElementById('c-size'), {
     series: D.stockSize, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
     yTick: function (v) { return V.int(Math.round(v)); },
-    ariaLabel: "Lignes de code TypeScript par mois"
+    ariaLabel: "TypeScript lines of code over time"
   });
   V.table(document.getElementById('t-size'),
-    ['Relevé', 'Fichiers', 'Lignes de code', 'Lignes de commentaire', 'Taux'], D.stockTable);
+    ['Snapshot', 'Files', 'Code lines', 'Comment lines', 'Ratio'], D.stockTable);
 
   V.lineChart(document.getElementById('c-stockratio'), {
     series: D.stockRatio, tMin: D.tMin, tMax: D.tMax,
-    ariaLabel: "Taux de commentaires de l ensemble de la codebase"
+    ariaLabel: "Comment ratio across the whole codebase"
   });
 
-  V.table(document.getElementById('t-releases'), ['Modèle', 'Date de sortie', 'Source'], D.releaseTable);
+  V.table(document.getElementById('t-releases'), ['Model', 'Release date', 'Source'], D.releaseTable);
 })();
 </script>

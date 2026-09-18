@@ -19,14 +19,15 @@
  *     not necessarily the model that wrote every line in it.
  *
  * Usage:
- *   node tools/comment-ratio/by-model.mjs [--repo <path>] [--ref <ref>] [--out <dir>]
+ *   node tools/comment-ratio/by-model.mjs [--repo <path>] [--ref <ref>]
+ *                                         [--until <YYYY-MM-DD>] [--out <dir>]
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import { classifyLines, CODE, COMMENT } from './classify.mjs';
-import { readBlobs, headerPath } from './git.mjs';
+import { readBlobs, headerPath, commitBefore } from './git.mjs';
 import { categoryOf } from './files.mjs';
 import { fileURLToPath } from 'node:url';
 
@@ -120,7 +121,7 @@ function streamHistory(repo, ref, onCommit) {
       commit = {
         sha,
         date,
-        person: IDENTITIES[(email ?? '').toLowerCase()] ?? name ?? '(inconnu)',
+        person: IDENTITIES[(email ?? '').toLowerCase()] ?? name ?? '(unknown)',
         model: modelOf(rest.join('\x1f')),
         files: [],
       };
@@ -229,7 +230,7 @@ function expand(ranges) {
 }
 
 async function main() {
-  const options = { repo: process.cwd(), ref: 'HEAD', out: null };
+  const options = { repo: process.cwd(), ref: 'HEAD', until: null, out: null };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i += 2)
     options[argv[i].replace(/^--/, '')] = argv[i + 1];
@@ -245,8 +246,14 @@ async function main() {
   const perCommit = new Map();
   let commitCount = 0;
 
+  // `--until` stops before a day (YYYY-MM-DD), so a known outlier can be cut out.
+  const ref = options.until
+    ? commitBefore(options.repo, options.ref, `${options.until}T00:00:00+00:00`)
+    : options.ref;
+  if (!ref) throw new Error(`No commit before ${options.until}`);
+
   process.stderr.write('Reading history...\n');
-  await streamHistory(options.repo, options.ref, (commit) => {
+  await streamHistory(options.repo, ref, (commit) => {
     commitCount++;
     const month = commit.date.slice(0, 7);
     let touchedTs = false;
@@ -386,7 +393,8 @@ async function main() {
 
   const report = {
     generatedAt: new Date().toISOString(),
-    ref: options.ref,
+    ref,
+    until: options.until,
     commitsScanned: commitCount,
     byModel: Object.fromEntries(
       [...byModel].map(([k, v]) => [
