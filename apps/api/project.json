@@ -8,7 +8,7 @@
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --noEmit --project apps/api/tsconfig.app.json"
+        "command": "tsc --noEmit --project apps/api/tsconfig.app.json && tsc --noEmit --project apps/api/tsconfig.spec.json"
       }
     },
     "build": {

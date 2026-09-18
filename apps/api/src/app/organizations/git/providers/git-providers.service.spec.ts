@@ -541,7 +541,7 @@ describe('GitProvidersService', () => {
         userId,
         installationId: 12345,
         state: 'STUB_STATE',
-        source: 'web',
+        source: 'ui',
       });
 
       expect(mockGitAdapter.addGitProvider).toHaveBeenCalledWith(
@@ -582,7 +582,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.addGitProvider).toHaveBeenCalledWith(
@@ -604,7 +604,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.addGitProvider).toHaveBeenCalledWith(
@@ -637,7 +637,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.addGitProvider).toHaveBeenLastCalledWith(
@@ -653,7 +653,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(result).toEqual(mockProvider);
@@ -676,7 +676,7 @@ describe('GitProvidersService', () => {
               userId,
               installationId: 12345,
               state: 'STUB_STATE',
-              source: 'web',
+              source: 'ui',
             }),
           ).rejects.toThrow('database is down');
         });
@@ -696,7 +696,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           }),
         ).rejects.toThrow(
           new BadRequestException('Invalid or expired state token'),
@@ -722,7 +722,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           }),
         ).rejects.toThrow(
           new BadRequestException(
@@ -772,7 +772,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
         });
 
@@ -789,7 +789,7 @@ describe('GitProvidersService', () => {
             repo: 'repo-a',
             branch: 'main',
             allowTokenlessProvider: true,
-            source: 'web',
+            source: 'ui',
           });
         });
 
@@ -802,7 +802,7 @@ describe('GitProvidersService', () => {
             repo: 'repo-b',
             branch: 'develop',
             allowTokenlessProvider: true,
-            source: 'web',
+            source: 'ui',
           });
         });
       });
@@ -822,7 +822,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
         });
 
@@ -868,7 +868,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
         });
 
@@ -896,7 +896,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
         });
 
@@ -972,7 +972,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           const calls = (mockGitAdapter.addGitRepo as jest.Mock).mock.calls;
@@ -986,7 +986,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
@@ -1000,7 +1000,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 12345,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           const calls = (mockGitAdapter.addGitRepo as jest.Mock).mock.calls;
@@ -1015,7 +1015,7 @@ describe('GitProvidersService', () => {
               userId,
               installationId: 12345,
               state: 'STUB_STATE',
-              source: 'web',
+              source: 'ui',
             });
 
             expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
@@ -1149,7 +1149,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 99999,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.updateGitProvider).toHaveBeenCalledWith(
@@ -1170,7 +1170,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 99999,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.addGitProvider).not.toHaveBeenCalled();
@@ -1182,7 +1182,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 99999,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(result).toEqual(reboundProvider);
@@ -1208,7 +1208,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 99999,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(mockGitAdapter.updateGitProvider).not.toHaveBeenCalled();
@@ -1220,7 +1220,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 99999,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           });
 
           expect(result).toEqual(owner);
@@ -1244,7 +1244,7 @@ describe('GitProvidersService', () => {
               userId,
               installationId: 99999,
               state: 'STUB_STATE',
-              source: 'web',
+              source: 'ui',
             }),
           ).rejects.toThrow(BadRequestException);
         });
@@ -1263,7 +1263,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 1,
             state: 'BAD_STATE',
-            source: 'web',
+            source: 'ui',
           }),
         ).rejects.toThrow(
           new BadRequestException('Invalid or expired state token'),
@@ -1284,7 +1284,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 1,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           }),
         ).rejects.toThrow(
           new BadRequestException('Invalid or expired state token'),
@@ -1305,7 +1305,7 @@ describe('GitProvidersService', () => {
             userId,
             installationId: 1,
             state: 'STUB_STATE',
-            source: 'web',
+            source: 'ui',
           }),
         ).rejects.toThrow(
           new BadRequestException('Invalid or expired state token'),
@@ -1322,7 +1322,7 @@ describe('GitProvidersService', () => {
           userId,
           installationId: 0,
           state: 'STUB_STATE',
-          source: 'web',
+          source: 'ui',
         }),
       ).rejects.toThrow(
         new BadRequestException('installationId must be a positive integer'),
@@ -1338,7 +1338,7 @@ describe('GitProvidersService', () => {
           userId,
           installationId: -1,
           state: 'STUB_STATE',
-          source: 'web',
+          source: 'ui',
         }),
       ).rejects.toThrow(
         new BadRequestException('installationId must be a positive integer'),
@@ -1354,7 +1354,7 @@ describe('GitProvidersService', () => {
           userId,
           installationId: 1.5,
           state: 'STUB_STATE',
-          source: 'web',
+          source: 'ui',
         }),
       ).rejects.toThrow(
         new BadRequestException('installationId must be a positive integer'),
@@ -1370,7 +1370,7 @@ describe('GitProvidersService', () => {
           userId,
           installationId: NaN,
           state: 'STUB_STATE',
-          source: 'web',
+          source: 'ui',
         }),
       ).rejects.toThrow(
         new BadRequestException('installationId must be a positive integer'),
@@ -1588,7 +1588,10 @@ describe('GitProvidersService', () => {
       mockedAxios.post = jest.fn().mockResolvedValue({
         data: githubConversionResponse,
       });
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(false);
+      // `isAxiosError` is a type predicate, which a jest.fn() signature cannot express.
+      mockedAxios.isAxiosError = jest
+        .fn()
+        .mockReturnValue(false) as unknown as typeof mockedAxios.isAxiosError;
       (
         mockGitAdapter.upsertOrganizationGitHubApp as jest.Mock
       ).mockImplementation((app) => Promise.resolve(app));
@@ -1725,7 +1728,10 @@ describe('GitProvidersService', () => {
 
     describe('when GitHub conversion returns a 4xx error', () => {
       it('throws BadRequestException', async () => {
-        mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+        // `isAxiosError` is a type predicate, which a jest.fn() signature cannot express.
+        mockedAxios.isAxiosError = jest
+          .fn()
+          .mockReturnValue(true) as unknown as typeof mockedAxios.isAxiosError;
         mockedAxios.post = jest.fn().mockRejectedValue({
           response: { data: { message: 'Not Found' }, status: 404 },
           isAxiosError: true,
