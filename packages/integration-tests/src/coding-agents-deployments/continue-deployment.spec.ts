@@ -156,7 +156,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const recipeVersions: CommandVersion[] = [
         {
@@ -252,7 +251,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       // Create second recipe
       command2 = await testApp.commandsHexa.getAdapter().captureCommand({
@@ -330,7 +328,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const standardVersions: StandardVersion[] = [
         {
@@ -425,7 +422,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       globalStandard = await testApp.standardsHexa.getAdapter().createStandard({
         name: 'Global Standard',
@@ -484,7 +480,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const recipeVersions: CommandVersion[] = [
         {
@@ -598,8 +593,6 @@ describe('Continue Deployment Integration', () => {
     });
 
     it('returns no file updates for empty recipe list', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
       const fileUpdates = await continueDeployer.deployCommands(
         [],
         gitRepo,
@@ -616,8 +609,6 @@ describe('Continue Deployment Integration', () => {
       };
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await continueDeployer.deployCommands(
           [],
           gitRepo,
