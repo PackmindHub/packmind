@@ -1,4 +1,5 @@
 import { SmtpMailService } from './SmtpMailService';
+import { SmtpConfigurationError } from './SmtpConfigurationError';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { Configuration } from '../config/config/Configuration';
@@ -339,6 +340,14 @@ Test content here
           'SMTP_HOST and SMTP_PORT are required',
         );
       });
+
+      it('raises a SmtpConfigurationError', async () => {
+        configureSmtp({ SMTP_HOST: '' });
+
+        await expect(
+          service.callNodeMailer(mailOptions),
+        ).rejects.toBeInstanceOf(SmtpConfigurationError);
+      });
     });
 
     describe('credentials', () => {
@@ -425,6 +434,14 @@ Test content here
           await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
             'SMTP_TLS_REJECT_UNAUTHORIZED',
           );
+        });
+
+        it('raises a SmtpConfigurationError', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'yes' });
+
+          await expect(
+            service.callNodeMailer(mailOptions),
+          ).rejects.toBeInstanceOf(SmtpConfigurationError);
         });
       });
     });

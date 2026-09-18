@@ -1,4 +1,5 @@
 import { EmailData, MailService } from './MailService';
+import { SmtpConfigurationError } from './SmtpConfigurationError';
 import { Configuration } from '..';
 import { PackmindLogger } from '@packmind/logger';
 import nodemailer from 'nodemailer';
@@ -142,7 +143,7 @@ ${content}
       return true;
     }
 
-    throw new Error(
+    throw new SmtpConfigurationError(
       `SMTP_TLS_REJECT_UNAUTHORIZED must be 'true' or 'false', got '${value}'`,
     );
   }
@@ -161,7 +162,7 @@ ${content}
     );
 
     if (!host || !port) {
-      throw new Error('SMTP_HOST and SMTP_PORT are required');
+      throw new SmtpConfigurationError('SMTP_HOST and SMTP_PORT are required');
     }
 
     const mailConfig: SMTPPool.Options = {
