@@ -352,6 +352,18 @@ it is also what got one of them wrong — see the last bullet.
 - **`GetPackageByIdUseCase` has the same unscoped `findById`** the release routes had, and
   predates this feature.
 
+**Answered on the PR, 2026-09-18.** All four findings have a threaded reply on #489, posted
+after the branch reached `origin` so each cited commit resolves:
+[F1](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044254228),
+[F2](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044251617),
+[F3](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044250464),
+[F4](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044252798).
+
+None of the four threads is resolved, deliberately. The S5 row said a *false* finding is
+answered and closed there, and none of the four turned out purely false — three were real
+defects and the fourth carries the live escalation below, which must not read as settled.
+Resolving them is the reviewer's call, not the triage's.
+
 **What was verified at the close.** `nx run-many -t test` over `types`, `deployments`, `api`,
 `frontend`, `feature-flags`, `ui` and `migrations`: seven projects green, `--skip-nx-cache`.
 The four Playwright criteria pass together in 49.2s at `--workers=1` — matching S4's 49.1s.
