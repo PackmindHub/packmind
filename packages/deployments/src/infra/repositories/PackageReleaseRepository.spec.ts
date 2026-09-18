@@ -261,44 +261,57 @@ describe('PackageReleaseRepository', () => {
       await repository.createWithVersions(releaseOf('2.0.0'), pinnedVersions());
     });
 
-    it('hydrates a deleted command version when found by package id and version', async () => {
-      await fixture.datasource
-        .getRepository(CommandVersionSchema)
-        .softDelete({ id: commandVersion.id });
+    describe('reading it by package id and version', () => {
+      it('hydrates the deleted command version at the number it pinned', async () => {
+        await fixture.datasource
+          .getRepository(CommandVersionSchema)
+          .softDelete({ id: commandVersion.id });
 
-      const found = await repository.findByPackageIdAndVersion(pkg.id, '2.0.0');
+        const found = await repository.findByPackageIdAndVersion(
+          pkg.id,
+          '2.0.0',
+        );
 
-      expect(found?.recipeVersions).toHaveLength(1);
-      expect(found?.recipeVersions[0].id).toEqual(commandVersion.id);
-      expect(found?.recipeVersions[0].version).toEqual(3);
+        expect(
+          found?.recipeVersions.map((version) => [version.id, version.version]),
+        ).toEqual([[commandVersion.id, 3]]);
+      });
+
+      it('hydrates the deleted standard version at the number it pinned', async () => {
+        await fixture.datasource
+          .getRepository(StandardVersionSchema)
+          .softDelete({ id: standardVersion.id });
+
+        const found = await repository.findByPackageIdAndVersion(
+          pkg.id,
+          '2.0.0',
+        );
+
+        expect(
+          found?.standardVersions.map((version) => [
+            version.id,
+            version.version,
+          ]),
+        ).toEqual([[standardVersion.id, 2]]);
+      });
     });
 
-    it('hydrates a deleted standard version when found by package id and version', async () => {
-      await fixture.datasource
-        .getRepository(StandardVersionSchema)
-        .softDelete({ id: standardVersion.id });
+    describe('reading it by package id', () => {
+      it('hydrates both deleted versions', async () => {
+        await fixture.datasource
+          .getRepository(CommandVersionSchema)
+          .softDelete({ id: commandVersion.id });
+        await fixture.datasource
+          .getRepository(StandardVersionSchema)
+          .softDelete({ id: standardVersion.id });
 
-      const found = await repository.findByPackageIdAndVersion(pkg.id, '2.0.0');
+        const [found] = await repository.findByPackageId(pkg.id);
 
-      expect(found?.standardVersions).toHaveLength(1);
-      expect(found?.standardVersions[0].id).toEqual(standardVersion.id);
-      expect(found?.standardVersions[0].version).toEqual(2);
-    });
-
-    it('hydrates deleted versions when found by package id', async () => {
-      await fixture.datasource
-        .getRepository(CommandVersionSchema)
-        .softDelete({ id: commandVersion.id });
-      await fixture.datasource
-        .getRepository(StandardVersionSchema)
-        .softDelete({ id: standardVersion.id });
-
-      const [found] = await repository.findByPackageId(pkg.id);
-
-      expect(found.recipeVersions).toHaveLength(1);
-      expect(found.recipeVersions[0].id).toEqual(commandVersion.id);
-      expect(found.standardVersions).toHaveLength(1);
-      expect(found.standardVersions[0].id).toEqual(standardVersion.id);
+        expect([
+          found.recipeVersions.map((version) => version.id),
+          found.standardVersions.map((version) => version.id),
+        ]).toEqual([[commandVersion.id], [standardVersion.id]]);
+      });
     });
   });
 
@@ -317,42 +330,61 @@ describe('PackageReleaseRepository', () => {
         .save(skillVersionFactory({ skillId: skill.id, version: 6 }));
     });
 
-    it('keeps the pinned command version when found by package id and version', async () => {
-      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
+    describe('reading it by package id and version', () => {
+      it('keeps the pinned command version', async () => {
+        const found = await repository.findByPackageIdAndVersion(
+          pkg.id,
+          '4.0.0',
+        );
 
-      expect(found?.recipeVersions).toHaveLength(1);
-      expect(found?.recipeVersions[0].id).toEqual(commandVersion.id);
-      expect(found?.recipeVersions[0].version).toEqual(3);
+        expect(
+          found?.recipeVersions.map((version) => [version.id, version.version]),
+        ).toEqual([[commandVersion.id, 3]]);
+      });
+
+      it('keeps the pinned standard version', async () => {
+        const found = await repository.findByPackageIdAndVersion(
+          pkg.id,
+          '4.0.0',
+        );
+
+        expect(
+          found?.standardVersions.map((version) => [
+            version.id,
+            version.version,
+          ]),
+        ).toEqual([[standardVersion.id, 2]]);
+      });
+
+      it('keeps the pinned skill version', async () => {
+        const found = await repository.findByPackageIdAndVersion(
+          pkg.id,
+          '4.0.0',
+        );
+
+        expect(
+          found?.skillVersions.map((version) => [version.id, version.version]),
+        ).toEqual([[skillVersion.id, 5]]);
+      });
     });
 
-    it('keeps the pinned standard version when found by package id and version', async () => {
-      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
+    describe('reading it by package id', () => {
+      it('keeps all three pinned versions', async () => {
+        const [found] = await repository.findByPackageId(pkg.id);
 
-      expect(found?.standardVersions).toHaveLength(1);
-      expect(found?.standardVersions[0].id).toEqual(standardVersion.id);
-      expect(found?.standardVersions[0].version).toEqual(2);
-    });
-
-    it('keeps the pinned skill version when found by package id and version', async () => {
-      const found = await repository.findByPackageIdAndVersion(pkg.id, '4.0.0');
-
-      expect(found?.skillVersions).toHaveLength(1);
-      expect(found?.skillVersions[0].id).toEqual(skillVersion.id);
-      expect(found?.skillVersions[0].version).toEqual(5);
-    });
-
-    it('keeps the pinned versions when found by package id', async () => {
-      const [found] = await repository.findByPackageId(pkg.id);
-
-      expect(found.recipeVersions).toHaveLength(1);
-      expect(found.recipeVersions[0].id).toEqual(commandVersion.id);
-      expect(found.recipeVersions[0].version).toEqual(3);
-      expect(found.standardVersions).toHaveLength(1);
-      expect(found.standardVersions[0].id).toEqual(standardVersion.id);
-      expect(found.standardVersions[0].version).toEqual(2);
-      expect(found.skillVersions).toHaveLength(1);
-      expect(found.skillVersions[0].id).toEqual(skillVersion.id);
-      expect(found.skillVersions[0].version).toEqual(5);
+        expect([
+          found.recipeVersions.map((version) => [version.id, version.version]),
+          found.standardVersions.map((version) => [
+            version.id,
+            version.version,
+          ]),
+          found.skillVersions.map((version) => [version.id, version.version]),
+        ]).toEqual([
+          [[commandVersion.id, 3]],
+          [[standardVersion.id, 2]],
+          [[skillVersion.id, 5]],
+        ]);
+      });
     });
   });
 });

@@ -165,12 +165,14 @@ describe('CreatePackageReleases1821000000000', () => {
       ).rejects.toThrow();
     });
 
-    it('keeps the join row when a pinned command version delete is refused', async () => {
-      await deleteVersion('command_versions', pinnedCommandVersionId).catch(
-        () => undefined,
-      );
+    describe('when a pinned command version delete is refused', () => {
+      it('keeps the join row', async () => {
+        await deleteVersion('command_versions', pinnedCommandVersionId).catch(
+          () => undefined,
+        );
 
-      expect(await countRows('package_release_command_versions')).toBe(1);
+        expect(await countRows('package_release_command_versions')).toBe(1);
+      });
     });
 
     it('refuses to delete a standard version that a release pins', async () => {
@@ -179,12 +181,14 @@ describe('CreatePackageReleases1821000000000', () => {
       ).rejects.toThrow();
     });
 
-    it('keeps the join row when a pinned standard version delete is refused', async () => {
-      await deleteVersion('standard_versions', pinnedStandardVersionId).catch(
-        () => undefined,
-      );
+    describe('when a pinned standard version delete is refused', () => {
+      it('keeps the join row', async () => {
+        await deleteVersion('standard_versions', pinnedStandardVersionId).catch(
+          () => undefined,
+        );
 
-      expect(await countRows('package_release_standard_versions')).toBe(1);
+        expect(await countRows('package_release_standard_versions')).toBe(1);
+      });
     });
 
     it('refuses to delete a skill version that a release pins', async () => {
@@ -193,12 +197,14 @@ describe('CreatePackageReleases1821000000000', () => {
       ).rejects.toThrow();
     });
 
-    it('keeps the join row when a pinned skill version delete is refused', async () => {
-      await deleteVersion('skill_versions', pinnedSkillVersionId).catch(
-        () => undefined,
-      );
+    describe('when a pinned skill version delete is refused', () => {
+      it('keeps the join row', async () => {
+        await deleteVersion('skill_versions', pinnedSkillVersionId).catch(
+          () => undefined,
+        );
 
-      expect(await countRows('package_release_skill_versions')).toBe(1);
+        expect(await countRows('package_release_skill_versions')).toBe(1);
+      });
     });
 
     describe('and the release itself is deleted', () => {

@@ -270,24 +270,31 @@ describe('CreatePackageReleaseUseCase', () => {
     });
   });
 
-  it('refuses an empty package with no_components even when the version is malformed', async () => {
-    packageService.findById.mockResolvedValue(
-      buildPackage({ recipes: [], standards: [], skills: [] }),
-    );
+  describe('when an empty package is cut with a malformed version', () => {
+    it('reports the empty package rather than the version', async () => {
+      packageService.findById.mockResolvedValue(
+        buildPackage({ recipes: [], standards: [], skills: [] }),
+      );
 
-    await expect(useCase.execute(buildCommand('banana'))).rejects.toMatchObject(
-      {
-        code: 'no_components',
-      },
-    );
+      await expect(
+        useCase.execute(buildCommand('banana')),
+      ).rejects.toMatchObject({ code: 'no_components' });
+    });
   });
 
-  it('refuses a malformed version with malformed', async () => {
-    await expect(useCase.execute(buildCommand('1.0'))).rejects.toMatchObject({
-      code: 'malformed',
-      currentVersion: '0.0.0',
+  describe('when the version is malformed', () => {
+    it('refuses it with malformed', async () => {
+      await expect(useCase.execute(buildCommand('1.0'))).rejects.toMatchObject({
+        code: 'malformed',
+        currentVersion: '0.0.0',
+      });
     });
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
   });
 
   it('refuses a version that is not greater with not_greater', async () => {
@@ -336,18 +343,36 @@ describe('CreatePackageReleaseUseCase', () => {
     });
   });
 
-  it('refuses the whole release when a command has no version', async () => {
-    commandsPort.listCommandVersions.mockResolvedValue([]);
+  describe('when a command has no version', () => {
+    beforeEach(() => {
+      commandsPort.listCommandVersions.mockResolvedValue([]);
+    });
 
-    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    it('refuses the whole release', async () => {
+      await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
   });
 
-  it('refuses the whole release when a standard has no version', async () => {
-    standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+  describe('when a standard has no version', () => {
+    beforeEach(() => {
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+    });
 
-    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    it('refuses the whole release', async () => {
+      await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
   });
 
   it('translates a 23505 from the insert into not_greater carrying the re-read version', async () => {
@@ -376,24 +401,34 @@ describe('CreatePackageReleaseUseCase', () => {
     );
   });
 
-  it('raises PackageNotFoundError when the package does not exist', async () => {
-    packageService.findById.mockResolvedValue(null);
+  describe('when the package does not exist', () => {
+    it('raises PackageNotFoundError', async () => {
+      packageService.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBeInstanceOf(
-      PackageNotFoundError,
-    );
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(PackageNotFoundError);
+    });
   });
 
-  it('raises PackageNotFoundError when the package belongs to another space', async () => {
-    const otherSpaceId = createSpaceId(uuidv4());
-    packageService.findById.mockResolvedValue(
-      buildPackage({ spaceId: otherSpaceId }),
-    );
+  describe('when the package belongs to another space', () => {
+    beforeEach(() => {
+      packageService.findById.mockResolvedValue(
+        buildPackage({ spaceId: createSpaceId(uuidv4()) }),
+      );
+    });
 
-    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBeInstanceOf(
-      PackageNotFoundError,
-    );
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    it('raises PackageNotFoundError', async () => {
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(PackageNotFoundError);
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
   });
 
   it('raises PackageReleaseRefusedError instances, not bare errors', async () => {
@@ -402,41 +437,46 @@ describe('CreatePackageReleaseUseCase', () => {
     );
   });
 
-  it('a component with no version refuses the cut with PackageComponentHasNoVersionError', async () => {
-    commandsPort.listCommandVersions.mockResolvedValue([]);
+  describe('when a component has no version at all', () => {
+    const refusal = async () => {
+      commandsPort.listCommandVersions.mockResolvedValue([]);
+      return useCase
+        .execute(buildCommand('0.1.0'))
+        .catch((caught: unknown) => caught);
+    };
 
-    let error: unknown;
-    try {
-      await useCase.execute(buildCommand('0.1.0'));
-    } catch (e) {
-      error = e;
-    }
+    it('refuses the cut with PackageComponentHasNoVersionError', async () => {
+      expect(await refusal()).toBeInstanceOf(PackageComponentHasNoVersionError);
+    });
 
-    expect(error).toBeInstanceOf(PackageComponentHasNoVersionError);
-    expect((error as PackageComponentHasNoVersionError).family).toBe('recipe');
-    expect((error as PackageComponentHasNoVersionError).componentId).toBe(
-      commandId,
-    );
+    it('names the family it could not resolve', async () => {
+      const error = (await refusal()) as PackageComponentHasNoVersionError;
+
+      expect(error.family).toBe('recipe');
+    });
+
+    it('names the component it could not resolve', async () => {
+      const error = (await refusal()) as PackageComponentHasNoVersionError;
+
+      expect(error.componentId).toBe(commandId);
+    });
   });
 
-  it('nothing is written when a component has no version', async () => {
-    commandsPort.listCommandVersions.mockResolvedValue([]);
+  describe('when the caller is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
 
-    try {
-      await useCase.execute(buildCommand('0.1.0'));
-    } catch {
-      // Expected to throw
-    }
+    it('refuses the caller', async () => {
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(SpaceMembershipRequiredError);
+    });
 
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
-  });
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
 
-  it('refuses a caller who is not a member of the space', async () => {
-    spacesPort.findMembership.mockResolvedValue(null);
-
-    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBeInstanceOf(
-      SpaceMembershipRequiredError,
-    );
-    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
   });
 });

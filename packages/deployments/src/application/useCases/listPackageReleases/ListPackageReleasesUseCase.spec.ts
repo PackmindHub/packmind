@@ -389,38 +389,50 @@ describe('ListPackageReleasesUseCase', () => {
       expect(result.readiness.outdatedComponents).toEqual([]);
     });
 
-    it('ListPackageReleasesUseCase: returns ready verdict when an unresolved component differs from the release', async () => {
+    it('is ready, because the package differs from its release', async () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.readiness.verdict).toBe('ready');
     });
   });
 
-  it('raises PackageNotFoundError when the package does not exist', async () => {
-    packageService.findById.mockResolvedValue(null);
+  describe('when the package does not exist', () => {
+    it('raises PackageNotFoundError', async () => {
+      packageService.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
-      PackageNotFoundError,
-    );
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        PackageNotFoundError,
+      );
+    });
   });
 
-  it('raises PackageNotFoundError when the package belongs to another space', async () => {
-    const otherSpaceId = createSpaceId(uuidv4());
-    packageService.findById.mockResolvedValue(
-      buildPackage({ spaceId: otherSpaceId }),
-    );
+  describe('when the package belongs to another space', () => {
+    beforeEach(() => {
+      packageService.findById.mockResolvedValue(
+        buildPackage({ spaceId: createSpaceId(uuidv4()) }),
+      );
+    });
 
-    await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
-      PackageNotFoundError,
-    );
-    expect(packageReleaseService.listReleases).not.toHaveBeenCalled();
+    it('raises PackageNotFoundError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        PackageNotFoundError,
+      );
+    });
+
+    it('reads nothing', async () => {
+      await useCase.execute(buildCommand()).catch(() => undefined);
+
+      expect(packageReleaseService.listReleases).not.toHaveBeenCalled();
+    });
   });
 
-  it('refuses a caller who is not a member of the space', async () => {
-    spacesPort.findMembership.mockResolvedValue(null);
+  describe('when the caller is not a member of the space', () => {
+    it('refuses the caller', async () => {
+      spacesPort.findMembership.mockResolvedValue(null);
 
-    await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
-      SpaceMembershipRequiredError,
-    );
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        SpaceMembershipRequiredError,
+      );
+    });
   });
 });

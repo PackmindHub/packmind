@@ -106,26 +106,28 @@ describe('OrganizationsSpacesPackagesController', () => {
       expect(result).toBe(response);
     });
 
-    it('turns a missing package into a 404 when listing releases', async () => {
-      deploymentsService.listPackageReleases.mockRejectedValue(
-        new PackageNotFoundError(packageId),
-      );
+    describe('when the package does not exist', () => {
+      it('turns it into a 404', async () => {
+        deploymentsService.listPackageReleases.mockRejectedValue(
+          new PackageNotFoundError(packageId),
+        );
 
-      await expect(
-        controller.listPackageReleases(
-          organizationId,
-          spaceId,
-          packageId,
-          request,
-        ),
-      ).rejects.toBeInstanceOf(NotFoundException);
+        await expect(
+          controller.listPackageReleases(
+            organizationId,
+            spaceId,
+            packageId,
+            request,
+          ),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
     });
   });
 
   describe('createPackageRelease', () => {
     const response: CreatePackageReleaseResponse = { release };
 
-    it('passes the submitted version through when cutting a release', async () => {
+    it('passes the submitted version through', async () => {
       deploymentsService.createPackageRelease.mockResolvedValue(response);
 
       await controller.createPackageRelease(
@@ -159,54 +161,62 @@ describe('OrganizationsSpacesPackagesController', () => {
       expect(result).toBe(response);
     });
 
-    it('answers a refused release with a 400 carrying the refusal code and current version', async () => {
-      deploymentsService.createPackageRelease.mockRejectedValue(
-        new PackageReleaseRefusedError('not_greater', '1.2.0'),
-      );
+    describe('when the cut is refused', () => {
+      const cut = () => {
+        deploymentsService.createPackageRelease.mockRejectedValue(
+          new PackageReleaseRefusedError('not_greater', '1.2.0'),
+        );
 
-      expect.assertions(2);
-      try {
-        await controller.createPackageRelease(
+        return controller.createPackageRelease(
           organizationId,
           spaceId,
           packageId,
           request,
           { version: '1.1.0' },
         );
-      } catch (error) {
-        expect(error).toBeInstanceOf(BadRequestException);
+      };
+
+      it('answers with a 400', async () => {
+        await expect(cut()).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('carries the refusal code and the current version', async () => {
+        const error = await cut().catch((caught) => caught);
+
         expect((error as BadRequestException).getResponse()).toEqual({
           message: 'Package release refused: not_greater',
           code: 'not_greater',
           currentVersion: '1.2.0',
         });
-      }
+      });
     });
 
-    it('turns a missing package into a 404 when cutting a release', async () => {
-      deploymentsService.createPackageRelease.mockRejectedValue(
-        new PackageNotFoundError(packageId),
-      );
+    describe('when the package does not exist', () => {
+      it('turns it into a 404', async () => {
+        deploymentsService.createPackageRelease.mockRejectedValue(
+          new PackageNotFoundError(packageId),
+        );
 
-      await expect(
-        controller.createPackageRelease(
-          organizationId,
-          spaceId,
-          packageId,
-          request,
-          { version: '1.1.0' },
-        ),
-      ).rejects.toBeInstanceOf(NotFoundException);
+        await expect(
+          controller.createPackageRelease(
+            organizationId,
+            spaceId,
+            packageId,
+            request,
+            { version: '1.1.0' },
+          ),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
     });
   });
 
   describe('getPackageRelease', () => {
     const response: GetPackageReleaseResponse = { release };
 
-    it('passes the version param through when reading one release', async () => {
+    it('passes the version param through', async () => {
       deploymentsService.getPackageRelease.mockResolvedValue(response);
 
-      const result = await controller.getPackageRelease(
+      await controller.getPackageRelease(
         organizationId,
         spaceId,
         packageId,
@@ -221,23 +231,38 @@ describe('OrganizationsSpacesPackagesController', () => {
         packageId,
         version: '1.1.0',
       });
+    });
+
+    it('returns the release untouched', async () => {
+      deploymentsService.getPackageRelease.mockResolvedValue(response);
+
+      const result = await controller.getPackageRelease(
+        organizationId,
+        spaceId,
+        packageId,
+        '1.1.0',
+        request,
+      );
+
       expect(result).toBe(response);
     });
 
-    it('turns an unknown version into a 404 when reading one release', async () => {
-      deploymentsService.getPackageRelease.mockRejectedValue(
-        new PackageReleaseNotFoundError(packageId, '9.9.9'),
-      );
+    describe('when no release carries the requested version', () => {
+      it('turns it into a 404', async () => {
+        deploymentsService.getPackageRelease.mockRejectedValue(
+          new PackageReleaseNotFoundError(packageId, '9.9.9'),
+        );
 
-      await expect(
-        controller.getPackageRelease(
-          organizationId,
-          spaceId,
-          packageId,
-          '9.9.9',
-          request,
-        ),
-      ).rejects.toBeInstanceOf(NotFoundException);
+        await expect(
+          controller.getPackageRelease(
+            organizationId,
+            spaceId,
+            packageId,
+            '9.9.9',
+            request,
+          ),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
     });
   });
 });

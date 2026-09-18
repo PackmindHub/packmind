@@ -98,10 +98,12 @@ describe('packageReleaseVersion', () => {
       expect(comparePackageReleaseVersions(a, b)).toBeGreaterThan(0);
     });
 
-    it('returns negative when first is less than second', () => {
-      const a: PackageReleaseVersion = { major: 1, minor: 2, patch: 3 };
-      const b: PackageReleaseVersion = { major: 1, minor: 2, patch: 4 };
-      expect(comparePackageReleaseVersions(a, b)).toBeLessThan(0);
+    describe('when the first is less than the second', () => {
+      it('returns negative', () => {
+        const a: PackageReleaseVersion = { major: 1, minor: 2, patch: 3 };
+        const b: PackageReleaseVersion = { major: 1, minor: 2, patch: 4 };
+        expect(comparePackageReleaseVersions(a, b)).toBeLessThan(0);
+      });
     });
   });
 
@@ -124,22 +126,31 @@ describe('packageReleaseVersion', () => {
       );
     });
 
-    it('returns versions in the order patch, minor, major', () => {
+    describe('the order the three are returned in', () => {
       const [patch, minor, major] = nextVersions('2.5.8');
-      expect(parsePackageReleaseVersion(patch)).toEqual({
-        major: 2,
-        minor: 5,
-        patch: 9,
+
+      it('puts the patch increment first', () => {
+        expect(parsePackageReleaseVersion(patch)).toEqual({
+          major: 2,
+          minor: 5,
+          patch: 9,
+        });
       });
-      expect(parsePackageReleaseVersion(minor)).toEqual({
-        major: 2,
-        minor: 6,
-        patch: 0,
+
+      it('puts the minor increment second', () => {
+        expect(parsePackageReleaseVersion(minor)).toEqual({
+          major: 2,
+          minor: 6,
+          patch: 0,
+        });
       });
-      expect(parsePackageReleaseVersion(major)).toEqual({
-        major: 3,
-        minor: 0,
-        patch: 0,
+
+      it('puts the major increment third', () => {
+        expect(parsePackageReleaseVersion(major)).toEqual({
+          major: 3,
+          minor: 0,
+          patch: 0,
+        });
       });
     });
   });
