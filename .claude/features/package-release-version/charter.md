@@ -4,8 +4,10 @@
 - status: `closed` for its acceptance criteria — AC-1..AC-25 delivered and green; reopened on
   2026-09-16 by D-056 for a feature flag, and closed again on 2026-09-17 with S4 (D-057).
   S5 triaged the review on PR #489 the same day and closed: four findings, four units
-  (U-027..U-030), all green. **Not merged, and two things outstanding that are not this
-  charter's — see `S5 — done` below.**
+  (U-027..U-030), all green. S6 closed on 2026-09-18: three defects the criteria-led review
+  found, three standards raised on #489, and the `packmind-cli` gate this feature had been
+  failing since S1. **Not merged. S7 is open and handed off — three coupling findings and one
+  false sentence in `apps/doc`; see `S7 — open` below. Every check on #489 is green.**
 - opened: `2026-09-14`
 
 Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
@@ -238,6 +240,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
   | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing. *Closed 2026-09-17: four units, U-027..U-030, and six decisions, D-059..D-064* | S4 |
   | S6 | — (no new AC; a second review pass and a red gate, neither a behaviour) | the defects a human-led review found in the release surface — a readiness query nothing invalidated, and a form with two dead ends — plus the two standards Greptile raised on #489, and the 76 `packmind-cli lint` errors this feature's own specs were carrying. **Not sized** — the findings are the sizing. *Closed 2026-09-18: eight commits* | S5 |
+  | S7 | — (no new AC; a third review pass, not a behaviour) | triage the three `graphify-labs` coupling findings on #489, and the `apps/doc` sentence U-032 made false. **Not sized** — the triage is the sizing. *Open* | S6 |
 
   **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
@@ -468,6 +471,74 @@ hand-written sweep for the two rules, and the sweep was wrong — it looked for 
 closing brace and stopped at a fixture's, so it declared a three-expect test clean. The
 gate found it. Approximating a gate you cannot run is worth doing and is not worth
 trusting; the eighth commit is the difference between the two.
+
+## S7 — open: hand off, three coupling findings and one false sentence
+
+**State at handoff.** `057a45406`, pushed, and `origin/main` merged in with no conflicts
+remaining (`git merge-tree` is clean). **Every check on
+[#489](https://github.com/PackmindHub/packmind/pull/489) is green**, including
+`quality-packmind-cli`, which was red for the whole of S1..S5 and is the thing S6 fixed.
+Locally: nine projects green on `test`, `lint` and `typecheck` with `--skip-nx-cache`, and
+`packmind-cli lint .` reports 0 errors against 18 pre-existing warnings, none in a file
+this branch touches.
+
+Nothing is half-done. The work below is new input, not unfinished business.
+
+### The three findings, untriaged
+
+Posted 2026-09-18T16:07Z by `graphify-labs[bot]`, which describes itself as deterministic
+coupling deltas rather than an LLM judgement — so unlike the Greptile findings these are
+measurements, and the question is what they are worth rather than whether they are true.
+None has been triaged. Facts gathered, conclusions deliberately not drawn:
+
+| id | subject | claim | what is already known |
+|---|---|---|---|
+| [4048459912](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459912) | `useGetDashboardKpiQuery()` — `DeploymentsQueries.ts:359` | high coupling complexity, Ca·Ce = 12 | **This branch does not touch that function.** `git log -S` over the range finds nothing. Either the tool attributes a file-level delta to an unchanged function, or the delta is real and caused by the module's imports growing. Check which before spending anything on it |
+| [4048459927](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459927) | `CreatePackageReleaseDrawer()` | fans out to 6 callees | True and partly S6's doing: the drawer gained `nextVersions` when the server's version was made to outrank readiness. Its six are `@packmind/ui`, `@packmind/types`, the analytics provider, the mutation hook, `getReleaseVerdictMessage` and `readPackageReleaseRefusal` — which is what a form that submits, refuses and reports looks like. Splitting it is a real option and is not obviously an improvement |
+| [4048459934](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459934) | `evaluatePackageReleaseGate()` | high coupling complexity, Ca·Ce = 12 | It calls the four comparison helpers beside it and is called from `ListPackageReleasesUseCase` and the barrel. The four helpers are separately exported and separately tested **on purpose** — D-006, D-007, D-008 — so the composition being the only thing that couples to all four is the shape those decisions asked for. A remedy that inlines them reverses a decision rather than fixing a defect |
+
+The S5 lesson applies and is why none of these was acted on unprompted: a finding that
+lands on code the decision log constrains has to be checked against the log first, or the
+fix undoes a decision. D-006, D-007 and D-008 constrain the third one directly.
+
+### The one thing that is a defect
+
+`apps/doc/concepts/packages-management.mdx` says **"Any member of your organization can
+create a release."** U-032 made that false when it put the three use cases on
+`AbstractSpaceMemberUseCase`, and D-065 amended this charter's scope bullet without
+touching the user-facing page. Named in S6, named on the PR, still not fixed. It is a
+sentence, and it is the only thing on this list that is wrong rather than merely measured.
+
+### Two corrections to the record that a reader should not rediscover
+
+- **The branch pushes itself.** The S5 handoff said a git hook pushes on commit; `.husky/`
+  has `pre-commit` (pretty-quick plus `precommit-lint.sh`) and `pre-push`, and no push in
+  the commit path — yet HEAD and `origin/feat/845-package-release-version` are equal after
+  every commit this session. Whatever is doing it, **do not assume an unpushed commit is
+  private**: check `git rev-parse HEAD origin/<branch>` before writing anything on the PR
+  that cites a hash.
+- **`tsconfig.base.effective.json` is generated and untracked, and a stale one is
+  indistinguishable from a broken build.** A proprietary-flavoured copy makes
+  `nx run frontend:build` fail with a wall of `TS2307: Cannot find module
+  '@packmind/proprietary/frontend/...'`. `PACKMIND_EDITION=oss node
+  scripts/select-tsconfig.mjs` resets it. This cost a session's worth of confusion once
+  already.
+
+### Still true from S5, and still not this feature's
+
+The cross-organization reach is closed on the three release routes and open on every
+sibling surface under `/organizations/:orgId/spaces/:spaceId/`, because nothing upstream
+binds a space to its organization. D-064 has the guard chain quoted end to end.
+`GetPackageByIdUseCase` still performs the unscoped `findById` the release use cases were
+taught not to.
+
+### What running it needs
+
+`packmind-cli lint .` needs a valid API key; the gate is worth running rather than
+approximating, because in S6 a hand-written sweep for the same two rules cleared a test the
+gate then caught. Build the CLI first — `nx build packmind-cli` — since `dist/` is cleaned
+by other Nx targets and a missing binary reports as `MODULE_NOT_FOUND`, not as a lint
+failure. Playwright has not been run since S5 and needs the docker stack.
 
 ## Done
 
