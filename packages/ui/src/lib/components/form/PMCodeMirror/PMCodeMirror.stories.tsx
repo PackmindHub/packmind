@@ -63,7 +63,6 @@ export const Python: Story = {
   },
 };
 
-// New stories using the language prop
 export const JavaScriptWithLanguageProp: Story = {
   args: {
     value:
