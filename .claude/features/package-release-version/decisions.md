@@ -3760,3 +3760,96 @@ space is in the organization, and where — is reported to the human as a findin
 charter, because it is.
 
 ---
+
+## D-065 — The release use cases adopt `AbstractSpaceMemberUseCase`; D-035 and D-017 are reversed on the human's decision
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-18`
+- supersedes: D-017 (partial — the base class), D-035 (the authorisation level)
+- superseded-by: —
+- relates to: `AC-19`, `AC-22`, `D-060`, `D-064`
+
+**Decision.** `CreatePackageReleaseUseCase`, `ListPackageReleasesUseCase` and
+`GetPackageReleaseUseCase` extend `AbstractSpaceMemberUseCase` and implement
+`executeForSpaceMembers`. Each takes `spacesPort: ISpacesPort` as its first constructor
+argument and passes it to `super`. The caller must be a member of the space named in the
+URL. **U-029's package-to-space binding stays** — the two are different checks and both are
+needed.
+
+This was decided by the human on 2026-09-18, in answer to the halt D-064 raised.
+
+**Reasoning.** D-064 established that the cross-organization reach was open and that
+`AbstractSpaceMemberUseCase` would close it. D-035 had rejected that base class, so adopting
+it is a reversal, not an implementation detail, and it is recorded as one.
+
+*Why it closes the hole.* `AbstractSpaceMemberUseCase` calls
+`spacesPort.findMembership(command.user.id, command.spaceId)` and throws
+`SpaceMembershipRequiredError` when there is none. An org-A caller is not a member of an
+org-B space, so the foreign `spaceId` is refused before the package is ever loaded.
+
+*Why U-029's guard is not now redundant.* They defend different substitutions, and dropping
+either reopens one:
+
+- Caller puts a **foreign `spaceId`** in the URL with the matching foreign `packageId` — the
+  membership check refuses it. U-029's guard would have passed, because `pkg.spaceId` really
+  does equal the URL's.
+- Caller puts **their own `spaceId`** in the URL with a foreign `packageId` — the membership
+  check passes, because they are genuinely a member of their own space. U-029's guard
+  refuses it, because the package lives elsewhere.
+
+One binds the caller to the space; the other binds the resource to it. Only together do they
+say "this caller, in this space, acting on a package that is in it".
+
+*What this does to AC-19, stated plainly because it is a criterion.* AC-19 reads "A member of
+the organization who did not create the package can release it — **no ownership or role
+check** refuses them", and that still holds: nothing consults `createdBy` and nothing consults
+a role. Space membership is neither — it is tenancy, the question of which rows this route
+addresses at all. The criterion's test is unchanged in intent and passes with a membership
+mock.
+
+What does change is a **scope sentence**: `In scope` said "No permission check. Any member of
+the organization can release." That is now false — an organization member who is not in the
+space is refused. The charter is amended rather than quietly left, because that sentence was
+written to stop a subagent inventing an authorisation rule, and it would now be wrong in the
+other direction.
+
+*Why the error is the right one.* `SpaceMembershipRequiredError` carries the code `not_found`
+and the message "This space does not exist, or you do not have access to it." A caller cannot
+distinguish a space that is absent from one they cannot see, which is the property a tenancy
+check should have, and it needed no new refusal code — D-034's union stays at four.
+
+*The risk that was checked before deciding to do this in one unit.* Neither
+`CreatePackageReleaseUseCase.spec.ts` nor `GetPackageReleaseUseCase.spec.ts` nor
+`ListPackageReleasesUseCase.spec.ts` constructs an `ISpacesPort` at all today, so **every**
+test in all three files fails on conversion until a mock is added — not only the AC-19 one.
+That is the bulk of the unit and the reason it is not a two-line change. The end-to-end
+criteria were judged low risk and the judgement is recorded here: `apiPackageFactory` derives
+its `spaceId` from the signed-up user's own `listSpaces()`, and `CreatePackageUseCase` —
+already an `AbstractSpaceMemberUseCase` — already clears this exact gate for that same
+user/space pair in the same `beforeEach`.
+
+**Rejected.**
+
+- Keeping `AbstractMemberUseCase` and adding a bespoke space check inside each use case —
+  three copies of a check the base class already performs, and it would leave the release
+  routes looking different from every neighbour for no reason.
+- Dropping U-029's binding now that membership is checked — see the two substitutions above;
+  it reopens the own-space-plus-foreign-package case.
+- Extending the change to `GetPackageByIdUseCase` and the sibling surfaces while here — that
+  use case already extends the right base and its own gap is the unscoped `findById`, which
+  is not this feature's. The wider audit stays reported, not absorbed.
+- Widening `AC-19` to say space membership is required — the criterion is about ownership and
+  roles and remains true as written; it is the scope bullet that was wrong.
+
+**Constrains implementation.** Follow `GetPackageByIdUseCase` exactly: `spacesPort` first,
+`accountsPort` second, existing dependencies after, `logger` last, `super(spacesPort,
+accountsPort, logger)`. Rename `executeForMembers` to `executeForSpaceMembers` and keep every
+body unchanged, including U-029's `pkg.spaceId !== command.spaceId` guard. In
+`DeploymentsAdapter.initialize()`, prepend `this.spacesPort` to the three constructor calls;
+it is already populated there. In each spec, add `mockInterface<ISpacesPort>()` with
+`findMembership` resolving to a membership, matching `CreatePackageUseCase.spec.ts`. Each use
+case gains one test that a non-member is refused with `SpaceMembershipRequiredError`. Do not
+touch `packages/types`, the controller, or any use case outside these three.
+
+---

@@ -1,9 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   CreatePackageReleaseCommand,
   CreatePackageReleaseResponse,
   IAccountsPort,
+  ISpacesPort,
   ICommandsPort,
   ICreatePackageReleaseUseCase,
   ISkillsPort,
@@ -33,13 +37,14 @@ const isUniqueViolation = (error: unknown): boolean =>
   (error as { code?: unknown }).code === UNIQUE_VIOLATION;
 
 export class CreatePackageReleaseUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     CreatePackageReleaseCommand,
     CreatePackageReleaseResponse
   >
   implements ICreatePackageReleaseUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
     private readonly commandsPort: ICommandsPort,
@@ -47,12 +52,12 @@ export class CreatePackageReleaseUseCase
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('CreatePackageReleaseUseCase initialized');
   }
 
-  async executeForMembers(
-    command: CreatePackageReleaseCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: CreatePackageReleaseCommand & SpaceMemberContext,
   ): Promise<CreatePackageReleaseResponse> {
     const { packageId, version, spaceId } = command;
 

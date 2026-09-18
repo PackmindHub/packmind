@@ -70,9 +70,18 @@ it", and no record afterwards that the moment happened.
 - **Browsing a released version**: its version list, and what each version pins.
 - **A "released content is behind" signal on the package**, distinct from the existing
   destination drift: 0.1.0 pins "Work with Jest" v4 and v5 exists.
-- **No permission check.** Any member of the organization can release — stated as
+- **No ownership or role check.** No `createdBy` test, no admin requirement — stated as
   scope, because "who may cut a release" is exactly the question a subagent would
   otherwise invent an answer to.
+
+  *Amended 2026-09-18 by D-065.* This bullet read "**No permission check.** Any member of
+  the organization can release" until S5. It is now a **space** member of the organization:
+  the three release use cases extend `AbstractSpaceMemberUseCase`, so a member who does not
+  belong to the space is refused. AC-19 is untouched — it forbids an ownership or role
+  check, and space membership is neither — but the old sentence would now be wrong in the
+  opposite direction from the one it was written to prevent. The reason is D-064: nothing in
+  the request chain binds a space to its organization, so organization-level authorisation
+  let a caller reach another organization's package.
 - **Coverage on non-skill components.** Every example in the issue uses a skill; the
   rules speak of components. A command and a standard must appear in the tests.
 - **CHANGELOG under `Unreleased`, and end-user documentation under `apps/doc/`** — the

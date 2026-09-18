@@ -504,6 +504,7 @@ export class DeploymentsAdapter
     );
 
     this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
       this.commandsPort,
@@ -512,11 +513,13 @@ export class DeploymentsAdapter
     );
 
     this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
     );
 
     this._listPackageReleasesUseCase = new ListPackageReleasesUseCase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
       this.commandsPort,

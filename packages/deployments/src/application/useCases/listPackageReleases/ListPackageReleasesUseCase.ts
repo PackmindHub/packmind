@@ -1,7 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
+  ISpacesPort,
   ICommandsPort,
   IListPackageReleasesUseCase,
   ISkillsPort,
@@ -155,13 +159,14 @@ const findOutdatedComponents = (
 };
 
 export class ListPackageReleasesUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ListPackageReleasesCommand,
     ListPackageReleasesResponse
   >
   implements IListPackageReleasesUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
     private readonly commandsPort: ICommandsPort,
@@ -169,12 +174,12 @@ export class ListPackageReleasesUseCase
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('ListPackageReleasesUseCase initialized');
   }
 
-  async executeForMembers(
-    command: ListPackageReleasesCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: ListPackageReleasesCommand & SpaceMemberContext,
   ): Promise<ListPackageReleasesResponse> {
     const { packageId, spaceId } = command;
 

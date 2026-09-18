@@ -1,7 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
+  ISpacesPort,
   IGetPackageReleaseUseCase,
   GetPackageReleaseCommand,
   GetPackageReleaseResponse,
@@ -13,23 +17,24 @@ import { PackageReleaseNotFoundError } from '../../../domain/errors/PackageRelea
 const origin = 'GetPackageReleaseUseCase';
 
 export class GetPackageReleaseUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     GetPackageReleaseCommand,
     GetPackageReleaseResponse
   >
   implements IGetPackageReleaseUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('GetPackageReleaseUseCase initialized');
   }
 
-  async executeForMembers(
-    command: GetPackageReleaseCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: GetPackageReleaseCommand & SpaceMemberContext,
   ): Promise<GetPackageReleaseResponse> {
     const { packageId, version, spaceId } = command;
 

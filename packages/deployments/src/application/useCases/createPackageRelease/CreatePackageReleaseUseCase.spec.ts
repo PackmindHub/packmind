@@ -1,9 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CommandVersion,
   CreatePackageReleaseCommand,
   IAccountsPort,
+  ISpacesPort,
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
@@ -23,6 +25,7 @@ import {
   createStandardId,
   createStandardVersionId,
   createUserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test';
 import { v4 as uuidv4 } from 'uuid';
@@ -122,6 +125,7 @@ describe('CreatePackageReleaseUseCase', () => {
   let pkg: Package;
   let useCase: CreatePackageReleaseUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
@@ -168,6 +172,16 @@ describe('CreatePackageReleaseUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
     commandsPort = {
       listCommandVersions: jest
         .fn()
@@ -191,6 +205,7 @@ describe('CreatePackageReleaseUseCase', () => {
     stubbedLogger = stubLogger();
 
     useCase = new CreatePackageReleaseUseCase(
+      spacesPort,
       accountsPort,
       services,
       commandsPort,
@@ -413,6 +428,15 @@ describe('CreatePackageReleaseUseCase', () => {
       // Expected to throw
     }
 
+    expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+  });
+
+  it('refuses a caller who is not a member of the space', async () => {
+    spacesPort.findMembership.mockResolvedValue(null);
+
+    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBeInstanceOf(
+      SpaceMembershipRequiredError,
+    );
     expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
   });
 });

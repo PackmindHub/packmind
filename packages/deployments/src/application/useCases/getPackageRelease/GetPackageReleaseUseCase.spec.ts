@@ -1,9 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   CommandVersion,
   GetPackageReleaseCommand,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   Package,
   PackageRelease,
@@ -20,6 +22,7 @@ import {
   createStandardId,
   createStandardVersionId,
   createUserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test';
 import { v4 as uuidv4 } from 'uuid';
@@ -121,6 +124,7 @@ describe('GetPackageReleaseUseCase', () => {
   let pkg: Package;
   let useCase: GetPackageReleaseUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let packageService: jest.Mocked<PackageService>;
   let packageReleaseService: jest.Mocked<PackageReleaseService>;
   let services: jest.Mocked<DeploymentsServices>;
@@ -159,9 +163,20 @@ describe('GetPackageReleaseUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
     stubbedLogger = stubLogger();
 
     useCase = new GetPackageReleaseUseCase(
+      spacesPort,
       accountsPort,
       services,
       stubbedLogger,
@@ -253,5 +268,14 @@ describe('GetPackageReleaseUseCase', () => {
     const result = await useCase.execute(buildCommand('1.0.0'));
 
     expect(result.release.version).toBe('1.0.0');
+  });
+
+  it('refuses a caller who is not a member of the space', async () => {
+    spacesPort.findMembership.mockResolvedValue(null);
+
+    await expect(useCase.execute(buildCommand('1.0.0'))).rejects.toBeInstanceOf(
+      SpaceMembershipRequiredError,
+    );
+    expect(packageReleaseService.findByVersion).not.toHaveBeenCalled();
   });
 });
