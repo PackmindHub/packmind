@@ -2,7 +2,7 @@ import { commandFactory } from '@packmind/commands/test';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -21,15 +21,7 @@ describe('OrganizationsSpacesRecipesController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    commandsService = {
-      getCommandsBySpace: jest.fn(),
-      getCommandById: jest.fn(),
-      getCommandVersionsById: jest.fn(),
-      updateCommandFromUI: jest.fn(),
-      deleteCommand: jest.fn(),
-      deleteCommandsBatch: jest.fn(),
-      getLatestVersionNumber: jest.fn(),
-    } as unknown as jest.Mocked<CommandsService>;
+    commandsService = createMockInstance(CommandsService);
 
     logger = stubLogger();
     controller = new OrganizationsSpacesCommandsController(

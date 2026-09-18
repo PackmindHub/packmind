@@ -14,7 +14,7 @@ import {
   SkillEditForbiddenError,
   SkillFileNotEditableError,
 } from '@packmind/skills';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -35,13 +35,7 @@ describe('OrganizationsSpacesSkillsController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    skillsService = {
-      getSkillsBySpace: jest.fn(),
-      uploadSkill: jest.fn(),
-      deleteSkill: jest.fn(),
-      getLatestVersionNumber: jest.fn(),
-      updateSkillFile: jest.fn(),
-    } as unknown as jest.Mocked<SkillsService>;
+    skillsService = createMockInstance(SkillsService);
 
     logger = stubLogger();
     controller = new OrganizationsSpacesSkillsController(skillsService, logger);

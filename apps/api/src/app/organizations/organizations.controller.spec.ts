@@ -9,7 +9,7 @@ import {
   UserSpaceRole,
   GetDeployedContentResponse,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -28,17 +28,11 @@ describe('OrganizationsController', () => {
 
   beforeEach(() => {
     const logger = stubLogger();
-    mockAccountsAdapter = {} as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
 
-    mockDeploymentAdapter = {
-      pullAllContent: jest.fn(),
-      getDeployedContent: jest.fn(),
-      getContentByVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentPort>;
+    mockDeploymentAdapter = mockInterface<IDeploymentPort>();
 
-    mockSpacesAdapter = {
-      listUserSpaces: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesAdapter = mockInterface<ISpacesPort>();
 
     controller = new OrganizationsController(
       mockAccountsAdapter,

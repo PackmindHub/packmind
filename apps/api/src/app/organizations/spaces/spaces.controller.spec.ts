@@ -1,6 +1,6 @@
 import { spaceFactory } from '@packmind/spaces/test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -26,11 +26,7 @@ describe('OrganizationsSpacesController', () => {
 
   beforeEach(() => {
     logger = stubLogger();
-    spacesService = {
-      listUserSpaces: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-    } as unknown as jest.Mocked<SpacesService>;
+    spacesService = createMockInstance(SpacesService);
     controller = new OrganizationsSpacesController(spacesService, logger);
   });
 

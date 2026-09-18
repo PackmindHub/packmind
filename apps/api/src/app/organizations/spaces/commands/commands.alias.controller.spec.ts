@@ -1,7 +1,7 @@
 import { commandFactory } from '@packmind/commands/test';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -19,10 +19,7 @@ describe('CommandsAliasController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    commandsService = {
-      getCommandsBySpace: jest.fn(),
-      getCommandById: jest.fn(),
-    } as unknown as jest.Mocked<CommandsService>;
+    commandsService = createMockInstance(CommandsService);
 
     logger = stubLogger();
     controller = new CommandsAliasController(commandsService, logger);

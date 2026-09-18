@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import { skillFactory } from '@packmind/skills/test';
 import { SkillsHexa } from '@packmind/skills';
 import {
@@ -16,14 +16,11 @@ import {
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 
+type SkillsAdapter = ReturnType<SkillsHexa['getAdapter']>;
+
 describe('SkillsService', () => {
   let service: SkillsService;
-  let mockAdapter: {
-    getSkillById: jest.Mock;
-    getLatestSkillVersionUseCase: jest.Mock;
-    getSkillFiles: jest.Mock;
-    updateSkillFileFromUI: jest.Mock;
-  };
+  let mockAdapter: jest.Mocked<SkillsAdapter>;
   let skillsHexa: jest.Mocked<SkillsHexa>;
   let deploymentAdapter: jest.Mocked<IDeploymentPort>;
 
@@ -33,16 +30,10 @@ describe('SkillsService', () => {
   const skillId = createSkillId('skill-789');
 
   beforeEach(() => {
-    mockAdapter = {
-      getSkillById: jest.fn(),
-      getLatestSkillVersionUseCase: jest.fn(),
-      getSkillFiles: jest.fn(),
-      updateSkillFileFromUI: jest.fn(),
-    };
+    mockAdapter = mockInterface<SkillsAdapter>();
 
-    skillsHexa = {
-      getAdapter: jest.fn().mockReturnValue(mockAdapter),
-    } as unknown as jest.Mocked<SkillsHexa>;
+    skillsHexa = createMockInstance(SkillsHexa);
+    skillsHexa.getAdapter.mockReturnValue(mockAdapter);
 
     deploymentAdapter = mockInterface<IDeploymentPort>();
     service = new SkillsService(skillsHexa, deploymentAdapter);

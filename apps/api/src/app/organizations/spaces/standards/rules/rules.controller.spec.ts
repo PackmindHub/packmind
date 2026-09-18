@@ -2,7 +2,7 @@ import { standardFactory } from '@packmind/standards/test';
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -25,11 +25,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    rulesService = {
-      getStandardById: jest.fn(),
-      getRulesByStandardId: jest.fn(),
-      getRuleExamples: jest.fn(),
-    } as unknown as jest.Mocked<RulesService>;
+    rulesService = createMockInstance(RulesService);
 
     logger = stubLogger();
     controller = new OrganizationsSpacesStandardsRulesController(
