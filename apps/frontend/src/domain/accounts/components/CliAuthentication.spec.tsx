@@ -62,6 +62,7 @@ describe('CliAuthentication', () => {
   const mockUser = {
     id: 'user-1' as UserId,
     email: 'testuser@packmind.com',
+    displayName: null,
     passwordHash: null,
     active: true,
     memberships: [

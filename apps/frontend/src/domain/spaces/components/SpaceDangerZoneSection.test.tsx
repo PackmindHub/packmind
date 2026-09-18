@@ -169,6 +169,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.open,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: true,
+          color: 'blue',
         },
       });
     });
@@ -192,6 +193,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.open,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -230,6 +232,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.restricted,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -270,6 +273,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.private,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -673,6 +677,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.open,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: true,
+          color: 'blue',
         },
       });
     });
@@ -696,6 +701,7 @@ describe('SpaceDangerZoneSection', () => {
           type: SpaceType.open,
           organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });

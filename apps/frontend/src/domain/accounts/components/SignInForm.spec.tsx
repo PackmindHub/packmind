@@ -12,7 +12,12 @@ import {
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
-import { SignInUserResponse, createOrganizationId } from '@packmind/types';
+import {
+  SignInUserResponse,
+  User,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
@@ -33,6 +38,15 @@ vi.mock('react-router', async () => ({
     <a href={to}>{children}</a>
   ),
 }));
+
+const signedInUser: User = {
+  id: createUserId('user-1'),
+  email: 'test@example.com',
+  displayName: null,
+  passwordHash: null,
+  active: true,
+  memberships: [],
+};
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -318,6 +332,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organization: {
             id: createOrganizationId('org-1'),
             name: 'Test Organization',
@@ -425,6 +440,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
@@ -508,6 +524,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
@@ -581,6 +598,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
@@ -671,6 +689,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -731,6 +750,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -792,6 +812,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -865,6 +886,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -977,6 +999,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
