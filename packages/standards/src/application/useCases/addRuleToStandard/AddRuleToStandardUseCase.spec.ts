@@ -588,9 +588,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            rules: [
-              { content: 'First rule for this standard', examples: [] },
-            ],
+            rules: [{ content: 'First rule for this standard', examples: [] }],
           }),
         );
       });

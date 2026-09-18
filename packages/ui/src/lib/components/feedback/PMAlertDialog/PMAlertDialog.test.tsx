@@ -104,10 +104,7 @@ describe('PMAlertDialog', () => {
   it('does not call onOpenChange when cancel is clicked in uncontrolled mode', () => {
     const onOpenChange = jest.fn();
     renderWithProvider(
-      <PMAlertDialog
-        {...defaultProps}
-        onOpenChange={onOpenChange}
-      />,
+      <PMAlertDialog {...defaultProps} onOpenChange={onOpenChange} />,
     );
 
     // Uncontrolled dialog starts closed, so cancel can't be exercised directly;

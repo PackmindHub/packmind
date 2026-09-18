@@ -41,8 +41,7 @@ export class SSEEventPublisher {
 
   private constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-  }
+  ) {}
 
   /** Makes the frontend's React Query cache refetch the program. */
   static async publishProgramStatusEvent(

@@ -5,7 +5,6 @@ export interface OrganizationCreatedPayload {
   method: 'sign-up' | 'create';
 }
 
-
 export class OrganizationCreatedEvent extends UserEvent<OrganizationCreatedPayload> {
   static override readonly eventName = 'accounts.organization.created';
 }

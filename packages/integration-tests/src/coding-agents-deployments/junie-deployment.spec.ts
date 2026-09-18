@@ -511,7 +511,6 @@ describe('Junie Deployment Integration', () => {
     let junieDeployer: JunieDeployer;
 
     beforeEach(async () => {
-
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',

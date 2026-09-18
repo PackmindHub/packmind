@@ -32,7 +32,6 @@ export interface AIPromptOptions {
   service_tier?: OpenAIServiceTier;
 }
 
-
 export type AIServiceErrorType =
   | 'RATE_LIMIT'
   | 'API_ERROR'

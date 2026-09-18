@@ -523,7 +523,6 @@ describe('GitHub Copilot Deployment Integration', () => {
     let copilotDeployer: CopilotDeployer;
 
     beforeEach(async () => {
-
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
