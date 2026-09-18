@@ -70,24 +70,22 @@ const annotations = releases.releases
     label: r.model.replace('Claude ', ''),
   }));
 
-// Every bucket that carries enough lines to mean anything, including the two
-// that are not a model: hiding them is how an attribution bug stays invisible.
+// Only the buckets that name a model are plotted. The rest — no trailer, no
+// version recorded, several models named — are real data but answer nothing
+// about a model, so they stay in the table rather than on the chart.
 const IS_MODEL = /^Claude (Opus|Sonnet|Haiku|Fable|Mythos) /;
-const modelItems = Object.entries(models.byModel)
-  .filter(([, bucket]) => bucket.addedTotal >= 1000)
-  .map(([name, bucket]) => ({
-    label: name
-      .replace('Claude ', '')
-      .replace('no Claude trailer', 'no trailer'),
-    muted: !IS_MODEL.test(name),
-    value: bucket.commentRatio,
-    median: bucket.commitDistribution.median,
-    p25: bucket.commitDistribution.p25,
-    p75: bucket.commitDistribution.p75,
-    commits: bucket.commits,
-    added: bucket.addedTotal,
-  }));
-modelItems.sort((a, b) => b.value - a.value);
+const modelBuckets = Object.entries(models.byModel)
+  .filter(([name, bucket]) => IS_MODEL.test(name) && bucket.addedTotal >= 1000)
+  .sort((a, b) => b[1].commentRatio - a[1].commentRatio);
+
+// One bar, one number. The per-commit median and spread used to be drawn over
+// the bars and could not be read; they live in the table below the chart.
+const modelItems = modelBuckets.map(([name, bucket]) => ({
+  label: name.replace('Claude ', ''),
+  value: bucket.commentRatio,
+  commits: bucket.commits,
+  added: bucket.addedTotal,
+}));
 
 const fmtPct = (v, d = 1) => (v === null ? '—' : (v * 100).toFixed(d) + '%');
 const fmtInt = (v) => v.toLocaleString('en-US');
@@ -363,14 +361,19 @@ const payload = {
     fmtInt(s.totals.all.comment),
     fmtPct(s.totals.all.commentRatio),
   ]),
-  modelTable: modelItems.map((d) => [
-    d.label,
-    fmtInt(d.commits),
-    fmtInt(d.added),
-    fmtPct(d.value),
-    fmtPct(d.median),
-    fmtPct(d.p25) + ' – ' + fmtPct(d.p75),
-  ]),
+  modelTable: Object.entries(models.byModel)
+    .filter(([, bucket]) => bucket.addedTotal >= 1000)
+    .sort((a, b) => b[1].commentRatio - a[1].commentRatio)
+    .map(([name, bucket]) => [
+      name.replace('Claude ', '').replace('no Claude trailer', 'no trailer'),
+      fmtInt(bucket.commits),
+      fmtInt(bucket.addedTotal),
+      fmtPct(bucket.commentRatio),
+      fmtPct(bucket.commitDistribution.median),
+      fmtPct(bucket.commitDistribution.p25) +
+        ' – ' +
+        fmtPct(bucket.commitDistribution.p75),
+    ]),
   releaseTable: releases.releases.map((r) => [
     r.model,
     new Date(r.date + 'T00:00:00Z').toLocaleDateString('en-GB', {
@@ -475,21 +478,18 @@ on the Wednesday and Thursday after that, once the rise had already started.</p>
 <h2>2. By model, directly</h2>
 <p>Commits produced through Claude Code carry a <code>Co-Authored-By: Claude &lt;model&gt;</code> trailer, so every
 added line can be attributed to the model of the session that produced it, rather than left to a correlation with the
-calendar. The bar is the pooled ratio; the dot and the line are the median and the interquartile range
-<em>per commit</em>, which is how you check that the result is not carried by a handful of large commits.</p>
+calendar. Each bar pools all of a model's added lines. Whether that pooled figure is carried by a few large commits
+is checked in the table: for Opus 5 the median commit sits at ${fmtPct(models.byModel['Claude Opus 5'].commitDistribution.median)},
+next to a pooled ${fmtPct(opus5.commentRatio)}, so the whole distribution has moved rather than its tail.</p>
 
 <div class="card">
   <div class="card-head">
     <h3>Comment ratio of added lines, by model</h3>
-    <p>Buckets with at least 1,000 added lines over the period.</p>
+    <p>Each bar pools every line the model added, over models with at least 1,000 of them. The median commit and the
+    spread between them are in the table, along with the buckets that name no model.</p>
   </div>
   <div class="chart" id="c-models"></div>
-  <div class="legend">
-    <span><i class="swatch" style="background:var(--series-1);height:9px;border-radius:3px"></i>Pooled over all lines</span>
-    <span><i class="swatch" style="background:var(--text-primary);width:9px;height:9px;border-radius:50%"></i>Median per commit</span>
-    <span><i class="swatch" style="background:var(--text-primary);opacity:.55"></i>P25 – P75 per commit</span>
-  </div>
-  <details><summary>See the data</summary><div id="t-models"></div></details>
+  <details><summary>See the data, including the unattributed buckets</summary><div id="t-models"></div></details>
 </div>
 
 <span class="eyebrow">By developer</span>

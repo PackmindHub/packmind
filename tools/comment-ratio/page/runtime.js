@@ -533,7 +533,7 @@
     var max = Math.max.apply(
       null,
       config.items.map(function (d) {
-        return Math.max(d.value, d.p75 || 0);
+        return d.value;
       }),
     );
     var xMax = max * 1.08;
@@ -594,30 +594,6 @@
           opacity: d.muted ? 0.45 : 1,
         }),
       );
-      // Interquartile range of per-commit ratios, as the robustness check.
-      if (d.p25 !== null && d.p25 !== undefined) {
-        svg.appendChild(
-          el('line', {
-            x1: x(d.p25),
-            x2: x(d.p75),
-            y1: cy,
-            y2: cy,
-            stroke: 'var(--text-primary)',
-            'stroke-width': 1.5,
-            opacity: 0.55,
-          }),
-        );
-        svg.appendChild(
-          el('circle', {
-            cx: x(d.median),
-            cy: cy,
-            r: 4,
-            fill: 'var(--surface-1)',
-            stroke: 'var(--text-primary)',
-            'stroke-width': 1.75,
-          }),
-        );
-      }
       // Sits past whichever of the bar end and the whisker end reaches furthest.
       var labelX =
         Math.max(
