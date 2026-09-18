@@ -45,7 +45,11 @@ import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import assert from 'assert';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
@@ -193,16 +197,11 @@ describe('PublishArtifactsUseCase', () => {
       },
     );
 
-    mockTargetService = {
-      findById: jest.fn(),
-      findByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
-    mockRenderModeConfigurationService = {
-      getActiveRenderModes: jest.fn(),
-      mapRenderModesToCodingAgents: jest.fn(),
-      mapCodingAgentsToRenderModes: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
 
     mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
       activeRenderModes,
@@ -214,13 +213,12 @@ describe('PublishArtifactsUseCase', () => {
       activeRenderModes,
     );
 
-    mockEventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
-    mockPublishArtifactsDelayedJob = {
-      addJob: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
+    mockPublishArtifactsDelayedJob = createMockInstance(
+      PublishArtifactsDelayedJob,
+    );
+    mockPublishArtifactsDelayedJob.addJob.mockResolvedValue('job-1');
 
     mockDeployDefaultSkillsUseCase =
       mockInterface<IDeployDefaultSkillsUseCase>();

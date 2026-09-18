@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import { GenerateUserTokenUseCase } from './GenerateUserTokenUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -42,13 +43,9 @@ describe('GenerateUserTokenUseCase', () => {
   };
 
   beforeEach(() => {
-    userService = {
-      getUserById: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    userService = createMockInstance(UserService);
 
-    organizationService = {
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    organizationService = createMockInstance(OrganizationService);
 
     useCase = new GenerateUserTokenUseCase(userService, organizationService);
   });

@@ -1,7 +1,11 @@
 import { CreateOrganizationUseCase } from './CreateOrganizationUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
@@ -25,18 +29,12 @@ describe('CreateOrganizationUseCase', () => {
   let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
-    mockOrganizationService = {
-      createOrganization: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    mockOrganizationService = createMockInstance(OrganizationService);
 
-    mockUserService = {
-      getUserById: jest.fn(),
-      addOrganizationMembership: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
-    mockEventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
+    mockEventEmitterService.emit.mockReturnValue(true);
 
     mockSpacesPort = mockInterface<ISpacesPort>();
 

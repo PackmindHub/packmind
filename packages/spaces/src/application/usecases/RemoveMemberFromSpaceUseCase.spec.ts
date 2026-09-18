@@ -11,7 +11,11 @@ import {
   PackmindEventEmitterService,
   SpaceAdminRequiredError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import {
@@ -53,11 +57,7 @@ describe('RemoveMemberFromSpaceUseCase', () => {
   });
 
   beforeEach(() => {
-    membershipService = {
-      findMembership: jest.fn(),
-      getSpaceById: jest.fn(),
-      removeSpaceMembership: jest.fn(),
-    } as unknown as jest.Mocked<UserSpaceMembershipService>;
+    membershipService = createMockInstance(UserSpaceMembershipService);
 
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);

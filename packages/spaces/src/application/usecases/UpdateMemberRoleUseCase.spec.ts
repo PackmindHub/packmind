@@ -11,7 +11,11 @@ import {
   createUserId,
   UserSpaceRole,
 } from '@packmind/types';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test';
@@ -51,10 +55,7 @@ describe('UpdateMemberRoleUseCase', () => {
   });
 
   beforeEach(() => {
-    membershipService = {
-      findMembership: jest.fn(),
-      updateMembershipRole: jest.fn(),
-    } as unknown as jest.Mocked<UserSpaceMembershipService>;
+    membershipService = createMockInstance(UserSpaceMembershipService);
 
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);

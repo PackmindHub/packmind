@@ -61,6 +61,26 @@ The price is that every member the run reaches has to be stubbed, so it suits a 
 narrow interaction rather than one driving a whole use case. Note that `jest.resetAllMocks()` and
 `resetMocks` in a jest config drop the refusal along with every other implementation.
 
+## Mocking a class
+
+`createMockInstance(StandardService)` is the class counterpart, for the same reason: an object
+literal cast with `as unknown as jest.Mocked<StandardService>` claims to be the whole class while
+implementing one method of it. Construct, then stub:
+
+```ts
+const service = createMockInstance(StandardService);
+service.getStandardById.mockResolvedValue(standard); // checked against StandardService
+```
+
+It walks the prototype **chain**, so inherited methods are mocked too — `findById` on a repository
+extending `AbstractRepository` is as real to a caller as anything the subclass declares, and a
+subclass override wins over the base it shadows. It stops before `Object.prototype`.
+
+Two kinds of member are skipped, because the walk only sees functions on a prototype: **getters**,
+and **arrow-function class fields** (`foo = () => {}`, an own property of the instance). A class
+relying on either is better mocked by hand. Unlike `mockInterface` there is no `strict` option, so
+that omission is silent until the call throws `is not a function`.
+
 `createTestDatasourceFixture` is the preferred shape for repository specs: `initialize()` in
 `beforeAll`, `cleanup()` in `afterEach`, `destroy()` in `afterAll`. Its own doc comment carries a
 worked example.

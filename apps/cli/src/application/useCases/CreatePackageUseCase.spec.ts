@@ -1,3 +1,4 @@
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 import { mockInterface } from '@packmind/test-utils';
 import { CreatePackageUseCase } from './CreatePackageUseCase';
 
@@ -41,9 +42,9 @@ describe('CreatePackageUseCase', () => {
     mockPackagesGateway = mockInterface<IPackagesGateway>();
     mockSpaceService = mockInterface<ISpaceService>();
 
-    mockGateway = {
+    mockGateway = createMockPackmindGateway({
       packages: mockPackagesGateway,
-    } as unknown as jest.Mocked<IPackmindGateway>;
+    });
 
     mockPackagesGateway.create.mockResolvedValue({ package: createdPackage });
 

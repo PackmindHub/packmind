@@ -8,17 +8,14 @@ import {
   GetTargetsByGitRepoCommand,
   Target,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 
 describe('GetTargetsByGitRepoUseCase', () => {
   let useCase: GetTargetsByGitRepoUseCase;
   let mockTargetService: jest.Mocked<TargetService>;
 
   beforeEach(() => {
-    mockTargetService = {
-      getTargetsByGitRepoId: jest.fn(),
-      addTarget: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
     useCase = new GetTargetsByGitRepoUseCase(mockTargetService, stubLogger());
   });

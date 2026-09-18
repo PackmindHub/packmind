@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -38,10 +42,8 @@ describe('RemoveUserFromOrganizationUseCase', () => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
 
-    userService = {
-      getUserById: mockGetUserById,
-      excludeUserFromOrganization: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    userService = createMockInstance(UserService);
+    userService.getUserById = mockGetUserById;
 
     spacesPort = mockInterface<ISpacesPort>();
     spacesPort.removeUserFromOrganizationSpaces.mockResolvedValue(undefined);

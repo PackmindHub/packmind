@@ -18,7 +18,11 @@ import {
   SpaceMembershipRequiredError,
   UserNotFoundError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 
 describe('GetRecipeByIdUseCase', () => {
   let usecase: GetCommandByIdUseCase;
@@ -27,9 +31,7 @@ describe('GetRecipeByIdUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
 
   beforeEach(() => {
-    commandService = {
-      getCommandById: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
     accountsAdapter = mockInterface<IAccountsPort>();
 
