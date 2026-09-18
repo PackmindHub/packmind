@@ -24,6 +24,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { classifyLines, BLANK, CODE, COMMENT } from './classify.mjs';
+import { categoryOf, CATEGORIES } from './files.mjs';
 import {
   git,
   commitBefore,
@@ -34,29 +35,7 @@ import {
 } from './git.mjs';
 
 const PATHSPECS = ['*.ts', '*.tsx'];
-const SPEC_PATTERN = /\.(spec|test)\.tsx?$/;
-// Directories that are not hand-written product code.
-const EXCLUDED_PREFIXES = [
-  'node_modules/',
-  'dist/',
-  'build/',
-  'coverage/',
-  'tmp/',
-];
 
-/** Category of a file, or null when the file must be ignored. */
-function categoryOf(filePath) {
-  if (EXCLUDED_PREFIXES.some((prefix) => filePath.includes(prefix)))
-    return null;
-  if (filePath.endsWith('.d.ts')) return null; // ambient declarations, mostly generated
-  const isTsx = filePath.endsWith('.tsx');
-  const isTs = filePath.endsWith('.ts');
-  if (!isTs && !isTsx) return null;
-  if (SPEC_PATTERN.test(filePath)) return isTsx ? 'spec.tsx' : 'spec.ts';
-  return isTsx ? 'tsx' : 'ts';
-}
-
-const CATEGORIES = ['ts', 'spec.ts', 'tsx', 'spec.tsx'];
 // Roll-ups reported alongside the raw categories.
 const GROUPS = {
   all: CATEGORIES,

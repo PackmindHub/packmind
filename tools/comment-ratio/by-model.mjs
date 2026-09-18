@@ -27,6 +27,7 @@ import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import { classifyLines, CODE, COMMENT } from './classify.mjs';
 import { readBlobs, headerPath } from './git.mjs';
+import { categoryOf } from './files.mjs';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -34,19 +35,11 @@ const IDENTITIES = JSON.parse(
   fs.readFileSync(path.join(here, 'identities.json'), 'utf8'),
 ).byEmail;
 
-const SPEC_PATTERN = /\.(spec|test)\.tsx?$/;
 const EMPTY_BLOB = /^0+$/;
 const KEY_SEP = ' :: '; // month/model composite Map key
 const UNATTRIBUTED = 'no Claude trailer';
 const UNSPECIFIED = 'Claude (version not recorded)';
-
-function categoryOf(filePath) {
-  if (filePath.endsWith('.d.ts')) return null;
-  const isTsx = filePath.endsWith('.tsx');
-  if (!isTsx && !filePath.endsWith('.ts')) return null;
-  if (SPEC_PATTERN.test(filePath)) return isTsx ? 'spec.tsx' : 'spec.ts';
-  return isTsx ? 'tsx' : 'ts';
-}
+const SEVERAL = 'several models named';
 
 /**
  * Pick the Claude model out of a commit message's Co-Authored-By lines.
@@ -60,14 +53,24 @@ function categoryOf(filePath) {
  */
 export function modelOf(message) {
   const pattern = /^[ \t]*Co-authored-by:[ \t]*(Claude[^<\n]*)/gim;
+  const named = new Set();
+  let unversioned = false;
+
   for (const [, raw] of message.matchAll(pattern)) {
-    const name = raw.trim();
     const match =
-      /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)\b/.exec(name);
-    if (match) return `Claude ${match[1]} ${match[2]}`;
-    return UNSPECIFIED; // bare "Claude", "Claude (AI Assistant)", ...
+      /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)\b/.exec(
+        raw.trim(),
+      );
+    if (match) named.add(`Claude ${match[1]} ${match[2]}`);
+    else unversioned = true; // bare "Claude", "Claude (AI Assistant)", ...
   }
-  return UNATTRIBUTED;
+
+  // A squashed pull request can name several models. Which lines came from
+  // which is not recorded, so the commit goes to its own bucket rather than
+  // being credited, by message order, to whichever is mentioned first.
+  if (named.size > 1) return SEVERAL;
+  if (named.size === 1) return [...named][0];
+  return unversioned ? UNSPECIFIED : UNATTRIBUTED;
 }
 
 /**

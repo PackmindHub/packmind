@@ -103,10 +103,21 @@ const opus4xPooled =
   opus4x.reduce((s, b) => s + b.addedComment + b.addedCode, 0);
 const headScope = stock.at(-1).totals.all;
 
-// Range of the periods before the shift, so the lede cannot go stale.
+// The flow series has its own before/after figures. They must not be mixed
+// with the per-model ones: the flow is a net diff per period, the per-model
+// numbers are a sum of per-commit diffs bucketed by trailer, and the two
+// measures do not produce the same multiplier.
+const SHIFT = '2026-08-01';
+const pooledFlow = (periods) => {
+  const comment = periods.reduce((s, m) => s + m.flow.all.addedComment, 0);
+  const code = periods.reduce((s, m) => s + m.flow.all.addedCode, 0);
+  return comment / (comment + code);
+};
 const beforeShift = flowMonths
-  .filter((m) => m.period < '2026-08-01')
+  .filter((m) => m.period < SHIFT)
   .map((m) => m.flow.all.commentRatio);
+const flowBefore = pooledFlow(flowMonths.filter((m) => m.period < SHIFT));
+const flowAfter = pooledFlow(flowMonths.filter((m) => m.period >= SHIFT));
 const opus4xRange = opus4x.map((b) => b.commentRatio).sort((a, b) => a - b);
 
 // The within-developer comparison: the same person, one generation apart.
@@ -254,11 +265,14 @@ const body = `<main>
 
 <header>
   <h1>Le taux de commentaires dans le code, quinzaine par quinzaine</h1>
-  <p class="lede">Le taux est resté entre ${fmtPct(Math.min(...beforeShift))} et ${fmtPct(Math.max(...beforeShift))}
-  sur les dix premiers mois, puis a été multiplié par ${(opus5.commentRatio / opus4xPooled).toFixed(0)} à partir d'août 2026.
-  Le basculement ne suit aucune consigne interne — aucune n'a changé — mais la sortie d'Opus 5 le 24 juillet : en
-  attribuant chaque ligne au modèle qui l'a produite, la famille Opus 4.5 → 4.8 se tient entre
-  ${fmtPct(opus4xRange[0])} et ${fmtPct(opus4xRange.at(-1))}, Opus 5 est à ${fmtPct(opus5.commentRatio)}.</p>
+  <p class="lede">Sur les dix premiers mois, chaque quinzaine tient entre ${fmtPct(Math.min(...beforeShift))} et
+  ${fmtPct(Math.max(...beforeShift))} ; à partir d'août 2026 le flux passe de ${fmtPct(flowBefore)} à
+  ${fmtPct(flowAfter)}, soit ×${(flowAfter / flowBefore).toFixed(1).replace('.', ',')}. Aucune consigne interne sur les
+  commentaires n'a changé sur la période.</p>
+  <p class="lede">Une seconde mesure, indépendante de la première — chaque ligne ajoutée attribuée au modèle de la
+  session qui l'a produite, commit par commit — désigne la sortie d'Opus 5 le 24 juillet : la famille Opus 4.5 → 4.8 se
+  tient entre ${fmtPct(opus4xRange[0])} et ${fmtPct(opus4xRange.at(-1))}, Opus 5 est à ${fmtPct(opus5.commentRatio)},
+  soit ×${(opus5.commentRatio / opus4xPooled).toFixed(1).replace('.', ',')}.</p>
   <p>Codebase Packmind, fichiers TypeScript (<code>.ts</code>, <code>.tsx</code> et tests <code>.spec.*</code>),
   d'octobre 2025 à septembre 2026.</p>
   <p class="meta">Généré le ${generated} · ${fmtInt(models.commitsScanned)} commits analysés ·
@@ -268,7 +282,7 @@ const body = `<main>
 <div class="tiles">
   <div class="tile"><span class="value">${fmtPct(opus5.commentRatio)}</span><span class="label">des lignes ajoutées par <b>Opus 5</b> sont des commentaires</span></div>
   <div class="tile"><span class="value">${fmtPct(opus4xPooled)}</span><span class="label">pour toute la famille <b>Opus 4.5 → 4.8</b></span></div>
-  <div class="tile"><span class="value">×${(opus5.commentRatio / opus4xPooled).toFixed(1).replace('.', ',')}</span><span class="label">écart entre les deux générations</span></div>
+  <div class="tile"><span class="value">×${(opus5.commentRatio / opus4xPooled).toFixed(1).replace('.', ',')}</span><span class="label">écart entre les deux générations, à la ligne attribuée</span></div>
   <div class="tile"><span class="value">${fmtPct(headScope.commentRatio)}</span><span class="label">taux sur l'ensemble du code existant aujourd'hui</span></div>
 </div>
 

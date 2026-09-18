@@ -82,7 +82,15 @@ like newly written code.
   necessarily the author of every line in it, and pull requests are squashed, so
   one trailer covers one pull request.
 - Commits with no trailer (most of 2025) are of unknown attribution — not
-  "human".
+  "human". A squashed pull request whose message names several different models
+  goes to a `several models named` bucket rather than being credited, by message
+  order, to whichever appears first.
+- A `#!` shebang counts as code, not as a comment — the convention `cloc` uses.
+  Three files in this repository are affected.
+- The flow series (net diff per period) and the per-model series (sum of
+  per-commit diffs) are different measures and do not yield the same
+  generational multiplier. Per-commit sums count churn written and rewritten
+  inside a period; the net diff cancels it. Never quote one as the other.
 - A trailer may carry a suffix (`Claude Opus 5 (1M context)`); it names the same
   model and lands in the same bucket. The model is read from the raw commit
   message rather than through `git`'s trailer parser, which only exposes a

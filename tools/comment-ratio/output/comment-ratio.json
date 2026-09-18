@@ -1,36 +1,14 @@
 {
-  "generatedAt": "2026-09-18T12:00:52.537Z",
+  "generatedAt": "2026-09-18T12:30:50.324Z",
   "repo": "/home/user/packmind",
   "ref": "HEAD",
-  "categories": [
-    "ts",
-    "spec.ts",
-    "tsx",
-    "spec.tsx"
-  ],
+  "categories": ["ts", "spec.ts", "tsx", "spec.tsx"],
   "groups": {
-    "all": [
-      "ts",
-      "spec.ts",
-      "tsx",
-      "spec.tsx"
-    ],
-    "prod": [
-      "ts",
-      "tsx"
-    ],
-    "spec": [
-      "spec.ts",
-      "spec.tsx"
-    ],
-    "backend": [
-      "ts",
-      "spec.ts"
-    ],
-    "frontend": [
-      "tsx",
-      "spec.tsx"
-    ]
+    "all": ["ts", "spec.ts", "tsx", "spec.tsx"],
+    "prod": ["ts", "tsx"],
+    "spec": ["spec.ts", "spec.tsx"],
+    "backend": ["ts", "spec.ts"],
+    "frontend": ["tsx", "spec.tsx"]
   },
   "snapshots": [
     {
@@ -1881,8 +1859,8 @@
     },
     {
       "label": "2026-09-18",
-      "date": "2026-09-18T11:57:08+00:00",
-      "sha": "d62f4fd61e0ad8e22457fce2a0ad4dac2cb202d8",
+      "date": "2026-09-18T12:02:03+00:00",
+      "sha": "bc327c0dbca526a7beb1d89fe455adfd8cf534dd",
       "kind": "head",
       "totals": {
         "ts": {
@@ -5640,8 +5618,8 @@
       },
       "to": {
         "label": "2026-09-18",
-        "sha": "d62f4fd61e0ad8e22457fce2a0ad4dac2cb202d8",
-        "date": "2026-09-18T11:57:08+00:00"
+        "sha": "bc327c0dbca526a7beb1d89fe455adfd8cf534dd",
+        "date": "2026-09-18T12:02:03+00:00"
       },
       "flow": {
         "ts": {
