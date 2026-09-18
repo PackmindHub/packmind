@@ -160,17 +160,17 @@ nineteen units with every criterion met.
 | id | criterion | user-visible | verified by |
 |----|-----------|--------------|-------------|
 | AC-1 | A package that has never been released shows "Not released yet" and a "Create a release" action | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "never released does not render the sentinel"; `nx test frontend --testNamePattern='ContextPackagePane'` — "renders the version area in the header", which proves the pane actually mounts it |
-| AC-2 | A package with no components shows the action disabled with "Add at least one component" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty package", for the sentence and the disabled action; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_components when package has never been released", for the rule |
-| AC-3 | A released package identical to its last release shows the action disabled with "Nothing has changed since 0.1.0" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release"; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_change when package is identical to its latest release" |
-| AC-4 | A released package one of whose pinned components has a newer version shows it is behind on that component — v4 pinned, v5 available — and offers a release | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "behind on a component", which asserts the name, v4 and v5 together and the action still enabled; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when a pinned component has a newer version available" |
-| AC-5 | Renaming a released package enables the action; renaming it back disables it again | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when package name changed" for the rename, and "returns no_change when package is identical to its latest release" for renaming it back: the gate is stateless (D-006), so "renamed back" **is** the identical state and there is no other state for it to be in; `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "unchanged since the last release" for enabled-on-`ready` and disabled-on-`no_change` |
-| AC-6 | Editing the description of a released package enables the action | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when package description changed"; the descriptions-differ-only-by-case leaf case records D-008's deliberate asymmetry with the name; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" for the disabled pole |
-| AC-7 | A title edit that differs from the released title only by surrounding whitespace, or only by case, leaves the action disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_change when the name differs only by surrounding whitespace" and "returns no_change when the name differs only by case", both driving the package through `evaluatePackageReleaseGate`. These are the two cases D-043 reserved this column for and D-046 records why: the `packageNameMatches` leaf cases were green all along and the **composition** was untested; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" |
-| AC-8 | Adding a component enables the action, removing one enables it, and adding then removing the same one leaves it disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when a component is added" and "… is removed", both driven through the **recipe** family (AC-21), and "returns no_change when a component is added and then removed". The third clause is proven by set-equality of the resulting state (D-008), **not** by driving a sequence — a stateless gate (D-006) cannot be asked anything else; `nx test frontend --testNamePattern='PackageVersionArea'` |
-| AC-9 | Removing the last component leaves the action disabled with "Add at least one component", not with a change reason — empty beats changed | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty beats changed", which asserts the change sentence is absent; `nx test deployments --testNamePattern='packageReleaseGate'` — "returns no_components when package HAS been released" |
-| AC-10 | One change of any kind is enough: a package whose component list is back to identical but whose title differs can be released | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "returns ready when component list is unchanged but name differs", which is AC-10 verbatim, plus "returns ready when a pinned component has a newer version available" for a second independent source; `nx test frontend --testNamePattern='PackageVersionArea'` |
+| AC-2 | A package with no components shows the action disabled with "Add at least one component" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty package", for the sentence and the disabled action; `nx test deployments --testNamePattern='packageReleaseGate'` — "when the package is empty" > "when it has never been released" > "reports no_components", for the rule |
+| AC-3 | A released package identical to its last release shows the action disabled with "Nothing has changed since 0.1.0" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release"; `nx test deployments --testNamePattern='packageReleaseGate'` — "when it is identical to its latest release" > "reports no_change" |
+| AC-4 | A released package one of whose pinned components has a newer version shows it is behind on that component — v4 pinned, v5 available — and offers a release | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "behind on a component", which asserts the name, v4 and v5 together and the action still enabled; `nx test deployments --testNamePattern='packageReleaseGate'` — "when a pinned component has a newer version available" > "is ready" |
+| AC-5 | Renaming a released package enables the action; renaming it back disables it again | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the name changed" > "is ready" for the rename, and "when it is identical to its latest release" > "reports no_change" for renaming it back: the gate is stateless (D-006), so "renamed back" **is** the identical state and there is no other state for it to be in; `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "unchanged since the last release" for enabled-on-`ready` and disabled-on-`no_change` |
+| AC-6 | Editing the description of a released package enables the action | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the description changed" > "is ready"; the descriptions-differ-only-by-case leaf case records D-008's deliberate asymmetry with the name; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" for the disabled pole |
+| AC-7 | A title edit that differs from the released title only by surrounding whitespace, or only by case, leaves the action disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the name differs only by surrounding whitespace" > "reports no_change" and "when the name differs only by case" > "reports no_change", both driving the package through `evaluatePackageReleaseGate`. These are the two cases D-043 reserved this column for and D-046 records why: the `packageNameMatches` leaf cases were green all along and the **composition** was untested; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" |
+| AC-8 | Adding a component enables the action, removing one enables it, and adding then removing the same one leaves it disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when a component is added" > "is ready" and "when a component is removed" > "is ready", both driven through the **recipe** family (AC-21), and "when a component is added and then removed" > "reports no_change". The third clause is proven by set-equality of the resulting state (D-008), **not** by driving a sequence — a stateless gate (D-006) cannot be asked anything else; `nx test frontend --testNamePattern='PackageVersionArea'` |
+| AC-9 | Removing the last component leaves the action disabled with "Add at least one component", not with a change reason — empty beats changed | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty beats changed", which asserts the change sentence is absent; `nx test deployments --testNamePattern='packageReleaseGate'` — "when the package is empty" > "when it has been released" > "reports no_components" |
+| AC-10 | One change of any kind is enough: a package whose component list is back to identical but whose title differs can be released | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the component list is unchanged but the name differs" > "is ready", which is AC-10 verbatim, plus "when a pinned component has a newer version available" > "is ready" for a second independent source; `nx test frontend --testNamePattern='PackageVersionArea'` |
 | AC-11 | The release form offers exactly the three next increments — 0.1.0 offers 0.1.1, 0.2.0 and 1.0.0 — and is pre-filled with the patch one | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "offers the three next increments", "pre-fills the patch increment" and "pre-fills 0.1.0 for a first release" |
-| AC-12 | A submitted version that does not follow X.Y.Z is refused with "Version must follow X.Y.Z", and the form keeps what was typed, so `1,2,3` can be corrected | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a malformed version and keeps it", which asserts the field still reads `1,2,3` and the mutation was not called; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses a malformed version with malformed" for the server-side check |
+| AC-12 | A submitted version that does not follow X.Y.Z is refused with "Version must follow X.Y.Z", and the form keeps what was typed, so `1,2,3` can be corrected | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a malformed version and keeps it", which asserts the field still reads `1,2,3` and the mutation was not called; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "when the version is malformed" > "refuses it with malformed" for the server-side check |
 | AC-13 | A submitted version lower than the current one is refused with "Version must be greater than 1.2.0" | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a lower version"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses a version that is not greater with not_greater" |
 | AC-14 | A submitted version equal to the current one is refused with "Version must be greater than 1.2.0" | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses the current version"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses 0.10.0 as not greater than 0.10.0" |
 | AC-15 | A submitted version that is well-formed and greater but not one of the three next increments — 0.5.0 after 0.1.0 — is refused | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a greater non-increment"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses a greater non-increment version with not_an_increment" |
@@ -237,6 +237,7 @@ risk, and they are the two that UK-3 and UK-6 have to settle first.
   | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
   | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
   | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing. *Closed 2026-09-17: four units, U-027..U-030, and six decisions, D-059..D-064* | S4 |
+  | S6 | — (no new AC; a second review pass and a red gate, neither a behaviour) | the defects a human-led review found in the release surface — a readiness query nothing invalidated, and a form with two dead ends — plus the two standards Greptile raised on #489, and the 76 `packmind-cli lint` errors this feature's own specs were carrying. **Not sized** — the findings are the sizing. *Closed 2026-09-18: six commits* | S5 |
 
   **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
   closed, and sized the same day by D-057 — which the human decided directly, with the
@@ -397,6 +398,69 @@ The four Playwright criteria pass together in 49.2s at `--workers=1` — matchin
 That run took four attempts, every failure inside the signup fixture and never in the release
 flow, exactly as D-053 describes and D-052 instructs; the one criterion that failed twice
 passes alone in 11.7s.
+
+## S6 — done: the second review, and the gate this feature was failing
+
+A review of the whole branch on 2026-09-18, by a person with an automated pass beside
+them, against the acceptance criteria rather than the diff. Everything S1..S5 verified
+stayed verified; what it found sat in the places no unit owned.
+
+**Three defects, all of them "the user is told nothing, or told something false, about
+state the server already knows".**
+
+- **`AC-5`, `AC-6` and `AC-8` did not hold in the running app.** The readiness query was
+  invalidated by the release mutation and nothing else, while the gate reads the
+  package's name, its description and its component list. With `staleTime` at ten
+  minutes and no refetch on focus, renaming a released package left the version area
+  saying "Nothing has changed since 0.1.0" with the action disabled — the inverse of
+  AC-5 — until the cache aged out. The unit tests feed `readiness` in as a prop, so they
+  could not see it, and no end-to-end test renames a released package. The three
+  mutations that move a gate input now invalidate it.
+- **A server refusal locked the form.** AC-25's own scenario: the server names its
+  current version, the sentence is right, and every other thing the form judges against
+  stayed as the page had read it — so the version the server would have accepted was
+  refused locally, with "Version must follow X.Y.Z". Only a reload got out. The server's
+  version now outranks readiness while the drawer is open, and the reset moved to the
+  closed-to-open transition so a refetch cannot wipe the sentence AC-25 asserts.
+- **A refusal on a never-released package rendered nothing at all.** It stored a null
+  current version; the "not greater" message is built from that version, so it came back
+  `undefined`, the field was not marked invalid, and pressing Release did nothing
+  visible. The refusal now carries `0.0.0` — what was actually compared against, and
+  what the server names back — and the state's type no longer admits null.
+
+**Two standards, from the review on #489, both true.** The three commands hand-rolled
+`PackmindCommand & { organizationId; spaceId }` where `SpaceMemberCommand` is the name
+for it — and is the bound `AbstractSpaceMemberUseCase` declares, so U-032's conversion
+was satisfied structurally rather than stated. `IListPackageReleasesUseCase` exported six
+types where the standard asks for the contract triple; the three payload shapes moved to
+`PackageRelease.ts`. A third, the bare `Error` thrown when a committed release cannot be
+read back, became `PackageReleaseNotPersistedError`: that state is a broken invariant,
+and by message alone it sat in a log next to the ordinary answer to asking for a version
+nobody cut.
+
+**And the gate this feature had been failing all along.** `packmind-cli lint .` was red on
+#489 with 76 errors, every one of them in a spec this feature added, against
+`backend-tests-redaction`: sixty `when` clauses inside `it()`, and the rest multiple
+expects in one test. Nothing in the pipeline S1..S5 ran that gate, which is why five green
+sessions never mentioned it. The specs are restructured; deployments goes 1399 → 1418
+tests, api 610 → 612, types 358 → 360, all from splitting rather than from new coverage.
+The charter's `verified by` column is rewritten to name the tests as they now read.
+
+**Two corrections to the record, not to the code.**
+
+- **Thread `4025211407` on #489 said the opposite of what merged.** The reply declining
+  `AbstractSpaceMemberUseCase` was posted at 06:10 UTC and agreed with at 06:10:55; the
+  conversion landed at 06:37. A follow-up now states the reversal and points at D-065.
+- **`apps/doc/concepts/packages-management.mdx` still says "Any member of your
+  organization can create a release."** U-032 made that false and S6 did not fix it. It is
+  named here, and on the PR, so it is not discovered by a reader.
+
+**What was verified.** `nx run-many -t test lint typecheck` over `types`, `deployments`,
+`api`, `frontend`, `feature-flags`, `ui` and `migrations`: seven projects green,
+`--skip-nx-cache`. Each of the three defect fixes is mutation-checked — reverting the
+change fails the test that covers it, and the one negative test stays green. Playwright
+was not run. Neither was `packmind-cli lint .`: it needs an API key, the one on the
+machine is expired, and the gate's verdict therefore comes from CI.
 
 ## Done
 
