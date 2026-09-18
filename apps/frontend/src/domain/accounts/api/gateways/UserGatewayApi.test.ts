@@ -1,5 +1,9 @@
 import { UserGatewayApi } from './UserGatewayApi';
-import { createOrganizationId } from '@packmind/types';
+import {
+  ListOrganizationUsersResponse,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
@@ -31,38 +35,24 @@ describe('UserGatewayApi', () => {
     const organizationId = createOrganizationId('org-123');
 
     describe('when fetching users successfully', () => {
-      const mockUsers = [
-        {
-          id: '1',
-          displayName: 'user1',
-          passwordHash: 'hash1',
-          active: true,
-          memberships: [
-            {
-              userId: '1',
-              organizationId: 'org-1',
-              role: 'admin',
-            },
-          ],
-        },
-        {
-          id: '2',
-          displayName: 'user2',
-          passwordHash: 'hash2',
-          active: true,
-          memberships: [
-            {
-              userId: '2',
-              organizationId: 'org-1',
-              role: 'admin',
-            },
-          ],
-        },
-      ];
-      let result: typeof mockUsers;
+      const mockResponse: ListOrganizationUsersResponse = {
+        users: [
+          {
+            userId: createUserId('1'),
+            displayName: 'user1',
+            role: 'admin',
+          },
+          {
+            userId: createUserId('2'),
+            displayName: 'user2',
+            role: 'member',
+          },
+        ],
+      };
+      let result: ListOrganizationUsersResponse;
 
       beforeEach(async () => {
-        mockApiGet.mockResolvedValue(mockUsers);
+        mockApiGet.mockResolvedValue(mockResponse);
         result = await gateway.getUsersInMyOrganization({ organizationId });
       });
 
@@ -71,7 +61,7 @@ describe('UserGatewayApi', () => {
       });
 
       it('returns the users from API response', () => {
-        expect(result).toEqual(mockUsers);
+        expect(result).toEqual(mockResponse);
       });
     });
 
@@ -87,10 +77,10 @@ describe('UserGatewayApi', () => {
     });
 
     describe('when no users exist', () => {
-      let result: unknown[];
+      let result: ListOrganizationUsersResponse;
 
       beforeEach(async () => {
-        mockApiGet.mockResolvedValue([]);
+        mockApiGet.mockResolvedValue({ users: [] });
         result = await gateway.getUsersInMyOrganization({ organizationId });
       });
 
@@ -98,8 +88,8 @@ describe('UserGatewayApi', () => {
         expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
       });
 
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
+      it('returns an empty user list', () => {
+        expect(result).toEqual({ users: [] });
       });
     });
   });

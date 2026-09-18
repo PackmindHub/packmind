@@ -75,8 +75,8 @@ describe('componentLateness', () => {
       drift(
         [
           artifact('std-1', 'standard', [
-            install('repo-a', 'target-1', 'outdated'),
-            install('repo-b', 'target-1', 'outdated'),
+            install('repo-a', 'target-1', 'behind'),
+            install('repo-b', 'target-1', 'behind'),
           ]),
         ],
         [location('repo-a', 'target-1'), location('repo-b', 'target-1')],
@@ -112,11 +112,11 @@ describe('componentLateness', () => {
       drift(
         [
           artifact('same-id', 'standard', [
-            install('repo-a', 'target-1', 'outdated'),
+            install('repo-a', 'target-1', 'behind'),
           ]),
           artifact('same-id', 'skill', [
-            install('repo-a', 'target-1', 'outdated'),
-            install('repo-b', 'target-1', 'outdated'),
+            install('repo-a', 'target-1', 'behind'),
+            install('repo-b', 'target-1', 'behind'),
           ]),
         ],
         [location('repo-a', 'target-1'), location('repo-b', 'target-1')],
@@ -136,8 +136,8 @@ describe('componentLateness', () => {
       drift(
         [
           artifact('std-1', 'standard', [
-            install('repo-a', 'target-1', 'outdated'),
-            install('repo-a', 'target-2', 'outdated'),
+            install('repo-a', 'target-1', 'behind'),
+            install('repo-a', 'target-2', 'behind'),
           ]),
         ],
         [location('repo-a', 'target-1'), location('repo-a', 'target-2')],

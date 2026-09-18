@@ -1,4 +1,5 @@
 import { queryClient } from '../../shared/data/queryClient';
+import { makeLoaderArgs } from '../../test/loaderArgs';
 import type { MockedFunction } from 'vitest';
 import { clientLoader as standardLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index';
 import { clientLoader as commandLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index';
@@ -40,13 +41,10 @@ const SKILL = { skill: { id: 'skill-1', slug: 'review-pr' } };
  * navigation it is about without a `beforeEach` three screens up.
  */
 function args(path: string, nav: string, params: Record<string, string>) {
-  return {
+  return makeLoaderArgs({
+    url: `https://app.packmind.com/org/acme/space/core${path}?nav=${nav}`,
     params: { orgSlug: 'acme', spaceSlug: 'core', ...params },
-    request: new Request(
-      `https://app.packmind.com/org/acme/space/core${path}?nav=${nav}`,
-    ),
-    context: {} as never,
-  };
+  });
 }
 
 function location(result: unknown): string | null {

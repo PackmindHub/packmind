@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { UseMutateFunction } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
@@ -12,8 +13,14 @@ import {
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
-import { SignInUserResponse } from '@packmind/types';
+import {
+  SignInUserResponse,
+  User,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import type { MockedFunction } from 'vitest';
+import { createSuccessQueryResult } from '../../../test/queryResultMocks';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
@@ -33,6 +40,43 @@ vi.mock('react-router', async () => ({
     <a href={to}>{children}</a>
   ),
 }));
+
+/**
+ * Re-plays the callbacks a component handed to `mutate`. TanStack invokes them
+ * with four arguments - the payload, the variables, the onMutate result and a
+ * MutationFunctionContext - and the handlers under test read only the first, so
+ * the other three are supplied here once instead of at every call site.
+ *
+ * `data` is optional because one caller drives a mutation whose success handler
+ * ignores its payload entirely.
+ */
+const replayMutation = <TData, TError, TVariables>(
+  mutate: UseMutateFunction<TData, TError, TVariables>,
+) => {
+  const [variables, options] = vi.mocked(mutate).mock.calls[0] ?? [];
+  const context = { client: new QueryClient(), meta: undefined };
+
+  return {
+    onSuccess: (data?: TData) =>
+      options?.onSuccess?.(
+        data as TData,
+        variables as TVariables,
+        undefined,
+        context,
+      ),
+    onError: (error: TError) =>
+      options?.onError?.(error, variables as TVariables, undefined, context),
+  };
+};
+
+const signedInUser: User = {
+  id: createUserId('user-1'),
+  email: 'test@example.com',
+  displayName: null,
+  passwordHash: null,
+  active: true,
+  memberships: [],
+};
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -72,10 +116,9 @@ describe('SignInForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock social providers query to return empty list
-    mockUseSocialProvidersQuery.mockReturnValue({
-      data: { providers: [] },
-      isLoading: false,
-    } as ReturnType<typeof useSocialProvidersQuery>);
+    mockUseSocialProvidersQuery.mockReturnValue(
+      createSuccessQueryResult<{ providers: string[] }>({ providers: [] }),
+    );
   });
 
   const createMockMutation = <T = unknown,>(overrides = {}) =>
@@ -291,8 +334,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onError = signInCall[1].onError;
+        const onError = replayMutation(mockSignInMutation.mutate).onError;
         onError(new Error('Invalid credentials'));
       });
 
@@ -318,12 +360,13 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organization: {
-            id: 'org-1',
+            id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
-            role: 'admin',
           },
+          role: 'admin',
         };
 
         renderWithProviders(<SignInForm />);
@@ -341,8 +384,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
         onSuccess(mockSignInResponse);
       });
 
@@ -425,10 +467,11 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -436,7 +479,7 @@ describe('SignInForm', () => {
             },
             {
               organization: {
-                id: 'org-2',
+                id: createOrganizationId('org-2'),
                 name: 'Organization 2',
                 slug: 'organization-2',
               },
@@ -460,8 +503,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -508,10 +550,11 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -535,8 +578,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -581,10 +623,11 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -592,7 +635,7 @@ describe('SignInForm', () => {
             },
             {
               organization: {
-                id: 'org-2',
+                id: createOrganizationId('org-2'),
                 name: 'Organization 2',
                 slug: 'organization-2',
               },
@@ -616,8 +659,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -671,6 +713,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -689,8 +732,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -731,6 +773,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -749,8 +792,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -792,6 +834,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -810,8 +853,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -865,6 +907,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -883,8 +926,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);
@@ -910,13 +952,13 @@ describe('SignInForm', () => {
           expect(mockCreateOrganizationMutation.mutate).toHaveBeenCalled();
         });
 
-        const createOrgCall =
-          mockCreateOrganizationMutation.mutate.mock.calls[0];
-        const onCreateSuccess = createOrgCall[1].onSuccess;
+        const onCreateSuccess = replayMutation(
+          mockCreateOrganizationMutation.mutate,
+        ).onSuccess;
 
         act(() => {
           onCreateSuccess({
-            id: 'org-1',
+            id: createOrganizationId('org-1'),
             name: 'New Organization',
             slug: 'new-organization',
           });
@@ -926,9 +968,9 @@ describe('SignInForm', () => {
           expect(mockSelectOrganizationMutation.mutate).toHaveBeenCalled();
         });
 
-        const selectOrgCall =
-          mockSelectOrganizationMutation.mutate.mock.calls[0];
-        const onSelectSuccess = selectOrgCall[1].onSuccess;
+        const onSelectSuccess = replayMutation(
+          mockSelectOrganizationMutation.mutate,
+        ).onSuccess;
 
         act(() => {
           onSelectSuccess();
@@ -977,6 +1019,7 @@ describe('SignInForm', () => {
         );
 
         const mockSignInResponse: SignInUserResponse = {
+          user: signedInUser,
           organizations: [],
         };
 
@@ -995,8 +1038,7 @@ describe('SignInForm', () => {
           expect(mockSignInMutation.mutate).toHaveBeenCalled();
         });
 
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSuccess = signInCall[1].onSuccess;
+        const onSuccess = replayMutation(mockSignInMutation.mutate).onSuccess;
 
         act(() => {
           onSuccess(mockSignInResponse);

@@ -60,9 +60,9 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('ProposeChangeModal', () => {
-  const organizationId = createOrganizationId();
-  const spaceId = createSpaceId();
-  const recipeId = createCommandId();
+  const organizationId = createOrganizationId('org-1');
+  const spaceId = createSpaceId('space-1');
+  const recipeId = createCommandId('command-1');
   const defaultProps = {
     commandName: 'My Command',
     recipeId,
