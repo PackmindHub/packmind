@@ -60,8 +60,6 @@ export class ListCommandsBySpaceUseCase
         );
       }
 
-      // Get recipes in the specified space
-      // Recipes are now always space-specific, no organization-level recipes
       const recipes = await this.commandService.listCommandsBySpace(
         command.spaceId,
         { includeDeleted: command.includeDeleted },

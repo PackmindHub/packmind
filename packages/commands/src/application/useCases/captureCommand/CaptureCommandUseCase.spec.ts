@@ -31,7 +31,6 @@ import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { CaptureCommandUseCase } from './CaptureCommandUseCase';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -55,7 +54,6 @@ describe('CaptureRecipeUseCase', () => {
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as Partial<jest.Mocked<ISpacesPort>> as jest.Mocked<ISpacesPort>;
 
-    // Mock RecipeService
     commandService = {
       addCommand: jest.fn(),
       listCommandsBySpace: jest.fn(),
@@ -65,7 +63,6 @@ describe('CaptureRecipeUseCase', () => {
       deleteCommand: jest.fn(),
     } as unknown as jest.Mocked<CommandService>;
 
-    // Mock RecipeVersionService
     commandVersionService = {
       addCommandVersion: jest.fn(),
       listCommandVersions: jest.fn(),
@@ -74,7 +71,6 @@ describe('CaptureRecipeUseCase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<CommandVersionService>;
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
@@ -83,7 +79,6 @@ describe('CaptureRecipeUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    // Default: no existing recipes (can be overridden in individual tests)
     commandService.listCommandsBySpace.mockResolvedValue([]);
 
     captureCommandUseCase = new CaptureCommandUseCase(

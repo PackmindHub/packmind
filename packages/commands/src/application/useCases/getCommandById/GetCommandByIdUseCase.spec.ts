@@ -355,9 +355,7 @@ describe('GetRecipeByIdUseCase', () => {
             },
           ],
         };
-        // Space belongs to the correct organization
         const space = spaceFactory({ id: spaceId, organizationId });
-        // But recipe's spaceId doesn't match the requested spaceId
         const differentSpaceId = createSpaceId('space-2');
         const recipe = commandFactory({
           id: recipeId,

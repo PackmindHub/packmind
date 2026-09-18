@@ -27,12 +27,6 @@ import { CommandsRepositories } from './infra/repositories/CommandsRepositories'
 
 const origin = 'RecipesHexa';
 
-/**
- * RecipesHexa - Facade for the Recipes domain following the Hexa pattern.
- *
- * This class serves as the main entry point for recipes-related functionality.
- * It exposes use cases through the adapter and manages the lifecycle of the domain.
- */
 export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
   private readonly commandsRepositories: CommandsRepositories;
   private readonly commandsServices: CommandsServices;
@@ -52,7 +46,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
         'Creating repository and service aggregators with DataSource',
       );
 
-      // Instantiate repositories and services
       this.commandsRepositories = new CommandsRepositories(dataSource);
       this.commandsServices = new CommandsServices(this.commandsRepositories);
 
@@ -69,9 +62,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('RecipesHexa already initialized');
@@ -81,7 +71,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
     this.logger.info('Initializing RecipesHexa (adapter retrieval phase)');
 
     try {
-      // Get all required ports
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
@@ -94,16 +83,12 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
       const deploymentPort =
         registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
 
-      // Get JobsService
       const jobsService = registry.getService(JobsService);
 
-      // Get PackmindEventEmitterService (required) - for domain event emission
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
 
-      // Initialize adapter with all dependencies
-      // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
         [IDeploymentPortName]: deploymentPort,
@@ -124,26 +109,15 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
     }
   }
 
-  /**
-   * Destroys the RecipesHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying RecipesHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('RecipesHexa destroyed');
   }
 
-  /**
-   * Get the Recipes adapter for cross-domain access to recipes data.
-   * This adapter implements IRecipesPort and can be injected into other domains.
-   */
   public getAdapter(): ICommandsPort {
     return this.adapter.getPort();
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ICommandsPortName;
   }
