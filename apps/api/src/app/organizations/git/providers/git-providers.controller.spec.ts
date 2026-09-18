@@ -64,7 +64,10 @@ import {
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { GitProvidersController } from './git-providers.controller';
-import { GitProvidersService } from './git-providers.service';
+import {
+  BuildGithubAppManifestResponse,
+  GitProvidersService,
+} from './git-providers.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
@@ -334,11 +337,7 @@ describe('GitProvidersController', () => {
   });
 
   describe('getGithubAppManifest', () => {
-    // The response type is not exported from the service, so derive it — the
-    // literal otherwise widens `'read'` to `string`.
-    const manifestResponse: Awaited<
-      ReturnType<GitProvidersService['buildGithubAppManifest']>
-    > = {
+    const manifestResponse: BuildGithubAppManifestResponse = {
       manifest: {
         name: 'Packmind on Acme',
         url: 'https://app.example.com',
