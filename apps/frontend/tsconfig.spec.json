@@ -16,6 +16,8 @@
     "moduleResolution": "Bundler"
   },
   "include": [
+    "global.d.ts",
+    "src/test-setup.ts",
     "vite.config.ts",
     "vite.config.mts",
     "src/**/*.test.ts",
