@@ -394,7 +394,6 @@ describe('ExecuteLinterProgramsUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      // Program returns [1] → violation at line 2 (0-indexed to 1-indexed conversion)
       expect(result.violations).toEqual([
         {
           line: 2,
