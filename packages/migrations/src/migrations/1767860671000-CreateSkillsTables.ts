@@ -19,7 +19,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // Table definitions
   private readonly skillsTable = new Table({
     name: 'skills',
     columns: [
@@ -156,7 +155,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
     ],
   });
 
-  // Foreign key definitions
   private readonly skillVersionsSkillForeignKey = new TableForeignKey({
     columnNames: ['skill_id'],
     referencedTableName: 'skills',
@@ -169,7 +167,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
     this.logger.info('Starting migration: CreateSkillsTables');
 
     try {
-      // Create main tables
       this.logger.debug('Creating skills table');
       await queryRunner.createTable(this.skillsTable);
       this.logger.info('Successfully created skills table');
@@ -178,7 +175,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
       await queryRunner.createTable(this.skillVersionsTable);
       this.logger.info('Successfully created skill_versions table');
 
-      // Create indices for skills table
       this.logger.debug('Creating indices for skills table');
       await queryRunner.createIndex(
         'skills',
@@ -203,7 +199,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
       );
       this.logger.info('Successfully created indices for skills table');
 
-      // Create indices for skill_versions table
       this.logger.debug('Creating indices for skill_versions table');
       await queryRunner.createIndex(
         'skill_versions',
@@ -222,7 +217,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
       );
       this.logger.info('Successfully created indices for skill_versions table');
 
-      // Create foreign keys
       this.logger.debug(
         'Adding foreign key constraints for skill_versions table',
       );
@@ -247,7 +241,6 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
     this.logger.info('Starting rollback: CreateSkillsTables');
 
     try {
-      // Drop foreign keys
       this.logger.debug(
         'Dropping foreign key constraints for skill_versions table',
       );
@@ -259,13 +252,11 @@ export class CreateSkillsTables1767860671000 implements MigrationInterface {
         'Successfully dropped foreign key constraints for skill_versions table',
       );
 
-      // Drop indices for skill_versions table
       this.logger.debug('Dropping indices for skill_versions table');
       await queryRunner.dropIndex('skill_versions', 'uidx_skill_version');
       await queryRunner.dropIndex('skill_versions', 'idx_skill_version_skill');
       this.logger.info('Successfully dropped indices for skill_versions table');
 
-      // Drop indices for skills table
       this.logger.debug('Dropping indices for skills table');
       await queryRunner.dropIndex('skills', 'idx_skill_slug');
       await queryRunner.dropIndex('skills', 'idx_skill_space');

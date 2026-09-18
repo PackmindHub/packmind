@@ -14,6 +14,8 @@ import {
   createSkillId,
   createUserId,
   createPackageReleaseId,
+  type GetPackageReleaseResponse,
+  type PackageReleaseSummary,
 } from '@packmind/types';
 import type { Mock } from 'vitest';
 
@@ -28,16 +30,28 @@ const packageId = createPackageId('pkg-1');
 const spaceId = createSpaceId('space-1');
 const organizationId = createOrganizationId('org-1');
 
+/*
+ * Annotated rather than inferred, as in PackageVersionArea.spec: the default
+ * `getReleaseMock` would otherwise fix the return to `{ data: undefined }` and
+ * `releases` to never[]. Frontend specs are type-checked since #500.
+ */
 const renderComponent = ({
   releases = [],
   open = true,
-  selectedVersion = undefined,
   getReleaseMock = () => ({ data: undefined, isLoading: false }),
+}: {
+  releases?: PackageReleaseSummary[];
+  open?: boolean;
+  getReleaseMock?: (version: string | undefined) => {
+    data: GetPackageReleaseResponse | undefined;
+    isLoading: boolean;
+  };
 } = {}) => {
   const onOpenChange = vi.fn();
 
   (useGetPackageReleaseQuery as Mock).mockImplementation(
-    (orgId, spId, pkgId, version) => getReleaseMock(version),
+    (_orgId, _spId, _pkgId, version: string | undefined) =>
+      getReleaseMock(version),
   );
 
   render(

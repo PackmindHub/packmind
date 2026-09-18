@@ -44,7 +44,6 @@ describe('GitRepoRepository', () => {
     organizationRepository =
       fixture.datasource.getRepository(OrganizationSchema);
 
-    // Create test organization and provider for foreign key constraints
     testOrganization = await organizationRepository.save({
       id: createOrganizationId(uuidv4()),
       name: 'Test Organization',

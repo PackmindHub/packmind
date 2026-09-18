@@ -51,23 +51,17 @@ describe('Continue Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
-    // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
-    // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
 
-    // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
 
-    // Create test data
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
@@ -78,7 +72,6 @@ describe('Continue Deployment Integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
-    // Get the default "Global" space created during signup
     const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
@@ -86,7 +79,6 @@ describe('Continue Deployment Integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    // Create test recipe
     recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for Continue',
       content: 'This is test recipe content for Continue deployment',
@@ -95,7 +87,6 @@ describe('Continue Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create test standard
     standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'Test Standard for Continue',
       description: 'A test standard for Continue deployment',
@@ -109,7 +100,6 @@ describe('Continue Deployment Integration', () => {
       spaceId: space.id,
     });
 
-    // Create git provider and repository
     const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
@@ -156,7 +146,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const recipeVersions: CommandVersion[] = [
         {
@@ -252,9 +241,7 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      // Create second recipe
       command2 = await testApp.commandsHexa.getAdapter().captureCommand({
         name: 'Second Recipe for Continue',
         content: 'This is the second recipe content',
@@ -330,7 +317,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const standardVersions: StandardVersion[] = [
         {
@@ -425,7 +411,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       globalStandard = await testApp.standardsHexa.getAdapter().createStandard({
         name: 'Global Standard',
@@ -484,7 +469,6 @@ describe('Continue Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const recipeVersions: CommandVersion[] = [
         {
@@ -511,7 +495,6 @@ describe('Continue Deployment Integration', () => {
         },
       ];
 
-      // Deploy recipes first
       const commandUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
@@ -519,7 +502,6 @@ describe('Continue Deployment Integration', () => {
         ['continue'],
       );
 
-      // Deploy standards second
       const standardsUpdates =
         await deployerService.aggregateStandardsDeployments(
           standardVersions,
@@ -528,7 +510,8 @@ describe('Continue Deployment Integration', () => {
           ['continue'],
         );
 
-      // Simulate the file merging that DeployerService does
+      // Mirrors DeployerService.mergeFileUpdates: last writer wins per path,
+      // so the standards pass overrides the commands pass on a shared file.
       const allUpdates = [commandUpdates, standardsUpdates];
       pathMap = new Map<string, FileModification>();
 
@@ -598,8 +581,6 @@ describe('Continue Deployment Integration', () => {
     });
 
     it('returns no file updates for empty recipe list', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
       const fileUpdates = await continueDeployer.deployCommands(
         [],
         gitRepo,
@@ -616,8 +597,6 @@ describe('Continue Deployment Integration', () => {
       };
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await continueDeployer.deployCommands(
           [],
           gitRepo,

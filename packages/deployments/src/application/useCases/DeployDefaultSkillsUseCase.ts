@@ -65,7 +65,6 @@ export class DeployDefaultSkillsUseCase
       delete: [],
     };
 
-    // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
     let codingAgents: CodingAgent[];
     if (command.agents !== undefined && command.agents.length > 0) {
       codingAgents = command.agents;
@@ -154,14 +153,10 @@ export class DeployDefaultSkillsUseCase
   /**
    * Builds the default-skill slice of the lockfile `artifacts` map.
    *
-   * The deployer-side `deployedSkills` metadata (slug, name, version) is
-   * shaped into synthetic `SkillVersion` entries that `PackmindLockFileService.buildLockFile`
-   * uses to populate its version lookup. Default skills are not persisted as
-   * Packmind domain entities, so these synthetic versions are only used in
-   * memory to drive lockfile-entry construction; nothing is written to the DB.
-   *
-   * Returns only the `artifacts` map from the resulting lockfile — callers
-   * merge it into the local lockfile via the CLI flow.
+   * The deployer-side `deployedSkills` metadata (slug, name, version) is shaped
+   * into synthetic `SkillVersion` entries, only to populate
+   * `PackmindLockFileService.buildLockFile`'s version lookup. Default skills are
+   * not persisted as Packmind domain entities and nothing here reaches the DB.
    */
   private buildLockFileSlice(
     enrichedFileUpdates: FileUpdates,

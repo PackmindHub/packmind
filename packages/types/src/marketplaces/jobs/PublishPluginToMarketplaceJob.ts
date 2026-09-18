@@ -15,11 +15,8 @@ export const PUBLISH_PLUGIN_TO_MARKETPLACE_QUEUE =
   'publish-plugin-to-marketplace';
 
 /**
- * Input payload for the marketplace plugin publish BullMQ job.
- *
- * The worker uses these ids to (re)load the distribution row, marketplace,
- * package, and acting user so all heavy lifting can happen off the request
- * thread.
+ * Ids only, which the worker re-loads so all the heavy lifting happens off the
+ * request thread.
  */
 export interface PublishPluginToMarketplaceJobInput {
   marketplaceDistributionId: MarketplaceDistributionId;
@@ -30,10 +27,10 @@ export interface PublishPluginToMarketplaceJobInput {
 }
 
 /**
- * Output payload — the job is fire-and-forget for the caller. The terminal
- * state is still persisted on `MarketplaceDistribution.status`; this output is
- * used by the BullMQ `completed` worker listener to route the terminal log line
- * to the right level (a swallowed failure must not be narrated as "completed").
+ * Fire-and-forget for the caller: the terminal state is persisted on
+ * `MarketplaceDistribution.status` regardless. This output exists so the BullMQ
+ * `completed` listener can pick the right log level — a swallowed failure must
+ * not be narrated as "completed".
  */
 export interface PublishPluginToMarketplaceJobOutput {
   marketplaceDistributionId: MarketplaceDistributionId;

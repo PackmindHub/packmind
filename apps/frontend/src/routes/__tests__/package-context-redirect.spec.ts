@@ -1,4 +1,5 @@
 import { queryClient } from '../../shared/data/queryClient';
+import { makeLoaderArgs } from '../../test/loaderArgs';
 import type { MockedFunction } from 'vitest';
 import { clientLoader as packageLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index';
 import { clientLoader as packagesLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index';
@@ -33,13 +34,10 @@ const ME = {
  * up.
  */
 function args(path: string, search: string, params: Record<string, string>) {
-  return {
+  return makeLoaderArgs({
+    url: `https://app.packmind.com/org/acme/space/core${path}?${search}`,
     params: { orgSlug: 'acme', spaceSlug: 'core', ...params },
-    request: new Request(
-      `https://app.packmind.com/org/acme/space/core${path}?${search}`,
-    ),
-    context: {} as never,
-  };
+  });
 }
 
 function location(result: unknown): string | null {

@@ -66,7 +66,6 @@ export class CodingAgentServices {
       existingFiles,
     );
 
-    // Process removed artifacts to generate file updates
     const hasRemovedArtifacts =
       removed.recipeVersions.length > 0 ||
       removed.standardVersions.length > 0 ||
@@ -103,11 +102,10 @@ export class CodingAgentServices {
       this.logger.info('Removed artifacts processed');
     }
 
-    // "Burn and Rebuild" for skills: add skill directories to delete list
-    // The commit flow will:
-    // 1. Expand directories to individual files (via listFilesInDirectory)
-    // 2. Filter out files that are also in createOrUpdate list
-    // This ensures stale files are deleted when a skill is updated
+    // "Burn and rebuild": deleting the whole skill directory is how stale
+    // files disappear when a skill is updated. CommitToGitUseCase expands the
+    // directory via listFilesInDirectories, then drops any path that is also
+    // in createOrUpdate, so surviving files are rewritten rather than removed.
     const allSkillVersions = [
       ...installed.skillVersions,
       ...removed.skillVersions,

@@ -1,5 +1,5 @@
 import { AuthGatewayApi } from './AuthGatewayApi';
-import { createOrganizationId, SignUpUserCommand } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway

@@ -30,7 +30,6 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
       };
     }
 
-    // Filter programs to only those matching the file's language
     const matchingPrograms = this.filterProgramsByLanguage(programs, language);
 
     if (matchingPrograms.length === 0) {
@@ -236,7 +235,6 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
   }
 
   private extractRuleName(ruleContent: string): string {
-    // Only extract from path if it looks like a file path (ends with .js)
     if (ruleContent.endsWith('.js') && ruleContent.includes('/')) {
       return ruleContent.split('/').pop()?.replace('.js', '') ?? ruleContent;
     }

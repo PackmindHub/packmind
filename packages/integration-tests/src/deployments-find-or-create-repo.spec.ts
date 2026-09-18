@@ -17,10 +17,10 @@ const emptyLockFile: PackmindLockFile = {
 };
 
 /**
- * After the deployments refactor, TargetResolutionService delegates the
- * provider+repo provisioning to IGitPort.findOrCreateGitRepo. This verifies the
- * end-to-end behavior is preserved: notifying a distribution for an unknown git
- * remote still auto-creates the git provider and the git repo.
+ * `TargetResolutionService` delegates provider and repo provisioning to
+ * `IGitPort.findOrCreateGitRepo`, which these tests exercise from the outside:
+ * notifying a distribution for an unknown git remote must auto-create both the
+ * git provider and the git repo.
  */
 describe('Deployments find-or-create repo integration', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
@@ -28,8 +28,6 @@ describe('Deployments find-or-create repo integration', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 

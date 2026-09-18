@@ -1,13 +1,16 @@
 import { SmtpMailService } from './SmtpMailService';
+import { SmtpConfigurationError } from './SmtpConfigurationError';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { Configuration } from '../config/config/Configuration';
-import { SentMessageInfo } from 'nodemailer';
+import nodemailer, { SentMessageInfo } from 'nodemailer';
+import SMTPPool from 'nodemailer/lib/smtp-pool';
 
-// Mock external dependencies
 jest.mock('../config/config/Configuration');
+jest.mock('nodemailer');
 
 const MockedConfiguration = jest.mocked(Configuration);
+const mockedNodemailer = jest.mocked(nodemailer);
 
 describe('SmtpMailService', () => {
   let service: SmtpMailService;
@@ -134,7 +137,6 @@ Test content here
 
     describe('when SMTP is not configured', () => {
       beforeEach(() => {
-        // Mock isConfigured to return false
         MockedConfiguration.getConfig.mockImplementation((key: string) => {
           if (key === 'SMTP_HOST') return Promise.resolve(null);
           if (key === 'SMTP_PORT') return Promise.resolve(null);
@@ -153,7 +155,6 @@ Test content here
       });
 
       it('calls buildMessageForLogging', async () => {
-        // Spy on buildMessageForLogging method
         const buildMessageSpy = jest.spyOn(service, 'buildMessageForLogging');
 
         await service.sendEmail({ recipient, subject, contentHtml });
@@ -173,7 +174,8 @@ Test content here
           contentHtml,
         );
 
-        // Packmind does not allow testing mockLogger, but here this is a business decision to check ;)
+        // Asserting on the logger, against the usual rule: logging the whole
+        // message is the behaviour being specified here, not a side effect.
         const infoStub = mockLogger.info;
         expect(infoStub).toHaveBeenCalledWith(expectedMessage);
       });
@@ -238,7 +240,8 @@ Test content here
           contentHtml,
         );
 
-        // Packmind does not allow testing mockLogger, but here this is a business decision to check ;)
+        // Asserting on the logger, against the usual rule: logging the whole
+        // message is the behaviour being specified here, not a side effect.
         const infoStub = mockLogger.info;
         expect(infoStub).toHaveBeenCalledWith(expectedMessage);
       });
@@ -279,6 +282,211 @@ Test content here
             }),
           ).rejects.toThrow('Failed to send email: SMTP connection failed');
         });
+      });
+    });
+  });
+
+  describe('callNodeMailer', () => {
+    const smtpPassword = 'super-secret-smtp-password';
+    const mailOptions = {
+      from: 'test@example.com',
+      to: 'user@example.com',
+      subject: 'Test Subject',
+      html: 'Test content',
+    };
+    let consoleLogSpy: jest.SpyInstance;
+
+    const configureSmtp = (overrides: Record<string, string> = {}) => {
+      const config: Record<string, string> = {
+        SMTP_HOST: 'smtp.example.com',
+        SMTP_PORT: '587',
+        SMTP_FROM: 'test@example.com',
+        SMTP_USER: 'user',
+        SMTP_PASSWORD: smtpPassword,
+        SMTP_SECURE: 'false',
+        ...overrides,
+      };
+      MockedConfiguration.getConfig.mockImplementation((key: string) =>
+        Promise.resolve(config[key] ?? null),
+      );
+    };
+
+    const buildMailConfig = async (): Promise<SMTPPool.Options> => {
+      await service.callNodeMailer(mailOptions);
+      return mockedNodemailer.createTransport.mock
+        .calls[0][0] as unknown as SMTPPool.Options;
+    };
+
+    beforeEach(() => {
+      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      mockedNodemailer.createTransport.mockReturnValue({
+        sendMail: jest.fn().mockResolvedValue({
+          messageId: 'test-message-id',
+        } as SentMessageInfo),
+      } as unknown as ReturnType<typeof nodemailer.createTransport>);
+      configureSmtp();
+    });
+
+    afterEach(() => {
+      consoleLogSpy.mockRestore();
+    });
+
+    describe('when SMTP_HOST or SMTP_PORT is missing', () => {
+      it('throws an error', async () => {
+        configureSmtp({ SMTP_HOST: '' });
+
+        await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+          'SMTP_HOST and SMTP_PORT are required',
+        );
+      });
+
+      it('raises a SmtpConfigurationError', async () => {
+        configureSmtp({ SMTP_HOST: '' });
+
+        await expect(
+          service.callNodeMailer(mailOptions),
+        ).rejects.toBeInstanceOf(SmtpConfigurationError);
+      });
+    });
+
+    describe('credentials', () => {
+      it('passes the credentials to the transport', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.auth).toEqual({ user: 'user', pass: smtpPassword });
+      });
+
+      it('never writes the config to the console', async () => {
+        await service.callNodeMailer(mailOptions);
+
+        expect(consoleLogSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('TLS certificate verification', () => {
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is unset', () => {
+        it('skips verification', async () => {
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is true', () => {
+        it('verifies certificates', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'true' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+        });
+
+        it('verifies certificates regardless of case and surrounding spaces', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' TRUE ' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is false', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'false' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+
+        it('skips verification regardless of case and surrounding spaces', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' FALSE ' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds only whitespace', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: '   ' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
+        it('rejects the configuration rather than silently skipping verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'yes' });
+
+          await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+            "SMTP_TLS_REJECT_UNAUTHORIZED must be 'true' or 'false', got 'yes'",
+          );
+        });
+
+        it('rejects a near-miss spelling of true', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'tru' });
+
+          await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+            'SMTP_TLS_REJECT_UNAUTHORIZED',
+          );
+        });
+
+        it('raises a SmtpConfigurationError', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'yes' });
+
+          await expect(
+            service.callNodeMailer(mailOptions),
+          ).rejects.toBeInstanceOf(SmtpConfigurationError);
+        });
+      });
+    });
+
+    describe('when the server is not an Exchange server', () => {
+      it('omits the legacy cipher override', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.ciphers).toBeUndefined();
+      });
+
+      it('keeps the configured secure flag', async () => {
+        configureSmtp({ SMTP_SECURE: 'true' });
+
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.secure).toBe(true);
+      });
+    });
+
+    describe('when the server is an Exchange server', () => {
+      beforeEach(() => {
+        configureSmtp({ SMTP_IS_EXCHANGE_SERVER: 'true', SMTP_SECURE: 'true' });
+      });
+
+      it('applies the legacy cipher override', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.ciphers).toBe('SSLv3');
+      });
+
+      it('disables implicit TLS', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.secure).toBe(false);
+      });
+
+      it('honours the verification opt-in', async () => {
+        configureSmtp({
+          SMTP_IS_EXCHANGE_SERVER: 'true',
+          SMTP_TLS_REJECT_UNAUTHORIZED: 'true',
+        });
+
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.tls?.rejectUnauthorized).toBe(true);
       });
     });
   });

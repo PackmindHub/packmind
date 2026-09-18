@@ -24,13 +24,14 @@ export class Configuration {
   ) {}
 
   private async initialize(env: Record<string, string | undefined>) {
-    // If already initialized, return immediately
     if (this.initialized) {
       this.logger.debug('Configuration already initialized, skipping');
       return;
     }
 
-    // If initialization is in progress, wait for it to complete
+    // Concurrent callers share one initialization. The promise is stored
+    // before this function ever awaits, so a second caller joins it instead of
+    // opening a second Infisical client.
     if (this.initializationPromise) {
       this.logger.debug(
         'Configuration initialization already in progress, waiting for completion',
@@ -39,13 +40,12 @@ export class Configuration {
       return;
     }
 
-    // Start initialization and store the promise
     this.initializationPromise = this.performInitialization(env);
 
     try {
       await this.initializationPromise;
     } finally {
-      // Clear the promise once initialization is complete (success or failure)
+      // Cleared on failure too, so a later call can retry.
       this.initializationPromise = null;
     }
   }
@@ -63,7 +63,6 @@ export class Configuration {
     if (configurationMode === 'infisical') {
       this.logger.info('Initializing Infisical configuration');
 
-      // Initialize InfisicalConfig with required parameters
       const clientId = env['INFISICAL_CLIENT_ID'];
       const clientSecret = env['INFISICAL_CLIENT_SECRET'];
       const infisicalEnv = env['INFISICAL_ENV'];
@@ -121,7 +120,8 @@ export class Configuration {
     try {
       await instance.initialize(env);
 
-      // First check process.env
+      // Environment variables win over Infisical, so a deployment can
+      // override a stored secret without touching it.
       const envValue = env[key];
       if (envValue) {
         instance.logger.debug(
@@ -131,7 +131,6 @@ export class Configuration {
         return envValue;
       }
 
-      // Then check infisical if available
       if (instance.infisicalConfig) {
         instance.logger.debug('Checking Infisical for configuration value', {
           key,
@@ -152,7 +151,8 @@ export class Configuration {
               error: error instanceof Error ? error.message : String(error),
             },
           );
-          // Fall through to return null
+          // Swallowed: an unreachable Infisical reads as "no value", the same
+          // as a key that is genuinely absent.
         }
       }
 

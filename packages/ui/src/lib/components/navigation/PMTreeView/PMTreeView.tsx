@@ -42,5 +42,4 @@ export type {
   TreeViewRootProviderProps as PMTreeViewRootProviderProps,
 } from '@chakra-ui/react';
 
-// Re-export the namespace for convenience
 export const PMTreeView = ChakraTreeView;

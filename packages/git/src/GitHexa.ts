@@ -28,16 +28,6 @@ import {
 
 const origin = 'GitHexa';
 
-/**
- * GitHexa - Facade for the Git domain following the Hexa pattern.
- *
- * This class serves as the main entry point for git-related functionality.
- * It holds the adapter and exposes use cases as a clean facade.
- *
- * The constructor instantiates repositories, services, and the adapter.
- * The initialize method retrieves ports from the registry and initializes the adapter.
- */
-
 export type GitHexaOpts = BaseHexaOpts & {
   gitRepoFactory?: IGitRepoFactory;
   githubTokenResolverFactory?: GithubTokenResolverFactory;
@@ -78,28 +68,22 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing GitHexa (adapter retrieval phase)');
 
     try {
-      // Resolve GitHub App hosting mode at bootstrap so use cases get the
-      // correct value. Mode is inferred from GITHUB_APP_SLUG presence: when
-      // set, a single shared App is configured via env; when unset, each org
-      // registers its own App via the manifest flow (on-prem).
+      // Resolved once at bootstrap, since every use case that validates
+      // credentials needs it before it runs. See GithubAppMode for what the
+      // two modes mean.
       const slug = await Configuration.getConfig('GITHUB_APP_SLUG');
       const mode: GithubAppMode = slug ? 'shared' : 'on-prem';
 
       this.adapter.setMode(mode);
 
-      // Get PackmindEventEmitterService (required) - for domain event emission
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
 
-      // Get all required ports and services
       const ports = {
         [IAccountsPortName]:
           registry.getAdapter<IAccountsPort>(IAccountsPortName),
@@ -109,8 +93,6 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
         jobsService: registry.getService(JobsService),
       };
 
-      // Initialize adapter once with all ports and services
-      // This will throw if any required port/service is missing
       await this.adapter.initialize(ports);
 
       this.logger.info('GitHexa initialized successfully');
@@ -122,31 +104,17 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     }
   }
 
-  /**
-   * Get the Git adapter for cross-domain access to git data.
-   * This adapter implements IGitPort and can be injected into other domains.
-   */
   public getAdapter(): IGitPort {
     return this.adapter.getPort();
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return IGitPortName;
   }
 
-  /**
-   * Destroys the GitHexa and cleans up resources
-   */
+  /** Nothing to release yet; kept to satisfy the Hexa lifecycle. */
   public destroy(): void {
     this.logger.info('Destroying GitHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('GitHexa destroyed');
   }
-
-  // ==================
-  // DELAYED JOBS
-  // ==================
 }

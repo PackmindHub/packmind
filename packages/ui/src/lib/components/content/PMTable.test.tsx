@@ -3,7 +3,6 @@ import '@testing-library/jest-dom';
 import { PMTable, PMTableColumn, PMTableRow } from './PMTable';
 import { UIProvider } from '../../UIProvider';
 
-// Helper function to render component with Chakra UI context
 const renderPMTable = (props: React.ComponentProps<typeof PMTable>) => {
   return render(
     <UIProvider>

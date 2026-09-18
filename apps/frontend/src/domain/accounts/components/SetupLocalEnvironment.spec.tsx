@@ -6,6 +6,13 @@ import { UIProvider } from '@packmind/ui';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
 import type { MockedFunction } from 'vitest';
+import {
+  createFailedMutationResult,
+  createIdleMutationResult,
+  createPendingMutationResult,
+  createSuccessMutationResult,
+} from '../../../test/mutationResultMocks';
+import { CreateCliLoginCodeResponse } from '@packmind/types';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useCreateCliLoginCodeMutation: vi.fn(),
@@ -44,39 +51,36 @@ describe('SetupLocalEnvironment', () => {
       typeof useCreateCliLoginCodeMutation
     >;
 
-  const defaultMutationResult = {
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
-    isPending: false,
-    isSuccess: false,
-    isError: false,
-    isIdle: true,
-    status: 'idle' as const,
-    data: undefined,
-    error: null,
-    variables: undefined,
-    reset: vi.fn(),
-    failureCount: 0,
-    failureReason: null,
-    submittedAt: 0,
-    context: undefined,
-    isPaused: false,
-  };
+  const idleMutation = (mutate = vi.fn()) =>
+    createIdleMutationResult<CreateCliLoginCodeResponse, Error, void>({
+      mutate,
+      mutateAsync: vi.fn(),
+      reset: vi.fn(),
+    });
+
+  const succeededMutation = (
+    data: CreateCliLoginCodeResponse,
+    mutate = vi.fn(),
+  ) =>
+    createSuccessMutationResult<CreateCliLoginCodeResponse, Error, void>({
+      data,
+      variables: undefined,
+      mutate,
+      mutateAsync: vi.fn(),
+      reset: vi.fn(),
+    });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseCreateCliLoginCodeMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useCreateCliLoginCodeMutation>,
-    );
+    mockUseCreateCliLoginCodeMutation.mockReturnValue(idleMutation());
   });
 
   describe('when mounting', () => {
     it('automatically generates install command', () => {
       const mutateMock = vi.fn();
-      mockUseCreateCliLoginCodeMutation.mockReturnValue({
-        ...defaultMutationResult,
-        mutate: mutateMock,
-      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue(
+        idleMutation(mutateMock),
+      );
 
       renderWithQueryClient(<SetupLocalEnvironment />);
 
@@ -86,10 +90,14 @@ describe('SetupLocalEnvironment', () => {
 
   describe('when generating command', () => {
     it('displays loading state', () => {
-      mockUseCreateCliLoginCodeMutation.mockReturnValue({
-        ...defaultMutationResult,
-        isPending: true,
-      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue(
+        createPendingMutationResult<CreateCliLoginCodeResponse, Error, void>({
+          variables: undefined,
+          mutate: vi.fn(),
+          mutateAsync: vi.fn(),
+          reset: vi.fn(),
+        }),
+      );
 
       renderWithQueryClient(<SetupLocalEnvironment />);
 
@@ -101,14 +109,12 @@ describe('SetupLocalEnvironment', () => {
 
   describe('when command is successfully generated', () => {
     const mockCode = 'test-login-code-123';
-    const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     beforeEach(() => {
-      mockUseCreateCliLoginCodeMutation.mockReturnValue({
-        ...defaultMutationResult,
-        isSuccess: true,
-        data: { code: mockCode, expiresAt: mockExpiresAt },
-      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue(
+        succeededMutation({ code: mockCode, expiresAt: mockExpiresAt }),
+      );
 
       renderWithQueryClient(<SetupLocalEnvironment />);
     });
@@ -132,14 +138,14 @@ describe('SetupLocalEnvironment', () => {
     it('calls mutate function', () => {
       const mutateMock = vi.fn();
       const mockCode = 'test-login-code-123';
-      const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-      mockUseCreateCliLoginCodeMutation.mockReturnValue({
-        ...defaultMutationResult,
-        mutate: mutateMock,
-        isSuccess: true,
-        data: { code: mockCode, expiresAt: mockExpiresAt },
-      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue(
+        succeededMutation(
+          { code: mockCode, expiresAt: mockExpiresAt },
+          mutateMock,
+        ),
+      );
 
       renderWithQueryClient(<SetupLocalEnvironment />);
 
@@ -154,11 +160,15 @@ describe('SetupLocalEnvironment', () => {
     const mockError = new Error('Failed to generate code');
 
     beforeEach(() => {
-      mockUseCreateCliLoginCodeMutation.mockReturnValue({
-        ...defaultMutationResult,
-        isError: true,
-        error: mockError,
-      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue(
+        createFailedMutationResult<CreateCliLoginCodeResponse, Error, void>({
+          error: mockError,
+          variables: undefined,
+          mutate: vi.fn(),
+          mutateAsync: vi.fn(),
+          reset: vi.fn(),
+        }),
+      );
 
       renderWithQueryClient(<SetupLocalEnvironment />);
     });

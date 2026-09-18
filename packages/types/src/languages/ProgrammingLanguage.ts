@@ -177,9 +177,6 @@ export const ProgrammingLanguageDetails: Record<
   },
 };
 
-/**
- * Returns all programming languages sorted by their display name
- */
 export const getAllLanguagesSortedByDisplayName = (): Array<{
   language: ProgrammingLanguage;
   info: ProgrammingLanguageInfo;
@@ -193,11 +190,11 @@ export const getAllLanguagesSortedByDisplayName = (): Array<{
 };
 
 /**
- * Converts a string to a ProgrammingLanguage enum value.
- * Matches case-insensitively against language names, display names, and file extensions.
- * @param input - The string to convert (language name or file extension)
- * @returns ProgrammingLanguage enum value
- * @throws Error if no matching language is found
+ * Matches case-insensitively, trying enum values first, then display names,
+ * then file extensions — so an input that is both (say a language whose name is
+ * another language's extension) resolves to the enum value.
+ *
+ * @throws Error when the input is empty or matches nothing.
  */
 export const stringToProgrammingLanguage = (
   input: string,
@@ -209,28 +206,24 @@ export const stringToProgrammingLanguage = (
 
   const lowerInput = trimmedInput.toLowerCase();
 
-  // Check direct enum value matches first
   for (const enumValue of Object.values(ProgrammingLanguage)) {
     if (enumValue.toLowerCase() === lowerInput) {
       return enumValue;
     }
   }
 
-  // Check display name matches
   for (const [language, info] of Object.entries(ProgrammingLanguageDetails)) {
     if (info.displayName.toLowerCase() === lowerInput) {
       return language as ProgrammingLanguage;
     }
   }
 
-  // Check file extension matches
   for (const [language, info] of Object.entries(ProgrammingLanguageDetails)) {
     if (info.fileExtensions.some((ext) => ext.toLowerCase() === lowerInput)) {
       return language as ProgrammingLanguage;
     }
   }
 
-  // If no match found, throw an error with helpful message
   const availableLanguages = Object.values(ProgrammingLanguageDetails)
     .map((info) => info.displayName)
     .join(', ');

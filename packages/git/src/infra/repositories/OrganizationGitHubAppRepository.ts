@@ -258,7 +258,6 @@ export class OrganizationGitHubAppRepository
       let result!: OrganizationGitHubApp;
 
       await this.repository.manager.transaction(async (manager) => {
-        // Revoke any existing active record for this org
         await manager
           .createQueryBuilder()
           .update(OrganizationGitHubAppSchema)
@@ -267,7 +266,6 @@ export class OrganizationGitHubAppRepository
           .andWhere('revokedAt IS NULL')
           .execute();
 
-        // Encrypt and insert the new record
         const encrypted = await this.encryptApp(app);
         result = await manager.save(OrganizationGitHubAppSchema, encrypted);
       });

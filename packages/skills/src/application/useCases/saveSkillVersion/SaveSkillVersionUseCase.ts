@@ -53,7 +53,6 @@ export class SaveSkillVersionUseCase
       organizationId,
     });
 
-    // Verify the space belongs to the organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       this.logger.warn('Space not found', { spaceId });
@@ -71,7 +70,6 @@ export class SaveSkillVersionUseCase
       );
     }
 
-    // Verify the skill exists and belongs to the space
     const skill = await this.skillService.getSkillById(skillVersion.skillId);
     if (!skill) {
       this.logger.warn('Skill not found', { skillId: skillVersion.skillId });
@@ -90,7 +88,6 @@ export class SaveSkillVersionUseCase
     }
 
     try {
-      // Get the latest version to calculate the new version number
       const latestVersion =
         await this.skillVersionService.getLatestSkillVersion(
           skillVersion.skillId,
@@ -103,7 +100,6 @@ export class SaveSkillVersionUseCase
         newVersion: newVersionNumber,
       });
 
-      // Save the skill version
       const savedVersion = await this.skillVersionService.addSkillVersion({
         skillId: skillVersion.skillId,
         userId: skillVersion.userId,
@@ -119,7 +115,6 @@ export class SaveSkillVersionUseCase
         version: newVersionNumber,
       });
 
-      // Create skill files if provided
       if (skillVersion.files && skillVersion.files.length > 0) {
         this.logger.info('Creating skill files', {
           count: skillVersion.files.length,
@@ -143,7 +138,6 @@ export class SaveSkillVersionUseCase
         });
       }
 
-      // Update the skill with the new version and data
       await this.skillService.updateSkill(skillVersion.skillId, {
         name: skillVersion.name,
         slug: skillVersion.slug,

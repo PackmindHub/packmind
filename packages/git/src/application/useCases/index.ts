@@ -1,4 +1,3 @@
-// Use cases exports
 export {
   AddGitProviderUseCase,
   AddGitProviderCommand,

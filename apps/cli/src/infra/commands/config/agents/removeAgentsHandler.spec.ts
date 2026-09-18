@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { Stats } from 'fs';
 import * as fsPromises from 'fs/promises';
 import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
@@ -30,18 +31,7 @@ describe('removeAgentsHandler', () => {
   let deps: RemoveAgentsHandlerDependencies;
 
   beforeEach(() => {
-    mockConfigRepository = {
-      readConfig: jest.fn(),
-      writeConfig: jest.fn(),
-      configExists: jest.fn(),
-      addPackagesToConfig: jest.fn(),
-      findDescendantConfigs: jest.fn(),
-      readHierarchicalConfig: jest.fn(),
-      findAllConfigsInTree: jest.fn(),
-      updateConfig: jest.fn(),
-      updateAgentsConfig: jest.fn(),
-      deleteAgentsConfig: jest.fn(),
-    } as unknown as jest.Mocked<IConfigFileRepository>;
+    mockConfigRepository = mockInterface<IConfigFileRepository>();
 
     mockExit = jest.fn();
     deps = {

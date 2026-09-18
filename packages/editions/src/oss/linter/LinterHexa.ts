@@ -27,9 +27,6 @@ export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
     return this.linterAdapter;
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ILinterPortName;
   }

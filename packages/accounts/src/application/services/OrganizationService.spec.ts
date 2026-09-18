@@ -5,7 +5,6 @@ import { PackmindLogger } from '@packmind/logger';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
 
-// Mock the slug package
 jest.mock('slug', () => ({
   __esModule: true,
   default: jest.fn(),

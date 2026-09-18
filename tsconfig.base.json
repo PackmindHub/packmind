@@ -48,6 +48,10 @@
         "packages/node-utils/src/nest/filters/index.ts"
       ],
       "@packmind/commands": ["packages/commands/src/index.ts"],
+      "@packmind/accounts/test": ["packages/accounts/test/index.ts"],
+      "@packmind/accounts/test/*": ["packages/accounts/test/*"],
+      "@packmind/git/test": ["packages/git/test/index.ts"],
+      "@packmind/git/test/*": ["packages/git/test/*"],
       "@packmind/commands/test": ["packages/commands/test/index.ts"],
       "@packmind/commands/test/*": ["packages/commands/test/*"],
       "@packmind/recipes": ["packages/commands/src/index.ts"],

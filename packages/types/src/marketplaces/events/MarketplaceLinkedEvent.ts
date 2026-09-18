@@ -3,14 +3,7 @@ import { UserEvent } from '../../events';
 import { GitRepoId } from '../../git';
 import { MarketplaceId } from '../MarketplaceId';
 
-/**
- * Payload emitted when an organization admin successfully links a marketplace.
- *
- * `userId` and `organizationId` are automatically merged in via the
- * `UserEvent` base. `addedBy` captures the admin who performed the action and
- * is denormalized onto the `Marketplace` row (it may diverge from `userId` in
- * the future, e.g. for impersonation/audit replays).
- */
+/** `addedBy` is the value denormalized onto `Marketplace.addedBy`. */
 export interface MarketplaceLinkedPayload {
   marketplaceId: MarketplaceId;
   gitRepoId: GitRepoId;

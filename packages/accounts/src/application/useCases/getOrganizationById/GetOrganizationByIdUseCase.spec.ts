@@ -1,6 +1,6 @@
 import { GetOrganizationByIdUseCase } from './GetOrganizationByIdUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { Organization, createOrganizationId } from '@packmind/types';
 
@@ -10,9 +10,7 @@ describe('GetOrganizationByIdUseCase', () => {
   let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
-    mockOrganizationService = {
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    mockOrganizationService = createMockInstance(OrganizationService);
 
     stubbedLogger = stubLogger();
 

@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   CreateRenderModeConfigurationCommand,
   IAccountsPort,
@@ -45,11 +45,7 @@ describe('CreateRenderModeConfigurationUseCase', () => {
   let organization: Organization;
 
   beforeEach(() => {
-    service = {
-      getConfiguration: jest.fn(),
-      createConfiguration: jest.fn(),
-      updateConfiguration: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    service = createMockInstance(RenderModeConfigurationService);
 
     accountsPort = {
       getUserById: jest.fn(),

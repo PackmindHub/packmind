@@ -78,7 +78,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       packagesSlugs: command.packagesSlugs,
     });
 
-    // Validate that package slugs are provided (unless it's a removal-only operation)
     const isRemovalOnlyOperation =
       (!command.packagesSlugs || command.packagesSlugs.length === 0) &&
       command.previousPackagesSlugs &&
@@ -98,14 +97,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     try {
       let resolvedTargetId: string | undefined;
 
-      // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
       const codingAgents =
         await this.renderModeConfigurationService.resolveCodingAgents(
           command.agents,
           command.organization.id,
         );
 
-      // Fetch packages and their artifacts (skip if removal-only operation)
       let commandVersions: CommandVersion[] = [];
       let standardVersions: StandardVersion[] = [];
       let skillVersions: SkillVersion[] = [];
@@ -137,7 +134,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           packagesSlugs: packages.map((p) => p.slug),
         });
 
-        // Extract commands, standards, and skills from packages
         const allCommands = packages.flatMap((pkg) => pkg.recipes);
         const allStandards = packages.flatMap((pkg) => pkg.standards);
         const allSkills = packages.flatMap((pkg) => pkg.skills);
@@ -151,7 +147,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         ];
         const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
-        // Build packageIdMap per artifact type (artifact can belong to multiple packages)
+        // An artifact can belong to several packages, hence the array value.
         const buildPackageIdMap = (
           accessor: (pkg: PackageWithArtefacts) => { id: string }[],
         ): Map<string, string[]> => {
@@ -179,7 +175,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           skillCount: skills.length,
         });
 
-        // Get command versions for commands
         const commandVersionsPromises = commands.map(async (cmd) => {
           const versions = await this.commandsPort.listCommandVersions(cmd.id);
           versions.sort(
@@ -196,7 +191,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           count: commandVersions.length,
         });
 
-        // Get standard versions for standards
         const standardVersionsPromises = standards.map((standard) =>
           this.standardsPort.getLatestStandardVersion(standard.id),
         );
@@ -209,13 +203,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           count: standardVersions.length,
         });
 
-        // Get skill versions for skills
         const skillVersionsPromises = skills.map(async (skill) => {
           const latestVersion = await this.skillsPort.getLatestSkillVersion(
             skill.id,
           );
 
-          // Fetch skill files for this version
           if (latestVersion) {
             const files = await this.skillsPort.getSkillFiles(latestVersion.id);
             return { ...latestVersion, files };
@@ -231,7 +223,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           count: skillVersions.length,
         });
 
-        // Build artifact metadata map from package artifacts and fetched versions
         artifactMetadata = buildArtifactMetadataMap({
           recipes: {
             spaceIdMap: new Map(
@@ -261,7 +252,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
       }
 
-      // Process removed packages if previousPackagesSlugs provided
       let removedCommandVersions: CommandVersion[] = [];
       let removedStandardVersions: StandardVersion[] = [];
       let removedSkillVersions: SkillVersion[] = [];
@@ -270,7 +260,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         command.previousPackagesSlugs &&
         command.previousPackagesSlugs.length > 0
       ) {
-        // Normalize previous slugs to "@space/package" format for consistent comparison
+        // Normalize before comparing against normalizedCurrentSlugs.
         const normalizedPreviousSlugs = await this.normalizeSlugs(
           command.previousPackagesSlugs,
           command.organization.id,
@@ -302,8 +292,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           });
         }
 
-        // Also check for updated packages (packages that are in both lists)
-        // to detect artifacts that were removed from those packages
+        // Packages present in both lists may have had artifacts dropped.
         const updatedPackageSlugs = this.computeUpdatedPackages(
           normalizedPreviousSlugs,
           normalizedCurrentSlugs,
@@ -323,9 +312,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             command.organization.id,
           );
 
-          // Add previous artifacts from updated packages to the removed lists
-          // These will be filtered later by filterSharedArtifacts to exclude
-          // artifacts that are still present in the current package content
+          // filterSharedArtifacts later drops those still present in the current content.
           removedCommandVersions = [
             ...removedCommandVersions,
             ...previousResult.commandVersions,
@@ -361,7 +348,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       ) {
         const currentPackageIds = packages.map((p) => p.id) as PackageId[];
 
-        // Query distribution history for previously deployed artifacts
         const previouslyDeployed =
           await this.targetResolutionService.findPreviouslyDeployedVersions(
             command.organization.id,
@@ -409,18 +395,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }
       }
 
-      // Initialize the merged file updates
       const mergedFileUpdates: FileUpdates = {
         createOrUpdate: [],
         delete: [],
       };
 
-      // Track skill versions to delete for folder cleanup
       let skillVersionsToDelete: SkillVersion[] = [];
       let removedAgents: CodingAgent[] = [];
       let cleanupSkillVersions: SkillVersion[] = [];
 
-      // Deploy artifacts for all coding agents using the unified method
       this.logger.info('Deploying artifacts for coding agents', {
         codingAgents,
       });
@@ -440,7 +423,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
 
-      // Generate deletion paths for removed artifacts (excluding shared ones)
       if (
         removedCommandVersions.length > 0 ||
         removedStandardVersions.length > 0 ||
@@ -456,7 +438,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
         const commandVersionsToDelete = filterResult.commandVersionsToDelete;
         const standardVersionsToDelete = filterResult.standardVersionsToDelete;
-        skillVersionsToDelete = filterResult.skillVersionsToDelete; // Assign to outer scope
+        skillVersionsToDelete = filterResult.skillVersionsToDelete;
 
         this.logger.info('Filtered shared artifacts from deletion', {
           originalRemovedCommands: removedCommandVersions.length,
@@ -560,7 +542,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }
       }
 
-      // Add packmind.json config file - use normalized slugs so the config always stores "@space/package" format
+      // Prefer the normalized slugs so packmind.json always stores "@space/package".
       const configSlugs =
         normalizedCurrentSlugs.length > 0
           ? normalizedCurrentSlugs
@@ -568,12 +550,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       const configFile =
         this.packmindConfigService.createConfigFileModification(
           configSlugs,
-          undefined, // existingPackages - not needed, we already have all packages in packagesSlugs
-          command.agents, // Pass agents to preserve them
+          undefined, // existingPackages: configSlugs already lists every package
+          command.agents,
         );
       mergedFileUpdates.createOrUpdate.push(configFile);
 
-      // Enrich file modifications with spaceId, artifactVersion, and artifactSlug from the metadata map
       if (artifactMetadata) {
         enrichFileModificationsWithMetadata(
           mergedFileUpdates.createOrUpdate,
@@ -581,7 +562,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
       }
 
-      // Generate packmind-lock.json
       const { artifactSpaceIds, artifactPackageIds } = artifactMetadata
         ? flattenArtifactMetadataMap(artifactMetadata)
         : { artifactSpaceIds: {}, artifactPackageIds: {} };
@@ -621,12 +601,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }),
       );
 
-      // Generate skill folders for agents that support skills
-      // Includes BOTH installed AND removed skills for folder cleanup
+      // Removed skills are included too, so their folders get cleaned up.
       const skillFolderPaths =
         this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
-      // Combine installed and removed skills for folder cleanup
       const allSkillsForFolderCleanup = [
         ...skillVersions,
         ...skillVersionsToDelete,
@@ -681,10 +659,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
-   * Resolves packages by slugs, respecting space prefixes.
-   * Slugs prefixed with "@space-slug/" are resolved within that specific space.
-   * Unprefixed slugs are resolved within the organization's default space.
-   * Returns packages, not-found slugs, and normalized slugs in "@space/package" format.
+   * Slugs prefixed with "@space-slug/" are resolved within that space; unprefixed
+   * slugs are resolved within the organization's default space.
    */
   private async resolvePackagesBySlugs(
     slugs: string[],
@@ -773,9 +749,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
-   * Normalizes package slugs to "@space-slug/package-slug" format.
-   * Unprefixed slugs are resolved to the organization's default space.
-   * Already-prefixed slugs are returned as-is.
+   * Normalizes slugs to "@space-slug/package-slug", resolving unprefixed ones
+   * against the organization's default space.
    */
   private async normalizeSlugs(
     slugs: string[],
@@ -797,7 +772,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {
-    // Merge createOrUpdate files (avoid duplicates by path)
     const existingPaths = new Set(target.createOrUpdate.map((f) => f.path));
     for (const file of source.createOrUpdate) {
       if (!existingPaths.has(file.path)) {
@@ -806,7 +780,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       }
     }
 
-    // Merge delete files (avoid duplicates by path)
     const existingDeletePaths = new Set(target.delete.map((f) => f.path));
     for (const file of source.delete) {
       if (!existingDeletePaths.has(file.path)) {
@@ -816,10 +789,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     }
   }
 
-  /**
-   * Computes which package slugs have been removed by comparing
-   * previous packages with current packages
-   */
   private computeRemovedPackages(
     previousSlugs: string[],
     currentSlugs: string[],
@@ -829,8 +798,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
-   * Computes packages that are in both previous and current lists (updated packages).
-   * These packages may have had artifacts added or removed.
+   * Packages in both lists: their artifact set may have changed.
    */
   private computeUpdatedPackages(
     previousSlugs: string[],
@@ -841,9 +809,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
-   * Filters removed artifacts to exclude those still needed by remaining packages.
-   * Compares by recipeId/standardId/skillId since the same artifact produces the same
-   * file path regardless of which package it came from.
+   * Compares by recipeId/standardId/skillId rather than by version id: the same
+   * artifact renders to the same file path whichever package it came from.
    */
   private filterSharedArtifacts(
     removedCommandVersions: CommandVersion[],
@@ -884,9 +851,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     };
   }
 
-  /**
-   * Fetches command, standard, and skill versions for the removed packages
-   */
   private async fetchArtifactsForRemovedPackages(
     removedPackageSlugs: string[],
     organizationId: OrganizationId,
@@ -895,13 +859,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }> {
-    // Fetch packages by slugs (they may not exist anymore, so we handle gracefully)
+    // notFoundSlugs is ignored: a removed package may no longer exist.
     const { packages } = await this.resolvePackagesBySlugs(
       removedPackageSlugs,
       organizationId,
     );
 
-    // Extract commands, standards, and skills from removed packages
     const allCommands = packages.flatMap((pkg) => pkg.recipes);
     const allStandards = packages.flatMap((pkg) => pkg.standards);
     const allSkills = packages.flatMap((pkg) => pkg.skills);
@@ -911,7 +874,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     const standards = [...new Map(allStandards.map((s) => [s.id, s])).values()];
     const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
-    // Get command versions for removed commands
     const commandVersionsPromises = commands.map(async (cmd) => {
       const versions = await this.commandsPort.listCommandVersions(cmd.id);
       versions.sort(
@@ -924,7 +886,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       (rv): rv is NonNullable<typeof rv> => rv !== null,
     );
 
-    // Get standard versions for removed standards
     const standardVersionsPromises = standards.map((standard) =>
       this.standardsPort.getLatestStandardVersion(standard.id),
     );
@@ -933,7 +894,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       await Promise.all(standardVersionsPromises)
     ).filter((sv) => sv !== null);
 
-    // Get skill versions for removed skills
     const skillVersionsPromises = skills.map((skill) =>
       this.skillsPort.getLatestSkillVersion(skill.id),
     );

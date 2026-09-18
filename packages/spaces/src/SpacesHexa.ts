@@ -21,19 +21,6 @@ import { UserSpaceMembershipService } from './application/services/UserSpaceMemb
 
 const origin = 'SpacesHexa';
 
-/**
- * SpacesHexa - Facade for the Spaces domain following the Port/Adapter pattern
- *
- * This class serves as the main entry point for spaces-related functionality.
- * It exposes the Spaces adapter for cross-domain access following DDD standards.
- *
- * The Hexa pattern:
- * - Constructor: Instantiates repositories, services, and adapter
- * - initialize(): Retrieves and sets ports from registry
- * - getAdapter(): Exposes the domain adapter for cross-domain access
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
- */
 export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
   private readonly spacesRepositories: SpacesRepositories;
   private readonly spacesServices: SpacesServices;
@@ -47,11 +34,8 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
     this.logger.info('Constructing SpacesHexa');
 
     try {
-      // Instantiate repositories and services
       this.spacesRepositories = new SpacesRepositories(this.dataSource);
       this.spacesServices = new SpacesServices(this.spacesRepositories);
-
-      // Instantiate adapter
       this.spacesAdapter = new SpacesAdapter(this);
 
       this.logger.info('SpacesHexa construction completed');
@@ -63,9 +47,6 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing SpacesHexa (adapter retrieval phase)');
 
@@ -92,35 +73,21 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
 
   destroy(): void {
     this.logger.info('Destroying SpacesHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('SpacesHexa destroyed');
   }
 
-  /**
-   * Get the Spaces adapter for cross-domain access
-   * Following DDD monorepo architecture standard
-   */
   public getAdapter(): ISpacesPort {
     return this.spacesAdapter.getPort();
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return ISpacesPortName;
   }
 
-  /**
-   * Get the space service instance
-   */
   public getSpaceService(): SpaceService {
     return this.spacesServices.getSpaceService();
   }
 
-  /**
-   * Get the user space membership service instance
-   */
   public getUserSpaceMembershipService(): UserSpaceMembershipService {
     return this.spacesServices.getUserSpaceMembershipService();
   }

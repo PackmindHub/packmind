@@ -2,7 +2,7 @@ import { TableColumnOptions } from 'typeorm';
 
 /**
  * Standalone migration column definitions for Docker deployment.
- * These are copied from @packmind/shared to avoid dependencies.
+ * Copied verbatim from @packmind/node-utils to avoid the dependency.
  */
 
 export const uuidMigrationColumn: TableColumnOptions = {

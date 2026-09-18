@@ -30,7 +30,11 @@ import {
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { IPackageRepository } from '../../../domain/repositories/IPackageRepository';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -184,15 +188,17 @@ describe('NotifyDistributionUseCase', () => {
     mockDistributedPackageRepository =
       mockInterface<IDistributedPackageRepository>();
 
-    mockRenderModeConfigurationService = {
-      getActiveRenderModes: jest
-        .fn()
-        .mockResolvedValue(DEFAULT_ACTIVE_RENDER_MODES),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
+      DEFAULT_ACTIVE_RENDER_MODES,
+    );
 
-    mockTargetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    mockTargetResolutionService = createMockInstance(TargetResolutionService);
+    mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      buildTarget(),
+    );
 
     mockSpacesPort = mockInterface<ISpacesPort>();
     mockSpacesPort.getSpaceBySlug.mockResolvedValue(null);

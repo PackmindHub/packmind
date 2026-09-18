@@ -19,7 +19,6 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   pluginName: string;
   /** Git remote URL of the render target; empty/undefined when the CLI is not in a git repo. */
   gitRemoteUrl?: string;
-  /** Git branch of the render target. */
   gitBranch?: string;
   /**
    * Which vendor's plugin format to render. Defaults to 'anthropic' (Claude)

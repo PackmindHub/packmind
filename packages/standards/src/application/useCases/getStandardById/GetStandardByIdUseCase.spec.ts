@@ -4,7 +4,11 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -32,9 +36,7 @@ describe('GetStandardByIdUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    standardService = {
-      getStandardById: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
     accountsAdapter = mockInterface<IAccountsPort>();
 
@@ -302,7 +304,7 @@ describe('GetStandardByIdUseCase', () => {
       };
       const space: Space = spaceFactory({
         id: spaceId,
-        organizationId: otherOrganizationId, // Different organization
+        organizationId: otherOrganizationId,
       });
 
       const command: GetStandardByIdCommand = {
@@ -341,7 +343,6 @@ describe('GetStandardByIdUseCase', () => {
         name: 'Test Org',
         slug: 'test-org',
       };
-      // Space belongs to a different organization
       const space: Space = spaceFactory({
         id: spaceId,
         organizationId: otherOrganizationId,
@@ -404,7 +405,7 @@ describe('GetStandardByIdUseCase', () => {
 
       const standard = standardFactory({
         id: standardId,
-        spaceId: otherSpaceId, // Different space
+        spaceId: otherSpaceId,
         slug: 'test-standard',
       });
 

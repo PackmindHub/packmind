@@ -20,10 +20,8 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
     this.logger.info('Starting migration: DropDeploymentGitRepoJunctions');
 
     try {
-      // Drop foreign keys first for deployment_git_repos
       this.logger.debug('Dropping foreign keys for deployment_git_repos');
 
-      // Check if foreign keys exist before trying to drop them
       const deploymentGitReposForeignKeys = await queryRunner.query(`
         SELECT constraint_name 
         FROM information_schema.table_constraints 
@@ -38,7 +36,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
         );
       }
 
-      // Drop foreign keys for standard_deployment_git_repos
       this.logger.debug(
         'Dropping foreign keys for standard_deployment_git_repos',
       );
@@ -57,7 +54,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
         );
       }
 
-      // Drop the junction tables
       this.logger.debug('Dropping deployment_git_repos table');
       await queryRunner.dropTable('deployment_git_repos', true);
 
@@ -79,7 +75,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
     this.logger.info('Starting rollback: DropDeploymentGitRepoJunctions');
 
     try {
-      // Recreate deployment_git_repos table
       this.logger.debug('Recreating deployment_git_repos table');
       await queryRunner.createTable(
         new Table({
@@ -107,7 +102,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
         true,
       );
 
-      // Recreate standard_deployment_git_repos table
       this.logger.debug('Recreating standard_deployment_git_repos table');
       await queryRunner.createTable(
         new Table({
@@ -128,7 +122,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
         true,
       );
 
-      // Recreate foreign keys for deployment_git_repos
       this.logger.debug('Recreating foreign keys for deployment_git_repos');
       await queryRunner.createForeignKey(
         'deployment_git_repos',
@@ -150,7 +143,6 @@ export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInt
         }),
       );
 
-      // Recreate foreign keys for standard_deployment_git_repos
       this.logger.debug(
         'Recreating foreign keys for standard_deployment_git_repos',
       );

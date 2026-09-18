@@ -1,8 +1,3 @@
-/**
- * Default model configurations for LLM service providers.
- * Re-exported from @packmind/types for backward compatibility.
- */
-
 export {
   DEFAULT_OPENAI_MODELS,
   DEFAULT_ANTHROPIC_MODELS,

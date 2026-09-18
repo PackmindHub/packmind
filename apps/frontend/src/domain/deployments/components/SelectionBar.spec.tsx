@@ -7,12 +7,7 @@ describe('SelectionBar', () => {
   const renderBar = (props: Partial<Parameters<typeof SelectionBar>[0]>) =>
     render(
       <UIProvider>
-        <SelectionBar
-          count={2}
-          actions={[]}
-          onClear={vi.fn()}
-          {...(props as Parameters<typeof SelectionBar>[0])}
-        />
+        <SelectionBar count={2} actions={[]} onClear={vi.fn()} {...props} />
       </UIProvider>,
     );
 

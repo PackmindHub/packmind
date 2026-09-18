@@ -1,5 +1,9 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   IAccountsPort,
   ISpacesPort,
@@ -98,11 +102,10 @@ describe('TrackPluginDeletedUseCase', () => {
     });
     pkg = buildPackage();
 
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest
-        .fn()
-        .mockResolvedValue([pkg]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+      pkg,
+    ]);
 
     spacesPort = mockInterface<ISpacesPort>();
     spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
@@ -114,9 +117,7 @@ describe('TrackPluginDeletedUseCase', () => {
     );
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new TrackPluginDeletedUseCase(
       packageService,

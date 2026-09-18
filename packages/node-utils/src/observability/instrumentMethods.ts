@@ -109,16 +109,11 @@ export function instrumentComponents(
  * than stored in a field, which is how `SpacesAdapter` and
  * `FetchFileContentJobFactory` reach theirs.
  *
- * Roughly a third of the use cases in the monorepo extend no base class at
- * all - they implement `IUseCase` or nothing, so no constructor opts them in
- * and they would emit no span whatsoever. This is what opts them in, and the
- * span shape they get is the `Class.method` every service and repository
- * already reports: `SignInUserUseCase.execute` for the entry point, and the
- * same for the twenty or so classes naming theirs after the domain instead
- * (`CommitToGitUseCase.commitToGit`).
+ * Many use cases extend no base class - they implement `IUseCase` or nothing -
+ * so no constructor opts them in and they would emit no span at all.
  *
- * Named rather than inlined so the intent reads at the call site, and so
- * `instrumentUseCases.arch.spec.ts` has something to look for.
+ * Named rather than inlined so that `instrumentUseCases.arch.spec.ts` has
+ * something to look for.
  */
 export function instrumentUseCase<T extends object>(useCase: T): T {
   instrumentMethods(useCase);
@@ -131,10 +126,10 @@ export function instrumentUseCase<T extends object>(useCase: T): T {
  * `initialize()`.
  *
  * Reflective, where `instrumentComponents` deliberately is not: an adapter
- * holds up to forty use cases in forty separate fields, and a list that long
- * drifts the first time somebody adds one - which is how this gap opened. The
- * risk `instrumentComponents` was avoiding does not apply here either, because
- * an adapter holds ports and services, never a TypeORM `DataSource`.
+ * holds dozens of use cases in as many fields, and an explicit list that long
+ * drifts the first time somebody adds one. The `DataSource` that
+ * `instrumentComponents` was guarding against cannot turn up here either,
+ * because an adapter holds only ports and services.
  *
  * Selects on the VALUE's constructor name rather than the field name: the
  * fields are `_addGitProvider` and `_commitToGit` in GitAdapter, and only the
@@ -146,7 +141,7 @@ export function instrumentUseCase<T extends object>(useCase: T): T {
  *
  * Use cases that DO extend a base class are reached too, and cost nothing: the
  * base patched their prototype at construction, so the marker check makes this
- * a no-op and their `execute` keeps the single span it already had.
+ * a no-op.
  */
 export function instrumentUseCases(owner: object): void {
   for (const name of Object.getOwnPropertyNames(owner)) {

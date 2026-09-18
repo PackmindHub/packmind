@@ -33,27 +33,23 @@ export class CommitToGitUseCase {
       deleteFileCount: deleteFiles?.length ?? 0,
     });
 
-    // Validate files array is not empty
     if (!files.length) {
       throw new Error('No files to commit');
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(repo);
 
-    // Process files to handle section-based updates
     const processedFiles: CommitFile[] = [];
     const filesToDelete: DeleteItem[] = [];
 
     for (const file of files) {
       if (file.content !== undefined) {
-        // File has full content, use it directly
         processedFiles.push({
           path: file.path,
           content: file.content,
           permissions: file.skillFilePermissions,
         });
       } else if (file.sections !== undefined) {
-        // File has sections, fetch existing content and merge
         this.logger.debug('Processing file with sections', {
           path: file.path,
           sectionsCount: file.sections.length,
@@ -73,17 +69,16 @@ export class CommitToGitUseCase {
           file.sections,
         );
 
-        // Check if the merged content is empty
         if (mergedContent.trim() === '') {
           if (existingFile) {
-            // File exists but would become empty after merge - mark for deletion
             this.logger.debug(
               'File would be empty after section merge, marking for deletion',
               { path: file.path },
             );
             filesToDelete.push({ path: file.path, type: DeleteItemType.File });
           }
-          // If file didn't exist, skip it entirely (nothing to create or delete)
+          // No else: a file that never existed and merges to empty needs
+          // neither a write nor a deletion.
         } else {
           processedFiles.push({
             path: file.path,
@@ -94,15 +89,12 @@ export class CommitToGitUseCase {
       }
     }
 
-    // Combine passed-in deleteFiles with files that became empty
     const allFilesToDelete = [...(deleteFiles ?? []), ...filesToDelete];
 
-    // Directory deletions are expanded in one call rather than one per
-    // directory. The previous `for … of` with an `await` inside asked the
-    // provider once per directory, and on GitHub each of those asks walks
-    // `ref -> commit -> tree?recursive=1` and filters a listing of the whole
-    // repository down to a single directory - so 112 directories cost 336
-    // sequential requests to answer what one tree already answered.
+    // Directory paths are collected first and expanded in a single call: on
+    // GitHub, asking per directory walks `ref -> commit -> tree?recursive=1`
+    // each time, so the request count would grow with the number of
+    // directories to answer what one recursive tree already answers.
     const expandedFilesToDelete: DeleteItem[] = [];
     const directoryPaths: string[] = [];
 
@@ -132,30 +124,29 @@ export class CommitToGitUseCase {
       (f) => !createPaths.has(f.path),
     );
 
-    // Validate that we have something to commit (either files to update or delete)
     if (processedFiles.length === 0 && filteredFilesToDelete.length === 0) {
       throw new Error('No files to commit');
     }
 
-    // Commit files to git repository and get commit data
     const commitData = await gitRepoInstance.commitFiles(
       processedFiles,
       commitMessage,
       filteredFilesToDelete.length > 0 ? filteredFilesToDelete : undefined,
     );
 
-    // Check if no changes were detected (GitLab returns 'no-changes' as sha)
+    // GitLab reports "nothing to commit" through this sentinel sha rather than
+    // an error.
     if (commitData.sha === 'no-changes') {
       this.logger.info('No changes detected, skipping commit creation', {
         owner: repo.owner,
         repo: repo.repo,
         fileCount: files.length,
       });
-      // Throw a specific error that can be caught by deployment logic
+      // Sentinel: deployment logic catches this rather than treating it as a
+      // failure.
       throw new Error('NO_CHANGES_DETECTED');
     }
 
-    // Store the commit in the database
     return this.gitCommitService.addCommit(commitData);
   }
 }

@@ -56,6 +56,59 @@ export const createIdleMutationResult = <TData, TError, TVariables>(
 });
 
 /**
+ * A mutation whose request is in flight. `variables` is the payload being sent,
+ * which the union requires to be present in this state.
+ */
+export const createPendingMutationResult = <TData, TError, TVariables>({
+  variables,
+  ...callbacks
+}: MutationResultCallbacks<TData, TError, TVariables> & {
+  variables: NoInfer<TVariables>;
+}): UseMutationResult<TData, TError, TVariables> => ({
+  ...inertMutationState,
+  status: 'pending',
+  data: undefined,
+  variables,
+  error: null,
+  failureReason: null,
+  isIdle: false,
+  isPending: true,
+  isSuccess: false,
+  isError: false,
+  mutate: callbacks.mutate ?? noop,
+  mutateAsync: callbacks.mutateAsync,
+  reset: callbacks.reset ?? noop,
+});
+
+/**
+ * A mutation that has resolved. `data` is checked against the mutation's own
+ * TData, which is the point of going through here rather than casting: a
+ * fixture that drifts from the response type fails the build.
+ */
+export const createSuccessMutationResult = <TData, TError, TVariables>({
+  data,
+  variables,
+  ...callbacks
+}: MutationResultCallbacks<TData, TError, TVariables> & {
+  data: NoInfer<TData>;
+  variables: NoInfer<TVariables>;
+}): UseMutationResult<TData, TError, TVariables> => ({
+  ...inertMutationState,
+  status: 'success',
+  data,
+  variables,
+  error: null,
+  failureReason: null,
+  isIdle: false,
+  isPending: false,
+  isSuccess: true,
+  isError: false,
+  mutate: callbacks.mutate ?? noop,
+  mutateAsync: callbacks.mutateAsync,
+  reset: callbacks.reset ?? noop,
+});
+
+/**
  * A mutation whose last attempt rejected. `variables` is the payload that
  * failed, which the union requires to be present in this state.
  *

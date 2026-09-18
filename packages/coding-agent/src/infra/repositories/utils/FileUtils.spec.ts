@@ -25,7 +25,6 @@ describe('SingleFileDeployer', () => {
       providerId: createGitProviderId('test-provider-id'),
     });
 
-    // Create various test targets
     rootTarget = {
       id: createTargetId(uuidv4()),
       name: 'root',

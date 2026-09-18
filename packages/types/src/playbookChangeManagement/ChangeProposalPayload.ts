@@ -68,8 +68,9 @@ export type SkillChangeProposalPayloadMap = {
 };
 
 /*
- * Note: the `delete` and `removeFromPackages` fields are there to store the user decision when applying the changeProposal.
- * */
+ * The `delete` and `removeFromPackages` fields hold the user's decision at the
+ * moment the change proposal is applied, not part of the proposal itself.
+ */
 export type RemoveArtefactPayload = {
   packageIds: PackageId[];
 };

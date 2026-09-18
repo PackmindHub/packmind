@@ -27,7 +27,6 @@ const sampleColumns = [
   },
 ];
 
-// New column configurations for demonstrating grow functionality
 const growingColumns = [
   {
     key: 'id',
@@ -141,7 +140,6 @@ const sampleData: SampleRow[] = [
   },
 ];
 
-// Sample data for growing columns demo
 const growingData = [
   {
     id: '1',
@@ -169,7 +167,6 @@ const growingData = [
   },
 ];
 
-// Sample data for mixed columns demo
 const mixedData = [
   {
     avatar: '👤',
@@ -261,7 +258,6 @@ export const EmptyTable: Story = {
   },
 };
 
-// New stories demonstrating grow functionality
 export const GrowingColumns: Story = {
   args: {
     columns: growingColumns,
@@ -356,7 +352,6 @@ export const AllFixedColumns: Story = {
   },
 };
 
-// Selection stories
 export const WithSelection: Story = {
   args: {
     columns: sampleColumns,
@@ -445,10 +440,8 @@ export const EmptyTableWithSelection: Story = {
   },
 };
 
-// Interactive selection example
 export const InteractiveSelectionExample: Story = {
   render: () => {
-    // Example usage component showing how to implement selection
     const ExampleUsageComponent = () => {
       const [selectedRows, setSelectedRows] = React.useState<Set<string>>(
         new Set(),

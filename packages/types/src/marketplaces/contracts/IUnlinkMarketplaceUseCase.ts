@@ -1,19 +1,14 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { MarketplaceId } from '../MarketplaceId';
 
-/**
- * Command used by an organization admin to unlink a previously linked
- * marketplace. The marketplace must belong to the caller's organization.
- */
+/** Admin-only. The marketplace must belong to the caller's organization. */
 export type UnlinkMarketplaceCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
 };
 
 /**
- * Minimal response — the caller already knows the rest of the marketplace
- * row at this point. Returning the id keeps the contract symmetric with
- * other delete-style use cases and simplifies cache invalidation on the
- * frontend.
+ * Just the id: the caller already holds the rest of the row, and an id is what
+ * the frontend needs to invalidate its cache.
  */
 export type UnlinkMarketplaceResponse = {
   marketplaceId: MarketplaceId;

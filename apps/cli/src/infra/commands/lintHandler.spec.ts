@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import * as fs from 'fs/promises';
 import { DetectionSeverity } from '@packmind/types';
 import { DiffMode } from '../../domain/entities/DiffMode';
@@ -59,17 +60,12 @@ describe('lintHandler', () => {
       lintFilesAgainstRule: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
-    mockHumanLogger = {
-      logViolations: jest.fn(),
-    } as unknown as jest.Mocked<HumanReadableLogger>;
+    mockHumanLogger = createMockInstance(HumanReadableLogger);
 
-    mockIDELogger = {
-      logViolations: jest.fn(),
-    } as unknown as jest.Mocked<IDELintLogger>;
+    mockIDELogger = createMockInstance(IDELintLogger);
 
-    mockIgnoreReader = {
-      readIgnorePatterns: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackmindIgnoreReader>;
+    mockIgnoreReader = createMockInstance(PackmindIgnoreReader);
+    mockIgnoreReader.readIgnorePatterns.mockResolvedValue([]);
 
     mockExit = jest.fn();
     mockResolvePath = jest.fn((path) => `/absolute/${path}`);

@@ -89,7 +89,6 @@ export class OnboardDeployer
         path: `${basePath}/LICENSE.txt`,
         content: LICENSE_TXT,
       },
-      // Reference files
       {
         path: `${referencesPath}/file-template-consistency.md`,
         content: FILE_TEMPLATE_CONSISTENCY,
@@ -106,7 +105,6 @@ export class OnboardDeployer
         path: `${referencesPath}/test-data-construction.md`,
         content: TEST_DATA_CONSTRUCTION,
       },
-      // Versioned files
       ...skillMd.versions.map((version) => ({
         path: `${basePath}/packmind-versions/${version}/create-items.md`,
         content: createItemsByVersion[version],

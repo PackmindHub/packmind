@@ -8,10 +8,8 @@ import {
 const GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH = 64;
 
 /**
- * Normalize a display name input: trim leading/trailing whitespace and cap at
- * the persisted column length. An empty input resolves to an empty string,
- * which represents "no display name set" and is allowed to coexist with other
- * empty values within an organization.
+ * Trims and caps at the persisted column length. The empty string means "no
+ * display name set" and, unlike a real name, may repeat within an organization.
  */
 export function normalizeDisplayName(input: string | null | undefined): string {
   if (input === null || input === undefined) {
@@ -21,9 +19,8 @@ export function normalizeDisplayName(input: string | null | undefined): string {
 }
 
 /**
- * Verify case-insensitive uniqueness of a non-empty display name within an
- * organization. Empty values bypass the check (multiple unnamed providers
- * coexist). Throws GitProviderDisplayNameAlreadyUsedError on collision.
+ * Uniqueness is case-insensitive and scoped to the organization. Empty values
+ * bypass the check, so unnamed providers can coexist.
  */
 export function ensureDisplayNameAvailable(
   normalized: string,

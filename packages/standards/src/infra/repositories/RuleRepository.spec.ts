@@ -86,7 +86,6 @@ describe('RuleRepository', () => {
   });
 
   it('can store and retrieve multiple rules by standard version', async () => {
-    // Create standard and version first
     const standard = await standardRepo.save(
       standardFactory({ slug: `standard-${uuidv4()}` }),
     );
@@ -110,7 +109,6 @@ describe('RuleRepository', () => {
   });
 
   it('can find a rule by id', async () => {
-    // Create standard and version first
     const standard = await standardRepo.save(
       standardFactory({ slug: `standard-${uuidv4()}` }),
     );
@@ -132,7 +130,6 @@ describe('RuleRepository', () => {
     });
 
     it('returns empty array for non-existent standard version', async () => {
-      // Create a standard version that doesn't have any rules
       const standard = await standardRepo.save(
         standardFactory({ slug: `standard-${uuidv4()}` }),
       );
@@ -204,7 +201,6 @@ describe('RuleRepository', () => {
     let testStandardVersion: StandardVersion;
 
     beforeEach(async () => {
-      // Create standard and version for soft delete tests
       const standard = await standardRepo.save(
         standardFactory({ slug: `standard-${uuidv4()}` }),
       );

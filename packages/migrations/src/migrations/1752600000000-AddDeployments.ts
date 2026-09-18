@@ -24,7 +24,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
     this.logger.info('Starting migration: AddDeployments');
 
     try {
-      // Create deployments table
       await queryRunner.createTable(
         new Table({
           name: 'deployments',
@@ -46,7 +45,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
         true,
       );
 
-      // Create deployment_recipe_versions join table
       await queryRunner.createTable(
         new Table({
           name: 'deployment_recipe_versions',
@@ -73,7 +71,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
         true,
       );
 
-      // Create foreign keys for deployment_recipe_versions
       await queryRunner.createForeignKey(
         'deployment_recipe_versions',
         new TableForeignKey({
@@ -94,7 +91,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
         }),
       );
 
-      // Create deployment_git_repos join table
       await queryRunner.createTable(
         new Table({
           name: 'deployment_git_repos',
@@ -121,7 +117,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
         true,
       );
 
-      // Create foreign keys for deployment_git_repos
       await queryRunner.createForeignKey(
         'deployment_git_repos',
         new TableForeignKey({
@@ -142,7 +137,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
         }),
       );
 
-      // Create foreign key for organizationId in deployments table
       await queryRunner.createForeignKey(
         'deployments',
         new TableForeignKey({
@@ -170,7 +164,6 @@ export class AddDeployments1752600000000 implements MigrationInterface {
       await queryRunner.dropTable('deployment_git_repos');
       await queryRunner.dropTable('deployment_recipe_versions');
 
-      // Then drop the main table
       await queryRunner.dropTable('deployments');
 
       this.logger.info('Migration AddDeployments rolled back successfully');

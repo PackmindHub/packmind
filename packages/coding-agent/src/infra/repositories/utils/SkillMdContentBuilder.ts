@@ -4,10 +4,6 @@ import { sortAdditionalPropertiesKeys } from '@packmind/node-utils';
 import { escapeSingleQuotes } from './FileUtils';
 import { formatAdditionalPropertyYaml } from './YamlFrontmatterUtils';
 
-/**
- * Generate the SKILL.md content with YAML frontmatter for a given skill version,
- * following the Agent Skills specification. The body is taken from skillVersion.prompt.
- */
 export function generateSkillMdContent(skillVersion: SkillVersion): string {
   const frontmatterFields: string[] = [];
 

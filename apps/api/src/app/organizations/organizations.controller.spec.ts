@@ -4,8 +4,12 @@ import {
   ArtifactVersionEntry,
   createOrganizationId,
   IPullContentResponse,
+  Space,
+  UserSpaceWithRole,
+  UserSpaceRole,
+  GetDeployedContentResponse,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -13,7 +17,7 @@ import {
   ISpacesPort,
   ListUserSpacesResponse,
 } from '@packmind/types';
-import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { InvalidArtifactIdError } from '@packmind/types';
 
 describe('OrganizationsController', () => {
@@ -24,17 +28,11 @@ describe('OrganizationsController', () => {
 
   beforeEach(() => {
     const logger = stubLogger();
-    mockAccountsAdapter = {} as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsAdapter = mockInterface<IAccountsPort>();
 
-    mockDeploymentAdapter = {
-      pullAllContent: jest.fn(),
-      getDeployedContent: jest.fn(),
-      getContentByVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentPort>;
+    mockDeploymentAdapter = mockInterface<IDeploymentPort>();
 
-    mockSpacesAdapter = {
-      listUserSpaces: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesAdapter = mockInterface<ISpacesPort>();
 
     controller = new OrganizationsController(
       mockAccountsAdapter,
@@ -248,7 +246,7 @@ describe('OrganizationsController', () => {
       user: { userId: 'user-123' },
       clientSource: 'cli',
     } as AuthenticatedRequest;
-    const mockResponse: IPullContentResponse = {
+    const mockResponse: GetDeployedContentResponse = {
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       resolvedAgents: [],
@@ -642,8 +640,13 @@ describe('OrganizationsController', () => {
     } as AuthenticatedRequest;
 
     describe('when the organization has spaces', () => {
-      const space1 = spaceFactory({ organizationId: orgId });
-      const space2 = spaceFactory({ organizationId: orgId });
+      const withRole = (space: Space): UserSpaceWithRole => ({
+        ...space,
+        role: UserSpaceRole.MEMBER,
+        pinned: false,
+      });
+      const space1 = withRole(spaceFactory({ organizationId: orgId }));
+      const space2 = withRole(spaceFactory({ organizationId: orgId }));
       const mockSpaces: ListUserSpacesResponse = { spaces: [space1, space2] };
 
       beforeEach(() => {

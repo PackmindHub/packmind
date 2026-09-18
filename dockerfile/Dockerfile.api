@@ -5,12 +5,16 @@ ARG EDITION=oss
 
 ENV NODE_ENV=production
 
-# Update OpenSSL and install required system dependencies
+# Update OpenSSL and install required system dependencies.
+# Version floors (>=) rather than exact pins: an Alpine branch repository only
+# serves the newest build of each package, so an exact pin breaks the build the
+# day a patch lands upstream. The floor still keeps the CVE-fixed version as a
+# minimum while letting later patches in.
 RUN apk update && \
     apk add --no-cache --upgrade \
-        openssl=3.5.8-r0 \
-        bash=5.3.3-r1 \
-        ca-certificates=20260611-r0 && \
+        "openssl>=3.5.8-r0" \
+        "bash>=5.3.3-r1" \
+        "ca-certificates>=20260909-r0" && \
     rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
 
 # Use the existing node user from the base image

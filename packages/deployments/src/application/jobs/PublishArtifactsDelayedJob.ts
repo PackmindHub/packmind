@@ -18,8 +18,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 const logOrigin = 'PublishArtifactsDelayedJob';
 
 /**
- * Delayed job for publishing artifacts to git repositories.
- * Performs git commits asynchronously and updates distribution status on completion.
+ * Commits the artifacts asynchronously, then updates the distribution's status.
  */
 export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
   PublishArtifactsJobInput,
@@ -62,7 +61,6 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
       },
     );
 
-    // Fetch the git repository
     const gitRepo = await this.gitPort.getRepositoryById(input.gitRepoId);
     if (!gitRepo) {
       throw new Error(`Git repository not found with id: ${input.gitRepoId}`);
@@ -131,7 +129,6 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         );
 
         try {
-          // Update distribution status in the database
           await this.distributionRepository.updateStatus(
             result.distributionId,
             result.status,
@@ -143,7 +140,6 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             { status: result.status },
           );
 
-          // Publish SSE event to notify frontend of status change
           await SSEEventPublisher.publishDistributionStatusChangeEvent(
             result.distributionId,
             result.status,
@@ -158,8 +154,8 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             `[${this.origin}] Failed to update distribution status for job ${job.id}`,
             { error: getErrorMessage(error) },
           );
-          // Note: We don't throw here to avoid marking the job as failed
-          // since the git commit itself was successful
+          // Not rethrown: the git commit itself succeeded, so the job must not
+          // be marked failed.
         }
       },
       failed: async (job, error) => {
@@ -168,7 +164,6 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         );
 
         try {
-          // Update distribution to failure status with error message
           await this.distributionRepository.updateStatus(
             job.data.distributionId,
             DistributionStatus.failure,
@@ -180,7 +175,6 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             `[${this.origin}] Updated distribution ${job.data.distributionId} to failure status`,
           );
 
-          // Publish SSE event to notify frontend of failure
           await SSEEventPublisher.publishDistributionStatusChangeEvent(
             job.data.distributionId,
             DistributionStatus.failure,

@@ -41,11 +41,6 @@ export abstract class AbstractMemberUseCase<
       defaultOrigin,
     ),
   ) {
-    // Gives every async method on this use case - inherited, overridden or
-    // private - its own span, so the layer between the use-case span below and
-    // the repository spans stops being a blank. One call here covers every
-    // authenticated use case in the monorepo; nothing opts in per method.
-    //
     // `execute` is skipped because it already owns the explicit span below,
     // which this cannot replace: that call site is the only one holding the
     // validated command, so it is the only place the tenant attributes can be
@@ -54,19 +49,14 @@ export abstract class AbstractMemberUseCase<
     instrumentMethods(this, { skip: ['execute'] });
   }
 
-  // Every authenticated use case in the monorepo funnels through here, so one
-  // span at this single point gives the whole domain layer a place in the
-  // trace - the level between the Nest handler span and the repository spans
-  // that was previously blank. AbstractAdminUseCase, AbstractSpaceMemberUseCase
-  // and AbstractSpaceAdminUseCase all extend this class and inherit this
-  // method.
+  // The single funnel for authenticated use cases: AbstractAdminUseCase,
+  // AbstractSpaceMemberUseCase and AbstractSpaceAdminUseCase all extend this
+  // class and none of them overrides execute, so one span here covers the
+  // whole domain layer.
   //
-  // The span carries the organization and nothing else. A tenant id is what
-  // makes traces filterable per customer, and it is already a Loki label on
-  // every log line the winston transport exports, so spans add no new
-  // exposure. userId and the rest stay off, for the same reason the pg
-  // instrumentation did not record bind values: a trace backend is not the
-  // place for per-user data.
+  // The span carries the tenant and nothing else - it is what makes traces
+  // filterable per customer. userId and the rest stay off deliberately: a
+  // trace backend is not the place for per-user data.
   async execute(command: Command): Promise<Result> {
     // this.constructor.name rather than a literal, so each subclass names its
     // own span. It survives production bundling because terser runs with
@@ -104,8 +94,7 @@ export abstract class AbstractMemberUseCase<
    * own without reaching for trace.getActiveSpan() from inside a nested call -
    * span concerns stay in execute().
    *
-   * Tenant and space only. userId and emails stay off spans; see
-   * docker/otel/README.md.
+   * Tenant and space only - see docker/otel/README.md.
    *
    * spaceId is read off the command here rather than in the space-scoped
    * subclasses: AbstractSpaceMemberUseCase and AbstractSpaceAdminUseCase both

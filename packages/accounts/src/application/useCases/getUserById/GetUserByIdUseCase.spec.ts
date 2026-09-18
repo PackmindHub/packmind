@@ -2,7 +2,7 @@ import { GetUserByIdUseCase } from './GetUserByIdUseCase';
 import { UserService } from '../../services/UserService';
 import { createUserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { userFactory } from '../../../../test';
 import { GetUserByIdCommand } from '@packmind/types';
 
@@ -12,13 +12,7 @@ describe('GetUserByIdUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockUserService = {
-      createUser: jest.fn(),
-      getUserById: jest.fn(),
-      getUserByEmail: jest.fn(),
-      hashPassword: jest.fn(),
-      validatePassword: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
     stubbedLogger = stubLogger();
 

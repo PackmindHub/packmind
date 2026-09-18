@@ -16,7 +16,6 @@ export default class KotlinParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('kotlin');
 
       for (const wasmPath of wasmPaths) {

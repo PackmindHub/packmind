@@ -48,8 +48,6 @@ export class StandardRepository
     });
 
     try {
-      // Query standards by slug across all spaces in the organization
-      // Join with spaces table to filter by organizationId
       const queryBuilder = this.repository
         .createQueryBuilder('standard')
         .innerJoin('spaces', 'space', 'standard.space_id = space.id')
@@ -72,7 +70,6 @@ export class StandardRepository
         return null;
       }
 
-      // Get the latest version for this standard to retrieve scope
       const latestVersion = await this.repository.manager
         .getRepository<StandardVersion>(StandardVersionSchema)
         .findOne({
@@ -114,7 +111,6 @@ export class StandardRepository
     });
 
     try {
-      // First, get all standards for the space with user information
       const standards = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],

@@ -1,8 +1,7 @@
 import { DataSource } from 'typeorm';
 
 /**
- * Production DataSource configuration for Docker migrations.
- * Uses environment variables and compiled JavaScript migration files.
+ * Production DataSource for Docker migrations.
  */
 export default new DataSource({
   type: 'postgres',

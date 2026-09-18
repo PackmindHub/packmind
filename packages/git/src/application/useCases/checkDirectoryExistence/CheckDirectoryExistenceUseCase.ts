@@ -27,7 +27,6 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       branch,
     });
 
-    // Business rule: all required parameters must be provided
     if (!gitRepoId) {
       throw new Error('Git repository ID is required');
     }
@@ -38,7 +37,6 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       throw new Error('Branch is required');
     }
 
-    // Business rule: git repository must exist
     const gitRepo = await this.gitRepoService.findGitRepoById(gitRepoId);
     if (!gitRepo) {
       throw new Error(`Git repository with ID ${gitRepoId} not found`);
@@ -47,7 +45,6 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     try {
-      // Delegate to repository layer for technical directory existence check
       const exists = await gitRepoInstance.checkDirectoryExists(
         directoryPath,
         branch,

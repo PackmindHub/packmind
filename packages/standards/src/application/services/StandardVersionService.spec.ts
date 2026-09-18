@@ -227,7 +227,7 @@ describe('StandardVersionService', () => {
           version: 1,
           rules: [{ content: 'Git rule', examples: [] }],
           scope: null,
-          userId: null, // Explicitly null for git commits
+          userId: null,
         };
 
         const savedGitVersion = {
@@ -281,7 +281,6 @@ describe('StandardVersionService', () => {
           .fn()
           .mockResolvedValue(version);
 
-        // Mock getRulesByVersionId to return empty rules array
         ruleRepository.findByStandardVersionId = jest
           .fn()
           .mockResolvedValue([]);

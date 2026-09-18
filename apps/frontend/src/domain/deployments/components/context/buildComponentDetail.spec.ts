@@ -60,6 +60,7 @@ const component = (
   type,
   name,
   summary: '',
+  createdAt: null,
   version: 3,
   href: `/org/acme/space/core/${type}s/${key}`,
 });
@@ -323,6 +324,7 @@ describe('withPaneDetailHref', () => {
       type: 'command',
       name: 'Ship it',
       summary: '',
+      createdAt: null,
       version: 3,
       href: '?package=pkg-1&component=command-1',
     });

@@ -1,4 +1,3 @@
-// Entity types
 export * from './TargetId';
 export * from './Target';
 export * from './TargetWithRepository';
@@ -25,14 +24,10 @@ export * from './DistributionOperation';
 export * from './DistributedPackageId';
 export * from './DistributedPackage';
 
-// Contracts
 export * from './contracts';
 
-// Errors
 export * from './errors';
 
-// Events
 export * from './events';
 
-// Ports
 export * from './ports';

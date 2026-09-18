@@ -1,8 +1,5 @@
 import { IJobFactory, IJobQueue } from './IJobQueue';
 
-/**
- * Registry for job queues by name
- */
 export interface IJobRegistry {
   registerQueue<TInput>(queueName: string, factory: IJobFactory<TInput>): void;
 

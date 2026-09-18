@@ -24,8 +24,8 @@ const screamingSnake = (flag: string): string =>
  *      - unset OR empty/whitespace => defer to the shared email-domain rule
  *   2. Shared email-domain rule from `@packmind/feature-flags`.
  *
- * This is the ONLY backend place that reads `Configuration.getConfig`, so
- * consuming use cases never touch infra/config directly.
+ * Keeping the `FF_*` lookup here is what lets a use case decide on a flag
+ * without reaching into config itself.
  */
 export async function isFeatureEnabled(
   flag: FeatureFlagKey,

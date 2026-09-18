@@ -32,7 +32,6 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
       email: maskEmail(command.email),
     });
 
-    // Validate email format
     const trimmedEmail = command.email.trim();
     if (!trimmedEmail || !validator.isEmail(trimmedEmail)) {
       this.logger.warn('Invalid email format provided', {
@@ -48,7 +47,6 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
 
     const normalizedEmail = trimmedEmail.toLowerCase();
 
-    // Find user by email (case-insensitive)
     const user =
       await this.userService.getUserByEmailCaseInsensitive(normalizedEmail);
 
@@ -108,7 +106,6 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
     }
 
     try {
-      // Create password reset token and send email
       const request: PasswordResetRequest = {
         email: user.email,
         user,

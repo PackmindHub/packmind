@@ -49,7 +49,6 @@ export class ListOrganizationUserStatusesUseCase
       organizationId: command.organizationId,
     });
 
-    // Get users by organization directly from database
     const users = await this.userService.listUsersByOrganization(
       command.organizationId,
     );
@@ -61,11 +60,9 @@ export class ListOrganizationUserStatusesUseCase
       return { userStatuses: [] };
     }
 
-    // Get all invitations for these users
     const userIds = users.map((user) => user.id);
     const invitations = await this.invitationService.findByUserIds(userIds);
 
-    // Create a map of userId to their latest invitation
     const invitationsByUserId = new Map<string, Invitation>();
     invitations.forEach((invitation) => {
       const existingInvitation = invitationsByUserId.get(
@@ -79,10 +76,8 @@ export class ListOrganizationUserStatusesUseCase
       }
     });
 
-    // Get application URL for building invitation links
     const appUrl = await this.getApplicationUrl();
 
-    // Build user statuses
     const userStatuses: UserStatus[] = users.map((user) => {
       const membership = user.memberships?.find(
         (m) => m.organizationId === command.organizationId,
@@ -117,23 +112,19 @@ export class ListOrganizationUserStatusesUseCase
     user: User,
     invitation: Invitation | undefined,
   ): InvitationStatus {
-    // If user is active, they have accepted/completed signup
     if (user.active) {
       return 'accepted';
     }
 
-    // If no invitation exists for inactive user
     if (!invitation) {
       return 'none';
     }
 
-    // Check if invitation is expired
     const now = new Date();
     if (invitation.expirationDate < now) {
       return 'expired';
     }
 
-    // Invitation is still pending
     return 'pending';
   }
 

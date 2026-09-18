@@ -31,7 +31,6 @@ const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.cursor;
-  /** Packmind-managed subdirectory within the broader standard path */
   private static readonly STANDARD_DEPLOY_DIR =
     CODING_AGENT_ARTEFACT_PATHS.cursor.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
@@ -71,7 +70,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
       const commandFile = this.generateCursorCommandForCommand(recipe);
       const targetPrefixedPath = getTargetPrefixedPath(
@@ -87,7 +85,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy recipes-index.mdc file
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(
         CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
@@ -96,7 +93,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       type: DeleteItemType.File,
     });
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(
         `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
@@ -125,7 +121,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Cursor configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCursorConfigForStandard(standardVersion);
@@ -154,7 +149,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
       const commandFile = this.generateCursorCommandForCommand(recipe);
       fileUpdates.createOrUpdate.push({
@@ -166,13 +160,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy recipes-index.mdc file
     fileUpdates.delete.push({
       path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
     });
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
       type: DeleteItemType.Directory,
@@ -193,7 +185,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Cursor configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCursorConfigForStandard(standardVersion);
@@ -226,7 +217,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Cursor skill files for each skill
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCursorSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -259,7 +249,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Cursor skill files for each skill (without target prefix)
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCursorSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -298,7 +287,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
       const commandFile = this.generateCursorCommandForCommand(recipe);
       fileUpdates.createOrUpdate.push({
@@ -310,7 +298,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate individual Cursor configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateCursorConfigForStandard(standardVersion);
@@ -323,7 +310,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate individual Cursor skill files for each skill
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateCursorSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -340,13 +326,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
       }
     }
 
-    // Clean up legacy recipes-index.mdc file
     fileUpdates.delete.push({
       path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
     });
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
       type: DeleteItemType.Directory,
@@ -381,7 +365,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete individual command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -389,7 +372,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete individual Cursor configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.mdc`,
@@ -397,7 +379,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy packmind commands subdirectory when recipes are removed
     const hasRemovedCommands = removed.recipeVersions.length > 0;
     if (hasRemovedCommands) {
       fileUpdates.delete.push({
@@ -406,7 +387,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete packmind folder if all standards are removed
     const hasRemovedStandards = removed.standardVersions.length > 0;
     if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
@@ -415,8 +395,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete skill directories for removed skills
-    // (git port will expand directory paths to individual files)
+    // Directory deletes are expanded to individual files by the git port
+    // (CommitToGitUseCase), so listing the skill folder is enough.
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -453,7 +433,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       },
     ];
 
-    // Delete individual command files for recipes
     for (const recipeVersion of artifacts.recipeVersions) {
       deleteItems.push({
         path: `${CursorDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -461,7 +440,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       deleteItems.push({
         path: `${CursorDeployer.ARTEFACT_PATHS.skill}${slug}`,
@@ -469,7 +447,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       deleteItems.push({
         path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -483,9 +460,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
     };
   }
 
-  /**
-   * Generate Cursor command file for a specific recipe
-   */
   private generateCursorCommandForCommand(recipe: CommandVersion): {
     path: string;
     content: string;
@@ -503,9 +477,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
     };
   }
 
-  /**
-   * Generate Cursor configuration file for a specific standard
-   */
   private async generateCursorConfigForStandard(
     standardVersion: StandardVersion,
   ): Promise<{
@@ -533,14 +504,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
 
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
-      // When the scope is not null or empty
       content = `---
 globs: ${standardVersion.scope}
 alwaysApply: false
 ---
 ${instructionContent}`;
     } else {
-      // When the scope is empty
       content = `---
 alwaysApply: true
 ---
@@ -564,17 +533,15 @@ ${instructionContent}`;
   ): SkillFileOutput[] {
     const files: SkillFileOutput[] = [];
 
-    // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
       path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
       content: skillMdContent,
     });
 
-    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
     if (skillVersion.files && skillVersion.files.length > 0) {
       for (const file of skillVersion.files) {
-        // Skip SKILL.md as it's already generated from the prompt
+        // Already generated above from the skill prompt.
         if (file.path.toUpperCase() === 'SKILL.MD') {
           continue;
         }
@@ -591,11 +558,7 @@ ${instructionContent}`;
     return files;
   }
 
-  /**
-   * Generate the SKILL.md content with frontmatter for a specific skill version
-   */
   private generateSkillMdContent(skillVersion: SkillVersion): string {
-    // Build frontmatter according to Agent Skills specification
     const frontmatterFields: string[] = [];
 
     if (skillVersion.name) {
@@ -642,7 +605,6 @@ ${instructionContent}`;
       frontmatterFields.push(`metadata:\n${metadataYaml}`);
     }
 
-    // Emit supported additional properties
     if (
       skillVersion.additionalProperties &&
       Object.keys(skillVersion.additionalProperties).length > 0
@@ -661,15 +623,12 @@ ${instructionContent}`;
 ${frontmatterFields.join('\n')}
 ---`;
 
-    // Content is the skill prompt (body)
     return `${frontmatter}
 
 ${skillVersion.prompt}`;
   }
 
-  /**
-   * Escape single quotes in YAML values to prevent parsing errors
-   */
+  // YAML single-quoted scalars escape a quote by doubling it.
   private escapeSingleQuotes(value: string): string {
     return value.replace(/'/g, "''");
   }

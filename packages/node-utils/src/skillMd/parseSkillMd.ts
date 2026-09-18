@@ -21,12 +21,7 @@ const SPEC_FIELDS = new Set([
   'metadata',
 ]);
 
-/**
- * Typed representation of a parsed SKILL.md file with individual
- * frontmatter fields extracted according to the Agent Skills specification.
- *
- * @see https://agentskills.io/specification
- */
+/** @see https://agentskills.io/specification */
 export type ParsedSkillMd = {
   name: string;
   description: string;
@@ -38,31 +33,20 @@ export type ParsedSkillMd = {
   /**
    * Claude Code additional properties, keyed by camelCase name.
    *
-   * Serialization contract:
-   * - DB stores raw values (JSONB) — e.g. `"opus"`, `true`, `{ preToolCall: "echo hello" }`.
-   * - The diff pipeline (CLI → API) uses `JSON.stringify(rawValue)` so values
-   *   are transported as JSON-encoded strings.
-   * - The applier uses `JSON.parse(newValue)` to recover the raw value before
-   *   persisting it back to the DB.
+   * Values here are JSON-ENCODED strings (`'"opus"'`, `'true'`), because that
+   * is the form the CLI-to-API diff pipeline compares and transports. The
+   * database holds the raw JSONB value instead, so
+   * `SkillChangeProposalApplier` has to `JSON.parse` each one on the way back.
    */
   additionalProperties: Record<string, string>;
 };
 
 /**
- * Parses a SKILL.md file and extracts typed frontmatter fields and body.
+ * Returns `null` - never throws - when the content cannot be parsed: missing or
+ * unclosed frontmatter, invalid YAML, or a YAML value that is not an object.
  *
- * Returns `null` when the content cannot be parsed (missing/unclosed
- * frontmatter, invalid YAML, or non-object YAML value).
- *
- * Individual spec fields (`license`, `compatibility`, `allowedTools`) are
- * extracted as strings. The generic `metadata` record is serialized as
- * deterministic JSON in `metadataJson`.
- *
- * Claude Code-specific fields are extracted into `additionalProperties`
- * with camelCase keys and JSON-serialized values.
- *
- * @param content - Raw SKILL.md file content
- * @returns Parsed fields and body, or `null` on failure
+ * `metadataJson` is deterministic JSON, so two equivalent metadata blocks
+ * compare equal as strings.
  */
 export function parseSkillMd(content: string): ParsedSkillMd | null {
   const parsed = parseSkillMdContent(content);
@@ -84,7 +68,6 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
       ? serializeSkillMetadata(metadata as Record<string, unknown>)
       : '{}';
 
-  // Extract Claude Code additional properties
   const additionalProperties: Record<string, string> = {};
   for (const [key, value] of Object.entries(properties)) {
     if (SPEC_FIELDS.has(key)) continue;

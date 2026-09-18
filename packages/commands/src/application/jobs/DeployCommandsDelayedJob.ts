@@ -16,9 +16,6 @@ import { createUserId } from '@packmind/types';
 
 const logOrigin = 'DeployRecipesDelayedJob';
 
-/**
- * Callback function type for job completion
- */
 export type DeployCommandsCallback = (
   result: DeployCommandsOutput,
 ) => Promise<void> | void;
@@ -29,10 +26,6 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
 > {
   readonly origin = logOrigin;
 
-  /**
-   * In-memory registry of callbacks keyed by job ID
-   * Callbacks are stored here because they cannot be serialized to Redis
-   */
   private readonly callbacks = new Map<string, DeployCommandsCallback>();
 
   constructor(
@@ -50,7 +43,6 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
       `[${this.origin}] Job ${jobId} failed - recipes could not be deployed`,
     );
 
-    // Clean up callback on failure
     if (this.callbacks.has(jobId)) {
       this.callbacks.delete(jobId);
       this.logger.info(
@@ -86,14 +78,12 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
     }
 
     try {
-      // Get all targets for this repository
       const allTargets = await this.deploymentPort.getTargetsByGitRepo({
         gitRepoId: input.gitRepoId,
         organizationId: input.organizationId,
         userId: createUserId('system'),
       });
 
-      // Filter targets to only those that match the affected target paths
       const targetIdsToDeployTo = allTargets
         .filter((target) => input.affectedTargetPaths.includes(target.path))
         .map((target) => target.id);
@@ -183,7 +173,6 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
           },
         );
 
-        // Execute callback if one was registered
         if (job.id && this.callbacks.has(job.id)) {
           const callback = this.callbacks.get(job.id);
 
@@ -205,7 +194,6 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
             }
           }
 
-          // Clean up callback after execution
           this.callbacks.delete(job.id);
           this.logger.info(
             `[${this.origin}] Removed callback for completed job ${job.id}`,

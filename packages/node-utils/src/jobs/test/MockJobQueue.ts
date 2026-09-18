@@ -1,10 +1,7 @@
 import { Worker } from 'bullmq';
 import { IQueue, WithTimeout, Runner, WorkerListeners } from '../domain/IQueue';
 
-/**
- * Mock implementation of IQueue for testing purposes.
- * This avoids the need for Redis connections in tests.
- */
+/** In-memory IQueue, so a test needs no Redis and starts no BullMQ worker. */
 export class MockJobQueue<Input, Output> implements IQueue<Input, Output> {
   private readonly jobs: Array<{
     id: string;
@@ -16,11 +13,12 @@ export class MockJobQueue<Input, Output> implements IQueue<Input, Output> {
   async addJob(
     name: string,
     params: WithTimeout<Input>,
-    jobsOptions?: unknown, // JobsOptions from bullmq, but we don't need the full type here
+    jobsOptions?: unknown,
   ): Promise<string> {
-    // Avoid unused parameter warning
+    // Options are accepted and dropped; the empty branch only keeps the
+    // parameter from reading as unused.
     if (jobsOptions) {
-      // Mock implementation ignores job options
+      // Intentionally empty.
     }
 
     const jobId = `mock-job-${++this.jobCounter}`;
@@ -42,8 +40,8 @@ export class MockJobQueue<Input, Output> implements IQueue<Input, Output> {
     _pattern: string,
     jobId: string,
   ): Promise<void> {
-    // Mock implementation — remove any queued job tagged with this id so
-    // assertions in tests reflect a cleared schedule.
+    // Name and pattern are ignored: dropping the job with this id is enough
+    // for a test to observe a cleared schedule.
     const jobIndex = this.jobs.findIndex((job) => job.id === jobId);
     if (jobIndex >= 0) {
       this.jobs.splice(jobIndex, 1);
@@ -56,12 +54,12 @@ export class MockJobQueue<Input, Output> implements IQueue<Input, Output> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     listeners?: Partial<WorkerListeners<Input, Output>>,
   ): Promise<Worker<Input, Output> | null> {
-    // Mock implementation - we don't actually create workers in tests
-    // These parameters are required by the interface but not used in mock
+    // No worker is started, so a queued job is never processed - a test that
+    // needs the runner to have run must invoke it itself.
     return null;
   }
 
-  // Test utilities - these are not part of IQueue but useful for testing
+  // Beyond IQueue - inspection helpers for assertions.
   getJobs(): Array<{ id: string; name: string; input: WithTimeout<Input> }> {
     return [...this.jobs];
   }

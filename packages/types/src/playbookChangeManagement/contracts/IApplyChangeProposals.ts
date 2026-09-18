@@ -10,15 +10,6 @@ import { SkillVersionId } from '../../skills';
 import { AcceptedChangeProposal } from '../AcceptedChangeProposal';
 import { PackageId } from '../../deployments';
 
-/**
- * Maps artifact ID types to their corresponding version ID types.
- * This ensures type safety when returning version IDs for specific artifacts.
- *
- * @example
- * ArtefactVersionId<RecipeId> = RecipeVersionId
- * ArtefactVersionId<StandardId> = StandardVersionId
- * ArtefactVersionId<SkillId> = SkillVersionId
- */
 export type ArtefactVersionId<T extends StandardId | CommandId | SkillId> =
   T extends CommandId
     ? CommandVersionId

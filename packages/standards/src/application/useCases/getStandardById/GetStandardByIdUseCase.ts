@@ -40,7 +40,6 @@ export class GetStandardByIdUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: command.spaceId });
@@ -67,8 +66,6 @@ export class GetStandardByIdUseCase
         return { standard: null };
       }
 
-      // Verify the standard belongs to the space
-      // Standards are now always space-specific (spaceId is never null)
       if (standard.spaceId !== command.spaceId) {
         this.logger.warn('Standard does not belong to space', {
           standardId: command.standardId,

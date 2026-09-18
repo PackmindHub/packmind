@@ -30,10 +30,7 @@ export type PackmindLockFileEntry = {
   spaceId: string;
   packageIds: string[];
   files: PackmindLockFileFile[];
-  /**
-   * Origin discriminator for the entry. Required as of `lockfileVersion: 2`.
-   * See {@link PackmindLockFileEntrySource}.
-   */
+  /** Required as of `lockfileVersion: 2`. */
   source: PackmindLockFileEntrySource;
 };
 
@@ -44,19 +41,17 @@ export type PackmindLockFileEntry = {
  *   `${source}:${type}:${slug}` (e.g. `'default:skill:create-skill'`,
  *   `'user:skill:my-custom-skill'`, `'user:standard:typescript-good-practices'`).
  *
- * The current `lockfileVersion` is `2`. Version `1` lockfiles (predecessor
- * format with `${type}:${slug}` keys and no `source` field on entries) are
- * accepted by `LockFileRepository.read` and migrated to v2 in memory; the
+ * The current `lockfileVersion` is `2`. Versions `0` and `1` (the predecessor
+ * format, with `${type}:${slug}` keys and no `source` field on entries) are
+ * still accepted by `LockFileRepository.read` and migrated to v2 in memory; the
  * on-disk file is only rewritten on the next mutating command.
  */
 export type PackmindLockFile = {
-  /** Current value: `2`. Readers accept `1` for backward-compatible migration. */
   lockfileVersion: number;
   /**
-   * Version of the Packmind CLI that last synchronized this workspace.
-   * Stored verbatim (including any pre-release suffix such as `-next`).
-   * Optional for backward compatibility with lockfiles produced by older
-   * CLI versions that did not record this information.
+   * Version of the Packmind CLI that last synchronized this workspace, stored
+   * verbatim including any pre-release suffix such as `-next`. Optional because
+   * older CLI versions did not record it.
    */
   cliVersion?: string;
   packageSlugs: string[];

@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import {
@@ -53,23 +54,12 @@ describe('configAgentsHandler', () => {
   let originalStdoutWrite: typeof process.stdout.write;
 
   beforeEach(() => {
-    mockConfigRepository = {
-      readConfig: jest.fn(),
-      writeConfig: jest.fn(),
-      // Default to true so existing tests don't incidentally hit the
-      // "Creating packmind.json..." branch unless they explicitly opt in.
-      configExists: jest.fn().mockResolvedValue(true),
-      addPackagesToConfig: jest.fn(),
-      findDescendantConfigs: jest.fn().mockResolvedValue([]),
-      readHierarchicalConfig: jest.fn(),
-      findAllConfigsInTree: jest.fn(),
-      updateConfig: jest.fn(),
-      updateAgentsConfig: jest.fn(),
-    } as unknown as jest.Mocked<IConfigFileRepository>;
+    mockConfigRepository = mockInterface<IConfigFileRepository>();
+    mockConfigRepository.configExists // "Creating packmind.json..." branch unless they explicitly opt in. // Default to true so existing tests don't incidentally hit the
+      .mockResolvedValue(true);
+    mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
 
-    mockAgentDetectionService = {
-      detectAgentArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<IAgentArtifactDetectionService>;
+    mockAgentDetectionService = mockInterface<IAgentArtifactDetectionService>();
 
     mockDeploymentGateway = createMockDeploymentGateway();
     mockPackmindGateway = createMockPackmindGateway({

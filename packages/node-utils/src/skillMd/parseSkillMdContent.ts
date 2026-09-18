@@ -5,32 +5,16 @@ import { canonicalJsonStringify } from '@packmind/types';
 
 const FRONTMATTER_DELIMITER = '---';
 
-/**
- * Result of parsing a SKILL.md file content.
- *
- * Properties are returned as a generic record so consumers can
- * map them to their own domain types.
- *
- * The `allowed-tools` YAML key is normalised to `allowedTools`.
- *
- * @see https://agentskills.io/specification
- */
+/** @see https://agentskills.io/specification */
 export type ParsedSkillMdContent = {
-  /** Frontmatter properties with `allowed-tools` normalised to `allowedTools` */
+  /** Untyped on purpose - each consumer maps these to its own domain type. */
   properties: Record<string, unknown>;
-  /** Markdown body after the closing `---` */
   body: string;
 };
 
 /**
- * Serializes skill metadata fields into a deterministic JSON string.
- *
- * Keys are sorted alphabetically (recursively) before serialization so that
- * two records with the same entries always produce the same output
- * regardless of insertion order.
- *
- * @param fields - Metadata key-value pairs to serialize
- * @returns Deterministic JSON string
+ * Sorts keys recursively before serializing, so two metadata records with the
+ * same entries compare equal as strings whatever order they were built in.
  */
 export function serializeSkillMetadata(
   fields: Record<string, unknown>,
@@ -39,13 +23,11 @@ export function serializeSkillMetadata(
 }
 
 /**
- * Parses a SKILL.md file and extracts YAML frontmatter properties and body.
+ * Returns `null` - never throws - when the content cannot be parsed: missing or
+ * unclosed frontmatter, invalid YAML, or a YAML value that is not an object.
  *
- * Returns `null` when the content cannot be parsed (missing/unclosed
- * frontmatter, invalid YAML, or non-object YAML value).
- *
- * @param content - Raw SKILL.md file content
- * @returns Parsed properties and body, or `null` on failure
+ * The spec's `allowed-tools` key is normalised to `allowedTools` on the way
+ * out, so downstream code only ever sees the camelCase form.
  */
 export function parseSkillMdContent(
   content: string,

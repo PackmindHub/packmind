@@ -1,3 +1,4 @@
+import { userFactory } from '@packmind/accounts/test';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -51,7 +52,7 @@ describe('AuthController', () => {
     jest.restoreAllMocks();
   });
 
-  const mockUser: User = {
+  const mockUser: User = userFactory({
     id: createUserId('1'),
     email: 'testuser@packmind.com',
     passwordHash: 'hashedPassword',
@@ -63,7 +64,7 @@ describe('AuthController', () => {
         role: 'admin',
       },
     ],
-  };
+  });
 
   const mockOrganization: Organization = {
     id: createOrganizationId('org-1'),
@@ -154,6 +155,7 @@ describe('AuthController', () => {
     const signUpRequest: SignUpWithOrganizationCommand = {
       email: 'testuser@packmind.com',
       password: 'password123',
+      method: 'password',
     };
 
     describe('with valid request', () => {
@@ -220,9 +222,12 @@ describe('AuthController', () => {
     });
 
     describe('when required fields are missing', () => {
-      const invalidRequest = {
+      // The empty credentials are what the service rejects; `method` is
+      // required by the command type either way.
+      const invalidRequest: SignUpWithOrganizationCommand = {
         email: '',
         password: '',
+        method: 'password',
       };
 
       beforeEach(() => {
@@ -869,7 +874,7 @@ describe('AuthController', () => {
 
     describe('when PACKMIND_EDITION is not set (community default)', () => {
       beforeEach(() => {
-        mockConfiguration.getConfig.mockResolvedValue(undefined);
+        mockConfiguration.getConfig.mockResolvedValue(null);
         mockAuthService.getMe.mockResolvedValue({
           edition: 'community' as const,
           message: 'No valid access token found',
@@ -888,7 +893,7 @@ describe('AuthController', () => {
 
     describe('when service throws and fallback catch block runs', () => {
       beforeEach(() => {
-        mockConfiguration.getConfig.mockResolvedValue(undefined);
+        mockConfiguration.getConfig.mockResolvedValue(null);
         mockAuthService.getMe.mockRejectedValue(new Error('Unexpected error'));
       });
 

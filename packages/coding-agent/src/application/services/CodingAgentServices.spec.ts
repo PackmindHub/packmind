@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   DeleteItemType,
   FileUpdates,
@@ -50,12 +50,7 @@ describe('CodingAgentServices', () => {
 
   beforeEach(() => {
     mockLogger = stubLogger();
-    mockDeployerService = {
-      aggregateRecipeDeployments: jest.fn(),
-      aggregateStandardsDeployments: jest.fn(),
-      aggregateArtifactRendering: jest.fn(),
-      getDeployerForAgent: jest.fn(),
-    } as unknown as jest.Mocked<DeployerService>;
+    mockDeployerService = createMockInstance(DeployerService);
 
     service = new CodingAgentServices(mockDeployerService, mockLogger);
   });

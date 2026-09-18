@@ -17,16 +17,15 @@ import { createLLMService } from '../../../factories/createLLMService';
 const origin = 'TestLLMConnectionUseCase';
 
 /**
- * Extract HTTP status code from SDK error objects.
- * This is a best-effort extraction - not all SDKs expose status codes reliably.
+ * Best-effort: the OpenAI and Anthropic SDKs put the HTTP status on the error
+ * object, but not every provider error reaching here does, hence the fallback
+ * to digging a `(4xx)` out of the message.
  */
 function extractStatusCode(error: unknown): number | undefined {
-  // All major SDK errors (OpenAI, Anthropic, Azure) expose a 'status' property
   if (error && typeof error === 'object' && 'status' in error) {
     return typeof error.status === 'number' ? error.status : undefined;
   }
 
-  // Fallback: parse from error message for backwards compatibility
   if (error instanceof Error) {
     const statusMatch = error.message.match(/\((\d{3})\)/);
     if (statusMatch) {
@@ -37,9 +36,6 @@ function extractStatusCode(error: unknown): number | undefined {
   return undefined;
 }
 
-/**
- * Classify error type from error message.
- */
 function classifyErrorType(error: unknown): AIServiceErrorType {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const lowerMessage = errorMessage.toLowerCase();
@@ -84,16 +80,13 @@ export class TestLLMConnectionUseCase
       organizationId: command.organizationId,
     });
 
-    // Create the LLM service from the configuration
     const llmService = createLLMService(config);
 
-    // Test standard model
     const standardModelResult = await this.testModel(
       llmService,
       LLMModelPerformance.STANDARD,
     );
 
-    // Test fast model only if it differs from standard model
     let fastModelResult: ModelTestResult | undefined;
     const shouldTestFastModel = this.shouldTestFastModel(config);
 
@@ -123,9 +116,6 @@ export class TestLLMConnectionUseCase
     };
   }
 
-  /**
-   * Test a specific model by executing a simple prompt.
-   */
   private async testModel(
     llmService: AIService,
     performance: LLMModelPerformance,
@@ -147,7 +137,6 @@ export class TestLLMConnectionUseCase
           success: true,
         };
       } else {
-        // Service returned graceful failure
         this.logger.warn('Model test failed gracefully', {
           model: result.model,
           error: result.error,
@@ -165,7 +154,6 @@ export class TestLLMConnectionUseCase
         };
       }
     } catch (error) {
-      // Unexpected error
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       const errorType = classifyErrorType(error);
@@ -190,17 +178,11 @@ export class TestLLMConnectionUseCase
     }
   }
 
-  /**
-   * Determine if we should test the fast model separately.
-   * Only test if it's defined and different from the standard model.
-   */
   private shouldTestFastModel(config: LLMServiceConfig): boolean {
-    // For Packmind provider, we don't test fast model separately
     if (config.provider === 'packmind') {
       return false;
     }
 
-    // Check if fast model is defined and differs from standard model
     let fastModel: string | undefined;
     let standardModel: string | undefined;
 
@@ -211,12 +193,10 @@ export class TestLLMConnectionUseCase
       standardModel = config.model;
     }
 
-    // If fast model is not defined or empty, don't test it
     if (!fastModel || fastModel.trim() === '') {
       return false;
     }
 
-    // If models are the same, don't test separately
     if (fastModel === standardModel) {
       return false;
     }

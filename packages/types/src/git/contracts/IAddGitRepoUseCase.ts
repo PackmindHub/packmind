@@ -8,9 +8,9 @@ export type AddGitRepoCommand = PackmindCommand & {
   repo: string;
   branch: string;
   /**
-   * When true, skips the validation that ensures the git provider has a token.
-   * This is used by internal use cases like NotifyDistributionUseCase that need
-   * to create repos for tokenless providers (e.g., auto-created from packmind).
+   * Skips the check that the git provider has a token. Needed by the internal
+   * notify-distribution flow, which records distributions against the tokenless
+   * providers the CLI auto-creates. Not for request-driven paths.
    * Default: false
    */
   allowTokenlessProvider?: boolean;

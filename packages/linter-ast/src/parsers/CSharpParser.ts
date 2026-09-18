@@ -16,7 +16,6 @@ export default class CSharpParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('c_sharp');
 
       for (const wasmPath of wasmPaths) {

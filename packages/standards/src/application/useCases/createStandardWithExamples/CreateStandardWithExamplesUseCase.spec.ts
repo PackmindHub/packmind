@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import {
   RuleAddedEvent,
@@ -39,44 +43,21 @@ describe('CreateStandardWithExamplesUseCase', () => {
   const userId = createUserId(uuidv4());
 
   beforeEach(() => {
-    // Mock StandardService
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsBySpace: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
-    // Mock RuleExampleRepository
     ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Mock RuleRepository
     ruleRepository = mockInterface<IRuleRepository>();
 
-    // Mock LinterAdapter
     linterAdapter = mockInterface<ILinterPort>();
 
-    // Mock EventEmitterService
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
-    // Use stubLogger from shared test utils
     logger = stubLogger();
 
-    // Default mock for findByStandardVersionId - returns empty array (no rules)
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     usecase = new CreateStandardWithExamplesUseCase(

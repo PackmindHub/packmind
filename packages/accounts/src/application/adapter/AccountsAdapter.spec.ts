@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
@@ -39,9 +40,8 @@ describe('AccountsAdapter', () => {
     mockGitPort = {} as IGitPort;
     mockStandardsPort = {} as IStandardsPort;
     mockDeploymentPort = {} as IDeploymentPort;
-    mockEventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
+    mockEventEmitterService.emit.mockReturnValue(true);
 
     mockServices = {
       getUserService: jest.fn(),

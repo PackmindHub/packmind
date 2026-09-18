@@ -26,7 +26,6 @@ export class AddSourceCodeStateToDetectionPrograms1760524511000 implements Migra
 
       this.logger.info('Successfully added source_code_state column');
 
-      // Remove the default after adding the column
       await queryRunner.query(`
         ALTER TABLE "detection_programs" 
         ALTER COLUMN "source_code_state" DROP DEFAULT

@@ -75,7 +75,6 @@ export class DeleteCommandUseCase
         );
       }
 
-      // Get existing recipe to validate space ownership
       this.logger.info('Fetching recipe to validate space ownership', {
         recipeId,
       });
@@ -99,18 +98,15 @@ export class DeleteCommandUseCase
         );
       }
 
-      // Delete the recipe itself
       this.logger.info('Deleting recipe', { recipeId });
       await this.commandService.deleteCommand(recipeId, userId as UserId);
 
-      // Then delete all recipe versions for this recipe
       this.logger.info('Deleting all recipe versions for recipe', { recipeId });
       await this.commandVersionService.deleteCommandVersionsForCommand(
         recipeId,
         userId,
       );
 
-      // Emit event to notify other domains
       const event = new CommandDeletedEvent({
         id: recipeId,
         spaceId,

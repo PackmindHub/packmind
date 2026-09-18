@@ -14,25 +14,16 @@ import { PMConfirmationModalBody } from './PMConfirmationModalBody';
 import { PMConfirmationModalFooter } from './PMConfirmationModalFooter';
 
 export type PMConfirmationModalProps = {
-  /** The trigger element that opens the modal */
   trigger: ReactNode;
-  /** Title displayed in the modal header */
   title: string;
-  /** Message displayed in the modal body */
   message: ReactNode;
-  /** Text for the confirm button (defaults to "Delete") */
   confirmText?: string;
-  /** Text for the cancel button (defaults to "Cancel") */
   cancelText?: string;
-  /** Color scheme for the confirm button (defaults to "red") */
   confirmColorScheme?: string;
-  /** Callback function called when user confirms the action */
   onConfirm: () => void;
-  /** Whether the modal is open (controlled mode) */
+  /** Omit to let DialogRoot manage open state itself (uncontrolled). */
   open?: boolean;
-  /** Callback function called when modal state changes (controlled mode) */
   onOpenChange?: (details: { open: boolean }) => void;
-  /** Whether the confirm action is loading */
   isLoading?: boolean;
 };
 
@@ -92,7 +83,6 @@ export const PMConfirmationModal = ({
   );
 };
 
-// Export slot components for advanced usage
 export { PMConfirmationModalHeader } from './PMConfirmationModalHeader';
 export { PMConfirmationModalBody } from './PMConfirmationModalBody';
 export { PMConfirmationModalFooter } from './PMConfirmationModalFooter';

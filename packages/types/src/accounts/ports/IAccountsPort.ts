@@ -55,11 +55,6 @@ import {
   ValidatePasswordResetTokenResponse,
 } from '../index';
 
-/**
- * Port interface for the Accounts domain adapter.
- * This interface defines all the operations that can be performed
- * on the accounts domain from external consumers.
- */
 export const IAccountsPortName = 'IAccountsPort' as const;
 
 export interface IAccountsPort {
@@ -91,7 +86,7 @@ export interface IAccountsPort {
     command: CheckEmailAvailabilityCommand,
   ): Promise<CheckEmailAvailabilityResponse>;
 
-  // Organization-related operations
+  // Organization, invitation and role operations
   createOrganization(command: CreateOrganizationCommand): Promise<Organization>;
 
   getOrganizationById(

@@ -1,4 +1,8 @@
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -144,11 +148,10 @@ describe('InstallPackagesUseCase', () => {
       artifacts: {},
     };
 
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest
-        .fn()
-        .mockResolvedValue([publicPackage]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+      publicPackage,
+    ]);
 
     commandsPort = mockInterface<ICommandsPort>();
     commandsPort.listCommandVersions.mockResolvedValue([]);
@@ -169,33 +172,32 @@ describe('InstallPackagesUseCase', () => {
 
     accountsPort = mockInterface<IAccountsPort>();
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
-    renderModeConfigurationService = {
-      resolveCodingAgents: jest.fn().mockResolvedValue([CodingAgents.packmind]),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+      CodingAgents.packmind,
+    ]);
 
-    packmindConfigService = {
-      createConfigFileModification: jest.fn().mockReturnValue({
-        path: 'packmind.json',
-        content: '{}',
-      }),
-    } as unknown as jest.Mocked<PackmindConfigService>;
+    packmindConfigService = createMockInstance(PackmindConfigService);
+    packmindConfigService.createConfigFileModification.mockReturnValue({
+      path: 'packmind.json',
+      content: '{}',
+    });
 
-    lockFileService = {
-      buildLockFile: jest.fn().mockReturnValue({
-        lockfileVersion: 1,
-        packageSlugs: [],
-        agents: [],
-        artifacts: {},
-      }),
-      createLockFileModification: jest.fn().mockReturnValue({
-        path: 'packmind-lock.json',
-        content: '{}',
-      }),
-    } as unknown as jest.Mocked<PackmindLockFileService>;
+    lockFileService = createMockInstance(PackmindLockFileService);
+    lockFileService.buildLockFile.mockReturnValue({
+      lockfileVersion: 1,
+      packageSlugs: [],
+      agents: [],
+      artifacts: {},
+    });
+    lockFileService.createLockFileModification.mockReturnValue({
+      path: 'packmind-lock.json',
+      content: '{}',
+    });
 
     spacesPort = mockInterface<ISpacesPort>();
     spacesPort.listSpacesByOrganization.mockResolvedValue([
@@ -300,7 +302,6 @@ describe('InstallPackagesUseCase', () => {
     });
 
     it('returns sourceArtifacts counts based on the packages being installed', async () => {
-      // Build 2 standards, 1 recipe, 3 skills on the package
       const standardA: Standard = {
         id: createStandardId(uuidv4()),
         spaceId: publicSpace.id,

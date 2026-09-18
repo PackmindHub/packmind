@@ -39,16 +39,10 @@ export class GeminiService implements AIService {
     this.logger.info('GeminiService initialized');
   }
 
-  /**
-   * Check if the Gemini service is properly configured and ready to use
-   */
   async isConfigured(): Promise<boolean> {
     return !!this.apiKey;
   }
 
-  /**
-   * Initialize the Gemini client with the injected API key
-   */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -74,9 +68,6 @@ export class GeminiService implements AIService {
       : this.defaultModel;
   }
 
-  /**
-   * Execute a prompt with retry mechanism and return typed result
-   */
   async executePrompt<T = string>(
     prompt: string,
     options: AIPromptOptions = {},
@@ -144,16 +135,13 @@ export class GeminiService implements AIService {
           responseLength: content.length,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -205,9 +193,6 @@ export class GeminiService implements AIService {
     };
   }
 
-  /**
-   * Execute a prompt with conversation history
-   */
   async executePromptWithHistory<T = string>(
     conversationHistory: PromptConversation[],
     options: AIPromptOptions = {},
@@ -249,7 +234,6 @@ export class GeminiService implements AIService {
 
         const modelName = this.getModel(options);
 
-        // Convert PromptConversation to Gemini format
         const contents = conversationHistory.map((conv) => ({
           role: this.mapRoleToGemini(conv.role),
           parts: [{ text: conv.message }],
@@ -281,16 +265,13 @@ export class GeminiService implements AIService {
           responseLength: content.length,
         });
 
-        // Try to parse as JSON if T is not string, otherwise return as string
         let parsedData: T;
         try {
-          // If the generic type T is expected to be an object, try to parse JSON
           parsedData =
             typeof content === 'string' && content.trim().startsWith('{')
               ? (JSON.parse(content) as T)
               : (content as T);
         } catch {
-          // If JSON parsing fails, return as string type
           parsedData = content as T;
         }
 
@@ -342,9 +323,6 @@ export class GeminiService implements AIService {
     };
   }
 
-  /**
-   * Map PromptConversationRole to Gemini role format
-   */
   private mapRoleToGemini(role: PromptConversationRole): 'user' | 'model' {
     switch (role) {
       case PromptConversationRole.USER:
@@ -352,16 +330,14 @@ export class GeminiService implements AIService {
       case PromptConversationRole.ASSISTANT:
         return 'model';
       case PromptConversationRole.SYSTEM:
-        // Gemini doesn't have a separate system role, map to user
+        // Gemini `contents` only accepts the 'user' and 'model' roles, so a
+        // system turn is folded into the user role.
         return 'user';
       default:
         return 'user';
     }
   }
 
-  /**
-   * Classify error type for retry logic
-   */
   private classifyError(error: unknown): AIServiceErrorType {
     if (error instanceof AIServiceError) {
       return error.type;
@@ -385,9 +361,6 @@ export class GeminiService implements AIService {
     return AIServiceErrorTypes.API_ERROR;
   }
 
-  /**
-   * Determine if we should retry based on error type and attempt number
-   */
   private shouldRetry(
     errorType: AIServiceErrorType,
     attempt: number,
@@ -397,12 +370,10 @@ export class GeminiService implements AIService {
       return false;
     }
 
-    // Don't retry authentication errors
     if (errorType === AIServiceErrorTypes.AUTHENTICATION_ERROR) {
       return false;
     }
 
-    // Retry rate limits, network errors, and general API errors
     return [
       AIServiceErrorTypes.RATE_LIMIT,
       AIServiceErrorTypes.NETWORK_ERROR,
@@ -410,9 +381,6 @@ export class GeminiService implements AIService {
     ].includes(errorType);
   }
 
-  /**
-   * Get a list of available model IDs from Gemini
-   */
   async getModels(): Promise<string[]> {
     this.logger.info('Fetching available models from Gemini');
 

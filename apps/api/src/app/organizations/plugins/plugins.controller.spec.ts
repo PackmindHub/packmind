@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
@@ -29,10 +30,7 @@ describe('PluginsController', () => {
   };
 
   beforeEach(() => {
-    service = {
-      renderPlugin: jest.fn(),
-      trackPluginDeleted: jest.fn(),
-    } as unknown as jest.Mocked<PluginsService>;
+    service = createMockInstance(PluginsService);
     controller = new PluginsController(service);
   });
 

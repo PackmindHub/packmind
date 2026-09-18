@@ -1,6 +1,4 @@
-/**
- * Log levels enum to match PackmindLogger
- */
+// Mirrors PackmindLogger's LogLevel — the two must stay in sync.
 export enum LogLevel {
   SILENT = 'silent',
   ERROR = 'error',
@@ -13,8 +11,8 @@ export enum LogLevel {
 }
 
 /**
- * Simplified logger for Docker migrations.
- * Provides the same interface as PackmindLogger but with simpler console output.
+ * Console-only stand-in for PackmindLogger in Docker migrations: same
+ * constructor and `error`/`warn`/`info`/`debug` surface, plain console output.
  */
 export class DockerLogger {
   private readonly name: string;

@@ -2,18 +2,18 @@ import { CodingAgent } from './CodingAgent';
 import { ArtifactType } from '../deployments';
 
 /**
- * Directory paths where a coding agent stores each artefact type.
- * Undefined means the agent doesn't support that artefact type as discrete files.
+ * Directory paths where a coding agent stores each artefact type. An empty
+ * string means that agent does not store the type as discrete files.
  */
 export type CodingAgentArtefactPaths = {
   [K in ArtifactType]: string;
 };
 
 /**
- * Coding agents that deploy artefacts as discrete files in separate directories.
- * Single-file agents (junie, agents_md) embed everything in one file
- * and are intentionally excluded.
- * gitlab_duo is a hybrid: standards/commands use single-file, skills use multi-file.
+ * Agents that deploy artefacts as discrete files in separate directories. The
+ * single-file agents junie and agents_md embed everything in one file and are
+ * deliberately excluded. gitlab_duo is a hybrid, included for its skills while
+ * its standards and commands stay single-file.
  */
 export type MultiFileCodingAgent = Extract<
   CodingAgent,
@@ -30,13 +30,10 @@ export type MultiFileCodingAgent = Extract<
 >;
 
 /**
- * Centralized mapping of coding agents to their artefact directory paths.
- *
- * Only multi-file agents have entries. Single-file agents embed artefacts
- * in a single file and have no discrete artefact directories — they don't
- * need entries here. The intersection type ensures:
- * - Literal key access (e.g. `.claude`) returns CodingAgentArtefactPaths (non-undefined)
- * - Dynamic CodingAgent access returns CodingAgentArtefactPaths | undefined
+ * Only multi-file agents have entries. The intersection type is what makes both
+ * access patterns behave: a literal key such as `.claude` types as
+ * `CodingAgentArtefactPaths`, while indexing by an arbitrary `CodingAgent`
+ * types as `CodingAgentArtefactPaths | undefined`.
  */
 export const CODING_AGENT_ARTEFACT_PATHS: Record<
   MultiFileCodingAgent,

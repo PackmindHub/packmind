@@ -1,3 +1,4 @@
+import { gitRepoFactory } from '@packmind/git/test';
 // jest.mock calls are hoisted by jest before any imports.
 // Mock the heavy import chains that load broken packages at test time.
 
@@ -67,14 +68,13 @@ describe('GitRepositoriesController tracked repository routes', () => {
     clientSource: 'cli',
   } as Partial<AuthenticatedRequest> as AuthenticatedRequest;
 
-  const trackedRepo: GitRepo = {
+  const trackedRepo: GitRepo = gitRepoFactory({
     id: createGitRepoId('repo-1'),
     owner: 'my-orga',
     repo: 'my-repo',
     branch: 'dev',
-    providerId: undefined as never,
     isTracked: true,
-  } as GitRepo;
+  });
 
   beforeEach(() => {
     mockService = {
@@ -251,7 +251,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
     describe('when the caller is not an organization admin', () => {
       it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
         mockService.setTrackedRepository.mockRejectedValue(
-          new OrganizationAdminRequiredError('Not an admin'),
+          new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
 
         await expect(
@@ -319,7 +319,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
     describe('when the caller is not an organization admin', () => {
       it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
         mockService.updateTrackedBranch.mockRejectedValue(
-          new OrganizationAdminRequiredError('Not an admin'),
+          new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
 
         await expect(
@@ -422,7 +422,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
     describe('when the caller is not an organization admin', () => {
       it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
         mockService.removeTrackedRepository.mockRejectedValue(
-          new OrganizationAdminRequiredError('Not an admin'),
+          new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
 
         await expect(

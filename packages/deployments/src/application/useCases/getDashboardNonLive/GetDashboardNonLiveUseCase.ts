@@ -68,7 +68,7 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
         .filter((s) => !deployedStandardIds.has(s.id))
         .map((s) => ({ id: s.id, name: s.name })),
       recipes: nonLiveCommands,
-      // Command-named twin of `recipes` (superset); same value.
+      // Same value under the command-named field the type also requires.
       commands: nonLiveCommands,
       skills: skills
         .filter((s) => !deployedSkillIds.has(s.id))

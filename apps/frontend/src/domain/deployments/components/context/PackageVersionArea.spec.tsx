@@ -6,6 +6,8 @@ import {
   createOrganizationId,
   createPackageId,
   createSpaceId,
+  type PackageReleaseReadiness,
+  type PackageReleaseSummary,
 } from '@packmind/types';
 import type { Mock } from 'vitest';
 
@@ -35,16 +37,27 @@ const packageId = createPackageId('pkg-1');
 const spaceId = createSpaceId('space-1');
 const organizationId = createOrganizationId('org-1');
 
+/*
+ * Annotated rather than inferred: the defaults below would otherwise fix
+ * `verdict` to 'ready' and `outdatedComponents` to never[], and every case that
+ * passes anything else would stop compiling. Frontend specs are type-checked
+ * since #500.
+ */
 const renderComponent = ({
   readiness = {
     currentVersion: null,
-    verdict: 'ready' as const,
-    nextVersions: ['0.1.0', '0.2.0', '1.0.0'] as [string, string, string],
+    verdict: 'ready',
+    nextVersions: ['0.1.0', '0.2.0', '1.0.0'],
     outdatedComponents: [],
   },
   isLoading = false,
   componentsCount = 1,
   releases = [],
+}: {
+  readiness?: PackageReleaseReadiness;
+  isLoading?: boolean;
+  componentsCount?: number;
+  releases?: PackageReleaseSummary[];
 } = {}) => {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
     data: {

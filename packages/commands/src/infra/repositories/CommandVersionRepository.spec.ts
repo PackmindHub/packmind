@@ -47,7 +47,6 @@ describe('RecipeVersionRepository', () => {
       stubbedLogger,
     );
 
-    // Create a test recipe for soft delete tests
     testCommand = commandFactory();
     await commandRepository.add(testCommand);
   });

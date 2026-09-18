@@ -25,7 +25,11 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
@@ -122,18 +126,11 @@ describe('CreatePackageUseCase', () => {
     });
 
   beforeEach(() => {
-    mockPackageService = {
-      createPackage: jest.fn(),
-      findById: jest.fn(),
-      getPackagesBySpaceId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
+    mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
 
-    mockServices = {
-      getPackageService: jest.fn().mockReturnValue(mockPackageService),
-      getTargetService: jest.fn(),
-      getRenderModeConfigurationService: jest.fn(),
-      getRepositories: jest.fn(),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    mockServices = createMockInstance(DeploymentsServices);
+    mockServices.getPackageService.mockReturnValue(mockPackageService);
 
     mockAccountsPort = mockInterface<IAccountsPort>();
     mockAccountsPort.getUserById.mockResolvedValue(buildUser());

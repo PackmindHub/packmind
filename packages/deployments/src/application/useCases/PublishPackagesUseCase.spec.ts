@@ -34,7 +34,11 @@ import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { distributionFactory } from '../../../test/distributionFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 
@@ -86,9 +90,7 @@ describe('PublishPackagesUseCase', () => {
 
     mockDeploymentPort = mockInterface<IDeploymentPort>();
 
-    mockPackageService = {
-      getPackagesByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
     mockDistributedPackageRepository =
       mockInterface<IDistributedPackageRepository>();

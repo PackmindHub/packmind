@@ -10,14 +10,13 @@ function normalizePath(p: string): string {
 }
 
 /**
- * Resolves the artefact type and coding agent from a file path by matching
- * against known agent command and standard path patterns.
+ * Backslashes are normalized to forward slashes so Windows paths match too.
+ * Matching runs in three passes — command, then standard, then skill — so an
+ * agent is only reported for the earlier type when its directories overlap.
  *
- * Normalizes backslashes to forward slashes for cross-platform support,
- * then checks if the path contains any known artefact directory pattern.
- * Command patterns are checked first, then standard patterns.
- *
- * @returns `{ artifactType, codingAgent }` if the path matches a known pattern, `null` otherwise.
+ * The truthiness guard on each pattern is load-bearing, not defensive: an agent
+ * that does not support a type carries `''` for it, and `includes('')` is true
+ * of every path.
  */
 export function resolveArtefactFromPath(
   filePath: string,

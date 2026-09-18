@@ -1,20 +1,16 @@
 import { UserId } from '../accounts/User';
 
 /**
- * Filename of the standalone Packmind marketplace lock file. The file is
- * always located at the marketplace repository root, regardless of where
- * the vendor descriptor (e.g. `marketplace.json`) lives.
- *
- * Single source of truth for the filename. Re-exported as a path constant
- * by `packages/deployments/src/application/services/packmindMarketplaceLock.ts`.
+ * Filename of the standalone Packmind marketplace lock file. The file always
+ * sits at the marketplace repository root, regardless of where the vendor
+ * descriptor (e.g. `marketplace.json`) lives.
  */
 export const PACKMIND_MARKETPLACE_LOCK_FILENAME = 'packmind-lock.json';
 
 /**
- * Per-plugin lock entry. Captures the canonical Packmind-managed state for
- * a single plugin slug on the marketplace — used for drift detection,
- * idempotency on republish, and to mark the slug as Packmind-managed (i.e.
- * exempt from the unmanaged-name-collision check).
+ * The canonical Packmind-managed state of one plugin slug on the marketplace.
+ * Presence in the lock is also what marks a slug as Packmind-managed, and so
+ * exempt from the unmanaged-name-collision check.
  */
 export type PackmindMarketplaceLockPluginEntry = {
   version: string;

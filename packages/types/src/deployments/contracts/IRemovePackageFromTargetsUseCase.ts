@@ -17,13 +17,13 @@ export type RemovePackageFromTargetsResult = {
 };
 
 /**
- * Represents the resolved artifacts for a target when removing a package.
- * Contains information about which artifacts are exclusive to the removed package
- * and which artifacts remain from other packages.
+ * The split that decides a removal: artifacts held only by the package being
+ * removed get deleted, while artifacts shared with a remaining package are
+ * re-rendered instead.
  */
 export type TargetArtifactResolution = {
   targetId: TargetId;
-  /** Artifacts that only belong to the removed package and should be deleted */
+  /** Exclusive to the removed package, so these get deleted. */
   exclusiveArtifacts: {
     recipeVersionIds: CommandVersionId[];
     // Command-named twin of `recipeVersionIds` (superset); same value.
@@ -31,7 +31,7 @@ export type TargetArtifactResolution = {
     standardVersionIds: StandardVersionId[];
     skillVersionIds: SkillVersionId[];
   };
-  /** Artifacts that belong to remaining packages and should be re-rendered */
+  /** Shared with a remaining package, so these get re-rendered, not deleted. */
   remainingArtifacts: {
     recipeVersionIds: CommandVersionId[];
     // Command-named twin of `recipeVersionIds` (superset); same value.
@@ -43,7 +43,6 @@ export type TargetArtifactResolution = {
 
 export type RemovePackageFromTargetsResponse = {
   results: RemovePackageFromTargetsResult[];
-  /** Optional artifact resolutions for each target showing which artifacts were exclusive vs shared */
   artifactResolutions?: TargetArtifactResolution[];
 };
 

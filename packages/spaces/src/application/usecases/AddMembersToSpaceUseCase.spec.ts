@@ -14,7 +14,11 @@ import {
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { AddMembersToSpaceUseCase } from './AddMembersToSpaceUseCase';
 
@@ -50,10 +54,7 @@ describe('AddMembersToSpaceUseCase', () => {
   });
 
   beforeEach(() => {
-    membershipService = {
-      addSpaceMembership: jest.fn(),
-      findMembership: jest.fn(),
-    } as unknown as jest.Mocked<UserSpaceMembershipService>;
+    membershipService = createMockInstance(UserSpaceMembershipService);
 
     accountsPort = mockInterface<IAccountsPort>();
     accountsPort.getUserById.mockResolvedValue(user);
