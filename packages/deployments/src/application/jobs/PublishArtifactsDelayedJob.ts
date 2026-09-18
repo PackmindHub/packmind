@@ -7,7 +7,12 @@ import {
   SSEEventPublisher,
   WorkerListeners,
 } from '@packmind/node-utils';
-import { DistributionStatus, GitCommit, IGitPort } from '@packmind/types';
+import {
+  DistributionId,
+  DistributionStatus,
+  GitCommit,
+  IGitPort,
+} from '@packmind/types';
 import { Job } from 'bullmq';
 import {
   PublishArtifactsJobInput,
@@ -16,6 +21,30 @@ import {
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
 const logOrigin = 'PublishArtifactsDelayedJob';
+
+/**
+ * The payload shape this queue carried before one job covered every target of a
+ * repository. Jobs live in Redis under an unchanged queue name, so a job
+ * enqueued by the previous release is still waiting there after a deploy and
+ * reaches this worker with a single `distributionId`.
+ */
+type LegacyPublishArtifactsJobInput = {
+  distributionId?: DistributionId;
+};
+
+/**
+ * Reads the distributions of a job in either payload shape, so a job enqueued
+ * before the deploy finalizes its distribution instead of failing on a missing
+ * array and leaving it in_progress forever.
+ */
+function readDistributionIds(
+  input: PublishArtifactsJobInput & LegacyPublishArtifactsJobInput,
+): DistributionId[] {
+  if (input.distributionIds?.length) {
+    return input.distributionIds;
+  }
+  return input.distributionId ? [input.distributionId] : [];
+}
 
 /**
  * Delayed job for publishing artifacts to git repositories.
@@ -49,8 +78,10 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     input: PublishArtifactsJobInput,
     _controller: AbortController, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<PublishArtifactsJobOutput> {
+    const distributionIds = readDistributionIds(input);
+
     this.logger.info(
-      `[${this.origin}] Processing job ${jobId} for distributions ${input.distributionIds.join(', ')}`,
+      `[${this.origin}] Processing job ${jobId} for distributions ${distributionIds.join(', ')}`,
       {
         gitRepoId: input.gitRepoId,
         filesCount: input.fileUpdates.createOrUpdate.length,
@@ -88,7 +119,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     } catch (error) {
       if (error instanceof Error && error.message === 'NO_CHANGES_DETECTED') {
         this.logger.info(
-          `[${this.origin}] No changes detected for distributions ${input.distributionIds.join(', ')}`,
+          `[${this.origin}] No changes detected for distributions ${distributionIds.join(', ')}`,
         );
         status = DistributionStatus.no_changes;
         gitCommit = undefined;
@@ -98,7 +129,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
     }
 
     return {
-      distributionIds: input.distributionIds,
+      distributionIds,
       organizationId: input.organizationId,
       success: true,
       status,
@@ -107,11 +138,11 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
   }
 
   getJobName(input: PublishArtifactsJobInput): string {
-    return `publish-artifacts-${input.distributionIds.join('-')}`;
+    return `publish-artifacts-${readDistributionIds(input).join('-')}`;
   }
 
   jobStartedInfo(input: PublishArtifactsJobInput): string {
-    return `distributionIds: ${input.distributionIds.join(', ')}`;
+    return `distributionIds: ${readDistributionIds(input).join(', ')}`;
   }
 
   getWorkerListener(): Partial<
@@ -130,10 +161,12 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
           },
         );
 
-        try {
-          // One commit covers every target of the repository, so every one of
-          // their distributions moves out of in_progress together.
-          for (const distributionId of result.distributionIds) {
+        // One commit covers every target of the repository, so every one of
+        // their distributions moves out of in_progress together. Each is
+        // finalized on its own: one that cannot be updated must not strand the
+        // rest in in_progress.
+        for (const distributionId of result.distributionIds) {
+          try {
             await this.distributionRepository.updateStatus(
               distributionId,
               result.status,
@@ -155,14 +188,14 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             this.logger.info(
               `[${this.origin}] Published SSE event for distribution ${distributionId}`,
             );
+          } catch (error) {
+            this.logger.error(
+              `[${this.origin}] Failed to update distribution status for ${distributionId} of job ${job.id}`,
+              { error: getErrorMessage(error) },
+            );
+            // Note: We don't throw here to avoid marking the job as failed
+            // since the git commit itself was successful
           }
-        } catch (error) {
-          this.logger.error(
-            `[${this.origin}] Failed to update distribution status for job ${job.id}`,
-            { error: getErrorMessage(error) },
-          );
-          // Note: We don't throw here to avoid marking the job as failed
-          // since the git commit itself was successful
         }
       },
       failed: async (job, error) => {
@@ -170,10 +203,11 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
           `[${this.origin}] Job ${job.id} failed with error: ${getErrorMessage(error)}`,
         );
 
-        try {
-          // The commit failed for the whole repository, so every target's
-          // distribution fails with it.
-          for (const distributionId of job.data.distributionIds) {
+        // The commit failed for the whole repository, so every target's
+        // distribution fails with it, each on its own so that one that cannot
+        // be updated does not strand the rest in in_progress.
+        for (const distributionId of readDistributionIds(job.data)) {
+          try {
             await this.distributionRepository.updateStatus(
               distributionId,
               DistributionStatus.failure,
@@ -195,12 +229,12 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             this.logger.info(
               `[${this.origin}] Published SSE failure event for distribution ${distributionId}`,
             );
+          } catch (updateError) {
+            this.logger.error(
+              `[${this.origin}] Failed to update distribution ${distributionId} to failure status for job ${job.id}`,
+              { error: getErrorMessage(updateError) },
+            );
           }
-        } catch (updateError) {
-          this.logger.error(
-            `[${this.origin}] Failed to update distribution failure status for job ${job.id}`,
-            { error: getErrorMessage(updateError) },
-          );
         }
       },
     };

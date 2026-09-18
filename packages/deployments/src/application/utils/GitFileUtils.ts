@@ -1,5 +1,6 @@
 import { IGitPort, GitRepo, Target, CodingAgent } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { ConflictingTargetFilePathError } from '../../domain/errors/ConflictingTargetFilePathError';
 
 const origin = 'GitFileUtils';
 
@@ -148,29 +149,88 @@ export function mergeFileUpdates(
 }
 
 /**
+ * What a modification actually writes to git. Comparing this is all that
+ * decides whether committing one modification in place of another loses
+ * anything; the metadata around it only feeds the lock file, itself a
+ * modification with content.
+ */
+function writtenBytes(
+  file: import('@packmind/types').FileModification,
+): string {
+  if (file.content !== undefined) {
+    return `content:${file.isBase64 === true}:${file.content}`;
+  }
+  return `sections:${JSON.stringify(file.sections)}`;
+}
+
+type ClaimedFile<TFile> = { targetIndex: number; file: TFile };
+
+/**
  * Merges the per-target file updates of a repository group into the single set
  * of updates that gets committed.
  *
  * Every target in the group shares one commit, so every target's files must be
  * in it - taking one target's updates would silently drop the others'. Paths
  * are target-prefixed by `applyTargetPrefixingToFileUpdates`, so two targets in
- * the same repository cannot claim the same path unless they were configured
- * with the same path; `mergeFileUpdates` then keeps the first target in the
- * group, which is the same entry the commit would have carried before.
+ * the same repository only claim the same path when they were configured with
+ * the same path. Nothing enforces distinct paths, so that clash is possible and
+ * has no correct outcome: the two targets each want their own content there,
+ * and their lock files never match, since the lock file names its target. It
+ * raises ConflictingTargetFilePathError rather than committing one of them and
+ * reporting success to both.
+ *
+ * A path a single target both writes and deletes is left alone: that is what it
+ * asked for on its own, and merging must not change it.
  */
 export function mergeFileUpdatesAcrossTargets(
   fileUpdatesPerTarget: Iterable<import('@packmind/types').FileUpdates>,
 ): import('@packmind/types').FileUpdates {
-  const merged: import('@packmind/types').FileUpdates = {
-    createOrUpdate: [],
-    delete: [],
-  };
+  const written = new Map<
+    string,
+    ClaimedFile<import('@packmind/types').FileModification>
+  >();
+  const deleted = new Map<
+    string,
+    ClaimedFile<import('@packmind/types').DeleteItem>
+  >();
 
+  let targetIndex = 0;
   for (const targetFileUpdates of fileUpdatesPerTarget) {
-    mergeFileUpdates(merged, targetFileUpdates);
+    for (const file of targetFileUpdates.createOrUpdate) {
+      const claimed = written.get(file.path);
+      if (!claimed) {
+        written.set(file.path, { targetIndex, file });
+        continue;
+      }
+      if (
+        claimed.targetIndex !== targetIndex &&
+        writtenBytes(claimed.file) !== writtenBytes(file)
+      ) {
+        throw new ConflictingTargetFilePathError(file.path);
+      }
+    }
+
+    for (const file of targetFileUpdates.delete) {
+      // Several targets asking to delete the same path ask for the same thing.
+      if (!deleted.has(file.path)) {
+        deleted.set(file.path, { targetIndex, file });
+      }
+    }
+
+    targetIndex += 1;
   }
 
-  return merged;
+  for (const [path, claimed] of deleted) {
+    const writer = written.get(path);
+    if (writer && writer.targetIndex !== claimed.targetIndex) {
+      throw new ConflictingTargetFilePathError(path);
+    }
+  }
+
+  return {
+    createOrUpdate: Array.from(written.values()).map((claimed) => claimed.file),
+    delete: Array.from(deleted.values()).map((claimed) => claimed.file),
+  };
 }
 
 /**
