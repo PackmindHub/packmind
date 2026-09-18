@@ -3,12 +3,14 @@ import { Agent } from 'https';
 /**
  * Ceiling on how many sockets may be open to a git provider at once.
  *
- * The cap, not `keepAlive`, is what buys connection reuse. Node has defaulted
- * to `keepAlive: true` since v19, but a socket can only be reused if a free
- * one already exists when a request starts, and a fan-out that starts every
- * request in the same tick finds none — so it opens a socket per request and
- * pays a TLS handshake per request. Capping the pool makes request N+1 wait
- * for one of the N sockets instead.
+ * Both settings below are load-bearing. `keepAlive` must be passed
+ * explicitly: the v19 change that turned it on applies to
+ * `https.globalAgent`, while the `Agent` constructor still defaults it to
+ * false, so without it this agent pools nothing. And keep-alive alone is not
+ * enough, because a socket can only be reused if a free one already exists
+ * when a request starts — a fan-out that starts every request in the same
+ * tick finds none and pays a TLS handshake per request. The cap is what makes
+ * request N+1 wait for one of the N sockets instead.
  *
  * 20 is a starting ceiling, not a tuned one: well under the 100 concurrent
  * requests GitHub documents as the onset of secondary rate limits, high

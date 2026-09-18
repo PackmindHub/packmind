@@ -18,7 +18,6 @@ import {
   isProbeableSource,
 } from '../shared/probeCandidateCredentials';
 
-// Re-export for backward compatibility
 export { AddGitProviderCommand };
 
 const origin = 'AddGitProviderUseCase';

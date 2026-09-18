@@ -31,8 +31,9 @@ export class InvalidInstallStateError extends Error {
  * Format: base64url(jsonPayload) + '.' + base64url(hmacSha256(key, jsonPayload))
  *
  * The HMAC input is the raw UTF-8 JSON bytes of the payload, not the base64url
- * version, and the payload keys are serialized in a fixed order — verification
- * re-signs the decoded bytes, so any reordering breaks every existing token.
+ * version. Verification re-signs the bytes decoded from the token rather than
+ * re-serializing the parsed payload, so a token stays valid whatever order
+ * `sign()` happens to write its keys in.
  */
 export class InstallStateSigner {
   static readonly DEFAULT_TTL_SECONDS = 10 * 60;
@@ -57,7 +58,6 @@ export class InstallStateSigner {
     const exp = payload.exp ?? this.now() + this.ttlSeconds;
     const kind: InstallStateKind = payload.kind ?? 'install';
 
-    // This key order is part of the signature; see the class comment.
     const fullPayload: Record<string, string | number> = {
       orgId: payload.orgId,
       userId: payload.userId,

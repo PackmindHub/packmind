@@ -35,7 +35,8 @@ const JWT_LIFETIME_SECONDS = 9 * 60;
  * A 401 only flushes the cache, so the next call re-mints and re-exchanges and
  * a transient 401 (rate limit, clock skew, brief outage) self-recovers.
  * Revocation is deliberately never persisted here — that is an explicit user
- * action handled by `RevokeGithubAppUseCase`.
+ * action, which reaches `IOrganizationGitHubAppRepository.markRevoked` through
+ * `GitAdapter.revokeOrganizationGitHubApp`.
  */
 export class AppInstallationTokenResolver implements IGithubTokenResolver {
   private readonly providerId: GitProviderId;

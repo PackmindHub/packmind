@@ -98,7 +98,7 @@ export class GitlabProvider implements IGitProvider {
           params: {
             membership: true,
             archived: false,
-            order_by: 'last_activity_at', // Use last_activity_at like the working example
+            order_by: 'last_activity_at',
             per_page: PROJECTS_PER_PAGE,
             page,
           },
