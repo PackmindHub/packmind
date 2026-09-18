@@ -27,6 +27,12 @@ import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import { classifyLines, CODE, COMMENT } from './classify.mjs';
 import { readBlobs } from './git.mjs';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const IDENTITIES = JSON.parse(
+  fs.readFileSync(path.join(here, 'identities.json'), 'utf8'),
+).byEmail;
 
 const SPEC_PATTERN = /\.(spec|test)\.tsx?$/;
 const EMPTY_BLOB = /^0+$/;
@@ -42,14 +48,22 @@ function categoryOf(filePath) {
   return isTsx ? 'tsx' : 'ts';
 }
 
-/** Pick the Claude model out of a commit's Co-Authored-By trailers. */
-function modelOf(trailers) {
-  for (const raw of trailers.split('\x1e')) {
-    const name = raw.replace(/<[^>]*>/g, '').trim();
-    if (!/^Claude\b/.test(name)) continue;
-    const match = /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)$/.exec(
-      name,
-    );
+/**
+ * Pick the Claude model out of a commit message's Co-Authored-By lines.
+ *
+ * Read from the raw message rather than through `%(trailers:...)`: git only
+ * exposes a trailer when it sits, unindented, in the message's last paragraph,
+ * and a few dozen commits here do not satisfy that.
+ *
+ * A trailer can carry a suffix after the version — `Claude Opus 5 (1M context)`
+ * is the same model as `Claude Opus 5` and must land in the same bucket.
+ */
+export function modelOf(message) {
+  const pattern = /^[ \t]*Co-authored-by:[ \t]*(Claude[^<\n]*)/gim;
+  for (const [, raw] of message.matchAll(pattern)) {
+    const name = raw.trim();
+    const match =
+      /^Claude\s+(Opus|Sonnet|Haiku|Fable|Mythos)\s+([\d.]+)\b/.exec(name);
     if (match) return `Claude ${match[1]} ${match[2]}`;
     return UNSPECIFIED; // bare "Claude", "Claude (AI Assistant)", ...
   }
@@ -75,7 +89,8 @@ function streamHistory(repo, ref, onCommit) {
         '--full-index', // so `index <src>..<dst>` carries complete blob shas
         '--unified=0',
         '--patch',
-        '--format=%x00%H%x1f%cI%x1f%(trailers:key=Co-Authored-By,valueonly,separator=%x1e)',
+        // %x00 opens a commit record; the body runs to the %x02 sentinel.
+        '--format=%x00%H%x1f%cI%x1f%ae%x1f%an%x1f%B%x02',
         '--',
         '*.ts',
         '*.tsx',
@@ -89,6 +104,20 @@ function streamHistory(repo, ref, onCommit) {
     });
     let commit = null;
     let file = null;
+    // A commit record's header spans several lines, because it carries the raw
+    // message; it is accumulated until the sentinel closes it.
+    let header = null;
+
+    const openCommit = (text) => {
+      const [sha, date, email, name, ...rest] = text.split('\x1f');
+      commit = {
+        sha,
+        date,
+        person: IDENTITIES[(email ?? '').toLowerCase()] ?? name ?? '(inconnu)',
+        model: modelOf(rest.join('\x1f')),
+        files: [],
+      };
+    };
 
     const closeFile = () => {
       if (commit && file && (file.added.length || file.removed.length))
@@ -102,10 +131,21 @@ function streamHistory(repo, ref, onCommit) {
     };
 
     lines.on('line', (line) => {
+      if (header !== null) {
+        const end = line.indexOf('\x02');
+        header += '\n' + (end === -1 ? line : line.slice(0, end));
+        if (end !== -1) {
+          openCommit(header);
+          header = null;
+        }
+        return;
+      }
       if (line.startsWith('\0')) {
         closeCommit();
-        const [sha, date, trailers] = line.slice(1).split('\x1f');
-        commit = { sha, date, model: modelOf(trailers ?? ''), files: [] };
+        const rest = line.slice(1);
+        const end = rest.indexOf('\x02');
+        if (end === -1) header = rest;
+        else openCommit(rest.slice(0, end));
         return;
       }
       if (!commit) return;
@@ -191,6 +231,7 @@ async function main() {
   const work = [];
   const byModel = new Map();
   const byMonthModel = new Map();
+  const byPersonModel = new Map();
   // Per-commit totals, so the headline ratio can be checked against the median
   // commit: a mean over pooled lines can be carried by a handful of large ones.
   const perCommit = new Map();
@@ -212,6 +253,7 @@ async function main() {
           lines: expand(file.added),
           model: commit.model,
           month,
+          person: commit.person,
           commentKey: 'addedComment',
           codeKey: 'addedCode',
           commit: commit.sha,
@@ -225,6 +267,7 @@ async function main() {
           lines: expand(file.removed),
           model: commit.model,
           month,
+          person: commit.person,
           commentKey: 'removedComment',
           codeKey: 'removedCode',
           commit: commit.sha,
@@ -236,6 +279,8 @@ async function main() {
     if (touchedTs) {
       bucketFor(byModel, commit.model).commits++;
       bucketFor(byMonthModel, `${month}${KEY_SEP}${commit.model}`).commits++;
+      bucketFor(byPersonModel, `${commit.person}${KEY_SEP}${commit.model}`)
+        .commits++;
       perCommit.set(commit.sha, {
         model: commit.model,
         addedCode: 0,
@@ -268,6 +313,10 @@ async function main() {
           byMonthModel,
           `${item.month}${KEY_SEP}${item.model}`,
         );
+        const personal = bucketFor(
+          byPersonModel,
+          `${item.person}${KEY_SEP}${item.model}`,
+        );
         for (const lineNumber of item.lines) {
           const cls = classes[lineNumber - 1];
           const key =
@@ -279,6 +328,7 @@ async function main() {
           if (!key) continue;
           model[key]++;
           monthly[key]++;
+          personal[key]++;
           const commit = perCommit.get(item.commit);
           if (commit && key.startsWith('added')) commit[key]++;
         }
@@ -299,8 +349,16 @@ async function main() {
       .sort((a, b) => a - b);
     if (ratios.length === 0)
       return { commits: 0, median: null, p25: null, p75: null };
-    const at = (q) =>
-      ratios[Math.min(ratios.length - 1, Math.floor(q * ratios.length))];
+    // Linear interpolation between order statistics: with an even count the
+    // median is the mean of the two middle values, not the upper one.
+    const at = (q) => {
+      const position = (ratios.length - 1) * q;
+      const lower = Math.floor(position);
+      const upper = Math.ceil(position);
+      return (
+        ratios[lower] + (ratios[upper] - ratios[lower]) * (position - lower)
+      );
+    };
     return {
       commits: ratios.length,
       median: at(0.5),
@@ -331,6 +389,10 @@ async function main() {
     byMonthAndModel: [...byMonthModel].map(([key, value]) => {
       const [month, model] = key.split(KEY_SEP);
       return { month, model, ...withRatio(value) };
+    }),
+    byPersonAndModel: [...byPersonModel].map(([key, value]) => {
+      const [person, model] = key.split(KEY_SEP);
+      return { person, model, ...withRatio(value) };
     }),
   };
 

@@ -67,7 +67,15 @@ const GROUPS = {
 };
 
 function parseArgs(argv) {
-  const options = { repo: process.cwd(), ref: 'HEAD', to: null, out: null };
+  const options = {
+    repo: process.cwd(),
+    ref: 'HEAD',
+    to: null,
+    out: null,
+    // Models ship mid-month, so a monthly sample cannot separate the weeks
+    // before a release from the weeks after it. Sample twice a month.
+    step: 'half-month',
+  };
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i].replace(/^--/, '');
     if (!(key in options)) throw new Error(`Unknown option: ${argv[i]}`);
@@ -81,25 +89,29 @@ function monthOf(isoDate) {
   return isoDate.slice(0, 7);
 }
 
-/** First days of every month strictly after `afterMonth`, up to and including `toMonth`. */
-function monthStarts(afterMonth, toMonth) {
-  const starts = [];
-  let [year, month] = afterMonth.split('-').map(Number);
+/**
+ * Sampling days strictly after `afterDay`, up to the end of `toMonth`:
+ * the 1st and the 15th of each month, or only the 1st under `step: 'month'`.
+ */
+function boundaryDays(afterDay, toMonth, step) {
+  const days = [];
+  let [year, month] = afterDay.slice(0, 7).split('-').map(Number);
   for (;;) {
+    for (const day of step === 'month' ? ['01'] : ['01', '15']) {
+      const label = `${year}-${String(month).padStart(2, '0')}-${day}`;
+      if (label.slice(0, 7) > toMonth) return days;
+      if (label > afterDay) days.push(label);
+    }
     month += 1;
     if (month > 12) {
       month = 1;
       year += 1;
     }
-    const label = `${year}-${String(month).padStart(2, '0')}`;
-    if (label > toMonth) break;
-    starts.push(`${label}-01`);
   }
-  return starts;
 }
 
 /** Resolve the commits the history is sampled at. */
-function resolveBoundaries(repo, ref, toMonth) {
+function resolveBoundaries(repo, ref, toMonth, step) {
   const rootSha = git(repo, ['rev-list', '--max-parents=0', ref])
     .trim()
     .split('\n')
@@ -117,7 +129,7 @@ function resolveBoundaries(repo, ref, toMonth) {
     },
   ];
 
-  for (const day of monthStarts(monthOf(rootDate), toMonth)) {
+  for (const day of boundaryDays(rootDate.slice(0, 10), toMonth, step)) {
     const sha = commitBefore(repo, ref, `${day}T00:00:00`);
     if (!sha) continue;
     boundaries.push({
@@ -252,6 +264,8 @@ function measureFlow(cache, diff, fromTree, toTree) {
 
 function toCsv(report) {
   const header = [
+    'period_start',
+    'period_end',
     'month',
     'scope',
     'snapshot_date',
@@ -276,6 +290,8 @@ function toCsv(report) {
       const flow = month.flow[scope];
       rows.push(
         [
+          month.period,
+          month.periodEnd,
           month.month,
           scope,
           month.to.label,
@@ -301,7 +317,12 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const toMonth = options.to ?? new Date().toISOString().slice(0, 7);
 
-  const boundaries = resolveBoundaries(options.repo, options.ref, toMonth);
+  const boundaries = resolveBoundaries(
+    options.repo,
+    options.ref,
+    toMonth,
+    options.step,
+  );
   process.stderr.write(
     `Sampling ${boundaries.length} commits (${boundaries[0].label} -> ${boundaries.at(-1).label})\n`,
   );
@@ -327,9 +348,10 @@ async function main() {
     const diff = diffLineNumbers(options.repo, from.sha, to.sha, PATHSPECS);
     const flow = measureFlow(cache, diff, from.tree, to.tree);
     months.push({
-      // The month a delta belongs to is the one its *opening* boundary opens,
-      // which is the boundary label rather than the date of the commit that
-      // happened to be the last one before it.
+      // A period is named by the day its *opening* boundary opens, not by the
+      // date of the commit that happened to be the last one before it.
+      period: from.kind === 'root' ? from.date.slice(0, 10) : from.label,
+      periodEnd: to.label,
       month: from.kind === 'root' ? monthOf(from.date) : monthOf(from.label),
       // The first delta is the initial import of an already existing codebase,
       // not a month of normal development.
@@ -340,9 +362,9 @@ async function main() {
       flow,
       stockAtEnd: to.totals,
     });
-    const month = months.at(-1);
+    const period = months.at(-1);
     process.stderr.write(
-      `  ${month.month}${month.seeded ? ' (import)' : month.partial ? ' (partial)' : '         '}  +${String(flow.all.addedCode + flow.all.addedComment).padStart(7)} lines  ` +
+      `  ${period.period} -> ${period.periodEnd}${period.seeded ? ' (import)' : period.partial ? ' (partial)' : '        '}  +${String(flow.all.addedCode + flow.all.addedComment).padStart(7)} lines  ` +
         `${flow.all.commentRatio === null ? '   n/a' : (flow.all.commentRatio * 100).toFixed(2) + '%'} of added lines are comments\n`,
     );
   }

@@ -1,64 +1,64 @@
 {
-  "generatedAt": "2026-09-18T11:19:47.673Z",
+  "generatedAt": "2026-09-18T11:57:08.033Z",
   "ref": "HEAD",
   "commitsScanned": 3559,
   "byModel": {
     "no Claude trailer": {
-      "commits": 1178,
-      "addedCode": 317059,
-      "addedComment": 14523,
-      "removedCode": 112169,
-      "removedComment": 4464,
-      "addedTotal": 331582,
-      "commentRatio": 0.04379912057952482,
+      "commits": 1152,
+      "addedCode": 309810,
+      "addedComment": 14360,
+      "removedCode": 111490,
+      "removedComment": 4423,
+      "addedTotal": 324170,
+      "commentRatio": 0.04429774501033409,
       "commitDistribution": {
-        "commits": 501,
-        "median": 0.01639344262295082,
+        "commits": 481,
+        "median": 0.01674641148325359,
         "p25": 0,
-        "p75": 0.05813953488372093
+        "p75": 0.05846153846153846
       }
     },
     "Claude (version not recorded)": {
-      "commits": 889,
-      "addedCode": 177754,
-      "addedComment": 10015,
-      "removedCode": 93075,
-      "removedComment": 9744,
-      "addedTotal": 187769,
-      "commentRatio": 0.05333681278592313,
+      "commits": 136,
+      "addedCode": 33017,
+      "addedComment": 1764,
+      "removedCode": 8725,
+      "removedComment": 443,
+      "addedTotal": 34781,
+      "commentRatio": 0.050717345677237576,
       "commitDistribution": {
-        "commits": 523,
-        "median": 0.007380073800738007,
-        "p25": 0,
-        "p75": 0.057692307692307696
+        "commits": 92,
+        "median": 0.04060822207058157,
+        "p25": 0.008610357304387155,
+        "p75": 0.06362745858711254
       }
     },
     "Claude Sonnet 4.5": {
-      "commits": 90,
-      "addedCode": 21738,
-      "addedComment": 637,
-      "removedCode": 3913,
-      "removedComment": 158,
-      "addedTotal": 22375,
-      "commentRatio": 0.02846927374301676,
+      "commits": 108,
+      "addedCode": 27456,
+      "addedComment": 803,
+      "removedCode": 4205,
+      "removedComment": 163,
+      "addedTotal": 28259,
+      "commentRatio": 0.028415725963409886,
       "commitDistribution": {
-        "commits": 57,
-        "median": 0.014150943396226415,
-        "p25": 0.0026595744680851063,
-        "p75": 0.04609929078014184
+        "commits": 73,
+        "median": 0.012537612838515547,
+        "p25": 0,
+        "p75": 0.04576659038901602
       }
     },
     "Claude Opus 4.5": {
-      "commits": 348,
-      "addedCode": 80922,
-      "addedComment": 1736,
-      "removedCode": 32512,
-      "removedComment": 941,
-      "addedTotal": 82658,
-      "commentRatio": 0.021002201843741682,
+      "commits": 359,
+      "addedCode": 83884,
+      "addedComment": 1813,
+      "removedCode": 33000,
+      "removedComment": 979,
+      "addedTotal": 85697,
+      "commentRatio": 0.021155933113177823,
       "commitDistribution": {
-        "commits": 214,
-        "median": 0.012448132780082987,
+        "commits": 221,
+        "median": 0.012477718360071301,
         "p25": 0,
         "p75": 0.03204047217537943
       }
@@ -73,24 +73,24 @@
       "commentRatio": 0.0036224976167778837,
       "commitDistribution": {
         "commits": 8,
-        "median": 0.0028169014084507044,
+        "median": 0.0017658488457550161,
         "p25": 0,
-        "p75": 0.012195121951219513
+        "p75": 0.0073467747571458525
       }
     },
     "Claude Opus 4.6": {
-      "commits": 418,
-      "addedCode": 70802,
-      "addedComment": 990,
-      "removedCode": 21865,
-      "removedComment": 531,
-      "addedTotal": 71792,
-      "commentRatio": 0.013789837307778026,
+      "commits": 794,
+      "addedCode": 115533,
+      "addedComment": 1550,
+      "removedCode": 64550,
+      "removedComment": 1159,
+      "addedTotal": 117083,
+      "commentRatio": 0.01323847185330065,
       "commitDistribution": {
-        "commits": 227,
+        "commits": 418,
         "median": 0,
         "p25": 0,
-        "p75": 0.01240694789081886
+        "p75": 0.012281401394304621
       }
     },
     "Claude Sonnet 4": {
@@ -109,48 +109,48 @@
       }
     },
     "Claude Sonnet 4.6": {
-      "commits": 192,
-      "addedCode": 29763,
-      "addedComment": 335,
-      "removedCode": 9920,
-      "removedComment": 95,
-      "addedTotal": 30098,
-      "commentRatio": 0.011130307661638647,
+      "commits": 194,
+      "addedCode": 31828,
+      "addedComment": 369,
+      "removedCode": 9961,
+      "removedComment": 101,
+      "addedTotal": 32197,
+      "commentRatio": 0.01146069509581638,
       "commitDistribution": {
-        "commits": 103,
+        "commits": 105,
         "median": 0,
         "p25": 0,
         "p75": 0.01593625498007968
       }
     },
     "Claude Opus 4.7": {
-      "commits": 48,
-      "addedCode": 6666,
-      "addedComment": 134,
-      "removedCode": 842,
-      "removedComment": 5,
-      "addedTotal": 6800,
-      "commentRatio": 0.019705882352941177,
+      "commits": 248,
+      "addedCode": 60172,
+      "addedComment": 835,
+      "removedCode": 17835,
+      "removedComment": 565,
+      "addedTotal": 61007,
+      "commentRatio": 0.013686953956103398,
       "commitDistribution": {
-        "commits": 34,
+        "commits": 159,
         "median": 0,
         "p25": 0,
-        "p75": 0.018036072144288578
+        "p75": 0.012560310467799454
       }
     },
     "Claude Opus 4.8": {
-      "commits": 40,
-      "addedCode": 9782,
-      "addedComment": 247,
-      "removedCode": 31704,
-      "removedComment": 642,
-      "addedTotal": 10029,
-      "commentRatio": 0.024628577126333633,
+      "commits": 79,
+      "addedCode": 16129,
+      "addedComment": 553,
+      "removedCode": 37422,
+      "removedComment": 899,
+      "addedTotal": 16682,
+      "commentRatio": 0.03314950245773888,
       "commitDistribution": {
-        "commits": 20,
+        "commits": 39,
         "median": 0,
         "p25": 0,
-        "p75": 0.019704433497536946
+        "p75": 0.051587301587301584
       }
     },
     "Claude Fable 5": {
@@ -178,24 +178,24 @@
       "commentRatio": 0.06908890723919625,
       "commitDistribution": {
         "commits": 18,
-        "median": 0.057971014492753624,
-        "p25": 0.01809954751131222,
-        "p75": 0.11666666666666667
+        "median": 0.05554228380315337,
+        "p25": 0.022856838851305947,
+        "p75": 0.11022727272727273
       }
     },
     "Claude Opus 5": {
-      "commits": 266,
-      "addedCode": 38042,
-      "addedComment": 9247,
-      "removedCode": 6792,
-      "removedComment": 1152,
-      "addedTotal": 47289,
-      "commentRatio": 0.19554230370699316,
+      "commits": 399,
+      "addedCode": 74699,
+      "addedComment": 15817,
+      "removedCode": 25604,
+      "removedComment": 9000,
+      "addedTotal": 90516,
+      "commentRatio": 0.17474258694595432,
       "commitDistribution": {
-        "commits": 202,
-        "median": 0.19672131147540983,
-        "p25": 0.1171875,
-        "p75": 0.2857142857142857
+        "commits": 293,
+        "median": 0.17391304347826086,
+        "p25": 0.09523809523809523,
+        "p75": 0.268370607028754
       }
     },
     "Claude Fable 5.1": {
@@ -240,46 +240,46 @@
     {
       "month": "2025-11",
       "model": "no Claude trailer",
-      "commits": 287,
-      "addedCode": 58261,
+      "commits": 286,
+      "addedCode": 58149,
       "addedComment": 3539,
-      "removedCode": 31650,
+      "removedCode": 31633,
       "removedComment": 1930,
-      "addedTotal": 61800,
-      "commentRatio": 0.05726537216828479
+      "addedTotal": 61688,
+      "commentRatio": 0.05736934249773051
     },
     {
       "month": "2025-11",
       "model": "Claude (version not recorded)",
-      "commits": 22,
-      "addedCode": 11558,
+      "commits": 23,
+      "addedCode": 11670,
       "addedComment": 510,
-      "removedCode": 2913,
+      "removedCode": 2930,
       "removedComment": 113,
-      "addedTotal": 12068,
-      "commentRatio": 0.04226052369903878
+      "addedTotal": 12180,
+      "commentRatio": 0.04187192118226601
     },
     {
       "month": "2025-12",
       "model": "Claude (version not recorded)",
-      "commits": 68,
-      "addedCode": 10605,
-      "addedComment": 441,
+      "commits": 69,
+      "addedCode": 10607,
+      "addedComment": 442,
       "removedCode": 2600,
       "removedComment": 160,
-      "addedTotal": 11046,
-      "commentRatio": 0.039923954372623575
+      "addedTotal": 11049,
+      "commentRatio": 0.04000362023712553
     },
     {
       "month": "2025-12",
       "model": "no Claude trailer",
-      "commits": 175,
-      "addedCode": 30386,
-      "addedComment": 1071,
-      "removedCode": 10524,
+      "commits": 173,
+      "addedCode": 29586,
+      "addedComment": 1031,
+      "removedCode": 10506,
       "removedComment": 304,
-      "addedTotal": 31457,
-      "commentRatio": 0.03404647614203516
+      "addedTotal": 30617,
+      "commentRatio": 0.03367410262272594
     },
     {
       "month": "2025-12",
@@ -295,57 +295,57 @@
     {
       "month": "2025-12",
       "model": "Claude Opus 4.5",
-      "commits": 41,
-      "addedCode": 6746,
-      "addedComment": 148,
-      "removedCode": 1134,
+      "commits": 42,
+      "addedCode": 7544,
+      "addedComment": 187,
+      "removedCode": 1152,
       "removedComment": 25,
-      "addedTotal": 6894,
-      "commentRatio": 0.021467943138961415
+      "addedTotal": 7731,
+      "commentRatio": 0.02418833268658647
     },
     {
       "month": "2026-01",
       "model": "Claude Opus 4.5",
-      "commits": 209,
-      "addedCode": 58815,
-      "addedComment": 1082,
-      "removedCode": 25390,
-      "removedComment": 748,
-      "addedTotal": 59897,
-      "commentRatio": 0.018064343790173132
+      "commits": 217,
+      "addedCode": 60681,
+      "addedComment": 1116,
+      "removedCode": 25772,
+      "removedComment": 786,
+      "addedTotal": 61797,
+      "commentRatio": 0.01805912908393611
     },
     {
       "month": "2026-01",
       "model": "no Claude trailer",
-      "commits": 229,
-      "addedCode": 30245,
-      "addedComment": 1011,
-      "removedCode": 10509,
-      "removedComment": 414,
-      "addedTotal": 31256,
-      "commentRatio": 0.03234578960839519
+      "commits": 210,
+      "addedCode": 25130,
+      "addedComment": 901,
+      "removedCode": 10111,
+      "removedComment": 376,
+      "addedTotal": 26031,
+      "commentRatio": 0.03461257731166686
     },
     {
       "month": "2026-01",
       "model": "Claude Sonnet 4.5",
-      "commits": 35,
-      "addedCode": 8777,
-      "addedComment": 188,
-      "removedCode": 2271,
-      "removedComment": 75,
-      "addedTotal": 8965,
-      "commentRatio": 0.020970440602342443
+      "commits": 52,
+      "addedCode": 13916,
+      "addedComment": 348,
+      "removedCode": 2541,
+      "removedComment": 78,
+      "addedTotal": 14264,
+      "commentRatio": 0.024397083567021874
     },
     {
       "month": "2026-01",
       "model": "Claude (version not recorded)",
-      "commits": 12,
-      "addedCode": 2477,
-      "addedComment": 87,
-      "removedCode": 547,
-      "removedComment": 5,
-      "addedTotal": 2564,
-      "commentRatio": 0.033931357254290175
+      "commits": 6,
+      "addedCode": 587,
+      "addedComment": 3,
+      "removedCode": 293,
+      "removedComment": 2,
+      "addedTotal": 590,
+      "commentRatio": 0.005084745762711864
     },
     {
       "month": "2026-01",
@@ -361,24 +361,24 @@
     {
       "month": "2026-02",
       "model": "Claude Opus 4.5",
-      "commits": 89,
-      "addedCode": 14548,
-      "addedComment": 506,
-      "removedCode": 5901,
+      "commits": 90,
+      "addedCode": 14838,
+      "addedComment": 510,
+      "removedCode": 5981,
       "removedComment": 168,
-      "addedTotal": 15054,
-      "commentRatio": 0.03361232894911651
+      "addedTotal": 15348,
+      "commentRatio": 0.033229085222830336
     },
     {
       "month": "2026-02",
       "model": "no Claude trailer",
-      "commits": 175,
-      "addedCode": 23870,
-      "addedComment": 314,
-      "removedCode": 14413,
+      "commits": 174,
+      "addedCode": 23580,
+      "addedComment": 310,
+      "removedCode": 14333,
       "removedComment": 201,
-      "addedTotal": 24184,
-      "commentRatio": 0.012983790936156136
+      "addedTotal": 23890,
+      "commentRatio": 0.01297614064462118
     },
     {
       "month": "2026-02",
@@ -449,68 +449,68 @@
     {
       "month": "2026-03",
       "model": "Claude Opus 4.6",
-      "commits": 167,
-      "addedCode": 33609,
-      "addedComment": 576,
-      "removedCode": 13464,
-      "removedComment": 361,
-      "addedTotal": 34185,
-      "commentRatio": 0.016849495392716105
+      "commits": 395,
+      "addedCode": 59309,
+      "addedComment": 924,
+      "removedCode": 52285,
+      "removedComment": 880,
+      "addedTotal": 60233,
+      "commentRatio": 0.015340428004582206
     },
     {
       "month": "2026-03",
       "model": "no Claude trailer",
-      "commits": 124,
-      "addedCode": 9714,
-      "addedComment": 110,
-      "removedCode": 10258,
-      "removedComment": 125,
-      "addedTotal": 9824,
-      "commentRatio": 0.011197068403908795
+      "commits": 121,
+      "addedCode": 8782,
+      "addedComment": 101,
+      "removedCode": 10092,
+      "removedComment": 122,
+      "addedTotal": 8883,
+      "commentRatio": 0.011370032646628392
     },
     {
       "month": "2026-03",
       "model": "Claude Sonnet 4.6",
-      "commits": 157,
-      "addedCode": 15492,
-      "addedComment": 208,
-      "removedCode": 5595,
-      "removedComment": 68,
-      "addedTotal": 15700,
-      "commentRatio": 0.013248407643312102
+      "commits": 159,
+      "addedCode": 17557,
+      "addedComment": 242,
+      "removedCode": 5636,
+      "removedComment": 74,
+      "addedTotal": 17799,
+      "commentRatio": 0.013596269453340075
     },
     {
       "month": "2026-03",
       "model": "Claude Opus 4.5",
-      "commits": 6,
-      "addedCode": 632,
+      "commits": 7,
+      "addedCode": 640,
       "addedComment": 0,
-      "removedCode": 67,
+      "removedCode": 75,
       "removedComment": 0,
-      "addedTotal": 632,
+      "addedTotal": 640,
       "commentRatio": 0
     },
     {
       "month": "2026-03",
       "model": "Claude Sonnet 4.5",
-      "commits": 7,
-      "addedCode": 2792,
-      "addedComment": 119,
-      "removedCode": 224,
-      "removedComment": 4,
-      "addedTotal": 2911,
-      "commentRatio": 0.04087942287873583
+      "commits": 8,
+      "addedCode": 3371,
+      "addedComment": 125,
+      "removedCode": 246,
+      "removedComment": 6,
+      "addedTotal": 3496,
+      "commentRatio": 0.03575514874141877
     },
     {
       "month": "2026-03",
       "model": "Claude (version not recorded)",
-      "commits": 233,
-      "addedCode": 27780,
-      "addedComment": 384,
-      "removedCode": 39268,
-      "removedComment": 649,
-      "addedTotal": 28164,
-      "commentRatio": 0.013634426927993182
+      "commits": 4,
+      "addedCode": 360,
+      "addedComment": 5,
+      "removedCode": 542,
+      "removedComment": 125,
+      "addedTotal": 365,
+      "commentRatio": 0.0136986301369863
     },
     {
       "month": "2026-03",
@@ -536,14 +536,14 @@
     },
     {
       "month": "2026-04",
-      "model": "Claude (version not recorded)",
-      "commits": 158,
-      "addedCode": 20965,
-      "addedComment": 192,
-      "removedCode": 4192,
-      "removedComment": 72,
-      "addedTotal": 21157,
-      "commentRatio": 0.009075010634778087
+      "model": "Claude Opus 4.6",
+      "commits": 148,
+      "addedCode": 19331,
+      "addedComment": 216,
+      "removedCode": 3708,
+      "removedComment": 65,
+      "addedTotal": 19547,
+      "commentRatio": 0.011050289046912569
     },
     {
       "month": "2026-04",
@@ -569,14 +569,25 @@
     },
     {
       "month": "2026-04",
-      "model": "Claude Opus 4.6",
-      "commits": 1,
-      "addedCode": 828,
-      "addedComment": 28,
-      "removedCode": 0,
-      "removedComment": 0,
-      "addedTotal": 856,
-      "commentRatio": 0.03271028037383177
+      "model": "Claude (version not recorded)",
+      "commits": 2,
+      "addedCode": 845,
+      "addedComment": 3,
+      "removedCode": 309,
+      "removedComment": 3,
+      "addedTotal": 848,
+      "commentRatio": 0.003537735849056604
+    },
+    {
+      "month": "2026-04",
+      "model": "Claude Opus 4.7",
+      "commits": 9,
+      "addedCode": 1617,
+      "addedComment": 1,
+      "removedCode": 175,
+      "removedComment": 4,
+      "addedTotal": 1618,
+      "commentRatio": 0.0006180469715698393
     },
     {
       "month": "2026-05",
@@ -602,25 +613,36 @@
     },
     {
       "month": "2026-05",
-      "model": "Claude (version not recorded)",
-      "commits": 102,
-      "addedCode": 29666,
-      "addedComment": 907,
-      "removedCode": 11262,
-      "removedComment": 502,
-      "addedTotal": 30573,
-      "commentRatio": 0.029666699375265757
+      "model": "Claude Opus 4.7",
+      "commits": 131,
+      "addedCode": 31394,
+      "addedComment": 514,
+      "removedCode": 11631,
+      "removedComment": 461,
+      "addedTotal": 31908,
+      "commentRatio": 0.016108812836906104
     },
     {
       "month": "2026-05",
-      "model": "Claude Opus 4.7",
-      "commits": 45,
-      "addedCode": 6415,
-      "addedComment": 125,
-      "removedCode": 709,
-      "removedComment": 5,
-      "addedTotal": 6540,
-      "commentRatio": 0.0191131498470948
+      "model": "Claude (version not recorded)",
+      "commits": 15,
+      "addedCode": 4159,
+      "addedComment": 494,
+      "removedCode": 184,
+      "removedComment": 2,
+      "addedTotal": 4653,
+      "commentRatio": 0.10616806361487213
+    },
+    {
+      "month": "2026-05",
+      "model": "Claude Opus 4.6",
+      "commits": 1,
+      "addedCode": 528,
+      "addedComment": 24,
+      "removedCode": 156,
+      "removedComment": 44,
+      "addedTotal": 552,
+      "commentRatio": 0.043478260869565216
     },
     {
       "month": "2026-05",
@@ -636,13 +658,13 @@
     {
       "month": "2026-06",
       "model": "Claude Opus 4.7",
-      "commits": 3,
-      "addedCode": 251,
-      "addedComment": 9,
-      "removedCode": 133,
-      "removedComment": 0,
-      "addedTotal": 260,
-      "commentRatio": 0.03461538461538462
+      "commits": 108,
+      "addedCode": 27161,
+      "addedComment": 320,
+      "removedCode": 6029,
+      "removedComment": 100,
+      "addedTotal": 27481,
+      "commentRatio": 0.011644408864306248
     },
     {
       "month": "2026-06",
@@ -657,17 +679,6 @@
     },
     {
       "month": "2026-06",
-      "model": "Claude (version not recorded)",
-      "commits": 130,
-      "addedCode": 31231,
-      "addedComment": 546,
-      "removedCode": 10624,
-      "removedComment": 321,
-      "addedTotal": 31777,
-      "commentRatio": 0.017182238726122668
-    },
-    {
-      "month": "2026-06",
       "model": "Claude Sonnet 4.6",
       "commits": 2,
       "addedCode": 3851,
@@ -676,6 +687,17 @@
       "removedComment": 21,
       "addedTotal": 3866,
       "commentRatio": 0.0038799793067770304
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Opus 4.8",
+      "commits": 24,
+      "addedCode": 4270,
+      "addedComment": 205,
+      "removedCode": 4692,
+      "removedComment": 221,
+      "addedTotal": 4475,
+      "commentRatio": 0.04581005586592179
     },
     {
       "month": "2026-06",
@@ -690,6 +712,17 @@
     },
     {
       "month": "2026-06",
+      "model": "Claude (version not recorded)",
+      "commits": 3,
+      "addedCode": 153,
+      "addedComment": 32,
+      "removedCode": 38,
+      "removedComment": 0,
+      "addedTotal": 185,
+      "commentRatio": 0.17297297297297298
+    },
+    {
+      "month": "2026-06",
       "model": "Claude Fable 5",
       "commits": 3,
       "addedCode": 612,
@@ -698,17 +731,6 @@
       "removedComment": 1,
       "addedTotal": 618,
       "commentRatio": 0.009708737864077669
-    },
-    {
-      "month": "2026-06",
-      "model": "Claude Opus 4.8",
-      "commits": 2,
-      "addedCode": 102,
-      "addedComment": 2,
-      "removedCode": 2,
-      "removedComment": 0,
-      "addedTotal": 104,
-      "commentRatio": 0.019230769230769232
     },
     {
       "month": "2026-07",
@@ -724,24 +746,13 @@
     {
       "month": "2026-07",
       "model": "Claude Opus 4.8",
-      "commits": 36,
-      "addedCode": 9421,
-      "addedComment": 238,
-      "removedCode": 31587,
-      "removedComment": 632,
-      "addedTotal": 9659,
-      "commentRatio": 0.024640231908065018
-    },
-    {
-      "month": "2026-07",
-      "model": "Claude (version not recorded)",
-      "commits": 30,
-      "addedCode": 8003,
-      "addedComment": 537,
-      "removedCode": 1880,
-      "removedComment": 61,
-      "addedTotal": 8540,
-      "commentRatio": 0.06288056206088993
+      "commits": 53,
+      "addedCode": 11600,
+      "addedComment": 341,
+      "removedCode": 32615,
+      "removedComment": 668,
+      "addedTotal": 11941,
+      "commentRatio": 0.02855707227200402
     },
     {
       "month": "2026-07",
@@ -767,14 +778,25 @@
     },
     {
       "month": "2026-07",
+      "model": "Claude (version not recorded)",
+      "commits": 9,
+      "addedCode": 3784,
+      "addedComment": 211,
+      "removedCode": 808,
+      "removedComment": 23,
+      "addedTotal": 3995,
+      "commentRatio": 0.05281602002503129
+    },
+    {
+      "month": "2026-07",
       "model": "Claude Opus 5",
-      "commits": 29,
-      "addedCode": 5234,
-      "addedComment": 539,
-      "removedCode": 693,
-      "removedComment": 76,
-      "addedTotal": 5773,
-      "commentRatio": 0.09336566776372769
+      "commits": 33,
+      "addedCode": 7274,
+      "addedComment": 762,
+      "removedCode": 737,
+      "removedComment": 78,
+      "addedTotal": 8036,
+      "commentRatio": 0.09482329517172723
     },
     {
       "month": "2026-08",
@@ -790,24 +812,13 @@
     {
       "month": "2026-08",
       "model": "Claude Opus 5",
-      "commits": 129,
-      "addedCode": 14550,
-      "addedComment": 3014,
-      "removedCode": 2917,
-      "removedComment": 420,
-      "addedTotal": 17564,
-      "commentRatio": 0.171601002049647
-    },
-    {
-      "month": "2026-08",
-      "model": "Claude (version not recorded)",
-      "commits": 49,
-      "addedCode": 15331,
-      "addedComment": 2862,
-      "removedCode": 3762,
-      "removedComment": 212,
-      "addedTotal": 18193,
-      "commentRatio": 0.15731325234980487
+      "commits": 177,
+      "addedCode": 29805,
+      "addedComment": 5830,
+      "removedCode": 6658,
+      "removedComment": 619,
+      "addedTotal": 35635,
+      "commentRatio": 0.16360319910200646
     },
     {
       "month": "2026-08",
@@ -843,26 +854,26 @@
       "commentRatio": 0.047619047619047616
     },
     {
-      "month": "2026-09",
-      "model": "Claude Opus 5",
-      "commits": 108,
-      "addedCode": 18258,
-      "addedComment": 5694,
-      "removedCode": 3182,
-      "removedComment": 656,
-      "addedTotal": 23952,
-      "commentRatio": 0.2377254509018036
+      "month": "2026-08",
+      "model": "Claude (version not recorded)",
+      "commits": 1,
+      "addedCode": 76,
+      "addedComment": 46,
+      "removedCode": 21,
+      "removedComment": 13,
+      "addedTotal": 122,
+      "commentRatio": 0.3770491803278688
     },
     {
       "month": "2026-09",
-      "model": "Claude (version not recorded)",
-      "commits": 83,
-      "addedCode": 19889,
-      "addedComment": 3533,
-      "removedCode": 15944,
-      "removedComment": 7648,
-      "addedTotal": 23422,
-      "commentRatio": 0.15084108957390488
+      "model": "Claude Opus 5",
+      "commits": 189,
+      "addedCode": 37620,
+      "addedComment": 9225,
+      "removedCode": 18209,
+      "removedComment": 8303,
+      "addedTotal": 46845,
+      "commentRatio": 0.19692603266090297
     },
     {
       "month": "2026-09",
@@ -877,6 +888,701 @@
     },
     {
       "month": "2026-09",
+      "model": "Claude Fable 5.1",
+      "commits": 3,
+      "addedCode": 288,
+      "addedComment": 4,
+      "removedCode": 28,
+      "removedComment": 1,
+      "addedTotal": 292,
+      "commentRatio": 0.0136986301369863
+    },
+    {
+      "month": "2026-09",
+      "model": "Claude (version not recorded)",
+      "commits": 2,
+      "addedCode": 527,
+      "addedComment": 2,
+      "removedCode": 917,
+      "removedComment": 1,
+      "addedTotal": 529,
+      "commentRatio": 0.003780718336483932
+    }
+  ],
+  "byPersonAndModel": [
+    {
+      "person": "compte packmind (automatisation)",
+      "model": "no Claude trailer",
+      "commits": 24,
+      "addedCode": 149851,
+      "addedComment": 6887,
+      "removedCode": 26257,
+      "removedComment": 961,
+      "addedTotal": 156738,
+      "commentRatio": 0.043939567941405404
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "no Claude trailer",
+      "commits": 323,
+      "addedCode": 18997,
+      "addedComment": 281,
+      "removedCode": 28188,
+      "removedComment": 472,
+      "addedTotal": 19278,
+      "commentRatio": 0.014576200850710654
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "no Claude trailer",
+      "commits": 234,
+      "addedCode": 61004,
+      "addedComment": 2063,
+      "removedCode": 19710,
+      "removedComment": 763,
+      "addedTotal": 63067,
+      "commentRatio": 0.032711243598078234
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "no Claude trailer",
+      "commits": 175,
+      "addedCode": 27858,
+      "addedComment": 1848,
+      "removedCode": 19453,
+      "removedComment": 1442,
+      "addedTotal": 29706,
+      "commentRatio": 0.062209654615229246
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "no Claude trailer",
+      "commits": 163,
+      "addedCode": 25773,
+      "addedComment": 1343,
+      "removedCode": 5903,
+      "removedComment": 222,
+      "addedTotal": 27116,
+      "commentRatio": 0.049527953975512615
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude (version not recorded)",
+      "commits": 46,
+      "addedCode": 15767,
+      "addedComment": 500,
+      "removedCode": 3794,
+      "removedComment": 165,
+      "addedTotal": 16267,
+      "commentRatio": 0.030737075059937297
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "no Claude trailer",
+      "commits": 69,
+      "addedCode": 10581,
+      "addedComment": 503,
+      "removedCode": 5566,
+      "removedComment": 203,
+      "addedTotal": 11084,
+      "commentRatio": 0.04538072897870805
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude (version not recorded)",
+      "commits": 71,
+      "addedCode": 14980,
+      "addedComment": 1159,
+      "removedCode": 3187,
+      "removedComment": 131,
+      "addedTotal": 16139,
+      "commentRatio": 0.0718136191833447
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "no Claude trailer",
+      "commits": 164,
+      "addedCode": 15746,
+      "addedComment": 1435,
+      "removedCode": 6413,
+      "removedComment": 360,
+      "addedTotal": 17181,
+      "commentRatio": 0.08352249578022233
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Sonnet 4.5",
+      "commits": 45,
+      "addedCode": 11387,
+      "addedComment": 242,
+      "removedCode": 2404,
+      "removedComment": 107,
+      "addedTotal": 11629,
+      "commentRatio": 0.020810043855877546
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Opus 4.5",
+      "commits": 107,
+      "addedCode": 19265,
+      "addedComment": 474,
+      "removedCode": 7400,
+      "removedComment": 206,
+      "addedTotal": 19739,
+      "commentRatio": 0.024013374537717208
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Opus 4.5",
+      "commits": 33,
+      "addedCode": 7496,
+      "addedComment": 246,
+      "removedCode": 977,
+      "removedComment": 36,
+      "addedTotal": 7742,
+      "commentRatio": 0.03177473521053991
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Opus 4.5",
+      "commits": 43,
+      "addedCode": 28506,
+      "addedComment": 314,
+      "removedCode": 16688,
+      "removedComment": 497,
+      "addedTotal": 28820,
+      "commentRatio": 0.010895211658570438
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Sonnet 4.5",
+      "commits": 11,
+      "addedCode": 1125,
+      "addedComment": 26,
+      "removedCode": 355,
+      "removedComment": 24,
+      "addedTotal": 1151,
+      "commentRatio": 0.022589052997393572
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Opus 4.5",
+      "commits": 140,
+      "addedCode": 20972,
+      "addedComment": 494,
+      "removedCode": 6091,
+      "removedComment": 198,
+      "addedTotal": 21466,
+      "commentRatio": 0.023013137053945774
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Opus 4.5",
+      "commits": 17,
+      "addedCode": 6338,
+      "addedComment": 271,
+      "removedCode": 1325,
+      "removedComment": 36,
+      "addedTotal": 6609,
+      "commentRatio": 0.041004690573460435
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude (version not recorded)",
+      "commits": 8,
+      "addedCode": 836,
+      "addedComment": 19,
+      "removedCode": 376,
+      "removedComment": 3,
+      "addedTotal": 855,
+      "commentRatio": 0.022222222222222223
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Opus 4.5",
+      "commits": 19,
+      "addedCode": 1307,
+      "addedComment": 14,
+      "removedCode": 519,
+      "removedComment": 6,
+      "addedTotal": 1321,
+      "commentRatio": 0.010598031794095382
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Haiku 4.5",
+      "commits": 24,
+      "addedCode": 3935,
+      "addedComment": 19,
+      "removedCode": 7953,
+      "removedComment": 222,
+      "addedTotal": 3954,
+      "commentRatio": 0.0048052604957005566
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Sonnet 4.5",
+      "commits": 10,
+      "addedCode": 1997,
+      "addedComment": 85,
+      "removedCode": 324,
+      "removedComment": 5,
+      "addedTotal": 2082,
+      "commentRatio": 0.040826128722382324
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Sonnet 4.5",
+      "commits": 12,
+      "addedCode": 928,
+      "addedComment": 31,
+      "removedCode": 231,
+      "removedComment": 0,
+      "addedTotal": 959,
+      "commentRatio": 0.03232533889468196
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Haiku 4.5",
+      "commits": 4,
+      "addedCode": 1254,
+      "addedComment": 0,
+      "removedCode": 5,
+      "removedComment": 0,
+      "addedTotal": 1254,
+      "commentRatio": 0
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Opus 4.6",
+      "commits": 193,
+      "addedCode": 16156,
+      "addedComment": 145,
+      "removedCode": 5828,
+      "removedComment": 123,
+      "addedTotal": 16301,
+      "commentRatio": 0.008895159806146863
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Opus 4.6",
+      "commits": 265,
+      "addedCode": 30789,
+      "addedComment": 238,
+      "removedCode": 8310,
+      "removedComment": 73,
+      "addedTotal": 31027,
+      "commentRatio": 0.007670738389144938
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Opus 4.6",
+      "commits": 6,
+      "addedCode": 1922,
+      "addedComment": 23,
+      "removedCode": 198,
+      "removedComment": 8,
+      "addedTotal": 1945,
+      "commentRatio": 0.011825192802056555
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Haiku 4.5",
+      "commits": 1,
+      "addedCode": 37,
+      "addedComment": 0,
+      "removedCode": 3,
+      "removedComment": 0,
+      "addedTotal": 37,
+      "commentRatio": 0
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Opus 4.6",
+      "commits": 100,
+      "addedCode": 18673,
+      "addedComment": 365,
+      "removedCode": 35875,
+      "removedComment": 491,
+      "addedTotal": 19038,
+      "commentRatio": 0.019172181951885702
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Sonnet 4",
+      "commits": 2,
+      "addedCode": 541,
+      "addedComment": 0,
+      "removedCode": 20,
+      "removedComment": 0,
+      "addedTotal": 541,
+      "commentRatio": 0
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Opus 4.6",
+      "commits": 172,
+      "addedCode": 34866,
+      "addedComment": 549,
+      "removedCode": 10616,
+      "removedComment": 362,
+      "addedTotal": 35415,
+      "commentRatio": 0.015501905972045744
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Sonnet 4.5",
+      "commits": 30,
+      "addedCode": 12019,
+      "addedComment": 419,
+      "removedCode": 891,
+      "removedComment": 27,
+      "addedTotal": 12438,
+      "commentRatio": 0.033687087956263066
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Sonnet 4.6",
+      "commits": 119,
+      "addedCode": 8726,
+      "addedComment": 85,
+      "removedCode": 3607,
+      "removedComment": 31,
+      "addedTotal": 8811,
+      "commentRatio": 0.009647032118942231
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Sonnet 4.6",
+      "commits": 12,
+      "addedCode": 8505,
+      "addedComment": 111,
+      "removedCode": 2763,
+      "removedComment": 35,
+      "addedTotal": 8616,
+      "commentRatio": 0.01288300835654596
+    },
+    {
+      "person": "Claude (commit direct)",
+      "model": "Claude (version not recorded)",
+      "commits": 2,
+      "addedCode": 353,
+      "addedComment": 3,
+      "removedCode": 144,
+      "removedComment": 1,
+      "addedTotal": 356,
+      "commentRatio": 0.008426966292134831
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Sonnet 4.6",
+      "commits": 1,
+      "addedCode": 208,
+      "addedComment": 13,
+      "removedCode": 3,
+      "removedComment": 1,
+      "addedTotal": 221,
+      "commentRatio": 0.058823529411764705
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Opus 4.6",
+      "commits": 58,
+      "addedCode": 13127,
+      "addedComment": 230,
+      "removedCode": 3723,
+      "removedComment": 102,
+      "addedTotal": 13357,
+      "commentRatio": 0.017219435501983977
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Sonnet 4.6",
+      "commits": 62,
+      "addedCode": 14389,
+      "addedComment": 160,
+      "removedCode": 3588,
+      "removedComment": 34,
+      "addedTotal": 14549,
+      "commentRatio": 0.010997319403395423
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude (version not recorded)",
+      "commits": 7,
+      "addedCode": 995,
+      "addedComment": 51,
+      "removedCode": 1222,
+      "removedComment": 143,
+      "addedTotal": 1046,
+      "commentRatio": 0.04875717017208413
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Opus 4.7",
+      "commits": 125,
+      "addedCode": 38190,
+      "addedComment": 274,
+      "removedCode": 6070,
+      "removedComment": 62,
+      "addedTotal": 38464,
+      "commentRatio": 0.007123544093178036
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Opus 4.7",
+      "commits": 13,
+      "addedCode": 457,
+      "addedComment": 20,
+      "removedCode": 398,
+      "removedComment": 31,
+      "addedTotal": 477,
+      "commentRatio": 0.041928721174004195
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Opus 4.7",
+      "commits": 8,
+      "addedCode": 681,
+      "addedComment": 15,
+      "removedCode": 187,
+      "removedComment": 1,
+      "addedTotal": 696,
+      "commentRatio": 0.021551724137931036
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Opus 4.7",
+      "commits": 21,
+      "addedCode": 9082,
+      "addedComment": 135,
+      "removedCode": 8912,
+      "removedComment": 383,
+      "addedTotal": 9217,
+      "commentRatio": 0.01464684821525442
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Opus 4.7",
+      "commits": 71,
+      "addedCode": 8904,
+      "addedComment": 160,
+      "removedCode": 1197,
+      "removedComment": 14,
+      "addedTotal": 9064,
+      "commentRatio": 0.0176522506619594
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Opus 4.7",
+      "commits": 10,
+      "addedCode": 2858,
+      "addedComment": 231,
+      "removedCode": 1071,
+      "removedComment": 74,
+      "addedTotal": 3089,
+      "commentRatio": 0.07478148268047911
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Opus 4.8",
+      "commits": 7,
+      "addedCode": 1109,
+      "addedComment": 58,
+      "removedCode": 166,
+      "removedComment": 11,
+      "addedTotal": 1167,
+      "commentRatio": 0.049700085689802914
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Opus 4.8",
+      "commits": 11,
+      "addedCode": 1108,
+      "addedComment": 69,
+      "removedCode": 4567,
+      "removedComment": 221,
+      "addedTotal": 1177,
+      "commentRatio": 0.05862361937128292
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude (version not recorded)",
+      "commits": 2,
+      "addedCode": 86,
+      "addedComment": 32,
+      "removedCode": 2,
+      "removedComment": 0,
+      "addedTotal": 118,
+      "commentRatio": 0.2711864406779661
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Opus 4.8",
+      "commits": 14,
+      "addedCode": 1811,
+      "addedComment": 69,
+      "removedCode": 349,
+      "removedComment": 6,
+      "addedTotal": 1880,
+      "commentRatio": 0.036702127659574466
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Fable 5",
+      "commits": 7,
+      "addedCode": 1309,
+      "addedComment": 100,
+      "removedCode": 161,
+      "removedComment": 10,
+      "addedTotal": 1409,
+      "commentRatio": 0.07097232079488999
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Opus 4.8",
+      "commits": 4,
+      "addedCode": 1707,
+      "addedComment": 28,
+      "removedCode": 161,
+      "removedComment": 0,
+      "addedTotal": 1735,
+      "commentRatio": 0.016138328530259365
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Opus 4.8",
+      "commits": 36,
+      "addedCode": 9421,
+      "addedComment": 238,
+      "removedCode": 31587,
+      "removedComment": 632,
+      "addedTotal": 9659,
+      "commentRatio": 0.024640231908065018
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Opus 4.8",
+      "commits": 6,
+      "addedCode": 913,
+      "addedComment": 88,
+      "removedCode": 558,
+      "removedComment": 29,
+      "addedTotal": 1001,
+      "commentRatio": 0.08791208791208792
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Sonnet 5",
+      "commits": 29,
+      "addedCode": 3382,
+      "addedComment": 251,
+      "removedCode": 341,
+      "removedComment": 32,
+      "addedTotal": 3633,
+      "commentRatio": 0.06908890723919625
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Fable 5",
+      "commits": 18,
+      "addedCode": 6805,
+      "addedComment": 1280,
+      "removedCode": 2259,
+      "removedComment": 159,
+      "addedTotal": 8085,
+      "commentRatio": 0.1583178726035869
+    },
+    {
+      "person": "Quentin Le Bourles",
+      "model": "Claude Opus 5",
+      "commits": 110,
+      "addedCode": 13461,
+      "addedComment": 1873,
+      "removedCode": 2056,
+      "removedComment": 225,
+      "addedTotal": 15334,
+      "commentRatio": 0.12214686317986174
+    },
+    {
+      "person": "Steven Drouet",
+      "model": "Claude Opus 5",
+      "commits": 22,
+      "addedCode": 6998,
+      "addedComment": 399,
+      "removedCode": 3999,
+      "removedComment": 162,
+      "addedTotal": 7397,
+      "commentRatio": 0.053940786805461674
+    },
+    {
+      "person": "Joan Racenet",
+      "model": "Claude Opus 5",
+      "commits": 190,
+      "addedCode": 36687,
+      "addedComment": 9622,
+      "removedCode": 7543,
+      "removedComment": 1074,
+      "addedTotal": 46309,
+      "commentRatio": 0.2077781856658533
+    },
+    {
+      "person": "Vincent Pretre",
+      "model": "Claude Opus 5",
+      "commits": 26,
+      "addedCode": 7517,
+      "addedComment": 664,
+      "removedCode": 3381,
+      "removedComment": 60,
+      "addedTotal": 8181,
+      "commentRatio": 0.08116367192274783
+    },
+    {
+      "person": "Malo Couaran",
+      "model": "Claude Opus 5",
+      "commits": 15,
+      "addedCode": 4478,
+      "addedComment": 577,
+      "removedCode": 510,
+      "removedComment": 54,
+      "addedTotal": 5055,
+      "commentRatio": 0.11414441147378833
+    },
+    {
+      "person": "Cédric Teyton",
+      "model": "Claude Opus 5",
+      "commits": 27,
+      "addedCode": 4786,
+      "addedComment": 2585,
+      "removedCode": 7984,
+      "removedComment": 7350,
+      "addedTotal": 7371,
+      "commentRatio": 0.35069868403201737
+    },
+    {
+      "person": "Michel Agent",
+      "model": "Claude Opus 4.8",
+      "commits": 1,
+      "addedCode": 60,
+      "addedComment": 3,
+      "removedCode": 34,
+      "removedComment": 0,
+      "addedTotal": 63,
+      "commentRatio": 0.047619047619047616
+    },
+    {
+      "person": "Claude (commit direct)",
+      "model": "Claude Opus 5",
+      "commits": 9,
+      "addedCode": 772,
+      "addedComment": 97,
+      "removedCode": 131,
+      "removedComment": 75,
+      "addedTotal": 869,
+      "commentRatio": 0.11162255466052934
+    },
+    {
+      "person": "Steven Drouet",
       "model": "Claude Fable 5.1",
       "commits": 3,
       "addedCode": 288,

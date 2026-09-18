@@ -23,11 +23,10 @@ const monthly = read(path.join(options.out, 'comment-ratio.json'));
 const models = read(path.join(options.out, 'by-model.json'));
 const releases = read(path.join(here, 'model-releases.json'));
 
-/** Timestamp in the middle of a YYYY-MM month, where its point is plotted. */
-const midMonth = (month) => {
-  const [year, m] = month.split('-').map(Number);
-  return Date.UTC(year, m - 1, 16);
-};
+const day = (isoDay) => Date.parse(isoDay + 'T00:00:00Z');
+
+/** A period is plotted at its midpoint, which is where its average sits. */
+const periodMid = (m) => (day(m.period) + day(m.periodEnd)) / 2;
 
 // The first delta is the initial import of a codebase that already existed, so
 // it is not a month of development and is kept out of the trend charts.
@@ -36,10 +35,7 @@ const flowMonths = monthly.months.filter((m) => !m.seeded);
 const series = (scope, name, color) => ({
   name,
   color,
-  points: flowMonths.map((m) => [
-    midMonth(m.month),
-    m.flow[scope].commentRatio,
-  ]),
+  points: flowMonths.map((m) => [periodMid(m), m.flow[scope].commentRatio]),
 });
 
 // Plotted at the boundary the snapshot stands for (the 1st of the month), not
@@ -52,8 +48,11 @@ const stock = monthly.snapshots
     totals: s.totals,
   }));
 
-const tMin = Date.UTC(2025, 9, 1);
-const tMax = Date.UTC(2026, 9, 1);
+// Bounds come from the data, so no plotted point can fall outside the plot.
+const MARGIN = 6 * 24 * 3600 * 1000;
+const plotted = [...flowMonths.map(periodMid), ...stock.map((s) => s.t)];
+const tMin = Math.min(...plotted) - MARGIN;
+const tMax = Math.max(...plotted) + MARGIN;
 
 const annotations = releases.releases.map((r) => ({
   t: Date.parse(r.date + 'T00:00:00Z'),
@@ -61,55 +60,36 @@ const annotations = releases.releases.map((r) => ({
   major: r.major,
 }));
 
-const ORDER = [
-  'Claude Opus 4.5',
-  'Claude Opus 4.6',
-  'Claude Opus 4.7',
-  'Claude Opus 4.8',
-  'Claude Opus 5',
-  'Claude Sonnet 4.5',
-  'Claude Sonnet 4.6',
-  'Claude Sonnet 5',
-  'Claude Haiku 4.5',
-  'Claude Fable 5',
-];
-const modelItems = ORDER.filter(
-  (name) => models.byModel[name] && models.byModel[name].addedTotal >= 1000,
-).map((name) => {
-  const bucket = models.byModel[name];
-  return {
-    label: name.replace('Claude ', ''),
+// Every bucket that carries enough lines to mean anything, including the two
+// that are not a model: hiding them is how an attribution bug stays invisible.
+const IS_MODEL = /^Claude (Opus|Sonnet|Haiku|Fable|Mythos) /;
+const modelItems = Object.entries(models.byModel)
+  .filter(([, bucket]) => bucket.addedTotal >= 1000)
+  .map(([name, bucket]) => ({
+    label: name
+      .replace('Claude ', '')
+      .replace('no Claude trailer', 'sans trailer'),
+    muted: !IS_MODEL.test(name),
     value: bucket.commentRatio,
     median: bucket.commitDistribution.median,
     p25: bucket.commitDistribution.p25,
     p75: bucket.commitDistribution.p75,
     commits: bucket.commits,
     added: bucket.addedTotal,
-  };
-});
+  }));
 modelItems.sort((a, b) => b.value - a.value);
 
 const fmtPct = (v, d = 1) =>
   v === null ? '—' : (v * 100).toFixed(d).replace('.', ',') + ' %';
 const fmtInt = (v) => v.toLocaleString('fr-FR');
-const MONTH_FR = [
-  'janv.',
-  'févr.',
-  'mars',
-  'avr.',
-  'mai',
-  'juin',
-  'juil.',
-  'août',
-  'sept.',
-  'oct.',
-  'nov.',
-  'déc.',
-];
-const monthFr = (month) => {
-  const [year, m] = month.split('-').map(Number);
-  return `${MONTH_FR[m - 1]} ${year}`;
-};
+const dayFr = (isoDay) =>
+  new Date(isoDay + 'T00:00:00Z').toLocaleDateString('fr-FR', {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'short',
+  });
+const periodFr = (m) =>
+  `${dayFr(m.period)} → ${dayFr(m.periodEnd)} ${m.periodEnd.slice(2, 4)}`;
 
 const opus5 = models.byModel['Claude Opus 5'];
 const opus4x = [
@@ -122,6 +102,73 @@ const opus4xPooled =
   opus4x.reduce((s, b) => s + b.addedComment, 0) /
   opus4x.reduce((s, b) => s + b.addedComment + b.addedCode, 0);
 const headScope = stock.at(-1).totals.all;
+
+// Range of the periods before the shift, so the lede cannot go stale.
+const beforeShift = flowMonths
+  .filter((m) => m.period < '2026-08-01')
+  .map((m) => m.flow.all.commentRatio);
+const opus4xRange = opus4x.map((b) => b.commentRatio).sort((a, b) => a - b);
+
+// The within-developer comparison: the same person, one generation apart.
+const COMPARED = ['Claude Opus 4.6', 'Claude Opus 4.7', 'Claude Opus 5'];
+const personTotals = new Map();
+for (const row of models.byPersonAndModel) {
+  personTotals.set(
+    row.person,
+    (personTotals.get(row.person) ?? 0) + row.commits,
+  );
+}
+const comparable = [...personTotals.keys()].filter((person) => {
+  const rows = models.byPersonAndModel.filter(
+    (r) =>
+      r.person === person && COMPARED.includes(r.model) && r.addedTotal >= 1000,
+  );
+  return rows.some((r) => r.model === 'Claude Opus 5') && rows.length >= 2;
+});
+comparable.sort(
+  (a, b) =>
+    (models.byPersonAndModel.find(
+      (r) => r.person === b && r.model === 'Claude Opus 5',
+    )?.commentRatio ?? 0) -
+    (models.byPersonAndModel.find(
+      (r) => r.person === a && r.model === 'Claude Opus 5',
+    )?.commentRatio ?? 0),
+);
+const authorItems = [];
+for (const person of comparable) {
+  for (const model of COMPARED) {
+    const row = models.byPersonAndModel.find(
+      (r) => r.person === person && r.model === model,
+    );
+    if (!row || row.addedTotal < 1000) continue;
+    authorItems.push({
+      label: `${person} · ${model.replace('Claude ', '')}`,
+      value: row.commentRatio,
+      muted: model !== 'Claude Opus 5',
+      commits: row.commits,
+      added: row.addedTotal,
+      median: null,
+    });
+  }
+}
+
+const personModelTable = [...personTotals.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .flatMap(([person, total]) =>
+    models.byPersonAndModel
+      .filter((r) => r.person === person)
+      .sort((a, b) => b.commits - a.commits)
+      .map((r) => [
+        person,
+        r.model
+          .replace('Claude ', '')
+          .replace('no Claude trailer', 'sans trailer'),
+        fmtInt(r.commits),
+        fmtPct(r.commits / total, 0),
+        fmtInt(r.addedTotal),
+        fmtPct(r.commentRatio),
+      ]),
+  );
 
 const payload = {
   tMin,
@@ -148,8 +195,10 @@ const payload = {
     },
   ],
   modelItems,
+  authorItems,
+  personModelTable,
   monthTable: flowMonths.map((m) => [
-    monthFr(m.month) + (m.partial ? ' (partiel)' : ''),
+    periodFr(m) + (m.partial ? ' (partiel)' : ''),
     fmtInt(m.flow.all.addedCode + m.flow.all.addedComment),
     fmtPct(m.flow.all.commentRatio),
     fmtPct(m.flow.ts.commentRatio),
@@ -204,10 +253,12 @@ const head = `<title>Taux de commentaires Packmind</title>
 const body = `<main>
 
 <header>
-  <h1>Le taux de commentaires dans le code, mois par mois</h1>
-  <p class="lede">Le taux est resté entre 1 et 6 % pendant onze mois, puis a été multiplié par dix en août 2026.
-  Le basculement ne suit pas une consigne interne — aucune n'a changé — mais l'arrivée d'Opus 5 : en attribuant chaque
-  ligne au modèle qui l'a produite, toute la famille Opus 4.5 → 4.8 se tient sous 2,5 %, Opus 5 est à 19,6 %.</p>
+  <h1>Le taux de commentaires dans le code, quinzaine par quinzaine</h1>
+  <p class="lede">Le taux est resté entre ${fmtPct(Math.min(...beforeShift))} et ${fmtPct(Math.max(...beforeShift))}
+  sur les dix premiers mois, puis a été multiplié par ${(opus5.commentRatio / opus4xPooled).toFixed(0)} à partir d'août 2026.
+  Le basculement ne suit aucune consigne interne — aucune n'a changé — mais la sortie d'Opus 5 le 24 juillet : en
+  attribuant chaque ligne au modèle qui l'a produite, la famille Opus 4.5 → 4.8 se tient entre
+  ${fmtPct(opus4xRange[0])} et ${fmtPct(opus4xRange.at(-1))}, Opus 5 est à ${fmtPct(opus5.commentRatio)}.</p>
   <p>Codebase Packmind, fichiers TypeScript (<code>.ts</code>, <code>.tsx</code> et tests <code>.spec.*</code>),
   d'octobre 2025 à septembre 2026.</p>
   <p class="meta">Généré le ${generated} · ${fmtInt(models.commitsScanned)} commits analysés ·
@@ -223,7 +274,7 @@ const body = `<main>
 
 <span class="eyebrow">Le flux</span>
 <h2>1. Ce qui est écrit chaque mois</h2>
-<p>Pour chaque mois, le diff net entre le 1<sup>er</sup> du mois et le 1<sup>er</sup> du mois suivant : sur les lignes
+<p>Pour chaque quinzaine — les modèles sortent en milieu de mois, un pas mensuel ne séparerait pas l'avant de l'après — le diff net entre les deux bornes : sur les lignes
 <em>ajoutées</em>, quelle part est du commentaire. C'est la mesure qui reflète la façon dont le code est écrit — le taux
 sur l'ensemble de la codebase, lui, bouge lentement parce qu'il est dominé par l'existant.</p>
 
@@ -267,8 +318,23 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
   <details><summary>Voir les données</summary><div id="t-models"></div></details>
 </div>
 
+<span class="eyebrow">Par développeur</span>
+<h2>3. Le même développeur, d'une génération à l'autre</h2>
+<p>Les commits Opus 5 ne sont pas répartis uniformément dans l'équipe, donc la comparaison entre modèles pourrait
+n'être qu'une comparaison entre personnes. Elle ne l'est pas : chaque développeur qui a utilisé les deux générations
+monte, d'un facteur 4 à 20. L'amplitude, elle, varie beaucoup d'une personne à l'autre.</p>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Taux de commentaires par développeur et par modèle</h3>
+    <p>Développeurs ayant au moins 1 000 lignes ajoutées avec Opus 5 et avec au moins un modèle de la génération précédente.</p>
+  </div>
+  <div class="chart" id="c-authors"></div>
+  <details><summary>Voir la répartition complète des modèles par développeur</summary><div id="t-authors"></div></details>
+</div>
+
 <span class="eyebrow">Le stock</span>
-<h2>3. Le stock, pour mémoire</h2>
+<h2>4. Le stock, pour mémoire</h2>
 <p>La taille de la codebase et le taux de commentaires calculé sur l'ensemble des fichiers existants à chaque relevé.</p>
 
 <div class="card">
@@ -319,7 +385,7 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
     ariaLabel: "Taux de commentaires des lignes ajoutees par mois"
   });
   V.table(document.getElementById('t-headline'),
-    ['Mois', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
+    ['Période', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
 
   V.lineChart(document.getElementById('c-category'), {
     series: D.byCategory, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
@@ -329,13 +395,20 @@ interquartile <em>par commit</em>, pour vérifier que le résultat n'est pas por
     return '<span><i class="swatch" style="background:' + s.color + '"></i>' + s.name + '</span>';
   }).join('');
   V.table(document.getElementById('t-category'),
-    ['Mois', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
+    ['Période', 'Lignes ajoutées', 'Tous', '.ts', '.tsx', 'Tests', 'Taux des lignes supprimées'], D.monthTable);
 
   V.barChart(document.getElementById('c-models'), {
     items: D.modelItems, ariaLabel: "Taux de commentaires par modele"
   });
   V.table(document.getElementById('t-models'),
     ['Modèle', 'Commits', 'Lignes ajoutées', 'Taux poolé', 'Médiane/commit', 'P25 – P75'], D.modelTable);
+
+  V.barChart(document.getElementById('c-authors'), {
+    items: D.authorItems, ariaLabel: "Taux de commentaires par developpeur et par modele"
+  });
+  V.table(document.getElementById('t-authors'),
+    ['Développeur', 'Modèle', 'Commits', 'Part de ses commits', 'Lignes ajoutées', 'Taux de commentaires'],
+    D.personModelTable);
 
   V.lineChart(document.getElementById('c-size'), {
     series: D.stockSize, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
@@ -367,7 +440,9 @@ const html =
 fs.mkdirSync(options.out, { recursive: true });
 const target = path.join(
   options.out,
-  options.target === 'artifact' ? 'comment-ratio.artifact.html' : 'comment-ratio.html',
+  options.target === 'artifact'
+    ? 'comment-ratio.artifact.html'
+    : 'comment-ratio.html',
 );
 fs.writeFileSync(target, html);
 process.stderr.write(

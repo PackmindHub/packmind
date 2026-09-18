@@ -1,0 +1,17 @@
+{
+  "note": "Several git identities belong to the same person (a personal address used before a work one, a GitHub noreply address, a shortened display name). Emails are matched lower-cased; an address that is not listed keeps whatever display name its commits carry.",
+  "byEmail": {
+    "quentin.lebourles@promyze.com": "Quentin Le Bourles",
+    "joan.racenet@packmind.com": "Joan Racenet",
+    "malo.couaran@promyze.com": "Malo Couaran",
+    "159782968+malopromyze@users.noreply.github.com": "Malo Couaran",
+    "steven.drouet@promyze.com": "Steven Drouet",
+    "121097790+stevdrouet@users.noreply.github.com": "Steven Drouet",
+    "vincent.pretre@gmail.com": "Vincent Pretre",
+    "vincent.pretre@packmind.com": "Vincent Pretre",
+    "cedric.teyton@packmind.com": "Cédric Teyton",
+    "michel@packmind.com": "Michel Agent",
+    "contact@packmind.com": "compte packmind (automatisation)",
+    "noreply@anthropic.com": "Claude (commit direct)"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T11:19:01.523Z",
+  "generatedAt": "2026-09-18T11:56:22.242Z",
   "repo": "/home/user/packmind",
   "ref": "HEAD",
   "categories": [
@@ -105,6 +105,77 @@
       }
     },
     {
+      "label": "2025-09-15",
+      "date": "2025-09-11T20:23:41+00:00",
+      "sha": "55b606690a5981e3df0dffed2262a03c4f7540fd",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 629,
+          "blank": 4181,
+          "code": 31877,
+          "comment": 2416,
+          "commentRatio": 0.07045169568133439
+        },
+        "spec.ts": {
+          "files": 114,
+          "blank": 4046,
+          "code": 22990,
+          "comment": 518,
+          "commentRatio": 0.022035051897226477
+        },
+        "tsx": {
+          "files": 176,
+          "blank": 1215,
+          "code": 13816,
+          "comment": 315,
+          "commentRatio": 0.022291416035666266
+        },
+        "spec.tsx": {
+          "files": 16,
+          "blank": 474,
+          "code": 2583,
+          "comment": 68,
+          "commentRatio": 0.025650697849867975
+        },
+        "all": {
+          "files": 935,
+          "blank": 9916,
+          "code": 71266,
+          "comment": 3317,
+          "commentRatio": 0.04447394178298004
+        },
+        "prod": {
+          "files": 805,
+          "blank": 5396,
+          "code": 45693,
+          "comment": 2731,
+          "commentRatio": 0.05639765405584008
+        },
+        "spec": {
+          "files": 130,
+          "blank": 4520,
+          "code": 25573,
+          "comment": 586,
+          "commentRatio": 0.0224014679460224
+        },
+        "backend": {
+          "files": 743,
+          "blank": 8227,
+          "code": 54867,
+          "comment": 2934,
+          "commentRatio": 0.05076036746769087
+        },
+        "frontend": {
+          "files": 192,
+          "blank": 1689,
+          "code": 16399,
+          "comment": 383,
+          "commentRatio": 0.022822071266833513
+        }
+      }
+    },
+    {
       "label": "2025-10-01",
       "date": "2025-09-29T13:39:10+00:00",
       "sha": "f74706521e087276da45b32d4e7f9dcd726b8348",
@@ -172,6 +243,77 @@
           "code": 19166,
           "comment": 483,
           "commentRatio": 0.02458140363377271
+        }
+      }
+    },
+    {
+      "label": "2025-10-15",
+      "date": "2025-10-09T15:54:30+00:00",
+      "sha": "682a75177236d0f340cf7b863d506dea6fbe7e9a",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 809,
+          "blank": 6535,
+          "code": 47385,
+          "comment": 3317,
+          "commentRatio": 0.06542148238728256
+        },
+        "spec.ts": {
+          "files": 145,
+          "blank": 5775,
+          "code": 33826,
+          "comment": 764,
+          "commentRatio": 0.02208730847065626
+        },
+        "tsx": {
+          "files": 216,
+          "blank": 1685,
+          "code": 19225,
+          "comment": 395,
+          "commentRatio": 0.020132517838939858
+        },
+        "spec.tsx": {
+          "files": 20,
+          "blank": 810,
+          "code": 4527,
+          "comment": 152,
+          "commentRatio": 0.032485573840564226
+        },
+        "all": {
+          "files": 1190,
+          "blank": 14805,
+          "code": 104963,
+          "comment": 4628,
+          "commentRatio": 0.04222974514330556
+        },
+        "prod": {
+          "files": 1025,
+          "blank": 8220,
+          "code": 66610,
+          "comment": 3712,
+          "commentRatio": 0.05278575694661699
+        },
+        "spec": {
+          "files": 165,
+          "blank": 6585,
+          "code": 38353,
+          "comment": 916,
+          "commentRatio": 0.0233262879115842
+        },
+        "backend": {
+          "files": 954,
+          "blank": 12310,
+          "code": 81211,
+          "comment": 4081,
+          "commentRatio": 0.04784739483187169
+        },
+        "frontend": {
+          "files": 236,
+          "blank": 2495,
+          "code": 23752,
+          "comment": 547,
+          "commentRatio": 0.02251121445326968
         }
       }
     },
@@ -247,6 +389,77 @@
       }
     },
     {
+      "label": "2025-11-15",
+      "date": "2025-11-14T22:30:13+01:00",
+      "sha": "2a60ca30fcb712bc0fff16212cfac4ce2122ab06",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 1084,
+          "blank": 8795,
+          "code": 63150,
+          "comment": 5185,
+          "commentRatio": 0.07587619814150874
+        },
+        "spec.ts": {
+          "files": 168,
+          "blank": 6845,
+          "code": 40807,
+          "comment": 755,
+          "commentRatio": 0.0181656320677542
+        },
+        "tsx": {
+          "files": 244,
+          "blank": 1963,
+          "code": 21981,
+          "comment": 434,
+          "commentRatio": 0.019362034351996432
+        },
+        "spec.tsx": {
+          "files": 21,
+          "blank": 831,
+          "code": 4662,
+          "comment": 153,
+          "commentRatio": 0.03177570093457944
+        },
+        "all": {
+          "files": 1517,
+          "blank": 18434,
+          "code": 130600,
+          "comment": 6527,
+          "commentRatio": 0.047598211876581566
+        },
+        "prod": {
+          "files": 1328,
+          "blank": 10758,
+          "code": 85131,
+          "comment": 5619,
+          "commentRatio": 0.06191735537190083
+        },
+        "spec": {
+          "files": 189,
+          "blank": 7676,
+          "code": 45469,
+          "comment": 908,
+          "commentRatio": 0.019578670461651248
+        },
+        "backend": {
+          "files": 1252,
+          "blank": 15640,
+          "code": 103957,
+          "comment": 5940,
+          "commentRatio": 0.05405061102668863
+        },
+        "frontend": {
+          "files": 265,
+          "blank": 2794,
+          "code": 26643,
+          "comment": 587,
+          "commentRatio": 0.02155710613294161
+        }
+      }
+    },
+    {
       "label": "2025-12-01",
       "date": "2025-11-30T22:03:46+01:00",
       "sha": "afcbf0ee1b13b481292eb472db1f1e6f889b1b30",
@@ -314,6 +527,77 @@
           "code": 30162,
           "comment": 639,
           "commentRatio": 0.020746079672737897
+        }
+      }
+    },
+    {
+      "label": "2025-12-15",
+      "date": "2025-12-15T00:55:46+01:00",
+      "sha": "81fdb7abe9ab2a2aea8d99b97211e8506119e756",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 1315,
+          "blank": 11304,
+          "code": 80223,
+          "comment": 7020,
+          "commentRatio": 0.08046490835940992
+        },
+        "spec.ts": {
+          "files": 228,
+          "blank": 10602,
+          "code": 60835,
+          "comment": 862,
+          "commentRatio": 0.01397150590790476
+        },
+        "tsx": {
+          "files": 265,
+          "blank": 2316,
+          "code": 25411,
+          "comment": 486,
+          "commentRatio": 0.018766652508012512
+        },
+        "spec.tsx": {
+          "files": 27,
+          "blank": 1063,
+          "code": 5809,
+          "comment": 174,
+          "commentRatio": 0.029082400133712185
+        },
+        "all": {
+          "files": 1835,
+          "blank": 25285,
+          "code": 172278,
+          "comment": 8542,
+          "commentRatio": 0.04724034951885853
+        },
+        "prod": {
+          "files": 1580,
+          "blank": 13620,
+          "code": 105634,
+          "comment": 7506,
+          "commentRatio": 0.06634258440869718
+        },
+        "spec": {
+          "files": 255,
+          "blank": 11665,
+          "code": 66644,
+          "comment": 1036,
+          "commentRatio": 0.015307328605200945
+        },
+        "backend": {
+          "files": 1543,
+          "blank": 21906,
+          "code": 141058,
+          "comment": 7882,
+          "commentRatio": 0.05292063918356385
+        },
+        "frontend": {
+          "files": 292,
+          "blank": 3379,
+          "code": 31220,
+          "comment": 660,
+          "commentRatio": 0.02070263488080301
         }
       }
     },
@@ -389,6 +673,77 @@
       }
     },
     {
+      "label": "2026-01-15",
+      "date": "2026-01-14T18:09:33+01:00",
+      "sha": "42df0844f13ad452fe831b0ca52e11ae26a07fe1",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 1480,
+          "blank": 12969,
+          "code": 93242,
+          "comment": 7838,
+          "commentRatio": 0.07754254056193115
+        },
+        "spec.ts": {
+          "files": 262,
+          "blank": 14565,
+          "code": 84823,
+          "comment": 962,
+          "commentRatio": 0.0112140817159177
+        },
+        "tsx": {
+          "files": 313,
+          "blank": 2653,
+          "code": 29325,
+          "comment": 540,
+          "commentRatio": 0.01808136614766449
+        },
+        "spec.tsx": {
+          "files": 28,
+          "blank": 1090,
+          "code": 6067,
+          "comment": 174,
+          "commentRatio": 0.027880147412273674
+        },
+        "all": {
+          "files": 2083,
+          "blank": 31277,
+          "code": 213457,
+          "comment": 9514,
+          "commentRatio": 0.042669226042848625
+        },
+        "prod": {
+          "files": 1793,
+          "blank": 15622,
+          "code": 122567,
+          "comment": 8378,
+          "commentRatio": 0.06398106075069686
+        },
+        "spec": {
+          "files": 290,
+          "blank": 15655,
+          "code": 90890,
+          "comment": 1136,
+          "commentRatio": 0.012344337469845479
+        },
+        "backend": {
+          "files": 1742,
+          "blank": 27534,
+          "code": 178065,
+          "comment": 8800,
+          "commentRatio": 0.04709282102052284
+        },
+        "frontend": {
+          "files": 341,
+          "blank": 3743,
+          "code": 35392,
+          "comment": 714,
+          "commentRatio": 0.019775106630476928
+        }
+      }
+    },
+    {
       "label": "2026-02-01",
       "date": "2026-01-30T17:17:37+01:00",
       "sha": "c3a9a791658469047da982ed75be5bf4c4ac71ca",
@@ -456,6 +811,77 @@
           "code": 39101,
           "comment": 711,
           "commentRatio": 0.017858937003918416
+        }
+      }
+    },
+    {
+      "label": "2026-02-15",
+      "date": "2026-02-14T18:24:55+01:00",
+      "sha": "377524a922a26484f78af79c0853107f18add89a",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 1730,
+          "blank": 15710,
+          "code": 109689,
+          "comment": 8732,
+          "commentRatio": 0.07373692166085408
+        },
+        "spec.ts": {
+          "files": 321,
+          "blank": 20527,
+          "code": 113348,
+          "comment": 900,
+          "commentRatio": 0.007877599607870597
+        },
+        "tsx": {
+          "files": 383,
+          "blank": 3423,
+          "code": 37873,
+          "comment": 703,
+          "commentRatio": 0.018223766072169224
+        },
+        "spec.tsx": {
+          "files": 43,
+          "blank": 1720,
+          "code": 9339,
+          "comment": 95,
+          "commentRatio": 0.01006995972016112
+        },
+        "all": {
+          "files": 2477,
+          "blank": 41380,
+          "code": 270249,
+          "comment": 10430,
+          "commentRatio": 0.0371598872733621
+        },
+        "prod": {
+          "files": 2113,
+          "blank": 19133,
+          "code": 147562,
+          "comment": 9435,
+          "commentRatio": 0.06009668974566393
+        },
+        "spec": {
+          "files": 364,
+          "blank": 22247,
+          "code": 122687,
+          "comment": 995,
+          "commentRatio": 0.008044824630908297
+        },
+        "backend": {
+          "files": 2051,
+          "blank": 36237,
+          "code": 223037,
+          "comment": 9632,
+          "commentRatio": 0.041397865637450626
+        },
+        "frontend": {
+          "files": 426,
+          "blank": 5143,
+          "code": 47212,
+          "comment": 798,
+          "commentRatio": 0.016621537179754217
         }
       }
     },
@@ -531,6 +957,77 @@
       }
     },
     {
+      "label": "2026-03-15",
+      "date": "2026-03-13T17:54:30+01:00",
+      "sha": "f40b132e982929135be7ab3d345442cc721ca590",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 1936,
+          "blank": 17495,
+          "code": 122998,
+          "comment": 9328,
+          "commentRatio": 0.07049257137675136
+        },
+        "spec.ts": {
+          "files": 389,
+          "blank": 25243,
+          "code": 142788,
+          "comment": 930,
+          "commentRatio": 0.006471005719534088
+        },
+        "tsx": {
+          "files": 493,
+          "blank": 4263,
+          "code": 50746,
+          "comment": 826,
+          "commentRatio": 0.016016443031102147
+        },
+        "spec.tsx": {
+          "files": 44,
+          "blank": 1778,
+          "code": 9716,
+          "comment": 99,
+          "commentRatio": 0.010086602139582273
+        },
+        "all": {
+          "files": 2862,
+          "blank": 48779,
+          "code": 326248,
+          "comment": 11183,
+          "commentRatio": 0.033141590428858045
+        },
+        "prod": {
+          "files": 2429,
+          "blank": 21758,
+          "code": 173744,
+          "comment": 10154,
+          "commentRatio": 0.05521539114074106
+        },
+        "spec": {
+          "files": 433,
+          "blank": 27021,
+          "code": 152504,
+          "comment": 1029,
+          "commentRatio": 0.0067021422104694105
+        },
+        "backend": {
+          "files": 2325,
+          "blank": 42738,
+          "code": 265786,
+          "comment": 10258,
+          "commentRatio": 0.03716074249032763
+        },
+        "frontend": {
+          "files": 537,
+          "blank": 6041,
+          "code": 60462,
+          "comment": 925,
+          "commentRatio": 0.01506833694430417
+        }
+      }
+    },
+    {
       "label": "2026-04-01",
       "date": "2026-03-31T18:01:25+02:00",
       "sha": "11b51e386ccbf43efe56015c19d75b261397136a",
@@ -598,6 +1095,77 @@
           "code": 55262,
           "comment": 896,
           "commentRatio": 0.01595498415185726
+        }
+      }
+    },
+    {
+      "label": "2026-04-15",
+      "date": "2026-04-14T17:53:36+02:00",
+      "sha": "c4eefbb0758d8a73183a3beac469812aa508d7a9",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2020,
+          "blank": 18487,
+          "code": 130592,
+          "comment": 9405,
+          "commentRatio": 0.06718001100023573
+        },
+        "spec.ts": {
+          "files": 422,
+          "blank": 27151,
+          "code": 154163,
+          "comment": 910,
+          "commentRatio": 0.005868204007145022
+        },
+        "tsx": {
+          "files": 456,
+          "blank": 3937,
+          "code": 46825,
+          "comment": 799,
+          "commentRatio": 0.01677725516546279
+        },
+        "spec.tsx": {
+          "files": 48,
+          "blank": 1993,
+          "code": 10881,
+          "comment": 101,
+          "commentRatio": 0.009196867601529777
+        },
+        "all": {
+          "files": 2946,
+          "blank": 51568,
+          "code": 342461,
+          "comment": 11215,
+          "commentRatio": 0.031709813501622955
+        },
+        "prod": {
+          "files": 2476,
+          "blank": 22424,
+          "code": 177417,
+          "comment": 10204,
+          "commentRatio": 0.05438623608231488
+        },
+        "spec": {
+          "files": 470,
+          "blank": 29144,
+          "code": 165044,
+          "comment": 1011,
+          "commentRatio": 0.006088344223299509
+        },
+        "backend": {
+          "files": 2442,
+          "blank": 45638,
+          "code": 284755,
+          "comment": 10315,
+          "commentRatio": 0.03495780662215745
+        },
+        "frontend": {
+          "files": 504,
+          "blank": 5930,
+          "code": 57706,
+          "comment": 900,
+          "commentRatio": 0.01535678940722793
         }
       }
     },
@@ -673,6 +1241,77 @@
       }
     },
     {
+      "label": "2026-05-15",
+      "date": "2026-05-13T17:32:33+02:00",
+      "sha": "d32d248814ec72bfdfb4612fdf902780f40e49ca",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2058,
+          "blank": 18502,
+          "code": 130825,
+          "comment": 9219,
+          "commentRatio": 0.06582931078803804
+        },
+        "spec.ts": {
+          "files": 427,
+          "blank": 27098,
+          "code": 154607,
+          "comment": 891,
+          "commentRatio": 0.005729977234433884
+        },
+        "tsx": {
+          "files": 490,
+          "blank": 4073,
+          "code": 49062,
+          "comment": 777,
+          "commentRatio": 0.015590200445434299
+        },
+        "spec.tsx": {
+          "files": 54,
+          "blank": 2050,
+          "code": 11544,
+          "comment": 82,
+          "commentRatio": 0.007053156717701703
+        },
+        "all": {
+          "files": 3029,
+          "blank": 51723,
+          "code": 346038,
+          "comment": 10969,
+          "commentRatio": 0.030724887747299073
+        },
+        "prod": {
+          "files": 2548,
+          "blank": 22575,
+          "code": 179887,
+          "comment": 9996,
+          "commentRatio": 0.05264294328612883
+        },
+        "spec": {
+          "files": 481,
+          "blank": 29148,
+          "code": 166151,
+          "comment": 973,
+          "commentRatio": 0.005822024365142051
+        },
+        "backend": {
+          "files": 2485,
+          "blank": 45600,
+          "code": 285432,
+          "comment": 10110,
+          "commentRatio": 0.03420833587104371
+        },
+        "frontend": {
+          "files": 544,
+          "blank": 6123,
+          "code": 60606,
+          "comment": 859,
+          "commentRatio": 0.013975433173350687
+        }
+      }
+    },
+    {
       "label": "2026-06-01",
       "date": "2026-05-29T17:08:55+02:00",
       "sha": "318e3b2847b0ee0e1d3ba85c6a5eb2d78f4f05c5",
@@ -740,6 +1379,77 @@
           "code": 69574,
           "comment": 875,
           "commentRatio": 0.012420332439069398
+        }
+      }
+    },
+    {
+      "label": "2026-06-15",
+      "date": "2026-06-14T06:53:38+02:00",
+      "sha": "ebad227fc4a566c11b9d77a18870d13be68c5eff",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2155,
+          "blank": 19095,
+          "code": 141192,
+          "comment": 10287,
+          "commentRatio": 0.06791040342225656
+        },
+        "spec.ts": {
+          "files": 480,
+          "blank": 30065,
+          "code": 173640,
+          "comment": 1215,
+          "commentRatio": 0.00694861456635498
+        },
+        "tsx": {
+          "files": 558,
+          "blank": 5295,
+          "code": 70637,
+          "comment": 823,
+          "commentRatio": 0.011516932549678142
+        },
+        "spec.tsx": {
+          "files": 61,
+          "blank": 2449,
+          "code": 13978,
+          "comment": 84,
+          "commentRatio": 0.005973545726070261
+        },
+        "all": {
+          "files": 3254,
+          "blank": 56904,
+          "code": 399447,
+          "comment": 12409,
+          "commentRatio": 0.030129462724835864
+        },
+        "prod": {
+          "files": 2713,
+          "blank": 24390,
+          "code": 211829,
+          "comment": 11110,
+          "commentRatio": 0.049834259595674155
+        },
+        "spec": {
+          "files": 541,
+          "blank": 32514,
+          "code": 187618,
+          "comment": 1299,
+          "commentRatio": 0.006876035507656802
+        },
+        "backend": {
+          "files": 2635,
+          "blank": 49160,
+          "code": 314832,
+          "comment": 11502,
+          "commentRatio": 0.035246097556491204
+        },
+        "frontend": {
+          "files": 619,
+          "blank": 7744,
+          "code": 84615,
+          "comment": 907,
+          "commentRatio": 0.010605458244662191
         }
       }
     },
@@ -815,6 +1525,77 @@
       }
     },
     {
+      "label": "2026-07-15",
+      "date": "2026-07-13T22:49:11+02:00",
+      "sha": "e2eb4e85b8425af71366a9e00553511549cb3f19",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2170,
+          "blank": 19285,
+          "code": 143213,
+          "comment": 10450,
+          "commentRatio": 0.06800596109668561
+        },
+        "spec.ts": {
+          "files": 486,
+          "blank": 30273,
+          "code": 174601,
+          "comment": 1180,
+          "commentRatio": 0.00671289843612222
+        },
+        "tsx": {
+          "files": 574,
+          "blank": 5467,
+          "code": 74794,
+          "comment": 859,
+          "commentRatio": 0.0113544737155169
+        },
+        "spec.tsx": {
+          "files": 57,
+          "blank": 2324,
+          "code": 13034,
+          "comment": 65,
+          "commentRatio": 0.004962210855790518
+        },
+        "all": {
+          "files": 3287,
+          "blank": 57349,
+          "code": 405642,
+          "comment": 12554,
+          "commentRatio": 0.030019416732823843
+        },
+        "prod": {
+          "files": 2744,
+          "blank": 24752,
+          "code": 218007,
+          "comment": 11309,
+          "commentRatio": 0.049316227389279425
+        },
+        "spec": {
+          "files": 543,
+          "blank": 32597,
+          "code": 187635,
+          "comment": 1245,
+          "commentRatio": 0.00659148665819568
+        },
+        "backend": {
+          "files": 2656,
+          "blank": 49558,
+          "code": 317814,
+          "comment": 11630,
+          "commentRatio": 0.03530190259953133
+        },
+        "frontend": {
+          "files": 631,
+          "blank": 7791,
+          "code": 87828,
+          "comment": 924,
+          "commentRatio": 0.01041103299080584
+        }
+      }
+    },
+    {
       "label": "2026-08-01",
       "date": "2026-07-31T15:44:09+02:00",
       "sha": "738805e2dc53a8eed6bcba53fd91b073db680936",
@@ -882,6 +1663,77 @@
           "code": 86924,
           "comment": 953,
           "commentRatio": 0.010844703392241428
+        }
+      }
+    },
+    {
+      "label": "2026-08-15",
+      "date": "2026-08-14T14:58:29+02:00",
+      "sha": "ebbc6cc30ff81447903faafa138f328c5e7a062a",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2143,
+          "blank": 18471,
+          "code": 139927,
+          "comment": 12384,
+          "commentRatio": 0.0813073251439489
+        },
+        "spec.ts": {
+          "files": 484,
+          "blank": 29922,
+          "code": 172775,
+          "comment": 1337,
+          "commentRatio": 0.007678965263738283
+        },
+        "tsx": {
+          "files": 535,
+          "blank": 5196,
+          "code": 71867,
+          "comment": 891,
+          "commentRatio": 0.01224607603287611
+        },
+        "spec.tsx": {
+          "files": 60,
+          "blank": 2682,
+          "code": 14592,
+          "comment": 113,
+          "commentRatio": 0.00768446106766406
+        },
+        "all": {
+          "files": 3222,
+          "blank": 56271,
+          "code": 399161,
+          "comment": 14725,
+          "commentRatio": 0.03557742953373634
+        },
+        "prod": {
+          "files": 2678,
+          "blank": 23667,
+          "code": 211794,
+          "comment": 13275,
+          "commentRatio": 0.05898191221358783
+        },
+        "spec": {
+          "files": 544,
+          "blank": 32604,
+          "code": 187367,
+          "comment": 1450,
+          "commentRatio": 0.007679393274969944
+        },
+        "backend": {
+          "files": 2627,
+          "blank": 48393,
+          "code": 312702,
+          "comment": 13721,
+          "commentRatio": 0.04203441546704736
+        },
+        "frontend": {
+          "files": 595,
+          "blank": 7878,
+          "code": 86459,
+          "comment": 1004,
+          "commentRatio": 0.011479139750523079
         }
       }
     },
@@ -957,9 +1809,80 @@
       }
     },
     {
+      "label": "2026-09-15",
+      "date": "2026-09-14T17:42:26+02:00",
+      "sha": "e2f62198f7533ea55ac1f67de395c48f548eddf1",
+      "kind": "month-start",
+      "totals": {
+        "ts": {
+          "files": 2190,
+          "blank": 19175,
+          "code": 144263,
+          "comment": 16105,
+          "commentRatio": 0.10042527187468822
+        },
+        "spec.ts": {
+          "files": 544,
+          "blank": 32281,
+          "code": 186059,
+          "comment": 2069,
+          "commentRatio": 0.010997831263820378
+        },
+        "tsx": {
+          "files": 601,
+          "blank": 6285,
+          "code": 89285,
+          "comment": 6387,
+          "commentRatio": 0.06675934442679153
+        },
+        "spec.tsx": {
+          "files": 87,
+          "blank": 3829,
+          "code": 20272,
+          "comment": 608,
+          "commentRatio": 0.029118773946360154
+        },
+        "all": {
+          "files": 3422,
+          "blank": 61570,
+          "code": 439879,
+          "comment": 25169,
+          "commentRatio": 0.0541212950061069
+        },
+        "prod": {
+          "files": 2791,
+          "blank": 25460,
+          "code": 233548,
+          "comment": 22492,
+          "commentRatio": 0.08784564911732541
+        },
+        "spec": {
+          "files": 631,
+          "blank": 36110,
+          "code": 206331,
+          "comment": 2677,
+          "commentRatio": 0.012808122177141544
+        },
+        "backend": {
+          "files": 2734,
+          "blank": 51456,
+          "code": 330322,
+          "comment": 18174,
+          "commentRatio": 0.05214980946696662
+        },
+        "frontend": {
+          "files": 688,
+          "blank": 10114,
+          "code": 109557,
+          "comment": 6995,
+          "commentRatio": 0.060016130139336946
+        }
+      }
+    },
+    {
       "label": "2026-09-18",
-      "date": "2026-09-18T12:43:02+02:00",
-      "sha": "35c79cab88496a9709c391d89f94eb1ce67969fa",
+      "date": "2026-09-18T11:22:44+00:00",
+      "sha": "8c06a75bd0f4edb3b24ce1c675367890cd74eef3",
       "kind": "head",
       "totals": {
         "ts": {
@@ -1030,6 +1953,8 @@
   ],
   "months": [
     {
+      "period": "2025-09-05",
+      "periodEnd": "2025-09-15",
       "month": "2025-09",
       "seeded": true,
       "partial": false,
@@ -1039,73 +1964,220 @@
         "date": "2025-09-05T11:42:35+02:00"
       },
       "to": {
+        "label": "2025-09-15",
+        "sha": "55b606690a5981e3df0dffed2262a03c4f7540fd",
+        "date": "2025-09-11T20:23:41+00:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 31877,
+          "addedComment": 2416,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.07045169568133439
+        },
+        "spec.ts": {
+          "addedCode": 22990,
+          "addedComment": 518,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.022035051897226477
+        },
+        "tsx": {
+          "addedCode": 13816,
+          "addedComment": 315,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.022291416035666266
+        },
+        "spec.tsx": {
+          "addedCode": 2583,
+          "addedComment": 68,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.025650697849867975
+        },
+        "all": {
+          "addedCode": 71266,
+          "addedComment": 3317,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.04447394178298004
+        },
+        "prod": {
+          "addedCode": 45693,
+          "addedComment": 2731,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.05639765405584008
+        },
+        "spec": {
+          "addedCode": 25573,
+          "addedComment": 586,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.0224014679460224
+        },
+        "backend": {
+          "addedCode": 54867,
+          "addedComment": 2934,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.05076036746769087
+        },
+        "frontend": {
+          "addedCode": 16399,
+          "addedComment": 383,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.022822071266833513
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 629,
+          "blank": 4181,
+          "code": 31877,
+          "comment": 2416,
+          "commentRatio": 0.07045169568133439
+        },
+        "spec.ts": {
+          "files": 114,
+          "blank": 4046,
+          "code": 22990,
+          "comment": 518,
+          "commentRatio": 0.022035051897226477
+        },
+        "tsx": {
+          "files": 176,
+          "blank": 1215,
+          "code": 13816,
+          "comment": 315,
+          "commentRatio": 0.022291416035666266
+        },
+        "spec.tsx": {
+          "files": 16,
+          "blank": 474,
+          "code": 2583,
+          "comment": 68,
+          "commentRatio": 0.025650697849867975
+        },
+        "all": {
+          "files": 935,
+          "blank": 9916,
+          "code": 71266,
+          "comment": 3317,
+          "commentRatio": 0.04447394178298004
+        },
+        "prod": {
+          "files": 805,
+          "blank": 5396,
+          "code": 45693,
+          "comment": 2731,
+          "commentRatio": 0.05639765405584008
+        },
+        "spec": {
+          "files": 130,
+          "blank": 4520,
+          "code": 25573,
+          "comment": 586,
+          "commentRatio": 0.0224014679460224
+        },
+        "backend": {
+          "files": 743,
+          "blank": 8227,
+          "code": 54867,
+          "comment": 2934,
+          "commentRatio": 0.05076036746769087
+        },
+        "frontend": {
+          "files": 192,
+          "blank": 1689,
+          "code": 16399,
+          "comment": 383,
+          "commentRatio": 0.022822071266833513
+        }
+      }
+    },
+    {
+      "period": "2025-09-15",
+      "periodEnd": "2025-10-01",
+      "month": "2025-09",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2025-09-15",
+        "sha": "55b606690a5981e3df0dffed2262a03c4f7540fd",
+        "date": "2025-09-11T20:23:41+00:00"
+      },
+      "to": {
         "label": "2025-10-01",
         "sha": "f74706521e087276da45b32d4e7f9dcd726b8348",
         "date": "2025-09-29T13:39:10+00:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 42083,
-          "addedComment": 3116,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.06893957830925462
+          "addedCode": 12615,
+          "addedComment": 875,
+          "removedCode": 2409,
+          "removedComment": 175,
+          "commentRatio": 0.06486286137879911
         },
         "spec.ts": {
-          "addedCode": 29947,
-          "addedComment": 744,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.024241634355348474
+          "addedCode": 9243,
+          "addedComment": 252,
+          "removedCode": 2286,
+          "removedComment": 26,
+          "commentRatio": 0.026540284360189573
         },
         "tsx": {
-          "addedCode": 15728,
-          "addedComment": 361,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.022437690347442352
+          "addedCode": 5647,
+          "addedComment": 160,
+          "removedCode": 3735,
+          "removedComment": 114,
+          "commentRatio": 0.027552953332185295
         },
         "spec.tsx": {
-          "addedCode": 3438,
-          "addedComment": 122,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.034269662921348316
+          "addedCode": 1009,
+          "addedComment": 57,
+          "removedCode": 154,
+          "removedComment": 3,
+          "commentRatio": 0.05347091932457786
         },
         "all": {
-          "addedCode": 91196,
-          "addedComment": 4343,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.04545787584127948
+          "addedCode": 28514,
+          "addedComment": 1344,
+          "removedCode": 8584,
+          "removedComment": 318,
+          "commentRatio": 0.04501306182597629
         },
         "prod": {
-          "addedCode": 57811,
-          "addedComment": 3477,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.05673214984988905
+          "addedCode": 18262,
+          "addedComment": 1035,
+          "removedCode": 6144,
+          "removedComment": 289,
+          "commentRatio": 0.05363528009535161
         },
         "spec": {
-          "addedCode": 33385,
-          "addedComment": 866,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.025283933315815597
+          "addedCode": 10252,
+          "addedComment": 309,
+          "removedCode": 2440,
+          "removedComment": 29,
+          "commentRatio": 0.029258592936274974
         },
         "backend": {
-          "addedCode": 72030,
-          "addedComment": 3860,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.05086309131637897
+          "addedCode": 21858,
+          "addedComment": 1127,
+          "removedCode": 4695,
+          "removedComment": 201,
+          "commentRatio": 0.04903197737654992
         },
         "frontend": {
-          "addedCode": 19166,
-          "addedComment": 483,
-          "removedCode": 0,
-          "removedComment": 0,
-          "commentRatio": 0.02458140363377271
+          "addedCode": 6656,
+          "addedComment": 217,
+          "removedCode": 3889,
+          "removedComment": 117,
+          "commentRatio": 0.031572821184344534
         }
       },
       "stockAtEnd": {
@@ -1175,6 +2247,8 @@
       }
     },
     {
+      "period": "2025-10-01",
+      "periodEnd": "2025-10-15",
       "month": "2025-10",
       "seeded": false,
       "partial": false,
@@ -1184,73 +2258,220 @@
         "date": "2025-09-29T13:39:10+00:00"
       },
       "to": {
+        "label": "2025-10-15",
+        "sha": "682a75177236d0f340cf7b863d506dea6fbe7e9a",
+        "date": "2025-10-09T15:54:30+00:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 6292,
+          "addedComment": 236,
+          "removedCode": 990,
+          "removedComment": 35,
+          "commentRatio": 0.03615196078431373
+        },
+        "spec.ts": {
+          "addedCode": 4806,
+          "addedComment": 25,
+          "removedCode": 927,
+          "removedComment": 5,
+          "commentRatio": 0.00517491202649555
+        },
+        "tsx": {
+          "addedCode": 5325,
+          "addedComment": 106,
+          "removedCode": 1828,
+          "removedComment": 72,
+          "commentRatio": 0.019517584238630085
+        },
+        "spec.tsx": {
+          "addedCode": 1279,
+          "addedComment": 39,
+          "removedCode": 190,
+          "removedComment": 9,
+          "commentRatio": 0.02959028831562974
+        },
+        "all": {
+          "addedCode": 17702,
+          "addedComment": 406,
+          "removedCode": 3935,
+          "removedComment": 121,
+          "commentRatio": 0.022421029379279877
+        },
+        "prod": {
+          "addedCode": 11617,
+          "addedComment": 342,
+          "removedCode": 2818,
+          "removedComment": 107,
+          "commentRatio": 0.02859770883853165
+        },
+        "spec": {
+          "addedCode": 6085,
+          "addedComment": 64,
+          "removedCode": 1117,
+          "removedComment": 14,
+          "commentRatio": 0.010408196454708083
+        },
+        "backend": {
+          "addedCode": 11098,
+          "addedComment": 261,
+          "removedCode": 1917,
+          "removedComment": 40,
+          "commentRatio": 0.022977374768905715
+        },
+        "frontend": {
+          "addedCode": 6604,
+          "addedComment": 145,
+          "removedCode": 2018,
+          "removedComment": 81,
+          "commentRatio": 0.021484664394725145
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 809,
+          "blank": 6535,
+          "code": 47385,
+          "comment": 3317,
+          "commentRatio": 0.06542148238728256
+        },
+        "spec.ts": {
+          "files": 145,
+          "blank": 5775,
+          "code": 33826,
+          "comment": 764,
+          "commentRatio": 0.02208730847065626
+        },
+        "tsx": {
+          "files": 216,
+          "blank": 1685,
+          "code": 19225,
+          "comment": 395,
+          "commentRatio": 0.020132517838939858
+        },
+        "spec.tsx": {
+          "files": 20,
+          "blank": 810,
+          "code": 4527,
+          "comment": 152,
+          "commentRatio": 0.032485573840564226
+        },
+        "all": {
+          "files": 1190,
+          "blank": 14805,
+          "code": 104963,
+          "comment": 4628,
+          "commentRatio": 0.04222974514330556
+        },
+        "prod": {
+          "files": 1025,
+          "blank": 8220,
+          "code": 66610,
+          "comment": 3712,
+          "commentRatio": 0.05278575694661699
+        },
+        "spec": {
+          "files": 165,
+          "blank": 6585,
+          "code": 38353,
+          "comment": 916,
+          "commentRatio": 0.0233262879115842
+        },
+        "backend": {
+          "files": 954,
+          "blank": 12310,
+          "code": 81211,
+          "comment": 4081,
+          "commentRatio": 0.04784739483187169
+        },
+        "frontend": {
+          "files": 236,
+          "blank": 2495,
+          "code": 23752,
+          "comment": 547,
+          "commentRatio": 0.02251121445326968
+        }
+      }
+    },
+    {
+      "period": "2025-10-15",
+      "periodEnd": "2025-11-01",
+      "month": "2025-10",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2025-10-15",
+        "sha": "682a75177236d0f340cf7b863d506dea6fbe7e9a",
+        "date": "2025-10-09T15:54:30+00:00"
+      },
+      "to": {
         "label": "2025-11-01",
         "sha": "664c72456625bc82a066be8b254504ed995b3a89",
         "date": "2025-10-29T03:54:22+00:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 17286,
-          "addedComment": 1366,
-          "removedCode": 2814,
-          "removedComment": 147,
-          "commentRatio": 0.07323611408964187
+          "addedCode": 11244,
+          "addedComment": 1132,
+          "removedCode": 2074,
+          "removedComment": 114,
+          "commentRatio": 0.09146735617323852
         },
         "spec.ts": {
-          "addedCode": 10571,
-          "addedComment": 117,
-          "removedCode": 2146,
-          "removedComment": 47,
-          "commentRatio": 0.01094685628742515
+          "addedCode": 5771,
+          "addedComment": 92,
+          "removedCode": 1225,
+          "removedComment": 42,
+          "commentRatio": 0.01569162544772301
         },
         "tsx": {
-          "addedCode": 7702,
-          "addedComment": 152,
-          "removedCode": 2398,
-          "removedComment": 77,
-          "commentRatio": 0.01935319582378406
+          "addedCode": 2624,
+          "addedComment": 48,
+          "removedCode": 817,
+          "removedComment": 7,
+          "commentRatio": 0.017964071856287425
         },
         "spec.tsx": {
-          "addedCode": 1408,
-          "addedComment": 40,
-          "removedCode": 198,
-          "removedComment": 9,
-          "commentRatio": 0.027624309392265192
+          "addedCode": 139,
+          "addedComment": 3,
+          "removedCode": 18,
+          "removedComment": 2,
+          "commentRatio": 0.02112676056338028
         },
         "all": {
-          "addedCode": 36967,
-          "addedComment": 1675,
-          "removedCode": 7556,
-          "removedComment": 280,
-          "commentRatio": 0.04334661766989286
+          "addedCode": 19778,
+          "addedComment": 1275,
+          "removedCode": 4134,
+          "removedComment": 165,
+          "commentRatio": 0.06056144017479694
         },
         "prod": {
-          "addedCode": 24988,
-          "addedComment": 1518,
-          "removedCode": 5212,
-          "removedComment": 224,
-          "commentRatio": 0.05727005206368369
+          "addedCode": 13868,
+          "addedComment": 1180,
+          "removedCode": 2891,
+          "removedComment": 121,
+          "commentRatio": 0.07841573631047315
         },
         "spec": {
-          "addedCode": 11979,
-          "addedComment": 157,
-          "removedCode": 2344,
-          "removedComment": 56,
-          "commentRatio": 0.012936717205009888
+          "addedCode": 5910,
+          "addedComment": 95,
+          "removedCode": 1243,
+          "removedComment": 44,
+          "commentRatio": 0.01582014987510408
         },
         "backend": {
-          "addedCode": 27857,
-          "addedComment": 1483,
-          "removedCode": 4960,
-          "removedComment": 194,
-          "commentRatio": 0.0505453306066803
+          "addedCode": 17015,
+          "addedComment": 1224,
+          "removedCode": 3299,
+          "removedComment": 156,
+          "commentRatio": 0.06710894237622676
         },
         "frontend": {
-          "addedCode": 9110,
-          "addedComment": 192,
-          "removedCode": 2596,
-          "removedComment": 86,
-          "commentRatio": 0.020640722425284884
+          "addedCode": 2763,
+          "addedComment": 51,
+          "removedCode": 835,
+          "removedComment": 9,
+          "commentRatio": 0.01812366737739872
         }
       },
       "stockAtEnd": {
@@ -1320,6 +2541,8 @@
       }
     },
     {
+      "period": "2025-11-01",
+      "periodEnd": "2025-11-15",
       "month": "2025-11",
       "seeded": false,
       "partial": false,
@@ -1329,73 +2552,220 @@
         "date": "2025-10-29T03:54:22+00:00"
       },
       "to": {
+        "label": "2025-11-15",
+        "sha": "2a60ca30fcb712bc0fff16212cfac4ce2122ab06",
+        "date": "2025-11-14T22:30:13+01:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 13425,
+          "addedComment": 1598,
+          "removedCode": 6743,
+          "removedComment": 835,
+          "commentRatio": 0.1063702323104573
+        },
+        "spec.ts": {
+          "addedCode": 5835,
+          "addedComment": 86,
+          "removedCode": 3400,
+          "removedComment": 145,
+          "commentRatio": 0.014524573551764905
+        },
+        "tsx": {
+          "addedCode": 1518,
+          "addedComment": 2,
+          "removedCode": 569,
+          "removedComment": 4,
+          "commentRatio": 0.0013157894736842105
+        },
+        "spec.tsx": {
+          "addedCode": 24,
+          "addedComment": 0,
+          "removedCode": 10,
+          "removedComment": 0,
+          "commentRatio": 0
+        },
+        "all": {
+          "addedCode": 20802,
+          "addedComment": 1686,
+          "removedCode": 10722,
+          "removedComment": 984,
+          "commentRatio": 0.07497331910352188
+        },
+        "prod": {
+          "addedCode": 14943,
+          "addedComment": 1600,
+          "removedCode": 7312,
+          "removedComment": 839,
+          "commentRatio": 0.09671764492534607
+        },
+        "spec": {
+          "addedCode": 5859,
+          "addedComment": 86,
+          "removedCode": 3410,
+          "removedComment": 145,
+          "commentRatio": 0.014465937762825905
+        },
+        "backend": {
+          "addedCode": 19260,
+          "addedComment": 1684,
+          "removedCode": 10143,
+          "removedComment": 980,
+          "commentRatio": 0.08040488922841864
+        },
+        "frontend": {
+          "addedCode": 1542,
+          "addedComment": 2,
+          "removedCode": 579,
+          "removedComment": 4,
+          "commentRatio": 0.0012953367875647669
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 1084,
+          "blank": 8795,
+          "code": 63150,
+          "comment": 5185,
+          "commentRatio": 0.07587619814150874
+        },
+        "spec.ts": {
+          "files": 168,
+          "blank": 6845,
+          "code": 40807,
+          "comment": 755,
+          "commentRatio": 0.0181656320677542
+        },
+        "tsx": {
+          "files": 244,
+          "blank": 1963,
+          "code": 21981,
+          "comment": 434,
+          "commentRatio": 0.019362034351996432
+        },
+        "spec.tsx": {
+          "files": 21,
+          "blank": 831,
+          "code": 4662,
+          "comment": 153,
+          "commentRatio": 0.03177570093457944
+        },
+        "all": {
+          "files": 1517,
+          "blank": 18434,
+          "code": 130600,
+          "comment": 6527,
+          "commentRatio": 0.047598211876581566
+        },
+        "prod": {
+          "files": 1328,
+          "blank": 10758,
+          "code": 85131,
+          "comment": 5619,
+          "commentRatio": 0.06191735537190083
+        },
+        "spec": {
+          "files": 189,
+          "blank": 7676,
+          "code": 45469,
+          "comment": 908,
+          "commentRatio": 0.019578670461651248
+        },
+        "backend": {
+          "files": 1252,
+          "blank": 15640,
+          "code": 103957,
+          "comment": 5940,
+          "commentRatio": 0.05405061102668863
+        },
+        "frontend": {
+          "files": 265,
+          "blank": 2794,
+          "code": 26643,
+          "comment": 587,
+          "commentRatio": 0.02155710613294161
+        }
+      }
+    },
+    {
+      "period": "2025-11-15",
+      "periodEnd": "2025-12-01",
+      "month": "2025-11",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2025-11-15",
+        "sha": "2a60ca30fcb712bc0fff16212cfac4ce2122ab06",
+        "date": "2025-11-14T22:30:13+01:00"
+      },
+      "to": {
         "label": "2025-12-01",
         "sha": "afcbf0ee1b13b481292eb472db1f1e6f889b1b30",
         "date": "2025-11-30T22:03:46+01:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 26674,
-          "addedComment": 2995,
-          "removedCode": 11423,
-          "removedComment": 1020,
-          "commentRatio": 0.10094711651892548
+          "addedCode": 13621,
+          "addedComment": 1441,
+          "removedCode": 5052,
+          "removedComment": 229,
+          "commentRatio": 0.09567122560084983
         },
         "spec.ts": {
-          "addedCode": 21170,
-          "addedComment": 186,
-          "removedCode": 5647,
-          "removedComment": 205,
-          "commentRatio": 0.00870949616032965
+          "addedCode": 15707,
+          "addedComment": 106,
+          "removedCode": 2619,
+          "removedComment": 66,
+          "commentRatio": 0.006703345348763675
         },
         "tsx": {
-          "addedCode": 4463,
-          "addedComment": 45,
-          "removedCode": 779,
-          "removedComment": 15,
-          "commentRatio": 0.009982253771073648
+          "addedCode": 3341,
+          "addedComment": 43,
+          "removedCode": 606,
+          "removedComment": 11,
+          "commentRatio": 0.012706855791962174
         },
         "spec.tsx": {
-          "addedCode": 820,
+          "addedCode": 796,
           "addedComment": 20,
-          "removedCode": 22,
+          "removedCode": 12,
           "removedComment": 0,
-          "commentRatio": 0.023809523809523808
+          "commentRatio": 0.024509803921568627
         },
         "all": {
-          "addedCode": 53127,
-          "addedComment": 3246,
-          "removedCode": 17871,
-          "removedComment": 1240,
-          "commentRatio": 0.057580756745250386
+          "addedCode": 33465,
+          "addedComment": 1610,
+          "removedCode": 8289,
+          "removedComment": 306,
+          "commentRatio": 0.04590163934426229
         },
         "prod": {
-          "addedCode": 31137,
-          "addedComment": 3040,
-          "removedCode": 12202,
-          "removedComment": 1035,
-          "commentRatio": 0.08894870819557012
+          "addedCode": 16962,
+          "addedComment": 1484,
+          "removedCode": 5658,
+          "removedComment": 240,
+          "commentRatio": 0.08045104629730022
         },
         "spec": {
-          "addedCode": 21990,
-          "addedComment": 206,
-          "removedCode": 5669,
-          "removedComment": 205,
-          "commentRatio": 0.0092809515227969
+          "addedCode": 16503,
+          "addedComment": 126,
+          "removedCode": 2631,
+          "removedComment": 66,
+          "commentRatio": 0.007577124300920079
         },
         "backend": {
-          "addedCode": 47844,
-          "addedComment": 3181,
-          "removedCode": 17070,
-          "removedComment": 1225,
-          "commentRatio": 0.06234198922097011
+          "addedCode": 29328,
+          "addedComment": 1547,
+          "removedCode": 7671,
+          "removedComment": 295,
+          "commentRatio": 0.050105263157894736
         },
         "frontend": {
-          "addedCode": 5283,
-          "addedComment": 65,
-          "removedCode": 801,
-          "removedComment": 15,
-          "commentRatio": 0.012154076290201944
+          "addedCode": 4137,
+          "addedComment": 63,
+          "removedCode": 618,
+          "removedComment": 11,
+          "commentRatio": 0.015
         }
       },
       "stockAtEnd": {
@@ -1465,6 +2835,8 @@
       }
     },
     {
+      "period": "2025-12-01",
+      "periodEnd": "2025-12-15",
       "month": "2025-12",
       "seeded": false,
       "partial": false,
@@ -1474,73 +2846,220 @@
         "date": "2025-11-30T22:03:46+01:00"
       },
       "to": {
+        "label": "2025-12-15",
+        "sha": "81fdb7abe9ab2a2aea8d99b97211e8506119e756",
+        "date": "2025-12-15T00:55:46+01:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 11706,
+          "addedComment": 776,
+          "removedCode": 3202,
+          "removedComment": 153,
+          "commentRatio": 0.062169524114725205
+        },
+        "spec.ts": {
+          "addedCode": 8593,
+          "addedComment": 85,
+          "removedCode": 1653,
+          "removedComment": 18,
+          "commentRatio": 0.009794883613735884
+        },
+        "tsx": {
+          "addedCode": 2090,
+          "addedComment": 38,
+          "removedCode": 1395,
+          "removedComment": 18,
+          "commentRatio": 0.017857142857142856
+        },
+        "spec.tsx": {
+          "addedCode": 866,
+          "addedComment": 11,
+          "removedCode": 503,
+          "removedComment": 10,
+          "commentRatio": 0.012542759407069556
+        },
+        "all": {
+          "addedCode": 23255,
+          "addedComment": 910,
+          "removedCode": 6753,
+          "removedComment": 199,
+          "commentRatio": 0.03765776950134492
+        },
+        "prod": {
+          "addedCode": 13796,
+          "addedComment": 814,
+          "removedCode": 4597,
+          "removedComment": 171,
+          "commentRatio": 0.05571526351813826
+        },
+        "spec": {
+          "addedCode": 9459,
+          "addedComment": 96,
+          "removedCode": 2156,
+          "removedComment": 28,
+          "commentRatio": 0.010047095761381476
+        },
+        "backend": {
+          "addedCode": 20299,
+          "addedComment": 861,
+          "removedCode": 4855,
+          "removedComment": 171,
+          "commentRatio": 0.04068998109640832
+        },
+        "frontend": {
+          "addedCode": 2956,
+          "addedComment": 49,
+          "removedCode": 1898,
+          "removedComment": 28,
+          "commentRatio": 0.016306156405990018
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 1315,
+          "blank": 11304,
+          "code": 80223,
+          "comment": 7020,
+          "commentRatio": 0.08046490835940992
+        },
+        "spec.ts": {
+          "files": 228,
+          "blank": 10602,
+          "code": 60835,
+          "comment": 862,
+          "commentRatio": 0.01397150590790476
+        },
+        "tsx": {
+          "files": 265,
+          "blank": 2316,
+          "code": 25411,
+          "comment": 486,
+          "commentRatio": 0.018766652508012512
+        },
+        "spec.tsx": {
+          "files": 27,
+          "blank": 1063,
+          "code": 5809,
+          "comment": 174,
+          "commentRatio": 0.029082400133712185
+        },
+        "all": {
+          "files": 1835,
+          "blank": 25285,
+          "code": 172278,
+          "comment": 8542,
+          "commentRatio": 0.04724034951885853
+        },
+        "prod": {
+          "files": 1580,
+          "blank": 13620,
+          "code": 105634,
+          "comment": 7506,
+          "commentRatio": 0.06634258440869718
+        },
+        "spec": {
+          "files": 255,
+          "blank": 11665,
+          "code": 66644,
+          "comment": 1036,
+          "commentRatio": 0.015307328605200945
+        },
+        "backend": {
+          "files": 1543,
+          "blank": 21906,
+          "code": 141058,
+          "comment": 7882,
+          "commentRatio": 0.05292063918356385
+        },
+        "frontend": {
+          "files": 292,
+          "blank": 3379,
+          "code": 31220,
+          "comment": 660,
+          "commentRatio": 0.02070263488080301
+        }
+      }
+    },
+    {
+      "period": "2025-12-15",
+      "periodEnd": "2026-01-01",
+      "month": "2025-12",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2025-12-15",
+        "sha": "81fdb7abe9ab2a2aea8d99b97211e8506119e756",
+        "date": "2025-12-15T00:55:46+01:00"
+      },
+      "to": {
         "label": "2026-01-01",
         "sha": "17f397644155735b5a3130012987d8ac59587d23",
         "date": "2025-12-30T12:38:44+01:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 16995,
-          "addedComment": 1175,
-          "removedCode": 3877,
-          "removedComment": 224,
-          "commentRatio": 0.06466703357182169
+          "addedCode": 5523,
+          "addedComment": 431,
+          "removedCode": 909,
+          "removedComment": 103,
+          "commentRatio": 0.07238831037957676
         },
         "spec.ts": {
-          "addedCode": 19359,
-          "addedComment": 168,
-          "removedCode": 1791,
-          "removedComment": 22,
-          "commentRatio": 0.00860347211553234
+          "addedCode": 10879,
+          "addedComment": 81,
+          "removedCode": 251,
+          "removedComment": 2,
+          "commentRatio": 0.007390510948905109
         },
         "tsx": {
-          "addedCode": 3908,
-          "addedComment": 64,
-          "removedCode": 1452,
-          "removedComment": 18,
-          "commentRatio": 0.016112789526686808
+          "addedCode": 2012,
+          "addedComment": 29,
+          "removedCode": 251,
+          "removedComment": 3,
+          "commentRatio": 0.014208721215090642
         },
         "spec.tsx": {
-          "addedCode": 1009,
-          "addedComment": 11,
-          "removedCode": 503,
-          "removedComment": 10,
-          "commentRatio": 0.010784313725490196
+          "addedCode": 151,
+          "addedComment": 1,
+          "removedCode": 8,
+          "removedComment": 1,
+          "commentRatio": 0.006578947368421052
         },
         "all": {
-          "addedCode": 41271,
-          "addedComment": 1418,
-          "removedCode": 7623,
-          "removedComment": 274,
-          "commentRatio": 0.033216987982852726
+          "addedCode": 18565,
+          "addedComment": 542,
+          "removedCode": 1419,
+          "removedComment": 109,
+          "commentRatio": 0.028366567226670854
         },
         "prod": {
-          "addedCode": 20903,
-          "addedComment": 1239,
-          "removedCode": 5329,
-          "removedComment": 242,
-          "commentRatio": 0.05595700478728209
+          "addedCode": 7535,
+          "addedComment": 460,
+          "removedCode": 1160,
+          "removedComment": 106,
+          "commentRatio": 0.05753595997498437
         },
         "spec": {
-          "addedCode": 20368,
-          "addedComment": 179,
-          "removedCode": 2294,
-          "removedComment": 32,
-          "commentRatio": 0.008711734073100696
+          "addedCode": 11030,
+          "addedComment": 82,
+          "removedCode": 259,
+          "removedComment": 3,
+          "commentRatio": 0.0073794096472282215
         },
         "backend": {
-          "addedCode": 36354,
-          "addedComment": 1343,
-          "removedCode": 5668,
-          "removedComment": 246,
-          "commentRatio": 0.035626177149375285
+          "addedCode": 16402,
+          "addedComment": 512,
+          "removedCode": 1160,
+          "removedComment": 105,
+          "commentRatio": 0.030270781601040558
         },
         "frontend": {
-          "addedCode": 4917,
-          "addedComment": 75,
-          "removedCode": 1955,
-          "removedComment": 28,
-          "commentRatio": 0.015024038461538462
+          "addedCode": 2163,
+          "addedComment": 30,
+          "removedCode": 259,
+          "removedComment": 4,
+          "commentRatio": 0.013679890560875513
         }
       },
       "stockAtEnd": {
@@ -1610,6 +3129,8 @@
       }
     },
     {
+      "period": "2026-01-01",
+      "periodEnd": "2026-01-15",
       "month": "2026-01",
       "seeded": false,
       "partial": false,
@@ -1619,73 +3140,220 @@
         "date": "2025-12-30T12:38:44+01:00"
       },
       "to": {
+        "label": "2026-01-15",
+        "sha": "42df0844f13ad452fe831b0ca52e11ae26a07fe1",
+        "date": "2026-01-14T18:09:33+01:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 9389,
+          "addedComment": 608,
+          "removedCode": 984,
+          "removedComment": 118,
+          "commentRatio": 0.06081824547364209
+        },
+        "spec.ts": {
+          "addedCode": 17182,
+          "addedComment": 94,
+          "removedCode": 3822,
+          "removedComment": 73,
+          "commentRatio": 0.005441074322759898
+        },
+        "tsx": {
+          "addedCode": 3284,
+          "addedComment": 49,
+          "removedCode": 1131,
+          "removedComment": 21,
+          "commentRatio": 0.014701470147014702
+        },
+        "spec.tsx": {
+          "addedCode": 119,
+          "addedComment": 0,
+          "removedCode": 4,
+          "removedComment": 0,
+          "commentRatio": 0
+        },
+        "all": {
+          "addedCode": 29974,
+          "addedComment": 751,
+          "removedCode": 5941,
+          "removedComment": 212,
+          "commentRatio": 0.024442636289666395
+        },
+        "prod": {
+          "addedCode": 12673,
+          "addedComment": 657,
+          "removedCode": 2115,
+          "removedComment": 139,
+          "commentRatio": 0.049287321830457614
+        },
+        "spec": {
+          "addedCode": 17301,
+          "addedComment": 94,
+          "removedCode": 3826,
+          "removedComment": 73,
+          "commentRatio": 0.005403851681517678
+        },
+        "backend": {
+          "addedCode": 26571,
+          "addedComment": 702,
+          "removedCode": 4806,
+          "removedComment": 191,
+          "commentRatio": 0.025739742602573973
+        },
+        "frontend": {
+          "addedCode": 3403,
+          "addedComment": 49,
+          "removedCode": 1135,
+          "removedComment": 21,
+          "commentRatio": 0.014194669756662804
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 1480,
+          "blank": 12969,
+          "code": 93242,
+          "comment": 7838,
+          "commentRatio": 0.07754254056193115
+        },
+        "spec.ts": {
+          "files": 262,
+          "blank": 14565,
+          "code": 84823,
+          "comment": 962,
+          "commentRatio": 0.0112140817159177
+        },
+        "tsx": {
+          "files": 313,
+          "blank": 2653,
+          "code": 29325,
+          "comment": 540,
+          "commentRatio": 0.01808136614766449
+        },
+        "spec.tsx": {
+          "files": 28,
+          "blank": 1090,
+          "code": 6067,
+          "comment": 174,
+          "commentRatio": 0.027880147412273674
+        },
+        "all": {
+          "files": 2083,
+          "blank": 31277,
+          "code": 213457,
+          "comment": 9514,
+          "commentRatio": 0.042669226042848625
+        },
+        "prod": {
+          "files": 1793,
+          "blank": 15622,
+          "code": 122567,
+          "comment": 8378,
+          "commentRatio": 0.06398106075069686
+        },
+        "spec": {
+          "files": 290,
+          "blank": 15655,
+          "code": 90890,
+          "comment": 1136,
+          "commentRatio": 0.012344337469845479
+        },
+        "backend": {
+          "files": 1742,
+          "blank": 27534,
+          "code": 178065,
+          "comment": 8800,
+          "commentRatio": 0.04709282102052284
+        },
+        "frontend": {
+          "files": 341,
+          "blank": 3743,
+          "code": 35392,
+          "comment": 714,
+          "commentRatio": 0.019775106630476928
+        }
+      }
+    },
+    {
+      "period": "2026-01-15",
+      "periodEnd": "2026-02-01",
+      "month": "2026-01",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-01-15",
+        "sha": "42df0844f13ad452fe831b0ca52e11ae26a07fe1",
+        "date": "2026-01-14T18:09:33+01:00"
+      },
+      "to": {
         "label": "2026-02-01",
         "sha": "c3a9a791658469047da982ed75be5bf4c4ac71ca",
         "date": "2026-01-30T17:17:37+01:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 21524,
-          "addedComment": 1206,
-          "removedCode": 2439,
-          "removedComment": 225,
-          "commentRatio": 0.053057633084029915
+          "addedCode": 12345,
+          "addedComment": 622,
+          "removedCode": 1665,
+          "removedComment": 131,
+          "commentRatio": 0.04796791856250482
         },
         "spec.ts": {
-          "addedCode": 47857,
-          "addedComment": 354,
-          "removedCode": 17338,
-          "removedComment": 440,
-          "commentRatio": 0.007342722615170811
+          "addedCode": 31301,
+          "addedComment": 272,
+          "removedCode": 14142,
+          "removedComment": 379,
+          "commentRatio": 0.008614955816678808
         },
         "tsx": {
-          "addedCode": 6733,
-          "addedComment": 147,
-          "removedCode": 2088,
-          "removedComment": 38,
-          "commentRatio": 0.02136627906976744
+          "addedCode": 4087,
+          "addedComment": 107,
+          "removedCode": 1595,
+          "removedComment": 26,
+          "commentRatio": 0.025512637100619934
         },
         "spec.tsx": {
-          "addedCode": 3909,
+          "addedCode": 3875,
           "addedComment": 10,
-          "removedCode": 2577,
+          "removedCode": 2658,
           "removedComment": 94,
-          "commentRatio": 0.0025516713447307987
+          "commentRatio": 0.002574002574002574
         },
         "all": {
-          "addedCode": 80023,
-          "addedComment": 1717,
-          "removedCode": 24442,
-          "removedComment": 797,
-          "commentRatio": 0.021005627599706388
+          "addedCode": 51608,
+          "addedComment": 1011,
+          "removedCode": 20060,
+          "removedComment": 630,
+          "commentRatio": 0.01921359204849959
         },
         "prod": {
-          "addedCode": 28257,
-          "addedComment": 1353,
-          "removedCode": 4527,
-          "removedComment": 263,
-          "commentRatio": 0.04569402228976697
+          "addedCode": 16432,
+          "addedComment": 729,
+          "removedCode": 3260,
+          "removedComment": 157,
+          "commentRatio": 0.042480041955596994
         },
         "spec": {
-          "addedCode": 51766,
-          "addedComment": 364,
-          "removedCode": 19915,
-          "removedComment": 534,
-          "commentRatio": 0.006982543640897756
+          "addedCode": 35176,
+          "addedComment": 282,
+          "removedCode": 16800,
+          "removedComment": 473,
+          "commentRatio": 0.00795307123921259
         },
         "backend": {
-          "addedCode": 69381,
-          "addedComment": 1560,
-          "removedCode": 19777,
-          "removedComment": 665,
-          "commentRatio": 0.02199010445299615
+          "addedCode": 43646,
+          "addedComment": 894,
+          "removedCode": 15807,
+          "removedComment": 510,
+          "commentRatio": 0.020071845532105972
         },
         "frontend": {
-          "addedCode": 10642,
-          "addedComment": 157,
-          "removedCode": 4665,
-          "removedComment": 132,
-          "commentRatio": 0.014538383183628113
+          "addedCode": 7962,
+          "addedComment": 117,
+          "removedCode": 4253,
+          "removedComment": 120,
+          "commentRatio": 0.014481990345339769
         }
       },
       "stockAtEnd": {
@@ -1755,6 +3423,8 @@
       }
     },
     {
+      "period": "2026-02-01",
+      "periodEnd": "2026-02-15",
       "month": "2026-02",
       "seeded": false,
       "partial": false,
@@ -1764,73 +3434,220 @@
         "date": "2026-01-30T17:17:37+01:00"
       },
       "to": {
+        "label": "2026-02-15",
+        "sha": "377524a922a26484f78af79c0853107f18add89a",
+        "date": "2026-02-14T18:24:55+01:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 10553,
+          "addedComment": 561,
+          "removedCode": 4786,
+          "removedComment": 158,
+          "commentRatio": 0.05047687601223682
+        },
+        "spec.ts": {
+          "addedCode": 13867,
+          "addedComment": 73,
+          "removedCode": 2501,
+          "removedComment": 28,
+          "commentRatio": 0.005236728837876614
+        },
+        "tsx": {
+          "addedCode": 7142,
+          "addedComment": 90,
+          "removedCode": 1086,
+          "removedComment": 8,
+          "commentRatio": 0.012444690265486726
+        },
+        "spec.tsx": {
+          "addedCode": 2216,
+          "addedComment": 7,
+          "removedCode": 161,
+          "removedComment": 2,
+          "commentRatio": 0.003148897885739991
+        },
+        "all": {
+          "addedCode": 33778,
+          "addedComment": 731,
+          "removedCode": 8534,
+          "removedComment": 196,
+          "commentRatio": 0.02118287982845055
+        },
+        "prod": {
+          "addedCode": 17695,
+          "addedComment": 651,
+          "removedCode": 5872,
+          "removedComment": 166,
+          "commentRatio": 0.035484574294124056
+        },
+        "spec": {
+          "addedCode": 16083,
+          "addedComment": 80,
+          "removedCode": 2662,
+          "removedComment": 30,
+          "commentRatio": 0.004949576192538514
+        },
+        "backend": {
+          "addedCode": 24420,
+          "addedComment": 634,
+          "removedCode": 7287,
+          "removedComment": 186,
+          "commentRatio": 0.02530534046459647
+        },
+        "frontend": {
+          "addedCode": 9358,
+          "addedComment": 97,
+          "removedCode": 1247,
+          "removedComment": 10,
+          "commentRatio": 0.010259122157588578
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 1730,
+          "blank": 15710,
+          "code": 109689,
+          "comment": 8732,
+          "commentRatio": 0.07373692166085408
+        },
+        "spec.ts": {
+          "files": 321,
+          "blank": 20527,
+          "code": 113348,
+          "comment": 900,
+          "commentRatio": 0.007877599607870597
+        },
+        "tsx": {
+          "files": 383,
+          "blank": 3423,
+          "code": 37873,
+          "comment": 703,
+          "commentRatio": 0.018223766072169224
+        },
+        "spec.tsx": {
+          "files": 43,
+          "blank": 1720,
+          "code": 9339,
+          "comment": 95,
+          "commentRatio": 0.01006995972016112
+        },
+        "all": {
+          "files": 2477,
+          "blank": 41380,
+          "code": 270249,
+          "comment": 10430,
+          "commentRatio": 0.0371598872733621
+        },
+        "prod": {
+          "files": 2113,
+          "blank": 19133,
+          "code": 147562,
+          "comment": 9435,
+          "commentRatio": 0.06009668974566393
+        },
+        "spec": {
+          "files": 364,
+          "blank": 22247,
+          "code": 122687,
+          "comment": 995,
+          "commentRatio": 0.008044824630908297
+        },
+        "backend": {
+          "files": 2051,
+          "blank": 36237,
+          "code": 223037,
+          "comment": 9632,
+          "commentRatio": 0.041397865637450626
+        },
+        "frontend": {
+          "files": 426,
+          "blank": 5143,
+          "code": 47212,
+          "comment": 798,
+          "commentRatio": 0.016621537179754217
+        }
+      }
+    },
+    {
+      "period": "2026-02-15",
+      "periodEnd": "2026-03-01",
+      "month": "2026-02",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-02-15",
+        "sha": "377524a922a26484f78af79c0853107f18add89a",
+        "date": "2026-02-14T18:24:55+01:00"
+      },
+      "to": {
         "label": "2026-03-01",
         "sha": "093ea7c26f02cb7c0578c7042d5d6d226f847eda",
         "date": "2026-02-28T13:29:31+01:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 18755,
-          "addedComment": 963,
-          "removedCode": 5617,
-          "removedComment": 230,
-          "commentRatio": 0.048838624606958106
+          "addedCode": 9719,
+          "addedComment": 423,
+          "removedCode": 2348,
+          "removedComment": 93,
+          "commentRatio": 0.041707749950700056
         },
         "spec.ts": {
-          "addedCode": 32005,
-          "addedComment": 112,
-          "removedCode": 3420,
-          "removedComment": 54,
-          "commentRatio": 0.003487249743126693
+          "addedCode": 20279,
+          "addedComment": 59,
+          "removedCode": 3060,
+          "removedComment": 46,
+          "commentRatio": 0.002900973547054774
         },
         "tsx": {
-          "addedCode": 11812,
-          "addedComment": 178,
-          "removedCode": 1741,
-          "removedComment": 11,
-          "commentRatio": 0.014845704753961634
+          "addedCode": 5612,
+          "addedComment": 95,
+          "removedCode": 1597,
+          "removedComment": 10,
+          "commentRatio": 0.016646223935517786
         },
         "spec.tsx": {
-          "addedCode": 2362,
-          "addedComment": 11,
-          "removedCode": 167,
-          "removedComment": 2,
-          "commentRatio": 0.004635482511588706
+          "addedCode": 260,
+          "addedComment": 4,
+          "removedCode": 120,
+          "removedComment": 0,
+          "commentRatio": 0.015151515151515152
         },
         "all": {
-          "addedCode": 64934,
-          "addedComment": 1264,
-          "removedCode": 10945,
-          "removedComment": 297,
-          "commentRatio": 0.019094232454152694
+          "addedCode": 35870,
+          "addedComment": 581,
+          "removedCode": 7125,
+          "removedComment": 149,
+          "commentRatio": 0.015939206057446982
         },
         "prod": {
-          "addedCode": 30567,
-          "addedComment": 1141,
-          "removedCode": 7358,
-          "removedComment": 241,
-          "commentRatio": 0.03598460956225558
+          "addedCode": 15331,
+          "addedComment": 518,
+          "removedCode": 3945,
+          "removedComment": 103,
+          "commentRatio": 0.03268345005994069
         },
         "spec": {
-          "addedCode": 34367,
-          "addedComment": 123,
-          "removedCode": 3587,
-          "removedComment": 56,
-          "commentRatio": 0.003566251087271673
+          "addedCode": 20539,
+          "addedComment": 63,
+          "removedCode": 3180,
+          "removedComment": 46,
+          "commentRatio": 0.0030579555382972525
         },
         "backend": {
-          "addedCode": 50760,
-          "addedComment": 1075,
-          "removedCode": 9037,
-          "removedComment": 284,
-          "commentRatio": 0.020738882994115946
+          "addedCode": 29998,
+          "addedComment": 482,
+          "removedCode": 5408,
+          "removedComment": 139,
+          "commentRatio": 0.015813648293963256
         },
         "frontend": {
-          "addedCode": 14174,
-          "addedComment": 189,
-          "removedCode": 1908,
-          "removedComment": 13,
-          "commentRatio": 0.013158810833391352
+          "addedCode": 5872,
+          "addedComment": 99,
+          "removedCode": 1717,
+          "removedComment": 10,
+          "commentRatio": 0.016580137330430414
         }
       },
       "stockAtEnd": {
@@ -1900,6 +3717,8 @@
       }
     },
     {
+      "period": "2026-03-01",
+      "periodEnd": "2026-03-15",
       "month": "2026-03",
       "seeded": false,
       "partial": false,
@@ -1909,73 +3728,220 @@
         "date": "2026-02-28T13:29:31+01:00"
       },
       "to": {
+        "label": "2026-03-15",
+        "sha": "f40b132e982929135be7ab3d345442cc721ca590",
+        "date": "2026-03-13T17:54:30+01:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 11049,
+          "addedComment": 379,
+          "removedCode": 5111,
+          "removedComment": 113,
+          "commentRatio": 0.033164158207910396
+        },
+        "spec.ts": {
+          "addedCode": 14334,
+          "addedComment": 50,
+          "removedCode": 2113,
+          "removedComment": 33,
+          "commentRatio": 0.003476084538375973
+        },
+        "tsx": {
+          "addedCode": 11882,
+          "addedComment": 97,
+          "removedCode": 3024,
+          "removedComment": 59,
+          "commentRatio": 0.00809750396527256
+        },
+        "spec.tsx": {
+          "addedCode": 240,
+          "addedComment": 0,
+          "removedCode": 3,
+          "removedComment": 0,
+          "commentRatio": 0
+        },
+        "all": {
+          "addedCode": 37505,
+          "addedComment": 526,
+          "removedCode": 10251,
+          "removedComment": 205,
+          "commentRatio": 0.013830822223975178
+        },
+        "prod": {
+          "addedCode": 22931,
+          "addedComment": 476,
+          "removedCode": 8135,
+          "removedComment": 172,
+          "commentRatio": 0.020335796983808264
+        },
+        "spec": {
+          "addedCode": 14574,
+          "addedComment": 50,
+          "removedCode": 2116,
+          "removedComment": 33,
+          "commentRatio": 0.0034190371991247265
+        },
+        "backend": {
+          "addedCode": 25383,
+          "addedComment": 429,
+          "removedCode": 7224,
+          "removedComment": 146,
+          "commentRatio": 0.016620176662017667
+        },
+        "frontend": {
+          "addedCode": 12122,
+          "addedComment": 97,
+          "removedCode": 3027,
+          "removedComment": 59,
+          "commentRatio": 0.007938456502168753
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 1936,
+          "blank": 17495,
+          "code": 122998,
+          "comment": 9328,
+          "commentRatio": 0.07049257137675136
+        },
+        "spec.ts": {
+          "files": 389,
+          "blank": 25243,
+          "code": 142788,
+          "comment": 930,
+          "commentRatio": 0.006471005719534088
+        },
+        "tsx": {
+          "files": 493,
+          "blank": 4263,
+          "code": 50746,
+          "comment": 826,
+          "commentRatio": 0.016016443031102147
+        },
+        "spec.tsx": {
+          "files": 44,
+          "blank": 1778,
+          "code": 9716,
+          "comment": 99,
+          "commentRatio": 0.010086602139582273
+        },
+        "all": {
+          "files": 2862,
+          "blank": 48779,
+          "code": 326248,
+          "comment": 11183,
+          "commentRatio": 0.033141590428858045
+        },
+        "prod": {
+          "files": 2429,
+          "blank": 21758,
+          "code": 173744,
+          "comment": 10154,
+          "commentRatio": 0.05521539114074106
+        },
+        "spec": {
+          "files": 433,
+          "blank": 27021,
+          "code": 152504,
+          "comment": 1029,
+          "commentRatio": 0.0067021422104694105
+        },
+        "backend": {
+          "files": 2325,
+          "blank": 42738,
+          "code": 265786,
+          "comment": 10258,
+          "commentRatio": 0.03716074249032763
+        },
+        "frontend": {
+          "files": 537,
+          "blank": 6041,
+          "code": 60462,
+          "comment": 925,
+          "commentRatio": 0.01506833694430417
+        }
+      }
+    },
+    {
+      "period": "2026-03-15",
+      "periodEnd": "2026-04-01",
+      "month": "2026-03",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-03-15",
+        "sha": "f40b132e982929135be7ab3d345442cc721ca590",
+        "date": "2026-03-13T17:54:30+01:00"
+      },
+      "to": {
         "label": "2026-04-01",
         "sha": "11b51e386ccbf43efe56015c19d75b261397136a",
         "date": "2026-03-31T18:01:25+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 18645,
-          "addedComment": 776,
-          "removedCode": 11714,
-          "removedComment": 558,
-          "commentRatio": 0.03995674785026518
+          "addedCode": 11214,
+          "addedComment": 469,
+          "removedCode": 10221,
+          "removedComment": 517,
+          "commentRatio": 0.040143798681845415
         },
         "spec.ts": {
-          "addedCode": 26695,
-          "addedComment": 56,
-          "removedCode": 14645,
-          "removedComment": 83,
-          "commentRatio": 0.002093379686740683
+          "addedCode": 20941,
+          "addedComment": 30,
+          "removedCode": 21112,
+          "removedComment": 74,
+          "commentRatio": 0.0014305469457822708
         },
         "tsx": {
-          "addedCode": 9202,
-          "addedComment": 97,
-          "removedCode": 5599,
-          "removedComment": 89,
-          "commentRatio": 0.010431229164426282
+          "addedCode": 3352,
+          "addedComment": 22,
+          "removedCode": 8607,
+          "removedComment": 52,
+          "commentRatio": 0.006520450503852994
         },
         "spec.tsx": {
-          "addedCode": 327,
+          "addedCode": 87,
           "addedComment": 1,
-          "removedCode": 35,
+          "removedCode": 32,
           "removedComment": 0,
-          "commentRatio": 0.003048780487804878
+          "commentRatio": 0.011363636363636364
         },
         "all": {
-          "addedCode": 54869,
-          "addedComment": 930,
-          "removedCode": 31993,
-          "removedComment": 730,
-          "commentRatio": 0.01666696535780211
+          "addedCode": 35594,
+          "addedComment": 522,
+          "removedCode": 39972,
+          "removedComment": 643,
+          "commentRatio": 0.014453427843615018
         },
         "prod": {
-          "addedCode": 27847,
-          "addedComment": 873,
-          "removedCode": 17313,
-          "removedComment": 647,
-          "commentRatio": 0.030396935933147632
+          "addedCode": 14566,
+          "addedComment": 491,
+          "removedCode": 18828,
+          "removedComment": 569,
+          "commentRatio": 0.03260941754665604
         },
         "spec": {
-          "addedCode": 27022,
-          "addedComment": 57,
-          "removedCode": 14680,
-          "removedComment": 83,
-          "commentRatio": 0.0021049521769636987
+          "addedCode": 21028,
+          "addedComment": 31,
+          "removedCode": 21144,
+          "removedComment": 74,
+          "commentRatio": 0.0014720547034522058
         },
         "backend": {
-          "addedCode": 45340,
-          "addedComment": 832,
-          "removedCode": 26359,
-          "removedComment": 641,
-          "commentRatio": 0.01801957896560686
+          "addedCode": 32155,
+          "addedComment": 499,
+          "removedCode": 31333,
+          "removedComment": 591,
+          "commentRatio": 0.015281435658724812
         },
         "frontend": {
-          "addedCode": 9529,
-          "addedComment": 98,
-          "removedCode": 5634,
-          "removedComment": 89,
-          "commentRatio": 0.010179702918874
+          "addedCode": 3439,
+          "addedComment": 23,
+          "removedCode": 8639,
+          "removedComment": 52,
+          "commentRatio": 0.006643558636626227
         }
       },
       "stockAtEnd": {
@@ -2045,6 +4011,8 @@
       }
     },
     {
+      "period": "2026-04-01",
+      "periodEnd": "2026-04-15",
       "month": "2026-04",
       "seeded": false,
       "partial": false,
@@ -2054,73 +4022,220 @@
         "date": "2026-03-31T18:01:25+02:00"
       },
       "to": {
+        "label": "2026-04-15",
+        "sha": "c4eefbb0758d8a73183a3beac469812aa508d7a9",
+        "date": "2026-04-14T17:53:36+02:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 9227,
+          "addedComment": 219,
+          "removedCode": 2632,
+          "removedComment": 88,
+          "commentRatio": 0.02318441668431082
+        },
+        "spec.ts": {
+          "addedCode": 14196,
+          "addedComment": 32,
+          "removedCode": 2650,
+          "removedComment": 8,
+          "commentRatio": 0.002249086308687096
+        },
+        "tsx": {
+          "addedCode": 1645,
+          "addedComment": 7,
+          "removedCode": 311,
+          "removedComment": 4,
+          "commentRatio": 0.00423728813559322
+        },
+        "spec.tsx": {
+          "addedCode": 1192,
+          "addedComment": 1,
+          "removedCode": 82,
+          "removedComment": 0,
+          "commentRatio": 0.0008382229673093043
+        },
+        "all": {
+          "addedCode": 26260,
+          "addedComment": 259,
+          "removedCode": 5675,
+          "removedComment": 100,
+          "commentRatio": 0.00976658245031864
+        },
+        "prod": {
+          "addedCode": 10872,
+          "addedComment": 226,
+          "removedCode": 2943,
+          "removedComment": 92,
+          "commentRatio": 0.020364029554874753
+        },
+        "spec": {
+          "addedCode": 15388,
+          "addedComment": 33,
+          "removedCode": 2732,
+          "removedComment": 8,
+          "commentRatio": 0.00213993904416056
+        },
+        "backend": {
+          "addedCode": 23423,
+          "addedComment": 251,
+          "removedCode": 5282,
+          "removedComment": 96,
+          "commentRatio": 0.010602348568049336
+        },
+        "frontend": {
+          "addedCode": 2837,
+          "addedComment": 8,
+          "removedCode": 393,
+          "removedComment": 4,
+          "commentRatio": 0.00281195079086116
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2020,
+          "blank": 18487,
+          "code": 130592,
+          "comment": 9405,
+          "commentRatio": 0.06718001100023573
+        },
+        "spec.ts": {
+          "files": 422,
+          "blank": 27151,
+          "code": 154163,
+          "comment": 910,
+          "commentRatio": 0.005868204007145022
+        },
+        "tsx": {
+          "files": 456,
+          "blank": 3937,
+          "code": 46825,
+          "comment": 799,
+          "commentRatio": 0.01677725516546279
+        },
+        "spec.tsx": {
+          "files": 48,
+          "blank": 1993,
+          "code": 10881,
+          "comment": 101,
+          "commentRatio": 0.009196867601529777
+        },
+        "all": {
+          "files": 2946,
+          "blank": 51568,
+          "code": 342461,
+          "comment": 11215,
+          "commentRatio": 0.031709813501622955
+        },
+        "prod": {
+          "files": 2476,
+          "blank": 22424,
+          "code": 177417,
+          "comment": 10204,
+          "commentRatio": 0.05438623608231488
+        },
+        "spec": {
+          "files": 470,
+          "blank": 29144,
+          "code": 165044,
+          "comment": 1011,
+          "commentRatio": 0.006088344223299509
+        },
+        "backend": {
+          "files": 2442,
+          "blank": 45638,
+          "code": 284755,
+          "comment": 10315,
+          "commentRatio": 0.03495780662215745
+        },
+        "frontend": {
+          "files": 504,
+          "blank": 5930,
+          "code": 57706,
+          "comment": 900,
+          "commentRatio": 0.01535678940722793
+        }
+      }
+    },
+    {
+      "period": "2026-04-15",
+      "periodEnd": "2026-05-01",
+      "month": "2026-04",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-04-15",
+        "sha": "c4eefbb0758d8a73183a3beac469812aa508d7a9",
+        "date": "2026-04-14T17:53:36+02:00"
+      },
+      "to": {
         "label": "2026-05-01",
         "sha": "e98a8af990c197dc29602877d3537bfd6a12e8c7",
         "date": "2026-04-30T14:41:12+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 11513,
-          "addedComment": 257,
-          "removedCode": 3836,
-          "removedComment": 129,
-          "commentRatio": 0.02183517417162277
+          "addedCode": 2352,
+          "addedComment": 38,
+          "removedCode": 1270,
+          "removedComment": 41,
+          "commentRatio": 0.015899581589958158
         },
         "spec.ts": {
-          "addedCode": 15258,
-          "addedComment": 36,
-          "removedCode": 2935,
-          "removedComment": 8,
-          "commentRatio": 0.0023538642604943117
+          "addedCode": 1067,
+          "addedComment": 4,
+          "removedCode": 290,
+          "removedComment": 0,
+          "commentRatio": 0.003734827264239029
         },
         "tsx": {
-          "addedCode": 3871,
-          "addedComment": 41,
-          "removedCode": 774,
-          "removedComment": 12,
-          "commentRatio": 0.010480572597137014
+          "addedCode": 2246,
+          "addedComment": 34,
+          "removedCode": 483,
+          "removedComment": 8,
+          "commentRatio": 0.014912280701754385
         },
         "spec.tsx": {
-          "addedCode": 2296,
-          "addedComment": 15,
-          "removedCode": 211,
+          "addedCode": 1104,
+          "addedComment": 14,
+          "removedCode": 129,
           "removedComment": 0,
-          "commentRatio": 0.006490696668109044
+          "commentRatio": 0.012522361359570662
         },
         "all": {
-          "addedCode": 32938,
-          "addedComment": 349,
-          "removedCode": 7756,
-          "removedComment": 149,
-          "commentRatio": 0.01048457355724457
+          "addedCode": 6769,
+          "addedComment": 90,
+          "removedCode": 2172,
+          "removedComment": 49,
+          "commentRatio": 0.013121446274967197
         },
         "prod": {
-          "addedCode": 15384,
-          "addedComment": 298,
-          "removedCode": 4610,
-          "removedComment": 141,
-          "commentRatio": 0.019002678229817625
+          "addedCode": 4598,
+          "addedComment": 72,
+          "removedCode": 1753,
+          "removedComment": 49,
+          "commentRatio": 0.015417558886509636
         },
         "spec": {
-          "addedCode": 17554,
-          "addedComment": 51,
-          "removedCode": 3146,
-          "removedComment": 8,
-          "commentRatio": 0.002896904288554388
+          "addedCode": 2171,
+          "addedComment": 18,
+          "removedCode": 419,
+          "removedComment": 0,
+          "commentRatio": 0.008222932846048425
         },
         "backend": {
-          "addedCode": 26771,
-          "addedComment": 293,
-          "removedCode": 6771,
-          "removedComment": 137,
-          "commentRatio": 0.010826189772391368
+          "addedCode": 3419,
+          "addedComment": 42,
+          "removedCode": 1560,
+          "removedComment": 41,
+          "commentRatio": 0.012135221034383126
         },
         "frontend": {
-          "addedCode": 6167,
-          "addedComment": 56,
-          "removedCode": 985,
-          "removedComment": 12,
-          "commentRatio": 0.008998875140607425
+          "addedCode": 3350,
+          "addedComment": 48,
+          "removedCode": 612,
+          "removedComment": 8,
+          "commentRatio": 0.014125956444967627
         }
       },
       "stockAtEnd": {
@@ -2190,6 +4305,8 @@
       }
     },
     {
+      "period": "2026-05-01",
+      "periodEnd": "2026-05-15",
       "month": "2026-05",
       "seeded": false,
       "partial": false,
@@ -2199,73 +4316,220 @@
         "date": "2026-04-30T14:41:12+02:00"
       },
       "to": {
+        "label": "2026-05-15",
+        "sha": "d32d248814ec72bfdfb4612fdf902780f40e49ca",
+        "date": "2026-05-13T17:32:33+02:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 2040,
+          "addedComment": 51,
+          "removedCode": 2889,
+          "removedComment": 234,
+          "commentRatio": 0.024390243902439025
+        },
+        "spec.ts": {
+          "addedCode": 2407,
+          "addedComment": 13,
+          "removedCode": 2740,
+          "removedComment": 36,
+          "commentRatio": 0.005371900826446281
+        },
+        "tsx": {
+          "addedCode": 2580,
+          "addedComment": 2,
+          "removedCode": 2106,
+          "removedComment": 50,
+          "commentRatio": 0.000774593338497289
+        },
+        "spec.tsx": {
+          "addedCode": 1495,
+          "addedComment": 2,
+          "removedCode": 1807,
+          "removedComment": 35,
+          "commentRatio": 0.0013360053440213762
+        },
+        "all": {
+          "addedCode": 8522,
+          "addedComment": 68,
+          "removedCode": 9542,
+          "removedComment": 355,
+          "commentRatio": 0.007916181606519208
+        },
+        "prod": {
+          "addedCode": 4620,
+          "addedComment": 53,
+          "removedCode": 4995,
+          "removedComment": 284,
+          "commentRatio": 0.011341750481489407
+        },
+        "spec": {
+          "addedCode": 3902,
+          "addedComment": 15,
+          "removedCode": 4547,
+          "removedComment": 71,
+          "commentRatio": 0.0038294613224406433
+        },
+        "backend": {
+          "addedCode": 4447,
+          "addedComment": 64,
+          "removedCode": 5629,
+          "removedComment": 270,
+          "commentRatio": 0.014187541565063178
+        },
+        "frontend": {
+          "addedCode": 4075,
+          "addedComment": 4,
+          "removedCode": 3913,
+          "removedComment": 85,
+          "commentRatio": 0.000980632507967639
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2058,
+          "blank": 18502,
+          "code": 130825,
+          "comment": 9219,
+          "commentRatio": 0.06582931078803804
+        },
+        "spec.ts": {
+          "files": 427,
+          "blank": 27098,
+          "code": 154607,
+          "comment": 891,
+          "commentRatio": 0.005729977234433884
+        },
+        "tsx": {
+          "files": 490,
+          "blank": 4073,
+          "code": 49062,
+          "comment": 777,
+          "commentRatio": 0.015590200445434299
+        },
+        "spec.tsx": {
+          "files": 54,
+          "blank": 2050,
+          "code": 11544,
+          "comment": 82,
+          "commentRatio": 0.007053156717701703
+        },
+        "all": {
+          "files": 3029,
+          "blank": 51723,
+          "code": 346038,
+          "comment": 10969,
+          "commentRatio": 0.030724887747299073
+        },
+        "prod": {
+          "files": 2548,
+          "blank": 22575,
+          "code": 179887,
+          "comment": 9996,
+          "commentRatio": 0.05264294328612883
+        },
+        "spec": {
+          "files": 481,
+          "blank": 29148,
+          "code": 166151,
+          "comment": 973,
+          "commentRatio": 0.005822024365142051
+        },
+        "backend": {
+          "files": 2485,
+          "blank": 45600,
+          "code": 285432,
+          "comment": 10110,
+          "commentRatio": 0.03420833587104371
+        },
+        "frontend": {
+          "files": 544,
+          "blank": 6123,
+          "code": 60606,
+          "comment": 859,
+          "commentRatio": 0.013975433173350687
+        }
+      }
+    },
+    {
+      "period": "2026-05-15",
+      "periodEnd": "2026-06-01",
+      "month": "2026-05",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-05-15",
+        "sha": "d32d248814ec72bfdfb4612fdf902780f40e49ca",
+        "date": "2026-05-13T17:32:33+02:00"
+      },
+      "to": {
         "label": "2026-06-01",
         "sha": "318e3b2847b0ee0e1d3ba85c6a5eb2d78f4f05c5",
         "date": "2026-05-29T17:08:55+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 8191,
-          "addedComment": 648,
-          "removedCode": 3271,
-          "removedComment": 297,
-          "commentRatio": 0.07331146057246295
+          "addedCode": 6183,
+          "addedComment": 597,
+          "removedCode": 414,
+          "removedComment": 63,
+          "commentRatio": 0.08805309734513274
         },
         "spec.ts": {
-          "addedCode": 12931,
-          "addedComment": 263,
-          "removedCode": 3272,
-          "removedComment": 42,
-          "commentRatio": 0.01993330301652266
+          "addedCode": 10593,
+          "addedComment": 262,
+          "removedCode": 601,
+          "removedComment": 18,
+          "commentRatio": 0.02413634269921695
         },
         "tsx": {
-          "addedCode": 11763,
-          "addedComment": 18,
-          "removedCode": 2988,
-          "removedComment": 50,
-          "commentRatio": 0.0015278838808250573
+          "addedCode": 9187,
+          "addedComment": 16,
+          "removedCode": 886,
+          "removedComment": 0,
+          "commentRatio": 0.001738563511898294
         },
         "spec.tsx": {
-          "addedCode": 2172,
-          "addedComment": 2,
-          "removedCode": 1817,
-          "removedComment": 35,
-          "commentRatio": 0.0009199632014719411
+          "addedCode": 677,
+          "addedComment": 0,
+          "removedCode": 10,
+          "removedComment": 0,
+          "commentRatio": 0
         },
         "all": {
-          "addedCode": 35057,
-          "addedComment": 931,
-          "removedCode": 11348,
-          "removedComment": 424,
-          "commentRatio": 0.02586973435589641
+          "addedCode": 26640,
+          "addedComment": 875,
+          "removedCode": 1911,
+          "removedComment": 81,
+          "commentRatio": 0.03180083590768672
         },
         "prod": {
-          "addedCode": 19954,
-          "addedComment": 666,
-          "removedCode": 6259,
-          "removedComment": 347,
-          "commentRatio": 0.03229873908826382
+          "addedCode": 15370,
+          "addedComment": 613,
+          "removedCode": 1300,
+          "removedComment": 63,
+          "commentRatio": 0.038353250328474
         },
         "spec": {
-          "addedCode": 15103,
-          "addedComment": 265,
-          "removedCode": 5089,
-          "removedComment": 77,
-          "commentRatio": 0.017243623112962
+          "addedCode": 11270,
+          "addedComment": 262,
+          "removedCode": 611,
+          "removedComment": 18,
+          "commentRatio": 0.022719389524800553
         },
         "backend": {
-          "addedCode": 21122,
-          "addedComment": 911,
-          "removedCode": 6543,
-          "removedComment": 339,
-          "commentRatio": 0.04134707030363546
+          "addedCode": 16776,
+          "addedComment": 859,
+          "removedCode": 1015,
+          "removedComment": 81,
+          "commentRatio": 0.04870995180039694
         },
         "frontend": {
-          "addedCode": 13935,
-          "addedComment": 20,
-          "removedCode": 4805,
-          "removedComment": 85,
-          "commentRatio": 0.0014331780723754925
+          "addedCode": 9864,
+          "addedComment": 16,
+          "removedCode": 896,
+          "removedComment": 0,
+          "commentRatio": 0.0016194331983805667
         }
       },
       "stockAtEnd": {
@@ -2335,6 +4599,8 @@
       }
     },
     {
+      "period": "2026-06-01",
+      "periodEnd": "2026-06-15",
       "month": "2026-06",
       "seeded": false,
       "partial": false,
@@ -2344,73 +4610,220 @@
         "date": "2026-05-29T17:08:55+02:00"
       },
       "to": {
+        "label": "2026-06-15",
+        "sha": "ebad227fc4a566c11b9d77a18870d13be68c5eff",
+        "date": "2026-06-14T06:53:38+02:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 7221,
+          "addedComment": 609,
+          "removedCode": 2623,
+          "removedComment": 75,
+          "commentRatio": 0.07777777777777778
+        },
+        "spec.ts": {
+          "addedCode": 12191,
+          "addedComment": 98,
+          "removedCode": 3150,
+          "removedComment": 18,
+          "commentRatio": 0.00797461144112621
+        },
+        "tsx": {
+          "addedCode": 13598,
+          "addedComment": 40,
+          "removedCode": 324,
+          "removedComment": 10,
+          "commentRatio": 0.002932981375568265
+        },
+        "spec.tsx": {
+          "addedCode": 1767,
+          "addedComment": 2,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": 0.0011305822498586771
+        },
+        "all": {
+          "addedCode": 34777,
+          "addedComment": 749,
+          "removedCode": 6097,
+          "removedComment": 103,
+          "commentRatio": 0.02108315036874402
+        },
+        "prod": {
+          "addedCode": 20819,
+          "addedComment": 649,
+          "removedCode": 2947,
+          "removedComment": 85,
+          "commentRatio": 0.030231041550214274
+        },
+        "spec": {
+          "addedCode": 13958,
+          "addedComment": 100,
+          "removedCode": 3150,
+          "removedComment": 18,
+          "commentRatio": 0.007113387395077536
+        },
+        "backend": {
+          "addedCode": 19412,
+          "addedComment": 707,
+          "removedCode": 5773,
+          "removedComment": 93,
+          "commentRatio": 0.03514091157612207
+        },
+        "frontend": {
+          "addedCode": 15365,
+          "addedComment": 42,
+          "removedCode": 324,
+          "removedComment": 10,
+          "commentRatio": 0.0027260336210813267
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2155,
+          "blank": 19095,
+          "code": 141192,
+          "comment": 10287,
+          "commentRatio": 0.06791040342225656
+        },
+        "spec.ts": {
+          "files": 480,
+          "blank": 30065,
+          "code": 173640,
+          "comment": 1215,
+          "commentRatio": 0.00694861456635498
+        },
+        "tsx": {
+          "files": 558,
+          "blank": 5295,
+          "code": 70637,
+          "comment": 823,
+          "commentRatio": 0.011516932549678142
+        },
+        "spec.tsx": {
+          "files": 61,
+          "blank": 2449,
+          "code": 13978,
+          "comment": 84,
+          "commentRatio": 0.005973545726070261
+        },
+        "all": {
+          "files": 3254,
+          "blank": 56904,
+          "code": 399447,
+          "comment": 12409,
+          "commentRatio": 0.030129462724835864
+        },
+        "prod": {
+          "files": 2713,
+          "blank": 24390,
+          "code": 211829,
+          "comment": 11110,
+          "commentRatio": 0.049834259595674155
+        },
+        "spec": {
+          "files": 541,
+          "blank": 32514,
+          "code": 187618,
+          "comment": 1299,
+          "commentRatio": 0.006876035507656802
+        },
+        "backend": {
+          "files": 2635,
+          "blank": 49160,
+          "code": 314832,
+          "comment": 11502,
+          "commentRatio": 0.035246097556491204
+        },
+        "frontend": {
+          "files": 619,
+          "blank": 7744,
+          "code": 84615,
+          "comment": 907,
+          "commentRatio": 0.010605458244662191
+        }
+      }
+    },
+    {
+      "period": "2026-06-15",
+      "periodEnd": "2026-07-01",
+      "month": "2026-06",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-06-15",
+        "sha": "ebad227fc4a566c11b9d77a18870d13be68c5eff",
+        "date": "2026-06-14T06:53:38+02:00"
+      },
+      "to": {
         "label": "2026-07-01",
         "sha": "197592f487fb8abd94952df8d7978947f1bf566f",
         "date": "2026-06-24T10:46:55+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 10327,
-          "addedComment": 882,
-          "removedCode": 4268,
-          "removedComment": 222,
-          "commentRatio": 0.07868676956017485
+          "addedCode": 3144,
+          "addedComment": 276,
+          "removedCode": 1683,
+          "removedComment": 150,
+          "commentRatio": 0.08070175438596491
         },
         "spec.ts": {
-          "addedCode": 13967,
-          "addedComment": 98,
-          "removedCode": 4855,
-          "removedComment": 57,
-          "commentRatio": 0.006967650195520796
+          "addedCode": 1776,
+          "addedComment": 0,
+          "removedCode": 1705,
+          "removedComment": 39,
+          "commentRatio": 0
         },
         "tsx": {
-          "addedCode": 18775,
-          "addedComment": 82,
-          "removedCode": 1502,
-          "removedComment": 23,
-          "commentRatio": 0.004348517791801453
+          "addedCode": 5592,
+          "addedComment": 42,
+          "removedCode": 1593,
+          "removedComment": 13,
+          "commentRatio": 0.007454739084132056
         },
         "spec.tsx": {
-          "addedCode": 1796,
-          "addedComment": 2,
+          "addedCode": 29,
+          "addedComment": 0,
           "removedCode": 973,
           "removedComment": 19,
-          "commentRatio": 0.0011123470522803114
+          "commentRatio": 0
         },
         "all": {
-          "addedCode": 44865,
-          "addedComment": 1064,
-          "removedCode": 11598,
-          "removedComment": 321,
-          "commentRatio": 0.023166191295260076
+          "addedCode": 10541,
+          "addedComment": 318,
+          "removedCode": 5954,
+          "removedComment": 221,
+          "commentRatio": 0.02928446449949351
         },
         "prod": {
-          "addedCode": 29102,
-          "addedComment": 964,
-          "removedCode": 5770,
-          "removedComment": 245,
-          "commentRatio": 0.03206279518392869
+          "addedCode": 8736,
+          "addedComment": 318,
+          "removedCode": 3276,
+          "removedComment": 163,
+          "commentRatio": 0.03512259774685222
         },
         "spec": {
-          "addedCode": 15763,
-          "addedComment": 100,
-          "removedCode": 5828,
-          "removedComment": 76,
-          "commentRatio": 0.006303977809998109
+          "addedCode": 1805,
+          "addedComment": 0,
+          "removedCode": 2678,
+          "removedComment": 58,
+          "commentRatio": 0
         },
         "backend": {
-          "addedCode": 24294,
-          "addedComment": 980,
-          "removedCode": 9123,
-          "removedComment": 279,
-          "commentRatio": 0.038775025718129304
+          "addedCode": 4920,
+          "addedComment": 276,
+          "removedCode": 3388,
+          "removedComment": 189,
+          "commentRatio": 0.053117782909930716
         },
         "frontend": {
-          "addedCode": 20571,
-          "addedComment": 84,
-          "removedCode": 2475,
-          "removedComment": 42,
-          "commentRatio": 0.004066811909949165
+          "addedCode": 5621,
+          "addedComment": 42,
+          "removedCode": 2566,
+          "removedComment": 32,
+          "commentRatio": 0.007416563658838072
         }
       },
       "stockAtEnd": {
@@ -2480,6 +4893,8 @@
       }
     },
     {
+      "period": "2026-07-01",
+      "periodEnd": "2026-07-15",
       "month": "2026-07",
       "seeded": false,
       "partial": false,
@@ -2489,31 +4904,178 @@
         "date": "2026-06-24T10:46:55+02:00"
       },
       "to": {
+        "label": "2026-07-15",
+        "sha": "e2eb4e85b8425af71366a9e00553511549cb3f19",
+        "date": "2026-07-13T22:49:11+02:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 592,
+          "addedComment": 37,
+          "removedCode": 32,
+          "removedComment": 0,
+          "commentRatio": 0.058823529411764705
+        },
+        "spec.ts": {
+          "addedCode": 894,
+          "addedComment": 4,
+          "removedCode": 4,
+          "removedComment": 0,
+          "commentRatio": 0.004454342984409799
+        },
+        "tsx": {
+          "addedCode": 194,
+          "addedComment": 7,
+          "removedCode": 36,
+          "removedComment": 0,
+          "commentRatio": 0.03482587064676617
+        },
+        "spec.tsx": {
+          "addedCode": 0,
+          "addedComment": 0,
+          "removedCode": 0,
+          "removedComment": 0,
+          "commentRatio": null
+        },
+        "all": {
+          "addedCode": 1680,
+          "addedComment": 48,
+          "removedCode": 72,
+          "removedComment": 0,
+          "commentRatio": 0.027777777777777776
+        },
+        "prod": {
+          "addedCode": 786,
+          "addedComment": 44,
+          "removedCode": 68,
+          "removedComment": 0,
+          "commentRatio": 0.05301204819277108
+        },
+        "spec": {
+          "addedCode": 894,
+          "addedComment": 4,
+          "removedCode": 4,
+          "removedComment": 0,
+          "commentRatio": 0.004454342984409799
+        },
+        "backend": {
+          "addedCode": 1486,
+          "addedComment": 41,
+          "removedCode": 36,
+          "removedComment": 0,
+          "commentRatio": 0.026850032743942372
+        },
+        "frontend": {
+          "addedCode": 194,
+          "addedComment": 7,
+          "removedCode": 36,
+          "removedComment": 0,
+          "commentRatio": 0.03482587064676617
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2170,
+          "blank": 19285,
+          "code": 143213,
+          "comment": 10450,
+          "commentRatio": 0.06800596109668561
+        },
+        "spec.ts": {
+          "files": 486,
+          "blank": 30273,
+          "code": 174601,
+          "comment": 1180,
+          "commentRatio": 0.00671289843612222
+        },
+        "tsx": {
+          "files": 574,
+          "blank": 5467,
+          "code": 74794,
+          "comment": 859,
+          "commentRatio": 0.0113544737155169
+        },
+        "spec.tsx": {
+          "files": 57,
+          "blank": 2324,
+          "code": 13034,
+          "comment": 65,
+          "commentRatio": 0.004962210855790518
+        },
+        "all": {
+          "files": 3287,
+          "blank": 57349,
+          "code": 405642,
+          "comment": 12554,
+          "commentRatio": 0.030019416732823843
+        },
+        "prod": {
+          "files": 2744,
+          "blank": 24752,
+          "code": 218007,
+          "comment": 11309,
+          "commentRatio": 0.049316227389279425
+        },
+        "spec": {
+          "files": 543,
+          "blank": 32597,
+          "code": 187635,
+          "comment": 1245,
+          "commentRatio": 0.00659148665819568
+        },
+        "backend": {
+          "files": 2656,
+          "blank": 49558,
+          "code": 317814,
+          "comment": 11630,
+          "commentRatio": 0.03530190259953133
+        },
+        "frontend": {
+          "files": 631,
+          "blank": 7791,
+          "code": 87828,
+          "comment": 924,
+          "commentRatio": 0.01041103299080584
+        }
+      }
+    },
+    {
+      "period": "2026-07-15",
+      "periodEnd": "2026-08-01",
+      "month": "2026-07",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-07-15",
+        "sha": "e2eb4e85b8425af71366a9e00553511549cb3f19",
+        "date": "2026-07-13T22:49:11+02:00"
+      },
+      "to": {
         "label": "2026-08-01",
         "sha": "738805e2dc53a8eed6bcba53fd91b073db680936",
         "date": "2026-07-31T15:44:09+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 9338,
-          "addedComment": 1273,
-          "removedCode": 13573,
+          "addedCode": 8748,
+          "addedComment": 1236,
+          "removedCode": 13543,
           "removedComment": 629,
-          "commentRatio": 0.11996984261615305
+          "commentRatio": 0.12379807692307693
         },
         "spec.ts": {
-          "addedCode": 11928,
-          "addedComment": 119,
-          "removedCode": 15224,
+          "addedCode": 11034,
+          "addedComment": 115,
+          "removedCode": 15220,
           "removedComment": 47,
-          "commentRatio": 0.009877977919814061
+          "commentRatio": 0.010314826441833349
         },
         "tsx": {
-          "addedCode": 3322,
-          "addedComment": 115,
-          "removedCode": 5367,
-          "removedComment": 108,
-          "commentRatio": 0.033459412278149546
+          "addedCode": 3156,
+          "addedComment": 109,
+          "removedCode": 5359,
+          "removedComment": 109,
+          "commentRatio": 0.0333843797856049
         },
         "spec.tsx": {
           "addedCode": 2982,
@@ -2523,39 +5085,39 @@
           "commentRatio": 0.013236267372600927
         },
         "all": {
-          "addedCode": 27570,
-          "addedComment": 1547,
-          "removedCode": 35847,
-          "removedComment": 795,
-          "commentRatio": 0.05313047360648419
+          "addedCode": 25920,
+          "addedComment": 1500,
+          "removedCode": 35805,
+          "removedComment": 796,
+          "commentRatio": 0.05470459518599562
         },
         "prod": {
-          "addedCode": 12660,
-          "addedComment": 1388,
-          "removedCode": 18940,
-          "removedComment": 737,
-          "commentRatio": 0.09880410022779043
+          "addedCode": 11904,
+          "addedComment": 1345,
+          "removedCode": 18902,
+          "removedComment": 738,
+          "commentRatio": 0.10151709562985886
         },
         "spec": {
-          "addedCode": 14910,
-          "addedComment": 159,
-          "removedCode": 16907,
+          "addedCode": 14016,
+          "addedComment": 155,
+          "removedCode": 16903,
           "removedComment": 58,
-          "commentRatio": 0.010551463268962771
+          "commentRatio": 0.010937830781172818
         },
         "backend": {
-          "addedCode": 21266,
-          "addedComment": 1392,
-          "removedCode": 28797,
+          "addedCode": 19782,
+          "addedComment": 1351,
+          "removedCode": 28763,
           "removedComment": 676,
-          "commentRatio": 0.061435254656192075
+          "commentRatio": 0.06392845313017556
         },
         "frontend": {
-          "addedCode": 6304,
-          "addedComment": 155,
-          "removedCode": 7050,
-          "removedComment": 119,
-          "commentRatio": 0.023997522836352377
+          "addedCode": 6138,
+          "addedComment": 149,
+          "removedCode": 7042,
+          "removedComment": 120,
+          "commentRatio": 0.023699697789088595
         }
       },
       "stockAtEnd": {
@@ -2625,6 +5187,8 @@
       }
     },
     {
+      "period": "2026-08-01",
+      "periodEnd": "2026-08-15",
       "month": "2026-08",
       "seeded": false,
       "partial": false,
@@ -2634,73 +5198,220 @@
         "date": "2026-07-31T15:44:09+02:00"
       },
       "to": {
+        "label": "2026-08-15",
+        "sha": "ebbc6cc30ff81447903faafa138f328c5e7a062a",
+        "date": "2026-08-14T14:58:29+02:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 2696,
+          "addedComment": 1463,
+          "removedCode": 1187,
+          "removedComment": 136,
+          "commentRatio": 0.3517672517432075
+        },
+        "spec.ts": {
+          "addedCode": 2869,
+          "addedComment": 96,
+          "removedCode": 509,
+          "removedComment": 7,
+          "commentRatio": 0.03237774030354131
+        },
+        "tsx": {
+          "addedCode": 113,
+          "addedComment": 33,
+          "removedCode": 837,
+          "removedComment": 1,
+          "commentRatio": 0.22602739726027396
+        },
+        "spec.tsx": {
+          "addedCode": 1142,
+          "addedComment": 19,
+          "removedCode": 883,
+          "removedComment": 0,
+          "commentRatio": 0.01636520241171404
+        },
+        "all": {
+          "addedCode": 6820,
+          "addedComment": 1611,
+          "removedCode": 3416,
+          "removedComment": 144,
+          "commentRatio": 0.19108053611671214
+        },
+        "prod": {
+          "addedCode": 2809,
+          "addedComment": 1496,
+          "removedCode": 2024,
+          "removedComment": 137,
+          "commentRatio": 0.3475029036004646
+        },
+        "spec": {
+          "addedCode": 4011,
+          "addedComment": 115,
+          "removedCode": 1392,
+          "removedComment": 7,
+          "commentRatio": 0.027872031022782354
+        },
+        "backend": {
+          "addedCode": 5565,
+          "addedComment": 1559,
+          "removedCode": 1696,
+          "removedComment": 143,
+          "commentRatio": 0.21883773161145423
+        },
+        "frontend": {
+          "addedCode": 1255,
+          "addedComment": 52,
+          "removedCode": 1720,
+          "removedComment": 1,
+          "commentRatio": 0.03978576893649579
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2143,
+          "blank": 18471,
+          "code": 139927,
+          "comment": 12384,
+          "commentRatio": 0.0813073251439489
+        },
+        "spec.ts": {
+          "files": 484,
+          "blank": 29922,
+          "code": 172775,
+          "comment": 1337,
+          "commentRatio": 0.007678965263738283
+        },
+        "tsx": {
+          "files": 535,
+          "blank": 5196,
+          "code": 71867,
+          "comment": 891,
+          "commentRatio": 0.01224607603287611
+        },
+        "spec.tsx": {
+          "files": 60,
+          "blank": 2682,
+          "code": 14592,
+          "comment": 113,
+          "commentRatio": 0.00768446106766406
+        },
+        "all": {
+          "files": 3222,
+          "blank": 56271,
+          "code": 399161,
+          "comment": 14725,
+          "commentRatio": 0.03557742953373634
+        },
+        "prod": {
+          "files": 2678,
+          "blank": 23667,
+          "code": 211794,
+          "comment": 13275,
+          "commentRatio": 0.05898191221358783
+        },
+        "spec": {
+          "files": 544,
+          "blank": 32604,
+          "code": 187367,
+          "comment": 1450,
+          "commentRatio": 0.007679393274969944
+        },
+        "backend": {
+          "files": 2627,
+          "blank": 48393,
+          "code": 312702,
+          "comment": 13721,
+          "commentRatio": 0.04203441546704736
+        },
+        "frontend": {
+          "files": 595,
+          "blank": 7878,
+          "code": 86459,
+          "comment": 1004,
+          "commentRatio": 0.011479139750523079
+        }
+      }
+    },
+    {
+      "period": "2026-08-15",
+      "periodEnd": "2026-09-01",
+      "month": "2026-08",
+      "seeded": false,
+      "partial": false,
+      "from": {
+        "label": "2026-08-15",
+        "sha": "ebbc6cc30ff81447903faafa138f328c5e7a062a",
+        "date": "2026-08-14T14:58:29+02:00"
+      },
+      "to": {
         "label": "2026-09-01",
         "sha": "38078df6574173ae02a855e47176c703883b7959",
         "date": "2026-08-31T18:17:45+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 6343,
-          "addedComment": 3606,
-          "removedCode": 1853,
-          "removedComment": 209,
-          "commentRatio": 0.3624484872851543
+          "addedCode": 3674,
+          "addedComment": 2153,
+          "removedCode": 693,
+          "removedComment": 83,
+          "commentRatio": 0.3694868714604428
         },
         "spec.ts": {
-          "addedCode": 11313,
-          "addedComment": 479,
-          "removedCode": 1238,
-          "removedComment": 29,
-          "commentRatio": 0.04062075983717775
+          "addedCode": 8448,
+          "addedComment": 383,
+          "removedCode": 733,
+          "removedComment": 22,
+          "commentRatio": 0.04336994677839429
         },
         "tsx": {
-          "addedCode": 12285,
-          "addedComment": 2633,
-          "removedCode": 2150,
-          "removedComment": 5,
-          "commentRatio": 0.17649819010591233
+          "addedCode": 12172,
+          "addedComment": 2600,
+          "removedCode": 1313,
+          "removedComment": 4,
+          "commentRatio": 0.1760086650419713
         },
         "spec.tsx": {
-          "addedCode": 2504,
-          "addedComment": 95,
-          "removedCode": 911,
+          "addedCode": 1369,
+          "addedComment": 76,
+          "removedCode": 35,
           "removedComment": 2,
-          "commentRatio": 0.03655252020007695
+          "commentRatio": 0.05259515570934256
         },
         "all": {
-          "addedCode": 32445,
-          "addedComment": 6813,
-          "removedCode": 6152,
-          "removedComment": 245,
-          "commentRatio": 0.17354424575882624
+          "addedCode": 25663,
+          "addedComment": 5212,
+          "removedCode": 2774,
+          "removedComment": 111,
+          "commentRatio": 0.16880971659919028
         },
         "prod": {
-          "addedCode": 18628,
-          "addedComment": 6239,
-          "removedCode": 4003,
-          "removedComment": 214,
-          "commentRatio": 0.2508947601238589
+          "addedCode": 15846,
+          "addedComment": 4753,
+          "removedCode": 2006,
+          "removedComment": 87,
+          "commentRatio": 0.23073935627943104
         },
         "spec": {
-          "addedCode": 13817,
-          "addedComment": 574,
-          "removedCode": 2149,
-          "removedComment": 31,
-          "commentRatio": 0.039886039886039885
+          "addedCode": 9817,
+          "addedComment": 459,
+          "removedCode": 768,
+          "removedComment": 24,
+          "commentRatio": 0.044667185675360065
         },
         "backend": {
-          "addedCode": 17656,
-          "addedComment": 4085,
-          "removedCode": 3091,
-          "removedComment": 238,
-          "commentRatio": 0.18789384112966284
+          "addedCode": 12122,
+          "addedComment": 2536,
+          "removedCode": 1426,
+          "removedComment": 105,
+          "commentRatio": 0.17301132487378906
         },
         "frontend": {
-          "addedCode": 14789,
-          "addedComment": 2728,
-          "removedCode": 3061,
-          "removedComment": 7,
-          "commentRatio": 0.1557344294114289
+          "addedCode": 13541,
+          "addedComment": 2676,
+          "removedCode": 1348,
+          "removedComment": 6,
+          "commentRatio": 0.16501202441881976
         }
       },
       "stockAtEnd": {
@@ -2770,82 +5481,231 @@
       }
     },
     {
+      "period": "2026-09-01",
+      "periodEnd": "2026-09-15",
       "month": "2026-09",
       "seeded": false,
-      "partial": true,
+      "partial": false,
       "from": {
         "label": "2026-09-01",
         "sha": "38078df6574173ae02a855e47176c703883b7959",
         "date": "2026-08-31T18:17:45+02:00"
       },
       "to": {
-        "label": "2026-09-18",
-        "sha": "35c79cab88496a9709c391d89f94eb1ce67969fa",
-        "date": "2026-09-18T12:43:02+02:00"
+        "label": "2026-09-15",
+        "sha": "e2f62198f7533ea55ac1f67de395c48f548eddf1",
+        "date": "2026-09-14T17:42:26+02:00"
       },
       "flow": {
         "ts": {
-          "addedCode": 6556,
-          "addedComment": 4193,
-          "removedCode": 4932,
-          "removedComment": 6781,
-          "commentRatio": 0.39008279839985116
+          "addedCode": 5059,
+          "addedComment": 2231,
+          "removedCode": 3704,
+          "removedComment": 580,
+          "commentRatio": 0.30603566529492454
         },
         "spec.ts": {
-          "addedCode": 16876,
-          "addedComment": 608,
-          "removedCode": 10091,
-          "removedComment": 399,
-          "commentRatio": 0.034774651109585906
+          "addedCode": 11020,
+          "addedComment": 378,
+          "removedCode": 5451,
+          "removedComment": 7,
+          "commentRatio": 0.03316371293209335
         },
         "tsx": {
-          "addedCode": 9832,
-          "addedComment": 3785,
-          "removedCode": 2117,
-          "removedComment": 274,
-          "commentRatio": 0.2779613718146435
+          "addedCode": 8478,
+          "addedComment": 3060,
+          "removedCode": 1919,
+          "removedComment": 160,
+          "commentRatio": 0.26521060842433697
         },
         "spec.tsx": {
-          "addedCode": 5467,
-          "addedComment": 508,
-          "removedCode": 104,
-          "removedComment": 13,
-          "commentRatio": 0.08502092050209205
+          "addedCode": 4427,
+          "addedComment": 422,
+          "removedCode": 81,
+          "removedComment": 1,
+          "commentRatio": 0.0870282532480924
         },
         "all": {
-          "addedCode": 38731,
-          "addedComment": 9094,
-          "removedCode": 17244,
-          "removedComment": 7467,
-          "commentRatio": 0.19015159435441714
+          "addedCode": 28984,
+          "addedComment": 6091,
+          "removedCode": 11155,
+          "removedComment": 748,
+          "commentRatio": 0.17365645046329295
         },
         "prod": {
-          "addedCode": 16388,
-          "addedComment": 7978,
-          "removedCode": 7049,
-          "removedComment": 7055,
-          "commentRatio": 0.32742345891816466
+          "addedCode": 13537,
+          "addedComment": 5291,
+          "removedCode": 5623,
+          "removedComment": 740,
+          "commentRatio": 0.2810176333120884
         },
         "spec": {
-          "addedCode": 22343,
-          "addedComment": 1116,
-          "removedCode": 10195,
-          "removedComment": 412,
-          "commentRatio": 0.04757236028816233
+          "addedCode": 15447,
+          "addedComment": 800,
+          "removedCode": 5532,
+          "removedComment": 8,
+          "commentRatio": 0.04923985966639995
         },
         "backend": {
-          "addedCode": 23432,
-          "addedComment": 4801,
-          "removedCode": 15023,
-          "removedComment": 7180,
-          "commentRatio": 0.17004923316686146
+          "addedCode": 16079,
+          "addedComment": 2609,
+          "removedCode": 9155,
+          "removedComment": 587,
+          "commentRatio": 0.13960830479452055
         },
         "frontend": {
-          "addedCode": 15299,
-          "addedComment": 4293,
-          "removedCode": 2221,
-          "removedComment": 287,
-          "commentRatio": 0.21912004899959167
+          "addedCode": 12905,
+          "addedComment": 3482,
+          "removedCode": 2000,
+          "removedComment": 161,
+          "commentRatio": 0.21248550680417405
+        }
+      },
+      "stockAtEnd": {
+        "ts": {
+          "files": 2190,
+          "blank": 19175,
+          "code": 144263,
+          "comment": 16105,
+          "commentRatio": 0.10042527187468822
+        },
+        "spec.ts": {
+          "files": 544,
+          "blank": 32281,
+          "code": 186059,
+          "comment": 2069,
+          "commentRatio": 0.010997831263820378
+        },
+        "tsx": {
+          "files": 601,
+          "blank": 6285,
+          "code": 89285,
+          "comment": 6387,
+          "commentRatio": 0.06675934442679153
+        },
+        "spec.tsx": {
+          "files": 87,
+          "blank": 3829,
+          "code": 20272,
+          "comment": 608,
+          "commentRatio": 0.029118773946360154
+        },
+        "all": {
+          "files": 3422,
+          "blank": 61570,
+          "code": 439879,
+          "comment": 25169,
+          "commentRatio": 0.0541212950061069
+        },
+        "prod": {
+          "files": 2791,
+          "blank": 25460,
+          "code": 233548,
+          "comment": 22492,
+          "commentRatio": 0.08784564911732541
+        },
+        "spec": {
+          "files": 631,
+          "blank": 36110,
+          "code": 206331,
+          "comment": 2677,
+          "commentRatio": 0.012808122177141544
+        },
+        "backend": {
+          "files": 2734,
+          "blank": 51456,
+          "code": 330322,
+          "comment": 18174,
+          "commentRatio": 0.05214980946696662
+        },
+        "frontend": {
+          "files": 688,
+          "blank": 10114,
+          "code": 109557,
+          "comment": 6995,
+          "commentRatio": 0.060016130139336946
+        }
+      }
+    },
+    {
+      "period": "2026-09-15",
+      "periodEnd": "2026-09-18",
+      "month": "2026-09",
+      "seeded": false,
+      "partial": true,
+      "from": {
+        "label": "2026-09-15",
+        "sha": "e2f62198f7533ea55ac1f67de395c48f548eddf1",
+        "date": "2026-09-14T17:42:26+02:00"
+      },
+      "to": {
+        "label": "2026-09-18",
+        "sha": "8c06a75bd0f4edb3b24ce1c675367890cd74eef3",
+        "date": "2026-09-18T11:22:44+00:00"
+      },
+      "flow": {
+        "ts": {
+          "addedCode": 1810,
+          "addedComment": 2183,
+          "removedCode": 1541,
+          "removedComment": 6422,
+          "commentRatio": 0.5467067367893814
+        },
+        "spec.ts": {
+          "addedCode": 6675,
+          "addedComment": 269,
+          "removedCode": 5459,
+          "removedComment": 431,
+          "commentRatio": 0.03873847926267281
+        },
+        "tsx": {
+          "addedCode": 1513,
+          "addedComment": 790,
+          "removedCode": 357,
+          "removedComment": 179,
+          "commentRatio": 0.3430308293530178
+        },
+        "spec.tsx": {
+          "addedCode": 1151,
+          "addedComment": 93,
+          "removedCode": 134,
+          "removedComment": 19,
+          "commentRatio": 0.0747588424437299
+        },
+        "all": {
+          "addedCode": 11149,
+          "addedComment": 3335,
+          "removedCode": 7491,
+          "removedComment": 7051,
+          "commentRatio": 0.23025407346037005
+        },
+        "prod": {
+          "addedCode": 3323,
+          "addedComment": 2973,
+          "removedCode": 1898,
+          "removedComment": 6601,
+          "commentRatio": 0.4722045743329098
+        },
+        "spec": {
+          "addedCode": 7826,
+          "addedComment": 362,
+          "removedCode": 5593,
+          "removedComment": 450,
+          "commentRatio": 0.04421104054714216
+        },
+        "backend": {
+          "addedCode": 8485,
+          "addedComment": 2452,
+          "removedCode": 7000,
+          "removedComment": 6853,
+          "commentRatio": 0.22419310597055866
+        },
+        "frontend": {
+          "addedCode": 2664,
+          "addedComment": 883,
+          "removedCode": 491,
+          "removedComment": 198,
+          "commentRatio": 0.24894276853679165
         }
       },
       "stockAtEnd": {
