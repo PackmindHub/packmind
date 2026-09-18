@@ -18,6 +18,7 @@ export * from './PackmindFileConfig';
 export * from './PackmindLockFile';
 export * from './DistributionId';
 export * from './Distribution';
+export * from './DistributionHistoryEntry';
 export * from './DistributionOperation';
 export * from './DistributedPackageId';
 export * from './DistributedPackage';

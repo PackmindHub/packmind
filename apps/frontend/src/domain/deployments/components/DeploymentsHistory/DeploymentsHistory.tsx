@@ -16,20 +16,23 @@ import {
 } from '@packmind/ui';
 import { LuInfo } from 'react-icons/lu';
 import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
-import { Distribution, RenderMode, DistributedPackage } from '@packmind/types';
+import {
+  Distribution,
+  DistributionHistoryEntry,
+  RenderMode,
+  DistributedPackage,
+} from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
 
-export type DeploymentType = 'recipe' | 'standard' | 'skill' | 'package';
+export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
 
 /** Paths that mean "the repository itself", which the target line leaves out. */
 const ROOT_TARGET_PATHS = new Set(['', '/', '.', './']);
 
-interface DeploymentsHistoryProps {
-  deployments: Distribution[];
-  type: DeploymentType;
+type DeploymentsHistoryProps = {
   entityId: string;
   usersMap?: Record<string, string>;
   loading?: boolean;
@@ -39,7 +42,16 @@ interface DeploymentsHistoryProps {
   spaceSlug?: string;
   hidePackageColumn?: boolean;
   hideVersionColumn?: boolean;
-}
+} & (
+  | { type: 'package'; deployments: DistributionHistoryEntry[] }
+  | { type: Exclude<DeploymentType, 'package'>; deployments: Distribution[] }
+);
+
+type HistoryRow = {
+  deployment: DistributionHistoryEntry;
+  version: string | number;
+  removed: boolean;
+};
 
 export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   deployments,
@@ -133,19 +145,14 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   };
 
   const getVersion = (deployment: Distribution) => {
-    if (type === 'package') {
-      // Packages don't have versions like recipes/standards
-      return '-';
-    }
-
     // Search through all distributed packages for the version
     for (const dp of deployment.distributedPackages || []) {
-      if (type === 'recipe') {
-        const recipeVersion = dp.recipeVersions?.find(
+      if (type === 'command') {
+        const commandVersion = dp.recipeVersions?.find(
           (v) => v.recipeId === entityId,
         );
-        if (recipeVersion) {
-          return recipeVersion.version;
+        if (commandVersion) {
+          return commandVersion.version;
         }
       } else if (type === 'standard') {
         const standardVersion = dp.standardVersions?.find(
@@ -176,7 +183,10 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
    * between rows sat in the middle of a phrase. Two lines, the name of the
    * place and then where in it, read down a column.
    */
-  const getTargetInfo = (deployment: Distribution): React.ReactNode => {
+  const getTargetInfo = (
+    deployment: DistributionHistoryEntry,
+    removed: boolean,
+  ): React.ReactNode => {
     const target = deployment.target;
     if (!target) return 'No target specified';
     const place = target.gitRepo
@@ -217,7 +227,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
               {detail}
             </PMText>
           )}
-          {isRemoval(deployment) && (
+          {removed && (
             <PMBadge colorPalette="orange" size="sm" flexShrink={0}>
               Removed
             </PMBadge>
@@ -227,7 +237,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
-  const getCommitLinks = (deployment: Distribution) => {
+  const getCommitLinks = (deployment: DistributionHistoryEntry) => {
     const commit = deployment.gitCommit;
     if (!commit) {
       if (deployment.status === 'in_progress') {
@@ -283,7 +293,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
-  const getAuthor = (deployment: Distribution) => {
+  const getAuthor = (deployment: DistributionHistoryEntry) => {
     if (usersMap) {
       return usersMap[deployment.authorId || 'N/A'] || 'Unknown User';
     }
@@ -296,7 +306,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
    * one active developer it printed the same name on every row of the log for
    * a hundred and ten pixels. It is worth keeping, not worth a column.
    */
-  const getWhen = (deployment: Distribution): React.ReactNode => (
+  const getWhen = (deployment: DistributionHistoryEntry): React.ReactNode => (
     <PMBox minW={0}>
       <PMText as="div" variant="small" whiteSpace="nowrap">
         {format(new Date(deployment.createdAt), 'yyyy-MM-dd HH:mm')}
@@ -307,7 +317,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     </PMBox>
   );
 
-  const getMessage = (deployment: Distribution): React.ReactNode => {
+  const getMessage = (
+    deployment: DistributionHistoryEntry,
+  ): React.ReactNode => {
     const text = (() => {
       if (deployment.status === 'failure' && deployment.error)
         return deployment.error;
@@ -327,7 +339,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return <ClippedText text={text} />;
   };
 
-  const getPackageInfo = (deployment: Distribution): React.ReactNode => {
+  const getPackageInfo = (
+    deployment: DistributionHistoryEntry,
+  ): React.ReactNode => {
     const packages = deployment.distributedPackages
       ?.map((dp) => dp.package)
       .filter(Boolean);
@@ -357,14 +371,10 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const isRemoval = (deployment: Distribution): boolean => {
     let distributedPackage: DistributedPackage | undefined;
 
-    if (type === 'package') {
-      distributedPackage = deployment.distributedPackages?.find(
-        (dp: DistributedPackage) => dp.packageId === entityId,
-      );
-    } else if (type === 'recipe') {
+    if (type === 'command') {
       distributedPackage = deployment.distributedPackages?.find(
         (dp: DistributedPackage) =>
-          dp.recipeVersions?.some((rv) => rv.recipeId === entityId),
+          dp.recipeVersions?.some((cv) => cv.recipeId === entityId),
       );
     } else if (type === 'standard') {
       distributedPackage = deployment.distributedPackages?.find(
@@ -413,17 +423,36 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     { key: 'message', header: 'Message', grow: true, align: 'left' },
   ] as PMTableColumn[];
 
-  const tableData: PMTableRow[] = deployments.map((deployment) => ({
-    key: deployment.id,
-    version: getVersion(deployment as Distribution),
-    package: getPackageInfo(deployment),
-    target: getTargetInfo(deployment),
-    renderModes: <RenderModes renderModes={deployment.renderModes} />,
-    commits: getCommitLinks(deployment),
-    createdAt: getWhen(deployment),
-    status: getStatusBadge(deployment.status),
-    message: getMessage(deployment),
-  }));
+  let rows: HistoryRow[];
+  if (type === 'package') {
+    rows = deployments.map((deployment) => ({
+      deployment,
+      version: '-',
+      removed:
+        deployment.distributedPackages.find((dp) => dp.packageId === entityId)
+          ?.operation === 'remove',
+    }));
+  } else {
+    rows = deployments.map((deployment) => ({
+      deployment,
+      version: getVersion(deployment),
+      removed: isRemoval(deployment),
+    }));
+  }
+
+  const tableData: PMTableRow[] = rows.map(
+    ({ deployment, version, removed }) => ({
+      key: deployment.id,
+      version,
+      package: getPackageInfo(deployment),
+      target: getTargetInfo(deployment, removed),
+      renderModes: <RenderModes renderModes={deployment.renderModes} />,
+      commits: getCommitLinks(deployment),
+      createdAt: getWhen(deployment),
+      status: getStatusBadge(deployment.status),
+      message: getMessage(deployment),
+    }),
+  );
 
   return (
     <PMPageSection title={title} headingLevel="h5">

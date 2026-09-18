@@ -60,10 +60,11 @@ export class DeploymentsGatewayApi
 
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage> = async ({
     organizationId,
+    spaceId,
     packageId,
   }: NewPackmindCommandBody<ListDeploymentsByPackageCommand>) => {
     return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/package/${packageId}`,
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/packages/${packageId}/deployments`,
     );
   };
 

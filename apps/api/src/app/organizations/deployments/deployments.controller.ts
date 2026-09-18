@@ -31,7 +31,6 @@ import {
   PackageId,
   OrganizationId,
   ListActiveDistributedPackagesBySpaceCommand,
-  ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
@@ -120,66 +119,6 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/recipe/:id - Failed to fetch deployments',
         {
           recipeId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('package/:id')
-  async getDeploymentsByPackageId(
-    @Param('orgId') organizationId: OrganizationId,
-    @Param('id') id: PackageId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/package/:id - Fetching deployments by package ID',
-      {
-        packageId: id,
-        organizationId,
-      },
-    );
-
-    try {
-      const command: ListDeploymentsByPackageCommand = {
-        userId: request.user.userId,
-        organizationId,
-        packageId: id,
-      };
-
-      const deployments =
-        await this.deploymentsService.listDeploymentsByPackage(command);
-
-      if (!deployments || deployments.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/package/:id - No deployments found',
-          {
-            packageId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/package/:id - Deployments fetched successfully',
-        {
-          packageId: id,
-          organizationId,
-          count: deployments.length,
-        },
-      );
-
-      return deployments;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/package/:id - Failed to fetch deployments',
-        {
-          packageId: id,
           organizationId,
           error: errorMessage,
         },

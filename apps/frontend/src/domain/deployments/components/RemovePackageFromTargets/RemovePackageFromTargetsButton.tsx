@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { PMButton, PMTooltip, PMSpinner } from '@packmind/ui';
-import { Distribution, Package } from '@packmind/types';
+import { DistributionHistoryEntry, Package } from '@packmind/types';
 import { RemovePackageFromTargetsDialog } from './RemovePackageFromTargetsDialog';
 import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 export interface RemovePackageFromTargetsButtonProps {
   selectedPackage: Package;
-  distributions: Distribution[];
+  distributions: DistributionHistoryEntry[];
   distributionsLoading?: boolean;
   size?: 'sm' | 'md' | 'lg';
 }

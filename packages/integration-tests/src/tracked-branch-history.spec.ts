@@ -1,7 +1,12 @@
 import { DistributionSchema } from '@packmind/deployments';
 import { GitCommitSchema, GitRepoSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import { Distribution, GitCommit, GitRepo, Package } from '@packmind/types';
+import {
+  DistributionHistoryEntry,
+  GitCommit,
+  GitRepo,
+  Package,
+} from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -130,9 +135,11 @@ describe('Tracked branch distribution history integration', () => {
     });
   }
 
-  function displayedHistory(): Promise<Distribution[]> {
+  function displayedHistory(): Promise<DistributionHistoryEntry[]> {
     return testApp.deploymentsHexa.getAdapter().listDeploymentsByPackage({
       ...admin.packmindCommand(),
+      organizationId: admin.organization.id,
+      spaceId: admin.space.id,
       packageId: distributedPackage.id,
     });
   }
@@ -478,6 +485,8 @@ describe('Tracked branch distribution history integration', () => {
         .getAdapter()
         .listDeploymentsByPackage({
           ...otherAdmin.packmindCommand(),
+          organizationId: otherAdmin.organization.id,
+          spaceId: otherAdmin.space.id,
           packageId: otherPackage.id,
         })
         .then((history) =>

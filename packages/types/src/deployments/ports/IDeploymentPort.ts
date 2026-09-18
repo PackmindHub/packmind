@@ -73,6 +73,7 @@ import {
 } from '../contracts';
 import { OrganizationId } from '../../accounts/Organization';
 import { Distribution } from '../Distribution';
+import { DistributionHistoryEntry } from '../DistributionHistoryEntry';
 import {
   Package,
   PackageId,
@@ -139,11 +140,12 @@ export interface IDeploymentPort {
    * Lists all distributions for a specific package
    *
    * @param command - Command containing packageId and organizationId
-   * @returns Promise of Distribution entries that include the specified package
+   * @returns Promise of history entries for the distributions that include the
+   * specified package — without the artifact versions each package carried
    */
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]>;
+  ): Promise<DistributionHistoryEntry[]>;
 
   /**
    * Lists all distributions that include a specific recipe

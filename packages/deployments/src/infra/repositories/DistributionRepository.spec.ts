@@ -222,8 +222,10 @@ describe('DistributionRepository', () => {
     });
 
     describe('when listing distributions by package', () => {
+      const spaceId = createSpaceId('space-1');
+
       beforeEach(async () => {
-        await repository.listByPackageId(packageId1, organizationId);
+        await repository.listByPackageId(packageId1, organizationId, spaceId);
       });
 
       it('scopes the history to the tracked branch', () => {
@@ -247,6 +249,24 @@ describe('DistributionRepository', () => {
         expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
           expect.stringContaining('"gitRepo"."id" NOT IN'),
           expect.anything(),
+        );
+      });
+
+      it('joins the distributed package to its owning package', () => {
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
+
+      // Regression test for the vulnerability where a caller who is a member
+      // of `spaceId` could pass a `packageId` belonging to a different space
+      // in the same organization and still read its distribution history.
+      // Fails if the `package.spaceId` scoping is removed from the query.
+      it('excludes a package that belongs to a different space in the same organization', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'package.spaceId = :spaceId',
+          { spaceId },
         );
       });
     });

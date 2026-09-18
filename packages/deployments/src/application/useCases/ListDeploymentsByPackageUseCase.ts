@@ -1,44 +1,60 @@
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  OrganizationId,
-  Distribution,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
+import {
+  IAccountsPort,
   IListDeploymentsByPackage,
+  ISpacesPort,
   ListDeploymentsByPackageCommand,
+  ListDeploymentsByPackageResponse,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
-export class ListDeploymentsByPackageUseCase implements IListDeploymentsByPackage {
+const origin = 'ListDeploymentsByPackageUseCase';
+
+export class ListDeploymentsByPackageUseCase
+  extends AbstractSpaceMemberUseCase<
+    ListDeploymentsByPackageCommand,
+    ListDeploymentsByPackageResponse
+  >
+  implements IListDeploymentsByPackage
+{
   constructor(
+    spacesPort: ISpacesPort,
+    accountsAdapter: IAccountsPort,
     private readonly distributionRepository: IDistributionRepository,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      'ListDeploymentsByPackageUseCase',
-      LogLevel.INFO,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('ListDeploymentsByPackageUseCase initialized');
   }
 
   /**
-   * Lists all distributions for a specific package in an organization
-   * @param command Command containing packageId and organizationId
+   * Lists all distributions for a specific package in a space
+   * @param command Command containing packageId, spaceId and organizationId
    * @returns An array of distributions that include the specified package
    */
-  public async execute(
-    command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  async executeForSpaceMembers(
+    command: ListDeploymentsByPackageCommand & SpaceMemberContext,
+  ): Promise<ListDeploymentsByPackageResponse> {
     this.logger.info('Listing distributions for package', {
       packageId: command.packageId,
+      spaceId: command.spaceId,
       organizationId: command.organizationId,
     });
 
     try {
       const distributions = await this.distributionRepository.listByPackageId(
         command.packageId,
-        command.organizationId as OrganizationId,
+        command.organizationId,
+        command.spaceId,
       );
 
       this.logger.info('Distributions for package listed successfully', {
         packageId: command.packageId,
+        spaceId: command.spaceId,
         organizationId: command.organizationId,
         count: distributions.length,
       });
@@ -47,6 +63,7 @@ export class ListDeploymentsByPackageUseCase implements IListDeploymentsByPackag
     } catch (error) {
       this.logger.error('Failed to list distributions for package', {
         packageId: command.packageId,
+        spaceId: command.spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

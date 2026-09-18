@@ -3,7 +3,7 @@ import {
   Gateway,
   IGetTargetsByOrganizationUseCase,
   IUpdateRenderModeConfigurationUseCase,
-  Distribution,
+  DistributionHistoryEntry,
 } from '@packmind/types';
 import { IDeploymentsGateway } from '../IPackmindGateway';
 
@@ -31,11 +31,12 @@ export class DeploymentsGateway implements IDeploymentsGateway {
     };
 
   listDeploymentsByPackage = async (
+    spaceId: string,
     packageId: string,
-  ): Promise<Distribution[]> => {
+  ): Promise<DistributionHistoryEntry[]> => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/deployments/package/${packageId}`,
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/deployments`,
     );
   };
 }

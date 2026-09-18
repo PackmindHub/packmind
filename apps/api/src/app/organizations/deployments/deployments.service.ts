@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   ActiveDistributedPackagesByTarget,
   Distribution,
+  DistributionHistoryEntry,
   ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
@@ -56,7 +57,7 @@ export class DeploymentsService {
 
   async listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     return this.deploymentAdapter.listDeploymentsByPackage(command);
   }
 

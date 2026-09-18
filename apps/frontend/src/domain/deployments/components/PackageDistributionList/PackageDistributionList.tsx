@@ -1,12 +1,13 @@
 import React from 'react';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
-import { PackageId } from '@packmind/types';
+import { PackageId, SpaceId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 import { PMEmptyState, PMBox, PMSpinner, PMText } from '@packmind/ui';
 
 interface PackageDistributionListProps {
   packageId: PackageId;
+  spaceId: SpaceId | undefined;
   /**
    * What the section calls itself. Defaulted rather than fixed, because a
    * surface that shows nothing but these events has to name them, and one that
@@ -17,13 +18,13 @@ interface PackageDistributionListProps {
 
 export const PackageDistributionList: React.FC<
   PackageDistributionListProps
-> = ({ packageId, title = 'Distributions' }) => {
+> = ({ packageId, spaceId, title = 'Distributions' }) => {
   const {
     data: deployments,
     isLoading: isLoadingDeployments,
     isError,
     error,
-  } = useListPackageDeploymentsQuery(packageId);
+  } = useListPackageDeploymentsQuery(packageId, spaceId);
 
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
