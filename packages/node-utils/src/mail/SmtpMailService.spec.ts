@@ -356,10 +356,12 @@ Test content here
     });
 
     describe('TLS certificate verification', () => {
-      it('skips verification when SMTP_TLS_REJECT_UNAUTHORIZED is unset', async () => {
-        const mailConfig = await buildMailConfig();
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED is unset', () => {
+        it('skips verification', async () => {
+          const mailConfig = await buildMailConfig();
 
-        expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
       });
 
       describe('when SMTP_TLS_REJECT_UNAUTHORIZED is true', () => {
