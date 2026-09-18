@@ -13,9 +13,16 @@ import type {
   UserId,
   OrganizationId,
   UserOrganizationRole,
+  GenerateApiKeyResponse,
+  GetCurrentApiKeyResponse,
 } from '@packmind/types';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 import type { MockedFunction } from 'vitest';
+import {
+  createIdleMutationResult,
+  createSuccessMutationResult,
+} from '../../../test/mutationResultMocks';
+import { createSuccessQueryResult } from '../../../test/queryResultMocks';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useGetCurrentApiKeyQuery: vi.fn(),
@@ -101,24 +108,12 @@ describe('CliAuthentication', () => {
       typeof useGenerateApiKeyMutation
     >;
 
-  const defaultMutationResult = {
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
-    isPending: false,
-    isSuccess: false,
-    isError: false,
-    isIdle: true,
-    status: 'idle' as const,
-    data: undefined,
-    error: null,
-    variables: undefined,
-    reset: vi.fn(),
-    failureCount: 0,
-    failureReason: null,
-    submittedAt: 0,
-    context: undefined,
-    isPaused: false,
-  };
+  const idleGenerateApiKey = (mutate = vi.fn()) =>
+    createIdleMutationResult<GenerateApiKeyResponse, Error, void>({
+      mutate,
+      mutateAsync: vi.fn(),
+      reset: vi.fn(),
+    });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,18 +121,12 @@ describe('CliAuthentication', () => {
 
   describe('when rendering with no API key', () => {
     beforeEach(() => {
-      const mockQueryResult = {
-        data: { hasApiKey: false },
-        isLoading: false,
-        isError: false,
-      };
-
       mockUseGetCurrentApiKeyQuery.mockReturnValue(
-        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+        createSuccessQueryResult<GetCurrentApiKeyResponse>({
+          hasApiKey: false,
+        }),
       );
-      mockUseGenerateApiKeyMutation.mockReturnValue(
-        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(idleGenerateApiKey());
 
       renderWithQueryClient(<CliAuthentication />);
     });
@@ -162,21 +151,16 @@ describe('CliAuthentication', () => {
   });
 
   describe('when user has an active API key', () => {
-    const expirationDate = '2024-12-31T23:59:59.000Z';
+    const expirationDate = new Date('2024-12-31T23:59:59.000Z');
 
     beforeEach(async () => {
-      const mockQueryResult = {
-        data: { hasApiKey: true, expiresAt: expirationDate },
-        isLoading: false,
-        isError: false,
-      };
-
       mockUseGetCurrentApiKeyQuery.mockReturnValue(
-        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+        createSuccessQueryResult<GetCurrentApiKeyResponse>({
+          hasApiKey: true,
+          expiresAt: expirationDate,
+        }),
       );
-      mockUseGenerateApiKeyMutation.mockReturnValue(
-        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(idleGenerateApiKey());
 
       renderWithQueryClient(<CliAuthentication />);
 
@@ -207,18 +191,13 @@ describe('CliAuthentication', () => {
 
   describe('when user clicks Generate New API Key with existing key', () => {
     beforeEach(async () => {
-      const mockQueryResult = {
-        data: { hasApiKey: true, expiresAt: '2024-12-31T23:59:59.000Z' },
-        isLoading: false,
-        isError: false,
-      };
-
       mockUseGetCurrentApiKeyQuery.mockReturnValue(
-        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+        createSuccessQueryResult<GetCurrentApiKeyResponse>({
+          hasApiKey: true,
+          expiresAt: new Date('2024-12-31T23:59:59.000Z'),
+        }),
       );
-      mockUseGenerateApiKeyMutation.mockReturnValue(
-        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(idleGenerateApiKey());
 
       renderWithQueryClient(<CliAuthentication />);
 
@@ -266,19 +245,14 @@ describe('CliAuthentication', () => {
     const mutateMock = vi.fn();
 
     beforeEach(async () => {
-      const mockQueryResult = {
-        data: { hasApiKey: false },
-        isLoading: false,
-        isError: false,
-      };
-
       mockUseGetCurrentApiKeyQuery.mockReturnValue(
-        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+        createSuccessQueryResult<GetCurrentApiKeyResponse>({
+          hasApiKey: false,
+        }),
       );
-      mockUseGenerateApiKeyMutation.mockReturnValue({
-        ...defaultMutationResult,
-        mutate: mutateMock,
-      } as ReturnType<typeof useGenerateApiKeyMutation>);
+      mockUseGenerateApiKeyMutation.mockReturnValue(
+        idleGenerateApiKey(mutateMock),
+      );
 
       renderWithQueryClient(<CliAuthentication />);
 
@@ -300,23 +274,23 @@ describe('CliAuthentication', () => {
 
   describe('when API key generation succeeds', () => {
     const mockApiKey = 'test-api-key-123';
-    const mockExpiresAt = '2024-12-31T23:59:59.000Z';
+    const mockExpiresAt = new Date('2024-12-31T23:59:59.000Z');
 
     beforeEach(async () => {
-      const mockQueryResult = {
-        data: { hasApiKey: false },
-        isLoading: false,
-        isError: false,
-      };
-
       mockUseGetCurrentApiKeyQuery.mockReturnValue(
-        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+        createSuccessQueryResult<GetCurrentApiKeyResponse>({
+          hasApiKey: false,
+        }),
       );
-      mockUseGenerateApiKeyMutation.mockReturnValue({
-        ...defaultMutationResult,
-        isSuccess: true,
-        data: { apiKey: mockApiKey, expiresAt: mockExpiresAt },
-      } as ReturnType<typeof useGenerateApiKeyMutation>);
+      mockUseGenerateApiKeyMutation.mockReturnValue(
+        createSuccessMutationResult<GenerateApiKeyResponse, Error, void>({
+          data: { apiKey: mockApiKey, expiresAt: mockExpiresAt },
+          variables: undefined,
+          mutate: vi.fn(),
+          mutateAsync: vi.fn(),
+          reset: vi.fn(),
+        }),
+      );
 
       renderWithQueryClient(<CliAuthentication />);
 

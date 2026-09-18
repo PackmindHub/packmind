@@ -20,6 +20,7 @@ import {
   createUserId,
 } from '@packmind/types';
 import type { MockedFunction } from 'vitest';
+import { createSuccessQueryResult } from '../../../test/queryResultMocks';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
@@ -115,10 +116,9 @@ describe('SignInForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock social providers query to return empty list
-    mockUseSocialProvidersQuery.mockReturnValue({
-      data: { providers: [] },
-      isLoading: false,
-    } as ReturnType<typeof useSocialProvidersQuery>);
+    mockUseSocialProvidersQuery.mockReturnValue(
+      createSuccessQueryResult<{ providers: string[] }>({ providers: [] }),
+    );
   });
 
   const createMockMutation = <T = unknown,>(overrides = {}) =>
