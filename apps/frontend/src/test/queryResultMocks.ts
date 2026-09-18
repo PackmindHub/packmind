@@ -23,7 +23,15 @@ const inertQueryState = {
   isRefetching: false,
   isStale: false,
   isEnabled: true,
+  fetchStatus: 'idle' as const,
 };
+
+/**
+ * `promise` feeds the `useQuery().promise` suspense API. Nothing here awaits it,
+ * and a rejected one would surface as an unhandled rejection, so it never settles.
+ */
+const unsettled = <TData>(): Promise<TData> =>
+  new Promise<TData>(() => undefined);
 
 const noRefetch = <TData, TError>(): UseQueryResult<TData, TError>['refetch'] =>
   (() => Promise.reject(new Error('refetch is not stubbed'))) as UseQueryResult<
@@ -37,7 +45,10 @@ const noRefetch = <TData, TError>(): UseQueryResult<TData, TError>['refetch'] =>
  */
 export const createSuccessQueryResult = <TData, TError = Error>(
   data: TData,
-  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<TData, TError>(),
+  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<
+    TData,
+    TError
+  >(),
 ): UseQueryResult<TData, TError> => ({
   ...inertQueryState,
   status: 'success',
@@ -51,13 +62,17 @@ export const createSuccessQueryResult = <TData, TError = Error>(
   isSuccess: true,
   isPlaceholderData: false,
   refetch,
+  promise: Promise.resolve(data),
 });
 
 /**
  * A query still in flight on first paint - no data yet, and nothing failed.
  */
 export const createPendingQueryResult = <TData, TError = Error>(
-  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<TData, TError>(),
+  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<
+    TData,
+    TError
+  >(),
 ): UseQueryResult<TData, TError> => ({
   ...inertQueryState,
   status: 'pending',
@@ -74,6 +89,8 @@ export const createPendingQueryResult = <TData, TError = Error>(
   isSuccess: false,
   isPlaceholderData: false,
   refetch,
+  fetchStatus: 'fetching',
+  promise: unsettled<TData>(),
 });
 
 /**
@@ -81,7 +98,10 @@ export const createPendingQueryResult = <TData, TError = Error>(
  */
 export const createFailedQueryResult = <TData, TError = Error>(
   error: NoInfer<TError>,
-  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<TData, TError>(),
+  refetch: UseQueryResult<TData, TError>['refetch'] = noRefetch<
+    TData,
+    TError
+  >(),
 ): UseQueryResult<TData, TError> => ({
   ...inertQueryState,
   status: 'error',
@@ -98,4 +118,5 @@ export const createFailedQueryResult = <TData, TError = Error>(
   isSuccess: false,
   isPlaceholderData: false,
   refetch,
+  promise: unsettled<TData>(),
 });
