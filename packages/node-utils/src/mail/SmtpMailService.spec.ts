@@ -2,12 +2,15 @@ import { SmtpMailService } from './SmtpMailService';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { Configuration } from '../config/config/Configuration';
-import { SentMessageInfo } from 'nodemailer';
+import nodemailer, { SentMessageInfo } from 'nodemailer';
+import SMTPPool from 'nodemailer/lib/smtp-pool';
 
 // Mock external dependencies
 jest.mock('../config/config/Configuration');
+jest.mock('nodemailer');
 
 const MockedConfiguration = jest.mocked(Configuration);
+const mockedNodemailer = jest.mocked(nodemailer);
 
 describe('SmtpMailService', () => {
   let service: SmtpMailService;
@@ -279,6 +282,81 @@ Test content here
             }),
           ).rejects.toThrow('Failed to send email: SMTP connection failed');
         });
+      });
+    });
+  });
+
+  describe('callNodeMailer', () => {
+    const smtpPassword = 'super-secret-smtp-password';
+    const mailOptions = {
+      from: 'test@example.com',
+      to: 'user@example.com',
+      subject: 'Test Subject',
+      html: 'Test content',
+    };
+    let consoleLogSpy: jest.SpyInstance;
+
+    const configureSmtp = (overrides: Record<string, string> = {}) => {
+      const config: Record<string, string> = {
+        SMTP_HOST: 'smtp.example.com',
+        SMTP_PORT: '587',
+        SMTP_FROM: 'test@example.com',
+        SMTP_USER: 'user',
+        SMTP_PASSWORD: smtpPassword,
+        SMTP_SECURE: 'false',
+        ...overrides,
+      };
+      MockedConfiguration.getConfig.mockImplementation((key: string) =>
+        Promise.resolve(config[key] ?? null),
+      );
+    };
+
+    const buildMailConfig = async (): Promise<SMTPPool.Options> => {
+      await service.callNodeMailer(mailOptions);
+      return mockedNodemailer.createTransport.mock
+        .calls[0][0] as unknown as SMTPPool.Options;
+    };
+
+    beforeEach(() => {
+      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      mockedNodemailer.createTransport.mockReturnValue({
+        sendMail: jest.fn().mockResolvedValue({
+          messageId: 'test-message-id',
+        } as SentMessageInfo),
+      } as unknown as ReturnType<typeof nodemailer.createTransport>);
+      configureSmtp();
+    });
+
+    afterEach(() => {
+      consoleLogSpy.mockRestore();
+    });
+
+    describe('credentials', () => {
+      it('passes the credentials to the transport', async () => {
+        const mailConfig = await buildMailConfig();
+
+        expect(mailConfig.auth).toEqual({ user: 'user', pass: smtpPassword });
+      });
+
+      it('never writes the config to the console', async () => {
+        await service.callNodeMailer(mailOptions);
+
+        expect(consoleLogSpy).not.toHaveBeenCalled();
+      });
+
+      it('keeps the password out of the logs', async () => {
+        await service.callNodeMailer(mailOptions);
+
+        // Packmind discourages asserting on the stubbed logger, but keeping the
+        // credential out of the logs is the very property under test here.
+        const loggedArguments = JSON.stringify([
+          mockLogger.debug.mock.calls,
+          mockLogger.info.mock.calls,
+          mockLogger.warn.mock.calls,
+          mockLogger.error.mock.calls,
+        ]);
+
+        expect(loggedArguments).not.toContain(smtpPassword);
       });
     });
   });

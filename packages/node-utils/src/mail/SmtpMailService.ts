@@ -162,7 +162,13 @@ ${content}
       mailConfig.secure = false;
     }
 
-    console.log(JSON.stringify(mailConfig));
+    this._logger.debug('SMTP mail config built', {
+      host: mailConfig.host,
+      port: mailConfig.port,
+      secure: mailConfig.secure,
+      hasAuth: Boolean(mailConfig.auth),
+      tlsRejectUnauthorized: mailConfig.tls.rejectUnauthorized,
+    });
 
     return mailConfig;
   }
