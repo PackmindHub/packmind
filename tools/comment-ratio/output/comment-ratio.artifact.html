@@ -974,20 +974,35 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
       );
     });
 
-    var lastX = -Infinity;
-    config.points.forEach(function (p) {
-      if (x(p.t) - lastX < 52) return;
-      lastX = x(p.t);
+    // Ticks sit on a calendar grid, not on whichever days happen to carry
+    // commits: spacing them by the data makes the axis look arbitrary. The
+    // grid is anchored on the marked date so the reference line lands on one.
+    var step = (config.tickDays || 7) * 864e5;
+    var anchor = config.tickAnchor || t0;
+    var first = anchor - Math.ceil((anchor - t0) / step) * step;
+    for (var t = first; t <= t1; t += step) {
+      if (t < t0) continue;
       svg.appendChild(
-        text(dayTick(p.t), {
-          x: x(p.t),
+        text(dayTick(t), {
+          x: x(t),
           y: m.top + plotH + 20,
           fill: 'var(--text-muted)',
           'font-size': 11.5,
           'text-anchor': 'middle',
         }),
       );
-    });
+      svg.appendChild(
+        el('line', {
+          x1: x(t),
+          x2: x(t),
+          y1: m.top + plotH,
+          y2: m.top + plotH + 4,
+          stroke: 'var(--axis)',
+          'stroke-width': 1,
+        }),
+      );
+    }
+
     svg.appendChild(
       el('line', {
         x1: m.left,
@@ -1295,6 +1310,7 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
   V.dotChart(document.getElementById('c-daily'), {
     points: D.daily.points, tMin: D.daily.tMin, tMax: D.daily.tMax,
     annotations: [{ t: D.daily.release, label: 'Opus 5 released' }],
+    tickAnchor: D.daily.release, tickDays: 7,
     ariaLabel: "Daily comment ratio around the Opus 5 release"
   });
   document.getElementById('l-daily').innerHTML = D.daily.legend.map(function (e) {

@@ -407,20 +407,35 @@
       );
     });
 
-    var lastX = -Infinity;
-    config.points.forEach(function (p) {
-      if (x(p.t) - lastX < 52) return;
-      lastX = x(p.t);
+    // Ticks sit on a calendar grid, not on whichever days happen to carry
+    // commits: spacing them by the data makes the axis look arbitrary. The
+    // grid is anchored on the marked date so the reference line lands on one.
+    var step = (config.tickDays || 7) * 864e5;
+    var anchor = config.tickAnchor || t0;
+    var first = anchor - Math.ceil((anchor - t0) / step) * step;
+    for (var t = first; t <= t1; t += step) {
+      if (t < t0) continue;
       svg.appendChild(
-        text(dayTick(p.t), {
-          x: x(p.t),
+        text(dayTick(t), {
+          x: x(t),
           y: m.top + plotH + 20,
           fill: 'var(--text-muted)',
           'font-size': 11.5,
           'text-anchor': 'middle',
         }),
       );
-    });
+      svg.appendChild(
+        el('line', {
+          x1: x(t),
+          x2: x(t),
+          y1: m.top + plotH,
+          y2: m.top + plotH + 4,
+          stroke: 'var(--axis)',
+          'stroke-width': 1,
+        }),
+      );
+    }
+
     svg.appendChild(
       el('line', {
         x1: m.left,

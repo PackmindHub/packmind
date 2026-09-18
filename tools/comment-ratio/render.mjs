@@ -615,6 +615,7 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
   V.dotChart(document.getElementById('c-daily'), {
     points: D.daily.points, tMin: D.daily.tMin, tMax: D.daily.tMax,
     annotations: [{ t: D.daily.release, label: 'Opus 5 released' }],
+    tickAnchor: D.daily.release, tickDays: 7,
     ariaLabel: "Daily comment ratio around the Opus 5 release"
   });
   document.getElementById('l-daily').innerHTML = D.daily.legend.map(function (e) {
