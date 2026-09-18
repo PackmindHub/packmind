@@ -1,11 +1,5 @@
 import { createIntegrationTestFixture } from './createIntegrationTestFixture';
-import { accountsSchemas } from '@packmind/accounts';
-import { spacesSchemas } from '@packmind/spaces';
-import { commandsSchemas } from '@packmind/commands';
-import { standardsSchemas } from '@packmind/standards';
-import { skillsSchemas } from '@packmind/skills';
-import { gitSchemas } from '@packmind/git';
-import { playbookChangeManagementSchemas } from '@packmind/playbook-change-management';
+import { integrationTestSchemas } from './makeIntegrationTestDataSource';
 import { TestApp } from './TestApp';
 import {
   Organization,
@@ -16,7 +10,6 @@ import {
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { deploymentsSchemas } from '@packmind/deployments';
 
 type IntegrationTestContext = {
   testApp: TestApp;
@@ -25,17 +18,6 @@ type IntegrationTestContext = {
 export type IntegrationTest<
   T extends IntegrationTestContext = IntegrationTestContext,
 > = (tests: (getContext: () => Promise<T>) => void) => () => void;
-
-const integrationTestSchemas = [
-  ...accountsSchemas,
-  ...spacesSchemas,
-  ...commandsSchemas,
-  ...standardsSchemas,
-  ...skillsSchemas,
-  ...gitSchemas,
-  ...playbookChangeManagementSchemas,
-  ...deploymentsSchemas,
-];
 
 /**
  * Builds the describe body shared by `integrationTest` and
