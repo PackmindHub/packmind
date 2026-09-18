@@ -390,15 +390,41 @@ Test content here
 
           expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
         });
-      });
 
-      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
-        it('skips verification', async () => {
-          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'nope' });
+        it('skips verification regardless of case and surrounding spaces', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: ' FALSE ' });
 
           const mailConfig = await buildMailConfig();
 
           expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds only whitespace', () => {
+        it('skips verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: '   ' });
+
+          const mailConfig = await buildMailConfig();
+
+          expect(mailConfig.tls?.rejectUnauthorized).toBe(false);
+        });
+      });
+
+      describe('when SMTP_TLS_REJECT_UNAUTHORIZED holds an unrecognised value', () => {
+        it('rejects the configuration rather than silently skipping verification', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'yes' });
+
+          await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+            "SMTP_TLS_REJECT_UNAUTHORIZED must be 'true' or 'false', got 'yes'",
+          );
+        });
+
+        it('rejects a near-miss spelling of true', async () => {
+          configureSmtp({ SMTP_TLS_REJECT_UNAUTHORIZED: 'tru' });
+
+          await expect(service.callNodeMailer(mailOptions)).rejects.toThrow(
+            'SMTP_TLS_REJECT_UNAUTHORIZED',
+          );
         });
       });
     });

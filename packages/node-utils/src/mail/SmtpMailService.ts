@@ -122,6 +122,31 @@ ${content}
 **** END MESSAGE ****`;
   }
 
+  /**
+   * Certificate verification is opt-in: it stays off unless a deployment sets
+   * SMTP_TLS_REJECT_UNAUTHORIZED=true, so upgrading does not break instances whose
+   * mail server presents a certificate Node cannot verify. Turning it on is
+   * recommended, and a private CA is best trusted through NODE_EXTRA_CA_CERTS.
+   *
+   * Anything other than 'true' or 'false' is rejected rather than silently read as
+   * an opt-out: this flag is the only guard against SMTP interception, so a typo
+   * like '1' or 'yes' must not leave an operator believing it is on.
+   */
+  private parseTlsRejectUnauthorized(value: string | null): boolean {
+    const normalized = value?.trim().toLowerCase() ?? '';
+
+    if (normalized === '' || normalized === 'false') {
+      return false;
+    }
+    if (normalized === 'true') {
+      return true;
+    }
+
+    throw new Error(
+      `SMTP_TLS_REJECT_UNAUTHORIZED must be 'true' or 'false', got '${value}'`,
+    );
+  }
+
   private async buildMailConfig(): Promise<SMTPPool.Options> {
     const host = await Configuration.getConfig('SMTP_HOST');
     const port = await Configuration.getConfig('SMTP_PORT');
@@ -154,13 +179,10 @@ ${content}
       };
     }
 
-    // Certificate verification is opt-in: it stays off unless a deployment sets
-    // SMTP_TLS_REJECT_UNAUTHORIZED=true, so upgrading does not break instances whose
-    // mail server presents a certificate Node cannot verify. Turning it on is
-    // recommended, and a private CA is best trusted through NODE_EXTRA_CA_CERTS.
     mailConfig.tls = {
-      rejectUnauthorized:
-        tlsRejectUnauthorized?.trim().toLowerCase() === 'true',
+      rejectUnauthorized: this.parseTlsRejectUnauthorized(
+        tlsRejectUnauthorized,
+      ),
     };
 
     // Handle Exchange Server specific configuration. The legacy cipher and the
