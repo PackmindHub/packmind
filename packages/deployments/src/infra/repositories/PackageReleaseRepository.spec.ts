@@ -38,6 +38,7 @@ import { packageFactory } from '../../../test';
 import { PackageSchema } from '../schemas/PackageSchema';
 import { PackageReleaseSchema } from '../schemas/PackageReleaseSchema';
 import { PackageReleaseRepository } from './PackageReleaseRepository';
+import { PackageReleaseNotPersistedError } from '../../domain/errors/PackageReleaseNotPersistedError';
 
 describe('PackageReleaseRepository', () => {
   const fixture = createTestDatasourceFixture([
@@ -236,6 +237,22 @@ describe('PackageReleaseRepository', () => {
           skillVersionIds: [createSkillVersionId(uuidv4())],
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  // A committed release that cannot be read back is a broken invariant, not an
+  // answer: it must be distinguishable from `PackageReleaseNotFoundError`,
+  // which is what asking for a version nobody cut returns. There is no way to
+  // provoke it from the outside, so the read is stubbed.
+  describe('when a committed release cannot be read back', () => {
+    it('refuses with a named error rather than a generic one', async () => {
+      jest
+        .spyOn(repository, 'findByPackageIdAndVersion')
+        .mockResolvedValue(null);
+
+      await expect(
+        repository.createWithVersions(releaseOf('3.0.0'), pinnedVersions()),
+      ).rejects.toBeInstanceOf(PackageReleaseNotPersistedError);
     });
   });
 

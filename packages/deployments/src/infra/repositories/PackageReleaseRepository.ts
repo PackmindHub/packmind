@@ -7,6 +7,7 @@ import {
   PackageReleaseVersionIds,
 } from '../../domain/repositories/IPackageReleaseRepository';
 import { PackageReleaseSchema } from '../schemas/PackageReleaseSchema';
+import { PackageReleaseNotPersistedError } from '../../domain/errors/PackageReleaseNotPersistedError';
 
 const origin = 'PackageReleaseRepository';
 
@@ -79,8 +80,9 @@ export class PackageReleaseRepository
       );
 
       if (!persisted) {
-        throw new Error(
-          `Package release ${release.version} vanished right after being written`,
+        throw new PackageReleaseNotPersistedError(
+          release.packageId,
+          release.version,
         );
       }
 
