@@ -48,7 +48,6 @@ describe('ListOrganizationUserStatusesUseCase', () => {
 
     mockLogger = stubLogger();
 
-    // Mock Configuration.getConfig to return consistent test value
     jest
       .spyOn(Configuration, 'getConfig')
       .mockResolvedValue('http://localhost:8081');

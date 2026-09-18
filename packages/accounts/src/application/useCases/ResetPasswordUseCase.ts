@@ -32,7 +32,6 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     });
 
     try {
-      // 1. Find password reset token by token
       const resetToken = createPasswordResetToken(command.token);
       const passwordResetToken =
         await this.passwordResetTokenService.findByToken(resetToken);
@@ -44,7 +43,6 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         throw new PasswordResetTokenNotFoundError();
       }
 
-      // 2. Check if token is expired
       const now = new Date();
       if (passwordResetToken.expirationDate < now) {
         this.logger.warn('Password reset token expired', {
@@ -54,7 +52,6 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         throw new PasswordResetTokenExpiredError();
       }
 
-      // 3. Get the user associated with the token
       const user = await this.userService.getUserById(
         passwordResetToken.userId,
       );
@@ -69,7 +66,6 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         });
       }
 
-      // 4. Check if user is active (only active users can reset passwords)
       if (!user.active) {
         this.logger.warn('Password reset attempted for inactive user', {
           userId: user.id,
@@ -78,12 +74,10 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         throw new PasswordResetTokenNotFoundError(); // Generic error to prevent enumeration
       }
 
-      // 5. Hash the new password
       const passwordHash = await this.userService.hashPassword(
         command.password,
       );
 
-      // 6. Update user with new password hash
       const updatedUser = {
         ...user,
         passwordHash,
@@ -91,10 +85,11 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
 
       await this.userService.updateUser(updatedUser);
 
-      // 7. Clear login rate limiter for this user
+      // A user who just reset their password must not stay locked out by the
+      // failed attempts that led them here.
       await this.loginRateLimiterService.clearAttempts(user.email);
 
-      // 8. Hard delete the password reset token
+      // Hard delete, not a soft one: the token is single-use.
       await this.passwordResetTokenService.delete(passwordResetToken.id);
 
       this.logger.info('Password reset completed successfully', {

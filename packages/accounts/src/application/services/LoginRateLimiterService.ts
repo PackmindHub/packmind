@@ -19,16 +19,10 @@ export class LoginRateLimiterService {
     this.cache = Cache.getInstance();
   }
 
-  /**
-   * Get the cache key for a user's login attempts
-   */
   private getCacheKey(email: string): string {
     return `login_attempts:${email.toLowerCase()}`;
   }
 
-  /**
-   * Get the maximum login attempts from configuration or use default
-   */
   private async getMaxAttempts(): Promise<number> {
     try {
       const configValue = await Configuration.getConfig('MAX_LOGIN_ATTEMPTS');
@@ -56,9 +50,6 @@ export class LoginRateLimiterService {
     }
   }
 
-  /**
-   * Get the ban time in seconds from configuration or use default
-   */
   private async getBanTimeSeconds(): Promise<number> {
     try {
       const configValue = await Configuration.getConfig(
@@ -91,10 +82,7 @@ export class LoginRateLimiterService {
     }
   }
 
-  /**
-   * Check if a user is currently banned from login attempts
-   * Throws TooManyLoginAttemptsError if user is banned
-   */
+  // Throws TooManyLoginAttemptsError when the caller is currently banned.
   async checkLoginAllowed(email: string): Promise<void> {
     const cacheKey = this.getCacheKey(email);
 
@@ -102,7 +90,6 @@ export class LoginRateLimiterService {
       const attemptsData = await this.cache.get<LoginAttempt[]>(cacheKey);
 
       if (!attemptsData || attemptsData.length === 0) {
-        // No previous attempts, login is allowed
         return;
       }
 
@@ -110,14 +97,12 @@ export class LoginRateLimiterService {
       const banTimeSeconds = await this.getBanTimeSeconds();
       const maxAttempts = await this.getMaxAttempts();
 
-      // Filter out expired attempts (older than ban time)
       const validAttempts = attemptsData.filter((attempt) => {
         const attemptDate = new Date(attempt.timestamp);
         const timeDiffSeconds = (now.getTime() - attemptDate.getTime()) / 1000;
         return timeDiffSeconds < banTimeSeconds;
       });
 
-      // If we have max attempts or more valid attempts, user is banned
       if (validAttempts.length >= maxAttempts) {
         const oldestValidAttempt = validAttempts.sort(
           (a, b) =>
@@ -138,7 +123,6 @@ export class LoginRateLimiterService {
         throw new TooManyLoginAttemptsError(bannedUntil);
       }
 
-      // Update cache with only valid attempts if some were filtered out
       if (validAttempts.length !== attemptsData.length) {
         await this.cache.set(cacheKey, validAttempts, banTimeSeconds);
       }
@@ -155,9 +139,6 @@ export class LoginRateLimiterService {
     }
   }
 
-  /**
-   * Record a failed login attempt
-   */
   async recordFailedAttempt(email: string): Promise<void> {
     const cacheKey = this.getCacheKey(email);
 
@@ -172,7 +153,6 @@ export class LoginRateLimiterService {
 
       const updatedAttempts = [...existingAttempts, newAttempt];
 
-      // Store with expiration equal to ban time
       await this.cache.set(cacheKey, updatedAttempts, banTimeSeconds);
 
       this.logger.info('Recorded failed login attempt', {
@@ -188,9 +168,6 @@ export class LoginRateLimiterService {
     }
   }
 
-  /**
-   * Clear all login attempts for a user (called on successful login)
-   */
   async clearAttempts(email: string): Promise<void> {
     const cacheKey = this.getCacheKey(email);
 

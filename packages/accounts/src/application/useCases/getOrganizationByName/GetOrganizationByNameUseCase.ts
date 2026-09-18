@@ -27,7 +27,6 @@ export class GetOrganizationByNameUseCase implements IGetOrganizationByNameUseCa
     });
 
     try {
-      // Slugify the name and search by slug
       const organizationSlug = slug(name);
       this.logger.debug('Slugified organization name for search', {
         originalName: name,

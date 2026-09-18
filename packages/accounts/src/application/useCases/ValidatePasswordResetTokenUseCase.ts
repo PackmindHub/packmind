@@ -27,7 +27,6 @@ export class ValidatePasswordResetTokenUseCase implements IValidatePasswordReset
     });
 
     try {
-      // 1. Find password reset token by token
       const resetToken = createPasswordResetToken(command.token);
       const passwordResetToken =
         await this.passwordResetTokenService.findByToken(resetToken);
@@ -42,7 +41,6 @@ export class ValidatePasswordResetTokenUseCase implements IValidatePasswordReset
         };
       }
 
-      // 2. Check if token is expired
       const now = new Date();
       if (passwordResetToken.expirationDate < now) {
         this.logger.warn('Password reset token expired', {
@@ -55,7 +53,6 @@ export class ValidatePasswordResetTokenUseCase implements IValidatePasswordReset
         };
       }
 
-      // 3. Get the user associated with the token to get email
       const user = await this.userService.getUserById(
         passwordResetToken.userId,
       );
@@ -71,7 +68,6 @@ export class ValidatePasswordResetTokenUseCase implements IValidatePasswordReset
         };
       }
 
-      // 4. Check if user is active (only active users can reset passwords)
       if (!user.active) {
         this.logger.warn('Password reset token for inactive user', {
           userId: user.id,

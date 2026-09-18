@@ -19,7 +19,6 @@ import {
 } from '../../domain/errors';
 import * as bcrypt from 'bcrypt';
 
-// Mock bcrypt
 jest.mock('bcrypt');
 
 describe('UserService', () => {

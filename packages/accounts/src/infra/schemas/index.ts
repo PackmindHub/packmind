@@ -1,4 +1,3 @@
-// Export schemas array for TypeORM configuration
 import { UserSchema } from './UserSchema';
 import { OrganizationSchema } from './OrganizationSchema';
 import { UserOrganizationMembershipSchema } from './UserOrganizationMembershipSchema';
