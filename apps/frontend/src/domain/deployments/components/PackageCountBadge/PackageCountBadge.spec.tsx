@@ -5,7 +5,11 @@ import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { PackageCountBadge } from './PackageCountBadge';
 import { formatPackageNames } from './PackagesDropdown';
-import { createPackageId, createStandardId, Package } from '@packmind/types';
+import {
+  createPackageId,
+  createStandardId,
+  PackageResponse,
+} from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
 
 // Both exports stubbed, matching what the bare automock used to produce.
@@ -36,7 +40,11 @@ const defaultProps = {
   organizationId: undefined,
 };
 
-const makePackage = (id: string, name: string, description = ''): Package =>
+const makePackage = (
+  id: string,
+  name: string,
+  description = '',
+): PackageResponse =>
   ({
     id: createPackageId(id),
     name,
@@ -45,9 +53,10 @@ const makePackage = (id: string, name: string, description = ''): Package =>
     spaceId: '' as never,
     createdBy: '' as never,
     recipes: [],
+    commands: [],
     standards: [],
     skills: [],
-  }) as Package;
+  }) as PackageResponse;
 
 const twoPackages = [
   makePackage('pkg-1', 'Package Alpha'),

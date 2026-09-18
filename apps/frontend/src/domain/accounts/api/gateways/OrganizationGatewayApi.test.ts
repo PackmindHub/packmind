@@ -1,5 +1,5 @@
 import { OrganizationGatewayApi } from './OrganizationGatewayApi';
-import { createUserId } from '@packmind/types';
+import { CreateInvitationsResponse, createUserId } from '@packmind/types';
 import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
@@ -72,12 +72,23 @@ describe('OrganizationGatewayApi', () => {
 
   describe('inviteUsers', () => {
     describe('when API call succeeds', () => {
-      const mockResponse = {
-        created: [{ email: 'test@example.com', userId: 'user123' }],
+      const mockResponse: CreateInvitationsResponse = {
+        created: [
+          {
+            email: 'test@example.com',
+            userId: createUserId('user123'),
+            invitation: {
+              id: 'invitation-1',
+              userId: createUserId('user123'),
+              token: 'invitation-token',
+              expirationDate: new Date('2026-01-01T00:00:00.000Z'),
+            },
+          },
+        ],
         organizationInvitations: [],
         skipped: [],
       };
-      let result: typeof mockResponse;
+      let result: CreateInvitationsResponse;
 
       beforeEach(async () => {
         mockApiPost.mockResolvedValue(mockResponse);

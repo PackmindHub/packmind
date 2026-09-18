@@ -94,6 +94,18 @@ describe('CliAuthentication', () => {
       organization: mockOrganization,
       isAuthenticated: true,
       isLoading: false,
+      // AuthContext also exposes the AuthService calls. The component under
+      // test reads only the data above, so these are present-but-refusing
+      // rather than silently absent.
+      getMe: vi.fn().mockRejectedValue(new Error('getMe is not stubbed')),
+      getUserOrganizations: vi
+        .fn()
+        .mockRejectedValue(new Error('getUserOrganizations is not stubbed')),
+      validateAndSwitchIfNeeded: vi
+        .fn()
+        .mockRejectedValue(
+          new Error('validateAndSwitchIfNeeded is not stubbed'),
+        ),
     });
   });
 

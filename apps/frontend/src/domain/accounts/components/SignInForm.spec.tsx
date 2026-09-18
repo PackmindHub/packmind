@@ -365,8 +365,8 @@ describe('SignInForm', () => {
             id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
-            role: 'admin',
           },
+          role: 'admin',
         };
 
         renderWithProviders(<SignInForm />);

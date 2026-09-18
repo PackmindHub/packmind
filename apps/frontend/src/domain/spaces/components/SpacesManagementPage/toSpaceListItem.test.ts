@@ -14,6 +14,7 @@ const buildSpace = (overrides: Partial<Space> = {}): Space => ({
   type: SpaceType.open,
   organizationId: createOrganizationId('11111111-1111-1111-1111-111111111111'),
   isDefaultSpace: false,
+  color: 'blue',
   ...overrides,
 });
 
