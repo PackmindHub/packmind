@@ -22,6 +22,7 @@ const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const monthly = read(path.join(options.out, 'comment-ratio.json'));
 const models = read(path.join(options.out, 'by-model.json'));
 const releases = read(path.join(here, 'model-releases.json'));
+const daily = read(path.join(options.out, 'daily.json'));
 
 const day = (isoDay) => Date.parse(isoDay + 'T00:00:00Z');
 
@@ -142,6 +143,63 @@ const worked = flowMonths
     b.flow.all.addedComment > a.flow.all.addedComment ? b : a,
   );
 
+// The daily window around the Opus 5 release. Colour carries the model, in
+// four classes rather than one per model: six hues would not be separable, and
+// the question is which generation wrote the day, not which exact build.
+const DAY_COLOURS = [
+  [/^Claude Opus 5$/, 'Opus 5', 'var(--series-1)'],
+  [/^Claude (Opus|Sonnet|Haiku) 4\./, 'Generation 4.x', 'var(--series-2)'],
+  [
+    /^Claude (Fable|Sonnet|Mythos) 5/,
+    'Other generation-5 model',
+    'var(--series-3)',
+  ],
+];
+const classifyDay = (model) =>
+  DAY_COLOURS.find(([pattern]) => pattern.test(model ?? '')) ?? [
+    null,
+    'No version recorded',
+    'var(--text-muted)',
+  ];
+
+const dailyPoints = daily.days.map((d) => {
+  const [, model, color] = classifyDay(d.model);
+  return {
+    t: day(d.date),
+    ratio: d.commentRatio,
+    added: d.added,
+    label: dayEn(d.date) + ' ' + d.date.slice(2, 4),
+    model,
+    color,
+  };
+});
+const dailyLegend = [...new Set(dailyPoints.map((p) => p.model))].map(
+  (model) => ({
+    model,
+    color: dailyPoints.find((p) => p.model === model).color,
+  }),
+);
+// Bounds quoted in the prose, so the sentence cannot drift from the chart.
+// Small days are noisy at this resolution, hence the floor on the "after" side.
+const DAILY_FLOOR = 300;
+const releaseDay = daily.around;
+const before = daily.days.filter((d) => d.date < releaseDay);
+const after = daily.days.filter(
+  (d) => d.date > releaseDay && d.added >= DAILY_FLOOR,
+);
+const span = (rows) => {
+  const values = rows.map((d) => d.commentRatio).sort((a, b) => a - b);
+  return `${fmtPct(values[0])} and ${fmtPct(values.at(-1))}`;
+};
+
+const dailyTable = daily.days.map((d) => [
+  dayEn(d.date) + ' ' + d.date.slice(2, 4),
+  fmtInt(d.commits),
+  fmtInt(d.added),
+  fmtPct(d.commentRatio),
+  classifyDay(d.model)[1],
+]);
+
 // The within-developer comparison: the same person, one generation apart.
 const COMPARED = ['Claude Opus 4.6', 'Claude Opus 4.7', 'Claude Opus 5'];
 const personTotals = new Map();
@@ -227,6 +285,14 @@ const payload = {
       points: stock.map((s) => [s.t, s.totals.all.code]),
     },
   ],
+  daily: {
+    points: dailyPoints,
+    legend: dailyLegend,
+    table: dailyTable,
+    tMin: day(daily.from) - 12 * 3600 * 1000,
+    tMax: day(daily.to) + 12 * 3600 * 1000,
+    release: day(daily.around),
+  },
   modelItems,
   authorItems,
   personModelTable,
@@ -332,6 +398,24 @@ dominated by what was written months ago.</p>
   <div class="legend" id="l-category"></div>
   <details><summary>See the data</summary><div id="t-category"></div></details>
 </div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Day by day, two weeks either side of the Opus 5 release</h3>
+    <p>One dot per day that touched TypeScript; its area is how many lines were added, its colour is the model that
+    wrote most of them. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend
+    would invent a trend that was not measured.</p>
+  </div>
+  <div class="chart" id="c-daily"></div>
+  <div class="legend" id="l-daily"></div>
+  <details><summary>See the data</summary><div id="t-daily"></div></details>
+</div>
+
+<p>The fortnightly series cannot separate the week before a release from the week after it. Day by day, the switch and
+the change land together. Before the release the days run between ${span(before)}; after it, every day carrying more
+than ${fmtInt(DAILY_FLOOR)} lines runs between ${span(after)}. Opus 5 shipped on a Friday, so its first working days
+are the Monday and Tuesday that follow — and the two instruction changes that might otherwise explain the move landed
+on the Wednesday and Thursday after that, once the rise had already started.</p>
 
 <span class="eyebrow">Attribution</span>
 <h2>2. By model, directly</h2>
@@ -463,6 +547,18 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
     return '<span><i class="swatch" style="background:' + s.color + '"></i>' + s.name + '</span>';
   }).join('');
   V.table(document.getElementById('t-category'), FLOW_COLUMNS, D.monthTable);
+
+  V.dotChart(document.getElementById('c-daily'), {
+    points: D.daily.points, tMin: D.daily.tMin, tMax: D.daily.tMax,
+    annotations: [{ t: D.daily.release, label: 'Opus 5 released' }],
+    ariaLabel: "Daily comment ratio around the Opus 5 release"
+  });
+  document.getElementById('l-daily').innerHTML = D.daily.legend.map(function (e) {
+    return '<span><i class="swatch" style="background:' + e.color +
+      ';width:10px;height:10px;border-radius:50%"></i>' + e.model + '</span>';
+  }).join('');
+  V.table(document.getElementById('t-daily'),
+    ['Day', 'Commits', 'Lines added', 'Comment ratio', 'Model'], D.daily.table);
 
   V.barChart(document.getElementById('c-models'), {
     items: D.modelItems, ariaLabel: "Comment ratio by model"

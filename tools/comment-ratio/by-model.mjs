@@ -29,7 +29,7 @@ import readline from 'node:readline';
 import { classifyLines, CODE, COMMENT } from './classify.mjs';
 import { readBlobs, headerPath, commitBefore } from './git.mjs';
 import { categoryOf } from './files.mjs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const IDENTITIES = JSON.parse(
@@ -81,7 +81,7 @@ export function modelOf(message) {
  * Stream the whole history as a patch and collect, per commit and per file,
  * which line numbers were added and removed and which blobs to read them from.
  */
-function streamHistory(repo, ref, onCommit) {
+export function streamHistory(repo, ref, onCommit, extraArgs = []) {
   return new Promise((resolve, reject) => {
     const child = spawn(
       'git',
@@ -99,6 +99,7 @@ function streamHistory(repo, ref, onCommit) {
         // A commit message cannot contain a NUL (git refuses one), so NUL is
         // the one delimiter the message itself can never forge.
         '--format=%x00%H%x1f%cI%x1f%ae%x1f%an%x1f%B%x00',
+        ...extraArgs,
         '--',
         '*.ts',
         '*.tsx',
@@ -465,7 +466,11 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error.stack}\n`);
-  process.exit(1);
-});
+// Only run when invoked directly: this module also exports its history walker,
+// and importing it must not kick off a full analysis.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    process.stderr.write(`${error.stack}\n`);
+    process.exit(1);
+  });
+}

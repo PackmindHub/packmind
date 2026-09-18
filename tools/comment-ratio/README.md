@@ -26,6 +26,7 @@ pnpm install                                # provides the `typescript` parser
 node tools/comment-ratio/selftest.mjs       # check the line classifier
 node tools/comment-ratio/collect.mjs --until 2026-09-18   # stock + flow
 node tools/comment-ratio/by-model.mjs --until 2026-09-18  # per-model (~1 min)
+node tools/comment-ratio/daily.mjs --around 2026-07-24    # daily window
 node tools/comment-ratio/render.mjs         # build the HTML report
 ```
 
@@ -35,11 +36,14 @@ Everything lands in `tools/comment-ratio/output/`:
 | ----------------------------- | --------------------------------------------- |
 | `comment-ratio.json` / `.csv` | monthly stock and flow, per file category     |
 | `by-model.json` / `.csv`      | per-model flow, with per-commit distribution  |
+| `daily.json`                  | one row per day in a window around a date     |
 | `comment-ratio.html`          | self-contained report, no external dependency |
 
 `collect.mjs` takes `--repo`, `--ref`, `--to YYYY-MM`, `--until YYYY-MM-DD`,
 `--step` and `--out`; `by-model.mjs` takes `--repo`, `--ref`, `--until` and
-`--out`. `--until` stops the walk before a given day; the published figures use
+`--out`; `daily.mjs` takes `--repo`, `--ref`, `--around YYYY-MM-DD`, `--days`
+and `--out`, and labels each day with whichever model wrote most of its lines.
+`--until` stops the walk before a given day; the published figures use
 `--until 2026-09-18`, because a deliberate comment-rewriting pass landed that
 day and would have dominated the final period. The full history must be present — a shallow
 clone silently produces a truncated series, so run `git fetch --unshallow` first
@@ -71,6 +75,7 @@ like newly written code.
 | `git.mjs`             | the git plumbing wrappers (`ls-tree`, `cat-file --batch`, diffs) |
 | `collect.mjs`         | monthly stock and flow                                           |
 | `by-model.mjs`        | per-model flow from commit trailers                              |
+| `daily.mjs`           | day-by-day flow over a window, labelled by model                 |
 | `render.mjs`          | builds the HTML report                                           |
 | `model-releases.json` | Anthropic model release dates, with their provenance             |
 | `page/`               | stylesheet and chart runtime inlined into the report             |

@@ -1,0 +1,263 @@
+{
+  "generatedAt": "2026-09-18T14:05:08.221Z",
+  "around": "2026-07-24",
+  "from": "2026-07-10",
+  "to": "2026-08-08",
+  "days": [
+    {
+      "date": "2026-07-10",
+      "addedCode": 38,
+      "addedComment": 3,
+      "commits": 3,
+      "byModel": {
+        "no Claude trailer": 30,
+        "Claude Opus 4.8": 11
+      },
+      "added": 41,
+      "commentRatio": 0.07317073170731707,
+      "model": "no Claude trailer"
+    },
+    {
+      "date": "2026-07-13",
+      "addedCode": 1681,
+      "addedComment": 51,
+      "commits": 9,
+      "byModel": {
+        "Claude Sonnet 5": 1732
+      },
+      "added": 1732,
+      "commentRatio": 0.029445727482678985,
+      "model": "Claude Sonnet 5"
+    },
+    {
+      "date": "2026-07-15",
+      "addedCode": 6528,
+      "addedComment": 170,
+      "commits": 3,
+      "byModel": {
+        "Claude Sonnet 5": 38,
+        "Claude Opus 4.8": 6660
+      },
+      "added": 6698,
+      "commentRatio": 0.025380710659898477,
+      "model": "Claude Opus 4.8"
+    },
+    {
+      "date": "2026-07-16",
+      "addedCode": 535,
+      "addedComment": 57,
+      "commits": 4,
+      "byModel": {
+        "Claude Opus 4.8": 505,
+        "Claude Sonnet 5": 86,
+        "no Claude trailer": 1
+      },
+      "added": 592,
+      "commentRatio": 0.09628378378378379,
+      "model": "Claude Opus 4.8"
+    },
+    {
+      "date": "2026-07-17",
+      "addedCode": 3831,
+      "addedComment": 194,
+      "commits": 12,
+      "byModel": {
+        "Claude Sonnet 5": 478,
+        "no Claude trailer": 1,
+        "Claude Fable 5": 3546
+      },
+      "added": 4025,
+      "commentRatio": 0.048198757763975156,
+      "model": "Claude Fable 5"
+    },
+    {
+      "date": "2026-07-20",
+      "addedCode": 4171,
+      "addedComment": 229,
+      "commits": 14,
+      "byModel": {
+        "Claude Fable 5": 234,
+        "Claude (version not recorded)": 3995,
+        "Claude Opus 4.8": 171
+      },
+      "added": 4400,
+      "commentRatio": 0.05204545454545455,
+      "model": "Claude (version not recorded)"
+    },
+    {
+      "date": "2026-07-21",
+      "addedCode": 894,
+      "addedComment": 2,
+      "commits": 1,
+      "byModel": {
+        "Claude Fable 5": 896
+      },
+      "added": 896,
+      "commentRatio": 0.002232142857142857,
+      "model": "Claude Fable 5"
+    },
+    {
+      "date": "2026-07-22",
+      "addedCode": 538,
+      "addedComment": 15,
+      "commits": 4,
+      "byModel": {
+        "Claude Opus 4.8": 553
+      },
+      "added": 553,
+      "commentRatio": 0.027124773960216998,
+      "model": "Claude Opus 4.8"
+    },
+    {
+      "date": "2026-07-23",
+      "addedCode": 675,
+      "addedComment": 0,
+      "commits": 5,
+      "byModel": {
+        "no Claude trailer": 12,
+        "Claude Opus 4.8": 663
+      },
+      "added": 675,
+      "commentRatio": 0,
+      "model": "Claude Opus 4.8"
+    },
+    {
+      "date": "2026-07-24",
+      "addedCode": 122,
+      "addedComment": 0,
+      "commits": 1,
+      "byModel": {
+        "Claude Opus 4.8": 122
+      },
+      "added": 122,
+      "commentRatio": 0,
+      "model": "Claude Opus 4.8"
+    },
+    {
+      "date": "2026-07-27",
+      "addedCode": 462,
+      "addedComment": 47,
+      "commits": 3,
+      "byModel": {
+        "Claude Opus 5": 509
+      },
+      "added": 509,
+      "commentRatio": 0.09233791748526522,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-07-28",
+      "addedCode": 4477,
+      "addedComment": 463,
+      "commits": 23,
+      "byModel": {
+        "Claude Opus 5": 4940
+      },
+      "added": 4940,
+      "commentRatio": 0.0937246963562753,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-07-29",
+      "addedCode": 60,
+      "addedComment": 13,
+      "commits": 2,
+      "byModel": {
+        "Claude Opus 5": 73
+      },
+      "added": 73,
+      "commentRatio": 0.1780821917808219,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-07-30",
+      "addedCode": 2131,
+      "addedComment": 227,
+      "commits": 4,
+      "byModel": {
+        "Claude Opus 5": 2190,
+        "Claude Fable 5": 168
+      },
+      "added": 2358,
+      "commentRatio": 0.09626802374893978,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-07-31",
+      "addedCode": 517,
+      "addedComment": 79,
+      "commits": 5,
+      "byModel": {
+        "Claude Fable 5": 272,
+        "Claude Opus 5": 324
+      },
+      "added": 596,
+      "commentRatio": 0.1325503355704698,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-08-03",
+      "addedCode": 17,
+      "addedComment": 0,
+      "commits": 1,
+      "byModel": {
+        "Claude Fable 5": 17
+      },
+      "added": 17,
+      "commentRatio": 0,
+      "model": "Claude Fable 5"
+    },
+    {
+      "date": "2026-08-04",
+      "addedCode": 4395,
+      "addedComment": 1303,
+      "commits": 23,
+      "byModel": {
+        "Claude Opus 5": 841,
+        "Claude Fable 5": 3738,
+        "no Claude trailer": 1119
+      },
+      "added": 5698,
+      "commentRatio": 0.22867672867672867,
+      "model": "Claude Fable 5"
+    },
+    {
+      "date": "2026-08-05",
+      "addedCode": 5,
+      "addedComment": 0,
+      "commits": 2,
+      "byModel": {
+        "Claude Fable 5": 5
+      },
+      "added": 5,
+      "commentRatio": 0,
+      "model": "Claude Fable 5"
+    },
+    {
+      "date": "2026-08-06",
+      "addedCode": 139,
+      "addedComment": 0,
+      "commits": 6,
+      "byModel": {
+        "Claude Opus 5": 135,
+        "no Claude trailer": 4
+      },
+      "added": 139,
+      "commentRatio": 0,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-08-07",
+      "addedCode": 1543,
+      "addedComment": 174,
+      "commits": 21,
+      "byModel": {
+        "Claude Opus 5": 1633,
+        "no Claude trailer": 84
+      },
+      "added": 1717,
+      "commentRatio": 0.10133954571927781,
+      "model": "Claude Opus 5"
+    }
+  ]
+}

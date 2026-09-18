@@ -32,6 +32,11 @@
     return MONTHS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
   }
 
+  function dayTick(ms) {
+    var d = new Date(ms);
+    return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()];
+  }
+
   function el(name, attrs, children) {
     var node = document.createElementNS(SVG_NS, name);
     for (var key in attrs) {
@@ -333,6 +338,174 @@
     });
   }
 
+  // ----------------------------------------------------------------- dot chart
+
+  /**
+   * One dot per day: area carries how much was written, colour carries which
+   * model wrote it. No connecting line — the days are not evenly spaced and a
+   * line across a weekend would invent a trend that is not measured.
+   */
+  function dotChart(container, config) {
+    var W = 900;
+    var H = 340;
+    var m = { top: 46, right: 20, bottom: 40, left: 54 };
+    var plotW = W - m.left - m.right;
+    var plotH = H - m.top - m.bottom;
+
+    var yMax =
+      Math.max.apply(
+        null,
+        config.points.map(function (p) {
+          return p.ratio;
+        }),
+      ) * 1.18;
+    var maxAdded = Math.max.apply(
+      null,
+      config.points.map(function (p) {
+        return p.added;
+      }),
+    );
+    var t0 = config.tMin;
+    var t1 = config.tMax;
+    var x = function (t) {
+      return m.left + ((t - t0) / (t1 - t0)) * plotW;
+    };
+    var y = function (v) {
+      return m.top + plotH - (v / yMax) * plotH;
+    };
+    // Area, not radius, carries the value: doubling the lines doubles the ink.
+    var r = function (added) {
+      return 3.5 + 8.5 * Math.sqrt(added / maxAdded);
+    };
+
+    var svg = el('svg', {
+      viewBox: '0 0 ' + W + ' ' + H,
+      role: 'img',
+      'aria-label': config.ariaLabel,
+    });
+
+    ticks(yMax, 4).forEach(function (value) {
+      svg.appendChild(
+        el('line', {
+          x1: m.left,
+          x2: m.left + plotW,
+          y1: y(value),
+          y2: y(value),
+          stroke: 'var(--grid)',
+          'stroke-width': 1,
+        }),
+      );
+      svg.appendChild(
+        text(pct(value, 0), {
+          x: m.left - 10,
+          y: y(value) + 4,
+          fill: 'var(--text-muted)',
+          'font-size': 11.5,
+          'text-anchor': 'end',
+          'font-variant-numeric': 'tabular-nums',
+        }),
+      );
+    });
+
+    var lastX = -Infinity;
+    config.points.forEach(function (p) {
+      if (x(p.t) - lastX < 52) return;
+      lastX = x(p.t);
+      svg.appendChild(
+        text(dayTick(p.t), {
+          x: x(p.t),
+          y: m.top + plotH + 20,
+          fill: 'var(--text-muted)',
+          'font-size': 11.5,
+          'text-anchor': 'middle',
+        }),
+      );
+    });
+    svg.appendChild(
+      el('line', {
+        x1: m.left,
+        x2: m.left + plotW,
+        y1: m.top + plotH,
+        y2: m.top + plotH,
+        stroke: 'var(--axis)',
+        'stroke-width': 1,
+      }),
+    );
+
+    (config.annotations || []).forEach(function (a) {
+      var ax = x(a.t);
+      svg.appendChild(
+        el('line', {
+          x1: ax,
+          x2: ax,
+          y1: m.top - 8,
+          y2: m.top + plotH,
+          stroke: 'var(--annotation)',
+          'stroke-width': 1,
+          'stroke-dasharray': '3 4',
+        }),
+      );
+      svg.appendChild(
+        text(a.label, {
+          x: ax,
+          y: m.top - 16,
+          fill: 'var(--text-secondary)',
+          'font-size': 11.5,
+          'font-weight': 500,
+          'text-anchor': 'middle',
+        }),
+      );
+    });
+
+    var tip = tooltipFor(container);
+    config.points.forEach(function (p) {
+      var dot = el('circle', {
+        cx: x(p.t),
+        cy: y(p.ratio),
+        r: r(p.added),
+        fill: p.color,
+        stroke: 'var(--surface-1)',
+        'stroke-width': 2,
+      });
+      svg.appendChild(dot);
+      // The hit area is bigger than the dot, so a small day is still reachable.
+      var hit = el('circle', {
+        cx: x(p.t),
+        cy: y(p.ratio),
+        r: Math.max(14, r(p.added) + 4),
+        fill: 'transparent',
+      });
+      hit.addEventListener('mouseenter', function () {
+        tip.innerHTML =
+          '<b>' +
+          p.label +
+          '</b><div class="row"><span class="swatch" style="background:' +
+          p.color +
+          '"></span>' +
+          p.model +
+          '</div><div>' +
+          pct(p.ratio) +
+          ' of ' +
+          int(p.added) +
+          ' added lines</div>';
+        tip.classList.add('on');
+        var box = svg.getBoundingClientRect();
+        place(
+          tip,
+          container,
+          (x(p.t) / W) * box.width,
+          (y(p.ratio) / H) * box.height - 70,
+        );
+      });
+      hit.addEventListener('mouseleave', function () {
+        tip.classList.remove('on');
+      });
+      svg.appendChild(hit);
+    });
+
+    container.appendChild(svg);
+  }
+
   // ----------------------------------------------------------------- bar chart
 
   function barChart(container, config) {
@@ -522,6 +695,7 @@
 
   window.VIZ = {
     lineChart: lineChart,
+    dotChart: dotChart,
     barChart: barChart,
     table: table,
     pct: pct,

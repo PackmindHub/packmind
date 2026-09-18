@@ -3,35 +3,13 @@
   "repo": "/home/user/packmind",
   "ref": "64faa0903ff79f12a47d13a03c7cc5f3bb312180",
   "until": "2026-09-18",
-  "categories": [
-    "ts",
-    "spec.ts",
-    "tsx",
-    "spec.tsx"
-  ],
+  "categories": ["ts", "spec.ts", "tsx", "spec.tsx"],
   "groups": {
-    "all": [
-      "ts",
-      "spec.ts",
-      "tsx",
-      "spec.tsx"
-    ],
-    "prod": [
-      "ts",
-      "tsx"
-    ],
-    "spec": [
-      "spec.ts",
-      "spec.tsx"
-    ],
-    "backend": [
-      "ts",
-      "spec.ts"
-    ],
-    "frontend": [
-      "tsx",
-      "spec.tsx"
-    ]
+    "all": ["ts", "spec.ts", "tsx", "spec.tsx"],
+    "prod": ["ts", "tsx"],
+    "spec": ["spec.ts", "spec.tsx"],
+    "backend": ["ts", "spec.ts"],
+    "frontend": ["tsx", "spec.tsx"]
   },
   "snapshots": [
     {
