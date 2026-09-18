@@ -12,12 +12,9 @@ import { GithubTokenResolverFactory } from './github/auth/GithubTokenResolverFac
 const origin = 'GitProviderFactory';
 
 /**
- * GitProviderFactory - Infrastructure implementation of the git provider factory
- *
- * Creates concrete git provider instances based on the provider type.
- * For GitHub providers, delegates token resolution to the injected
- * `GithubTokenResolverFactory` which decides between PAT and App Installation
- * auth. GitLab providers continue to use raw PAT auth.
+ * GitHub providers delegate token resolution to the injected
+ * `GithubTokenResolverFactory`, which picks between PAT and App installation
+ * auth; GitLab only ever uses a raw PAT.
  */
 export class GitProviderFactory implements IGitProviderFactory {
   constructor(

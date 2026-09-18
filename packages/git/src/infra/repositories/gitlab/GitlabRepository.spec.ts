@@ -10,7 +10,6 @@ import {
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
 
-// Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
@@ -60,10 +59,9 @@ describe('GitlabRepository', () => {
     });
 
     describe('the agent it is given', () => {
-      // Asserting `keepAlive` alone would pass with no code change at all -
-      // Node has defaulted it to true since v19. The finite socket ceiling is
-      // the part that actually changes behaviour, because reuse only happens
-      // when a request finds a free socket instead of opening its own.
+      // `keepAlive` alone would pass without any code change — Node has
+      // defaulted it to true since v19. The finite ceiling is the part that
+      // changes behaviour.
       it('caps how many sockets may be open at once', () => {
         expect(providerHttpsAgent.maxSockets).toBe(PROVIDER_MAX_SOCKETS);
       });
@@ -132,7 +130,6 @@ describe('GitlabRepository', () => {
       let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
 
       beforeEach(async () => {
-        // Mock tree API to return empty (files don't exist)
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({ data: [], headers: {} });
@@ -230,9 +227,8 @@ describe('GitlabRepository', () => {
       });
 
       it('downloads no file to work out what changed', () => {
-        // The tree already carries a SHA per path, so the diff is a local
-        // hash comparison. A `GET /repository/files/<path>` per existing file
-        // is the fan-out this replaced.
+        // The tree already carries a SHA per path, so the diff needs no
+        // `GET /repository/files/<path>` at all.
         const fileCalls = mockAxiosInstance.get.mock.calls.filter(
           (call) =>
             typeof call[0] === 'string' &&
@@ -355,7 +351,6 @@ describe('GitlabRepository', () => {
 
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
-            // Tree returns path without leading slash
             return Promise.resolve({
               data: [{ path: 'path/to/file.txt', type: 'blob' }],
               headers: {},
@@ -405,10 +400,8 @@ describe('GitlabRepository', () => {
       ];
 
       beforeEach(() => {
-        // Mock getFileOnRepo to return null (files don't exist for creation)
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
-            // Return tree with existing files
             return Promise.resolve({
               data: [
                 { path: 'file-to-delete.txt', type: 'blob' },
@@ -417,11 +410,9 @@ describe('GitlabRepository', () => {
               headers: {},
             });
           }
-          // For file content check, return 404 (files don't exist)
           return Promise.reject({ response: { status: 404 } });
         });
 
-        // Mock successful commit
         mockAxiosInstance.post.mockResolvedValue({
           data: {
             id: 'commit-sha-789',
@@ -478,7 +469,6 @@ describe('GitlabRepository', () => {
         beforeEach(() => {
           mockAxiosInstance.get.mockImplementation((url: string) => {
             if (url.includes('/repository/tree')) {
-              // Only return existing-file.txt in the tree
               return Promise.resolve({
                 data: [{ path: 'existing-file.txt', type: 'blob' }],
                 headers: {},
@@ -528,7 +518,6 @@ describe('GitlabRepository', () => {
         beforeEach(() => {
           mockAxiosInstance.get.mockImplementation((url: string) => {
             if (url.includes('/repository/tree')) {
-              // Return empty tree (no files exist)
               return Promise.resolve({ data: [], headers: {} });
             }
             return Promise.reject({ response: { status: 404 } });
@@ -615,13 +604,11 @@ describe('GitlabRepository', () => {
             if (url.includes('/repository/tree')) {
               callCount++;
               if (callCount === 1) {
-                // First page - return file-on-page-1.txt
                 return Promise.resolve({
                   data: [{ path: 'file-on-page-1.txt', type: 'blob' }],
                   headers: { 'x-next-page': '2' },
                 });
               }
-              // Second page - return file-on-page-2.txt
               return Promise.resolve({
                 data: [{ path: 'file-on-page-2.txt', type: 'blob' }],
                 headers: {},
@@ -893,7 +880,6 @@ describe('GitlabRepository', () => {
       const existingContent = 'existing script content';
 
       beforeEach(() => {
-        // File exists in tree with identical content and no execute bit
         mockAxiosInstance.get.mockImplementation((url: string) => {
           if (url.includes('/repository/tree')) {
             return Promise.resolve({
@@ -1163,9 +1149,7 @@ describe('GitlabRepository', () => {
     });
 
     describe('when committing many existing files', () => {
-      // This used to assert that the per-file downloads were batched ten at a
-      // time. There are no per-file downloads left to batch, so what is worth
-      // pinning is that the request count no longer follows the file count.
+      // Pins that the request count does not follow the file count.
       const manyFiles = Array.from({ length: 25 }, (_, i) => ({
         path: `file-${i}.txt`,
         content: `new-content-${i}`,
@@ -1228,9 +1212,7 @@ describe('GitlabRepository', () => {
 
       describe('when a file differs from the repository copy only by line endings', () => {
         // The hash covers the exact bytes that would be written, with no
-        // normalisation, so CRLF and LF are two different files. That is also
-        // what decoding and string-comparing concluded, so this pins a verdict
-        // being preserved rather than a new one.
+        // normalisation, so CRLF and LF are two different files.
         const lfContent = 'line one\nline two\n';
         const crlfContent = 'line one\r\nline two\r\n';
 
@@ -1293,9 +1275,9 @@ describe('GitlabRepository', () => {
       });
 
       describe('when the tree reports no SHA for an existing path', () => {
-        // Nothing in the response guarantees the field. Committing a file that
-        // turns out to be identical costs one action; skipping one that changed
-        // loses the change, so the unknown case commits.
+        // Nothing in the response guarantees the SHA, and committing a file
+        // that turns out identical costs one action where skipping a changed
+        // one loses the change — so "cannot tell" commits.
         beforeEach(() => {
           mockAxiosInstance.get.mockImplementation((url: string) => {
             if (url.includes('/repository/tree')) {

@@ -10,7 +10,6 @@ import {
   providerHttpsAgent,
 } from '../http/providerHttpAgent';
 
-// Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -67,10 +66,9 @@ describe('GithubRepository', () => {
     });
 
     describe('the agent it is given', () => {
-      // Asserting `keepAlive` alone would pass with no code change at all -
-      // Node has defaulted it to true since v19. The finite socket ceiling is
-      // the part that actually changes behaviour, because reuse only happens
-      // when a request finds a free socket instead of opening its own.
+      // `keepAlive` alone would pass without any code change — Node has
+      // defaulted it to true since v19. The finite ceiling is the part that
+      // changes behaviour.
       it('caps how many sockets may be open at once', () => {
         expect(providerHttpsAgent.maxSockets).toBe(PROVIDER_MAX_SOCKETS);
       });
@@ -96,19 +94,16 @@ describe('GithubRepository', () => {
   });
 
   describe('commitFiles', () => {
-    // Sample files to commit
     const files = [
       { path: 'test/file1.txt', content: 'test content 1' },
       { path: 'test/file2.txt', content: 'test content 2' },
     ];
 
-    // Mock responses for Git Data API
     const refSha = 'ref-sha-123';
     const baseTreeSha = 'base-tree-sha-456';
     const newTreeSha = 'new-tree-sha-789';
     const newCommitSha = 'new-commit-sha-abc';
 
-    // Default tree items returned by the tree fetch (for filtering deletions)
     const defaultTreeItems = [
       {
         path: 'test/file-to-delete.txt',
@@ -125,7 +120,6 @@ describe('GithubRepository', () => {
     ];
 
     beforeEach(() => {
-      // Mock GET request for reference
       mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
         if (url.includes('/git/refs/heads/')) {
           return Promise.resolve({
@@ -144,7 +138,6 @@ describe('GithubRepository', () => {
             },
           });
         } else if (url.includes('/git/trees/')) {
-          // Return the tree structure for filtering deletions
           return Promise.resolve({
             data: {
               sha: baseTreeSha,
@@ -152,7 +145,6 @@ describe('GithubRepository', () => {
             },
           });
         } else if (url.includes('/contents/')) {
-          // This will be overridden in specific tests
           return Promise.reject({ response: { status: 404 } });
         }
         return Promise.reject(new Error(`Unexpected GET request: ${url}`));

@@ -21,7 +21,6 @@ import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
 
-// Mock Configuration for encryption key
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
   Configuration: {
@@ -63,7 +62,6 @@ describe('GitProviderRepository', () => {
     organizationRepository =
       fixture.datasource.getRepository(OrganizationSchema);
 
-    // Create test organization for foreign key constraints
     testOrganization = await organizationRepository.save({
       id: createOrganizationId(uuidv4()),
       name: 'Test Organization',
