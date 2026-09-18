@@ -361,6 +361,24 @@ it is also what got one of them wrong — see the last bullet.
 - **`GetPackageByIdUseCase` has the same unscoped `findById`** the release routes had, and
   predates this feature.
 
+**Reopened and closed again on 2026-09-18, by the human's answer to the halt.** D-064 escalated
+whether the release routes should adopt `AbstractSpaceMemberUseCase`; the answer was yes, and
+D-065 records the reversal of D-035 and D-017. U-032 converted all three use cases. U-029's
+package-to-space guard stays beside the membership check — one binds the caller to the space,
+the other binds the resource to it, and each catches a substitution the other passes.
+
+The same day, `origin/main` was merged in to clear the conflicts blocking #489 (U-031). Three
+were the pipeline racing itself across two branches. The fourth was not, and it costs this
+feature a claim: main opened `space-nav-plugin-first` to every account, so the release UI is no
+longer hidden twice over. `package-releases` is now the only thing hiding it. That is what
+D-056 asked for and it is no longer belt and braces — the "two together" sentence in the S4
+close is superseded by this paragraph.
+
+**Verified after both.** Seven projects green with `--skip-nx-cache`, and the four end-to-end
+criteria together in 49.6s at `--workers=1` — run against the membership gate, which was the
+open risk: the signed-up user is a member of the space the suite drives, as `CreatePackageUseCase`
+already being space-gated had suggested but not proven.
+
 **Answered on the PR, 2026-09-18.** All four findings have a threaded reply on #489, posted
 after the branch reached `origin` so each cited commit resolves:
 [F1](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044254228),
