@@ -65,8 +65,12 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         throw new UserNotFoundError({ userId: String(invitation.userId) });
       }
 
-      // Should be unreachable: activation hard-deletes the invitation below, so
-      // a second attempt fails the token lookup instead of reaching this.
+      // Load-bearing, not a formality. The update and the invitation delete
+      // below are separate writes, so a delete that fails leaves the token
+      // resolving against an already-active user, and two concurrent
+      // activations can both pass the lookup above. Without this guard those
+      // cases fall through and rewrite the password from `command`, letting
+      // whoever holds a spent token take the account over.
       if (user.active) {
         this.logger.warn('User is already active', {
           userId: user.id,
