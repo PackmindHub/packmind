@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   PMButton,
   PMCloseButton,
@@ -13,6 +13,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
+  nextVersions,
   validatePackageReleaseVersion,
   type OrganizationId,
   type PackageId,
@@ -72,25 +73,55 @@ export function CreatePackageReleaseDrawer({
    * pre-check judges against what the page last read; the server judges
    * against what it re-reads at that instant, and those two differ by exactly
    * the amount that matters when a release lands between the two.
+   *
+   * `currentVersion` is never null: a package that has never been released is
+   * judged against `0.0.0`, which is also the version the server names back,
+   * and a refusal carrying null renders no sentence at all.
    */
   const [refusal, setRefusal] = useState<{
     code: PackageReleaseRefusalCode;
-    currentVersion: string | null;
+    currentVersion: string;
   } | null>(null);
+  /**
+   * What the server said the current version was, the last time it refused.
+   *
+   * Once it has spoken it outranks `readiness`, which was read before the
+   * release that caused the refusal existed. Without this the form goes on
+   * judging against the stale version and refuses, locally and with the wrong
+   * sentence, every version the server would now accept - there is no way out
+   * of the drawer but a reload.
+   */
+  const [serverCurrentVersion, setServerCurrentVersion] = useState<
+    string | null
+  >(null);
 
   const createRelease = useCreatePackageReleaseMutation();
   const analytics = useAnalytics();
 
   const isPending = createRelease.isPending;
 
+  const effectiveCurrentVersion =
+    serverCurrentVersion ?? readiness.currentVersion;
+  const suggestions = serverCurrentVersion
+    ? nextVersions(serverCurrentVersion)
+    : readiness.nextVersions;
+
   /**
    * A second opening starts from the suggestion again, not from the attempt
    * that was refused the first time.
+   *
+   * Only on the closed-to-open transition. `defaultVersion` also moves when
+   * readiness is refetched, and running this then would wipe the refusal the
+   * reader is still looking at.
    */
+  const wasOpen = useRef(open);
   useEffect(() => {
-    if (!open) return;
-    setVersion(defaultVersion);
-    setRefusal(null);
+    if (open && !wasOpen.current) {
+      setVersion(defaultVersion);
+      setRefusal(null);
+      setServerCurrentVersion(null);
+    }
+    wasOpen.current = open;
   }, [open, defaultVersion]);
 
   const handleOpenChange = (next: boolean) => {
@@ -101,13 +132,11 @@ export function CreatePackageReleaseDrawer({
   const handleCreate = async () => {
     if (isPending) return;
 
-    const refused = validatePackageReleaseVersion(
-      version,
-      readiness.currentVersion ?? '0.0.0',
-    );
+    const judgedAgainst = effectiveCurrentVersion ?? '0.0.0';
+    const refused = validatePackageReleaseVersion(version, judgedAgainst);
 
     if (refused) {
-      setRefusal({ code: refused, currentVersion: readiness.currentVersion });
+      setRefusal({ code: refused, currentVersion: judgedAgainst });
       analytics.track('package_release_refused', {
         packageId,
         attemptedVersion: version,
@@ -146,6 +175,7 @@ export function CreatePackageReleaseDrawer({
 
       if (serverRefusal) {
         setRefusal(serverRefusal);
+        setServerCurrentVersion(serverRefusal.currentVersion);
         analytics.track('package_release_refused', {
           packageId,
           attemptedVersion: version,
@@ -204,7 +234,7 @@ export function CreatePackageReleaseDrawer({
                 </PMField.Root>
 
                 <PMHStack gap={2}>
-                  {readiness.nextVersions.map((nextVersion) => (
+                  {suggestions.map((nextVersion) => (
                     <PMButton
                       key={nextVersion}
                       variant="secondary"

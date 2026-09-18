@@ -312,4 +312,80 @@ describe('CreatePackageReleaseDrawer', () => {
       ),
     );
   });
+
+  describe('after the server has named a newer current version', () => {
+    /**
+     * The page read 0.1.0; a release landed behind the open form and the server
+     * is at 0.2.0. Everything the form judges against has to move with it, or
+     * the only version it will now accept is the one the stale suggestions
+     * happen to share.
+     */
+    const raceLost = () => ({
+      readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+      mutateAsync: vi
+        .fn()
+        .mockRejectedValueOnce(serverRefusal('not_greater', '0.2.0'))
+        .mockResolvedValue({ release: { version: '0.2.1' } }),
+    });
+
+    const loseTheRace = async () => {
+      await typeVersion('0.2.0');
+      await userEvent.click(submit());
+      await screen.findByText('Version must be greater than 0.2.0');
+    };
+
+    it('offers the increments over that version', async () => {
+      renderDrawer(raceLost());
+
+      await loseTheRace();
+
+      expect(screen.getByRole('button', { name: '0.2.1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '0.3.0' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: '0.1.1' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('lets the version it would now accept reach the server', async () => {
+      const { mutateAsync } = renderDrawer(raceLost());
+
+      await loseTheRace();
+      await typeVersion('0.2.1');
+      await userEvent.click(submit());
+
+      await waitFor(() =>
+        expect(mutateAsync).toHaveBeenLastCalledWith(
+          expect.objectContaining({ version: '0.2.1' }),
+        ),
+      );
+    });
+
+    it('refuses against that version rather than the stale one', async () => {
+      renderDrawer(raceLost());
+
+      await loseTheRace();
+      await typeVersion('0.1.1');
+      await userEvent.click(submit());
+
+      expect(
+        await screen.findByText('Version must be greater than 0.2.0'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('states why it refuses a version on a package never released', async () => {
+    const { mutateAsync } = renderDrawer({
+      readiness: readinessOf(null, ['0.0.1', '0.1.0', '1.0.0']),
+    });
+
+    await typeVersion('0.0.0');
+    await userEvent.click(submit());
+
+    // Without a version to name, this refusal used to render nothing at all and
+    // the button simply did nothing.
+    expect(
+      await screen.findByText('Version must be greater than 0.0.0'),
+    ).toBeInTheDocument();
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
 });
