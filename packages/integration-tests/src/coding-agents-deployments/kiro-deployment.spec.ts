@@ -13,7 +13,6 @@ import {
   FileUpdates,
   GitProviderVendors,
   GitRepo,
-  IGitPort,
   Organization,
   Command,
   CommandVersion,
@@ -44,7 +43,6 @@ describe('Kiro Deployment Integration', () => {
   ]);
 
   let testApp: TestApp;
-  let gitPort: IGitPort;
   let deployerService: DeployerService;
 
   let recipe: Command;
@@ -79,7 +77,6 @@ describe('Kiro Deployment Integration', () => {
     await testApp.initialize();
 
     deployerService = testApp.codingAgentHexa.getDeployerService();
-    gitPort = testApp.gitHexa.getAdapter();
 
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
@@ -160,7 +157,6 @@ describe('Kiro Deployment Integration', () => {
       path: '/',
       gitRepoId: gitRepo.id,
     };
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
   });
 
   afterEach(async () => {

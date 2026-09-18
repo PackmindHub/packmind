@@ -27,6 +27,11 @@ export interface DeployerConfig {
 export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   protected abstract readonly config: DeployerConfig;
 
+  // These deployers only *render* content: they emit `sections` and never read
+  // the repository. Existing content is fetched and merged at commit time by
+  // `CommitToGitUseCase` (packages/git), so `gitPort` is accepted purely to keep
+  // the construction shape uniform across `ICodingAgentDeployer` implementations
+  // (see `CodingAgentDeployerRegistry`) and is deliberately unused here.
   constructor(
     protected readonly standardsPort?: IStandardsPort,
     protected readonly gitPort?: IGitPort,
@@ -422,37 +427,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return [...standardVersions].sort((a, b) =>
       a.slug.localeCompare(b.slug, 'en'),
     );
-  }
-
-  private async getExistingContent(
-    gitRepo: GitRepo,
-    target: Target,
-  ): Promise<string> {
-    if (!this.gitPort) {
-      this.logger.debug('No GitPort available, returning empty content');
-      return '';
-    }
-
-    try {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        this.config.filePath,
-        target,
-      );
-      const existingFile = await this.gitPort.getFileFromRepo(
-        gitRepo,
-        targetPrefixedPath,
-      );
-      return existingFile?.content || '';
-    } catch (error) {
-      this.logger.debug(
-        `Failed to get existing ${this.config.agentName} content`,
-        {
-          error: error instanceof Error ? error.message : String(error),
-          targetPath: target.path,
-        },
-      );
-      return '';
-    }
   }
 
   private escapeSingleQuotes(value: string): string {

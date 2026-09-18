@@ -153,8 +153,6 @@ describe('Junie Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -373,9 +371,10 @@ describe('Junie Deployment Integration', () => {
     });
   });
 
-  // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
-  // They don't check for existing content - that's handled by the merge layer.
-  // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
+  // NOTE: Deployers ALWAYS generate sections and never read the repository.
+  // Existing content is fetched and merged at commit time by CommitToGitUseCase,
+  // so content-preservation tests live in
+  // packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.spec.ts
 
   describe('when .junie/guidelines.md exists but is missing recipe instructions', () => {
     let defaultTarget: Target;
@@ -388,8 +387,6 @@ describe('Junie Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -545,8 +542,6 @@ describe('Junie Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         const recipeVersions: CommandVersion[] = [
           {
             id: 'recipe-version-1' as CommandVersionId,
@@ -589,8 +584,6 @@ describe('Junie Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
         fileUpdates = await junieDeployer.deployStandards(
           [],
           gitRepo,
