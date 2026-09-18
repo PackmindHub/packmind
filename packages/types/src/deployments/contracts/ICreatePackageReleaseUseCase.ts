@@ -1,13 +1,9 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
-import { OrganizationId } from '../../accounts/Organization';
+import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 import { PackageId } from '../Package';
 import { PackageReleaseContent } from '../PackageRelease';
-import { SpaceId } from '../../spaces/SpaceId';
 
-export type CreatePackageReleaseCommand = PackmindCommand & {
+export type CreatePackageReleaseCommand = SpaceMemberCommand & {
   packageId: PackageId;
-  organizationId: OrganizationId;
-  spaceId: SpaceId;
   version: string;
 };
 

@@ -1,11 +1,9 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
-import { OrganizationId } from '../../accounts/Organization';
+import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 import { PackageId } from '../Package';
 import {
   PackageComponentFamily,
   PackageReleaseVerdict,
 } from '../PackageRelease';
-import { SpaceId } from '../../spaces/SpaceId';
 
 /** One release, as a list read sees it: the version string and nothing else. */
 export type PackageReleaseSummary = {
@@ -31,10 +29,8 @@ export type PackageReleaseReadiness = {
   outdatedComponents: OutdatedPackageComponent[];
 };
 
-export type ListPackageReleasesCommand = PackmindCommand & {
+export type ListPackageReleasesCommand = SpaceMemberCommand & {
   packageId: PackageId;
-  organizationId: OrganizationId;
-  spaceId: SpaceId;
 };
 
 export type ListPackageReleasesResponse = {
