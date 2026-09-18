@@ -143,48 +143,39 @@ const worked = flowMonths
     b.flow.all.addedComment > a.flow.all.addedComment ? b : a,
   );
 
-// The daily window around the Opus 5 release. Colour carries the model, in
-// four classes rather than one per model: six hues would not be separable, and
-// the question is which generation wrote the day, not which exact build.
-const DAY_COLOURS = [
-  [/^Claude Opus 5$/, 'Opus 5', 'var(--series-1)'],
-  [/^Claude (Opus|Sonnet|Haiku) 4\./, 'Generation 4.x', 'var(--series-2)'],
-  [
-    /^Claude (Fable|Sonnet|Mythos) 5/,
-    'Other generation-5 model',
-    'var(--series-3)',
-  ],
+// The daily window around the Opus 5 release. Only the Opus models are
+// plotted: the window also holds Fable 5, Sonnet 5 and days with no version
+// recorded, and mixing them in answers a different question than "what did the
+// Opus line do when Opus 5 landed".
+const DAILY_MODELS = [
+  ['Claude Opus 4.8', 'Opus 4.8', 'var(--series-2)'],
+  ['Claude Opus 5', 'Opus 5', 'var(--series-1)'],
 ];
-const classifyDay = (model) =>
-  DAY_COLOURS.find(([pattern]) => pattern.test(model ?? '')) ?? [
-    null,
-    'No version recorded',
-    'var(--text-muted)',
-  ];
 
-const dailyPoints = daily.days.map((d) => {
-  const [, model, color] = classifyDay(d.model);
+const dailyDays = daily.days.filter((d) =>
+  DAILY_MODELS.some(([model]) => model === d.model),
+);
+const dailyPoints = dailyDays.map((d) => {
+  const [, label, color] = DAILY_MODELS.find(([model]) => model === d.model);
   return {
     t: day(d.date),
     ratio: d.commentRatio,
     added: d.added,
     label: dayEn(d.date) + ' ' + d.date.slice(2, 4),
-    model,
+    model: label,
     color,
   };
 });
-const dailyLegend = [...new Set(dailyPoints.map((p) => p.model))].map(
-  (model) => ({
-    model,
-    color: dailyPoints.find((p) => p.model === model).color,
-  }),
-);
+const dailyLegend = DAILY_MODELS.filter(([model]) =>
+  dailyDays.some((d) => d.model === model),
+).map(([, model, color]) => ({ model, color }));
+
 // Bounds quoted in the prose, so the sentence cannot drift from the chart.
 // Small days are noisy at this resolution, hence the floor on the "after" side.
 const DAILY_FLOOR = 300;
 const releaseDay = daily.around;
-const before = daily.days.filter((d) => d.date < releaseDay);
-const after = daily.days.filter(
+const before = dailyDays.filter((d) => d.date < releaseDay);
+const after = dailyDays.filter(
   (d) => d.date > releaseDay && d.added >= DAILY_FLOOR,
 );
 const span = (rows) => {
@@ -192,16 +183,32 @@ const span = (rows) => {
   return `${fmtPct(values[0])} and ${fmtPct(values.at(-1))}`;
 };
 
-const dailyTable = daily.days.map((d) => [
+const dailyTable = dailyDays.map((d) => [
   dayEn(d.date) + ' ' + d.date.slice(2, 4),
   fmtInt(d.commits),
   fmtInt(d.added),
   fmtPct(d.commentRatio),
-  classifyDay(d.model)[1],
+  d.model.replace('Claude ', ''),
 ]);
 
-// The within-developer comparison: the same person, one generation apart.
-const COMPARED = ['Claude Opus 4.6', 'Claude Opus 4.7', 'Claude Opus 5'];
+// The within-developer comparison: the same person, across every Opus model
+// they used. Picking a subset of the models would hide a developer's own
+// history — an earlier version of this chart showed 4.6, 4.7 and 5 only, and
+// every developer's Opus 4.5 and 4.8 work disappeared from it.
+const OPUS_ORDER = [
+  'Claude Opus 4.5',
+  'Claude Opus 4.6',
+  'Claude Opus 4.7',
+  'Claude Opus 4.8',
+  'Claude Opus 5',
+];
+const MIN_LINES = 1000;
+const rowFor = (person, model) =>
+  models.byPersonAndModel.find(
+    (r) =>
+      r.person === person && r.model === model && r.addedTotal >= MIN_LINES,
+  );
+
 const personTotals = new Map();
 for (const row of models.byPersonAndModel) {
   personTotals.set(
@@ -209,39 +216,53 @@ for (const row of models.byPersonAndModel) {
     (personTotals.get(row.person) ?? 0) + row.commits,
   );
 }
-const comparable = [...personTotals.keys()].filter((person) => {
-  const rows = models.byPersonAndModel.filter(
-    (r) =>
-      r.person === person && COMPARED.includes(r.model) && r.addedTotal >= 1000,
-  );
-  return rows.some((r) => r.model === 'Claude Opus 5') && rows.length >= 2;
-});
-comparable.sort(
-  (a, b) =>
-    (models.byPersonAndModel.find(
-      (r) => r.person === b && r.model === 'Claude Opus 5',
-    )?.commentRatio ?? 0) -
-    (models.byPersonAndModel.find(
-      (r) => r.person === a && r.model === 'Claude Opus 5',
-    )?.commentRatio ?? 0),
-);
-const authorItems = [];
-for (const person of comparable) {
-  for (const model of COMPARED) {
-    const row = models.byPersonAndModel.find(
-      (r) => r.person === person && r.model === model,
+
+// A developer is comparable when they have enough Opus 5 work and enough work
+// on at least one earlier Opus to put beside it.
+const comparisons = [...personTotals.keys()]
+  .map((person) => {
+    const opus5 = rowFor(person, 'Claude Opus 5');
+    const earlier = OPUS_ORDER.slice(0, -1)
+      .map((model) => rowFor(person, model))
+      .filter(Boolean);
+    if (!opus5 || earlier.length === 0) return null;
+    // Compared against their own highest earlier figure, which is the
+    // hardest bar and the one that cannot flatter the result.
+    const best = earlier.reduce((a, b) =>
+      b.commentRatio > a.commentRatio ? b : a,
     );
-    if (!row || row.addedTotal < 1000) continue;
-    authorItems.push({
-      label: `${person} · ${model.replace('Claude ', '')}`,
+    return {
+      person,
+      opus5,
+      earlier,
+      best,
+      factor: opus5.commentRatio / best.commentRatio,
+    };
+  })
+  .filter(Boolean)
+  .sort((a, b) => b.opus5.commentRatio - a.opus5.commentRatio);
+
+// A developer whose Opus 5 figure does not clearly clear their own earlier
+// best is named rather than averaged away.
+const LEVEL = 1.1;
+const rises = comparisons.filter((c) => c.factor >= LEVEL);
+const level = comparisons.filter((c) => c.factor < LEVEL);
+const factors = rises.map((c) => c.factor).sort((a, b) => a - b);
+
+const authorItems = comparisons.flatMap((c) =>
+  OPUS_ORDER.map((model) => {
+    const row = rowFor(c.person, model);
+    if (!row) return null;
+    return {
+      label: `${c.person} · ${model.replace('Claude ', '')}`,
       value: row.commentRatio,
       muted: model !== 'Claude Opus 5',
       commits: row.commits,
       added: row.addedTotal,
       median: null,
-    });
-  }
-}
+    };
+  }).filter(Boolean),
+);
 
 const personModelTable = [...personTotals.entries()]
   .sort((a, b) => b[1] - a[1])
@@ -402,9 +423,10 @@ dominated by what was written months ago.</p>
 <div class="card">
   <div class="card-head">
     <h3>Day by day, two weeks either side of the Opus 5 release</h3>
-    <p>One dot per day that touched TypeScript; its area is how many lines were added, its colour is the model that
-    wrote most of them. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend
-    would invent a trend that was not measured.</p>
+    <p>One dot per day whose TypeScript lines came mostly from an Opus model; its area is how many lines were added.
+    Days carried by Fable 5, Sonnet 5 or by commits with no version recorded are left out — they answer a different
+    question. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend would
+    invent a trend that was not measured.</p>
   </div>
   <div class="chart" id="c-daily"></div>
   <div class="legend" id="l-daily"></div>
@@ -412,8 +434,8 @@ dominated by what was written months ago.</p>
 </div>
 
 <p>The fortnightly series cannot separate the week before a release from the week after it. Day by day, the switch and
-the change land together. Before the release the days run between ${span(before)}; after it, every day carrying more
-than ${fmtInt(DAILY_FLOOR)} lines runs between ${span(after)}. Opus 5 shipped on a Friday, so its first working days
+the change land together. Before the release, the Opus 4.8 days run between ${span(before)}; after it, every Opus 5
+day carrying more than ${fmtInt(DAILY_FLOOR)} lines runs between ${span(after)}. Opus 5 shipped on a Friday, so its first working days
 are the Monday and Tuesday that follow — and the two instruction changes that might otherwise explain the move landed
 on the Wednesday and Thursday after that, once the rise had already started.</p>
 
@@ -441,13 +463,23 @@ calendar. The bar is the pooled ratio; the dot and the line are the median and t
 <span class="eyebrow">By developer</span>
 <h2>3. The same developer, one generation apart</h2>
 <p>Opus 5 commits are not spread evenly across the team, so a comparison between models could have been a comparison
-between people. It is not one: every developer who used both generations moves the same way, by a factor of 4 to 20.
-How far they move, though, varies a great deal from one person to the next.</p>
+between people. It mostly is not one. Each developer is shown against <em>every</em> Opus model they used, and for
+${rises.length} of the ${comparisons.length} the Opus 5 figure clears their own highest earlier figure — by a factor of
+${factors[0].toFixed(1)} to ${factors.at(-1).toFixed(1)}.${
+  level.length === 0
+    ? ''
+    : ` The exception${level.length > 1 ? 's are' : ' is'} ${level
+        .map(
+          (c) =>
+            `${c.person}, whose ${c.best.model.replace('Claude ', '')} figure (${fmtPct(c.best.commentRatio)} on ${fmtInt(c.best.addedTotal)} lines) already matches it`,
+        )
+        .join(', and ')}.`
+}</p>
 
 <div class="card">
   <div class="card-head">
     <h3>Comment ratio by developer and model</h3>
-    <p>Developers with at least 1,000 lines added with Opus 5 and with at least one model of the previous generation.</p>
+    <p>Every Opus model each developer used with at least ${fmtInt(MIN_LINES)} added lines. Opus 5 in colour, the earlier models muted.</p>
   </div>
   <div class="chart" id="c-authors"></div>
   <details><summary>See the full model breakdown per developer</summary><div id="t-authors"></div></details>
