@@ -76,7 +76,6 @@ export class UploadSkillUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: spaceIdString });
@@ -93,7 +92,7 @@ export class UploadSkillUseCase
           `Space ${spaceIdString} does not belong to organization ${orgIdString}`,
         );
       }
-      // Find SKILL.md file
+
       this.logger.info('Looking for SKILL.md file');
       const skillMdFile = files.find((f) => f.path === SKILL_MD_FILENAME);
       if (!skillMdFile) {
@@ -101,14 +100,12 @@ export class UploadSkillUseCase
       }
       this.logger.info('SKILL.md file found');
 
-      // Parse SKILL.md
       this.logger.info('Parsing SKILL.md content');
       const parsedSkill = this.skillParser.parse(skillMdFile.content);
       this.logger.info('SKILL.md parsed successfully', {
         name: parsedSkill.metadata.name,
       });
 
-      // Validate metadata
       this.logger.info('Validating skill metadata');
       const validationErrors = this.skillValidator.validate(
         parsedSkill.metadata,
@@ -132,12 +129,10 @@ export class UploadSkillUseCase
       } = parsedSkill.metadata;
       const prompt = parsedSkill.body;
 
-      // Generate slug
       this.logger.info('Generating slug from skill name', { name });
       const skillSlug = slug(name);
       this.logger.info('Base slug generated', { slug: skillSlug });
 
-      // Check if skill with same slug already exists in space
       this.logger.info('Checking if skill exists in space', {
         slug: skillSlug,
         spaceId,
@@ -149,7 +144,6 @@ export class UploadSkillUseCase
       const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
 
       if (existingSkill) {
-        // Skill exists - check if content is identical to latest version
         this.logger.info('Skill already exists, checking for content changes', {
           skillId: existingSkill.id,
           currentVersion: existingSkill.version,
@@ -198,7 +192,6 @@ export class UploadSkillUseCase
 
         const newVersion = existingSkill.version + 1;
 
-        // Update skill entity with new version
         const updatedSkill = await this.skillService.updateSkill(
           existingSkill.id,
           {
@@ -220,7 +213,6 @@ export class UploadSkillUseCase
           version: newVersion,
         });
 
-        // Create new skill version
         const skillVersion = await this.skillVersionService.addSkillVersion({
           skillId: existingSkill.id,
           name,
@@ -241,7 +233,6 @@ export class UploadSkillUseCase
           version: newVersion,
         });
 
-        // Save supporting files
         this.logger.info('Saving supporting skill files', {
           count: supportingFiles.length,
         });
@@ -283,7 +274,6 @@ export class UploadSkillUseCase
         return { skill: updatedSkill, versionCreated: true };
       }
 
-      // Skill does not exist - create new skill with initial version 1
       this.logger.info('Slug is unique within space, creating new skill', {
         slug: skillSlug,
       });
@@ -309,7 +299,6 @@ export class UploadSkillUseCase
         name,
       });
 
-      // Create initial skill version
       this.logger.info('Creating initial skill version');
       const skillVersion = await this.skillVersionService.addSkillVersion({
         skillId: skill.id,
@@ -331,7 +320,6 @@ export class UploadSkillUseCase
         version: initialVersion,
       });
 
-      // Save supporting files
       this.logger.info('Saving supporting skill files', {
         count: supportingFiles.length,
       });
@@ -403,7 +391,6 @@ export class UploadSkillUseCase
     },
     newFiles: UploadSkillFileInput[],
   ): Promise<boolean> {
-    // Compare all content fields
     if (latestVersion.name !== newContent.name) return false;
     if (latestVersion.description !== newContent.description) return false;
     if (latestVersion.prompt !== newContent.prompt) return false;
@@ -424,7 +411,6 @@ export class UploadSkillUseCase
     )
       return false;
 
-    // Compare metadata (deep equality)
     const latestMetadata = latestVersion.metadata || {};
     const newMetadata = newContent.metadata || {};
     const sortedLatest = Object.keys(latestMetadata).sort((a, b) =>
@@ -441,7 +427,6 @@ export class UploadSkillUseCase
       return false;
     }
 
-    // Compare additionalProperties (deep equality)
     if (
       canonicalJsonStringify(latestVersion.additionalProperties ?? {}) !==
       canonicalJsonStringify(newContent.additionalProperties ?? {})
@@ -449,19 +434,16 @@ export class UploadSkillUseCase
       return false;
     }
 
-    // Compare files
     const latestFiles = await this.skillFileRepository.findBySkillVersionId(
       latestVersion.id,
     );
 
-    // Filter out SKILL.md from new files for comparison
     const newSupportingFiles = newFiles.filter(
       (f) => f.path !== SKILL_MD_FILENAME,
     );
 
     if (latestFiles.length !== newSupportingFiles.length) return false;
 
-    // Sort both arrays by path for comparison
     const sortedLatestFiles = [...latestFiles].sort((a, b) =>
       a.path.localeCompare(b.path),
     );

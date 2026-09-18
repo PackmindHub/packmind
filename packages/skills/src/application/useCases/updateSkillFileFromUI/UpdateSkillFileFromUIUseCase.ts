@@ -71,7 +71,6 @@ export class UpdateSkillFileFromUIUseCase
       userId,
     });
 
-    // Verify the space belongs to the organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       this.logger.warn('Space not found', { spaceId });
@@ -89,7 +88,6 @@ export class UpdateSkillFileFromUIUseCase
       );
     }
 
-    // Verify the skill exists and belongs to the space
     const skill = await this.skillService.getSkillById(skillId);
     if (!skill) {
       this.logger.warn('Skill not found', { skillId });
@@ -105,7 +103,6 @@ export class UpdateSkillFileFromUIUseCase
       throw new Error(`Skill ${skillId} does not belong to space ${spaceId}`);
     }
 
-    // Permission check: space admin, org admin, or the skill's creator may edit
     const spaceMembership = await this.spacesPort.findMembership(
       userId,
       spaceId,

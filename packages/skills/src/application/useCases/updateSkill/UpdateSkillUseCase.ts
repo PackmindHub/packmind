@@ -64,7 +64,6 @@ export class UpdateSkillUseCase
     });
 
     try {
-      // Get existing skill
       const existingSkill = await this.skillService.getSkillById(skillId);
       if (!existingSkill) {
         this.logger.error('Skill not found for update', { skillId });
@@ -76,7 +75,6 @@ export class UpdateSkillUseCase
         currentVersion: existingSkill.version,
       });
 
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(existingSkill.spaceId);
       if (!space) {
         this.logger.error('Space not found', {
@@ -96,7 +94,6 @@ export class UpdateSkillUseCase
         );
       }
 
-      // Increment version number
       const newVersion = existingSkill.version + 1;
       this.logger.info('Incrementing skill version', {
         skillId,
@@ -104,7 +101,6 @@ export class UpdateSkillUseCase
         newVersion,
       });
 
-      // Generate new slug if name changed
       let skillSlug = existingSkill.slug;
       if (name && name !== existingSkill.name) {
         this.logger.info('Generating new slug from updated name', { name });
@@ -131,7 +127,6 @@ export class UpdateSkillUseCase
         });
       }
 
-      // Update skill entity
       const updatedSkill = await this.skillService.updateSkill(skillId, {
         name: name || existingSkill.name,
         slug: skillSlug,
@@ -150,7 +145,6 @@ export class UpdateSkillUseCase
         newVersion,
       });
 
-      // Create new skill version
       await this.skillVersionService.addSkillVersion({
         skillId,
         name: name || existingSkill.name,
