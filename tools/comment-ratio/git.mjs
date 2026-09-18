@@ -58,12 +58,21 @@ export function readBlobs(repo, shas) {
       cwd: repo,
     });
     const chunks = [];
+    let stderr = '';
 
     child.on('error', reject);
     child.stdout.on('data', (chunk) => chunks.push(chunk));
-    child.stderr.resume();
+    child.stderr.on('data', (chunk) => (stderr += chunk));
 
-    child.on('close', () => {
+    child.on('close', (code) => {
+      // Without this, a failed read would resolve to an empty map and every
+      // blob would silently be classified as a zero-line file.
+      if (code !== 0) {
+        reject(
+          new Error(`git cat-file --batch exited ${code}: ${stderr.trim()}`),
+        );
+        return;
+      }
       const buffer = Buffer.concat(chunks);
       const blobs = new Map();
       let offset = 0;
@@ -85,11 +94,31 @@ export function readBlobs(repo, shas) {
         offset = end + 1; // skip the trailing newline git appends
       }
 
+      if (blobs.size !== new Set(shas).size) {
+        reject(
+          new Error(
+            `git cat-file --batch returned ${blobs.size} of ${new Set(shas).size} blobs`,
+          ),
+        );
+        return;
+      }
       resolve(blobs);
     });
 
     child.stdin.end(shas.join('\n') + '\n');
   });
+}
+
+/**
+ * The path out of a `--- a/<path>` or `+++ b/<path>` header.
+ * Git terminates the path with a tab when it contains a space.
+ */
+export function headerPath(line, prefix) {
+  const value = line.slice(4).replace(/\t.*$/, '');
+  if (value === '/dev/null') return null;
+  return value.startsWith(prefix + '/')
+    ? value.slice(prefix.length + 1)
+    : value;
 }
 
 /**
@@ -124,14 +153,21 @@ export function diffLineNumbers(repo, fromSha, toSha, pathspecs) {
     }
     if (!current) continue;
 
-    if (line.startsWith('--- ')) {
-      const path = line.slice(4);
-      current.oldPath = path === '/dev/null' ? null : path.replace(/^a\//, '');
+    // Header lines only precede the first hunk. Past that, a removed source
+    // line starting with `-- ` reaches the patch as `--- ` and must not be
+    // mistaken for one.
+    if (
+      line.startsWith('--- ') &&
+      current.added.length + current.removed.length === 0
+    ) {
+      current.oldPath = headerPath(line, 'a');
       continue;
     }
-    if (line.startsWith('+++ ')) {
-      const path = line.slice(4);
-      current.newPath = path === '/dev/null' ? null : path.replace(/^b\//, '');
+    if (
+      line.startsWith('+++ ') &&
+      current.added.length + current.removed.length === 0
+    ) {
+      current.newPath = headerPath(line, 'b');
       files.set(current.newPath ?? current.oldPath, current);
       continue;
     }

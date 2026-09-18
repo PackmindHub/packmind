@@ -130,7 +130,8 @@ function resolveBoundaries(repo, ref, toMonth, step) {
   ];
 
   for (const day of boundaryDays(rootDate.slice(0, 10), toMonth, step)) {
-    const sha = commitBefore(repo, ref, `${day}T00:00:00`);
+    // Explicit UTC, so the sampled commits do not depend on the machine's zone.
+    const sha = commitBefore(repo, ref, `${day}T00:00:00+00:00`);
     if (!sha) continue;
     boundaries.push({
       label: day,

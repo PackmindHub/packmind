@@ -5,12 +5,16 @@ time and per Claude model, straight from the git history.
 
 ## Why two measures
 
-- **Stock** — at the first of each month, the share of non-blank lines in the
-  whole codebase that are comment lines. Moves slowly: it is dominated by code
-  written months ago.
-- **Flow** — of the lines _added_ during a month (net diff between two month
+- **Stock** — at each sampling date, the share of non-blank lines in the whole
+  codebase that are comment lines. Moves slowly: it is dominated by code written
+  months ago.
+- **Flow** — of the lines _added_ during a period (net diff between two
   boundaries), the share that are comment lines. This is the one that reflects
   how code is being written right now.
+
+The history is sampled on the 1st **and** the 15th of each month. Models ship
+mid-month, so a monthly step cannot separate the weeks before a release from the
+weeks after it. `--step month` falls back to monthly boundaries.
 
 A third view attributes the flow to the model that produced it, using the
 `Co-Authored-By: Claude <model>` trailer that Claude Code writes on its commits.
@@ -49,8 +53,9 @@ mistaken for comments. Two cases are handled explicitly and covered by
 `selftest.mjs`:
 
 - JSX text (`<div>// this is rendered</div>`) is content, not a comment.
-- `{/* ... */}` is the JSX comment idiom, so the braces do not make it a code
-  line.
+- `{/* ... */}` is the JSX comment idiom: the braces of an expression-less JSX
+  expression belong to the comment, so a JSX comment spanning several lines is a
+  comment on its `{/*` and `*/}` lines too.
 
 `.d.ts` files are excluded. Renames are detected, so moving a file does not look
 like newly written code.
@@ -78,3 +83,9 @@ like newly written code.
   one trailer covers one pull request.
 - Commits with no trailer (most of 2025) are of unknown attribution — not
   "human".
+- A trailer may carry a suffix (`Claude Opus 5 (1M context)`); it names the same
+  model and lands in the same bucket. The model is read from the raw commit
+  message rather than through `git`'s trailer parser, which only exposes a
+  trailer sitting unindented in the message's last paragraph.
+- `git log <pathspec>` prunes history by default; 14 commits from one 2026-01
+  merge are therefore not counted. None of them carry a generation-5 trailer.

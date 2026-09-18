@@ -45,6 +45,27 @@ const cases = [
     expected: '1121111',
   },
   {
+    name: 'a JSX comment spanning several lines is a comment on every line',
+    file: 'sample.tsx',
+    source: [
+      'export const C = () => (', // 1
+      '  <div>', // 1
+      '    {/*', // 2
+      '      a note about the markup below', // 2
+      '    */}', // 2
+      '    <span />', // 1
+      '  </div>', // 1
+      ');', // 1
+    ].join('\n'),
+    expected: '11222111',
+  },
+  {
+    name: 'a byte-order mark does not turn the first line into code',
+    file: 'sample.ts',
+    source: '\ufeff// a header comment\nconst a = 1;\n',
+    expected: '21',
+  },
+  {
     name: 'a file without a trailing newline still counts its last line',
     file: 'sample.ts',
     source: 'const a = 1;\n// end',

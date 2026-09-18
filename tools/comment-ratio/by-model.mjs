@@ -26,7 +26,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import { classifyLines, CODE, COMMENT } from './classify.mjs';
-import { readBlobs } from './git.mjs';
+import { readBlobs, headerPath } from './git.mjs';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -170,14 +170,15 @@ function streamHistory(repo, ref, onCommit) {
         file.dstBlob = EMPTY_BLOB.test(dst) ? null : dst;
         return;
       }
-      if (line.startsWith('--- ')) {
-        const value = line.slice(4);
-        file.oldPath = value === '/dev/null' ? null : value.replace(/^a\//, '');
+      // Header lines only precede the first hunk; past that, a removed source
+      // line starting with `-- ` reaches the patch looking like one.
+      const beforeFirstHunk = file.added.length + file.removed.length === 0;
+      if (line.startsWith('--- ') && beforeFirstHunk) {
+        file.oldPath = headerPath(line, 'a');
         return;
       }
-      if (line.startsWith('+++ ')) {
-        const value = line.slice(4);
-        file.newPath = value === '/dev/null' ? null : value.replace(/^b\//, '');
+      if (line.startsWith('+++ ') && beforeFirstHunk) {
+        file.newPath = headerPath(line, 'b');
         return;
       }
       if (line.startsWith('@@')) {

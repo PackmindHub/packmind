@@ -158,9 +158,14 @@
     // fall in the same month (the 1st, and the head commit), so a label is only
     // drawn when it differs from the previous one.
     var lastLabel = null;
+    var lastLabelX = -Infinity;
     config.series[0].points.forEach(function (p) {
       if (monthLabel(p[0]) === lastLabel) return;
+      // Two samples a fortnight apart sit close enough for their labels to
+      // collide, so a new one is only drawn once there is room for it.
+      if (x(p[0]) - lastLabelX < 44) return;
       lastLabel = monthLabel(p[0]);
+      lastLabelX = x(p[0]);
       svg.appendChild(
         text(monthLabel(p[0]), {
           x: x(p[0]),

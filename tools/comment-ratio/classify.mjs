@@ -26,6 +26,10 @@ try {
   );
 }
 
+// A byte-order mark, a no-break space or a Unicode line separator carries no
+// content; git still counts lines by \n, so none of these open a new line.
+const IS_WHITESPACE = /[ \t\r\v\f\u00a0\ufeff\u2028\u2029]/;
+
 export const BLANK = 0;
 export const CODE = 1;
 export const COMMENT = 2;
@@ -46,6 +50,18 @@ function commentRanges(sourceFile, text) {
   const seen = new Set();
 
   const visit = (node) => {
+    // `{/* ... */}` holds no expression: the braces exist only to carry the
+    // comment, so they belong to it. Counting them as code would split a
+    // multi-line JSX comment, whose `{/*` and `*/}` lines hold nothing else.
+    if (
+      node.kind === ts.SyntaxKind.JsxExpression &&
+      node.expression === undefined
+    ) {
+      const open = node.getStart(sourceFile);
+      ranges.push({ pos: open, end: open + 1 });
+      ranges.push({ pos: node.end - 1, end: node.end });
+    }
+
     const children = node.getChildren(sourceFile);
     if (children.length > 0) {
       for (const child of children) visit(child);
@@ -90,7 +106,17 @@ export function classifyLines(fileName, text) {
 
   // Character mask: true when the character is inside a comment.
   const isCommentChar = new Uint8Array(text.length);
-  for (const range of commentRanges(sourceFile, text)) {
+  let ranges;
+  try {
+    ranges = commentRanges(sourceFile, text);
+  } catch (cause) {
+    // The TypeScript walker asserts on some malformed JSX. Fail loudly and
+    // name the file rather than let a bare assertion abort the whole run.
+    throw new Error(`Could not classify ${fileName}: ${cause.message}`, {
+      cause,
+    });
+  }
+  for (const range of ranges) {
     const end = Math.min(range.end, text.length);
     for (let i = range.pos; i < end; i++) isCommentChar[i] = 1;
   }
@@ -98,30 +124,13 @@ export function classifyLines(fileName, text) {
   const lines = [];
   let nonWhitespace = 0;
   let inComment = 0;
-  let outsideBraces = 0;
-  let hasOpenBrace = false;
-  let hasCloseBrace = false;
 
   const flush = () => {
-    const outsideComment = nonWhitespace - inComment;
     if (nonWhitespace === 0) lines.push(BLANK);
-    else if (outsideComment === 0) lines.push(COMMENT);
-    // `{/* ... */}` is the JSX comment idiom: the braces only exist to host
-    // the comment, so the line is a comment line rather than a code line.
-    else if (
-      inComment > 0 &&
-      outsideBraces === 0 &&
-      hasOpenBrace &&
-      hasCloseBrace
-    )
-      lines.push(COMMENT);
+    else if (nonWhitespace === inComment) lines.push(COMMENT);
     else lines.push(CODE);
-
     nonWhitespace = 0;
     inComment = 0;
-    outsideBraces = 0;
-    hasOpenBrace = false;
-    hasCloseBrace = false;
   };
 
   for (let i = 0; i < text.length; i++) {
@@ -130,17 +139,9 @@ export function classifyLines(fileName, text) {
       flush();
       continue;
     }
-    if (char === ' ' || char === '\t' || char === '\r') continue;
+    if (IS_WHITESPACE.test(char)) continue;
     nonWhitespace++;
-    if (isCommentChar[i]) {
-      inComment++;
-    } else if (char === '{') {
-      hasOpenBrace = true;
-    } else if (char === '}') {
-      hasCloseBrace = true;
-    } else {
-      outsideBraces++;
-    }
+    if (isCommentChar[i]) inComment++;
   }
   // Trailing line without a final newline.
   if (text.length > 0 && !text.endsWith('\n')) flush();
