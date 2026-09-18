@@ -1,0 +1,890 @@
+{
+  "generatedAt": "2026-09-18T11:19:47.673Z",
+  "ref": "HEAD",
+  "commitsScanned": 3559,
+  "byModel": {
+    "no Claude trailer": {
+      "commits": 1178,
+      "addedCode": 317059,
+      "addedComment": 14523,
+      "removedCode": 112169,
+      "removedComment": 4464,
+      "addedTotal": 331582,
+      "commentRatio": 0.04379912057952482,
+      "commitDistribution": {
+        "commits": 501,
+        "median": 0.01639344262295082,
+        "p25": 0,
+        "p75": 0.05813953488372093
+      }
+    },
+    "Claude (version not recorded)": {
+      "commits": 889,
+      "addedCode": 177754,
+      "addedComment": 10015,
+      "removedCode": 93075,
+      "removedComment": 9744,
+      "addedTotal": 187769,
+      "commentRatio": 0.05333681278592313,
+      "commitDistribution": {
+        "commits": 523,
+        "median": 0.007380073800738007,
+        "p25": 0,
+        "p75": 0.057692307692307696
+      }
+    },
+    "Claude Sonnet 4.5": {
+      "commits": 90,
+      "addedCode": 21738,
+      "addedComment": 637,
+      "removedCode": 3913,
+      "removedComment": 158,
+      "addedTotal": 22375,
+      "commentRatio": 0.02846927374301676,
+      "commitDistribution": {
+        "commits": 57,
+        "median": 0.014150943396226415,
+        "p25": 0.0026595744680851063,
+        "p75": 0.04609929078014184
+      }
+    },
+    "Claude Opus 4.5": {
+      "commits": 348,
+      "addedCode": 80922,
+      "addedComment": 1736,
+      "removedCode": 32512,
+      "removedComment": 941,
+      "addedTotal": 82658,
+      "commentRatio": 0.021002201843741682,
+      "commitDistribution": {
+        "commits": 214,
+        "median": 0.012448132780082987,
+        "p25": 0,
+        "p75": 0.03204047217537943
+      }
+    },
+    "Claude Haiku 4.5": {
+      "commits": 29,
+      "addedCode": 5226,
+      "addedComment": 19,
+      "removedCode": 7961,
+      "removedComment": 222,
+      "addedTotal": 5245,
+      "commentRatio": 0.0036224976167778837,
+      "commitDistribution": {
+        "commits": 8,
+        "median": 0.0028169014084507044,
+        "p25": 0,
+        "p75": 0.012195121951219513
+      }
+    },
+    "Claude Opus 4.6": {
+      "commits": 418,
+      "addedCode": 70802,
+      "addedComment": 990,
+      "removedCode": 21865,
+      "removedComment": 531,
+      "addedTotal": 71792,
+      "commentRatio": 0.013789837307778026,
+      "commitDistribution": {
+        "commits": 227,
+        "median": 0,
+        "p25": 0,
+        "p75": 0.01240694789081886
+      }
+    },
+    "Claude Sonnet 4": {
+      "commits": 2,
+      "addedCode": 541,
+      "addedComment": 0,
+      "removedCode": 20,
+      "removedComment": 0,
+      "addedTotal": 541,
+      "commentRatio": 0,
+      "commitDistribution": {
+        "commits": 1,
+        "median": 0,
+        "p25": 0,
+        "p75": 0
+      }
+    },
+    "Claude Sonnet 4.6": {
+      "commits": 192,
+      "addedCode": 29763,
+      "addedComment": 335,
+      "removedCode": 9920,
+      "removedComment": 95,
+      "addedTotal": 30098,
+      "commentRatio": 0.011130307661638647,
+      "commitDistribution": {
+        "commits": 103,
+        "median": 0,
+        "p25": 0,
+        "p75": 0.01593625498007968
+      }
+    },
+    "Claude Opus 4.7": {
+      "commits": 48,
+      "addedCode": 6666,
+      "addedComment": 134,
+      "removedCode": 842,
+      "removedComment": 5,
+      "addedTotal": 6800,
+      "commentRatio": 0.019705882352941177,
+      "commitDistribution": {
+        "commits": 34,
+        "median": 0,
+        "p25": 0,
+        "p75": 0.018036072144288578
+      }
+    },
+    "Claude Opus 4.8": {
+      "commits": 40,
+      "addedCode": 9782,
+      "addedComment": 247,
+      "removedCode": 31704,
+      "removedComment": 642,
+      "addedTotal": 10029,
+      "commentRatio": 0.024628577126333633,
+      "commitDistribution": {
+        "commits": 20,
+        "median": 0,
+        "p25": 0,
+        "p75": 0.019704433497536946
+      }
+    },
+    "Claude Fable 5": {
+      "commits": 25,
+      "addedCode": 8114,
+      "addedComment": 1380,
+      "removedCode": 2420,
+      "removedComment": 169,
+      "addedTotal": 9494,
+      "commentRatio": 0.1453549610280177,
+      "commitDistribution": {
+        "commits": 17,
+        "median": 0.038202247191011236,
+        "p25": 0.017857142857142856,
+        "p75": 0.08108108108108109
+      }
+    },
+    "Claude Sonnet 5": {
+      "commits": 29,
+      "addedCode": 3382,
+      "addedComment": 251,
+      "removedCode": 341,
+      "removedComment": 32,
+      "addedTotal": 3633,
+      "commentRatio": 0.06908890723919625,
+      "commitDistribution": {
+        "commits": 18,
+        "median": 0.057971014492753624,
+        "p25": 0.01809954751131222,
+        "p75": 0.11666666666666667
+      }
+    },
+    "Claude Opus 5": {
+      "commits": 266,
+      "addedCode": 38042,
+      "addedComment": 9247,
+      "removedCode": 6792,
+      "removedComment": 1152,
+      "addedTotal": 47289,
+      "commentRatio": 0.19554230370699316,
+      "commitDistribution": {
+        "commits": 202,
+        "median": 0.19672131147540983,
+        "p25": 0.1171875,
+        "p75": 0.2857142857142857
+      }
+    },
+    "Claude Fable 5.1": {
+      "commits": 3,
+      "addedCode": 288,
+      "addedComment": 4,
+      "removedCode": 28,
+      "removedComment": 1,
+      "addedTotal": 292,
+      "commentRatio": 0.0136986301369863,
+      "commitDistribution": {
+        "commits": 1,
+        "median": 0.016260162601626018,
+        "p25": 0.016260162601626018,
+        "p75": 0.016260162601626018
+      }
+    }
+  },
+  "byMonthAndModel": [
+    {
+      "month": "2025-09",
+      "model": "no Claude trailer",
+      "commits": 11,
+      "addedCode": 101949,
+      "addedComment": 4748,
+      "removedCode": 10753,
+      "removedComment": 405,
+      "addedTotal": 106697,
+      "commentRatio": 0.044499845356476754
+    },
+    {
+      "month": "2025-10",
+      "model": "no Claude trailer",
+      "commits": 7,
+      "addedCode": 38109,
+      "addedComment": 1727,
+      "removedCode": 8698,
+      "removedComment": 332,
+      "addedTotal": 39836,
+      "commentRatio": 0.04335274625966463
+    },
+    {
+      "month": "2025-11",
+      "model": "no Claude trailer",
+      "commits": 287,
+      "addedCode": 58261,
+      "addedComment": 3539,
+      "removedCode": 31650,
+      "removedComment": 1930,
+      "addedTotal": 61800,
+      "commentRatio": 0.05726537216828479
+    },
+    {
+      "month": "2025-11",
+      "model": "Claude (version not recorded)",
+      "commits": 22,
+      "addedCode": 11558,
+      "addedComment": 510,
+      "removedCode": 2913,
+      "removedComment": 113,
+      "addedTotal": 12068,
+      "commentRatio": 0.04226052369903878
+    },
+    {
+      "month": "2025-12",
+      "model": "Claude (version not recorded)",
+      "commits": 68,
+      "addedCode": 10605,
+      "addedComment": 441,
+      "removedCode": 2600,
+      "removedComment": 160,
+      "addedTotal": 11046,
+      "commentRatio": 0.039923954372623575
+    },
+    {
+      "month": "2025-12",
+      "model": "no Claude trailer",
+      "commits": 175,
+      "addedCode": 30386,
+      "addedComment": 1071,
+      "removedCode": 10524,
+      "removedComment": 304,
+      "addedTotal": 31457,
+      "commentRatio": 0.03404647614203516
+    },
+    {
+      "month": "2025-12",
+      "model": "Claude Sonnet 4.5",
+      "commits": 11,
+      "addedCode": 666,
+      "addedComment": 29,
+      "removedCode": 497,
+      "removedComment": 56,
+      "addedTotal": 695,
+      "commentRatio": 0.041726618705035974
+    },
+    {
+      "month": "2025-12",
+      "model": "Claude Opus 4.5",
+      "commits": 41,
+      "addedCode": 6746,
+      "addedComment": 148,
+      "removedCode": 1134,
+      "removedComment": 25,
+      "addedTotal": 6894,
+      "commentRatio": 0.021467943138961415
+    },
+    {
+      "month": "2026-01",
+      "model": "Claude Opus 4.5",
+      "commits": 209,
+      "addedCode": 58815,
+      "addedComment": 1082,
+      "removedCode": 25390,
+      "removedComment": 748,
+      "addedTotal": 59897,
+      "commentRatio": 0.018064343790173132
+    },
+    {
+      "month": "2026-01",
+      "model": "no Claude trailer",
+      "commits": 229,
+      "addedCode": 30245,
+      "addedComment": 1011,
+      "removedCode": 10509,
+      "removedComment": 414,
+      "addedTotal": 31256,
+      "commentRatio": 0.03234578960839519
+    },
+    {
+      "month": "2026-01",
+      "model": "Claude Sonnet 4.5",
+      "commits": 35,
+      "addedCode": 8777,
+      "addedComment": 188,
+      "removedCode": 2271,
+      "removedComment": 75,
+      "addedTotal": 8965,
+      "commentRatio": 0.020970440602342443
+    },
+    {
+      "month": "2026-01",
+      "model": "Claude (version not recorded)",
+      "commits": 12,
+      "addedCode": 2477,
+      "addedComment": 87,
+      "removedCode": 547,
+      "removedComment": 5,
+      "addedTotal": 2564,
+      "commentRatio": 0.033931357254290175
+    },
+    {
+      "month": "2026-01",
+      "model": "Claude Haiku 4.5",
+      "commits": 19,
+      "addedCode": 4703,
+      "addedComment": 13,
+      "removedCode": 7906,
+      "removedComment": 221,
+      "addedTotal": 4716,
+      "commentRatio": 0.00275657336726039
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Opus 4.5",
+      "commits": 89,
+      "addedCode": 14548,
+      "addedComment": 506,
+      "removedCode": 5901,
+      "removedComment": 168,
+      "addedTotal": 15054,
+      "commentRatio": 0.03361232894911651
+    },
+    {
+      "month": "2026-02",
+      "model": "no Claude trailer",
+      "commits": 175,
+      "addedCode": 23870,
+      "addedComment": 314,
+      "removedCode": 14413,
+      "removedComment": 201,
+      "addedTotal": 24184,
+      "commentRatio": 0.012983790936156136
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Sonnet 4.5",
+      "commits": 37,
+      "addedCode": 9503,
+      "addedComment": 301,
+      "removedCode": 921,
+      "removedComment": 23,
+      "addedTotal": 9804,
+      "commentRatio": 0.03070175438596491
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Opus 4.6",
+      "commits": 250,
+      "addedCode": 36365,
+      "addedComment": 386,
+      "removedCode": 8401,
+      "removedComment": 170,
+      "addedTotal": 36751,
+      "commentRatio": 0.01050311556148132
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Haiku 4.5",
+      "commits": 3,
+      "addedCode": 47,
+      "addedComment": 0,
+      "removedCode": 8,
+      "removedComment": 0,
+      "addedTotal": 47,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Sonnet 4",
+      "commits": 2,
+      "addedCode": 541,
+      "addedComment": 0,
+      "removedCode": 20,
+      "removedComment": 0,
+      "addedTotal": 541,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude (version not recorded)",
+      "commits": 2,
+      "addedCode": 249,
+      "addedComment": 16,
+      "removedCode": 83,
+      "removedComment": 1,
+      "addedTotal": 265,
+      "commentRatio": 0.06037735849056604
+    },
+    {
+      "month": "2026-02",
+      "model": "Claude Sonnet 4.6",
+      "commits": 1,
+      "addedCode": 6,
+      "addedComment": 0,
+      "removedCode": 6,
+      "removedComment": 0,
+      "addedTotal": 6,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude Opus 4.6",
+      "commits": 167,
+      "addedCode": 33609,
+      "addedComment": 576,
+      "removedCode": 13464,
+      "removedComment": 361,
+      "addedTotal": 34185,
+      "commentRatio": 0.016849495392716105
+    },
+    {
+      "month": "2026-03",
+      "model": "no Claude trailer",
+      "commits": 124,
+      "addedCode": 9714,
+      "addedComment": 110,
+      "removedCode": 10258,
+      "removedComment": 125,
+      "addedTotal": 9824,
+      "commentRatio": 0.011197068403908795
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude Sonnet 4.6",
+      "commits": 157,
+      "addedCode": 15492,
+      "addedComment": 208,
+      "removedCode": 5595,
+      "removedComment": 68,
+      "addedTotal": 15700,
+      "commentRatio": 0.013248407643312102
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude Opus 4.5",
+      "commits": 6,
+      "addedCode": 632,
+      "addedComment": 0,
+      "removedCode": 67,
+      "removedComment": 0,
+      "addedTotal": 632,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude Sonnet 4.5",
+      "commits": 7,
+      "addedCode": 2792,
+      "addedComment": 119,
+      "removedCode": 224,
+      "removedComment": 4,
+      "addedTotal": 2911,
+      "commentRatio": 0.04087942287873583
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude (version not recorded)",
+      "commits": 233,
+      "addedCode": 27780,
+      "addedComment": 384,
+      "removedCode": 39268,
+      "removedComment": 649,
+      "addedTotal": 28164,
+      "commentRatio": 0.013634426927993182
+    },
+    {
+      "month": "2026-03",
+      "model": "Claude Haiku 4.5",
+      "commits": 7,
+      "addedCode": 476,
+      "addedComment": 6,
+      "removedCode": 47,
+      "removedComment": 1,
+      "addedTotal": 482,
+      "commentRatio": 0.012448132780082987
+    },
+    {
+      "month": "2026-04",
+      "model": "Claude Sonnet 4.6",
+      "commits": 27,
+      "addedCode": 10003,
+      "addedComment": 112,
+      "removedCode": 1233,
+      "removedComment": 4,
+      "addedTotal": 10115,
+      "commentRatio": 0.011072664359861591
+    },
+    {
+      "month": "2026-04",
+      "model": "Claude (version not recorded)",
+      "commits": 158,
+      "addedCode": 20965,
+      "addedComment": 192,
+      "removedCode": 4192,
+      "removedComment": 72,
+      "addedTotal": 21157,
+      "commentRatio": 0.009075010634778087
+    },
+    {
+      "month": "2026-04",
+      "model": "no Claude trailer",
+      "commits": 75,
+      "addedCode": 3776,
+      "addedComment": 43,
+      "removedCode": 5076,
+      "removedComment": 99,
+      "addedTotal": 3819,
+      "commentRatio": 0.01125949201361613
+    },
+    {
+      "month": "2026-04",
+      "model": "Claude Opus 4.5",
+      "commits": 2,
+      "addedCode": 122,
+      "addedComment": 0,
+      "removedCode": 11,
+      "removedComment": 0,
+      "addedTotal": 122,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-04",
+      "model": "Claude Opus 4.6",
+      "commits": 1,
+      "addedCode": 828,
+      "addedComment": 28,
+      "removedCode": 0,
+      "removedComment": 0,
+      "addedTotal": 856,
+      "commentRatio": 0.03271028037383177
+    },
+    {
+      "month": "2026-05",
+      "model": "no Claude trailer",
+      "commits": 25,
+      "addedCode": 1474,
+      "addedComment": 10,
+      "removedCode": 1848,
+      "removedComment": 20,
+      "addedTotal": 1484,
+      "commentRatio": 0.006738544474393531
+    },
+    {
+      "month": "2026-05",
+      "model": "Claude Sonnet 4.6",
+      "commits": 5,
+      "addedCode": 411,
+      "addedComment": 0,
+      "removedCode": 556,
+      "removedComment": 2,
+      "addedTotal": 411,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-05",
+      "model": "Claude (version not recorded)",
+      "commits": 102,
+      "addedCode": 29666,
+      "addedComment": 907,
+      "removedCode": 11262,
+      "removedComment": 502,
+      "addedTotal": 30573,
+      "commentRatio": 0.029666699375265757
+    },
+    {
+      "month": "2026-05",
+      "model": "Claude Opus 4.7",
+      "commits": 45,
+      "addedCode": 6415,
+      "addedComment": 125,
+      "removedCode": 709,
+      "removedComment": 5,
+      "addedTotal": 6540,
+      "commentRatio": 0.0191131498470948
+    },
+    {
+      "month": "2026-05",
+      "model": "Claude Opus 4.8",
+      "commits": 1,
+      "addedCode": 199,
+      "addedComment": 4,
+      "removedCode": 81,
+      "removedComment": 10,
+      "addedTotal": 203,
+      "commentRatio": 0.019704433497536946
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Opus 4.7",
+      "commits": 3,
+      "addedCode": 251,
+      "addedComment": 9,
+      "removedCode": 133,
+      "removedComment": 0,
+      "addedTotal": 260,
+      "commentRatio": 0.03461538461538462
+    },
+    {
+      "month": "2026-06",
+      "model": "no Claude trailer",
+      "commits": 12,
+      "addedCode": 12807,
+      "addedComment": 600,
+      "removedCode": 2246,
+      "removedComment": 92,
+      "addedTotal": 13407,
+      "commentRatio": 0.04475274110539271
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude (version not recorded)",
+      "commits": 130,
+      "addedCode": 31231,
+      "addedComment": 546,
+      "removedCode": 10624,
+      "removedComment": 321,
+      "addedTotal": 31777,
+      "commentRatio": 0.017182238726122668
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Sonnet 4.6",
+      "commits": 2,
+      "addedCode": 3851,
+      "addedComment": 15,
+      "removedCode": 2530,
+      "removedComment": 21,
+      "addedTotal": 3866,
+      "commentRatio": 0.0038799793067770304
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Opus 4.5",
+      "commits": 1,
+      "addedCode": 59,
+      "addedComment": 0,
+      "removedCode": 9,
+      "removedComment": 0,
+      "addedTotal": 59,
+      "commentRatio": 0
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Fable 5",
+      "commits": 3,
+      "addedCode": 612,
+      "addedComment": 6,
+      "removedCode": 102,
+      "removedComment": 1,
+      "addedTotal": 618,
+      "commentRatio": 0.009708737864077669
+    },
+    {
+      "month": "2026-06",
+      "model": "Claude Opus 4.8",
+      "commits": 2,
+      "addedCode": 102,
+      "addedComment": 2,
+      "removedCode": 2,
+      "removedComment": 0,
+      "addedTotal": 104,
+      "commentRatio": 0.019230769230769232
+    },
+    {
+      "month": "2026-07",
+      "model": "no Claude trailer",
+      "commits": 7,
+      "addedCode": 56,
+      "addedComment": 3,
+      "removedCode": 2657,
+      "removedComment": 88,
+      "addedTotal": 59,
+      "commentRatio": 0.05084745762711865
+    },
+    {
+      "month": "2026-07",
+      "model": "Claude Opus 4.8",
+      "commits": 36,
+      "addedCode": 9421,
+      "addedComment": 238,
+      "removedCode": 31587,
+      "removedComment": 632,
+      "addedTotal": 9659,
+      "commentRatio": 0.024640231908065018
+    },
+    {
+      "month": "2026-07",
+      "model": "Claude (version not recorded)",
+      "commits": 30,
+      "addedCode": 8003,
+      "addedComment": 537,
+      "removedCode": 1880,
+      "removedComment": 61,
+      "addedTotal": 8540,
+      "commentRatio": 0.06288056206088993
+    },
+    {
+      "month": "2026-07",
+      "model": "Claude Sonnet 5",
+      "commits": 15,
+      "addedCode": 2243,
+      "addedComment": 91,
+      "removedCode": 234,
+      "removedComment": 18,
+      "addedTotal": 2334,
+      "commentRatio": 0.03898886032562125
+    },
+    {
+      "month": "2026-07",
+      "model": "Claude Fable 5",
+      "commits": 15,
+      "addedCode": 4862,
+      "addedComment": 254,
+      "removedCode": 1045,
+      "removedComment": 35,
+      "addedTotal": 5116,
+      "commentRatio": 0.049648162627052385
+    },
+    {
+      "month": "2026-07",
+      "model": "Claude Opus 5",
+      "commits": 29,
+      "addedCode": 5234,
+      "addedComment": 539,
+      "removedCode": 693,
+      "removedComment": 76,
+      "addedTotal": 5773,
+      "commentRatio": 0.09336566776372769
+    },
+    {
+      "month": "2026-08",
+      "model": "Claude Fable 5",
+      "commits": 7,
+      "addedCode": 2640,
+      "addedComment": 1120,
+      "removedCode": 1273,
+      "removedComment": 133,
+      "addedTotal": 3760,
+      "commentRatio": 0.2978723404255319
+    },
+    {
+      "month": "2026-08",
+      "model": "Claude Opus 5",
+      "commits": 129,
+      "addedCode": 14550,
+      "addedComment": 3014,
+      "removedCode": 2917,
+      "removedComment": 420,
+      "addedTotal": 17564,
+      "commentRatio": 0.171601002049647
+    },
+    {
+      "month": "2026-08",
+      "model": "Claude (version not recorded)",
+      "commits": 49,
+      "addedCode": 15331,
+      "addedComment": 2862,
+      "removedCode": 3762,
+      "removedComment": 212,
+      "addedTotal": 18193,
+      "commentRatio": 0.15731325234980487
+    },
+    {
+      "month": "2026-08",
+      "model": "no Claude trailer",
+      "commits": 26,
+      "addedCode": 2399,
+      "addedComment": 317,
+      "removedCode": 1733,
+      "removedComment": 129,
+      "addedTotal": 2716,
+      "commentRatio": 0.11671575846833579
+    },
+    {
+      "month": "2026-08",
+      "model": "Claude Sonnet 5",
+      "commits": 14,
+      "addedCode": 1139,
+      "addedComment": 160,
+      "removedCode": 107,
+      "removedComment": 14,
+      "addedTotal": 1299,
+      "commentRatio": 0.12317167051578137
+    },
+    {
+      "month": "2026-08",
+      "model": "Claude Opus 4.8",
+      "commits": 1,
+      "addedCode": 60,
+      "addedComment": 3,
+      "removedCode": 34,
+      "removedComment": 0,
+      "addedTotal": 63,
+      "commentRatio": 0.047619047619047616
+    },
+    {
+      "month": "2026-09",
+      "model": "Claude Opus 5",
+      "commits": 108,
+      "addedCode": 18258,
+      "addedComment": 5694,
+      "removedCode": 3182,
+      "removedComment": 656,
+      "addedTotal": 23952,
+      "commentRatio": 0.2377254509018036
+    },
+    {
+      "month": "2026-09",
+      "model": "Claude (version not recorded)",
+      "commits": 83,
+      "addedCode": 19889,
+      "addedComment": 3533,
+      "removedCode": 15944,
+      "removedComment": 7648,
+      "addedTotal": 23422,
+      "commentRatio": 0.15084108957390488
+    },
+    {
+      "month": "2026-09",
+      "model": "no Claude trailer",
+      "commits": 25,
+      "addedCode": 4013,
+      "addedComment": 1030,
+      "removedCode": 1804,
+      "removedComment": 325,
+      "addedTotal": 5043,
+      "commentRatio": 0.20424350584969264
+    },
+    {
+      "month": "2026-09",
+      "model": "Claude Fable 5.1",
+      "commits": 3,
+      "addedCode": 288,
+      "addedComment": 4,
+      "removedCode": 28,
+      "removedComment": 1,
+      "addedTotal": 292,
+      "commentRatio": 0.0136986301369863
+    }
+  ]
+}
