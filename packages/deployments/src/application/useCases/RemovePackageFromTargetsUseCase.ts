@@ -44,6 +44,7 @@ import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
   getTargetPrefixedPath,
+  mergeFileUpdatesAcrossTargets,
 } from '../utils/GitFileUtils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -136,17 +137,23 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         let distributionStatus = DistributionStatus.success;
 
         try {
-          // Get file updates from first target
-          const firstTargetData = removalDataPerTarget.values().next().value;
-          if (!firstTargetData) {
+          if (removalDataPerTarget.size === 0) {
             throw new Error('No file updates found for any target');
           }
 
+          // All the targets of a repository share one commit, so the commit
+          // carries the files of every one of them.
+          const repositoryFileUpdates = mergeFileUpdatesAcrossTargets(
+            Array.from(removalDataPerTarget.values()).map(
+              (removalData) => removalData.fileUpdates,
+            ),
+          );
+
           gitCommit = await this.gitPort.commitToGit(
             gitRepo,
-            firstTargetData.fileUpdates.createOrUpdate,
+            repositoryFileUpdates.createOrUpdate,
             commitMessage,
-            firstTargetData.fileUpdates.delete,
+            repositoryFileUpdates.delete,
           );
         } catch (error) {
           if (

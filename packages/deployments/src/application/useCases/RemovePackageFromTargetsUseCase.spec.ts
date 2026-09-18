@@ -364,10 +364,12 @@ describe('RemovePackageFromTargetsUseCase', () => {
             });
           });
 
-          it('passes delete files to commitToGit with target path prefix', async () => {
+          it('passes every target delete file to commitToGit with its target path prefix', async () => {
             await useCase.execute(command);
 
-            // Note: The paths are prefixed with the target path (/src/) by applyTargetPrefixingToFileUpdates
+            // Note: The paths are prefixed with each target path by
+            // applyTargetPrefixingToFileUpdates, and the single commit of the
+            // repository carries the files of all of its targets.
             expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
               mockGitRepo,
               expect.any(Array),
@@ -375,6 +377,10 @@ describe('RemovePackageFromTargetsUseCase', () => {
               [
                 {
                   path: 'src/.packmind/recipes/deleted-recipe.md',
+                  type: DeleteItemType.File,
+                },
+                {
+                  path: 'staging/.packmind/recipes/deleted-recipe.md',
                   type: DeleteItemType.File,
                 },
               ],
