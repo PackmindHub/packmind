@@ -12,7 +12,7 @@ import {
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
-import { SignInUserResponse } from '@packmind/types';
+import { SignInUserResponse, createOrganizationId } from '@packmind/types';
 import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
@@ -319,7 +319,7 @@ describe('SignInForm', () => {
 
         const mockSignInResponse: SignInUserResponse = {
           organization: {
-            id: 'org-1',
+            id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
             role: 'admin',
@@ -428,7 +428,7 @@ describe('SignInForm', () => {
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -436,7 +436,7 @@ describe('SignInForm', () => {
             },
             {
               organization: {
-                id: 'org-2',
+                id: createOrganizationId('org-2'),
                 name: 'Organization 2',
                 slug: 'organization-2',
               },
@@ -511,7 +511,7 @@ describe('SignInForm', () => {
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -584,7 +584,7 @@ describe('SignInForm', () => {
           organizations: [
             {
               organization: {
-                id: 'org-1',
+                id: createOrganizationId('org-1'),
                 name: 'Organization 1',
                 slug: 'organization-1',
               },
@@ -592,7 +592,7 @@ describe('SignInForm', () => {
             },
             {
               organization: {
-                id: 'org-2',
+                id: createOrganizationId('org-2'),
                 name: 'Organization 2',
                 slug: 'organization-2',
               },
@@ -916,7 +916,7 @@ describe('SignInForm', () => {
 
         act(() => {
           onCreateSuccess({
-            id: 'org-1',
+            id: createOrganizationId('org-1'),
             name: 'New Organization',
             slug: 'new-organization',
           });

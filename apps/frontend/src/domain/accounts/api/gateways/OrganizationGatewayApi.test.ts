@@ -1,4 +1,5 @@
 import { OrganizationGatewayApi } from './OrganizationGatewayApi';
+import { createUserId } from '@packmind/types';
 import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
@@ -124,7 +125,7 @@ describe('OrganizationGatewayApi', () => {
         mockApiDelete.mockResolvedValue(mockResponse);
         result = await gateway.removeUser({
           organizationId: 'org123',
-          targetUserId: 'user456',
+          targetUserId: createUserId('user456'),
         });
       });
 
@@ -147,7 +148,7 @@ describe('OrganizationGatewayApi', () => {
         await expect(
           gateway.removeUser({
             organizationId: 'org123',
-            targetUserId: 'user456',
+            targetUserId: createUserId('user456'),
           }),
         ).rejects.toThrow('User not found');
       });
