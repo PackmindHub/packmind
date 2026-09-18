@@ -9,12 +9,8 @@ import { IJobRegistry } from './domain/IJobRegistry';
 const origin = 'JobsService';
 
 /**
- * JobsService - Infrastructure service for background job management.
- *
- * This service provides a generic job registry system that allows other packages
- * to register their job implementations without creating circular dependencies.
- * Unlike domain hexas, this service is pure infrastructure and doesn't implement
- * the port-adapter pattern.
+ * Holds the job registry so a domain can register its own queues without any
+ * package having to depend on another's job implementations.
  */
 export class JobsService extends BaseService {
   private readonly jobRegistry: IJobRegistry;
@@ -27,7 +23,6 @@ export class JobsService extends BaseService {
     this.logger.info('Constructing JobsService');
 
     try {
-      // Initialize the job registry
       this.jobRegistry = new JobRegistry();
 
       this.logger.info('JobsService construction completed');
@@ -39,28 +34,18 @@ export class JobsService extends BaseService {
     }
   }
 
-  /**
-   * Initialize the service with access to the registry.
-   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async initialize(_registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing JobsService');
-    // JobsService doesn't need any adapters from registry
+    // Nothing to resolve - this service needs no adapter from the registry.
     this.logger.info('JobsService initialized successfully');
   }
 
-  /**
-   * Destroys the JobsService and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying JobsService');
-    // Add any cleanup logic here if needed
     this.logger.info('JobsService destroyed');
   }
 
-  /**
-   * Register a job queue factory
-   */
   public registerJobQueue<TInput>(
     queueName: string,
     factory: IJobFactory<TInput>,
@@ -69,9 +54,6 @@ export class JobsService extends BaseService {
     this.jobRegistry.registerQueue(queueName, factory);
   }
 
-  /**
-   * Initialize all registered job queues
-   */
   public async initJobQueues(): Promise<void> {
     this.logger.info('Initializing all registered job queues');
     await this.jobRegistry.initializeAllQueues();

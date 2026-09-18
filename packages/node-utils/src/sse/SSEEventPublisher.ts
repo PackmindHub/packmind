@@ -20,16 +20,14 @@ import { UserOrganizationRole } from '@packmind/types';
 const origin = 'SSEEventPublisher';
 
 /**
- * Shared SSE Event Publisher following the Configuration singleton pattern
- * Used to publish SSE events to Redis pub/sub for distribution to all API instances
+ * Publishes SSE events onto Redis pub/sub rather than straight to a connection:
+ * the subscriber may be attached to a different API instance than the one
+ * handling the write.
  */
 export class SSEEventPublisher {
   private static instance: SSEEventPublisher;
   private static redisClient: RedisSSEClient;
 
-  /**
-   * Get the singleton instance
-   */
   static getInstance(): SSEEventPublisher {
     if (!SSEEventPublisher.instance) {
       SSEEventPublisher.instance = new SSEEventPublisher();
@@ -44,13 +42,9 @@ export class SSEEventPublisher {
   private constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    // Private constructor for singleton pattern
   }
 
-  /**
-   * Publish a program status change event for cache invalidation
-   * This triggers React Query to refetch the program data
-   */
+  /** Makes the frontend's React Query cache refetch the program. */
   static async publishProgramStatusEvent(
     programId: string,
     ruleId: string,
@@ -70,7 +64,6 @@ export class SSEEventPublisher {
     );
 
     try {
-      // Create minimal event payload - just programId for cache invalidation
       const event = createProgramStatusChangeEvent(ruleId, language);
 
       await SSEEventPublisher.publishEvent(
@@ -97,10 +90,7 @@ export class SSEEventPublisher {
     }
   }
 
-  /**
-   * Publish an assessment status change event for cache invalidation
-   * This triggers React Query to refetch the assessment data
-   */
+  /** Makes the frontend's React Query cache refetch the assessment. */
   static async publishAssessmentStatusEvent(
     ruleId: string,
     language: string,
@@ -118,7 +108,6 @@ export class SSEEventPublisher {
     );
 
     try {
-      // Create event payload carrying identifiers needed for cache invalidation
       const event = createAssessmentStatusChangeEvent(ruleId, language);
 
       await SSEEventPublisher.publishEvent(
@@ -144,10 +133,7 @@ export class SSEEventPublisher {
     }
   }
 
-  /**
-   * Publish a detection heuristics updated event for cache invalidation
-   * This triggers React Query to refetch the heuristics data
-   */
+  /** Makes the frontend's React Query cache refetch the heuristics. */
   static async publishDetectionHeuristicsUpdatedEvent(
     ruleId: string,
     language: string,
@@ -167,7 +153,6 @@ export class SSEEventPublisher {
     );
 
     try {
-      // Create event payload carrying identifiers needed for cache invalidation
       const event = createDetectionHeuristicsUpdatedEvent(
         ruleId,
         language,
@@ -201,8 +186,8 @@ export class SSEEventPublisher {
   }
 
   /**
-   * Publish an event to notify a user that their context (role or membership) changed
-   * This should trigger a refetch of the /me route on the frontend
+   * Signals a change to the user's own role or membership, which the frontend
+   * answers by refetching /me.
    */
   static async publishUserContextChangeEvent(
     userId: string,
@@ -255,8 +240,8 @@ export class SSEEventPublisher {
   }
 
   /**
-   * Publish a distribution status change event for cache invalidation
-   * This triggers React Query to refetch the distribution data when status changes
+   * Makes the frontend's React Query cache refetch the distribution. Scoped to
+   * the organization rather than one user, so every viewer sees the new status.
    */
   static async publishDistributionStatusChangeEvent(
     distributionId: string,
@@ -308,8 +293,8 @@ export class SSEEventPublisher {
   }
 
   /**
-   * Publish a change proposal update event for cache invalidation
-   * This triggers React Query to refetch change proposal data when proposals are created, applied, or rejected
+   * Makes the frontend's React Query cache refetch change proposals. Scoped to
+   * the space rather than one user, so every viewer sees the change.
    */
   static async publishChangeProposalUpdateEvent(
     organizationId: string,
@@ -352,9 +337,6 @@ export class SSEEventPublisher {
     }
   }
 
-  /**
-   * Generic method to publish any SSE event type to Redis pub/sub
-   */
   static async publishEvent(
     eventType: string,
     params: string[],
@@ -368,11 +350,10 @@ export class SSEEventPublisher {
     });
 
     try {
-      // Ensure Redis client is initialized
+      // Only called for its side effect: it is what assigns redisClient.
       SSEEventPublisher.getInstance();
       const redisClient = SSEEventPublisher.redisClient;
 
-      // Create the Redis pub/sub message
       const message = createSSEEventMessage(
         eventType,
         params,
@@ -380,7 +361,6 @@ export class SSEEventPublisher {
         targetUserIds,
       );
 
-      // Publish to Redis events channel
       const serializedMessage = serializeSSERedisMessage(message);
       await redisClient.publish(SSE_REDIS_CHANNELS.EVENTS, serializedMessage);
 

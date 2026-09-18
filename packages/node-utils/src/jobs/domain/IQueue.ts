@@ -8,12 +8,9 @@ export interface IQueue<Input, Output> {
   ): Promise<string>;
   cancelJob(jobId: string): Promise<void>;
   /**
-   * Remove a repeatable job matching the given cron pattern + jobId.
-   *
-   * Implementations that don't support repeatable jobs may treat this as a
-   * no-op. Used by use cases that need to cancel a recurring schedule (for
-   * example, `UnlinkMarketplaceUseCase` removing the marketplace
-   * reconciliation cron when an admin unlinks a marketplace).
+   * Cancels a recurring schedule. All three arguments have to match the ones
+   * the repeatable job was added with. An implementation with no notion of
+   * repeatable jobs may treat this as a no-op.
    */
   removeRepeatable(name: string, pattern: string, jobId: string): Promise<void>;
   addWorker(

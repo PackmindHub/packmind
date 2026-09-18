@@ -1,20 +1,17 @@
 import { IQueue, QueueListeners } from '../domain/IQueue';
 import { MockJobQueue } from './MockJobQueue';
 
-/**
- * Mock factory function for creating job queues in tests.
- * This replaces the real queueFactory that connects to Redis.
- */
+/** Drop-in for `queueFactory` that needs no Redis. */
 export async function mockQueueFactory<Input, Output>(
   queueId: string,
   queueListeners?: Partial<QueueListeners>,
 ): Promise<IQueue<Input, Output>> {
-  // Log the listeners parameter to avoid unused variable warnings
+  // Listeners are accepted and ignored - no worker runs, so nothing can fire.
+  // The empty branch only keeps the parameter from reading as unused.
   if (queueListeners) {
-    // In a real implementation, listeners would be used for event handling
+    // Intentionally empty.
   }
 
-  // Use queueId to avoid unused variable warning
   if (!queueId) {
     throw new Error('Queue ID is required');
   }

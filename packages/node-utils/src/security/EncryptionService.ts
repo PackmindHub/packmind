@@ -23,7 +23,9 @@ export class EncryptionService {
   }
 
   /**
-   * Derive a consistent encryption key from the provided key or environment variable
+   * SHA-256 of the configured key string, which is how a secret of any length
+   * becomes the exactly 32 bytes aes-256-gcm requires - and the same 32 bytes
+   * every time, so previously stored values stay decryptable.
    */
   private getEncryptionKey(): Buffer {
     const keySource = this.encryptionKey;
@@ -34,15 +36,10 @@ export class EncryptionService {
       );
     }
 
-    // Use SHA-256 to derive a consistent 32-byte key from the provided string
     return createHash('sha256').update(keySource).digest();
   }
 
-  /**
-   * Encrypt a string value
-   * @param plaintext The value to encrypt
-   * @returns Base64 encoded encrypted value with format: iv:encrypted:tag
-   */
+  /** Returns `iv:ciphertext:tag`, each part base64. Empty input passes through. */
   encrypt(plaintext: string): string {
     if (!plaintext) {
       this.logger.warn('Attempted to encrypt empty or null value');
@@ -59,7 +56,6 @@ export class EncryptionService {
 
       const tag = cipher.getAuthTag();
 
-      // Combine iv, encrypted data, and tag with colons
       const result = `${iv.toString('base64')}:${encrypted}:${tag.toString('base64')}`;
 
       this.logger.debug('Value encrypted successfully');
@@ -68,7 +64,8 @@ export class EncryptionService {
       this.logger.error('Failed to encrypt value', {
         error: error instanceof Error ? error.message : String(error),
       });
-      // Re-throw the original error if it's from getEncryptionKey, otherwise wrap it
+      // A missing key is a misconfiguration and says so; every other failure
+      // collapses to a generic message.
       if (
         error instanceof Error &&
         error.message.includes('Encryption key not provided')
@@ -79,18 +76,15 @@ export class EncryptionService {
     }
   }
 
-  /**
-   * Decrypt a string value
-   * @param encryptedValue Base64 encoded encrypted value with format: iv:encrypted:tag
-   * @returns Decrypted plaintext value
-   */
+  /** Expects `iv:ciphertext:tag`; anything not in that shape passes through. */
   decrypt(encryptedValue: string): string {
     if (!encryptedValue) {
       this.logger.warn('Attempted to decrypt empty or null value');
       return encryptedValue;
     }
 
-    // Check if the value is already in plaintext (for backward compatibility)
+    // Values predating encryption are returned untouched rather than treated
+    // as corrupt ciphertext.
     if (
       !encryptedValue.includes(':') ||
       encryptedValue.split(':').length !== 3
@@ -130,7 +124,8 @@ export class EncryptionService {
   }
 
   /**
-   * Check if a value is encrypted (has the expected format)
+   * Shape check only, not a verification: callers use it to avoid encrypting an
+   * already-encrypted value a second time.
    */
   isEncrypted(value: string): boolean {
     return Boolean(
