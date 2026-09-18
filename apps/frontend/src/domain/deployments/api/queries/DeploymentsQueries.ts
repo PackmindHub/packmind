@@ -818,6 +818,25 @@ export const useCreatePackageReleaseMutation = () => {
   });
 };
 
+/**
+ * The release gate reads the package's name, its description and its component
+ * list, so every mutation that moves one of those three makes the readiness
+ * this key holds wrong — "Nothing has changed since 0.1.0" beside a package
+ * that was just renamed. The queries default to a ten-minute `staleTime` and
+ * do not refetch on focus, so nothing else brings it back.
+ *
+ * Invalidated by prefix rather than per package: one package pane is mounted
+ * at a time, so this refetches exactly the one on screen and marks the rest
+ * stale without a request.
+ */
+function invalidatePackageReleaseReadiness(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: LIST_PACKAGE_RELEASES_KEY,
+  });
+}
+
 function invalidateChangeProposalQueries(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
@@ -847,6 +866,7 @@ export const useUpdatePackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidatePackageReleaseReadiness(queryClient);
       await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
@@ -914,6 +934,7 @@ export const useAddArtefactsToPackagesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidatePackageReleaseReadiness(queryClient);
     },
   });
 };
@@ -960,6 +981,7 @@ export const useRemoveArtefactsFromPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
       });
+      await invalidatePackageReleaseReadiness(queryClient);
     },
   });
 };
