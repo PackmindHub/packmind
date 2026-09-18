@@ -62,22 +62,22 @@ function groupBy<T, K>(
 }
 
 /**
- * The recency coordinates every "latest version per artifact" reduction needs:
- * when the package was distributed, plus a stable tie-break.
+ * A distributed package paired with the date it was distributed on: the two
+ * fields every "latest version per artifact" reduction reads.
  */
-type DistributedPackageRecency = {
+type DatedDistributedPackage = {
   distributedPackageId: string;
   distributedAt: Date | string;
 };
 
-type LatestDistributedPackageRow = DistributedPackageRecency & {
+type LatestDistributedPackageRow = DatedDistributedPackage & {
   targetId: TargetId;
   packageId: PackageId;
   operation: DistributionOperation | null;
   renderModes: RenderMode[] | string | null;
 };
 
-type LatestAddedPackageRow = DistributedPackageRecency & {
+type LatestAddedPackageRow = DatedDistributedPackage & {
   targetId: TargetId;
   targetName: string;
   gitRepoId: string;
@@ -685,15 +685,19 @@ export class DistributionRepository implements IDistributionRepository {
     return versionsByDistributedPackageId;
   }
 
-  private latestVersionPerArtifact<Row extends DistributedPackageRecency, V>(
+  private latestVersionPerArtifact<
+    Row extends DatedDistributedPackage,
+    V extends { version: number },
+  >(
     activePackages: Row[],
     versionsByDistributedPackageId: Map<string, V[]>,
     artifactIdOf: (version: V) => string,
   ): Array<{ version: V; row: Row }> {
-    const packagesByRecency = [...activePackages].sort((a, b) => {
-      const delta =
-        new Date(b.distributedAt).getTime() -
-        new Date(a.distributedAt).getTime();
+    const distributedTime = (row: DatedDistributedPackage) =>
+      new Date(row.distributedAt).getTime();
+
+    const packagesNewestFirst = [...activePackages].sort((a, b) => {
+      const delta = distributedTime(b) - distributedTime(a);
       return delta !== 0
         ? delta
         : b.distributedPackageId.localeCompare(a.distributedPackageId);
@@ -701,7 +705,7 @@ export class DistributionRepository implements IDistributionRepository {
 
     const latestByArtifactId = new Map<string, { version: V; row: Row }>();
 
-    for (const row of packagesByRecency) {
+    for (const row of packagesNewestFirst) {
       const versions = versionsByDistributedPackageId.get(
         row.distributedPackageId,
       );
@@ -711,7 +715,13 @@ export class DistributionRepository implements IDistributionRepository {
 
       for (const version of versions) {
         const artifactId = artifactIdOf(version);
-        if (!latestByArtifactId.has(artifactId)) {
+        const current = latestByArtifactId.get(artifactId);
+        const outranksCurrent =
+          !current ||
+          (distributedTime(current.row) === distributedTime(row) &&
+            version.version > current.version.version);
+
+        if (outranksCurrent) {
           latestByArtifactId.set(artifactId, { version, row });
         }
       }

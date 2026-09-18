@@ -995,7 +995,7 @@ describe('DistributionRepository', () => {
         ]);
       });
 
-      // The recency reduce runs per target. Run over every target's rows at
+      // The reduce runs per target. Run over every target's rows at
       // once, target B's newer distribution would hide target A's version.
       it('keeps the version the older target actually holds', () => {
         expect(result.get(targetA)?.all.standardVersions).toEqual([olderOnA]);
@@ -1022,8 +1022,8 @@ describe('DistributionRepository', () => {
       >;
 
       beforeEach(async () => {
-        // Distinct timestamps so the recency order of the unrestricted view
-        // is the seeded order rather than an id tie-break.
+        // Distinct timestamps so the unrestricted view keeps the seeded order
+        // rather than falling back to an id tie-break.
         seedActiveRows([
           {
             targetId: targetA,
@@ -1906,6 +1906,8 @@ describe('DistributionRepository', () => {
       let result: OutdatedDeploymentsByTarget[];
 
       beforeEach(async () => {
+        // The greater distributed package id carries the lower version, so the
+        // reported version can only come from the artifact version tie-break.
         seedRawMany(
           [
             {
@@ -1929,14 +1931,14 @@ describe('DistributionRepository', () => {
               artifactId: standardId1,
               name: 'Standard One',
               slug: 'standard-one',
-              version: 1,
+              version: 2,
             },
             {
               distributedPackageId: 'dp-b',
               artifactId: standardId1,
               name: 'Standard One',
               slug: 'standard-one',
-              version: 2,
+              version: 1,
             },
           ],
         );
@@ -1947,9 +1949,69 @@ describe('DistributionRepository', () => {
         );
       });
 
-      it('breaks the tie on the greatest distributed package id', () => {
+      it('breaks the tie on the greatest artifact version', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+    });
+
+    describe('when the most recent distribution rolls a standard back', () => {
+      const standardId1 = createStandardId('std-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-older',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-02T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-older',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 2,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 1,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('reports the rolled-back version the target actually holds', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(1);
+      });
+
+      it('reports the date of the distribution that rolled it back', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deploymentDate).toBe(
+          '2024-01-02T00:00:00Z',
+        );
       });
     });
   });
