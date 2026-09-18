@@ -408,14 +408,19 @@ code {
 <span class="eyebrow">The flow</span>
 <h2>1. What gets written</h2>
 <p>For each fortnight — models ship mid-month, so a monthly step would not separate the weeks before a release from
-the weeks after it — the net diff between the two boundaries: of the lines <em>added</em>, what share is comment. This
-is the measure that reflects how code is being written. The ratio over the whole codebase moves slowly, because it is
-dominated by what was written months ago.</p>
+the weeks after it — the net diff between the two boundaries: of the lines <em>added</em>, what share is comment.
+Measuring the net rather than summing each commit means the chart counts what a period left behind, not everything
+typed during it; on this repository the two differ by 5 to 37% in volume but by less than half a point in ratio,
+because churn lands on comment and code lines alike. The ratio over the whole codebase, by contrast, moves slowly:
+it is dominated by what was written months ago.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Comment ratio of added lines</h3>
-    <p>The dashed lines mark the Opus releases. Every release, Opus or not, is listed in the reference table below.</p>
+    <h3>Comment ratio of added lines &mdash; net diff between period boundaries</h3>
+    <p>Each point is a single <code>git diff</code> between the last commit before the period opens and the last
+    commit before it closes, not a sum over the period's commits. A line written on the 3rd and rewritten on the 9th
+    of the same fortnight counts once, in its final form; a line added and removed inside the period does not count
+    at all. The dashed lines mark the Opus releases; every release is listed in the reference table below.</p>
   </div>
   <div class="chart" id="c-headline"></div>
   <details><summary>See the data</summary><div id="t-headline"></div></details>
@@ -465,8 +470,9 @@ next to a pooled 16.6%, so the whole distribution has moved rather than its tail
 
 <div class="card">
   <div class="card-head">
-    <h3>Comment ratio of added lines, by model</h3>
-    <p>Each bar pools every line the model added, over models with at least 1,000 of them. The median commit and the
+    <h3>Comment ratio of added lines, by model &mdash; summed over commits</h3>
+    <p>This one has to sum each commit's own diff rather than take a net diff, because only a commit carries the
+    trailer that names its model. Each bar pools every line the model added, over models with at least 1,000 of them. The median commit and the
     spread between them are in the table, along with the buckets that name no model.</p>
   </div>
   <div class="chart" id="c-models"></div>
