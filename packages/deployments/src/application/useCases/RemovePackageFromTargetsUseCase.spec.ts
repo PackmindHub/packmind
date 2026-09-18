@@ -371,7 +371,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
           it('passes delete files to commitToGit with target path prefix', async () => {
             await useCase.execute(command);
 
-            // Note: The paths are prefixed with the target path (/src/) by applyTargetPrefixingToFileUpdates
+            // applyTargetPrefixingToFileUpdates prefixes every path with /src/.
             expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
               mockGitRepo,
               expect.any(Array),
@@ -1187,7 +1187,6 @@ describe('RemovePackageFromTargetsUseCase', () => {
             };
 
             // Distribution 2: Package B was removed (newer distribution)
-            // The remove distribution includes the package reference to track which package was removed
             const packageBRemovedDistribution: DistributedPackage = {
               id: createDistributedPackageId('dp-pkg-b-remove'),
               distributionId: createDistributionId('dist-remove'),

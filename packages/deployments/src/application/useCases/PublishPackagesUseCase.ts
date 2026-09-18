@@ -27,7 +27,6 @@ import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 
 const origin = 'PublishPackagesUseCase';
 
-// Track resolved versions per package
 type PackageVersionsMap = Map<
   PackageId,
   {
@@ -104,8 +103,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       latestSkillVersions.map((version) => [version.skillId, version.id]),
     );
 
-    // Track per-package versions for distribution storage; an artifact without
-    // any version is skipped
+    // An artifact with no version of its own is skipped.
     const packageVersionsMap: PackageVersionsMap = new Map();
     for (const pkg of packages) {
       packageVersionsMap.set(pkg.id, {
@@ -121,7 +119,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
       });
     }
 
-    // Collect unique version IDs for publishing
     const commandVersionIds = Array.from(commandVersionIdByCommandId.values());
     const standardVersionIds = Array.from(
       standardVersionIdByStandardId.values(),
@@ -153,7 +150,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       packagesSlugs.push(`@${spaceSlug}/${pkg.slug}`);
     }
 
-    // Build artifact metadata maps for lock file generation
+    // Feeds the lock file that publishArtifacts generates.
     const artifactSpaceIds: Record<string, string> = {};
     const artifactPackageIds: Record<string, string[]> = {};
 
@@ -183,7 +180,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
       }
     }
 
-    // Publish artifacts using the unified publishArtifacts use case
     const { distributions } = await this.deploymentPort.publishArtifacts({
       userId: command.userId,
       organizationId: command.organizationId,
@@ -197,18 +193,17 @@ export class PublishPackagesUseCase implements IPublishPackages {
       artifactPackageIds,
     } as PublishArtifactsCommand);
 
-    // Store distributed package records for each distribution
     await this.storeDistributedPackages(
       packages,
       packageVersionsMap,
       distributions,
     );
 
-    // Convert distributions to PackagesDeployment format for backward compatibility
+    // PackagesDeployment is this use case's response shape, one per distribution.
     const allDeployments: PackagesDeployment[] = distributions.map(
       (distribution) => ({
         id: createPackagesDeploymentId(uuidv4()),
-        packages, // All packages that were distributed
+        packages,
         status: distribution.status,
         gitCommit: distribution.gitCommit,
         target: distribution.target,
@@ -227,11 +222,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
     return allDeployments;
   }
 
-  /**
-   * Store distributed package records for tracking package deployments.
-   * Creates DistributedPackage entries linking each package to its
-   * deployed standard and recipe versions within each distribution.
-   */
   private async storeDistributedPackages(
     packages: Package[],
     packageVersionsMap: PackageVersionsMap,
@@ -248,7 +238,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
     });
 
     for (const distribution of distributions) {
-      // Create DistributedPackage records for each package
       for (const pkg of packages) {
         const versions = packageVersionsMap.get(pkg.id);
         if (!versions) continue;
@@ -264,7 +253,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
           operation: 'add',
         });
 
-        // Link standard versions
         if (versions.standardVersionIds.length > 0) {
           await this.distributedPackageRepository.addStandardVersions(
             distributedPackageId,
@@ -272,7 +260,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
           );
         }
 
-        // Link recipe versions
         if (versions.recipeVersionIds.length > 0) {
           await this.distributedPackageRepository.addCommandVersions(
             distributedPackageId,
@@ -280,7 +267,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
           );
         }
 
-        // Link skill versions
         if (versions.skillVersionIds.length > 0) {
           await this.distributedPackageRepository.addSkillVersions(
             distributedPackageId,

@@ -83,7 +83,6 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
         command.organization.id,
       );
 
-    // Classify packages by space access
     const { accessibleSlugs, inaccessibleSlugs, inaccessibleSpaceIds } =
       await this.classifyPackagesByAccess(
         command.packagesSlugs,
@@ -223,7 +222,6 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
     }
 
-    // Delete files for artifacts from removed packages
     const newArtifactIds = new Set<string>([
       ...recipeVersions.map((rv) => String(rv.recipeId)),
       ...standardVersions.map((sv) => String(sv.standardId)),
@@ -246,7 +244,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       }
     }
 
-    // Add packmind.json config (all slugs, both accessible and inaccessible)
+    // packmind.json lists the inaccessible slugs too, so they are not lost.
     const allNormalizedSlugs = [
       ...normalizedAccessibleSlugs,
       ...inaccessibleSlugs,
@@ -363,7 +361,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     const sourceArtifacts = {
       skillsCount: skillVersions.length,
       standardsCount: standardVersions.length,
-      // Command-named twin of `recipesCount` (superset); carries the same value.
+      // Same value under the command-named field the response also requires.
       commandsCount: recipeVersions.length,
       recipesCount: recipeVersions.length,
     };

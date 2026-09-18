@@ -173,13 +173,11 @@ export class TargetService {
     });
 
     try {
-      // First check if target exists and get its details for validation
       const target = await this.targetRepository.findById(targetId);
       if (!target) {
         throw new Error(`Target with id ${targetId} not found`);
       }
 
-      // Prevent deletion of Root target (path '/')
       if (target.path === '/') {
         throw new Error('Root target cannot be deleted');
       }

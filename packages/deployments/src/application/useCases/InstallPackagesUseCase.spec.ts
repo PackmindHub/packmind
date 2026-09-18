@@ -300,7 +300,6 @@ describe('InstallPackagesUseCase', () => {
     });
 
     it('returns sourceArtifacts counts based on the packages being installed', async () => {
-      // Build 2 standards, 1 recipe, 3 skills on the package
       const standardA: Standard = {
         id: createStandardId(uuidv4()),
         spaceId: publicSpace.id,
