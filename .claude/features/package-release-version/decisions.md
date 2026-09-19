@@ -3949,3 +3949,67 @@ future session that has an independent reason to split `DeploymentsQueries.ts` i
 bound by this entry; it is bound not to cite these findings as that reason.
 
 ---
+
+## D-067 — The drawer recomputes `nextVersions` from the version a refusal names; D-015's rejected bullet is taken, narrowly
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-19`
+- supersedes: D-015 (partial — the `Rejected` bullet only; the payload is unchanged)
+- superseded-by: —
+- relates to: `AC-11`, `AC-25`, `D-009`, `D-015`, charter `S6`
+
+**Decision.** `CreatePackageReleaseDrawer` computes its increment suggestions from the
+current version a **server refusal** names, falling back to the readiness payload's list
+when there has been no refusal:
+
+```ts
+const suggestions = serverCurrentVersion
+  ? nextVersions(serverCurrentVersion)
+  : readiness.nextVersions;
+```
+
+D-015 lists "Computing `nextVersions` on the client from `currentVersion`" under
+**Rejected**. That bullet is taken, for the refusal path only. The payload keeps carrying
+`nextVersions` and remains the source for every ordinary render.
+
+**Reasoning.** This entry records something S6 already built. It is written now because the
+boundary reconcile found it by reading code, having been told by the log that the opposite
+was true — which is the failure this feature has now hit three times, and the one a
+decision entry is cheap enough to prevent.
+
+*Why the code is right.* A refusal is the one moment the payload's list is known-stale. The
+server refuses because its current version is not the one the page read; it names that
+version in the refusal; and `readiness.nextVersions` was computed from the version the page
+read, so it is provably wrong at exactly that instant. AC-25 asserts the sentence
+`Version must be greater than 0.2.0` for a version the form never held — so the payload
+cannot be the source, by the criterion's own construction. Re-fetching instead would work
+and would wipe the sentence AC-25 asserts, which is the dead end S6 removed.
+
+*Why it does not reopen D-009's two-implementations problem, which is what D-015's bullet
+was protecting.* `nextVersions` is the shared function in `packages/types` — the same one
+the server calls. There is one implementation; the client calls it with a fresher argument.
+D-015's bullet reads as forbidding a *reimplementation* of the increment rule, and that is
+the harm D-009 exists to close. Calling the shared function is not that. The bullet is
+nonetheless amended rather than explained away, because its text forbids the call and a
+later reader would be right to stop at the text.
+
+**Rejected.**
+
+- *Re-fetching readiness on refusal instead.* Correct-looking, and it wipes the refusal
+  sentence the query's own staleness is what preserves — the dead end S6 fixed, restored.
+- *Adding the refusal's increments to the refusal payload server-side.* Consistent with
+  D-015's principle and it means a new field on a wire contract, shipped so the client can
+  avoid calling a function it already imports.
+- *Leaving the stale suggestions visible after a refusal.* The form would offer three
+  increments over a version the server has just said is not current — every one of them
+  refusable, with the same message.
+- *Leaving this unrecorded because the code is right and the tests are green.* That is the
+  state this entry was written out of. Green is not the record.
+
+**Constrains implementation.** The client may call `nextVersions` from `packages/types`
+with a version the server named. It may not implement the increment rule, parse `X.Y.Z`
+by hand, or derive a version the server has not stated. Any future reader of D-015's
+`Rejected` list reads this entry beside it.
+
+---
