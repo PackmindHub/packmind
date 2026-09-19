@@ -4013,3 +4013,89 @@ by hand, or derive a version the server has not stated. Any future reader of D-0
 `Rejected` list reads this entry beside it.
 
 ---
+
+## D-068 — Readiness refetches on mount; the fourth gate input is not chased with invalidation
+
+- status: `active`
+- user-visible: `yes`
+- decided: `2026-09-19`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-4`, `AC-10`, `AC-25`, `D-006`, `D-055`, charter `S8`
+
+**Decision.** `getPackageReleasesQueryOptions` passes `refetchOnMount: 'always'`. Nothing
+else changes: `staleTime` stays at the shared ten minutes, `refetchOnWindowFocus` stays
+off, `apps/frontend/src/shared/data/queryClient.ts` is not touched, and no component
+mutation learns to invalidate the readiness key.
+
+**Reasoning.** The gate has four inputs. Three of them — name, description, component list
+— move only through this application's own mutations, and S6 wired those three to
+`invalidatePackageReleaseReadiness`. The fourth, a component gaining a newer version, is
+different in kind: **it is the only input that routinely changes without this browser doing
+anything.** A colleague publishes v5, the CLI publishes, an agent publishes, another tab
+publishes. No mutation in this session fires, so there is nothing to hang an invalidation
+on.
+
+That is what makes invalidation the wrong instrument here rather than merely a more
+expensive one. Wiring `useUpdateSkillFileMutation`, `useUpdateCommandMutation` and
+`useUpdateStandardMutation` to the readiness key would fix the case where you edited the
+component yourself, in this tab, moments ago — and leave AC-4's actual scenario, someone
+else's v5, exactly as broken as it is now. A fix that addresses the rare half of a defect
+and reports green is worse than none, because it closes the ticket.
+
+*A correction, because this session argued the opposite at the S7 close.* D-006 was cited
+as forbidding the invalidation route. It does not. D-006 constrains `packages/skills`,
+`packages/commands` and `packages/standards` — backend use cases — from learning about a
+deployments concern. The frontend edge already exists: all three sibling query modules
+import from `deployments/api/queryKeys.ts` today, and two of them already invalidate a
+deployments key on a version-creating edit with the comment that an updated version affects
+deployments. Option B was available on convention. It is rejected on completeness.
+
+*Why `refetchOnMount` and not a shorter `staleTime`.* D-055 records that AC-25's proof
+rests on the client's readiness being unable to refresh while the release form is open: the
+sentence `Version must be greater than 0.2.0` is producible both by the wire and by the
+drawer's own pre-check, and what makes the test sharp is that the client cannot hold
+`0.2.0`. A shorter `staleTime`, or `refetchOnWindowFocus`, lets a background refetch reach
+an open form — and AC-25 would not fail, it would start passing for the wrong reason, which
+D-055 calls out by name as worse.
+
+`refetchOnMount: 'always'` does not do that. It fires when the pane mounts and at no other
+time, so a reader arriving at a package gets a freshly computed gate, and a reader sitting
+in an open drawer keeps the stale belief AC-25 depends on. The two requirements turn out
+not to conflict once the refresh is pinned to arrival rather than to elapsed time. D-055's
+`Constrains implementation` is satisfied rather than invoked: its instruction was that a
+change here must find the test another way to keep the client's belief stale, and the way
+found is not to change the thing the test relies on.
+
+*What this deliberately does not fix, stated so it is not mistaken for an oversight.* A
+reader already sitting on the package pane when someone else publishes v5 still sees the
+old verdict until they navigate away and back. Closing that needs a push channel or
+polling, and D-006 priced the alternative to read-on-demand already. Arrival is the moment
+the question is actually asked.
+
+**Rejected.**
+
+- *Invalidating from the three component-update mutations.* Follows an existing convention
+  and cannot see the case AC-4 is about. See above.
+- *Both — invalidation as well as the refetch.* Once arrival refetches, invalidation adds
+  coverage only for a component the same reader edited in the same tab, and pays for it in
+  three files across three domains that must each be remembered when a fourth version-
+  creating path appears. The scout found the paths are already not uniform: the skill
+  mutation does not invalidate the deployments key its two siblings do.
+- *Lowering `staleTime` on the readiness query.* Reaches an open form and takes AC-25's
+  sharpness with it — D-055, precisely.
+- *Touching `queryClient.ts`.* A shared file; the concern is one query's; and D-055's
+  warning is attached to exactly that file.
+- *Accepting the staleness and documenting it.* Available, and it leaves two acceptance
+  criteria false in the running app, which is the state S6 refused for the other three
+  inputs. AC-4 and AC-10 are criteria, not preferences.
+
+**Constrains implementation.** Add `refetchOnMount: 'always'` to the object
+`getPackageReleasesQueryOptions` returns, and change nothing else in that factory. Do not
+alter `staleTime`, `gcTime` or `refetchOnWindowFocus` anywhere, and do not edit
+`apps/frontend/src/shared/data/queryClient.ts`. Do not add an invalidation to any skills,
+commands or standards query module. The unit is judged by a test that a remount refetches
+while the cached readiness is still fresh — asserting the option's presence is asserting
+configuration against itself and does not show the defect was real.
+
+---

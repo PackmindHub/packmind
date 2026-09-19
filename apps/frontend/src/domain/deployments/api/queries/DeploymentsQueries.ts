@@ -298,6 +298,7 @@ export const getPackageReleasesQueryOptions = (
     });
   },
   enabled: !!organizationId && !!spaceId && !!packageId,
+  refetchOnMount: 'always' as const,
 });
 
 export const useListPackageReleasesQuery = (

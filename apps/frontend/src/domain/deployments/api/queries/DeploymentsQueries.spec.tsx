@@ -16,6 +16,7 @@ import {
   useAddArtefactsToPackagesMutation,
   useRemoveArtefactsFromPackageMutation,
   useUpdatePackageMutation,
+  useListPackageReleasesQuery,
 } from './DeploymentsQueries';
 
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
@@ -27,6 +28,7 @@ vi.mock('../gateways', () => ({
     updatePackage: vi.fn(),
     addArtefactsToPackage: vi.fn(),
     removeArtefactsFromPackage: vi.fn(),
+    listPackageReleases: vi.fn(),
   },
 }));
 
@@ -50,11 +52,11 @@ const readinessWasInvalidated = (
     ([filters]) => filters?.queryKey === LIST_PACKAGE_RELEASES_KEY,
   );
 
-function buildHarness() {
+function buildHarness(staleTime?: number) {
   const queryClient = new QueryClient({
     defaultOptions: {
       mutations: { retry: false },
-      queries: { retry: false },
+      queries: { retry: false, staleTime },
     },
   });
 
@@ -68,7 +70,7 @@ function buildHarness() {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return { wrapper, invalidateQueries };
+  return { wrapper, invalidateQueries, queryClient };
 }
 
 describe('DeploymentsQueries package release readiness', () => {
@@ -173,6 +175,44 @@ describe('DeploymentsQueries package release readiness', () => {
       await waitFor(() =>
         expect(readinessWasInvalidated(invalidateQueries)).toBe(true),
       );
+    });
+  });
+
+  describe('when the package pane is re-entered', () => {
+    it('refetches the readiness the cache still considers fresh', async () => {
+      (
+        deploymentsGateways.listPackageReleases as MockedFunction<
+          typeof deploymentsGateways.listPackageReleases
+        >
+      ).mockResolvedValue({
+        readiness: { releasable: false },
+        releases: [],
+      } as never);
+
+      const { wrapper } = buildHarness(1000 * 60 * 10);
+      const { unmount } = renderHook(
+        () => useListPackageReleasesQuery(organizationId, spaceId, packageId),
+        { wrapper },
+      );
+
+      await waitFor(() => {
+        expect(deploymentsGateways.listPackageReleases).toHaveBeenCalledTimes(
+          1,
+        );
+      });
+
+      unmount();
+
+      renderHook(
+        () => useListPackageReleasesQuery(organizationId, spaceId, packageId),
+        { wrapper },
+      );
+
+      await waitFor(() => {
+        expect(deploymentsGateways.listPackageReleases).toHaveBeenCalledTimes(
+          2,
+        );
+      });
     });
   });
 });
