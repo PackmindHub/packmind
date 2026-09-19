@@ -3853,3 +3853,99 @@ case gains one test that a non-member is refused with `SpaceMembershipRequiredEr
 touch `packages/types`, the controller, or any use case outside these three.
 
 ---
+
+## D-066 — The three coupling findings on #489 are measurements, and none of them becomes work
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-19`
+- supersedes: —
+- superseded-by: —
+- relates to: `D-006`, `D-007`, `D-008`, `D-011`, charter `S7`
+
+**Decision.** The three findings posted on
+[#489](https://github.com/PackmindHub/packmind/pull/489) on 2026-09-18 by
+`graphify-labs[bot]` are triaged and closed without a unit between them. Each is answered
+on the PR; none changes code.
+
+| finding | verdict | why |
+|---|---|---|
+| `useGetDashboardKpiQuery()` — Ca·Ce = 12 | **misattributed** | the function is unchanged by this branch |
+| `CreatePackageReleaseDrawer()` — fans out to 6 | **true, declined** | the sixth callee is a defect fix |
+| `evaluatePackageReleaseGate()` — Ca·Ce = 12 | **true, declined** | the shape is D-006, D-007 and D-008 |
+
+**Reasoning.** These differ in kind from the Greptile findings S5 triaged. The tool
+describes itself as deterministic coupling deltas rather than an LLM judgement, so the
+question is never "is it true" but "is it worth anything" — and a measurement that is
+accurate can still name nothing that ought to change. All three are accurate about
+something. None names a defect.
+
+*Finding 1 is wrong about the only thing that would make it actionable.* The claim is a
+coupling delta on `useGetDashboardKpiQuery` at `DeploymentsQueries.ts:359`, attributed to
+this branch. The branch does add 139 lines to that module, including six imports — three
+from `@packmind/types` and three from `../queryKeys` — and inserts
+`useGetPackageReleaseQuery` in the lines immediately above the flagged function. But the
+flagged function itself appears in the diff against the merge-base **only as a context
+line**: its body is byte-identical, and `git log -S` over the range finds nothing. So the
+delta is real at the module level and the attribution to that function is an artefact of
+measuring efferent coupling per file and reporting it per function. Acting on it would
+mean refactoring a function this feature never touched, to lower a number this feature did
+not move.
+
+The residue, stated rather than absorbed: `DeploymentsQueries.ts` is a large shared module
+that every deployments surface imports from, and this feature made it larger. That is a
+pre-existing shape, it is not what the finding says, and splitting it is a change to a
+file six domains read — which is exactly the blast radius D-042 refused to take on for a
+better reason than this one.
+
+*Finding 2 is true, and the sixth callee was earned.* `CreatePackageReleaseDrawer` reaches
+`@packmind/ui`, `@packmind/types`, the analytics provider, the mutation hook,
+`getReleaseVerdictMessage` and `readPackageReleaseRefusal`. The last two are the refusal
+path, and the drawer gained `nextVersions` in S6 precisely because a server refusal
+otherwise locked the form — the second of the three defects that session found. Six is
+what a form that submits, refuses and reports looks like once it reports correctly. A
+split that separated the submitting from the reporting would put the two halves of that
+fix on either side of a component boundary, which is the arrangement the defect had.
+
+*Finding 3 asks for the shape three decisions refused.* `evaluatePackageReleaseGate`
+couples to its four comparison helpers because D-008 requires them to be pure functions
+tested directly, and to the ordered verdict because D-007 requires one function with four
+named branches in a stated order — AC-9 exists because two independent checks would race
+to produce the message. The composition being the only thing that touches all four is not
+incidental to those entries; it is what they describe. The obvious remedy — inline the
+helpers — deletes the tests AC-7 and AC-8 are verified by, and D-046 records that the leaf
+cases were green while the composition was the untested thing. Lowering the number would
+mean removing the seam that caught that.
+
+*The rule this session applied, which is S5's and is why nothing was done unprompted.* A
+finding that lands on code the decision log constrains is checked against the log before
+it is costed. Two of these three land on such code. Neither would have survived the check,
+and a fix applied first would have reversed a decision while reporting a green gate.
+
+**Rejected.**
+
+- *Acting on finding 1 by splitting `DeploymentsQueries.ts`.* It is the only one of the
+  three with a real underlying problem, and the finding does not describe that problem. A
+  change to a module six domains import from, motivated by a number misattributed to an
+  untouched function, is the worst available reason to touch it.
+- *Splitting `CreatePackageReleaseDrawer` to reach five callees.* Chosen against on the
+  merits, not on cost: the boundary would fall between submitting and reporting the
+  refusal, and S6 landed a defect fix that spans exactly that line.
+- *Inlining the four comparison helpers into the gate.* Reverses D-008, and takes AC-7's
+  and AC-8's named tests with it.
+- *Recording one entry per finding, as S5 did.* S5's each produced a unit and a separate
+  remedy. These produce none, and the shared reasoning — a measurement is not a defect,
+  and a remedy that reverses a decision is worse than the coupling it removes — is the
+  substance. Triplicating it would hide that they were judged together.
+- *Leaving them untriaged on the PR because none needs code.* The S7 row put the triage in
+  scope as the deliverable. An unanswered finding reads as an unnoticed one, and the next
+  reader re-derives all three.
+
+**Constrains implementation.** No unit follows from this entry. Do not refactor
+`DeploymentsQueries.ts`, `CreatePackageReleaseDrawer` or `evaluatePackageReleaseGate` in
+this feature. Answer each of the three threads on #489 with the verdict above and the
+reason, and leave them unresolved — resolving is the reviewer's call, per the S5 close. A
+future session that has an independent reason to split `DeploymentsQueries.ts` is not
+bound by this entry; it is bound not to cite these findings as that reason.
+
+---
