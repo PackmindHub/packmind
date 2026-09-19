@@ -824,7 +824,9 @@ export const useCreatePackageReleaseMutation = () => {
  * list, so every mutation that moves one of those three makes the readiness
  * this key holds wrong — "Nothing has changed since 0.1.0" beside a package
  * that was just renamed. The queries default to a ten-minute `staleTime` and
- * do not refetch on focus, so nothing else brings it back.
+ * do not refetch on focus. These invalidations refresh readiness within the mounted
+ * pane without navigation; arriving at or returning to the pane refetches via the
+ * query's `refetchOnMount: 'always'` setting.
  *
  * Invalidated by prefix rather than per package: one package pane is mounted
  * at a time, so this refetches exactly the one on screen and marks the rest

@@ -4099,3 +4099,74 @@ while the cached readiness is still fresh — asserting the option's presence is
 configuration against itself and does not show the defect was real.
 
 ---
+
+## D-069 — AC-25's sharpness now has a third dependency: no remount of the readiness owner mid-flow
+
+- status: `active`
+- user-visible: `no`
+- decided: `2026-09-19`
+- supersedes: —
+- superseded-by: —
+- relates to: `AC-25`, `D-055`, `D-068`, charter `S8`
+
+**Decision.** D-055's constraint is **extended, not replaced**. Anyone changing how the
+package-release readiness query refreshes must now preserve three properties, not two:
+
+1. `staleTime` in `apps/frontend/src/shared/data/queryClient.ts` (D-055),
+2. `refetchOnWindowFocus` in the same file (D-055),
+3. **no remount of the component owning the readiness observer may be introduced into
+   AC-25's flow between the release form opening and the refusal assertion** (this entry).
+
+Today that owner is `PackageVersionArea`, the only call site of
+`useListPackageReleasesQuery` in the repository.
+
+**Reasoning.** D-068 added `refetchOnMount: 'always'`, and the S8 reconcile confirmed
+AC-25 survives it: `CreatePackageReleaseDrawer` is rendered unconditionally as a sibling
+inside `PackageVersionArea`, driven by local `useState`, so opening the form re-renders
+and does not remount. The observer persists, `refetchOnMount` is never re-evaluated, and
+the client still cannot hold the version the server names. The criterion is sound.
+
+What changed is the **margin**, and that is worth a line because nobody would find it
+again cheaply. Before U-034 the guarantee was unconditional — the client physically could
+not refresh short of a reload. It is now conditional on the flow's component tree. The
+concrete hazard already exists in the file: `ContextPackagePane`'s `if (detail)` early
+return unmounts the whole header including the version area, so an AC-25 variant that
+opened a component detail before cutting would remount, refetch, learn the server's
+version, and the drawer's own pre-check would then produce the identical sentence. The
+test would not fail. It would pass for the wrong reason — the exact shape D-055 named,
+reached by a third route D-055 does not mention.
+
+*A correction to D-068, which is append-only and so is corrected here.* D-068 says the
+refetch "fires when the pane mounts and at no other time". That is imprecise: it fires on
+every mount of `PackageVersionArea`, which inside `ContextPackagePane` includes returning
+from an open component detail, not only arriving at the package from elsewhere. The
+decision is unaffected — more refreshes is the direction the fix wants — but the sentence
+would mislead someone reasoning about AC-25, which is precisely who reads it.
+
+*What is not decided here.* Whether the three S6 invalidations should now be removed. They
+are redundant with refetch-on-arrival for every case except a component edited in the same
+tab with no intervening navigation. Removing them is a real option and nothing in S8
+studied it; the comment above them is corrected by U-035 rather than the code, so that the
+question is asked from true premises when someone asks it.
+
+**Rejected.**
+
+- *Amending D-055 in place.* The log is append-only and a decided entry is never edited —
+  the one permitted mutation is a `superseded-by` line, and D-055 is not superseded. Its
+  reasoning is intact; it is its enumeration of routes that is now short by one.
+- *Adding a guard to the test instead — asserting no refetch occurred.* Turns an end-to-end
+  criterion into an assertion about caching internals, which is the mock-shaped confidence
+  D-048 added the browser suite to escape.
+- *Pinning the readiness query with `staleTime: Infinity` while the drawer is open.* Makes
+  the production code serve the test, and reintroduces the stale-form dead end S6 removed.
+- *Leaving it unwritten because AC-25 passes today.* The point of the entry is the future
+  change, not the present state — which is D-055's own argument, and D-055 was itself
+  written out of a boundary reconcile finding exactly this.
+
+**Constrains implementation.** Do not introduce a conditional mount, a `key` change or a
+parent early-return that unmounts `PackageVersionArea` into the path AC-25 drives. If the
+release UI is restructured so that it does, AC-25 needs a different way to keep the
+client's belief stale — not a looser assertion. Anyone moving the readiness observer to
+another component updates this entry to name the new owner.
+
+---
