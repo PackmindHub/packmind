@@ -22,3 +22,6 @@ dockerfile/helm-chart/**
 packmind-lock.json
 
 .nx/self-healing
+
+**/playwright-report/
+**/test-results/

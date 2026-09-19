@@ -13,6 +13,12 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
@@ -114,6 +120,9 @@ import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
+import { CreatePackageReleaseUseCase } from '../useCases/createPackageRelease/CreatePackageReleaseUseCase';
+import { GetPackageReleaseUseCase } from '../useCases/getPackageRelease/GetPackageReleaseUseCase';
+import { ListPackageReleasesUseCase } from '../useCases/listPackageReleases/ListPackageReleasesUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeletePackagesBatchUseCase } from '../useCases/deletePackage/DeletePackagesBatchUseCase';
@@ -189,6 +198,9 @@ export class DeploymentsAdapter
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUseCase;
   private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
   private _createPackageUseCase!: CreatePackageUseCase;
+  private _createPackageReleaseUseCase!: CreatePackageReleaseUseCase;
+  private _getPackageReleaseUseCase!: GetPackageReleaseUseCase;
+  private _listPackageReleasesUseCase!: ListPackageReleasesUseCase;
   private _updatePackageUseCase!: UpdatePackageUseCase;
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
@@ -483,6 +495,30 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
+    this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
+    this._listPackageReleasesUseCase = new ListPackageReleasesUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
     this._updatePackageUseCase = new UpdatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -758,6 +794,24 @@ export class DeploymentsAdapter
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
+  }
+
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this._createPackageReleaseUseCase.execute(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this._getPackageReleaseUseCase.execute(command);
+  }
+
+  async listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse> {
+    return this._listPackageReleasesUseCase.execute(command);
   }
 
   async updatePackage(

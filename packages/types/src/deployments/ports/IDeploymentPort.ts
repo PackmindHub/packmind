@@ -6,6 +6,12 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
@@ -207,6 +213,41 @@ export interface IDeploymentPort {
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
+
+  /**
+   * Cuts an immutable release of a package, pinning the latest version of
+   * every component it holds.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseRefusedError carrying a code and the current
+   *         version, when the package is empty or the version is refused
+   */
+  createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse>;
+
+  /**
+   * Lists a package's releases, newest first, together with everything the
+   * release panel needs: whether a cut is possible and why not, the three
+   * versions it may be offered, and which pinned components have fallen
+   * behind.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   */
+  listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse>;
+
+  /**
+   * Gets one release of a package by its version, with everything it pinned —
+   * including components that have since been deleted.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseNotFoundError when the package has no such version
+   */
+  getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse>;
 
   /**
    * System-level lookup by id, bypassing membership validation. Intended for

@@ -1,0 +1,12 @@
+{
+  "unit_id": "U-010",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/infra/repositories/PackageReleaseRepository.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='PackageReleaseRepository.*newer version'",
+    "kind": "behavioural",
+    "describes": "AC-17"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "unit_id": "U-018",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/application/services/packageReleaseGateHelpers.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='packageReleaseGate'",
+    "kind": "behavioural",
+    "describes": "AC-7"
+  }
+}
