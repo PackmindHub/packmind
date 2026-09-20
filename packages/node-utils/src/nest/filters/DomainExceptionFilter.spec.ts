@@ -6,7 +6,11 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { stubLogger } from '@packmind/test-utils';
-import { DomainError, DomainErrorKind } from '@packmind/types';
+import {
+  DomainError,
+  DomainErrorKind,
+  PackmindInternalError,
+} from '@packmind/types';
 import { DomainExceptionFilter } from './DomainExceptionFilter';
 
 class TestDomainError extends Error implements DomainError {
@@ -156,6 +160,101 @@ describe('DomainExceptionFilter', () => {
         'reason',
         'statusCode',
       ]);
+    });
+  });
+
+  describe('when the exception is an invalid_input domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'invalid_input',
+          'target_path_invalid',
+          'The target path is not a valid path.',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 400', () => {
+      expect(capturedStatus()).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('carries the reason in the body', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 400,
+        message: 'The target path is not a valid path.',
+        reason: 'target_path_invalid',
+      });
+    });
+  });
+
+  describe('when the exception is a conflict domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'conflict',
+          'root_target_not_deletable',
+          'The root target cannot be deleted.',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 409', () => {
+      expect(capturedStatus()).toBe(HttpStatus.CONFLICT);
+    });
+
+    it('carries the reason in the body', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 409,
+        message: 'The root target cannot be deleted.',
+        reason: 'root_target_not_deletable',
+      });
+    });
+  });
+
+  // The policy table, stated as behaviour: a new kind added to the union
+  // without a row here fails to compile, and a row given the wrong status
+  // fails here.
+  describe.each([
+    ['forbidden', HttpStatus.FORBIDDEN],
+    ['not_found', HttpStatus.NOT_FOUND],
+    ['invalid_input', HttpStatus.BAD_REQUEST],
+    ['conflict', HttpStatus.CONFLICT],
+  ] satisfies ReadonlyArray<[DomainErrorKind, number]>)(
+    'when the domain error kind is %s',
+    (kind, expectedStatus) => {
+      beforeEach(() => {
+        filter.catch(new TestDomainError(kind, 'a_reason', 'A message.'), host);
+      });
+
+      it('answers with the status the policy table states', () => {
+        expect(capturedStatus()).toBe(expectedStatus);
+      });
+    },
+  );
+
+  describe('when the exception is an internal error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindInternalError(
+          'package_reload_failed',
+          { packageId: '9ff2d85e-d9e4-40ae-bd02-c24429ba0d20' },
+          'Failed to retrieve the updated package.',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 500', () => {
+      expect(repliedStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    });
+
+    it("keeps Nest's generic body, so the message never reaches the caller", () => {
+      expect(repliedBody()).toEqual({
+        statusCode: 500,
+        message: 'Internal server error',
+      });
     });
   });
 
