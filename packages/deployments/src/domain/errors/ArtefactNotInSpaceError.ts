@@ -25,6 +25,5 @@ export class ArtefactNotInSpaceError extends DeploymentsError {
       `${LABELS[artefactType]} with id "${artefactId}" was not found in this space.`,
     );
     this.name = 'ArtefactNotInSpaceError';
-    Object.setPrototypeOf(this, ArtefactNotInSpaceError.prototype);
   }
 }

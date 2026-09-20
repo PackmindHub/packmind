@@ -21,6 +21,5 @@ export class SpaceNotAccessibleError extends DeploymentsError {
       'This space does not exist, or you do not have access to it.',
     );
     this.name = 'SpaceNotAccessibleError';
-    Object.setPrototypeOf(this, SpaceNotAccessibleError.prototype);
   }
 }

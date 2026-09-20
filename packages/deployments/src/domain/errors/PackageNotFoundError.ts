@@ -18,6 +18,5 @@ export class PackageNotFoundError extends DeploymentsError {
       `Package with id "${packageId}" was not found`,
     );
     this.name = 'PackageNotFoundError';
-    Object.setPrototypeOf(this, PackageNotFoundError.prototype);
   }
 }

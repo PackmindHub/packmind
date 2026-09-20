@@ -16,6 +16,5 @@ export class PackageReloadFailedError extends PackmindInternalError {
       `Package ${packageId} could not be read back after its artefacts were written.`,
     );
     this.name = 'PackageReloadFailedError';
-    Object.setPrototypeOf(this, PackageReloadFailedError.prototype);
   }
 }

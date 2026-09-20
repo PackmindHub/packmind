@@ -18,10 +18,6 @@ export type DeploymentsErrorContext = {
  * `UserAccessError`: the `kind` decides the HTTP answer, the literal `reason`
  * is what a client branches on, and `context` carries the ids for the log
  * instead of only being interpolated into the message.
- *
- * Subclasses re-apply `Object.setPrototypeOf` because the controllers still
- * narrow some of these with `instanceof`, which does not survive the
- * `Error` subclassing transform on its own.
  */
 export class DeploymentsError extends Error implements DomainError {
   readonly kind: DomainErrorKind;
@@ -39,6 +35,5 @@ export class DeploymentsError extends Error implements DomainError {
     this.kind = kind;
     this.reason = reason;
     this.context = context;
-    Object.setPrototypeOf(this, DeploymentsError.prototype);
   }
 }
