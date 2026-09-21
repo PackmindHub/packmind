@@ -8,6 +8,8 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
@@ -118,6 +120,7 @@ import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJob
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
+import { MoveArtefactsToPackageUseCase } from '../useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase';
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
@@ -206,6 +209,7 @@ export class DeploymentsAdapter
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUseCase;
+  private _moveArtefactsToPackageUseCase!: MoveArtefactsToPackageUseCase;
   private _removeArtefactsFromPackageUseCase!: RemoveArtefactsFromPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
@@ -552,6 +556,16 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._moveArtefactsToPackageUseCase = new MoveArtefactsToPackageUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+      ports.eventEmitterService,
+    );
+
     this._removeArtefactsFromPackageUseCase =
       new RemoveArtefactsFromPackageUseCase(
         this.spacesPort,
@@ -860,6 +874,12 @@ export class DeploymentsAdapter
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this._addArtefactsToPackageUseCase.execute(command);
+  }
+
+  async moveArtefactsToPackage(
+    command: MoveArtefactsToPackageCommand,
+  ): Promise<MoveArtefactsToPackageResponse> {
+    return this._moveArtefactsToPackageUseCase.execute(command);
   }
 
   async removeArtefactsFromPackage(

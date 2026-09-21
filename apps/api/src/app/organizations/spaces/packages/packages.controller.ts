@@ -31,6 +31,8 @@ import {
   SpaceId,
   StandardId,
   AddArtefactsToPackageCommand,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   ListPackageReleasesResponse,
@@ -77,6 +79,12 @@ type AddArtefactsToPackageApiResponse = Omit<
 };
 type RemoveArtefactsFromPackageApiResponse = Omit<
   RemoveArtefactsFromPackageResponse,
+  'package'
+> & {
+  package: PackageResponse;
+};
+type MoveArtefactsToPackageApiResponse = Omit<
+  MoveArtefactsToPackageResponse,
   'package'
 > & {
   package: PackageResponse;
@@ -586,6 +594,43 @@ export class OrganizationsSpacesPackagesController {
     );
 
     const response = await this.deploymentsService.addArtefactsToPackage({
+      userId,
+      spaceId,
+      organizationId,
+      packageId: packageId,
+      standardIds: body.standardIds,
+      recipeIds,
+      skillIds: body.skillIds,
+      originSkill: body.originSkill,
+    });
+    return { ...response, package: toPackageResponse(response.package) };
+  }
+
+  /**
+   * Move artifacts into an existing package, taking them out of every other
+   * package in the space
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/move-artifacts
+   */
+  @Post(':packageId/move-artifacts')
+  async moveArtefactsToPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: MoveArtefactsToPackageCommand & { commandIds?: CommandId[] },
+  ): Promise<MoveArtefactsToPackageApiResponse> {
+    const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/move-artifacts',
+      { organizationId, spaceId, packageId },
+    );
+
+    const response = await this.deploymentsService.moveArtefactsToPackage({
       userId,
       spaceId,
       organizationId,

@@ -1,6 +1,8 @@
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
@@ -295,6 +297,17 @@ export interface IDeploymentPort {
   addArtefactsToPackage(
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse>;
+
+  /**
+   * Puts artefacts in one package and takes them out of every other package in
+   * the space, so an artefact belongs to a single package. Artefacts the target
+   * already holds are reported as skipped, and each emptied package is listed
+   * in `removedFrom`. All or nothing: a failure anywhere rolls back the writes
+   * already made and throws, leaving membership exactly as it was.
+   */
+  moveArtefactsToPackage(
+    command: MoveArtefactsToPackageCommand,
+  ): Promise<MoveArtefactsToPackageResponse>;
 
   /**
    * Membership only — the artefacts keep shipping to any targets the package is
