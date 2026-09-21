@@ -20,7 +20,8 @@ export type GitErrorReason =
   | 'no_files_to_commit'
   | 'unresolvable_git_provider'
   | 'git_repo_already_linked_as_standard'
-  | 'invalid_install_state';
+  | 'invalid_install_state'
+  | 'git_remote_access_forbidden';
 
 export type GitErrorContext = {
   organizationId?: string;
@@ -34,6 +35,8 @@ export type GitErrorContext = {
   repositoryCount?: number;
   gitRemoteUrl?: string;
   field?: string;
+  vendor?: string;
+  action?: string;
 };
 
 /**

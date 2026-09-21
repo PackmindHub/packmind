@@ -3,6 +3,7 @@ import { GitHubAppRevokedError } from './GitHubAppRevokedError';
 import { GitProviderHasRepositoriesError } from './GitProviderHasRepositoriesError';
 import { GitProviderNotFoundError } from './GitProviderNotFoundError';
 import { GitProviderOrganizationMismatchError } from './GitProviderOrganizationMismatchError';
+import { GitRemoteAccessForbiddenError } from './GitRemoteAccessForbiddenError';
 import { GitRepoAlreadyExistsError } from './GitRepoAlreadyExistsError';
 import { InvalidGitProviderCredentialsError } from './InvalidGitProviderCredentialsError';
 import { NoTrackedRepositoryError } from './NoTrackedRepositoryError';
@@ -182,5 +183,50 @@ describe.each([
 
   it('keeps the repository coordinate in the context', () => {
     expect(error.context).toEqual({ owner: 'acme', repo: 'app' });
+  });
+});
+
+describe('GitRemoteAccessForbiddenError', () => {
+  const error = new GitRemoteAccessForbiddenError(
+    'GitHub',
+    'acme',
+    'app',
+    'write',
+  );
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers forbidden', () => {
+    expect(error.kind).toBe('forbidden');
+  });
+
+  it('carries the reason a client branches on', () => {
+    expect(error.reason).toBe('git_remote_access_forbidden');
+  });
+
+  it('keeps the coordinate and the missing access in the context', () => {
+    expect(error.context).toEqual({
+      vendor: 'GitHub',
+      owner: 'acme',
+      repo: 'app',
+      action: 'write',
+    });
+  });
+
+  it('names the vendor, the repository and the access the token lacks', () => {
+    expect(error.message).toBe(
+      "Access to the GitHub repository acme/app was refused. Check that the connection's token has write access.",
+    );
+  });
+
+  it('reads the same for the other vendor', () => {
+    expect(
+      new GitRemoteAccessForbiddenError('GitLab', 'acme', 'app', 'write')
+        .message,
+    ).toBe(
+      "Access to the GitLab repository acme/app was refused. Check that the connection's token has write access.",
+    );
   });
 });

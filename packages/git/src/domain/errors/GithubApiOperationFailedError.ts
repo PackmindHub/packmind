@@ -1,19 +1,20 @@
-import { GitInternalError, GitInternalErrorContext } from './GitInternalError';
+import { GitUpstreamError, GitUpstreamErrorContext } from './GitUpstreamError';
 
 /**
  * A call we made to the GitHub API did not succeed — committing, branching,
  * opening a pull request, comparing refs, listing directories. What went
- * wrong downstream is arbitrary and none of it is the caller's to correct,
- * so it stays a 500; the operation is what tells the reader which call it
+ * wrong is GitHub's, not ours and not the caller's, so it answers 502 and is
+ * logged at `warn`; the operation is what tells the reader which call it
  * was, and the original failure is kept in `cause`.
  */
-export class GithubApiOperationFailedError extends GitInternalError {
+export class GithubApiOperationFailedError extends GitUpstreamError {
   constructor(
     operation: string,
     public readonly cause: unknown,
-    context: GitInternalErrorContext = {},
+    context: GitUpstreamErrorContext = {},
   ) {
     super(
+      'upstream_unavailable',
       'github_api_operation_failed',
       { ...context, operation },
       `Failed to ${operation}: ${

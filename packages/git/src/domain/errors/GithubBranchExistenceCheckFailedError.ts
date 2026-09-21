@@ -1,13 +1,14 @@
 import { isNativeError } from 'util/types';
-import { GitInternalError } from './GitInternalError';
+import { GitUpstreamError } from './GitUpstreamError';
 
 /**
  * Probing whether a branch exists failed with something other than the 404,
- * 403 and 401 the caller already handles. The two message shapes are the two
- * the call site used to build: a native error contributes its message, an
- * unknown throw is stringified.
+ * 403 and 401 the call site already tells apart. Whatever GitHub did instead
+ * is GitHub's, so it answers 502. The two message shapes are the two the call
+ * site used to build: a native error contributes its message, an unknown
+ * throw is stringified.
  */
-export class GithubBranchExistenceCheckFailedError extends GitInternalError {
+export class GithubBranchExistenceCheckFailedError extends GitUpstreamError {
   constructor(
     owner: string,
     repo: string,
@@ -15,6 +16,7 @@ export class GithubBranchExistenceCheckFailedError extends GitInternalError {
     public readonly cause: unknown,
   ) {
     super(
+      'upstream_unavailable',
       'github_branch_existence_check_failed',
       { owner, repo, branch },
       isNativeError(cause)

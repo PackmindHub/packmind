@@ -7,9 +7,6 @@ export type GitInternalErrorReason =
   | 'available_remote_directories_failed'
   | 'git_adapter_ports_not_provided'
   | 'fetch_file_content_delayed_job_missing'
-  | 'github_api_operation_failed'
-  | 'github_available_repositories_failed'
-  | 'github_branch_existence_check_failed'
   | 'github_provider_token_empty'
   | 'github_app_provider_not_saved'
   | 'github_app_installation_id_missing'
@@ -22,9 +19,6 @@ export type GitInternalErrorReason =
   | 'github_app_id_invalid'
   | 'github_app_private_key_missing'
   | 'github_unsupported_auth_method'
-  | 'github_access_token_response_incomplete'
-  | 'github_access_token_expiry_unparseable'
-  | 'github_app_token_exchange_failed'
   | 'gitlab_api_operation_failed'
   | 'gitlab_available_repositories_failed'
   | 'gitlab_branch_existence_check_failed'
@@ -47,7 +41,6 @@ export type GitInternalErrorContext = {
   appId?: string | number;
   installationId?: string | number;
   organizationGitHubAppId?: string;
-  expiresAt?: string;
   status?: number;
   projectPath?: string;
   source?: string;
