@@ -217,6 +217,22 @@ describe('DistributionRepository', () => {
         expect.anything(),
       );
 
+    /*
+     * The three artifact-version collections hang off the same distributed
+     * package, so joining a second one makes SQL take their product. Every join
+     * method is checked, not just the one the query used to call, because a
+     * sibling brought back as an inner join costs exactly as much.
+     */
+    const expectNotJoined = (relation: string) => {
+      for (const join of [
+        mockQueryBuilder.innerJoin,
+        mockQueryBuilder.innerJoinAndSelect,
+        mockQueryBuilder.leftJoinAndSelect,
+      ]) {
+        expect(join).not.toHaveBeenCalledWith(relation, expect.anything());
+      }
+    };
+
     beforeEach(() => {
       mockQueryBuilder.getMany.mockResolvedValue([]);
     });
@@ -286,6 +302,28 @@ describe('DistributionRepository', () => {
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
       });
+
+      it('loads the command versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        );
+      });
+
+      it('loads no standard versions', () => {
+        expectNotJoined('distributedPackage.standardVersions');
+      });
+
+      it('loads no skill versions', () => {
+        expectNotJoined('distributedPackage.skillVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
     });
 
     describe('when listing distributions by standard', () => {
@@ -303,6 +341,28 @@ describe('DistributionRepository', () => {
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
       });
+
+      it('loads the standard versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        );
+      });
+
+      it('loads no command versions', () => {
+        expectNotJoined('distributedPackage.recipeVersions');
+      });
+
+      it('loads no skill versions', () => {
+        expectNotJoined('distributedPackage.skillVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
     });
 
     describe('when listing distributions by skill', () => {
@@ -319,6 +379,28 @@ describe('DistributionRepository', () => {
 
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
+      });
+
+      it('loads the skill versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.skillVersions',
+          'skillVersion',
+        );
+      });
+
+      it('loads no standard versions', () => {
+        expectNotJoined('distributedPackage.standardVersions');
+      });
+
+      it('loads no command versions', () => {
+        expectNotJoined('distributedPackage.recipeVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
       });
     });
 

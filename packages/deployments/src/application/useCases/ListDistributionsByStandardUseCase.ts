@@ -1,7 +1,7 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationId,
-  Distribution,
+  ListDistributionsByStandardResponse,
   IListDistributionsByStandard,
   ListDistributionsByStandardCommand,
 } from '@packmind/types';
@@ -25,7 +25,7 @@ export class ListDistributionsByStandardUseCase implements IListDistributionsByS
    */
   public async execute(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     this.logger.info('Listing distributions for standard', {
       standardId: command.standardId,
       organizationId: command.organizationId,

@@ -52,8 +52,11 @@ import {
   ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
   ListDistributionsByStandardCommand,
+  ListDistributionsByStandardResponse,
   ListDistributionsBySkillCommand,
+  ListDistributionsBySkillResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -78,7 +81,6 @@ import {
   UpdateTargetCommand,
 } from '../contracts';
 import { OrganizationId } from '../../accounts/Organization';
-import { Distribution } from '../Distribution';
 import { DistributionHistoryEntry } from '../DistributionHistoryEntry';
 import {
   Package,
@@ -117,17 +119,20 @@ export interface IDeploymentPort {
     command: ListDeploymentsByPackageCommand,
   ): Promise<DistributionHistoryEntry[]>;
 
+  /** Entries carry the versions of that command alone, and no other artifact. */
   listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]>;
+  ): Promise<ListDistributionsByCommandResponse>;
 
+  /** Entries carry the versions of that standard alone, and no other artifact. */
   listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]>;
+  ): Promise<ListDistributionsByStandardResponse>;
 
+  /** Entries carry the versions of that skill alone, and no other artifact. */
   listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]>;
+  ): Promise<ListDistributionsBySkillResponse>;
 
   addTarget(command: AddTargetCommand): Promise<Target>;
 

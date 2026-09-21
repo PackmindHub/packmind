@@ -32,6 +32,9 @@ import {
   OrganizationId,
   ListActiveDistributedPackagesBySpaceCommand,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
+  ListDistributionsByStandardResponse,
+  ListDistributionsBySkillResponse,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   SkillId,
@@ -72,7 +75,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: CommandId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/recipe/:id - Fetching deployments by recipe ID',
       {
@@ -132,7 +135,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: CommandId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/distributions/recipe/:id - Fetching distributions by recipe ID',
       {
@@ -192,7 +195,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: StandardId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/distributions/standard/:id - Fetching distributions by standard ID',
       {
@@ -252,7 +255,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: SkillId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/distributions/skill/:id - Fetching distributions by skill ID',
       {

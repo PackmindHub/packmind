@@ -6,6 +6,9 @@ import {
   ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
+  ListDistributionsByStandardResponse,
+  ListDistributionsBySkillResponse,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   PublishArtifactsCommand,
@@ -69,19 +72,19 @@ export class DeploymentsService {
 
   async listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     return this.deploymentAdapter.listDistributionsByCommand(command);
   }
 
   async listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     return this.deploymentAdapter.listDistributionsByStandard(command);
   }
 
   async listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     return this.deploymentAdapter.listDistributionsBySkill(command);
   }
 
