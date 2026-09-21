@@ -38,7 +38,6 @@ import {
   GetPackageReleaseResponse,
 } from '@packmind/types';
 import {
-  PackageNotFoundError,
   PackageReleaseNotFoundError,
   PackageReleaseRefusedError,
 } from '@packmind/deployments';
@@ -278,9 +277,6 @@ export class OrganizationsSpacesPackagesController {
         'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Failed to list releases',
         { organizationId, spaceId, packageId, error: errorMessage },
       );
-      if (error instanceof PackageNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
       throw error;
     }
   }
@@ -337,9 +333,6 @@ export class OrganizationsSpacesPackagesController {
           currentVersion: error.currentVersion,
         });
       }
-      if (error instanceof PackageNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
       throw error;
     }
   }
@@ -379,9 +372,6 @@ export class OrganizationsSpacesPackagesController {
         { organizationId, spaceId, packageId, version, error: errorMessage },
       );
       if (error instanceof PackageReleaseNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      if (error instanceof PackageNotFoundError) {
         throw new NotFoundException(error.message);
       }
       throw error;

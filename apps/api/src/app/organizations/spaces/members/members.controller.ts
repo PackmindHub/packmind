@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -18,10 +17,7 @@ import {
   UserId,
   UserSpaceRole,
 } from '@packmind/types';
-import {
-  AuthenticatedRequest,
-  SpaceAdminRequiredError,
-} from '@packmind/node-utils';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   CannotRemoveFromDefaultSpaceError,
   CannotRemoveSelfError,
@@ -73,19 +69,12 @@ export class SpaceMembersController {
       },
     );
 
-    try {
-      return await this.membersService.addMembersToSpace({
-        userId: req.user.userId,
-        organizationId: orgId,
-        spaceId,
-        members: body.members,
-      });
-    } catch (error) {
-      if (error instanceof SpaceAdminRequiredError) {
-        throw new ForbiddenException(error.message);
-      }
-      throw error;
-    }
+    return this.membersService.addMembersToSpace({
+      userId: req.user.userId,
+      organizationId: orgId,
+      spaceId,
+      members: body.members,
+    });
   }
 
   @Delete(':targetUserId')
@@ -108,9 +97,6 @@ export class SpaceMembersController {
         targetUserId,
       });
     } catch (error) {
-      if (error instanceof SpaceAdminRequiredError) {
-        throw new ForbiddenException(error.message);
-      }
       if (error instanceof CannotRemoveFromDefaultSpaceError) {
         throw new BadRequestException(error.message);
       }
@@ -143,9 +129,6 @@ export class SpaceMembersController {
         role: body.role as UserSpaceRole,
       });
     } catch (error) {
-      if (error instanceof SpaceAdminRequiredError) {
-        throw new ForbiddenException(error.message);
-      }
       if (error instanceof CannotUpdateOwnRoleError) {
         throw new BadRequestException(error.message);
       }

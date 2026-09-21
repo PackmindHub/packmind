@@ -107,7 +107,7 @@ describe('OrganizationsSpacesPackagesController', () => {
     });
 
     describe('when the package does not exist', () => {
-      it('turns it into a 404', async () => {
+      it('propagates the error for the filter to map', async () => {
         deploymentsService.listPackageReleases.mockRejectedValue(
           new PackageNotFoundError(packageId),
         );
@@ -119,7 +119,7 @@ describe('OrganizationsSpacesPackagesController', () => {
             packageId,
             request,
           ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toBeInstanceOf(PackageNotFoundError);
       });
     });
   });
@@ -192,7 +192,7 @@ describe('OrganizationsSpacesPackagesController', () => {
     });
 
     describe('when the package does not exist', () => {
-      it('turns it into a 404', async () => {
+      it('propagates the error for the filter to map', async () => {
         deploymentsService.createPackageRelease.mockRejectedValue(
           new PackageNotFoundError(packageId),
         );
@@ -205,7 +205,7 @@ describe('OrganizationsSpacesPackagesController', () => {
             request,
             { version: '1.1.0' },
           ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toBeInstanceOf(PackageNotFoundError);
       });
     });
   });
