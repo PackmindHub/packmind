@@ -509,7 +509,9 @@ export const AddToPackagesDialog = ({
           if (!o) setMoveTarget(null);
         }}
         targetPackageName={moveTarget?.name ?? ''}
-        artifactNames={artifacts.map((a) => a.name)}
+        artifactCount={artifactCount}
+        kindSingular={kindSingular}
+        kindPlural={kindPlural}
         emptiedPackages={(moveTarget ? emptiedBy(moveTarget) : []).map(
           (source) => ({
             packageName: source.name,

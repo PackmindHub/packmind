@@ -403,7 +403,7 @@ describe('AddToPackagesDialog', () => {
       fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
 
       expect(
-        await screen.findByText('Move to frontend-rules?'),
+        await screen.findByText('Move this standard to frontend-rules?'),
       ).toBeInTheDocument();
       expect(mutateAsync).not.toHaveBeenCalled();
     });
@@ -417,11 +417,29 @@ describe('AddToPackagesDialog', () => {
       fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
 
       const dialog = await screen.findByRole('dialog', {
-        name: 'Move to frontend-rules?',
+        name: 'Move this standard to frontend-rules?',
       });
       expect(within(dialog).getByText('already-here')).toBeInTheDocument();
       expect(
         within(dialog).getByText('Distributed to 2 repositories'),
+      ).toBeInTheDocument();
+    });
+
+    it('spells out what the repositories lose at their next sync', async () => {
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id], 2);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Move this standard to frontend-rules?',
+      });
+      expect(
+        within(dialog).getByText(
+          'Anyone working in these repositories loses this standard at their next sync.',
+        ),
       ).toBeInTheDocument();
     });
 
@@ -464,7 +482,7 @@ describe('AddToPackagesDialog', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText('Move to frontend-rules?'),
+          screen.queryByText('Move this standard to frontend-rules?'),
         ).not.toBeInTheDocument();
       });
       expect(mutateAsync).not.toHaveBeenCalled();
