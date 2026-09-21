@@ -76,12 +76,25 @@ Full standard is available here for further request: [Back-end repositories SQL 
 
 This standard establishes clean code practices in TypeScript for back-end development to enhance maintainability and ensure consistent patterns across services. It covers logging best practices, error... :
 * Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
+* Extend the package's `DomainError` base or `PackmindInternalError` when defining an error class, never `Error` directly, so the HTTP status and log level follow.
 * Inject PackmindLogger as a constructor parameter with a default value using a variable or a string representing the class name.
 * Instantiate use cases in adapters without passing the adapter's logger; use cases must create their own logger for proper origin tracking.
 * Keep all import statements at the top of the file before any other code. Never use dynamic imports in the middle of the code unless absolutely necessary for code splitting or lazy loading.
-* Use dedicated error types instead of generic Error instances to enable precise error handling and improve code maintainability. Create custom error classes that extend Error with descriptive names and context-specific information.
 
 Full standard is available here for further request: [Back-end TypeScript Clean Code Practices](.packmind/standards/back-end-typescript-clean-code-practices.md)
+
+# Standard: Domain Error Handling
+
+Failures raised by a use case are answered centrally by `DomainExceptionFilter`, which maps them to an HTTP status and a log level. A failure carrying no `kind` reaches Nest's `ExceptionsHandler` as a... :
+* Extend `PackmindInternalError` for broken invariants the caller cannot correct.
+* Give each package one error base extending `Error` and implementing `DomainError`, carrying a `kind`, a literal `reason` union and a typed `context`.
+* Never map domain errors in a controller with `instanceof` and a Nest `HttpException`; the filter maps `kind` centrally.
+* Never throw `new Error(...)` from a use case; throw a class extending the package's `DomainError` base or `PackmindInternalError`.
+* Put resource ids in the error's `context`, never in its user-facing message.
+* Throw a missing resource and a resource owned by another tenant from a single branch, with one error and one message.
+* Use `kind: 'not_found'` when a resource belongs to another tenant; reserve `forbidden` for when the caller's own rights are the subject.
+
+Full standard is available here for further request: [Domain Error Handling](.packmind/standards/domain-error-handling.md)
 
 # Standard: Domain Events
 
@@ -113,9 +126,10 @@ Full standard is available here for further request: [Port-Adapter Cross-Domain 
 # Standard: Scoped Repository Patterns
 
 Enforce data isolation and consistent query patterns in repositories extending SpaceScopedRepository or OrganizationScopedRepository, ensuring tenant-safe data access across the Packmind codebase. :
+* Declare `spaceId` or `organizationId` as a required parameter on collection-returning interface methods not already narrowed by a tenant-owned parent id — never optional
 * Delegate write operations (`save`, `update`) to the inherited `this.add()` method
 * Do not override `findById` in scoped repositories — the base class handles soft delete via `QueryOption.includeDeleted`
-* Include `spaceId` or `organizationId` as a parameter on all collection-returning domain interface methods
+* Justify every deliberately cross-tenant read with a comment naming the caller that requires it
 * Test cross-scope isolation for every finder method returning collections
 * Use `createScopedQueryBuilder(spaceId)` or `createScopedQueryBuilder(organizationId)` for all finder methods in scoped repositories
 
