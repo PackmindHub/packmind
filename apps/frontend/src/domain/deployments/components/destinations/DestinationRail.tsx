@@ -1293,6 +1293,15 @@ function RailActionBar({
             }}
             disabled={actionableCount === 0}
             aria-label="Select every drifted destination in this list"
+            /*
+              A 16px box on a bar this size is a target the pointer misses,
+              and the count beside it is a readout rather than a label, so a
+              miss has nothing to land on. The padding grows the target to
+              32px and the negative margin gives back the room it took, so
+              nothing on the bar moves.
+            */
+            padding={2}
+            margin={-2}
           />
           <PMText
             fontSize="xs"
