@@ -8,8 +8,9 @@ import {
   withNavMode,
 } from './SpaceNavModeContext';
 
-const IN_DEFAULT_AUDIENCE = 'someone@packmind.com';
-const OUTSIDE_DEFAULT_AUDIENCE = 'someone@example.com';
+/* Any account at all: the default no longer depends on who is asking, only on
+   somebody being signed in. */
+const SIGNED_IN = 'someone@example.com';
 const CHOICE_KEY = 'space-nav-mode.v2';
 const FIRST_KEY = 'space-nav-mode';
 
@@ -18,8 +19,14 @@ describe('resolveSpaceNavMode', () => {
     localStorage.clear();
   });
 
-  it('defaults to the current navigation', () => {
-    expect(resolveSpaceNavMode('', OUTSIDE_DEFAULT_AUDIENCE)).toBe('today');
+  it('defaults to the new navigation', () => {
+    expect(resolveSpaceNavMode('', SIGNED_IN)).toBe('plugin-first');
+  });
+
+  it('answers the same whatever the account', () => {
+    expect(resolveSpaceNavMode('', 'someone@packmind.com')).toBe(
+      'plugin-first',
+    );
   });
 
   it('answers for nobody in particular when given no email', () => {
@@ -27,71 +34,46 @@ describe('resolveSpaceNavMode', () => {
   });
 
   it('reads the mode that was chosen', () => {
-    localStorage.setItem(CHOICE_KEY, 'plugin-first');
+    localStorage.setItem(CHOICE_KEY, 'today');
 
-    expect(resolveSpaceNavMode('', OUTSIDE_DEFAULT_AUDIENCE)).toBe(
+    expect(resolveSpaceNavMode('', SIGNED_IN)).toBe('today');
+  });
+
+  it('lets an explicit nav win over the mode that was chosen', () => {
+    localStorage.setItem(CHOICE_KEY, 'today');
+
+    expect(resolveSpaceNavMode('?nav=plugin-first', SIGNED_IN)).toBe(
       'plugin-first',
     );
   });
 
-  it('lets an explicit nav win over the mode that was chosen', () => {
-    localStorage.setItem(CHOICE_KEY, 'plugin-first');
-
-    expect(resolveSpaceNavMode('?nav=today', OUTSIDE_DEFAULT_AUDIENCE)).toBe(
-      'today',
-    );
-  });
-
   it('pins a mode for someone who has never chosen one', () => {
-    expect(
-      resolveSpaceNavMode('?nav=plugin-first', OUTSIDE_DEFAULT_AUDIENCE),
-    ).toBe('plugin-first');
+    expect(resolveSpaceNavMode('?nav=today', SIGNED_IN)).toBe('today');
   });
 
   it('ignores a mode it does not know', () => {
-    expect(resolveSpaceNavMode('?nav=whatever', OUTSIDE_DEFAULT_AUDIENCE)).toBe(
-      'today',
+    expect(resolveSpaceNavMode('?nav=whatever', SIGNED_IN)).toBe(
+      'plugin-first',
     );
   });
 
   it('ignores a stored value it does not know', () => {
     localStorage.setItem(CHOICE_KEY, 'whatever');
 
-    expect(resolveSpaceNavMode('', OUTSIDE_DEFAULT_AUDIENCE)).toBe('today');
+    expect(resolveSpaceNavMode('', SIGNED_IN)).toBe('plugin-first');
   });
 
   it('finds nav among other query parameters', () => {
     expect(
-      resolveSpaceNavMode(
-        '?stub=1&nav=plugin-first&view=repositories',
-        OUTSIDE_DEFAULT_AUDIENCE,
-      ),
-    ).toBe('plugin-first');
-  });
-
-  describe('when the flag covers the person', () => {
-    it('defaults to the plugin-first navigation', () => {
-      expect(resolveSpaceNavMode('', IN_DEFAULT_AUDIENCE)).toBe('plugin-first');
-    });
-
-    it('covers every domain the flag lists', () => {
-      expect(resolveSpaceNavMode('', 'someone@promyze.com')).toBe(
-        'plugin-first',
-      );
-    });
-
-    it('still lets a chosen mode win over the default', () => {
-      localStorage.setItem(CHOICE_KEY, 'today');
-
-      expect(resolveSpaceNavMode('', IN_DEFAULT_AUDIENCE)).toBe('today');
-    });
+      resolveSpaceNavMode('?stub=1&nav=today&view=repositories', SIGNED_IN),
+    ).toBe('today');
   });
 
   describe('when a mode sits under the first storage key', () => {
     it('ignores it, since it was written without anybody choosing', () => {
       localStorage.setItem(FIRST_KEY, 'today');
 
-      expect(resolveSpaceNavMode('', IN_DEFAULT_AUDIENCE)).toBe('plugin-first');
+      expect(resolveSpaceNavMode('', SIGNED_IN)).toBe('plugin-first');
     });
   });
 });
@@ -114,17 +96,17 @@ describe('SpaceNavModeProvider', () => {
   }
 
   it('opens on the default for this person', () => {
-    expect(mount(IN_DEFAULT_AUDIENCE).result.current.mode).toBe('plugin-first');
+    expect(mount(SIGNED_IN).result.current.mode).toBe('plugin-first');
   });
 
   it('stores nothing until a mode is chosen', () => {
-    mount(IN_DEFAULT_AUDIENCE);
+    mount(SIGNED_IN);
 
     expect(localStorage.getItem(CHOICE_KEY)).toBeNull();
   });
 
   it('stores the mode that gets chosen', () => {
-    const { result } = mount(IN_DEFAULT_AUDIENCE);
+    const { result } = mount(SIGNED_IN);
 
     act(() => {
       result.current.setMode('today');
@@ -136,10 +118,12 @@ describe('SpaceNavModeProvider', () => {
 
   describe('when the URL pins a mode', () => {
     it('stores it, so an internal link does not undo it', () => {
-      const { result } = mount(OUTSIDE_DEFAULT_AUDIENCE, '/?nav=plugin-first');
+      /* Pinned to the mode that is *not* the default, so the assertion says
+         the parameter was read rather than that nothing happened. */
+      const { result } = mount(SIGNED_IN, '/?nav=today');
 
-      expect(result.current.mode).toBe('plugin-first');
-      expect(localStorage.getItem(CHOICE_KEY)).toBe('plugin-first');
+      expect(result.current.mode).toBe('today');
+      expect(localStorage.getItem(CHOICE_KEY)).toBe('today');
     });
   });
 });
