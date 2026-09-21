@@ -16,12 +16,17 @@ Reach for `Read`, `Glob` and `Grep` before a shell. Every check here is "open a 
 (`.github/workflows/weekly-doc-review.yml`) is non-interactive: it grants a small
 read-only shell allowlist and nobody is there to approve anything outside it, so a
 refused call spends a turn of a fixed budget and returns nothing. Paging through a file
-with `head` or `sed` when `Read` opens it whole loses either way. Pass this on to the
-sub-agents.
+with `head` or `sed` when `Read` opens it whole loses either way.
+
+Never `cd`. Every tool here takes a path relative to the repository root, so there is
+nothing to change directory for, and `cd somewhere && ...` is the one shape the
+allowlist can never admit: a prefix rule is matched against the whole command, so it
+does not match a compound one. That refusal cannot be granted by adding a rule — the
+only fix is not to write the command. Pass a path instead.
 
 ## Phase 1: Build Ground Truth
 
-Before launching any sub-agents, build a concise ground truth summary by gathering these four data sources:
+Before auditing anything, build a concise ground truth summary by gathering these four data sources:
 
 1. **Navigation structure** — Read `apps/doc/docs.json` and extract all navigation groups with their page lists
 2. **CLI commands** — List files in `apps/cli/src/infra/commands/` to get current command files
@@ -51,64 +56,100 @@ Compile these into a **ground truth summary** string formatted as:
 {today's date}
 ```
 
-## Phase 2: Launch Parallel Sub-Agents
+### Land the report file before auditing anything
 
-Launch **5 Explore sub-agents** in parallel (`subagent_type: Explore`), one per section group. Each agent receives:
-- The ground truth summary from Phase 1
-- The full contents of `references/section-audit-instructions.md` (read this file and include its contents in each prompt)
-- Its assigned section and list of MDX files to audit
+With the ground truth in hand and **before auditing a single page**, `Write`
+`doc-audit-report.md` at the project root with exactly this placeholder:
 
-### Agent Assignments
+```markdown
+<!-- doc-audit: incomplete -->
+# Documentation Audit Report
 
-| Agent | Sections | Pages to Audit |
+This run did not get as far as writing its findings. The placeholder was written
+before the audit began and never replaced, so whatever stopped the run did so
+between Phase 1 and Phase 3.
+```
+
+The first line is a marker the caller greps for, so reproduce it exactly and keep
+it as the very first line. Phase 3 overwrites this whole file, marker included.
+
+Do this even though Phase 3 writes the real report: a run that dies in between
+otherwise leaves the caller with no file and no clue, which is the one outcome
+this skill must never produce. It costs one `Write`.
+
+## Phase 2: Audit Each Section Group in Turn
+
+Audit the five section groups below **yourself, one after another**, in a single pass:
+read the group's pages, apply every check in `references/section-audit-instructions.md`,
+hold the findings, then move to the next group. Read
+`references/section-audit-instructions.md` once, before the first group.
+
+**Do not launch sub-agents for this.** A sub-agent runs in the background and reports
+back through a notification, and this skill's scheduled run
+(`.github/workflows/weekly-doc-review.yml`) is non-interactive: the run ends the moment
+you produce a reply, so the notification never arrives and the findings are lost. The
+run then exits *successfully* with the Phase 1 placeholder still on disk and nothing to
+show. That is not a hypothetical — it is how the audit failed on 2026-09-21, twice, once
+the `Agent` tool became asynchronous. Fanning out is the one shape this phase cannot
+take, whatever the turn budget looks like.
+
+For the same reason, never end a reply with work still outstanding. There is nobody to
+resume you. Carry on to Phase 3 in the same pass.
+
+### Section Groups
+
+| Group | Sections | Pages to Audit |
 |-------|----------|----------------|
-| 1 | Getting Started + root pages | `index.mdx`, `home.mdx` + all `getting-started/*.mdx` |
+| 1 | Getting Started + root pages | `index.mdx` + all `getting-started/*.mdx` |
 | 2 | Concepts | All `concepts/*.mdx` + `tools/import-from-knowledge-base.mdx` |
 | 3 | Tools & Integrations | `tools/cli.mdx` |
 | 4 | Governance + Playbook Maintenance + Linter | All `governance/*.mdx` + `playbook-maintenance/*.mdx` + `linter/*.mdx` |
 | 5 | Administration + Security | All `administration/*.mdx` + `security/*.mdx` |
 
-### Agent Prompt Template
+Read each page completely and apply all detection categories. Keep each group's findings
+in the exact format the instructions specify, so Phase 3 only has to merge them.
 
-Each agent's prompt should follow this structure:
+### The table is a split, not the page list
 
-```
-You are auditing the {section_name} section of the Packmind documentation.
+Take the pages from the MDX files Phase 1 found on disk, using the table only to decide
+which group a page belongs to. Reconcile the two before you start: a page on disk that no
+row claims joins the group owning its section, and a page named in a row that is not on
+disk is dropped. Say so in the report's coverage line either way.
 
-## Your Assigned Pages
-{list of MDX file paths to read and audit}
+Where no group owns the section — `tools/` is split across groups 2 and 3 by filename, so
+a page added there is claimed by nobody — put it in group 3 and name it in the coverage
+line. Any group will do; what must not happen is the page going unread because no rule
+picked one.
 
-## Ground Truth
-{ground truth summary from Phase 1}
+The table is maintained by hand and the docs are not, so it drifts — it carried a
+`home.mdx` that had not existed for some time. A phantom page is the harmless direction;
+the costly one is a page added to `apps/doc/` that no row mentions and is therefore never
+read, which a table trusted as the page list would hide behind a clean report.
 
-## Audit Instructions
-{full contents of references/section-audit-instructions.md}
+### If the budget runs short
 
-## Tools
-Use `Read`, `Glob` and `Grep`. `Read` opens any file you need, whole or by offset, and
-`Grep` searches the tree — between them there is nothing here a shell is needed for. Do
-not shell out to `head`, `sed`, `rg` or `jq`: this run is non-interactive, so a command
-outside its read-only allowlist is refused with nobody to approve it, and the turn is
-gone.
-
-Read each assigned MDX page completely and apply all detection categories. Return your findings in the exact format specified in the instructions.
-```
-
-### Sequential Fallback
-
-If the Agent tool is unavailable **or a launch is refused** — a permission denial counts, and in a non-interactive run (CI) there is nobody to approve one — do not abandon the audit. Fall back to auditing sequentially: read each section's pages one by one and apply the same checks from `references/section-audit-instructions.md` directly.
-
-Narrow the scope if the whole set does not fit (fewest pages dropped first, and say which), but never end the run without Phase 3: a partial report beats no report, and an empty run leaves whoever scheduled it with nothing to read.
+Narrow the scope rather than the phases: drop the fewest pages you can, audit what
+remains, and name what you dropped in the report. Never end the run without Phase 3 — a
+partial report beats no report, and an empty run leaves whoever scheduled it with nothing
+to read.
 
 ## Phase 3: Consolidate Report
 
-After all sub-agents complete:
+After all five groups are audited:
 
-1. **Collect** all findings from the 5 agents
+1. **Collect** the findings from all five groups
 2. **Deduplicate** — remove exact duplicates (same page, same line, same issue)
 3. **Sort** by severity: ERROR first, then WARNING, then INFO
 4. **Group** by category within each severity level
-5. **Write** the report to `doc-audit-report.md` at the project root — always, even when the audit is partial or found nothing. Writing the file is the deliverable; a summary in the reply is not, since the caller may be a script that only reads the file. When sections were skipped or audited without sub-agents, say so at the top of the report so a short report is not mistaken for a clean one.
+5. **Write** the report to `doc-audit-report.md` at the project root, overwriting the Phase 1 placeholder — always, even when the audit is partial or found nothing. Writing the file is the deliverable; a summary in the reply is not, since the caller may be a script that only reads the file. When sections were skipped or narrowed, say so at the top of the report so a short report is not mistaken for a clean one.
+
+   The real report must **not** carry the `<!-- doc-audit: incomplete -->` marker — the
+   caller reads that line as "this run produced nothing" and fails the job on it. Replace
+   the file wholesale rather than appending to the placeholder.
+
+   Write the file before composing your reply, not after. The reply is not the deliverable
+   and a run that ends having only described its findings has failed, however good the
+   description.
 
 ### Report Format
 

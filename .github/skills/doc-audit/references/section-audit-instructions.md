@@ -16,6 +16,9 @@ You are auditing a section of the Packmind end-user documentation. Your job is t
 
 **Valid finding:**
 - Page links to `/concepts/workflow-management` but no `apps/doc/concepts/workflow-management.mdx` exists
+- Page links to `/tools/cli#git-track` and `tools/cli.mdx` exists but carries no heading that
+  produces the `#git-track` anchor — a cross-page anchor is only as good as the heading it
+  points at, and the page resolving says nothing about the fragment
 
 **Not a finding (false positive):**
 - Links to external URLs (https://...) — do not check these
@@ -107,7 +110,7 @@ Where:
 [INFO] [E] **N/A**: CLI command `SyncCommand.ts` has no documentation coverage
 ```
 
-If you find **no issues** in your assigned section, return:
+If you find **no issues** in a section group, record:
 
 ```
 NO_ISSUES_FOUND
@@ -118,5 +121,5 @@ NO_ISSUES_FOUND
 - Read each MDX file **completely** — don't skip content
 - Be thorough but precise — false positives waste time
 - Include approximate line numbers to help locate issues
-- For Category E, you only need to check commands/packages relevant to your assigned section
+- For Category E, check every command and package against the whole doc set — the audit is a single pass, so there is no other run that would catch what this one scopes out
 - Do NOT suggest improvements or rewrites — this is detection only
