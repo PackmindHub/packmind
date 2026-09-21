@@ -1,0 +1,9 @@
+---
+applyTo: '**'
+---
+# Standard: Packmind Proprietary
+
+. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](../../.packmind/standards/packmind-proprietary.md)
