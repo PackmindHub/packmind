@@ -49,6 +49,24 @@ There are two ways to add items to packages:
   ```
 - **Via Web Interface** — Add items to packages through the Packmind UI
 
+<Note>
+  An item belongs to a single package. `packmind packages add` refuses an item
+  that already belongs to another package and points you at `packmind packages
+  move`, which relocates it in one step.
+</Note>
+
+### Moving and Removing Items
+
+- **`packmind packages move`** puts an item in a package and takes it out of every other one:
+  ```bash
+  packmind packages move --to backend --command create-api-endpoint
+  ```
+- **`packmind packages remove`** takes an item out of a package without adding it anywhere:
+  ```bash
+  packmind packages remove --from backend --command create-api-endpoint
+  ```
+  An item that belongs to no package is not installed or distributed anywhere, so `remove` always tells you what the item still belongs to.
+
 ## Using Packages
 
 Once you've created packages, you can distribute them using either of these methods:
