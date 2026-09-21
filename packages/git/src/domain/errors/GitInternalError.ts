@@ -4,7 +4,9 @@ export type GitInternalErrorReason =
   | 'git_provider_source_not_configured'
   | 'git_repo_provider_not_configured'
   | 'directory_existence_check_failed'
-  | 'available_remote_directories_failed';
+  | 'available_remote_directories_failed'
+  | 'git_adapter_ports_not_provided'
+  | 'fetch_file_content_delayed_job_missing';
 
 export type GitInternalErrorContext = {
   organizationId?: string;
