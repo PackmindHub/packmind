@@ -10,7 +10,8 @@ time and per Claude model, straight from the git history.
   months ago.
 - **Flow** — of the lines _added_ during a period (net diff between two
   boundaries), the share that are comment lines. This is the one that reflects
-  how code is being written right now.
+  how code is being written right now. Each period is measured on its own: a
+  flow figure is never a change against the previous period.
 
 The history is sampled on the 1st **and** the 15th of each month. Models ship
 mid-month, so a monthly step cannot separate the weeks before a release from the

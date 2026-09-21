@@ -321,11 +321,28 @@ const stockLabels = stock.map((s) =>
   }),
 );
 
+// The percentage alone invites two misreadings — a change since the previous
+// point, or a share of the whole codebase. The counts behind it prevent both.
+const flowNotes = flowMonths.map((m) => {
+  const a = m.flow.all;
+  const total = a.addedCode + a.addedComment;
+  return `${fmtInt(a.addedComment)} comment lines out of ${fmtInt(total)} added`;
+});
+
+// One point, spelled out in full, saves the reader from reverse-engineering the
+// definition from the axis. The last complete fortnight is the least arbitrary
+// choice and the closest to what a reader hovers first.
+const sample = flowMonths.filter((m) => !m.partial).at(-1);
+const sampleFlow = sample.flow.all;
+const sampleTotal = sampleFlow.addedCode + sampleFlow.addedComment;
+const sampleStock = stock.find((s) => s.label === sample.periodEnd);
+
 const payload = {
   tMin,
   tMax,
   annotations,
   flowLabels,
+  flowNotes,
   stockLabels,
   headline: [series('all', 'All files', 'var(--series-1)')],
   byCategory: [
@@ -442,29 +459,46 @@ const body = `<main>
 
 <span class="eyebrow">The flow</span>
 <h2>1. What gets written</h2>
-<p>For each fortnight — models ship mid-month, so a monthly step would not separate the weeks before a release from
-the weeks after it — the net diff between the two boundaries: of the lines <em>added</em>, what share is comment.
-Measuring the net rather than summing each commit means the chart counts what a period left behind, not everything
-typed during it; on this repository the two differ by 5 to 37% in volume but by less than half a point in ratio,
-because churn lands on comment and code lines alike. The ratio over the whole codebase, by contrast, moves slowly:
-it is dominated by what was written months ago.</p>
+<p>This section asks one question, fortnight by fortnight: <b>of the TypeScript written during that fortnight, what
+share of it is comment?</b> Fortnights rather than months, because models ship mid-month and a monthly step would
+blur the weeks before a release into the weeks after it. Measuring what gets <em>written</em>, rather than what
+exists, is what makes the series responsive — the ratio over the whole codebase is dominated by code from months ago
+and barely moves.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Comment ratio of added lines &mdash; net diff between period boundaries</h3>
-    <p>Each point is a single <code>git diff</code> between the last commit before the period opens and the last
-    commit before it closes, not a sum over the period's commits. A line written on the 3rd and rewritten on the 9th
-    of the same fortnight counts once, in its final form; a line added and removed inside the period does not count
-    at all. The dashed lines mark the Opus releases; every release is listed in the reference table below.</p>
+    <h3>Share of newly written lines that are comments</h3>
+    <p class="readout"><b>One point, spelled out.</b> Between ${dayEn(sample.period)} and
+    ${dayEn(sample.periodEnd)} ${sample.periodEnd.slice(0, 4)}, <b>${fmtInt(sampleTotal)} lines</b> of TypeScript were
+    added to the repository. <b>${fmtInt(sampleFlow.addedComment)}</b> of them were comment lines. The point therefore
+    sits at ${fmtInt(sampleFlow.addedComment)} ÷ ${fmtInt(sampleTotal)} =
+    <b>${fmtPct(sampleFlow.commentRatio)}</b>. Hover any point to see its own two numbers.</p>
+    <ul class="caveats">
+      <li>It is <b>not</b> a change against the previous point. Each fortnight is measured on its own; two
+      neighbouring points are two independent measurements, not a before and an after.</li>
+      <li>It is <b>not</b> the share of the whole codebase. That figure moves far more slowly &mdash; it was
+      ${fmtPct(sampleStock.totals.all.commentRatio)} on ${dayEn(sample.periodEnd)}, and it has its own chart in
+      section&nbsp;4.</li>
+    </ul>
+    <p>The dashed lines mark the Opus releases; every release is listed in the reference table below.</p>
   </div>
   <div class="chart" id="c-headline"></div>
   <details><summary>See the data</summary><div id="t-headline"></div></details>
+  <details><summary>How a period is measured</summary>
+    <p class="note">Blank lines are ignored on both sides of the division. Each point is a single
+    <code>git diff</code> between the last commit before the period opens and the last commit before it closes, not a
+    sum over the period's commits: a line written on the 3rd and rewritten on the 9th of the same fortnight counts
+    once, in its final form, and a line added then removed inside the period does not count at all. On this repository
+    the net and the per-commit sum differ by 5 to 37% in volume but by less than half a point in ratio, because churn
+    lands on comment and code lines alike.</p>
+  </details>
 </div>
 
 <div class="card">
   <div class="card-head">
     <h3>By file type</h3>
-    <p>Backend code, the React front end and the test files all follow the same path.</p>
+    <p>The same measure, split by file type: backend code, the React front end and the test files all follow the
+    same path.</p>
   </div>
   <div class="chart" id="c-category"></div>
   <div class="legend" id="l-category"></div>
@@ -621,7 +655,7 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
 
   V.lineChart(document.getElementById('c-headline'), {
     series: D.headline, annotations: D.annotations, tMin: D.tMin, tMax: D.tMax,
-    pointLabels: D.flowLabels,
+    pointLabels: D.flowLabels, note: D.flowNotes,
     ariaLabel: "Comment ratio of added lines over time"
   });
   V.table(document.getElementById('t-headline'), FLOW_COLUMNS, D.monthTable);

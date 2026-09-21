@@ -643,7 +643,7 @@
           pct(d.value) +
           '</b></div>' +
           (d.median !== null && d.median !== undefined
-            ? '<div>Médiane par commit <b>' +
+            ? '<div>Median commit <b>' +
               pct(d.median) +
               '</b> (P25 ' +
               pct(d.p25) +

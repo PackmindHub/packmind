@@ -164,6 +164,33 @@ p {
   margin: 0;
 }
 
+/* The plain reading of a single point, set apart from the method notes that
+   follow it: a reader who stops here has understood the chart. */
+.card-head .readout {
+  font-size: 14.5px;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--series-1) 8%, transparent);
+  border-left: 3px solid var(--series-1);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin: 0 0 10px;
+}
+
+.card-head .caveats {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.card-head .caveats li {
+  margin: 0 0 4px;
+}
+
+.card-head .caveats b {
+  color: var(--text-primary);
+}
+
 .chart {
   position: relative;
 }
@@ -298,6 +325,13 @@ summary::before {
 
 details[open] summary::before {
   content: '▾ ';
+}
+
+details .note {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 10px 0 2px;
+  max-width: 72ch;
 }
 
 .table-scroll {
