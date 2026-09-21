@@ -1310,7 +1310,7 @@
       "name": "doc-audit",
       "type": "skill",
       "id": "7683e9a7-4d61-40be-a993-9de987dba976",
-      "version": 4,
+      "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
         "b7e72473-52d8-4266-9d86-bd33b6395747"

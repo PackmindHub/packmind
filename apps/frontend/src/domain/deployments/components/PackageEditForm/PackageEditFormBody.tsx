@@ -40,6 +40,8 @@ interface PackageEditFormBodyProps {
   allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
+  /** Component id -> name of the other package holding it. */
+  ownerByArtefactId: Record<string, string>;
   id: PackageId;
   orgSlug: string;
   spaceSlug: string;
@@ -50,6 +52,7 @@ export const PackageEditFormBody = ({
   allCommands,
   allStandards,
   allSkills,
+  ownerByArtefactId,
   id,
   orgSlug,
   spaceSlug,
@@ -201,10 +204,13 @@ export const PackageEditFormBody = ({
                 p={4}
               >
                 <PackageEditFormContent
-                  key={`loaded-${allCommands.length}-${allStandards.length}-${allSkills.length}`}
+                  key={`loaded-${allCommands.length}-${allStandards.length}-${allSkills.length}-${
+                    Object.keys(ownerByArtefactId).length
+                  }`}
                   allCommands={allCommands}
                   allStandards={allStandards}
                   allSkills={allSkills}
+                  ownerByArtefactId={ownerByArtefactId}
                   selectedCommandIds={selectedCommandIds}
                   selectedStandardIds={selectedStandardIds}
                   selectedSkillIds={selectedSkillIds}

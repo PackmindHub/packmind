@@ -11,20 +11,9 @@ export type DistributedPackageHistoryEntry = Omit<
   ArtifactVersions
 >;
 
-/**
- * A distributed package in one artifact's history: the versions of that
- * artifact it carried, filtered to that artifact by the listing's WHERE, and no
- * other collection. The other two hang off the same row, so joining them makes
- * SQL take their product.
- */
 export type DistributedPackageArtifactHistoryEntry<V extends ArtifactVersions> =
   DistributedPackageHistoryEntry & Pick<DistributedPackage, V>;
 
-/**
- * A distribution whose distributed packages are `DP`: the type says what a
- * listing loaded on them, rather than leaving arrays undefined behind a type
- * that requires them.
- */
 export type DistributionHistoryEntryOf<
   DP extends DistributedPackageHistoryEntry,
 > = Omit<Distribution, 'distributedPackages'> & {

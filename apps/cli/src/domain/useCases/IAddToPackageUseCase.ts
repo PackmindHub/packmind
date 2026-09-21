@@ -1,4 +1,7 @@
-export type ItemType = 'standard' | 'command' | 'skill';
+import { IPublicUseCase } from '@packmind/types';
+import { ItemType } from '../entities/ItemType';
+
+export type { ItemType };
 
 export interface IAddToPackageCommand {
   packageSlug: string;
@@ -13,6 +16,7 @@ export interface IAddToPackageResult {
   skipped: string[];
 }
 
-export interface IAddToPackageUseCase {
-  execute(command: IAddToPackageCommand): Promise<IAddToPackageResult>;
-}
+export type IAddToPackageUseCase = IPublicUseCase<
+  IAddToPackageCommand,
+  IAddToPackageResult
+>;

@@ -27,6 +27,7 @@ export * from './IGetPackageByIdUseCase';
 export * from './IUpdatePackageUseCase';
 export * from './IDeletePackagesBatchUseCase';
 export * from './IAddArtefactsToPackageUseCase';
+export * from './IMoveArtefactsToPackageUseCase';
 export * from './IRemoveArtefactsFromPackageUseCase';
 export * from './INotifyArtefactsDistribution';
 export * from './INotifyDistributionUseCase';

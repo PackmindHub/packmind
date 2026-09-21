@@ -41,6 +41,8 @@ import {
   RemovePackageFromTargetsResponse,
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   GetDashboardKpiCommand,
@@ -186,6 +188,12 @@ export class DeploymentsService {
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this.deploymentAdapter.addArtefactsToPackage(command);
+  }
+
+  async moveArtefactsToPackage(
+    command: MoveArtefactsToPackageCommand,
+  ): Promise<MoveArtefactsToPackageResponse> {
+    return this.deploymentAdapter.moveArtefactsToPackage(command);
   }
 
   async removeArtefactsFromPackage(

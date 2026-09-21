@@ -7,6 +7,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
+import { useArtefactPackageOwners } from '../../hooks/useArtefactPackageOwners';
 import { PackageEditFormBody } from './PackageEditFormBody';
 
 interface PackageEditFormProps {
@@ -38,6 +39,15 @@ export const PackageEditForm = ({
 
   const { data: skillsResponse, isLoading: isLoadingSkills } =
     useGetSkillsQuery();
+
+  // A component belongs to a single package, so the form needs to know which
+  // ones another package already holds before it offers them.
+  const { ownerByArtefactId, isLoading: isLoadingOwners } =
+    useArtefactPackageOwners({
+      spaceId,
+      organizationId: organization?.id,
+      excludePackageId: id,
+    });
 
   const pkg = packageResponse?.package;
   const allCommands = (commandsResponse || []).sort((a, b) =>
@@ -94,7 +104,12 @@ export const PackageEditForm = ({
     );
   }
 
-  if (isLoadingCommands || isLoadingStandards || isLoadingSkills) {
+  if (
+    isLoadingCommands ||
+    isLoadingStandards ||
+    isLoadingSkills ||
+    isLoadingOwners
+  ) {
     return (
       <PMPage title="Edit Package" subtitle="Loading...">
         <PMBox
@@ -116,6 +131,7 @@ export const PackageEditForm = ({
       allCommands={allCommands}
       allStandards={allStandards}
       allSkills={allSkills}
+      ownerByArtefactId={ownerByArtefactId}
       id={id}
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}

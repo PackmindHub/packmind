@@ -102,8 +102,9 @@ See [event.md](components/event.md) and [adapter.md](components/adapter.md) for 
 ## Error Handling
 
 A failure raised in a use case becomes an HTTP response through `DomainExceptionFilter`,
-registered globally as an `APP_FILTER`. Two disjoint unions in `packages/types/src/errors/`,
-both discriminating on `kind`:
+registered globally as an `APP_FILTER`. The filter recognises an error by its `kind`.
+`packages/types/src/errors/` declares two interfaces that carry one — `DomainError` and
+`InternalError` — whose `kind` values do not overlap:
 
 | kind | HTTP | Log level | Message returned | Frontend retries |
 |------|------|-----------|------------------|------------------|
