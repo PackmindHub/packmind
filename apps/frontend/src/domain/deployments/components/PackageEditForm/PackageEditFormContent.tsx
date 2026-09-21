@@ -27,6 +27,8 @@ interface PackageEditFormContentProps {
   allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
+  /** Component id -> name of the other package holding it. */
+  ownerByArtefactId: Record<string, string>;
   selectedCommandIds: CommandId[];
   selectedStandardIds: StandardId[];
   selectedSkillIds: SkillId[];
@@ -41,10 +43,25 @@ interface PackageEditFormContentProps {
   spaceSlug: string;
 }
 
+/**
+ * Why an option cannot be picked: it is somewhere else. Naming the package
+ * turns a dead entry into a direction to go.
+ */
+function HeldByPackage({ packageName }: { packageName?: string }) {
+  if (!packageName) return null;
+
+  return (
+    <PMText variant="small" color="faded" marginLeft="auto" paddingLeft={2}>
+      In {packageName}
+    </PMText>
+  );
+}
+
 export const PackageEditFormContent = ({
   allCommands,
   allStandards,
   allSkills,
+  ownerByArtefactId,
   selectedCommandIds,
   selectedStandardIds,
   selectedSkillIds,
@@ -60,20 +77,38 @@ export const PackageEditFormContent = ({
 }: PackageEditFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  const commandItems = allCommands.map((recipe: Command) => ({
-    label: recipe.name,
-    value: recipe.id,
-  }));
+  /**
+   * A component held by another package cannot be picked here — it has to be
+   * moved from wherever it lives. One already selected stays selectable
+   * whatever the data says, so a component that somehow ended up in two
+   * packages can still be taken out of this one.
+   */
+  const toItem = <Id extends StandardId | CommandId | SkillId>(
+    artefact: { id: Id; name: string },
+    selectedIds: Id[],
+  ) => {
+    const heldBy = ownerByArtefactId[artefact.id.toString()];
+    const locked = Boolean(heldBy) && !selectedIds.includes(artefact.id);
 
-  const standardItems = allStandards.map((standard: Standard) => ({
-    label: standard.name,
-    value: standard.id,
-  }));
+    return {
+      label: artefact.name,
+      value: artefact.id,
+      disabled: locked,
+      heldBy: locked ? heldBy : undefined,
+    };
+  };
 
-  const skillItems = allSkills.map((skill: Skill) => ({
-    label: skill.name,
-    value: skill.id,
-  }));
+  const commandItems = allCommands.map((recipe: Command) =>
+    toItem(recipe, selectedCommandIds),
+  );
+
+  const standardItems = allStandards.map((standard: Standard) =>
+    toItem(standard, selectedStandardIds),
+  );
+
+  const skillItems = allSkills.map((skill: Skill) =>
+    toItem(skill, selectedSkillIds),
+  );
 
   const { collection: commandCollection, filter: filterCommands } =
     pmUseListCollection({
@@ -154,6 +189,7 @@ export const PackageEditFormContent = ({
                     {standardCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -270,6 +306,7 @@ export const PackageEditFormContent = ({
                     {commandCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -382,6 +419,7 @@ export const PackageEditFormContent = ({
                     {skillCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
