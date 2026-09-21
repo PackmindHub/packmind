@@ -1,7 +1,7 @@
 ---
 name: 'Domain Error Handling'
 alwaysApply: true
-description: 'Failures raised by a use case are answered centrally by `DomainExceptionFilter`, which maps them to an HTTP status and a log level. A failure carrying no `kind` reaches Nest''s `ExceptionsHandler` as an unrecognised exception: it answers 500 and logs a full stack at error level, even when the right answer was a 404. Two disjoint unions, both discriminating on `kind`, are declared in `packages/types/src/errors/` — `DomainError` (`DomainErrorKind` = `not_found` | `forbidden` | `invalid_input` | `conflict`) for failures the caller caused and can correct, and `InternalError` (`kind: ''internal''`, base class `PackmindInternalError`) for broken invariants that are our own bug.
+description: 'Failures raised by a use case are answered centrally by `DomainExceptionFilter`, which maps them to an HTTP status and a log level. A failure carrying no `kind` reaches Nest''s `ExceptionsHandler` as an unrecognised exception: it answers 500 and logs a full stack at error level, even when the right answer was a 404. Two interfaces carrying a `kind`, whose values do not overlap, are declared in `packages/types/src/errors/` — `DomainError` (`DomainErrorKind` = `not_found` | `forbidden` | `invalid_input` | `conflict`) for failures the caller caused and can correct, and `InternalError` (`kind: ''internal''`, base class `PackmindInternalError`) for broken invariants that are our own bug.
 
 | kind | HTTP | Log level | Message returned to the caller | Retried by the frontend |
 | --- | --- | --- | --- | --- |
