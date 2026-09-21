@@ -5,8 +5,9 @@
  * logs at `error` with a stack, keeps its message away from the client, and is
  * the one failure the frontend retries.
  *
- * Both unions discriminate on the same `kind` field and are disjoint, so a
- * value is at most one of them and `isDomainError` rejects an internal error.
+ * `DomainError` and `InternalError` are interfaces, not unions; each carries a
+ * `kind`, and their `kind` values do not overlap. So a value satisfies at most
+ * one of them and `isDomainError` rejects an internal error.
  *
  * Carrying a type rather than throwing a bare `Error` is what puts `context`
  * into the log as fields: Nest's `BaseExceptionFilter` logs a message and a
