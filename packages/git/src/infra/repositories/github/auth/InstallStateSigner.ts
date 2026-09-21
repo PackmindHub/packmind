@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
+import { GitError } from '@packmind/types';
 
 export type InstallStateKind = 'install' | 'manifest';
 
@@ -18,9 +19,18 @@ export interface InstallStatePayload {
   displayName?: string;
 }
 
-export class InvalidInstallStateError extends Error {
+/**
+ * The state token GitHub echoed back does not verify: forged, tampered with,
+ * truncated, or simply past its ten-minute TTL.
+ *
+ * `invalid_input` — the token travels in the request and nothing about our
+ * own state is broken. Which of the failures it was is deliberately not said,
+ * here or in the log: a caller probing the HMAC learns nothing from the
+ * answer.
+ */
+export class InvalidInstallStateError extends GitError {
   constructor(message = 'Invalid or expired state token') {
-    super(message);
+    super('invalid_input', 'invalid_install_state', {}, message);
     this.name = 'InvalidInstallStateError';
   }
 }

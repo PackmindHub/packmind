@@ -19,7 +19,8 @@ export type GitErrorReason =
   | 'missing_git_input'
   | 'no_files_to_commit'
   | 'unresolvable_git_provider'
-  | 'git_repo_already_linked_as_standard';
+  | 'git_repo_already_linked_as_standard'
+  | 'invalid_install_state';
 
 export type GitErrorContext = {
   organizationId?: string;
