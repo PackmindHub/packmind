@@ -19,6 +19,7 @@ import {
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
+import { gitlabRateLimitedError } from '../http/gitlabRateLimit';
 import {
   GitlabAvailableRepositoriesFailedError,
   GitlabBranchExistenceCheckFailedError,
@@ -87,6 +88,11 @@ export class GitlabProvider implements IGitProvider {
 
       return result;
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        operation: 'list available repositories',
+      });
+      if (throttled) throw throttled;
+
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
         baseUrl: this.baseUrl,
@@ -274,6 +280,9 @@ export class GitlabProvider implements IGitProvider {
       // Unlike GitHub, GitLab does not overload 403 — it throttles with a
       // 429 — so a 403 here is a refusal and nothing else, and there is no
       // header reading to do before believing it.
+      const throttled = gitlabRateLimitedError(error, { owner, repo, branch });
+      if (throttled) throw throttled;
+
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       if (status === 404) {

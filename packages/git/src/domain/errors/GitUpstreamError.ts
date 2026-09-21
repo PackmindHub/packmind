@@ -11,6 +11,7 @@ export type GitUpstreamErrorReason =
   | 'gitlab_api_operation_failed'
   | 'gitlab_available_repositories_failed'
   | 'gitlab_branch_existence_check_failed'
+  | 'gitlab_rate_limited'
   | 'gitlab_api_error_response'
   | 'gitlab_unexpected_response_format'
   | 'directory_existence_check_failed'

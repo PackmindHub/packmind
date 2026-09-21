@@ -18,5 +18,6 @@ export * from './GithubTokenResolverFactoryErrors';
 export * from './GitlabApiOperationFailedError';
 export * from './GitlabAvailableRepositoriesFailedError';
 export * from './GitlabBranchExistenceCheckFailedError';
+export * from './GitlabRateLimitedError';
 export * from './GitlabResponseShapeErrors';
 export * from './UnsupportedGitProviderSourceError';

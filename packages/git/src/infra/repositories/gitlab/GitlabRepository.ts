@@ -15,6 +15,7 @@ import {
   GitRemoteRepositoryNotFoundError,
   NoFilesToCommitError,
 } from '@packmind/types';
+import { gitlabRateLimitedError } from '../http/gitlabRateLimit';
 import {
   GitlabApiErrorResponseError,
   GitlabApiOperationFailedError,
@@ -467,6 +468,16 @@ export class GitlabRepository implements IGitRepo {
 
       return commitInfo;
     } catch (error) {
+      // A 429 is GitLab asking us to wait, not GitLab failing: it has to be
+      // told apart before the generic upstream error below turns it into a
+      // 502 the frontend would retry straight back into the limit.
+      const throttled = gitlabRateLimitedError(error, {
+        owner: this.options.owner,
+        repo: this.options.repo,
+        projectPath: this.projectPath,
+      });
+      if (throttled) throw throttled;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -534,6 +545,12 @@ export class GitlabRepository implements IGitRepo {
       });
       return;
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+        branch: targetBranch,
+      });
+      if (throttled) throw throttled;
+
       const status = this.extractHttpStatus(error);
       if (status !== 404) {
         const errorMessage =
@@ -577,6 +594,12 @@ export class GitlabRepository implements IGitRepo {
         targetBranch,
       });
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+        branch: targetBranch,
+      });
+      if (throttled) throw throttled;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to create target branch on GitLab', {
@@ -610,6 +633,12 @@ export class GitlabRepository implements IGitRepo {
         targetBranch,
       });
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+        branch: targetBranch,
+      });
+      if (throttled) throw throttled;
+
       const status = this.extractHttpStatus(error);
       if (status === 404) {
         this.logger.debug('Branch already absent on GitLab, skipping delete', {
@@ -680,6 +709,12 @@ export class GitlabRepository implements IGitRepo {
         };
       }
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+        branch: head,
+      });
+      if (throttled) throw throttled;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to look up merge request on GitLab', {
@@ -719,6 +754,12 @@ export class GitlabRepository implements IGitRepo {
         wasCreated: true,
       };
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+        branch: head,
+      });
+      if (throttled) throw throttled;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to create merge request on GitLab', {
@@ -793,6 +834,11 @@ export class GitlabRepository implements IGitRepo {
 
       return { files, truncated };
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        projectPath: this.projectPath,
+      });
+      if (throttled) throw throttled;
+
       const status = this.extractHttpStatus(error);
       if (status === 404) {
         // One of the two refs does not exist — nothing to compare.
@@ -1127,6 +1173,13 @@ export class GitlabRepository implements IGitRepo {
 
       return directories;
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        owner,
+        repo: name,
+        branch,
+      });
+      if (throttled) throw throttled;
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 

@@ -14,8 +14,10 @@ import {
   GitRemoteRepositoryNotFoundError,
   NoFilesToCommitError,
 } from '@packmind/types';
+import { GitlabRateLimitedError } from '../../../domain/errors';
 
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
 // than with mockInterface: only the verbs this suite drives are stubbed.
@@ -38,6 +40,7 @@ describe('GitlabRepository', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
     gitlabRepository = new GitlabRepository(
       'test-token',
       repositoryOptions,
@@ -1672,6 +1675,24 @@ describe('GitlabRepository', () => {
         ).rejects.toThrow(
           "Failed to compare 'main'...'packmind/sync' on GitLab: GitLab 503",
         );
+      });
+    });
+
+    describe('when GitLab is throttling us', () => {
+      it('raises the throttle rather than a generic upstream failure', async () => {
+        const throttle = new Error(
+          'Request failed with status code 429',
+        ) as Error & {
+          isAxiosError: true;
+          response: { status: number; headers: Record<string, string> };
+        };
+        throttle.isAxiosError = true;
+        throttle.response = { status: 429, headers: {} };
+        mockAxiosInstance.get.mockRejectedValue(throttle);
+
+        await expect(
+          gitlabRepository.compareBranches('main', 'packmind/sync'),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
       });
     });
   });

@@ -11,6 +11,7 @@ import axios from 'axios';
 import {
   GitlabAvailableRepositoriesFailedError,
   GitlabBranchExistenceCheckFailedError,
+  GitlabRateLimitedError,
 } from '../../../domain/errors';
 import {
   GitRemoteAccessForbiddenError,
@@ -29,7 +30,10 @@ const mockAxiosInstance = {
   delete: jest.fn(),
 } as Partial<jest.Mocked<AxiosInstance>> as jest.Mocked<AxiosInstance>;
 
-const buildAxiosError = (status: number) => {
+const buildAxiosError = (
+  status: number,
+  headers: Record<string, string> = {},
+) => {
   const err = new Error(
     `Request failed with status code ${status}`,
   ) as Error & {
@@ -37,7 +41,7 @@ const buildAxiosError = (status: number) => {
     response: { status: number; headers: Record<string, string> };
   };
   err.isAxiosError = true;
-  err.response = { status, headers: {} };
+  err.response = { status, headers };
   return err;
 };
 
@@ -430,6 +434,16 @@ describe('GitlabProvider', () => {
       });
     });
 
+    describe('when GitLab is throttling us', () => {
+      it('throws a rate limit error rather than an unavailable one', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          gitlabProvider.listAvailableRepositories(),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
+      });
+    });
+
     describe('pagination', () => {
       it('requests the given page', async () => {
         mockAxiosInstance.get.mockResolvedValue({ data: [], headers: {} });
@@ -510,6 +524,28 @@ describe('GitlabProvider', () => {
         );
 
         expect(result).toBe(false);
+      });
+    });
+
+    describe('when GitLab is throttling us (429)', () => {
+      it('throws a rate limit error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
+      });
+
+      it('carries the wait GitLab asked for', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(429, { 'retry-after': '42' }),
+        );
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toThrow(
+          'GitLab is rate limiting us. Try again in 42 seconds.',
+        );
       });
     });
 
