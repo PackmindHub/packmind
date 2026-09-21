@@ -17,6 +17,7 @@ import {
   AddArtefactsToPackageResponse,
   CreatePackageResponse,
   DeletePackagesBatchResponse,
+  DistributionHistoryEntry,
   GetPackageByIdResponse,
   GetPackageSummaryResponse,
   ListPackagesBySpaceResponse,
@@ -193,6 +194,54 @@ export class OrganizationsSpacesPackagesController {
       if (error instanceof Error && error.message.includes('does not exist')) {
         throw new NotFoundException(error.message);
       }
+      throw error;
+    }
+  }
+
+  /**
+   * List the distribution history of a package
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments
+   *
+   * Space scoped rather than organization scoped: the history names the
+   * repositories, branches and commits a package was distributed to, which is
+   * the space's to see, not the whole organization's.
+   */
+  @Get(':packageId/deployments')
+  async listPackageDeployments(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DistributionHistoryEntry[]> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments - Fetching deployments',
+      { organizationId, spaceId, packageId },
+    );
+
+    try {
+      const deployments =
+        await this.deploymentsService.listDeploymentsByPackage({
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+        });
+
+      this.logger.info(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments - Deployments fetched successfully',
+        { organizationId, spaceId, packageId, count: deployments.length },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments - Failed to fetch deployments',
+        { organizationId, spaceId, packageId, error: errorMessage },
+      );
       throw error;
     }
   }

@@ -10,7 +10,7 @@ import {
   PMBadge,
   PMAlert,
 } from '@packmind/ui';
-import { Distribution, TargetId } from '@packmind/types';
+import { DistributionHistoryEntry, TargetId } from '@packmind/types';
 import { useRemovePackageFromTargetsContext } from './RemovePackageFromTargets';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import {
@@ -38,7 +38,7 @@ type RemovableDistribution = {
 };
 
 function removableDistributions(
-  distributions: Distribution[],
+  distributions: DistributionHistoryEntry[],
 ): RemovableDistribution[] {
   const byTarget = new Map<TargetId, RemovableDistribution>();
 

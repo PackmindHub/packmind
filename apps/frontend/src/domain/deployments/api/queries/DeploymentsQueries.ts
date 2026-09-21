@@ -76,23 +76,27 @@ export const useListCommandDeploymentsQuery = (recipeId: CommandId) => {
   });
 };
 
-export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
+export const useListPackageDeploymentsQuery = (
+  packageId: PackageId,
+  spaceId: SpaceId | undefined,
+) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, packageId],
+    queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, spaceId, packageId],
     queryFn: () => {
-      if (!organization?.id) {
+      if (!organization?.id || !spaceId) {
         throw new Error(
-          'Organization ID is required to fetch package deployments',
+          'Organization ID and space ID are required to fetch package deployments',
         );
       }
       return deploymentsGateways.listDeploymentsByPackageId({
         organizationId: organization.id,
+        spaceId,
         packageId,
       });
     },
-    enabled: !!organization?.id,
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 

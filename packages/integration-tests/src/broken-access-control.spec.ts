@@ -1,7 +1,14 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import { TargetNotFoundError } from '@packmind/deployments';
-import { GitCommit, Package, Command, Standard } from '@packmind/types';
+import {
+  GitCommit,
+  Package,
+  Command,
+  SpaceId,
+  Standard,
+  UserSpaceRole,
+} from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -15,6 +22,7 @@ describe('Broken access control - target ownership validation', () => {
   let orgA: DataFactory;
   let orgB: DataFactory;
   let commit: GitCommit;
+  let otherSpaceId: SpaceId;
 
   beforeAll(async () => {
     await fixture.initialize();
@@ -216,6 +224,86 @@ describe('Broken access control - target ownership validation', () => {
           }),
         ).resolves.not.toThrow();
       });
+    });
+  });
+  describe('listDeploymentsByPackage', () => {
+    /*
+     * The space guard on the use case validates that the caller belongs to the
+     * space the command names. On its own that is not enough: nothing stopped a
+     * member of one space naming their own space while asking for a package
+     * that lives in another one of the organization's spaces, and reading its
+     * targets, branches and commits. The package has to be tied to the named
+     * space by the query itself, which is what these two tests pin down.
+     */
+    let otherSpacePackage: Package;
+
+    beforeEach(async () => {
+      const otherSpace = await testApp.spacesHexa.getAdapter().createSpace({
+        ...orgA.packmindCommand(),
+        name: 'Org A Second Space',
+      });
+
+      // createSpace does not enrol its creator, and the positive assertion
+      // below needs a caller who legitimately belongs to the owning space.
+      await testApp.spacesHexa.getAdapter().addSpaceMembership({
+        userId: orgA.user.id,
+        spaceId: otherSpace.id,
+        role: UserSpaceRole.MEMBER,
+        createdBy: orgA.user.id,
+      });
+
+      const command = await orgA.withCommand({
+        name: 'Recipe in the second space',
+        spaceId: otherSpace.id,
+      });
+
+      const response = await testApp.deploymentsHexa
+        .getAdapter()
+        .createPackage({
+          ...orgA.packmindCommand(),
+          spaceId: otherSpace.id,
+          name: 'Second Space Package',
+          description: 'Package belonging to another space of the same org',
+          recipeIds: [command.id],
+          standardIds: [],
+        });
+      otherSpacePackage = response.package;
+
+      // Real history to hide: without a distribution row both assertions below
+      // would be empty for the wrong reason, and would pass with the hole open.
+      await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...orgA.packmindCommand(),
+        packageIds: [otherSpacePackage.id],
+        targetIds: [orgA.target.id],
+      });
+
+      otherSpaceId = otherSpace.id;
+    });
+
+    it('returns the history to the space that owns the package', async () => {
+      const history = await testApp.deploymentsHexa
+        .getAdapter()
+        .listDeploymentsByPackage({
+          ...orgA.packmindCommand(),
+          organizationId: orgA.organization.id,
+          spaceId: otherSpaceId,
+          packageId: otherSpacePackage.id,
+        });
+
+      expect(history).not.toHaveLength(0);
+    });
+
+    it('returns nothing to a space that does not own the package', async () => {
+      const history = await testApp.deploymentsHexa
+        .getAdapter()
+        .listDeploymentsByPackage({
+          ...orgA.packmindCommand(),
+          organizationId: orgA.organization.id,
+          spaceId: orgA.space.id,
+          packageId: otherSpacePackage.id,
+        });
+
+      expect(history).toEqual([]);
     });
   });
 });

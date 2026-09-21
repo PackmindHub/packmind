@@ -79,6 +79,7 @@ import {
 } from '../contracts';
 import { OrganizationId } from '../../accounts/Organization';
 import { Distribution } from '../Distribution';
+import { DistributionHistoryEntry } from '../DistributionHistoryEntry';
 import {
   Package,
   PackageId,
@@ -111,9 +112,10 @@ export interface IDeploymentPort {
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse>;
 
+  /** History entries carry no artifact versions, unlike the distributions they summarise. */
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]>;
+  ): Promise<DistributionHistoryEntry[]>;
 
   listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,

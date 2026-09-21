@@ -236,7 +236,10 @@ export function ContextPackagePane({
    * in any target before offering to take it out of them. The Distribution tab
    * asks the same query, and React Query answers both from one request.
    */
-  const { data: deployments = [] } = useListPackageDeploymentsQuery(pkg.id);
+  const { data: deployments = [] } = useListPackageDeploymentsQuery(
+    pkg.id,
+    pkg.spaceId,
+  );
   const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
