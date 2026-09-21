@@ -1,6 +1,6 @@
 # logger
 
-This library was generated with [Nx](https://nx.dev).
+This library was generated with [Nx](https://nx.dev). It provides `PackmindLogger`, a structured logger wrapping [winston](https://github.com/winstonjs/winston), along with a `maskEmail` helper for redacting emails before they are logged.
 
 ## Building
 

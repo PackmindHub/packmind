@@ -133,10 +133,14 @@ nx lint <package-name>
 nx test <package-name>
 ```
 
-### Step 9: Run Full Quality Gate
+### Step 9: Run Repository-Wide Checks
 
-Before committing, run the full quality gate to validate the entire monorepo. This validates typecheck, tests, linting, builds, and Packmind standards. Do not commit until this passes.
+Before committing, validate the whole monorepo: frontend typecheck, tests and lint on the affected projects, formatting, and the build. Do not commit until all of them pass.
 
 ```bash
-npm run quality-gate
+pnpm run typecheck:frontend
+pnpm run test:staged
+pnpm run lint:staged
+pnpm run prettier:check
+pnpm run build
 ```
