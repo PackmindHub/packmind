@@ -1,4 +1,5 @@
 import { queryClient } from '../../shared/data/queryClient';
+import { makeLoaderArgs } from '../../test/loaderArgs';
 import { setFlashToast } from '../../shared/utils/flashToast';
 import { redirect } from 'react-router';
 import { clientLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected';
@@ -87,9 +88,8 @@ const me = {
   },
 };
 
-const loaderArgs = (spaceSlug: string) => ({
-  params: { orgSlug: 'org-slug', spaceSlug },
-});
+const loaderArgs = (spaceSlug: string) =>
+  makeLoaderArgs({ params: { orgSlug: 'org-slug', spaceSlug } });
 
 async function runLoaderExpectingRedirect(spaceSlug: string) {
   try {

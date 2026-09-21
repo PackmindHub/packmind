@@ -13,6 +13,10 @@ import {
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
 const origin = 'AddArtefactsToPackageUseCase';
@@ -55,28 +59,19 @@ export class AddArtefactsToPackageUseCase
       skillCount: skillIds.length,
     });
 
+    // Missing and belonging-to-another-tenant are one branch on purpose: they
+    // have to be indistinguishable from outside, and a single throw is what
+    // keeps them that way.
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== command.organizationId) {
-      throw new Error(
-        `Package ${packageId} does not belong to organization ${command.organizationId}`,
-      );
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new SpaceNotAccessibleError(spaceId, command.organizationId);
     }
 
     const existingPackage = await this.services
       .getPackageService()
       .findById(packageId);
-    if (!existingPackage) {
-      throw new Error(`Package with id ${packageId} not found`);
-    }
-
-    if (existingPackage.spaceId !== spaceId) {
-      throw new Error(
-        `Package with id ${packageId} does not exist in space ${spaceId}`,
-      );
+    if (!existingPackage || existingPackage.spaceId !== spaceId) {
+      throw new PackageNotFoundError(packageId, spaceId);
     }
 
     const currentCommandIds = existingPackage.recipes || [];
@@ -113,12 +108,11 @@ export class AddArtefactsToPackageUseCase
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
-        if (!recipe) {
-          throw new Error(`Recipe with id ${newCommandIds[i]} not found`);
-        }
-        if (recipe.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Recipe ${newCommandIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!recipe || recipe.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'command',
+            newCommandIds[i],
+            existingPackage.spaceId,
           );
         }
       }
@@ -133,12 +127,11 @@ export class AddArtefactsToPackageUseCase
 
       for (let i = 0; i < standards.length; i++) {
         const standard = standards[i];
-        if (!standard) {
-          throw new Error(`Standard with id ${newStandardIds[i]} not found`);
-        }
-        if (standard.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Standard ${newStandardIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!standard || standard.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'standard',
+            newStandardIds[i],
+            existingPackage.spaceId,
           );
         }
       }
@@ -151,12 +144,11 @@ export class AddArtefactsToPackageUseCase
 
       for (let i = 0; i < skills.length; i++) {
         const skill = skills[i];
-        if (!skill) {
-          throw new Error(`Skill with id ${newSkillIds[i]} not found`);
-        }
-        if (skill.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Skill ${newSkillIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!skill || skill.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'skill',
+            newSkillIds[i],
+            existingPackage.spaceId,
           );
         }
       }
@@ -183,7 +175,7 @@ export class AddArtefactsToPackageUseCase
       .findById(packageId);
 
     if (!updatedPackage) {
-      throw new Error(`Failed to retrieve updated package ${packageId}`);
+      throw new PackageReloadFailedError(packageId);
     }
 
     this.logger.info('Artefacts added to package successfully', {

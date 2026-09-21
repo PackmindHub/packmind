@@ -7,6 +7,7 @@ import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import {
   createDistributedPackageId,
   createDistributionId,
+  createGitProviderId,
   createGitRepoId,
   createOrganizationId,
   createPackageId,
@@ -47,6 +48,10 @@ const distribution = (
       owner: 'PackmindHub',
       repo: 'packmind-proprietary',
       branch: 'main',
+      providerId: createGitProviderId('provider-1'),
+      type: 'standard',
+      isTracked: true,
+      trackingRemovedAt: null,
     },
   },
   distributedPackages: [

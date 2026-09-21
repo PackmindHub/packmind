@@ -1,0 +1,19 @@
+{
+  "unit_id": "U-009",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/types/src/deployments/contracts/IGetPackageReleaseUseCase.ts",
+    "packages/types/src/deployments/contracts/index.ts",
+    "packages/types/src/deployments/ports/IDeploymentPort.ts",
+    "packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+    "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+    "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.spec.ts",
+    "packages/deployments/src/application/adapter/DeploymentsAdapter.ts",
+    "packages/deployments/src/index.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='GetPackageReleaseUseCase'",
+    "kind": "behavioural",
+    "describes": "AC-18"
+  }
+}

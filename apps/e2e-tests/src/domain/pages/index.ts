@@ -13,6 +13,11 @@ export interface IPackmindAppPage extends IPackmindPage {
   openSettings(): Promise<ISettingsPage>;
   openIntegrations(): Promise<ICliSetupPage>;
   openSpaceSettings(): Promise<ISpaceSettingsPage>;
+  /**
+   * The space Context surface, opened on one package. The navigation is pinned
+   * to `plugin-first`, which is the only mode that renders that surface.
+   */
+  openPackageInContext(packageId: string): Promise<ISpaceContextPage>;
   createSpace(
     name: string,
     options?: { type?: SpaceType },
@@ -92,6 +97,45 @@ export interface IPackagePage extends IPackmindAppPage {
   listStandardsInPackage(): Promise<{ name: string }[]>;
 }
 
+/**
+ * The space Context surface, showing one package. It is where a package's
+ * version is read and where a release is cut.
+ */
+export interface ISpaceContextPage extends IPackmindAppPage {
+  /** Cuts a release of the shown package through the release drawer. */
+  createRelease(version: string): Promise<void>;
+  /**
+   * Attempts a cut the drawer may be refused, and returns the trimmed sentence
+   * shown beside the version field. Unlike `createRelease` it does not wait
+   * for the drawer to close - a refused cut leaves it open.
+   */
+  attemptRelease(version: string): Promise<string>;
+  /** `Not released yet` before the first release, the version after it. */
+  getCurrentVersion(): Promise<string>;
+  /**
+   * Opens the release history drawer for the package, showing all available
+   * releases. Drives only — the assertion belongs to the spec.
+   */
+  openReleaseHistory(): Promise<void>;
+  /**
+   * In the open release history drawer, selects a version and returns the
+   * pinned component lines, each in the form `<name> v<number>`, in DOM order
+   * and trimmed. Waits for the detail view to render after the selection.
+   */
+  listComponentsPinnedBy(version: string): Promise<string[]>;
+  /**
+   * Whether the "Create a release" action is currently actionable. Returns
+   * true when enabled, false when disabled.
+   */
+  canCreateRelease(): Promise<boolean>;
+  /**
+   * The visible reason text explaining why the release action is disabled.
+   * Returns the trimmed text; waits for the element to be visible. Returns
+   * empty string if the verdict is ready (reason not rendered).
+   */
+  getReleaseBlockedReason(): Promise<string>;
+}
+
 export interface ICreateStandardPage extends IPackmindAppPage {
   createStandard(
     name: string,
@@ -162,4 +206,5 @@ export interface IPageFactory {
   getGitSettingsPage(): Promise<IGitSettingsPage>;
   getInvitationPage(token: string): Promise<IInvitationPage>;
   getSpaceSettingsPage(): Promise<ISpaceSettingsPage>;
+  getSpaceContextPage(): Promise<ISpaceContextPage>;
 }

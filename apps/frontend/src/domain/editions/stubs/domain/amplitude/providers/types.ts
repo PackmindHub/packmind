@@ -29,6 +29,17 @@ export type AnalyticsEventMap = {
     reason_label: string;
   };
   onboarding_reason_skipped: Record<string, never>;
+  package_version_released: {
+    packageId: string;
+    version: string;
+    componentsCount: number;
+    changeSources: string[];
+  };
+  package_release_refused: {
+    packageId: string;
+    attemptedVersion: string;
+    refusalReason: string;
+  };
   create_standard_from_samples_clicked: Record<string, never>;
   post_signup_onboarding_started: Record<string, never>;
   post_signup_onboarding_skipped: Record<string, never>;

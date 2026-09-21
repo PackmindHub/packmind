@@ -6,15 +6,14 @@ End-to-end tests for the Packmind CLI in real-like conditions.
 
 Before running these tests, you need:
 
-1. **Built CLI**: The CLI must be built first
+1. **Built CLI**: The CLI must be built first, then given its own runtime dependencies
 
    ```bash
    nx build packmind-cli
+   sh scripts/install-dist-cli-deps.sh
    ```
 
-2. **Clean Environment**: Ensure `PACKMIND_API_KEY` is not set in your `.env` file or shell environment, as tests need to control authentication state
-
-3. **Running API** (for authenticated tests only): The API server must be running. By default, tests expect it at `http://localhost:4200`, but you can override this with the `PACKMIND_INSTANCE_URL` environment variable:
+2. **Running API** (for authenticated tests only): The API server must be running. By default, tests expect it at `http://localhost:4200`, but you can override this with the `PACKMIND_INSTANCE_URL` environment variable:
 
    ```bash
    docker compose up
@@ -22,10 +21,11 @@ Before running these tests, you need:
 
    ```bash
    # Optional: Override the default Packmind instance URL
-   export PACKMIND_INSTANCE_URL=http://localhost:3000
+   # (e.g. when PACKMIND_WEB_PORT changes the port docker compose publishes)
+   export PACKMIND_INSTANCE_URL=http://localhost:4300
    ```
 
-   **Note**: Basic tests like `whoami-basic.spec.ts` don't require the API and can run standalone.
+   **Note**: Basic tests like `agents.spec.ts` don't require the API and can run standalone.
 
 ## Running Tests
 
@@ -87,7 +87,7 @@ console.log(result.stderr); // Standard error
 
 - **Real CLI Execution**: Tests run the actual CLI binary (`dist/apps/cli/main.cjs`)
 - **Real API Calls**: User setup is done via HTTP calls to the API
-- **Isolated Tests**: Each test suite creates its own user account
+- **Isolated Tests**: Each test creates its own user account and temporary directory
 - **Jest Stage**: Uses `jest-stage` for context management like integration tests
 
 ## Writing Tests
@@ -95,4 +95,4 @@ console.log(result.stderr); // Standard error
 1. Use `describeWithUserSignedUp()` for authenticated commands
 2. Use `runCli()` to execute CLI commands
 3. Check `returnCode`, `stdout`, and `stderr` in assertions
-4. Each test suite gets a fresh user account with a unique email
+4. Each test gets a fresh user account with a unique email

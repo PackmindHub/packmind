@@ -12,8 +12,9 @@ import {
 } from '../../../api/queries';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
-import { GitProviderId, OrganizationId } from '@packmind/types';
+import { GitProviderId, OrganizationId, createUserId } from '@packmind/types';
 import type { MockedFunction } from 'vitest';
+import { createSuccessQueryResult } from '../../../../../test/queryResultMocks';
 
 vi.mock('../../../api/queries', () => ({
   useCreateGitProviderMutation: vi.fn(),
@@ -145,13 +146,13 @@ describe('GitProviderConnection', () => {
     );
 
     // Default: community-edition user
-    mockUseGetMeQuery.mockReturnValue({
-      data: {
+    mockUseGetMeQuery.mockReturnValue(
+      createSuccessQueryResult({
         authenticated: true,
         edition: 'community',
         message: 'ok',
         user: {
-          id: 'user-1',
+          id: createUserId('user-1'),
           email: 'user@packmind.com',
           displayName: null,
           memberships: [],
@@ -163,8 +164,8 @@ describe('GitProviderConnection', () => {
           role: 'admin',
           githubAppMode: 'on-prem',
         },
-      },
-    } as ReturnType<typeof useGetMeQuery>);
+      }),
+    );
   });
 
   describe('when source is github', () => {
@@ -248,13 +249,13 @@ describe('GitProviderConnection', () => {
 
   describe('when edition is enterprise', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'enterprise',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -266,8 +267,8 @@ describe('GitProviderConnection', () => {
             role: 'admin',
             githubAppMode: 'shared',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
     });
 
     it('shows the hosted install button in the App tab', () => {

@@ -2,12 +2,15 @@ import { isDomainError } from './DomainError';
 
 describe('isDomainError', () => {
   describe('when the value has a valid kind and reason string', () => {
-    describe.each(['forbidden', 'not_found'])('and the kind is %s', (kind) => {
-      it('returns true', () => {
-        const value = { kind, reason: 'example reason' };
-        expect(isDomainError(value)).toBe(true);
-      });
-    });
+    describe.each(['forbidden', 'not_found', 'invalid_input', 'conflict'])(
+      'and the kind is %s',
+      (kind) => {
+        it('returns true', () => {
+          const value = { kind, reason: 'example reason' };
+          expect(isDomainError(value)).toBe(true);
+        });
+      },
+    );
   });
 
   describe('when the value is null', () => {
@@ -73,7 +76,7 @@ describe('isDomainError', () => {
   });
 
   describe('when the value has an unrecognized kind with a valid reason string', () => {
-    describe.each(['conflict', 'unauthorized', 'invalid_input'])(
+    describe.each(['unauthorized', 'internal', 'teapot'])(
       'and the kind is %s',
       (kind) => {
         it('returns false', () => {

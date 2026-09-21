@@ -1,6 +1,6 @@
 # skills
 
-This library was generated with [Nx](https://nx.dev).
+This library was generated with [Nx](https://nx.dev). It implements the domain logic for Packmind "skills" (a playbook artifact type), including their persistence schemas and the `SkillsHexa` entry point.
 
 ## Building
 

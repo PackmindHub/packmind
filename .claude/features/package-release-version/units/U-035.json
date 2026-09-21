@@ -1,0 +1,10 @@
+{
+  "unit_id": "U-035",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts"
+  ],
+  "gated_by": "sweep",
+  "$comment_no_exit_criterion": "Per D-047: the change is a code comment, and there is no assertion to name. Borrowing the U-034 criterion would pass green while judging this unit by a test it does not affect. Gated with `agent-gate.mjs sweep`; the executor runs the neighbouring test as a self-check, which is not the same thing as a criterion and is recorded as a self_check rather than one.",
+  "$comment_what_it_fixes": "U-034 made the docstring on `invalidatePackageReleaseReadiness` false in its load-bearing clause — 'nothing else brings it back' — which is the whole stated justification for the three S6 invalidations existing. D-069 leaves open whether those invalidations should now be removed; this unit makes sure that question gets asked from true premises."
+}

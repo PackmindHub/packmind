@@ -14,6 +14,7 @@
     "opencode",
     "packmind"
   ],
+  "targetId": "beda825e-1726-4b12-a1b5-9816fcac08ba",
   "artifacts": {
     "user:command:create-new-package-in-monorepo": {
       "name": "Create New Package",
@@ -118,7 +119,7 @@
       "name": "adding-ai-agent-rendering-system",
       "type": "skill",
       "id": "3fd90109-62dc-47de-803e-b311442808b2",
-      "version": 1,
+      "version": 2,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "6267de5e-a096-4e18-b6ca-5f66ce8c6b19"
@@ -161,7 +162,7 @@
       "name": "hexagonal-architecture",
       "type": "skill",
       "id": "3d5936bf-be09-4bd3-800d-60191185d2f5",
-      "version": 3,
+      "version": 4,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "6267de5e-a096-4e18-b6ca-5f66ce8c6b19"
@@ -588,7 +589,7 @@
       "name": "Back-end TypeScript Clean Code Practices",
       "type": "standard",
       "id": "46fa4b47-0c11-42ee-9407-6cd0de6abd18",
-      "version": 8,
+      "version": 9,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "6797d533-fcee-4d2d-92ed-1865ad8b07bc"
@@ -609,6 +610,35 @@
         },
         {
           "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:domain-error-handling": {
+      "name": "Domain Error Handling",
+      "type": "standard",
+      "id": "90593140-875b-4f86-bd54-8f89567ac440",
+      "version": 1,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
+      "packageIds": [
+        "6797d533-fcee-4d2d-92ed-1865ad8b07bc"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-domain-error-handling.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-domain-error-handling.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-domain-error-handling.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/domain-error-handling.md",
           "agent": "packmind"
         }
       ]
@@ -675,7 +705,7 @@
       "name": "Scoped Repository Patterns",
       "type": "standard",
       "id": "cb383ce1-1884-48c1-aa19-871682658308",
-      "version": 1,
+      "version": 2,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "6797d533-fcee-4d2d-92ed-1865ad8b07bc"
@@ -729,6 +759,5 @@
         }
       ]
     }
-  },
-  "cliVersion": "0.35.1"
+  }
 }

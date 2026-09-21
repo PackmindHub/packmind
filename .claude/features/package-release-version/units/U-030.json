@@ -1,0 +1,13 @@
+{
+  "unit_id": "U-030",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/migrations/src/migrations/1821000000000-CreatePackageReleases.ts",
+    "packages/migrations/src/lib/packageReleasesMigration.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test migrations --testNamePattern='CreatePackageReleases'",
+    "kind": "behavioural",
+    "describes": "AC-17 (D-062)"
+  }
+}

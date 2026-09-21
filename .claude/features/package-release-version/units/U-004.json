@@ -1,0 +1,15 @@
+{
+  "unit_id": "U-004",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/types/src/deployments/packageReleaseVersionRules.ts",
+    "packages/types/src/deployments/packageReleaseVersionRules.spec.ts",
+    "packages/types/src/deployments/PackageRelease.ts",
+    "packages/types/src/deployments/index.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test types --testNamePattern='packageReleaseVersionRules'",
+    "kind": "behavioural",
+    "describes": "AC-15"
+  }
+}

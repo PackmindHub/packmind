@@ -51,7 +51,7 @@ function destination(
 
 function renderList(
   destinations: PackageDestination[],
-  onUpdate?: (destination: PackageDestination) => void,
+  onUpdate?: (destinations: readonly PackageDestination[]) => void,
 ) {
   return render(
     <UIProvider>

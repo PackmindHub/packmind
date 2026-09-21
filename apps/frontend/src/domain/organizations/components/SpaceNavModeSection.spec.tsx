@@ -21,8 +21,9 @@ vi.mock(
   }),
 );
 
-const IN_DEFAULT_AUDIENCE = 'joan@packmind.com';
-const OUTSIDE_DEFAULT_AUDIENCE = 'someone@example.com';
+/* Any account at all: both flags are open to everybody, so who is asking no
+   longer changes either the offer or where they start. */
+const SIGNED_IN = 'someone@example.com';
 const CHOICE_KEY = 'space-nav-mode.v2';
 
 function ModeProbe() {
@@ -83,87 +84,77 @@ describe('SpaceNavModeSection', () => {
     vi.clearAllMocks();
   });
 
+  /*
+   * The mark now has one audience left: somebody who chose the current
+   * navigation back. Everybody else is already on the new one, which is what
+   * the mark used to point at.
+   */
   describe('the mark that points at it', () => {
-    it('points, for somebody who has never had the offer on screen', () => {
-      renderWithoutSection(OUTSIDE_DEFAULT_AUDIENCE);
+    it('points, for somebody who switched back and has never had the offer on screen', () => {
+      localStorage.setItem(CHOICE_KEY, 'today');
+
+      renderWithoutSection(SIGNED_IN);
 
       expect(screen.getByTestId('pointer')).toHaveTextContent('pointing');
     });
 
     it('goes quiet once the section has rendered', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
+      localStorage.setItem(CHOICE_KEY, 'today');
+
+      renderSection(SIGNED_IN);
 
       expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
     });
 
     it('stays quiet on the next visit, since the browser remembers', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
+      localStorage.setItem(CHOICE_KEY, 'today');
+      renderSection(SIGNED_IN);
       cleanup();
 
-      renderWithoutSection(OUTSIDE_DEFAULT_AUDIENCE);
+      renderWithoutSection(SIGNED_IN);
 
       expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
     });
 
     describe('when the reader is already on the new navigation', () => {
       it('says nothing, since there is nothing to discover', () => {
-        renderWithoutSection(IN_DEFAULT_AUDIENCE);
+        renderWithoutSection(SIGNED_IN);
 
         expect(screen.getByTestId('pointer')).toHaveTextContent('quiet');
       });
     });
   });
 
-  /*
-   * The two flags parting is the whole point of the beta, and this is where it
-   * shows: somebody nobody listed is offered the new navigation and still
-   * starts on the current one. One key could not say both.
-   */
-  describe('when the reader is outside the audience that gets it by default', () => {
-    it('offers the switch anyway, since the beta is open to every account', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
-
-      expect(screen.getByLabelText('New navigation')).toBeInTheDocument();
-    });
-
-    it('leaves them on the current navigation until they ask for it', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
-
-      expect(screen.getByLabelText('New navigation')).not.toBeChecked();
-      expect(screen.getByTestId('mode')).toHaveTextContent('today');
-    });
-
-    it('still honours a pinned demo link, so the mode is not gated', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE, '/?nav=plugin-first');
-
-      expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
-    });
-  });
-
-  describe('when the reader is inside the audience that gets it by default', () => {
+  describe('the switch', () => {
     it('names itself, since the profile page holds more than one section', () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       expect(
         screen.getByRole('heading', { name: 'Navigation (beta)' }),
       ).toBeInTheDocument();
     });
 
+    it('is offered to every account', () => {
+      renderSection(SIGNED_IN);
+
+      expect(screen.getByLabelText('New navigation')).toBeInTheDocument();
+    });
+
     it('says the choice is held by this browser', () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       expect(screen.getByText(/this browser/)).toBeInTheDocument();
     });
 
-    it('starts on, since the audience gets the new navigation by default', () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+    it('starts on, since every account gets the new navigation by default', () => {
+      renderSection(SIGNED_IN);
 
       expect(screen.getByLabelText('New navigation')).toBeChecked();
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
 
     it('flips the whole layout back to the current navigation', async () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       await userEvent.click(screen.getByLabelText('New navigation'));
 
@@ -171,7 +162,7 @@ describe('SpaceNavModeSection', () => {
     });
 
     it('flips on again', async () => {
-      renderSection(IN_DEFAULT_AUDIENCE, '/?nav=today');
+      renderSection(SIGNED_IN, '/?nav=today');
 
       await userEvent.click(screen.getByLabelText('New navigation'));
 
@@ -179,7 +170,7 @@ describe('SpaceNavModeSection', () => {
     });
 
     it('remembers the choice for the next visit', async () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       await userEvent.click(screen.getByLabelText('New navigation'));
 
@@ -189,7 +180,7 @@ describe('SpaceNavModeSection', () => {
     it('reads back a stored choice', () => {
       localStorage.setItem(CHOICE_KEY, 'today');
 
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       expect(screen.getByLabelText('New navigation')).not.toBeChecked();
     });
@@ -197,13 +188,13 @@ describe('SpaceNavModeSection', () => {
     it('lets the URL win over what is stored', () => {
       localStorage.setItem(CHOICE_KEY, 'today');
 
-      renderSection(IN_DEFAULT_AUDIENCE, '/?nav=plugin-first');
+      renderSection(SIGNED_IN, '/?nav=plugin-first');
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
 
     it('ignores a mode it does not know', () => {
-      renderSection(IN_DEFAULT_AUDIENCE, '/?nav=whatever');
+      renderSection(SIGNED_IN, '/?nav=whatever');
 
       expect(screen.getByTestId('mode')).toHaveTextContent('plugin-first');
     });
@@ -212,23 +203,24 @@ describe('SpaceNavModeSection', () => {
       it('ignores it, since nobody chose it', () => {
         localStorage.setItem('space-nav-mode', 'today');
 
-        renderSection(IN_DEFAULT_AUDIENCE);
+        renderSection(SIGNED_IN);
 
         expect(screen.getByLabelText('New navigation')).toBeChecked();
       });
     });
   });
+
   describe('what it reports', () => {
     it('names the architecture of every reader, so a rate has a denominator', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       expect(Analytics.setUserProperties).toHaveBeenCalledWith({
-        navigationMode: 'today',
+        navigationMode: 'plugin-first',
       });
     });
 
     it('reports a flip of the switch', async () => {
-      renderSection(IN_DEFAULT_AUDIENCE);
+      renderSection(SIGNED_IN);
 
       await userEvent.click(screen.getByLabelText('New navigation'));
 
@@ -239,33 +231,35 @@ describe('SpaceNavModeSection', () => {
       });
     });
 
-    it('reports an invitation link that was followed', () => {
-      renderSection(OUTSIDE_DEFAULT_AUDIENCE, '/?nav=plugin-first');
+    it('reports a link that pins the other navigation', () => {
+      renderSection(SIGNED_IN, '/?nav=today');
 
       expect(Analytics.track).toHaveBeenCalledWith('navigation_mode_switched', {
-        fromMode: 'today',
-        toMode: 'plugin-first',
+        fromMode: 'plugin-first',
+        toMode: 'today',
         origin: 'link',
       });
     });
 
     describe('when the link asks for the mode the reader is already on', () => {
       it('reports nothing, since nothing moved', () => {
-        renderSection(IN_DEFAULT_AUDIENCE, '/?nav=plugin-first');
+        renderSection(SIGNED_IN, '/?nav=plugin-first');
 
         expect(Analytics.track).not.toHaveBeenCalled();
       });
     });
 
     describe('when a mode was already chosen', () => {
+      /* Reading the default instead of the chosen mode would report nothing
+         here, since the link asks for what the default already is. */
       it('reports the move away from it, not from the default', () => {
-        localStorage.setItem(CHOICE_KEY, 'plugin-first');
+        localStorage.setItem(CHOICE_KEY, 'today');
 
-        renderSection(OUTSIDE_DEFAULT_AUDIENCE, '/?nav=today');
+        renderSection(SIGNED_IN, '/?nav=plugin-first');
 
         expect(Analytics.track).toHaveBeenCalledWith(
           'navigation_mode_switched',
-          { fromMode: 'plugin-first', toMode: 'today', origin: 'link' },
+          { fromMode: 'today', toMode: 'plugin-first', origin: 'link' },
         );
       });
     });

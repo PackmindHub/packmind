@@ -1,0 +1,656 @@
+# Feature: Release a numbered version of a package
+
+- slug: `package-release-version` — the directory name under `.claude/features/`
+- status: `closed` for its acceptance criteria — AC-1..AC-25 delivered and green; reopened on
+  2026-09-16 by D-056 for a feature flag, and closed again on 2026-09-17 with S4 (D-057).
+  S5 triaged the review on PR #489 the same day and closed: four findings, four units
+  (U-027..U-030), all green. S6 closed on 2026-09-18: three defects the criteria-led review
+  found, three standards raised on #489, and the `packmind-cli` gate this feature had been
+  failing since S1. **Not merged. S7 is open and handed off — three coupling findings and one
+  false sentence in `apps/doc`; see `S7 — open` below. Every check on #489 is green.**
+- opened: `2026-09-14`
+
+Frames [PackmindHub/packmind-proprietary#845](https://github.com/PackmindHub/packmind-proprietary/issues/845),
+itself the output of an Example Mapping workshop. The issue is the source of every
+acceptance criterion below; where this charter and the issue disagree, this charter
+wins, and `Out of scope` says what was added to the issue's own non-goals.
+
+The issue lives in the proprietary repository; the work lands here, on OSS, because
+that is where `packages/deployments`, `packages/types` and `apps/frontend` live and
+because proprietary picks OSS up by merge, not the other way round.
+
+## Problem
+
+A package is a curated set of components — commands, standards and skills — that a
+space distributes to repositories. `Package` (`packages/types/src/deployments/Package.ts`)
+holds `recipes: CommandId[]`, `standards: StandardId[]` and `skills: SkillId[]`: id
+arrays, no versions. It is a pointer to whatever those components happen to be right
+now, and it has no name for any state it has ever been in.
+
+The machinery for pinning versions already exists, one layer down and for a different
+purpose. `DistributedPackage` snapshots `standardVersions`, `recipeVersions` and
+`skillVersions` at the moment a package lands on a target, and the drift readers built
+on top of it — `buildPackageDriftOverview`, `componentLateness`, `PackageReachStrip` —
+tell an owner how far each landing has fallen behind. So the app can already answer
+"is this repository up to date with the package?". What nobody can ask is "up to date
+with *what*?": the only answer available is "with the package as it stands this
+second", which changes every time anyone publishes a component version.
+
+That is the half-truth in Packmind's promise. A tech lead is supposed to be able to
+say who is on which version of the playbook; today there is no version to be on. There
+is nothing to communicate ("we're shipping 0.3.0 of the frontend package"), nothing to
+compare two repositories against except a moving target, and no way to state that the
+content a package distributes is itself behind — only that a *destination* is behind.
+An owner curating a package has no moment where they say "this set, this shape, ship
+it", and no record afterwards that the moment happened.
+
+## In scope
+
+- **A release: a named, immutable snapshot of one package.** It carries an `X.Y.Z`
+  version, and pins the version of every component the package holds at the moment it
+  is cut, plus the package's own title and description. Once written, nothing changes
+  it — not publishing a newer component version, not renaming the package, not deleting
+  a component.
+- **Persistence for releases**, including whatever is needed for a release to stay
+  browsable after a component it pins has been deleted. The three pinned-version types
+  (`CommandVersion`, `StandardVersion`, `SkillVersion`) and the existing junction-table
+  idiom of `packages/deployments/src/infra/schemas/` are the starting point, not the
+  answer.
+- **A change gate**: given a package and its last release, whether anything has changed
+  since. Three inputs, one verdict — component versions, package details (title,
+  description), component list — plus one veto: an empty package can never be released.
+  The gate's answer and its *reason* are both read by the UI, because the disabled
+  action has to say why.
+- **Version validation**: `X.Y.Z` only, strictly greater than the current version, and
+  one of the three next increments (patch, minor, major). Enforced server-side
+  regardless of what the form offers.
+- **The release flow in the app**, on the package detail surface
+  (`apps/frontend/src/domain/deployments/components/context/`): a version area stating
+  the current version or "Not released yet", a "Create a release" action that is
+  enabled or disabled with its reason, and a form pre-filled with the suggested next
+  version that keeps invalid input for correction rather than discarding it.
+- **Browsing a released version**: its version list, and what each version pins.
+- **A "released content is behind" signal on the package**, distinct from the existing
+  destination drift: 0.1.0 pins "Work with Jest" v4 and v5 exists.
+- **No ownership or role check.** No `createdBy` test, no admin requirement — stated as
+  scope, because "who may cut a release" is exactly the question a subagent would
+  otherwise invent an answer to.
+
+  *Amended 2026-09-18 by D-065.* This bullet read "**No permission check.** Any member of
+  the organization can release" until S5. It is now a **space** member of the organization:
+  the three release use cases extend `AbstractSpaceMemberUseCase`, so a member who does not
+  belong to the space is refused. AC-19 is untouched — it forbids an ownership or role
+  check, and space membership is neither — but the old sentence would now be wrong in the
+  opposite direction from the one it was written to prevent. The reason is D-064: nothing in
+  the request chain binds a space to its organization, so organization-level authorisation
+  let a caller reach another organization's package.
+- **Coverage on non-skill components.** Every example in the issue uses a skill; the
+  rules speak of components. A command and a standard must appear in the tests.
+- **CHANGELOG under `Unreleased`, and end-user documentation under `apps/doc/`** — the
+  flow is user-facing.
+- **End-to-end coverage under `apps/e2e-tests/`**, added on 2026-09-16 by D-048 after S2
+  closed. Every criterion above is verified either side of the HTTP boundary and none
+  across it, and D-042 is a real defect living in exactly that gap. Playwright only;
+  `apps/cli-e2e-tests/` stays out, because releasing from the CLI remains a non-goal.
+
+- **A feature flag that hides the release surface**, added on 2026-09-16 by D-056 after the
+  feature was otherwise closed. Releases are inert until the consumer side ships (D-022), and
+  a visible "Create a release" action invites curators to cut immutable records that nothing
+  installs or compares against. This reverses D-020 and D-024, whose conclusion was that no
+  flag was needed — that argument was about rollback risk, and the reason here is
+  incompleteness.
+
+  Shaped by D-057 on 2026-09-17: **the UI only**. `PackageVersionArea` is wrapped in
+  `<PMFeatureFlag>` at its one mount site — the one-line gate D-024 kept it mountable for —
+  under the key `package-releases` with the audience `['@packmind.com', '@promyze.com']`. The
+  three release routes stay open, because the harm is writing immutable rows rather than
+  reading an empty list, and gating them means becoming the first caller of a helper nothing
+  in the repository calls. Who removes the flag, and when, is left open.
+
+## Out of scope
+
+Non-goals, stated so the orchestrator can recognise one. A unit that needs something on
+this list is not a design question — it is rung 4 of the escalation ladder, and halts
+to the human.
+
+From the issue:
+
+- **Releasing from the CLI.** No file under `apps/cli` is touched. A sibling story.
+- **A deleted *package* and its released versions.** Split into its own story on
+  2026-09-11. Deleted **components** inside a live package's release are in scope; a
+  soft-deleted package is not.
+- **Choosing an intermediary version of a component.** A release always pins the latest
+  version of each. There is no "release 0.2.0 with Jest v12 while v16 exists".
+- **The consumer side.** Installing, pinning, or distributing a *specific released
+  version* is not here. The workshop produced no example for it.
+
+Added here, because they are the nearest plausible things and none of them is asked
+for:
+
+- **Distribution and drift semantics do not change.** `PublishPackagesUseCase`,
+  `InstallPackagesUseCase`, `DistributedPackage` and every drift selector keep
+  distributing and comparing exactly what they do today: the package's current content.
+  A release is written alongside them and read by nobody but the release UI. Any unit
+  that finds itself editing a drift selector to teach it about releases has left scope.
+- **Marketplace and plugin publishing are untouched.** `renderPackageAsPlugin`,
+  `isPackagePublishableAsPlugin` and the marketplace tables do not learn about versions.
+- **No release notes, no per-release description, no git tag, no CHANGELOG generation.**
+  A release has a number, not prose.
+- **No deleting, yanking, editing or re-cutting a release.** Immutable includes
+  "no undo". A mistaken 0.2.0 is followed by 0.2.1.
+- **No pre-release or build-metadata versions.** `1.2.0-beta-2` is refused; that is a
+  criterion, and widening to semver's full grammar later is a different decision.
+- **No automatic release.** Nothing cuts a release on publish, on merge, or on a
+  schedule. It is a deliberate act by a person.
+- **No notification of any kind on release** — no email, no webhook, no in-app alert.
+
+## Acceptance criteria
+
+Each AC is **one user-observable behaviour**, and becomes at least one named test.
+
+AC-1 to AC-11 are about the gate and the form and are observable in the frontend
+against a stubbed API; AC-12 to AC-19 are about what the backend writes and refuses,
+and are observable at the use-case or HTTP boundary. AC-20 is the concurrent cut, and
+AC-21's whole content is that the others do not secretly assume a skill.
+
+AC-22 to AC-25 were added on 2026-09-16 by D-048 and are different in kind from all of
+the above: they are the only ones observable **across** the HTTP boundary, in a browser
+against a running API and database. Everything before them is verified on one side of
+that boundary or the other, which is why a defect sitting in the seam (D-042) survived
+nineteen units with every criterion met.
+
+| id | criterion | user-visible | verified by |
+|----|-----------|--------------|-------------|
+| AC-1 | A package that has never been released shows "Not released yet" and a "Create a release" action | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "never released does not render the sentinel"; `nx test frontend --testNamePattern='ContextPackagePane'` — "renders the version area in the header", which proves the pane actually mounts it |
+| AC-2 | A package with no components shows the action disabled with "Add at least one component" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty package", for the sentence and the disabled action; `nx test deployments --testNamePattern='packageReleaseGate'` — "when the package is empty" > "when it has never been released" > "reports no_components", for the rule |
+| AC-3 | A released package identical to its last release shows the action disabled with "Nothing has changed since 0.1.0" | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release"; `nx test deployments --testNamePattern='packageReleaseGate'` — "when it is identical to its latest release" > "reports no_change" |
+| AC-4 | A released package one of whose pinned components has a newer version shows it is behind on that component — v4 pinned, v5 available — and offers a release | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "behind on a component", which asserts the name, v4 and v5 together and the action still enabled; `nx test deployments --testNamePattern='packageReleaseGate'` — "when a pinned component has a newer version available" > "is ready". Made to hold in the running app by S8: `nx test frontend --testNamePattern='refetches the readiness the cache still considers fresh'` — the readiness the gate reads is recomputed on arrival at the pane, so a component that gained a version elsewhere is seen. Before U-034 this criterion was green at the unit level and false in the browser, because readiness is a prop in `PackageVersionArea.spec` (D-068) |
+| AC-5 | Renaming a released package enables the action; renaming it back disables it again | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the name changed" > "is ready" for the rename, and "when it is identical to its latest release" > "reports no_change" for renaming it back: the gate is stateless (D-006), so "renamed back" **is** the identical state and there is no other state for it to be in; `nx test frontend --testNamePattern='PackageVersionArea'` — "never released" and "unchanged since the last release" for enabled-on-`ready` and disabled-on-`no_change` |
+| AC-6 | Editing the description of a released package enables the action | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the description changed" > "is ready"; the descriptions-differ-only-by-case leaf case records D-008's deliberate asymmetry with the name; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" for the disabled pole |
+| AC-7 | A title edit that differs from the released title only by surrounding whitespace, or only by case, leaves the action disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the name differs only by surrounding whitespace" > "reports no_change" and "when the name differs only by case" > "reports no_change", both driving the package through `evaluatePackageReleaseGate`. These are the two cases D-043 reserved this column for and D-046 records why: the `packageNameMatches` leaf cases were green all along and the **composition** was untested; `nx test frontend --testNamePattern='PackageVersionArea'` — "unchanged since the last release" |
+| AC-8 | Adding a component enables the action, removing one enables it, and adding then removing the same one leaves it disabled | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when a component is added" > "is ready" and "when a component is removed" > "is ready", both driven through the **recipe** family (AC-21), and "when a component is added and then removed" > "reports no_change". The third clause is proven by set-equality of the resulting state (D-008), **not** by driving a sequence — a stateless gate (D-006) cannot be asked anything else; `nx test frontend --testNamePattern='PackageVersionArea'` |
+| AC-9 | Removing the last component leaves the action disabled with "Add at least one component", not with a change reason — empty beats changed | yes | `nx test frontend --testNamePattern='PackageVersionArea'` — "empty beats changed", which asserts the change sentence is absent; `nx test deployments --testNamePattern='packageReleaseGate'` — "when the package is empty" > "when it has been released" > "reports no_components" |
+| AC-10 | One change of any kind is enough: a package whose component list is back to identical but whose title differs can be released | yes | `nx test deployments --testNamePattern='packageReleaseGate'` — "when the component list is unchanged but the name differs" > "is ready", which is AC-10 verbatim, plus "when a pinned component has a newer version available" > "is ready" for a second independent source; `nx test frontend --testNamePattern='PackageVersionArea'`; `nx test frontend --testNamePattern='refetches the readiness the cache still considers fresh'` for the same staleness repair AC-4 carries, since AC-10's second source is a component version (D-068) |
+| AC-11 | The release form offers exactly the three next increments — 0.1.0 offers 0.1.1, 0.2.0 and 1.0.0 — and is pre-filled with the patch one | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "offers the three next increments", "pre-fills the patch increment" and "pre-fills 0.1.0 for a first release" |
+| AC-12 | A submitted version that does not follow X.Y.Z is refused with "Version must follow X.Y.Z", and the form keeps what was typed, so `1,2,3` can be corrected | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a malformed version and keeps it", which asserts the field still reads `1,2,3` and the mutation was not called; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "when the version is malformed" > "refuses it with malformed" for the server-side check |
+| AC-13 | A submitted version lower than the current one is refused with "Version must be greater than 1.2.0" | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a lower version"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses a version that is not greater with not_greater" |
+| AC-14 | A submitted version equal to the current one is refused with "Version must be greater than 1.2.0" | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses the current version"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses 0.10.0 as not greater than 0.10.0" |
+| AC-15 | A submitted version that is well-formed and greater but not one of the three next increments — 0.5.0 after 0.1.0 — is refused | yes | `nx test frontend --testNamePattern='CreatePackageReleaseDrawer'` — "refuses a greater non-increment"; `nx test deployments --testNamePattern='CreatePackageReleaseUseCase'` — "refuses a greater non-increment version with not_an_increment" |
+| AC-16 | A release pins the latest version of each component it holds: releasing 0.2.0 over a 0.1.0 that pinned v4 and v3 records v16 and v45, and the package then lists both versions | yes | `nx test deployments --testNamePattern='CreatePackageReleaseUseCase\|ListPackageReleasesUseCase'` — "pins the latest version of every component it holds" for the pinning, and "lists them newest first by parsed triple" for the listing |
+| AC-17 | Publishing a newer version of a pinned component does not change what an existing release pins: 0.1.0 still carries "Work with Jest" v4 | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*newer version'` |
+| AC-18 | A component deleted after a release is still shown, at its pinned version, when browsing that release; a release cut afterwards excludes it | yes | `nx test deployments --testNamePattern='PackageReleaseRepository.*deleted'` — first clause only; the second is a consequence of the package's component list, see D-037 |
+| AC-19 | A member of the organization who did not create the package can release it — no ownership or role check refuses them | yes | `nx test deployments --testNamePattern='CreatePackageReleaseUseCase\|GetPackageReleaseUseCase'` — "releases for a member who did not create the package", and "read a release the caller did not create" |
+| AC-20 | Two releases of the same version cut concurrently: the first is written and the second is refused because that version already exists | yes | `nx test deployments --testNamePattern='PackageReleaseRepository'` for the constraint itself, `CreatePackageReleaseUseCase` for the 23505 translation — see D-027 on what pg-mem does and does not prove |
+| AC-21 | Every rule above holds for a package whose components include a command and a standard, not only skills | no | `nx test deployments --testNamePattern='PackageReleaseRepository\|packageReleaseGate'` — the pinning fixture holds one command, one standard and one skill; the gate's change cases are driven through the **recipe** family. AC-18's block deliberately names only the command and the standard, because `SkillVersionSchema` has no soft-delete columns (D-037). S1 rules only; S2 re-checks its own |
+| AC-22 | A user cuts a release in the browser against a real API, and the version it created is then shown as the package's current version | yes | `cd apps/e2e-tests && npx playwright test src/features/packages/PackageRelease.spec.ts --grep 'cuts a release'` — "it cuts a release and shows the new version as the current version", driving a real browser against the running frontend, API and Postgres. Reached through the **Context** surface, not the package detail route (D-050) |
+| AC-23 | A release cut in the browser pins the package's real components, and browsing that version in the history lists them at the versions it pinned | yes | `cd apps/e2e-tests && npx playwright test src/features/packages/PackageRelease.spec.ts --grep 'lists what a release pinned'` — "it lists what a release pinned when browsing that version", asserting the **exact** one-element array `[`${standard.name} v1`]` against the real API: the pinned version number is the substance, so the assertion is not a loose match |
+| AC-24 | With nothing changed since the last release, the action is disabled in the running app and states why, naming the version | yes | `cd apps/e2e-tests && npx playwright test src/features/packages/PackageRelease.spec.ts --grep 'states why the action is disabled'` — "it states why the action is disabled when nothing has changed", asserting the button disabled **and** the exact sentence `Nothing has changed since 0.1.0`, so "naming the version" is part of the check rather than a substring match. Proves D-041 in the running app: the reason is visible text, which a tooltip on a disabled control could never be |
+| AC-25 | A version the server refuses reaches the form carrying its reason: the sentence the user sees names the refusal, not a generic failure | yes | `cd apps/e2e-tests && npx playwright test src/features/packages/PackageRelease.spec.ts --grep 'carries the refusal'` — "it carries the refusal from the server to the form when the race is lost", driving AC-20's race in a browser: two cuts land through the API behind the open form, whose own check then passes, so the request really reaches the server. The assertion is the exact sentence `Version must be greater than 0.2.0` — a version the form never held, so it can only have come over the wire. This is D-042's repair, proven (D-051) |
+
+## Known unknowns
+
+| id | question | resolve by |
+|----|----------|-----------|
+| UK-1 | What version is offered for a **first** release? The increment rule is defined against a current version, and a never-released package has none. Is it a free X.Y.Z, a fixed 0.1.0, or the three increments over an implied 0.0.0? | design session |
+| UK-2 | Do the title's trim and case-folding comparison rules (AC-7) apply to the description too? The issue gives title scenarios only, and justifies them with "the package name is trimmed anyway" — a reason that does not transfer. | design session |
+| UK-3 | Where a release lives in the schema, and how a release stays readable after a pinned component is deleted — pinning version **ids** and relying on component versions never being hard-deleted, versus copying the rendered content into the release. This decides AC-18 and most of the migration. | design session |
+| UK-4 | Is the gate computed on read (compare package against its last release, every time the pane loads) or maintained as state? AC-3, AC-5, AC-8 and AC-10 all read it, and the reason string is part of the answer. | design session |
+| UK-5 | What the "current version" is when releases could ever be non-monotonic, given AC-20's concurrency: greatest release, or last written? | design session |
+| UK-6 | The concurrency mechanism for AC-20 — a unique constraint on (package, version) surfacing as a refusal, or an explicit check — and what message reaches the form. | design session |
+| UK-7 | Feature flag: name, audience and rollback plan. The issue marks this *(inferred — confirm)*. If flagged, it joins `packages/feature-flags/src/registry.ts` and its `FeatureFlagKey` union. | design session |
+| UK-8 | Amplitude: `package_version_released` and `package_release_refused` are asked for, but the analytics provider is imported from `@packmind/proprietary/frontend/domain/amplitude/...` and `packages/amplitude` is empty on OSS. Can these events be emitted from the OSS side at all, and does `package_release_refused` fire on a client-side rejection, a server-side one, or both? | design session, verified empirically |
+| UK-9 | Does a release record who cut it and when, and is that shown? Nothing in the issue asks for it, and nothing forbids it. | design session |
+| UK-10 | Which surface browses a released version (AC-18) — the existing context package pane with a version selector, a separate route, or a drawer — and where the version area sits relative to `PackageReachStrip` and the existing tabs. | design session |
+| UK-11 | Does the flag gate the **API routes** as well as the UI, or only the UI? If the routes stay open the feature is hidden but reachable by URL, and the immutable rows can still be created; if they close, what do they answer — 404, 403, or a refusal code — and does that disclose the flag's existence? | **resolved — D-057**: UI only. The routes are unchanged, so they answer exactly what they answer today, and the disclosure question is moot. `isFeatureEnabled` has zero call sites in the repository and being its first is not worth the threat model |
+| UK-12 | The flag's key, audience and removal. `packages/feature-flags` holds three keys today, every one mapped to `['@packmind.com', '@promyze.com']` — D-020 called it a mechanism for pinning a demo to staff, not a rollout or a kill switch, and it has no per-organization audience. "Hide from everyone until a sibling ships" may not be what that registry does. | **resolved except removal — D-057**: `package-releases`, audience `['@packmind.com', '@promyze.com']`. D-020's premise was wrong — an audience of `[]` **is** off for everyone — and the empty audience is rejected anyway, because the `underFeatureFlag` fixture is domain-based and would take AC-22..AC-25 with it. Removal is left open, and D-057 says so |
+| UK-13 | Releases cut while the flag is off — by staff, in demos, by the e2e suite — are immutable and outlive the flag. Does that matter, and is anything owed to them when the feature opens up? | **resolved — D-057**: no. Under a staff pin they are demo data on staff organizations, plus what the e2e suite writes to its own database |
+
+## Size and sessions
+
+**Empty at framing. Filled at the close of the design session.**
+
+Coarse read: this **is one feature**. Every AC traces to the same sentence — a package
+has no state anyone can name — and none of the obvious cuts survives contact. The gate
+(AC-2..AC-10) without persistence has nothing to compare against; persistence
+(AC-16..AC-18) without the gate can be written but never reached, because the only way
+to cut a release is an action the gate enables; the version rules (AC-11..AC-15) are a
+property of the release form and refuse against a current version that only persistence
+knows. Shipped alone, each is inert.
+
+Expected shape of the work: one migration and one or two new schemas in
+`packages/deployments`, new types in `packages/types/src/deployments/`, a small cluster
+of use cases (cut a release, read a package's releases, compute the gate), the API
+controller entries they need, and a frontend release surface in the existing context
+package pane. The comparison rules (AC-7, AC-8, AC-10) are pure functions and are the
+cheapest, densest tests in the feature; AC-18 and AC-20 are the two with real design
+risk, and they are the two that UK-3 and UK-6 have to settle first.
+
+- rough unit count: `12-18` for S1+S2 (actual: 19), plus `3-5` for S3 (actual: 4), plus `2`
+  for S4 (actual: 3 — U-026 withdrew the CHANGELOG entry, which the boundary reconcile
+  found rather than the sizing), plus `not sized` for S5 (actual: 4 — one per finding, which
+  is the count the triage produced rather than one it was given)
+- verdict: `split`
+- session boundaries:
+
+  | id | ACs | what it lands | depends on |
+  |----|-----|---------------|------------|
+  | S1 | AC-16, AC-17, AC-18, AC-19, AC-20, AC-21 | the four tables and their migration, the `PackageRelease` aggregate, the version module in `packages/types`, the change gate and its comparisons, the three use cases and the three routes on the existing packages controller | — |
+  | S2 | AC-1..AC-15 | the version area in the package pane header, the release form, the history drawer, the Amplitude calls, `apps/doc` and the CHANGELOG | S1 |
+  | S3 | AC-22, AC-23, AC-24, AC-25 | the release endpoints on `IPackmindApi`, release methods on a new **`ISpaceContextPage` / `SpaceContextPage`** — *not* `IPackagePage`, which addresses a route that never mounts the release UI; corrected by D-050 after U-020 blocked on it — one Playwright spec in `apps/e2e-tests/src/features/packages/`, and D-042's wire repair | S2 |
+  | S4 | — (no new AC; a flag is a control, not a behaviour anyone asked to observe) | the `package-releases` flag, pinned to staff: the key in `packages/feature-flags`, one `<PMFeatureFlag>` wrap around `PackageVersionArea`, and `underFeatureFlag: true` on the release e2e spec. The API routes stay open — D-057 | S3 |
+  | S5 | — (no new AC; triage of an external review, not a behaviour) | the four Greptile findings on PR #489: each one judged true or false, the true ones fixed as units with their own criteria, the false ones answered on the PR and closed. **Not sized** — the triage is the sizing. *Closed 2026-09-17: four units, U-027..U-030, and six decisions, D-059..D-064* | S4 |
+  | S6 | — (no new AC; a second review pass and a red gate, neither a behaviour) | the defects a human-led review found in the release surface — a readiness query nothing invalidated, and a form with two dead ends — plus the two standards Greptile raised on #489, and the 76 `packmind-cli lint` errors this feature's own specs were carrying. **Not sized** — the findings are the sizing. *Closed 2026-09-18: eight commits* | S5 |
+  | S7 | — (no new AC; a third review pass, not a behaviour) | triage the three `graphify-labs` coupling findings on #489, and the `apps/doc` sentence U-032 made false. **Not sized** — the triage is the sizing. *Open* | S6 |
+
+  **S1, S2, S3 and S4 are complete and green.** S4 was added on 2026-09-16 by D-056, after S3
+  closed, and sized the same day by D-057 — which the human decided directly, with the
+  repository facts attached, in place of the design session D-056 called for. UK-11, UK-12 and
+  UK-13 are resolved there.
+
+  S4 is two units and they do not share an exit command, which is the whole of why it is two:
+  the registry key and the JSX wrap are judged by `nx test frontend`, and the e2e spec's
+  `underFeatureFlag` declaration is judged by Playwright against a running stack. The second
+  is not bookkeeping — an audience that matches nobody in the browser suite would silently
+  retire AC-22 to AC-25, and the gate never runs Playwright, so nothing else would notice.
+
+  The cut is not "backend then frontend" as a habit — it is where the contract is.
+  The **rules** behind AC-2..AC-15 are built and unit-tested in S1, where they live
+  (D-007, D-008, D-009, D-011, D-012); S2 is where each becomes observable in the
+  wording the criterion uses. AC-4 and AC-11 are the clearest case: the payload that
+  answers them is S1's (D-015), the sentence that states them is S2's (D-011).
+
+- why here: two signals fired, and one did not.
+
+  **The unit count is where the orchestrator's own context becomes the risk.** At 12-18
+  units across six projects — `types`, `migrations`, `deployments`, `api`, `frontend`,
+  `doc` — the orchestrator is the one participant with no gate on its judgement, and it
+  is the one that degrades. A single run would reach the frontend units, the ones with
+  the most criteria attached, at its worst.
+
+  **S1 ends somewhere a human wants to look.** Not a half-feature: a complete,
+  exercised domain — releases can be cut, refused, listed and browsed, with the race in
+  AC-20 driven against the real constraint and AC-18's deleted component read back
+  through `includeDeleted`. Every rule in the issue is enforced and tested before a
+  single pixel is drawn, which is the right order for a feature whose entire content is
+  rules.
+
+  **And S2 is genuinely better informed by S1 having landed.** The seam is the one
+  place in this feature where the contract is fully decided — the readiness payload
+  (D-015), the refusal codes (D-011), the three routes (D-016) — so S2 re-decides
+  nothing, but it specs its units against a payload that exists in the repository
+  rather than one described in prose.
+
+  **The signal that did not fire: no deferred unknown.** All ten were decided (UK-1→D-010,
+  UK-2→D-008, UK-3→D-003+D-004, UK-4→D-006, UK-5→D-009+D-012, UK-6→D-013, UK-7→D-020,
+  UK-8→D-021, UK-9→disposition table, UK-10→D-018), so the cut is a cut in the run, not
+  a pause for an answer. Nothing is re-framed and nothing is re-decided between the two.
+
+  One caveat to watch rather than split further: AC-18's content endpoint and its drawer
+  are the only genuinely separable leaf in the feature, and they straddle the seam. If
+  S1 runs long, that endpoint is the cheapest thing to carry into S2 — not a third
+  session.
+
+- why S3 is its own session, and not four more units on the end of S2:
+
+  **It is a different kind of verification, with a different failure mode.** Every unit
+  in S1 and S2 is judged by a test that runs in seconds against mocks or an in-memory
+  database. S3's are judged by a browser driving a running frontend against a running API
+  and a real Postgres. When one of those fails, the question "is the feature wrong or is
+  the harness wrong" is live in a way it never is for a jest run — and answering it is
+  most of the work. Mixing that into a session sized around fast feedback would make the
+  fast units pay the slow ones' startup cost and the slow ones inherit the fast ones'
+  assumptions.
+
+  **The dev stack is a precondition nothing else in this feature has.** `apps/e2e-tests/`
+  needs the frontend on 4200 and the API up before a single spec runs. That is the first
+  thing S3 establishes and the first thing that will go wrong; it has no bearing on any
+  unit before it.
+
+  **D-042's repair is genuinely risky and belongs beside its proof.** It changes how the
+  shared API client narrows errors, which every domain in `apps/frontend` depends on.
+  D-042 rejected loosening `isServerErrorResponse` precisely because the blast radius is
+  the whole application. Landing that change in the same session as the only test that
+  watches a real 400 travel end to end is what makes it verifiable rather than hopeful;
+  landing it in S2, judged by a drawer's rendering, is what D-042 refused.
+
+  **And S3 is informed by S2 in the same way S2 was by S1.** The page objects it extends,
+  the query hooks it exercises and the sentences it asserts all exist in the repository
+  now, so S3 specs its units against something real rather than something described.
+
+## S5 — done: the review on PR #489, triaged
+
+**The PR.** [PackmindHub/packmind#489](https://github.com/PackmindHub/packmind/pull/489),
+branch `feat/845-package-release-version`. One automated review by `greptile-apps`, four
+inline findings, submitted before S3 closed — so it saw S1 and S2 only.
+
+**The result: four findings, four units, and not one of them true as stated.**
+
+| # | finding | verdict | unit | decision |
+|---|---|---|---|---|
+| P1 | Missing Space Authorization | headline false, residue true | U-029 | D-060, corrected by D-064 |
+| P1 | Cascades Mutate Release History | true, and truer than it knew | U-030 | D-062 |
+| P1 | Unresolved Components Disappear | true | U-027 | D-059 |
+| P2 | Generic Errors Hide Refusals | half true | U-028 | D-061 |
+
+Each finding correctly identified something and then prescribed a remedy this codebase had
+already rejected, or could not reach. The decision log is what made the two separable, and
+it is also what got one of them wrong — see the last bullet.
+
+- **Unresolved components** was the cleanest defect. D-036 authorised omitting a versionless
+  component from the gate's snapshot on the reasoning that omission "makes the package look
+  different from its release" — true only when the release pinned the thing omitted. A
+  component added *after* the last release is absent from both sides, so the gate said
+  `no_change`; a package whose only component is versionless reached an empty snapshot and
+  said "Add at least one component" to someone who had one. D-059 keeps the identity with a
+  null pin.
+- **Cascades** was the finding that was more right than it knew: it asserted a hard-delete
+  path it could not locate, and the path exists one package out, in
+  `ApplyPlaybookUseCase.rollback()`. D-004 and D-037 are each locally correct about *soft*
+  delete and were jointly blind to it.
+- **Generic errors** and **space authorization** were each half right, in the same way. The
+  first asked for a fifth refusal code, which D-034 closed deliberately; the second asked for
+  `AbstractSpaceMemberUseCase`, which D-035 rejected for AC-19's sake.
+
+**The two things this session leaves open, neither of them the charter's.**
+
+- **The cross-organization reach is open on every space-scoped route.** D-060 claimed U-029's
+  space binding closed it; D-064 records that it does not, and why. `OrganizationAccessGuard`
+  reads only `:orgId`, nothing validates `:spaceId` against it, and `AbstractMemberUseCase`
+  never reads `spaceId` — so a caller supplying a consistent foreign `spaceId` and `packageId`
+  passes every check including the new one. The sting: `AbstractSpaceMemberUseCase`, the
+  remedy this feature twice refused, *would* have closed it. D-035 made that call without the
+  fact that nothing upstream binds a space to its organization. Reopening it changes D-035,
+  D-017 and how AC-19 is read, and the same chain serves recipes, standards and skills — so it
+  is rung 4 and it halts to a human.
+- **`GetPackageByIdUseCase` has the same unscoped `findById`** the release routes had, and
+  predates this feature.
+
+**Reopened and closed again on 2026-09-18, by the human's answer to the halt.** D-064 escalated
+whether the release routes should adopt `AbstractSpaceMemberUseCase`; the answer was yes, and
+D-065 records the reversal of D-035 and D-017. U-032 converted all three use cases. U-029's
+package-to-space guard stays beside the membership check — one binds the caller to the space,
+the other binds the resource to it, and each catches a substitution the other passes.
+
+The same day, `origin/main` was merged in to clear the conflicts blocking #489 (U-031). Three
+were the pipeline racing itself across two branches. The fourth was not, and it costs this
+feature a claim: main opened `space-nav-plugin-first` to every account, so the release UI is no
+longer hidden twice over. `package-releases` is now the only thing hiding it. That is what
+D-056 asked for and it is no longer belt and braces — the "two together" sentence in the S4
+close is superseded by this paragraph.
+
+**Verified after both.** Seven projects green with `--skip-nx-cache`, and the four end-to-end
+criteria together in 49.6s at `--workers=1` — run against the membership gate, which was the
+open risk: the signed-up user is a member of the space the suite drives, as `CreatePackageUseCase`
+already being space-gated had suggested but not proven.
+
+**Answered on the PR, 2026-09-18.** All four findings have a threaded reply on #489, posted
+after the branch reached `origin` so each cited commit resolves:
+[F1](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044254228),
+[F2](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044251617),
+[F3](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044250464),
+[F4](https://github.com/PackmindHub/packmind/pull/489#discussion_r4044252798).
+
+None of the four threads is resolved, deliberately. The S5 row said a *false* finding is
+answered and closed there, and none of the four turned out purely false — three were real
+defects and the fourth carries the live escalation below, which must not read as settled.
+Resolving them is the reviewer's call, not the triage's.
+
+**What was verified at the close.** `nx run-many -t test` over `types`, `deployments`, `api`,
+`frontend`, `feature-flags`, `ui` and `migrations`: seven projects green, `--skip-nx-cache`.
+The four Playwright criteria pass together in 49.2s at `--workers=1` — matching S4's 49.1s.
+That run took four attempts, every failure inside the signup fixture and never in the release
+flow, exactly as D-053 describes and D-052 instructs; the one criterion that failed twice
+passes alone in 11.7s.
+
+## S6 — done: the second review, and the gate this feature was failing
+
+A review of the whole branch on 2026-09-18, by a person with an automated pass beside
+them, against the acceptance criteria rather than the diff. Everything S1..S5 verified
+stayed verified; what it found sat in the places no unit owned.
+
+**Three defects, all of them "the user is told nothing, or told something false, about
+state the server already knows".**
+
+- **`AC-5`, `AC-6` and `AC-8` did not hold in the running app.** The readiness query was
+  invalidated by the release mutation and nothing else, while the gate reads the
+  package's name, its description and its component list. With `staleTime` at ten
+  minutes and no refetch on focus, renaming a released package left the version area
+  saying "Nothing has changed since 0.1.0" with the action disabled — the inverse of
+  AC-5 — until the cache aged out. The unit tests feed `readiness` in as a prop, so they
+  could not see it, and no end-to-end test renames a released package. The three
+  mutations that move a gate input now invalidate it.
+- **A server refusal locked the form.** AC-25's own scenario: the server names its
+  current version, the sentence is right, and every other thing the form judges against
+  stayed as the page had read it — so the version the server would have accepted was
+  refused locally, with "Version must follow X.Y.Z". Only a reload got out. The server's
+  version now outranks readiness while the drawer is open, and the reset moved to the
+  closed-to-open transition so a refetch cannot wipe the sentence AC-25 asserts.
+- **A refusal on a never-released package rendered nothing at all.** It stored a null
+  current version; the "not greater" message is built from that version, so it came back
+  `undefined`, the field was not marked invalid, and pressing Release did nothing
+  visible. The refusal now carries `0.0.0` — what was actually compared against, and
+  what the server names back — and the state's type no longer admits null.
+
+**Two standards, from the review on #489, both true.** The three commands hand-rolled
+`PackmindCommand & { organizationId; spaceId }` where `SpaceMemberCommand` is the name
+for it — and is the bound `AbstractSpaceMemberUseCase` declares, so U-032's conversion
+was satisfied structurally rather than stated. `IListPackageReleasesUseCase` exported six
+types where the standard asks for the contract triple; the three payload shapes moved to
+`PackageRelease.ts`. A third, the bare `Error` thrown when a committed release cannot be
+read back, became `PackageReleaseNotPersistedError`: that state is a broken invariant,
+and by message alone it sat in a log next to the ordinary answer to asking for a version
+nobody cut.
+
+**And the gate this feature had been failing all along.** `packmind-cli lint .` was red on
+#489 with 76 errors, every one of them in a spec this feature added, against
+`backend-tests-redaction`: sixty `when` clauses inside `it()`, and the rest multiple
+expects in one test. Nothing in the pipeline S1..S5 ran that gate, which is why five green
+sessions never mentioned it. The specs are restructured; deployments goes 1399 → 1418
+tests, api 610 → 612, types 358 → 360, all from splitting rather than from new coverage.
+The charter's `verified by` column is rewritten to name the tests as they now read.
+
+**Two corrections to the record, not to the code.**
+
+- **Thread `4025211407` on #489 said the opposite of what merged.** The reply declining
+  `AbstractSpaceMemberUseCase` was posted at 06:10 UTC and agreed with at 06:10:55; the
+  conversion landed at 06:37. A follow-up now states the reversal and points at D-065.
+- **`apps/doc/concepts/packages-management.mdx` still says "Any member of your
+  organization can create a release."** U-032 made that false and S6 did not fix it. It is
+  named here, and on the PR, so it is not discovered by a reader.
+
+**What was verified.** `nx run-many -t test lint typecheck` over `types`, `deployments`,
+`api`, `frontend`, `feature-flags`, `ui` and `migrations`: seven projects green,
+`--skip-nx-cache`. Each of the three defect fixes is mutation-checked — reverting the
+change fails the test that covers it, and the one negative test stays green. Playwright
+was not run. `packmind-cli lint .` was, once a working API key was available: **0 errors,
+exit 0**, against 76 when the session opened. The 18 warnings it still reports are raw SQL
+strings in nine repositories, none of them touched by this branch.
+
+That run earned its keep immediately. The restructuring commit had been checked by a
+hand-written sweep for the two rules, and the sweep was wrong — it looked for a test's
+closing brace and stopped at a fixture's, so it declared a three-expect test clean. The
+gate found it. Approximating a gate you cannot run is worth doing and is not worth
+trusting; the eighth commit is the difference between the two.
+
+## S7 — open: hand off, three coupling findings and one false sentence
+
+**State at handoff.** `057a45406`, pushed, and `origin/main` merged in with no conflicts
+remaining (`git merge-tree` is clean). **Every check on
+[#489](https://github.com/PackmindHub/packmind/pull/489) is green**, including
+`quality-packmind-cli`, which was red for the whole of S1..S5 and is the thing S6 fixed.
+Locally: nine projects green on `test`, `lint` and `typecheck` with `--skip-nx-cache`, and
+`packmind-cli lint .` reports 0 errors against 18 pre-existing warnings, none in a file
+this branch touches.
+
+Nothing is half-done. The work below is new input, not unfinished business.
+
+### The three findings, untriaged
+
+Posted 2026-09-18T16:07Z by `graphify-labs[bot]`, which describes itself as deterministic
+coupling deltas rather than an LLM judgement — so unlike the Greptile findings these are
+measurements, and the question is what they are worth rather than whether they are true.
+None has been triaged. Facts gathered, conclusions deliberately not drawn:
+
+| id | subject | claim | what is already known |
+|---|---|---|---|
+| [4048459912](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459912) | `useGetDashboardKpiQuery()` — `DeploymentsQueries.ts:359` | high coupling complexity, Ca·Ce = 12 | **This branch does not touch that function.** `git log -S` over the range finds nothing. Either the tool attributes a file-level delta to an unchanged function, or the delta is real and caused by the module's imports growing. Check which before spending anything on it |
+| [4048459927](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459927) | `CreatePackageReleaseDrawer()` | fans out to 6 callees | True and partly S6's doing: the drawer gained `nextVersions` when the server's version was made to outrank readiness. Its six are `@packmind/ui`, `@packmind/types`, the analytics provider, the mutation hook, `getReleaseVerdictMessage` and `readPackageReleaseRefusal` — which is what a form that submits, refuses and reports looks like. Splitting it is a real option and is not obviously an improvement |
+| [4048459934](https://github.com/PackmindHub/packmind/pull/489#discussion_r4048459934) | `evaluatePackageReleaseGate()` | high coupling complexity, Ca·Ce = 12 | It calls the four comparison helpers beside it and is called from `ListPackageReleasesUseCase` and the barrel. The four helpers are separately exported and separately tested **on purpose** — D-006, D-007, D-008 — so the composition being the only thing that couples to all four is the shape those decisions asked for. A remedy that inlines them reverses a decision rather than fixing a defect |
+
+The S5 lesson applies and is why none of these was acted on unprompted: a finding that
+lands on code the decision log constrains has to be checked against the log first, or the
+fix undoes a decision. D-006, D-007 and D-008 constrain the third one directly.
+
+### The one thing that is a defect
+
+`apps/doc/concepts/packages-management.mdx` says **"Any member of your organization can
+create a release."** U-032 made that false when it put the three use cases on
+`AbstractSpaceMemberUseCase`, and D-065 amended this charter's scope bullet without
+touching the user-facing page. Named in S6, named on the PR, still not fixed. It is a
+sentence, and it is the only thing on this list that is wrong rather than merely measured.
+
+### Two corrections to the record that a reader should not rediscover
+
+- **The branch pushes itself.** The S5 handoff said a git hook pushes on commit; `.husky/`
+  has `pre-commit` (pretty-quick plus `precommit-lint.sh`) and `pre-push`, and no push in
+  the commit path — yet HEAD and `origin/feat/845-package-release-version` are equal after
+  every commit this session. Whatever is doing it, **do not assume an unpushed commit is
+  private**: check `git rev-parse HEAD origin/<branch>` before writing anything on the PR
+  that cites a hash.
+- **`tsconfig.base.effective.json` is generated and untracked, and a stale one is
+  indistinguishable from a broken build.** A proprietary-flavoured copy makes
+  `nx run frontend:build` fail with a wall of `TS2307: Cannot find module
+  '@packmind/proprietary/frontend/...'`. `PACKMIND_EDITION=oss node
+  scripts/select-tsconfig.mjs` resets it. This cost a session's worth of confusion once
+  already.
+
+### Still true from S5, and still not this feature's
+
+The cross-organization reach is closed on the three release routes and open on every
+sibling surface under `/organizations/:orgId/spaces/:spaceId/`, because nothing upstream
+binds a space to its organization. D-064 has the guard chain quoted end to end.
+`GetPackageByIdUseCase` still performs the unscoped `findById` the release use cases were
+taught not to.
+
+### What running it needs
+
+`packmind-cli lint .` needs a valid API key; the gate is worth running rather than
+approximating, because in S6 a hand-written sweep for the same two rules cleared a test the
+gate then caught. Build the CLI first — `nx build packmind-cli` — since `dist/` is cleaned
+by other Nx targets and a missing binary reports as `MODULE_NOT_FOUND`, not as a lint
+failure. Playwright has not been run since S5 and needs the docker stack.
+
+## Done
+
+Every AC has a passing named test recorded in `records.jsonl`, and the full suite is
+green at the feature boundary.
+
+When the verdict was `split`, that is the bar for the **feature**, not for each
+session. A session ending green with its own ACs covered is a session done; the feature
+is done when the last one is.
+
+**Status on 2026-09-16 — every acceptance criterion is met; the feature is reopened.**
+All of AC-1 to AC-25 carry a
+`verified by`. `nx run-many -t test` over `types`, `deployments`, `api` and `frontend`
+is green at the boundary (145 files, 2173 tests), and the four end-to-end criteria pass
+together in `apps/e2e-tests/src/features/packages/PackageRelease.spec.ts`.
+
+Two things a reader should carry rather than discover:
+
+- **`PackageRelease.spec.ts` flakes at four workers under host load** — always inside
+  the signup fixture, never in the release flow, because it is the most expensive spec
+  in the suite and sits around 17s against a 30s timeout. Measured, not inferred, and
+  deliberately not smoothed away: D-053.
+- **The release UI is hidden behind `package-releases`**, audience `@packmind.com` and
+  `@promyze.com`, wrapped around its single mount site on the space Context surface — which
+  is itself reachable only in `plugin-first` navigation, pinned to the same two domains
+  (D-050). The two together are belt and braces, and that is the point: the hiding is now
+  deliberate and owned by this feature's own code, rather than inherited from another team's
+  navigation work where it could move without anyone reading this log. D-056 and D-057.
+
+  *This bullet read "the release UI is unflagged but not widely reachable" until S4 landed,
+  and it was the open product question that prompted D-056.*
+
+**And then reopened, the same day.** D-056 puts a feature flag in scope: the release surface
+ships hidden until the sibling stories that make a release do something are done. Nothing
+already built is in doubt — S1, S2 and S3 stay green and nothing is rolled back — but the bar
+above is no longer the last word, because S4 adds a deliverable with no acceptance criterion
+of its own. A flag is a control, not a behaviour anyone asked to observe, so it is judged the
+way D-047 judged the documentation: by a person, and by the suite staying green around it.
+
+The second bullet above is the reason. It was written as an open product question and D-056
+answers it — not by making the surface more reachable, but by hiding it deliberately instead
+of by accident.
+
+**And closed again on 2026-09-17.** S4 landed as two units. U-024 added the `package-releases`
+key and wrapped `PackageVersionArea`; U-025 moved the end-to-end spec into the flag's audience.
+Both passed their gate on the first attempt with no deviations.
+
+S4 adds no acceptance criterion, so per D-056 it is judged by a person and by the suite staying
+green around it. It is:
+
+- `nx test frontend --testNamePattern='ContextPackagePane'` went from 5 tests to 6, all green.
+  The new one — *"hides the version area from a user outside the flag audience"* — is the only
+  assertion in the repository that the gate exists at all.
+- `nx run-many -t test` over `types`, `deployments`, `api`, `frontend`, `feature-flags` and
+  `ui`: **145 files, 2174 tests, green**. That is exactly one more test than the previous
+  boundary run and no other movement, which is the measurable form of "the flag disturbed
+  nothing".
+- The four end-to-end criteria pass together in 49.1s at `--workers=1`, per D-053.
+
+Two things a reader should carry rather than discover:
+
+- **AC-22..AC-25 now depend on the spec's user signing up on `@packmind.com`.** Flipping
+  `underFeatureFlag` back to `false` makes all four fail at `SpaceContextPage.ts:24`, on the
+  "Create a release" button that is no longer rendered. That is not a regression; it is the
+  gate working, and U-025 observed exactly that failure before fixing it. It also supersedes
+  D-050's `do not set underFeatureFlag: true`, which now carries a forward pointer.
+- **The CHANGELOG entry is withdrawn; the `apps/doc` section stays.** S2 wrote both true and
+  S4 made them false, and both were right on their own terms; no unit gate could have seen it,
+  because no decision told S4 to touch either file. Raised by the boundary reconcile and
+  settled by D-058 in U-026: `# [Unreleased]` is promoted verbatim into the next numbered
+  section, so left alone the entry would land in a dated release announcing a feature that
+  release gives nobody. Documentation is a claim about the product rather than about a
+  version, and nobody reaches that page without looking for it, so it keeps its section. The
+  entry is restored from U-026's commit when the flag opens.
+
+  The residual, stated rather than waved away: `apps/doc` does describe a flow most readers
+  cannot use. That is the smaller of the two costs, and it is accepted.
+
+One deliberate asymmetry in this bar, stated so it is not read as an oversight: the
+`apps/doc` and CHANGELOG deliverable has no AC and no named test, because `apps/doc`
+declares no test target. It is gated by `sweep` and read by a person, per D-047.
+
+**And closed a third time on 2026-09-17, after S5.** The review on PR #489 was triaged: four
+findings, four units, six decisions. Nothing already built was rolled back and no acceptance
+criterion changed, which is what the S5 row promised — but three of the four findings were
+real defects, so "closed and green" at the S4 boundary was not the same thing as "correct".
+
+S5 adds no acceptance criterion either, so like S4 it is judged by a person and by the suite
+staying green around it. It is:
+
+- `nx run-many -t test` over `types`, `deployments`, `api`, `frontend`, `feature-flags`, `ui`
+  and `migrations` — seven projects, `--skip-nx-cache`, green. `migrations` joins the boundary
+  list for the first time, because U-030 gave that project its first spec touching this
+  feature.
+- The four end-to-end criteria pass together in 49.2s at `--workers=1`, against S4's 49.1s.
+- U-030's migration spec is mutation-checked twice — by its executor and independently:
+  reverting the three `onDelete` values to `CASCADE` fails 6 of its 8 tests. That check exists
+  because the gate cannot see a vacuous test, and this one asserts a constraint that no
+  repository spec in the codebase can observe.
+
+Three things a reader should carry rather than discover:
+
+- **The cross-organization reach is open, and this feature's own entry once claimed it was
+  closed.** D-060 asserted it; D-064 corrects it with the guard chain quoted end to end. The
+  repair U-029 landed is still right — it makes true a sentence D-035 had already asserted —
+  but it buys addressing, not tenancy. This is the one halt S5 produced.
+- **A versionless component now leads to an enabled button and an opaque 500.** D-059 made
+  that path reachable and D-061 left it unmapped, each correctly on its own terms; the
+  composition is a screen neither entry describes. D-063 accepts it explicitly, with the
+  fifth refusal code named as the repair if it is ever seen in the wild.
+- **The boundary reconcile found both of the above, and neither was visible from inside any
+  unit.** All four units passed their gate on the first attempt with one recorded deviation
+  between them. That is the second time on this feature that a green session hid something a
+  boundary check caught — U-026 and the CHANGELOG was the first — and it is the argument for
+  the reconcile being signal-triggered rather than occasional.

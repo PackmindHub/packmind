@@ -1,8 +1,7 @@
 ---
 name: 'Backend Tests Redaction'
 paths:
-  - "apps/api/**/*.spec.ts"
-  - "packages/**/*.spec.ts"
+  - "**/*.spec.ts"
 alwaysApply: false
 description: 'This standard establishes best practices for writing backend tests using Jest in the Packmind monorepo. It focuses on clarity, maintainability, and consistency across test suites by emphasizing behavioral testing, proper test organization, and effective use of testing utilities. Apply these rules when writing or refactoring backend unit tests, integration tests, and service tests to ensure tests remain readable, reliable, and easy to debug.'
 ---

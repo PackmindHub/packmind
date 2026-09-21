@@ -19,6 +19,8 @@ export enum DeploymentQueryKeys {
   GET_RENDER_MODE_CONFIGURATION = 'get-render-mode-configuration',
   GET_DASHBOARD_KPI = 'get-dashboard-kpi',
   GET_DASHBOARD_NON_LIVE = 'get-dashboard-non-live',
+  LIST_PACKAGE_RELEASES = 'list-package-releases',
+  GET_PACKAGE_RELEASE = 'get-package-release',
 }
 
 // Base query key arrays for reuse
@@ -123,3 +125,36 @@ export const GET_DASHBOARD_NON_LIVE_KEY = [
 
 export const getDashboardNonLiveKey = (spaceId: string) =>
   [...GET_DASHBOARD_NON_LIVE_KEY, spaceId] as const;
+
+export const LIST_PACKAGE_RELEASES_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.LIST_PACKAGE_RELEASES,
+] as const;
+
+export const getListPackageReleasesKey = (
+  spaceId: string,
+  organizationId: string,
+  packageId: string,
+) =>
+  [...LIST_PACKAGE_RELEASES_KEY, spaceId, organizationId, packageId] as const;
+
+export const GET_PACKAGE_RELEASE_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.GET_PACKAGE_RELEASE,
+] as const;
+
+export const getGetPackageReleaseKey = (
+  spaceId: string,
+  organizationId: string,
+  packageId: string,
+  version: string,
+) =>
+  [
+    ...GET_PACKAGE_RELEASE_KEY,
+    spaceId,
+    organizationId,
+    packageId,
+    version,
+  ] as const;

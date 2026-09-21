@@ -33,6 +33,7 @@ const createDistributedPackage = (
   packageId: DEFAULT_PACKAGE_ID,
   recipeVersions: [],
   standardVersions: [],
+  skillVersions: [],
   operation: 'add',
   ...overrides,
 });
@@ -78,16 +79,7 @@ describe('listActiveDistributions', () => {
         distribution = createDistribution({
           id: createDistributionId('dist-1'),
           createdAt: '2024-01-01T10:00:00Z',
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-1')],
         });
 
         result = callListActiveDistributions([distribution]);
@@ -108,14 +100,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-1'),
           createdAt: '2024-01-01T10:00:00Z',
           distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'remove',
-            },
+            createDistributedPackage('dist-1', { operation: 'remove' }),
           ],
         });
 
@@ -139,16 +124,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-old'),
           createdAt: '2024-01-01T10:00:00Z',
           target,
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-old'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-old')],
         });
 
         newerDistribution = createDistribution({
@@ -156,14 +132,9 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-02T10:00:00Z',
           target,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-new', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-new'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
+            }),
           ],
         });
 
@@ -188,16 +159,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-add'),
           createdAt: '2024-01-01T10:00:00Z',
           target,
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-add'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-add')],
         });
 
         const removeDistribution = createDistribution({
@@ -205,14 +167,10 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-02T10:00:00Z',
           target,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-remove', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-remove'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
               operation: 'remove',
-            },
+            }),
           ],
         });
 
@@ -235,14 +193,7 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-01T10:00:00Z',
           target,
           distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-remove'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'remove',
-            },
+            createDistributedPackage('dist-remove', { operation: 'remove' }),
           ],
         });
 
@@ -251,14 +202,9 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-02T10:00:00Z',
           target,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-add', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-add'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
+            }),
           ],
         });
 
@@ -290,16 +236,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-1'),
           createdAt: '2024-01-01T10:00:00Z',
           target: target1,
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-1')],
         });
 
         const dist2 = createDistribution({
@@ -307,14 +244,9 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-01T10:00:00Z',
           target: target2,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-2', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
+            }),
           ],
         });
 
@@ -342,16 +274,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-1'),
           createdAt: '2024-01-01T10:00:00Z',
           target: target1,
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-1')],
         });
 
         const removedTarget2 = createDistribution({
@@ -359,14 +282,10 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-01T10:00:00Z',
           target: target2,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-2', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
               operation: 'remove',
-            },
+            }),
           ],
         });
 
@@ -392,16 +311,7 @@ describe('listActiveDistributions', () => {
           id: createDistributionId('dist-1-add'),
           createdAt: '2024-01-01T10:00:00Z',
           target: target1,
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1-add'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
-          ],
+          distributedPackages: [createDistributedPackage('dist-1-add')],
         });
 
         const target1Remove = createDistribution({
@@ -409,14 +319,10 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-02T10:00:00Z',
           target: target1,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-1-remove', {
               id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-1-remove'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
               operation: 'remove',
-            },
+            }),
           ],
         });
 
@@ -426,14 +332,10 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-01T10:00:00Z',
           target: target2,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-2-remove', {
               id: createDistributedPackageId('dp-3'),
-              distributionId: createDistributionId('dist-2-remove'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
               operation: 'remove',
-            },
+            }),
           ],
         });
 
@@ -442,14 +344,9 @@ describe('listActiveDistributions', () => {
           createdAt: '2024-01-02T10:00:00Z',
           target: target2,
           distributedPackages: [
-            {
+            createDistributedPackage('dist-2-add', {
               id: createDistributedPackageId('dp-4'),
-              distributionId: createDistributionId('dist-2-add'),
-              packageId: createPackageId('package-1'),
-              recipeVersions: [],
-              standardVersions: [],
-              operation: 'add',
-            },
+            }),
           ],
         });
 

@@ -1,0 +1,482 @@
+import { PackmindLogger } from '@packmind/logger';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  CommandVersion,
+  CreatePackageReleaseCommand,
+  IAccountsPort,
+  ISpacesPort,
+  ICommandsPort,
+  ISkillsPort,
+  IStandardsPort,
+  Organization,
+  Package,
+  PackageRelease,
+  SkillVersion,
+  StandardVersion,
+  User,
+  createCommandId,
+  createCommandVersionId,
+  createOrganizationId,
+  createPackageReleaseId,
+  createSkillId,
+  createSkillVersionId,
+  createSpaceId,
+  createStandardId,
+  createStandardVersionId,
+  createUserId,
+  UserSpaceRole,
+} from '@packmind/types';
+import { userFactory } from '@packmind/accounts/test';
+import { v4 as uuidv4 } from 'uuid';
+import { packageFactory } from '../../../../test';
+import { CreatePackageReleaseUseCase } from './CreatePackageReleaseUseCase';
+import { PackageService } from '../../services/PackageService';
+import { PackageReleaseService } from '../../services/PackageReleaseService';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { PackageReleaseRefusedError } from '../../../domain/errors/PackageReleaseRefusedError';
+import { PackageComponentHasNoVersionError } from '../../../domain/errors/PackageComponentHasNoVersionError';
+
+describe('CreatePackageReleaseUseCase', () => {
+  const organizationId = createOrganizationId(uuidv4());
+  const spaceId = createSpaceId(uuidv4());
+  // Deliberately not the package's createdBy: any member may release.
+  const userId = createUserId(uuidv4());
+  const someoneElse = createUserId(uuidv4());
+
+  const commandId = createCommandId(uuidv4());
+  const standardId = createStandardId(uuidv4());
+  const skillId = createSkillId(uuidv4());
+
+  const commandVersionId = createCommandVersionId(uuidv4());
+  const standardVersionId = createStandardVersionId(uuidv4());
+  const skillVersionId = createSkillVersionId(uuidv4());
+
+  const organization: Organization = {
+    id: organizationId,
+    name: 'Acme',
+    slug: 'acme',
+  };
+
+  const user: User = userFactory({
+    id: userId,
+    email: 'member@test.com',
+    passwordHash: null,
+    active: true,
+    memberships: [{ userId, organizationId, role: 'member' }],
+  });
+
+  const buildPackage = (overrides: Partial<Package> = {}): Package =>
+    packageFactory({
+      name: 'Backend playbook',
+      description: 'Everything the backend team agrees on',
+      spaceId,
+      createdBy: someoneElse,
+      recipes: [commandId],
+      standards: [standardId],
+      skills: [skillId],
+      ...overrides,
+    });
+
+  const buildCommandVersion = (version: number): CommandVersion => ({
+    id: version === 3 ? commandVersionId : createCommandVersionId(uuidv4()),
+    recipeId: commandId,
+    name: 'A command',
+    slug: 'a-command',
+    content: 'content',
+    version,
+    userId,
+  });
+
+  const buildStandardVersion = (): StandardVersion => ({
+    id: standardVersionId,
+    standardId,
+    name: 'A standard',
+    slug: 'a-standard',
+    description: 'description',
+    version: 2,
+    scope: null,
+    userId,
+  });
+
+  const buildSkillVersion = (): SkillVersion => ({
+    id: skillVersionId,
+    skillId,
+    version: 5,
+    userId,
+    name: 'A skill',
+    slug: 'a-skill',
+    description: 'description',
+    prompt: 'prompt',
+  });
+
+  const buildRelease = (version: string): PackageRelease => ({
+    id: createPackageReleaseId(uuidv4()),
+    packageId: pkg.id,
+    version,
+    name: 'Backend playbook',
+    description: 'Everything the backend team agrees on',
+    recipeVersions: [],
+    standardVersions: [],
+    skillVersions: [],
+  });
+
+  let pkg: Package;
+  let useCase: CreatePackageReleaseUseCase;
+  let accountsPort: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
+  let standardsPort: jest.Mocked<IStandardsPort>;
+  let skillsPort: jest.Mocked<ISkillsPort>;
+  let packageService: jest.Mocked<PackageService>;
+  let packageReleaseService: jest.Mocked<PackageReleaseService>;
+  let services: jest.Mocked<DeploymentsServices>;
+  let stubbedLogger: jest.Mocked<PackmindLogger>;
+
+  const buildCommand = (version: string): CreatePackageReleaseCommand => ({
+    userId,
+    organizationId,
+    spaceId,
+    packageId: pkg.id,
+    version,
+  });
+
+  beforeEach(() => {
+    pkg = buildPackage();
+
+    packageService = {
+      findById: jest.fn().mockResolvedValue(pkg),
+    } as unknown as jest.Mocked<PackageService>;
+
+    packageReleaseService = {
+      createRelease: jest.fn().mockImplementation(async (release) => ({
+        ...release,
+        recipeVersions: [],
+        standardVersions: [],
+        skillVersions: [],
+      })),
+      listReleases: jest.fn().mockResolvedValue([]),
+      findByVersion: jest.fn(),
+    } as unknown as jest.Mocked<PackageReleaseService>;
+
+    services = {
+      getPackageService: jest.fn().mockReturnValue(packageService),
+      getPackageReleaseService: jest
+        .fn()
+        .mockReturnValue(packageReleaseService),
+    } as unknown as jest.Mocked<DeploymentsServices>;
+
+    accountsPort = {
+      getUserById: jest.fn().mockResolvedValue(user),
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    commandsPort = {
+      listCommandVersions: jest
+        .fn()
+        .mockResolvedValue([
+          buildCommandVersion(1),
+          buildCommandVersion(3),
+          buildCommandVersion(2),
+        ]),
+    } as unknown as jest.Mocked<ICommandsPort>;
+
+    standardsPort = {
+      getLatestStandardVersion: jest
+        .fn()
+        .mockResolvedValue(buildStandardVersion()),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
+    skillsPort = {
+      getLatestSkillVersion: jest.fn().mockResolvedValue(buildSkillVersion()),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
+    stubbedLogger = stubLogger();
+
+    useCase = new CreatePackageReleaseUseCase(
+      spacesPort,
+      accountsPort,
+      services,
+      commandsPort,
+      standardsPort,
+      skillsPort,
+      stubbedLogger,
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('pins the latest version of every component it holds', async () => {
+    await useCase.execute(buildCommand('0.1.0'));
+
+    expect(packageReleaseService.createRelease).toHaveBeenCalledWith(
+      expect.objectContaining({ packageId: pkg.id, version: '0.1.0' }),
+      {
+        recipeVersionIds: [commandVersionId],
+        standardVersionIds: [standardVersionId],
+        skillVersionIds: [skillVersionId],
+      },
+    );
+  });
+
+  it('copies the package name and description onto the release', async () => {
+    await useCase.execute(buildCommand('0.1.0'));
+
+    expect(packageReleaseService.createRelease).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Backend playbook',
+        description: 'Everything the backend team agrees on',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('releases for a member who did not create the package', async () => {
+    const result = await useCase.execute(buildCommand('0.1.0'));
+
+    expect(result.release.version).toBe('0.1.0');
+  });
+
+  it('treats a never-released package as 0.0.0', async () => {
+    packageReleaseService.listReleases.mockResolvedValue([]);
+
+    const result = await useCase.execute(buildCommand('0.1.0'));
+
+    expect(result.release.version).toBe('0.1.0');
+  });
+
+  it('refuses an empty package with no_components', async () => {
+    packageService.findById.mockResolvedValue(
+      buildPackage({ recipes: [], standards: [], skills: [] }),
+    );
+
+    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toMatchObject({
+      name: 'PackageReleaseRefusedError',
+      code: 'no_components',
+      currentVersion: '0.0.0',
+    });
+  });
+
+  describe('when an empty package is cut with a malformed version', () => {
+    it('reports the empty package rather than the version', async () => {
+      packageService.findById.mockResolvedValue(
+        buildPackage({ recipes: [], standards: [], skills: [] }),
+      );
+
+      await expect(
+        useCase.execute(buildCommand('banana')),
+      ).rejects.toMatchObject({ code: 'no_components' });
+    });
+  });
+
+  describe('when the version is malformed', () => {
+    it('refuses it with malformed', async () => {
+      await expect(useCase.execute(buildCommand('1.0'))).rejects.toMatchObject({
+        code: 'malformed',
+        currentVersion: '0.0.0',
+      });
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
+  });
+
+  it('refuses a version that is not greater with not_greater', async () => {
+    packageReleaseService.listReleases.mockResolvedValue([
+      buildRelease('1.2.0'),
+    ]);
+
+    await expect(useCase.execute(buildCommand('1.1.0'))).rejects.toMatchObject({
+      code: 'not_greater',
+      currentVersion: '1.2.0',
+    });
+  });
+
+  it('refuses a greater non-increment version with not_an_increment', async () => {
+    packageReleaseService.listReleases.mockResolvedValue([
+      buildRelease('1.2.0'),
+    ]);
+
+    await expect(useCase.execute(buildCommand('1.4.0'))).rejects.toMatchObject({
+      code: 'not_an_increment',
+      currentVersion: '1.2.0',
+    });
+  });
+
+  describe('when releases are 0.9.0 and 0.10.0', () => {
+    beforeEach(() => {
+      packageReleaseService.listReleases.mockResolvedValue([
+        buildRelease('0.9.0'),
+        buildRelease('0.10.0'),
+      ]);
+    });
+
+    it('accepts 0.10.1, taking the greatest release by parsed triple', async () => {
+      const result = await useCase.execute(buildCommand('0.10.1'));
+
+      expect(result.release.version).toBe('0.10.1');
+    });
+
+    it('refuses 0.10.0 as not greater than 0.10.0', async () => {
+      await expect(
+        useCase.execute(buildCommand('0.10.0')),
+      ).rejects.toMatchObject({
+        code: 'not_greater',
+        currentVersion: '0.10.0',
+      });
+    });
+  });
+
+  describe('when a command has no version', () => {
+    beforeEach(() => {
+      commandsPort.listCommandVersions.mockResolvedValue([]);
+    });
+
+    it('refuses the whole release', async () => {
+      await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when a standard has no version', () => {
+    beforeEach(() => {
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+    });
+
+    it('refuses the whole release', async () => {
+      await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toThrow();
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
+  });
+
+  it('translates a 23505 from the insert into not_greater carrying the re-read version', async () => {
+    packageReleaseService.listReleases
+      .mockResolvedValueOnce([buildRelease('1.2.0')])
+      .mockResolvedValueOnce([buildRelease('1.2.0'), buildRelease('1.2.1')]);
+    packageReleaseService.createRelease.mockRejectedValue(
+      Object.assign(new Error('duplicate key value'), { code: '23505' }),
+    );
+
+    await expect(useCase.execute(buildCommand('1.2.1'))).rejects.toMatchObject({
+      name: 'PackageReleaseRefusedError',
+      code: 'not_greater',
+      currentVersion: '1.2.1',
+    });
+  });
+
+  it('rethrows a non-23505 error from the insert untouched', async () => {
+    const connectionFailure = Object.assign(new Error('connection lost'), {
+      code: 'ECONNRESET',
+    });
+    packageReleaseService.createRelease.mockRejectedValue(connectionFailure);
+
+    await expect(useCase.execute(buildCommand('0.1.0'))).rejects.toBe(
+      connectionFailure,
+    );
+  });
+
+  describe('when the package does not exist', () => {
+    it('raises PackageNotFoundError', async () => {
+      packageService.findById.mockResolvedValue(null);
+
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(PackageNotFoundError);
+    });
+  });
+
+  describe('when the package belongs to another space', () => {
+    beforeEach(() => {
+      packageService.findById.mockResolvedValue(
+        buildPackage({ spaceId: createSpaceId(uuidv4()) }),
+      );
+    });
+
+    it('raises PackageNotFoundError', async () => {
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(PackageNotFoundError);
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
+  });
+
+  it('raises PackageReleaseRefusedError instances, not bare errors', async () => {
+    await expect(useCase.execute(buildCommand('9.9.9'))).rejects.toBeInstanceOf(
+      PackageReleaseRefusedError,
+    );
+  });
+
+  describe('when a component has no version at all', () => {
+    const refusal = async () => {
+      commandsPort.listCommandVersions.mockResolvedValue([]);
+      return useCase
+        .execute(buildCommand('0.1.0'))
+        .catch((caught: unknown) => caught);
+    };
+
+    it('refuses the cut with PackageComponentHasNoVersionError', async () => {
+      expect(await refusal()).toBeInstanceOf(PackageComponentHasNoVersionError);
+    });
+
+    it('names the family it could not resolve', async () => {
+      const error = (await refusal()) as PackageComponentHasNoVersionError;
+
+      expect(error.family).toBe('recipe');
+    });
+
+    it('names the component it could not resolve', async () => {
+      const error = (await refusal()) as PackageComponentHasNoVersionError;
+
+      expect(error.componentId).toBe(commandId);
+    });
+  });
+
+  describe('when the caller is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
+
+    it('refuses the caller', async () => {
+      await expect(
+        useCase.execute(buildCommand('0.1.0')),
+      ).rejects.toBeInstanceOf(SpaceMembershipRequiredError);
+    });
+
+    it('writes nothing', async () => {
+      await useCase.execute(buildCommand('0.1.0')).catch(() => undefined);
+
+      expect(packageReleaseService.createRelease).not.toHaveBeenCalled();
+    });
+  });
+});

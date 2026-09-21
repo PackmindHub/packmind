@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import { GitProviderId, OrganizationId } from '@packmind/types';
+import { GitProviderId, OrganizationId, createUserId } from '@packmind/types';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import {
   GitHubAppInstallSlot,
@@ -24,6 +24,7 @@ import {
   MutationResultCallbacks,
 } from '../../../../../test/mutationResultMocks';
 import type { MockedFunction } from 'vitest';
+import { createSuccessQueryResult } from '../../../../../test/queryResultMocks';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
   useGithubAppInstallUrlMutation: vi.fn(),
@@ -353,13 +354,13 @@ describe('GitHubAppConnection', () => {
       createMockManifestMutation(),
     );
 
-    mockUseGetMeQuery.mockReturnValue({
-      data: {
+    mockUseGetMeQuery.mockReturnValue(
+      createSuccessQueryResult({
         authenticated: true,
         edition: 'community',
         message: 'ok',
         user: {
-          id: 'user-1',
+          id: createUserId('user-1'),
           email: 'user@packmind.com',
           displayName: null,
           memberships: [],
@@ -371,8 +372,8 @@ describe('GitHubAppConnection', () => {
           role: 'admin',
           githubAppMode: 'on-prem',
         },
-      },
-    } as ReturnType<typeof useGetMeQuery>);
+      }),
+    );
   });
 
   afterEach(() => {
@@ -381,13 +382,13 @@ describe('GitHubAppConnection', () => {
 
   describe('when edition is enterprise', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'enterprise',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -399,8 +400,8 @@ describe('GitHubAppConnection', () => {
             role: 'admin',
             githubAppMode: 'shared',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
     });
 
     it('renders the install button without checking status', () => {
@@ -432,13 +433,13 @@ describe('GitHubAppConnection', () => {
 
   describe('when edition is community and status is loading', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'community',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -450,8 +451,8 @@ describe('GitHubAppConnection', () => {
             role: 'admin',
             githubAppMode: 'on-prem',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
 
       mockUseGetGithubAppStatusQuery.mockReturnValue({
         data: undefined,
@@ -480,13 +481,13 @@ describe('GitHubAppConnection', () => {
 
   describe('when edition is community and status query errored', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'community',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -498,8 +499,8 @@ describe('GitHubAppConnection', () => {
             role: 'admin',
             githubAppMode: 'on-prem',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
 
       mockUseGetGithubAppStatusQuery.mockReturnValue({
         data: undefined,
@@ -560,13 +561,13 @@ describe('GitHubAppConnection', () => {
 
   describe('when edition is community and hasApp is false', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'community',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -578,8 +579,8 @@ describe('GitHubAppConnection', () => {
             role: 'admin',
             githubAppMode: 'on-prem',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
 
       mockUseGetGithubAppStatusQuery.mockReturnValue({
         data: { hasApp: false },
@@ -775,13 +776,13 @@ describe('GitHubAppConnection', () => {
 
   describe('when edition is community and hasApp is true', () => {
     beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
+      mockUseGetMeQuery.mockReturnValue(
+        createSuccessQueryResult({
           authenticated: true,
           edition: 'community',
           message: 'ok',
           user: {
-            id: 'user-1',
+            id: createUserId('user-1'),
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
@@ -793,8 +794,8 @@ describe('GitHubAppConnection', () => {
             role: 'admin',
             githubAppMode: 'on-prem',
           },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
+        }),
+      );
 
       mockUseGetGithubAppStatusQuery.mockReturnValue({
         data: { hasApp: true, appSlug: 'my-packmind-app' },

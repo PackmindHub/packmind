@@ -115,7 +115,7 @@ describe('AutomateUpdatesStep', () => {
         hasExistingKey: true,
         isSuccess: true,
         generatedKey: 'pmk_test_abc123',
-        generatedKeyExpiresAt: '2026-08-19T12:00:00.000Z',
+        generatedKeyExpiresAt: new Date('2026-08-19T12:00:00.000Z'),
       }),
     );
     renderStep();

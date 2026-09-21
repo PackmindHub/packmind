@@ -1,0 +1,17 @@
+{
+  "unit_id": "U-029",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+    "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.spec.ts",
+    "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+    "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.spec.ts",
+    "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+    "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='CreatePackageReleaseUseCase|ListPackageReleasesUseCase|GetPackageReleaseUseCase'",
+    "kind": "behavioural",
+    "describes": "AC-19 (D-060)"
+  }
+}

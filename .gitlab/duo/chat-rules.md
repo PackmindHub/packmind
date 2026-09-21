@@ -9,6 +9,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+# Standard: Amplitude analytics usage
+
+* We use Amplitude to get insights about users' behavior when using our product with the different UI (CLI / MCP / web app). :
+* Event name ends with the verb (e.g 'standard_created', 'user_signed_up')
+* Property name should be in lower camel case
+* Tracked event name should be snake cased
+
+Full standard is available here for further request: [Amplitude analytics usage](../../.packmind/standards/amplitude-analytics-usage.md)
+
 # Standard: Backend Tests Redaction
 
 This standard establishes best practices for writing backend tests using Jest in the Packmind monorepo. It focuses on clarity, maintainability, and consistency across test suites by emphasizing behavi... :
@@ -43,6 +52,13 @@ This standard ensures personal information is not exposed in application logs ac
 * Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 
 Full standard is available here for further request: [Compliance - Logging Personal Information](../../.packmind/standards/compliance-logging-personal-information.md)
+
+# Standard: Packmind Proprietary
+
+. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](../../.packmind/standards/packmind-proprietary.md)
 
 # Standard: Typescript good practices
 

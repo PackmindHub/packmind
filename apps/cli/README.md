@@ -42,7 +42,7 @@ pnpm run packmind-cli:lint
 nx run packmind-cli:build
 ```
 
-This creates a non-bundled version in `dist/apps/cli/`.
+This creates a CJS bundle at `dist/apps/cli/main.cjs`, along with a generated `package.json`.
 
 #### Bundled Build (single JS file, requires Node.js)
 
@@ -50,7 +50,7 @@ This creates a non-bundled version in `dist/apps/cli/`.
 nx run packmind-cli:bundle
 ```
 
-This creates a single bundled JavaScript file in `dist/apps/cli-bundle/main.js`.
+This creates a single bundled JavaScript file in `dist/apps/cli-bundle/main.cjs`.
 
 ## Standalone Executables
 
@@ -81,27 +81,28 @@ nx build-executable-linux packmind-cli
 # Build for macOS (x64 + ARM64)
 nx build-executable-macos packmind-cli
 
-# Build for Windows (x64)
+# Build for Windows (x64 + ARM64)
 nx build-executable-windows packmind-cli
 ```
 
 #### Build for All Platforms
 
 ```bash
-# Build for Linux (x64, ARM64), Windows (x64), and macOS (x64, ARM64)
+# Build for Linux (x64, ARM64), Windows (x64, ARM64), and macOS (x64, ARM64)
 nx run packmind-cli:build-executable-all
 # or: bun run apps/cli/bun-build.ts --target=all
 ```
 
 **Output**: Multiple executables in `dist/apps/cli-executables/`:
 
-- `packmind-cli-linux-x64` / `packmind-cli-linux-x64-baseline`
+- `packmind-cli-linux-x64`
 - `packmind-cli-linux-arm64`
-- `packmind-cli-windows-x64.exe` / `packmind-cli-windows-x64-baseline.exe`
+- `packmind-cli-windows-x64.exe`
+- `packmind-cli-windows-arm64.exe`
 - `packmind-cli-macos-x64`
 - `packmind-cli-macos-arm64`
 
-> **Note**: Baseline versions support older CPUs (pre-2013). Use these for maximum compatibility.
+> **Note**: Baseline variants support older CPUs (pre-2013). They are skipped by all the grouped targets above; build one by naming its Bun target explicitly, e.g. `bun run apps/cli/bun-build.ts --target=bun-linux-x64-baseline`.
 
 ### Testing the Executable
 
@@ -119,10 +120,10 @@ Bun supports true cross-compilation - you can build for any platform from any pl
 
 ```bash
 # Build for Linux from macOS
-bun build --compile --target=bun-linux-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-linux
+bun run apps/cli/bun-build.ts --target=linux
 
 # Build for Windows from macOS
-bun build --compile --target=bun-windows-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-windows.exe
+bun run apps/cli/bun-build.ts --target=windows
 ```
 
 ### How It Works
@@ -144,7 +145,7 @@ The resulting binary is approximately **60-80 MB** because it includes:
 
 ### Platform Support
 
-- ✅ **Linux x64** (glibc and musl)
+- ✅ **Linux x64** (glibc)
 - ✅ **Linux ARM64** (including Raspberry Pi, AWS Graviton)
 - ✅ **Windows x64**
 - ✅ **macOS x64** (Intel)
@@ -184,7 +185,7 @@ codesign -d --entitlements - dist/apps/cli-executables/packmind-cli-macos-arm64
 
 #### Production Signing (CI/CD)
 
-For production distribution, the GitHub Actions workflow automatically signs macOS binaries with a Developer ID certificate. See `.github/workflows/sign-macos-cli.yml` and `MACOS_SIGNING_SETUP.md` for details.
+For production distribution, the GitHub Actions workflow automatically signs macOS binaries with a Developer ID certificate. See `.github/workflows/publish-cli-release.yml` and `MACOS_SIGNING_SETUP.md` for details.
 
 ## Usage
 
@@ -258,9 +259,8 @@ apps/cli/
 │   ├── application/            # Use cases and services
 │   ├── domain/                 # Business logic
 │   └── infra/                  # Infrastructure (loggers, gateways)
-├── scripts/
-│   ├── build-bun.sh            # Bun executable build script (current platform)
-│   └── build-bun-all.sh        # Bun executable build script (all platforms)
+├── scripts/                    # npm packaging helpers and WASM embedding
+├── bun-build.ts                # Bun executable build script (all targets)
 └── bunfig.toml                 # Bun configuration
 ```
 
@@ -284,7 +284,7 @@ curl -fsSL https://bun.sh/install | bash
 
 ### Build Fails with "Could not resolve"
 
-Ensure all external packages are listed in the `--external` flags in the build script. These packages are intentionally excluded as they're not needed for the CLI.
+Ensure all backend-only packages are listed in the `alias` map of `apps/cli/bun-build.ts`, which points them at `scripts/class-validator.js`. These packages are intentionally stubbed out as they're not needed for the CLI.
 
 ## Contributing
 
@@ -294,7 +294,7 @@ When modifying the CLI:
 2. Test with bundle: `nx run packmind-cli:bundle`
 3. Test with executable: `nx run packmind-cli:build-executable`
 4. Verify all output formats work correctly
-5. Run quality checks: `pnpm run quality-gate`
+5. Run quality checks: `pnpm run test:staged`, `pnpm run lint:staged` and `pnpm run prettier:check`
 
 ### Run locally
 

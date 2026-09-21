@@ -49,6 +49,9 @@ function makeRepo(overrides?: Partial<GitRepo>): GitRepo {
     repo: 'webapp',
     branch: 'main',
     providerId: PROVIDER_ID,
+    type: 'standard',
+    isTracked: true,
+    trackingRemovedAt: null,
     ...overrides,
   };
 }
