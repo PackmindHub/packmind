@@ -294,7 +294,7 @@ When modifying the CLI:
 2. Test with bundle: `nx run packmind-cli:bundle`
 3. Test with executable: `nx run packmind-cli:build-executable`
 4. Verify all output formats work correctly
-5. Run quality checks: `pnpm run quality-gate`
+5. Run quality checks: `pnpm run test:staged`, `pnpm run lint:staged` and `pnpm run prettier:check`
 
 ### Run locally
 
