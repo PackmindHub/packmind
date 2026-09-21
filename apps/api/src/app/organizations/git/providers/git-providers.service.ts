@@ -581,6 +581,11 @@ export class GitProvidersService {
         error instanceof GitProviderNotFoundError ||
         error instanceof GitProviderOrganizationMismatchError
       ) {
+        // Deliberate re-interpretation, not a mapping: a provider that vanished
+        // between issuing the state token and returning here means the
+        // re-authentication request is stale, so both the 404 and its message
+        // are replaced on purpose. Do not delete this as controller-style
+        // `instanceof` mapping.
         throw new BadRequestException(
           'Stale re-authentication request. Restart from the connection.',
         );

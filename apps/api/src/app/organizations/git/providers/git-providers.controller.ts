@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -11,9 +10,7 @@ import {
   Put,
   Query,
   Request,
-  ConflictException,
   BadRequestException,
-  BadGatewayException,
   NotImplementedException,
   UseGuards,
 } from '@nestjs/common';
@@ -21,14 +18,9 @@ import { GitProvidersService } from './git-providers.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitProvider,
-  GitProviderDisplayNameAlreadyUsedError,
-  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitRepo,
-  GitRepoAlreadyExistsError,
   GitRepoId,
-  GitProviderHasRepositoriesError,
-  InvalidGitProviderCredentialsError,
   ListAvailableReposResponse,
   ListProvidersResponse,
   OrganizationId,
@@ -85,12 +77,6 @@ export class GitProvidersController {
         req.clientSource,
       );
     } catch (error) {
-      if (error instanceof InvalidGitProviderCredentialsError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
-        throw new ConflictException(error.message);
-      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -430,11 +416,7 @@ export class GitProvidersController {
           error: error instanceof Error ? error.message : String(error),
         },
       );
-      throw new BadGatewayException(
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch available repositories',
-      );
+      throw error;
     }
   }
 
@@ -501,15 +483,6 @@ export class GitProvidersController {
       );
       return updatedProvider;
     } catch (error) {
-      if (error instanceof InvalidGitProviderCredentialsError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
-        throw new ConflictException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameNotEditableError) {
-        throw new ForbiddenException(error.message);
-      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -538,26 +511,18 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      await this.gitProvidersService.deleteGitProvider(
-        gitProviderId,
-        req.user.userId,
+    await this.gitProvidersService.deleteGitProvider(
+      gitProviderId,
+      req.user.userId,
+      organizationId,
+    );
+    this.logger.info(
+      'DELETE /organizations/:orgId/git/providers/:id - Git provider deleted successfully',
+      {
         organizationId,
-      );
-      this.logger.info(
-        'DELETE /organizations/:orgId/git/providers/:id - Git provider deleted successfully',
-        {
-          organizationId,
-          gitProviderId,
-        },
-      );
-    } catch (error) {
-      if (error instanceof GitProviderHasRepositoriesError) {
-        throw new BadRequestException(error.message);
-      }
-
-      throw error;
-    }
+        gitProviderId,
+      },
+    );
   }
 
   @Post(':id/repositories')
@@ -578,23 +543,15 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.addRepositoryToProvider(
-        req.user.userId,
-        organizationId,
-        gitProviderId,
-        addRepositoryDto.owner,
-        addRepositoryDto.repo,
-        addRepositoryDto.branch,
-        req.clientSource,
-      );
-    } catch (error) {
-      if (error instanceof GitRepoAlreadyExistsError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
-    }
+    return this.gitProvidersService.addRepositoryToProvider(
+      req.user.userId,
+      organizationId,
+      gitProviderId,
+      addRepositoryDto.owner,
+      addRepositoryDto.repo,
+      addRepositoryDto.branch,
+      req.clientSource,
+    );
   }
 
   @Delete(':providerId/repositories/:repositoryId')
