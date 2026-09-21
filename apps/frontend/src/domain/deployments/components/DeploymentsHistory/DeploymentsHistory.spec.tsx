@@ -5,18 +5,28 @@ import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import {
+  createCommandId,
+  createCommandVersionId,
   createDistributedPackageId,
   createDistributionId,
   createGitProviderId,
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  createSkillId,
+  createSkillVersionId,
+  createStandardId,
+  createStandardVersionId,
   createTargetId,
   createUserId,
   DistributionStatus,
   RenderMode,
+  type CommandDistributionHistoryEntry,
+  type DistributedPackageHistoryEntry,
   type DistributionHistoryEntry,
   type DistributionOperation,
+  type SkillDistributionHistoryEntry,
+  type StandardDistributionHistoryEntry,
 } from '@packmind/types';
 
 import { DeploymentsHistory } from './DeploymentsHistory';
@@ -79,6 +89,137 @@ const renderHistory = (deployments: DistributionHistoryEntry[]) =>
     </MemoryRouter>,
   );
 
+/*
+ * The three artifact histories, where the version column and the Removed badge
+ * are read off the one distributed package that carries the artifact. Each
+ * listing loads only its own version collection, so a fixture that carried the
+ * other two would not be the shape the component is given.
+ */
+const commandId = createCommandId('command-1');
+const standardId = createStandardId('standard-1');
+const skillId = createSkillId('skill-1');
+
+const artifactDistribution = <DP extends DistributedPackageHistoryEntry>(
+  distributedPackages: DP[],
+) => ({
+  ...distribution(1),
+  distributedPackages,
+});
+
+const distributedPackage = (
+  index: number,
+  operation: DistributionOperation = 'add',
+) => ({
+  id: createDistributedPackageId(`distributed-${index}`),
+  distributionId: createDistributionId('distribution-1'),
+  packageId,
+  operation,
+});
+
+const withCommandVersion = (
+  index: number,
+  version: number,
+  recipeId = commandId,
+  operation: DistributionOperation = 'add',
+) => ({
+  ...distributedPackage(index, operation),
+  recipeVersions: [
+    {
+      id: createCommandVersionId(`command-version-${index}`),
+      recipeId,
+      name: 'Governed Command',
+      slug: 'governed-command',
+      content: '# Governed Command',
+      version,
+      userId: null,
+    },
+  ],
+});
+
+const withStandardVersion = (
+  index: number,
+  version: number,
+  operation: DistributionOperation = 'add',
+) => ({
+  ...distributedPackage(index, operation),
+  standardVersions: [
+    {
+      id: createStandardVersionId(`standard-version-${index}`),
+      standardId,
+      name: 'Governed Standard',
+      slug: 'governed-standard',
+      description: 'A governed standard',
+      version,
+      userId: null,
+      scope: null,
+    },
+  ],
+});
+
+const withSkillVersion = (
+  index: number,
+  version: number,
+  operation: DistributionOperation = 'add',
+) => ({
+  ...distributedPackage(index, operation),
+  skillVersions: [
+    {
+      id: createSkillVersionId(`skill-version-${index}`),
+      skillId,
+      name: 'Governed Skill',
+      slug: 'governed-skill',
+      description: 'A governed skill',
+      prompt: 'Do the governed thing',
+      version,
+      userId: createUserId('user-1'),
+    },
+  ],
+});
+
+const renderCommandHistory = (deployments: CommandDistributionHistoryEntry[]) =>
+  render(
+    <MemoryRouter>
+      <UIProvider>
+        <DeploymentsHistory
+          deployments={deployments}
+          type="command"
+          entityId={commandId}
+          usersMap={{ [authorId]: 'joan.racenet' }}
+        />
+      </UIProvider>
+    </MemoryRouter>,
+  );
+
+const renderStandardHistory = (
+  deployments: StandardDistributionHistoryEntry[],
+) =>
+  render(
+    <MemoryRouter>
+      <UIProvider>
+        <DeploymentsHistory
+          deployments={deployments}
+          type="standard"
+          entityId={standardId}
+          usersMap={{ [authorId]: 'joan.racenet' }}
+        />
+      </UIProvider>
+    </MemoryRouter>,
+  );
+
+const renderSkillHistory = (deployments: SkillDistributionHistoryEntry[]) =>
+  render(
+    <MemoryRouter>
+      <UIProvider>
+        <DeploymentsHistory
+          deployments={deployments}
+          type="skill"
+          entityId={skillId}
+          usersMap={{ [authorId]: 'joan.racenet' }}
+        />
+      </UIProvider>
+    </MemoryRouter>,
+  );
+
 /**
  * jsdom lays nothing out, so the two numbers the message cell measures itself
  * with are always zero. These fix them for the length of one test.
@@ -107,6 +248,9 @@ afterEach(() => {
 describe('DeploymentsHistory', () => {
   const headers = () =>
     screen.getAllByRole('columnheader').map((cell) => cell.textContent);
+
+  /** The Version column, which leads every row that is not a package history. */
+  const version = () => screen.getAllByRole('cell')[0];
 
   /*
    * Two columns printed the same value on nearly every row of the log, and
@@ -254,6 +398,96 @@ describe('DeploymentsHistory', () => {
       await userEvent.hover(screen.getByText(LONG_ERROR));
 
       expect(await screen.findByRole('tooltip')).toHaveTextContent(LONG_ERROR);
+    });
+  });
+  describe("a command's history", () => {
+    it('shows the version of the command that was distributed', () => {
+      renderCommandHistory([artifactDistribution([withCommandVersion(1, 4)])]);
+
+      expect(version()).toHaveTextContent('4');
+    });
+
+    it('reads the version off the package that carries the command', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withCommandVersion(1, 9, createCommandId('another-command')),
+          withCommandVersion(2, 4),
+        ]),
+      ]);
+
+      expect(version()).toHaveTextContent('4');
+    });
+
+    it('says nothing when no package carries the command', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withCommandVersion(1, 9, createCommandId('another-command')),
+        ]),
+      ]);
+
+      expect(version()).toHaveTextContent('-');
+    });
+
+    it('marks a distribution that took the command out', () => {
+      renderCommandHistory([
+        artifactDistribution([withCommandVersion(1, 4, commandId, 'remove')]),
+      ]);
+
+      expect(screen.getByText('Removed')).toBeInTheDocument();
+    });
+
+    it('marks nothing when the command was put in', () => {
+      renderCommandHistory([artifactDistribution([withCommandVersion(1, 4)])]);
+
+      expect(screen.queryByText('Removed')).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a standard's history", () => {
+    it('shows the version of the standard that was distributed', () => {
+      renderStandardHistory([
+        artifactDistribution([withStandardVersion(1, 7)]),
+      ]);
+
+      expect(version()).toHaveTextContent('7');
+    });
+
+    it('marks a distribution that took the standard out', () => {
+      renderStandardHistory([
+        artifactDistribution([withStandardVersion(1, 7, 'remove')]),
+      ]);
+
+      expect(screen.getByText('Removed')).toBeInTheDocument();
+    });
+
+    it('marks nothing when the standard was put in', () => {
+      renderStandardHistory([
+        artifactDistribution([withStandardVersion(1, 7)]),
+      ]);
+
+      expect(screen.queryByText('Removed')).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a skill's history", () => {
+    it('shows the version of the skill that was distributed', () => {
+      renderSkillHistory([artifactDistribution([withSkillVersion(1, 2)])]);
+
+      expect(version()).toHaveTextContent('2');
+    });
+
+    it('marks a distribution that took the skill out', () => {
+      renderSkillHistory([
+        artifactDistribution([withSkillVersion(1, 2, 'remove')]),
+      ]);
+
+      expect(screen.getByText('Removed')).toBeInTheDocument();
+    });
+
+    it('marks nothing when the skill was put in', () => {
+      renderSkillHistory([artifactDistribution([withSkillVersion(1, 2)])]);
+
+      expect(screen.queryByText('Removed')).not.toBeInTheDocument();
     });
   });
 });
