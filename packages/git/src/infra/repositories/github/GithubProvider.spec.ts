@@ -3,6 +3,7 @@ import { GithubProvider } from './GithubProvider';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import { GithubAvailableRepositoriesFailedError } from '../../../domain/errors';
 
 jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
@@ -308,7 +309,7 @@ describe('GithubProvider', () => {
 
         await expect(
           githubProvider.listAvailableRepositories(),
-        ).rejects.toThrow('Failed to fetch repositories from GitHub');
+        ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
       });
     });
     describe('when a later provider page fails', () => {
@@ -359,9 +360,9 @@ describe('GithubProvider', () => {
       const mockError = 'String error';
       mockAxiosInstance.get.mockRejectedValue(mockError);
 
-      await expect(githubProvider.listAvailableRepositories()).rejects.toThrow(
-        'Failed to fetch repositories from GitHub',
-      );
+      await expect(
+        githubProvider.listAvailableRepositories(),
+      ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
     });
 
     describe('with default filtering', () => {
@@ -623,7 +624,7 @@ describe('GithubProvider', () => {
 
           await expect(
             installationProvider.listAvailableRepositories(),
-          ).rejects.toThrow('Failed to fetch repositories from GitHub');
+          ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
         });
       });
     });

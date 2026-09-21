@@ -3,6 +3,11 @@ import { createSign } from 'crypto';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitProviderId } from '@packmind/types';
 import { IGithubTokenResolver } from '../../../../domain/repositories/IGithubTokenResolver';
+import {
+  GithubAccessTokenExpiryUnparseableError,
+  GithubAccessTokenResponseIncompleteError,
+  GithubAppTokenExchangeFailedError,
+} from '../../../../domain/errors';
 
 const origin = 'AppInstallationTokenResolver';
 
@@ -145,15 +150,18 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
 
       const { token, expires_at: expiresAtIso } = response.data;
       if (!token || !expiresAtIso) {
-        throw new Error(
-          'GitHub access_tokens response missing token or expires_at',
+        throw new GithubAccessTokenResponseIncompleteError(
+          this.providerId,
+          this.installationId,
         );
       }
 
       const githubExpiry = Date.parse(expiresAtIso);
       if (Number.isNaN(githubExpiry)) {
-        throw new Error(
-          `GitHub access_tokens returned an unparseable expires_at: ${expiresAtIso}`,
+        throw new GithubAccessTokenExpiryUnparseableError(
+          this.providerId,
+          this.installationId,
+          expiresAtIso,
         );
       }
 
@@ -170,8 +178,11 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
           status: error.response.status,
           // Body intentionally NOT logged — may contain App-level secrets.
         });
-        throw new Error(
-          `Failed to exchange App JWT for installation token (status ${error.response.status})`,
+        throw new GithubAppTokenExchangeFailedError(
+          this.providerId,
+          this.installationId,
+          error,
+          error.response.status,
         );
       }
       this.logger.error('GitHub App installation token exchange failed', {
@@ -179,7 +190,11 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
         installationId: this.installationId,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw new Error('Failed to exchange App JWT for installation token');
+      throw new GithubAppTokenExchangeFailedError(
+        this.providerId,
+        this.installationId,
+        error,
+      );
     }
   }
 }

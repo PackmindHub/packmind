@@ -6,7 +6,25 @@ export type GitInternalErrorReason =
   | 'directory_existence_check_failed'
   | 'available_remote_directories_failed'
   | 'git_adapter_ports_not_provided'
-  | 'fetch_file_content_delayed_job_missing';
+  | 'fetch_file_content_delayed_job_missing'
+  | 'github_api_operation_failed'
+  | 'github_available_repositories_failed'
+  | 'github_branch_existence_check_failed'
+  | 'github_provider_token_empty'
+  | 'github_app_provider_not_saved'
+  | 'github_app_installation_id_missing'
+  | 'github_app_installation_id_invalid'
+  | 'github_app_id_not_configured'
+  | 'github_app_private_key_not_configured'
+  | 'github_app_repository_not_provided'
+  | 'github_app_organization_app_id_missing'
+  | 'github_organization_app_not_found'
+  | 'github_app_id_invalid'
+  | 'github_app_private_key_missing'
+  | 'github_unsupported_auth_method'
+  | 'github_access_token_response_incomplete'
+  | 'github_access_token_expiry_unparseable'
+  | 'github_app_token_exchange_failed';
 
 export type GitInternalErrorContext = {
   organizationId?: string;
@@ -14,6 +32,15 @@ export type GitInternalErrorContext = {
   gitRepoId?: string;
   directoryPath?: string;
   branch?: string;
+  operation?: string;
+  owner?: string;
+  repo?: string;
+  authMethod?: string;
+  appId?: string | number;
+  installationId?: string | number;
+  organizationGitHubAppId?: string;
+  expiresAt?: string;
+  status?: number;
 };
 
 /**

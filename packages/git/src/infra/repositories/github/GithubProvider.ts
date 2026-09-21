@@ -15,6 +15,10 @@ import {
   withTransientRetry,
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
+import {
+  GithubAvailableRepositoriesFailedError,
+  GithubBranchExistenceCheckFailedError,
+} from '../../../domain/errors';
 
 const origin = 'GithubProvider';
 
@@ -87,7 +91,7 @@ export class GithubProvider implements IGitProvider {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
       });
-      throw new Error('Failed to fetch repositories from GitHub');
+      throw new GithubAvailableRepositoriesFailedError(error);
     }
   }
 
@@ -275,8 +279,11 @@ export class GithubProvider implements IGitProvider {
           branch,
           error,
         });
-        throw new Error(
-          `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${error.message}`,
+        throw new GithubBranchExistenceCheckFailedError(
+          owner,
+          repo,
+          branch,
+          error,
         );
       }
 
@@ -284,8 +291,11 @@ export class GithubProvider implements IGitProvider {
         'Failed to check if branch exists with unknown error type',
         { owner, repo, branch, error },
       );
-      throw new Error(
-        `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: ${error}`,
+      throw new GithubBranchExistenceCheckFailedError(
+        owner,
+        repo,
+        branch,
+        error,
       );
     }
   }
