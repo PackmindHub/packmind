@@ -2,6 +2,8 @@
 
 ## Added
 
+- `packmind packages move --command my-command --to @space/my-package` puts a standard, command or skill in one package and takes it out of every other one it belonged to, in a single step. It reports where the artefact landed and each package it was removed from, and does nothing when the artefact was already in the target package alone
+
 ## Changed
 
 ## Fixed

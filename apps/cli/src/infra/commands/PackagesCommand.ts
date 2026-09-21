@@ -1,6 +1,7 @@
 import { subcommands } from 'cmd-ts';
 import { createPackageCommand } from './CreatePackageCommand';
 import { addToPackageCommand } from './AddToPackageCommand';
+import { moveToPackageCommand } from './MoveToPackageCommand';
 import { listPackagesCommand } from './listPackagesCommand';
 import { showPackageCommand } from './packages/showPackageCommand';
 
@@ -10,6 +11,7 @@ export const packagesCommand = subcommands({
   cmds: {
     create: createPackageCommand,
     add: addToPackageCommand,
+    move: moveToPackageCommand,
     list: listPackagesCommand,
     show: showPackageCommand,
   },

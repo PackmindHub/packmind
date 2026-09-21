@@ -4,6 +4,7 @@ import {
   IGetPackageSummaryUseCase,
   ICreatePackageUseCase,
   IAddArtefactsToPackageUseCase,
+  IRemoveArtefactsFromPackageUseCase,
 } from '@packmind/types';
 
 export interface IPackagesGateway {
@@ -11,4 +12,5 @@ export interface IPackagesGateway {
   getSummary: Gateway<IGetPackageSummaryUseCase>;
   create: Gateway<ICreatePackageUseCase>;
   addArtefacts: Gateway<IAddArtefactsToPackageUseCase>;
+  removeArtefacts: Gateway<IRemoveArtefactsFromPackageUseCase>;
 }
