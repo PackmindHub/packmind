@@ -10,6 +10,12 @@ import {
 } from '../http/withTransientRetry';
 import { gitBlobSha } from '@packmind/node-utils';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
+import { NoFilesToCommitError } from '@packmind/types';
+import {
+  GitlabApiErrorResponseError,
+  GitlabApiOperationFailedError,
+  GitlabUnexpectedResponseFormatError,
+} from '../../../domain/errors';
 
 const origin = 'GitlabRepository';
 
@@ -276,7 +282,7 @@ export class GitlabRepository implements IGitRepo {
     });
 
     if (files.length === 0 && (!deleteFiles || deleteFiles.length === 0)) {
-      throw new Error('No files to commit');
+      throw new NoFilesToCommitError();
     }
 
     try {
@@ -490,7 +496,11 @@ export class GitlabRepository implements IGitRepo {
         projectPath: this.projectPath,
         error: errorMessage,
       });
-      throw new Error(`Failed to commit files to GitLab: ${errorMessage}`);
+      throw new GitlabApiOperationFailedError('commit files to GitLab', error, {
+        owner: this.options.owner,
+        repo: this.options.repo,
+        projectPath: this.projectPath,
+      });
     }
   }
 
@@ -524,8 +534,10 @@ export class GitlabRepository implements IGitRepo {
           targetBranch,
           error: errorMessage,
         });
-        throw new Error(
-          `Failed to ensure branch '${targetBranch}' on GitLab: ${errorMessage}`,
+        throw new GitlabApiOperationFailedError(
+          `ensure branch '${targetBranch}' on GitLab`,
+          error,
+          { projectPath: this.projectPath, branch: targetBranch },
         );
       }
       // 404 is the only tolerated failure: the branch is simply missing.
@@ -564,8 +576,10 @@ export class GitlabRepository implements IGitRepo {
         targetBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to create branch '${targetBranch}' on GitLab: ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        `create branch '${targetBranch}' on GitLab`,
+        error,
+        { projectPath: this.projectPath, branch: targetBranch },
       );
     }
   }
@@ -602,8 +616,10 @@ export class GitlabRepository implements IGitRepo {
         targetBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to delete branch '${targetBranch}' on GitLab: ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        `delete branch '${targetBranch}' on GitLab`,
+        error,
+        { projectPath: this.projectPath, branch: targetBranch },
       );
     }
   }
@@ -663,8 +679,10 @@ export class GitlabRepository implements IGitRepo {
         base: baseBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to look up merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        `look up merge request on GitLab for '${head}' -> '${baseBranch}'`,
+        error,
+        { projectPath: this.projectPath, branch: head },
       );
     }
 
@@ -700,8 +718,10 @@ export class GitlabRepository implements IGitRepo {
         base: baseBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to open merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        `open merge request on GitLab for '${head}' -> '${baseBranch}'`,
+        error,
+        { projectPath: this.projectPath, branch: head },
       );
     }
   }
@@ -782,8 +802,10 @@ export class GitlabRepository implements IGitRepo {
         head,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to compare '${base}'...'${head}' on GitLab: ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        `compare '${base}'...'${head}' on GitLab`,
+        error,
+        { projectPath: this.projectPath },
       );
     }
   }
@@ -1006,11 +1028,13 @@ export class GitlabRepository implements IGitRepo {
             response.data &&
             'message' in response.data
           ) {
-            throw new Error(`GitLab API error: ${response.data.message}`);
+            throw new GitlabApiErrorResponseError(
+              projectPath,
+              branch,
+              response.data.message,
+            );
           }
-          throw new Error(
-            'GitLab API did not return an array - unexpected response format',
-          );
+          throw new GitlabUnexpectedResponseFormatError(projectPath, branch);
         }
 
         let pageDirectories = response.data
@@ -1128,8 +1152,10 @@ export class GitlabRepository implements IGitRepo {
         branch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to list repositories from GitLab: ${errorMessage}`,
+      throw new GitlabApiOperationFailedError(
+        'list repositories from GitLab',
+        error,
+        { owner, repo: name, branch },
       );
     }
   }

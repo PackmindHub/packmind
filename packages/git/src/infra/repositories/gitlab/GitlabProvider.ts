@@ -15,6 +15,10 @@ import {
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
+import {
+  GitlabAvailableRepositoriesFailedError,
+  GitlabBranchExistenceCheckFailedError,
+} from '../../../domain/errors';
 
 const origin = 'GitlabProvider';
 
@@ -83,7 +87,7 @@ export class GitlabProvider implements IGitProvider {
         error: error instanceof Error ? error.message : String(error),
         baseUrl: this.baseUrl,
       });
-      throw new Error('Failed to fetch repositories from GitLab');
+      throw new GitlabAvailableRepositoriesFailedError(error);
     }
   }
 
@@ -297,8 +301,11 @@ export class GitlabProvider implements IGitProvider {
           branch,
           error,
         });
-        throw new Error(
-          `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${error.message}`,
+        throw new GitlabBranchExistenceCheckFailedError(
+          owner,
+          repo,
+          branch,
+          error,
         );
       }
 
@@ -306,8 +313,11 @@ export class GitlabProvider implements IGitProvider {
         'Failed to check if branch exists with unknown error type',
         { owner, repo, branch, error },
       );
-      throw new Error(
-        `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: ${error}`,
+      throw new GitlabBranchExistenceCheckFailedError(
+        owner,
+        repo,
+        branch,
+        error,
       );
     }
   }

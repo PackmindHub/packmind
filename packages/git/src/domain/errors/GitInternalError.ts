@@ -24,7 +24,15 @@ export type GitInternalErrorReason =
   | 'github_unsupported_auth_method'
   | 'github_access_token_response_incomplete'
   | 'github_access_token_expiry_unparseable'
-  | 'github_app_token_exchange_failed';
+  | 'github_app_token_exchange_failed'
+  | 'gitlab_api_operation_failed'
+  | 'gitlab_available_repositories_failed'
+  | 'gitlab_branch_existence_check_failed'
+  | 'gitlab_api_error_response'
+  | 'gitlab_unexpected_response_format'
+  | 'unsupported_git_provider_source'
+  | 'fetch_file_content_queue_not_initialized'
+  | 'fetch_file_content_delayed_job_not_created';
 
 export type GitInternalErrorContext = {
   organizationId?: string;
@@ -41,6 +49,8 @@ export type GitInternalErrorContext = {
   organizationGitHubAppId?: string;
   expiresAt?: string;
   status?: number;
+  projectPath?: string;
+  source?: string;
 };
 
 /**

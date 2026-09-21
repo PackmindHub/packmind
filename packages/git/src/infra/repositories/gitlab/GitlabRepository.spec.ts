@@ -9,6 +9,7 @@ import {
 } from '../http/providerHttpAgent';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
+import { NoFilesToCommitError } from '@packmind/types';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -301,7 +302,7 @@ describe('GitlabRepository', () => {
       it('throws error', async () => {
         await expect(
           gitlabRepository.commitFiles([], 'Test commit'),
-        ).rejects.toThrow('No files to commit');
+        ).rejects.toBeInstanceOf(NoFilesToCommitError);
       });
     });
 

@@ -1,6 +1,7 @@
 export * from './AvailableRemoteDirectoriesFailedError';
 export * from './DirectoryExistenceCheckFailedError';
 export * from './FetchFileContentDelayedJobMissingError';
+export * from './FetchFileContentQueueErrors';
 export * from './GitAdapterPortsNotProvidedError';
 export * from './GitInternalError';
 export * from './GitProviderSourceNotConfiguredError';
@@ -12,3 +13,8 @@ export * from './GithubAppTokenExchangeFailedError';
 export * from './GithubAvailableRepositoriesFailedError';
 export * from './GithubBranchExistenceCheckFailedError';
 export * from './GithubTokenResolverFactoryErrors';
+export * from './GitlabApiOperationFailedError';
+export * from './GitlabAvailableRepositoriesFailedError';
+export * from './GitlabBranchExistenceCheckFailedError';
+export * from './GitlabResponseShapeErrors';
+export * from './UnsupportedGitProviderSourceError';

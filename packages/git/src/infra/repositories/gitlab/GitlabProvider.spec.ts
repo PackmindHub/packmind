@@ -8,6 +8,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
+import { GitlabAvailableRepositoriesFailedError } from '../../../domain/errors';
 
 jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
@@ -406,7 +407,7 @@ describe('GitlabProvider', () => {
 
         await expect(
           gitlabProvider.listAvailableRepositories(),
-        ).rejects.toThrow('Failed to fetch repositories from GitLab');
+        ).rejects.toBeInstanceOf(GitlabAvailableRepositoriesFailedError);
       });
     });
 
