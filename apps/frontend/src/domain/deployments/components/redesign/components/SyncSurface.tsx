@@ -1384,16 +1384,31 @@ function InstallSyncRow({
   const locked = lockReason !== null;
   const showArtifacts = selected && expanded;
   const checkbox = (
-    <PMCheckbox
-      size="sm"
-      checked={selected}
-      onCheckedChange={() => {
-        if (locked) return;
-        onToggle();
-      }}
-      disabled={locked}
-      aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${showTarget ? ` (${targetLabel(entry.target)})` : ''}`}
-    />
+    /*
+      The whole row toggles, so the click the label has already turned into a
+      tick has to stop here. Left to bubble it toggled the row a second time,
+      which put the row back where it started: the one place on the row where
+      clicking did nothing was the checkbox itself.
+
+      The same guard the package and marketplace headers on this screen carry,
+      and the reason they carry it.
+    */
+    <PMBox
+      onClick={(event) => event.stopPropagation()}
+      display="inline-flex"
+      alignItems="center"
+    >
+      <PMCheckbox
+        size="sm"
+        checked={selected}
+        onCheckedChange={() => {
+          if (locked) return;
+          onToggle();
+        }}
+        disabled={locked}
+        aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${showTarget ? ` (${targetLabel(entry.target)})` : ''}`}
+      />
+    </PMBox>
   );
   return (
     <PMVStack
@@ -1424,9 +1439,7 @@ function InstallSyncRow({
             showArrow
             openDelay={200}
           >
-            <PMBox display="inline-flex" alignItems="center">
-              {checkbox}
-            </PMBox>
+            {checkbox}
           </PMTooltip>
         ) : (
           checkbox

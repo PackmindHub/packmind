@@ -224,6 +224,28 @@ describe('SyncSurface', () => {
     });
   });
 
+  describe('the box on an install row', () => {
+    /*
+     * Clicked where a reader clicks, which is the box rather than the input
+     * behind it. The row toggles as a whole, so a click that reached the row
+     * through the label undid the tick the label had just made, and the one
+     * spot on the row that did nothing was the checkbox.
+     */
+    it('unticks the row', async () => {
+      renderSurface();
+      const box = screen.getAllByRole('checkbox', {
+        name: /^Select acme\//,
+      })[0];
+      expect(box).toBeChecked();
+
+      await userEvent.click(
+        box.closest('label')?.querySelector('[data-part="control"]') as Element,
+      );
+
+      expect(box).not.toBeChecked();
+    });
+  });
+
   describe('when the batch carries a marketplace', () => {
     const renderMixed = (
       onDistributeMarketplaces = distributeMarketplaces(2),
