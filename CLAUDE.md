@@ -30,6 +30,7 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - Build a project: `./node_modules/.bin/nx build <project-name>`
 - Test affected projects: `pnpm run test:staged`
 - Lint affected projects: `pnpm run lint:staged`
+- Run every validation step at once: `pnpm run quality-gate` (frontend typecheck, then `test:staged`, `lint:staged`, `build`)
 
 ## Code Quality
 

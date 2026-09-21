@@ -12,11 +12,11 @@ builds swap the aliases to real implementations.
 `tsconfig.base.effective.json`. Most projects need it before they type check or test, but not all —
 check the project you are in rather than assuming:
 
-- **typecheck**: 25 of the 31 `tsconfig.json` files extend the generated config and fail until it
+- **typecheck**: 23 of the 29 `tsconfig.json` files extend the generated config and fail until it
   exists. The six that extend the plain `tsconfig.base.json` instead need no setup: `linter-ast`,
   `linter-execution`, `llm`, `logger`, `test-utils` and `apps/cli-e2e-tests`.
-- **test**: 13 of the 26 `jest.config.ts` files `require` the generated config and feed its `paths`
-  to `pathsToModuleNameMapper`; `deployments` reads the plain `tsconfig.base.json`; the other twelve
+- **test**: 13 of the 24 `jest.config.ts` files `require` the generated config and feed its `paths`
+  to `pathsToModuleNameMapper`; `deployments` reads the plain `tsconfig.base.json`; the other ten
   declare no path mapping at all and run without either.
 
 In OSS, all of these resolve to `packages/editions/src/index.ts`:
