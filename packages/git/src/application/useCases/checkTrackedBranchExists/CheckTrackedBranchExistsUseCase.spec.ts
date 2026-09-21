@@ -2,6 +2,8 @@ import { Cache } from '@packmind/node-utils';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   GitRepo,
+  GitRepoNotFoundError,
+  MissingGitInputError,
   createGitProviderId,
   createGitRepoId,
   createOrganizationId,
@@ -116,9 +118,9 @@ describe('CheckTrackedBranchExistsUseCase', () => {
       gitRepoService.findGitRepoById.mockResolvedValue(null);
     });
 
-    it('throws naming the repository', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        `Repository with ID ${repositoryId} not found`,
+    it('throws a repository not found error', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        GitRepoNotFoundError,
       );
     });
   });
@@ -130,7 +132,7 @@ describe('CheckTrackedBranchExistsUseCase', () => {
           ...command,
           repositoryId: '' as typeof repositoryId,
         }),
-      ).rejects.toThrow('Repository ID is required');
+      ).rejects.toBeInstanceOf(MissingGitInputError);
     });
   });
 });

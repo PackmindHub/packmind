@@ -12,6 +12,7 @@ export * from './GitRepoAlreadyLinkedAsStandardError';
 export * from './GitRepoNotFoundError';
 export * from './InvalidGitProviderCredentialsError';
 export * from './MissingGitInputError';
+export * from './NoFilesToCommitError';
 export * from './NoTrackedRepositoryError';
 export * from './RepositoryAlreadyTrackedError';
 export * from './RepositoryNotTrackableError';

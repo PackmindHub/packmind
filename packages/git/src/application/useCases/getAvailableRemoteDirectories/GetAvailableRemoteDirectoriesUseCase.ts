@@ -2,9 +2,12 @@ import { GitProviderService } from '../../GitProviderService';
 import {
   GetAvailableRemoteDirectoriesCommand,
   IGetAvailableRemoteDirectoriesUseCase,
+  MissingGitInputError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Cache } from '@packmind/node-utils';
+import { AvailableRemoteDirectoriesFailedError } from '../../../domain/errors/AvailableRemoteDirectoriesFailedError';
+import { GitRepoProviderNotConfiguredError } from '../../../domain/errors/GitRepoProviderNotConfiguredError';
 
 const origin = 'GetAvailableRemoteDirectoriesUseCase';
 
@@ -24,15 +27,15 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
     const { organizationId, gitRepo, path } = command;
 
     if (!gitRepo) {
-      throw new Error('Git repository is required');
+      throw new MissingGitInputError('Git repository');
     }
 
     if (!organizationId) {
-      throw new Error('Organization ID is required');
+      throw new MissingGitInputError('Organization ID');
     }
 
     if (!gitRepo.providerId) {
-      throw new Error('Git repository must have a provider ID');
+      throw new GitRepoProviderNotConfiguredError(gitRepo.id);
     }
 
     const pathString = path && path !== '/' ? path : 'root';
@@ -89,7 +92,11 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
         branch: gitRepo.branch,
         error: errorMessage,
       });
-      throw new Error(`Failed to get available targets: ${errorMessage}`);
+      throw new AvailableRemoteDirectoriesFailedError(
+        organizationId,
+        gitRepo.id,
+        error,
+      );
     }
   }
 }

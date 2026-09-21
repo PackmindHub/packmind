@@ -1,11 +1,14 @@
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  GitRepoNotFoundError,
   ICheckDirectoryExistenceUseCase,
+  MissingGitInputError,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { PackmindLogger } from '@packmind/logger';
+import { DirectoryExistenceCheckFailedError } from '../../../domain/errors/DirectoryExistenceCheckFailedError';
 
 const origin = 'CheckDirectoryExistenceUseCase';
 
@@ -28,18 +31,18 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
     });
 
     if (!gitRepoId) {
-      throw new Error('Git repository ID is required');
+      throw new MissingGitInputError('Git repository ID');
     }
     if (!directoryPath) {
-      throw new Error('Directory path is required');
+      throw new MissingGitInputError('Directory path');
     }
     if (!branch) {
-      throw new Error('Branch is required');
+      throw new MissingGitInputError('Branch');
     }
 
     const gitRepo = await this.gitRepoService.findGitRepoById(gitRepoId);
     if (!gitRepo) {
-      throw new Error(`Git repository with ID ${gitRepoId} not found`);
+      throw new GitRepoNotFoundError(gitRepoId);
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
@@ -75,7 +78,12 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
         error: errorMessage,
       });
 
-      throw new Error(`Failed to check directory existence: ${errorMessage}`);
+      throw new DirectoryExistenceCheckFailedError(
+        gitRepoId,
+        directoryPath,
+        branch,
+        error,
+      );
     }
   }
 }

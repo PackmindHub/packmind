@@ -3,11 +3,11 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   DeleteGitRepoCommand,
   DeleteGitRepoResponse,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   GitRepoNotFoundError,
   IAccountsPort,
   IDeleteGitRepoUseCase,
+  MissingGitInputError,
   createUserId,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
@@ -34,7 +34,7 @@ export class DeleteGitRepoUseCase
     const { repositoryId, userId, providerId, organization } = command;
 
     if (!repositoryId) {
-      throw new Error('Repository ID is required');
+      throw new MissingGitInputError('Repository ID');
     }
 
     // Type-ignoring finder: this use case serves both the standard and the
@@ -42,24 +42,23 @@ export class DeleteGitRepoUseCase
     // marketplace-typed rows out.
     const repository =
       await this.gitRepoService.findGitRepoByIdIgnoringType(repositoryId);
-    if (!repository) {
-      throw new GitRepoNotFoundError(repositoryId);
-    }
 
-    if (providerId && repository.providerId !== providerId) {
-      throw new Error('Repository does not belong to the specified provider');
+    // A repository addressed through a provider that does not own it is one
+    // the caller cannot see through that path, so it answers exactly what a
+    // repository that does not exist answers.
+    if (!repository || (providerId && repository.providerId !== providerId)) {
+      throw new GitRepoNotFoundError(repositoryId);
     }
 
     const gitProvider = await this.gitProviderService.findGitProviderById(
       repository.providerId,
     );
-    if (!gitProvider) {
-      throw new GitProviderNotFoundError(repository.providerId);
-    }
 
-    if (gitProvider.organizationId !== organization.id) {
+    // A provider that does not exist and one owned by another organization are
+    // the same answer by design, so they are the same branch.
+    if (!gitProvider || gitProvider.organizationId !== organization.id) {
       throw new GitProviderOrganizationMismatchError(
-        gitProvider.id,
+        repository.providerId,
         organization.id,
       );
     }

@@ -1,10 +1,17 @@
 import { PackmindInternalError } from '@packmind/types';
 
-export type GitInternalErrorReason = 'git_provider_source_not_configured';
+export type GitInternalErrorReason =
+  | 'git_provider_source_not_configured'
+  | 'git_repo_provider_not_configured'
+  | 'directory_existence_check_failed'
+  | 'available_remote_directories_failed';
 
 export type GitInternalErrorContext = {
+  organizationId?: string;
   gitProviderId?: string;
   gitRepoId?: string;
+  directoryPath?: string;
+  branch?: string;
 };
 
 /**

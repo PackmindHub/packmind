@@ -17,6 +17,7 @@ export type GitErrorReason =
   | 'repository_not_trackable'
   | 'unsupported_git_provider'
   | 'missing_git_input'
+  | 'no_files_to_commit'
   | 'unresolvable_git_provider'
   | 'git_repo_already_linked_as_standard';
 
