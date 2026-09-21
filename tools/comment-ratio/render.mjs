@@ -461,7 +461,7 @@ and barely moves.</p>
   <div class="card-head">
     <h3>Share of newly written lines that are comments</h3>
     <p>Each point takes every TypeScript line added during that fortnight and divides the comment lines by the total,
-    ignoring blank lines. Hover a point for its two numbers. The dashed lines mark the Opus releases.</p>
+    ignoring blank lines. The dashed lines mark the Opus releases.</p>
   </div>
   <div class="chart" id="c-headline"></div>
   <details><summary>See the data</summary><div id="t-headline"></div></details>
@@ -517,19 +517,25 @@ on the Wednesday and Thursday after that, once the rise had already started.</p>
 <h2>2. By model, directly</h2>
 <p>Commits produced through Claude Code carry a <code>Co-Authored-By: Claude &lt;model&gt;</code> trailer, so every
 added line can be attributed to the model of the session that produced it, rather than left to a correlation with the
-calendar. Each bar pools all of a model's added lines. Whether that pooled figure is carried by a few large commits
-is checked in the table: for Opus 5 the median commit sits at ${fmtPct(models.byModel['Claude Opus 5'].commitDistribution.median)},
-next to a pooled ${fmtPct(opus5.commentRatio)}, so the whole distribution has moved rather than its tail.</p>
+calendar. Each bar pools all of a model's added lines. That pooled figure is not carried by a few large commits: for
+Opus 5 the median commit sits at ${fmtPct(models.byModel['Claude Opus 5'].commitDistribution.median)}, next to a
+pooled ${fmtPct(opus5.commentRatio)}, so the whole distribution has moved rather than its tail.</p>
 
 <div class="card">
   <div class="card-head">
-    <h3>Comment ratio of added lines, by model &mdash; summed over commits</h3>
-    <p>This one has to sum each commit's own diff rather than take a net diff, because only a commit carries the
-    trailer that names its model. Each bar pools every line the model added, over models with at least 1,000 of them. The median commit and the
-    spread between them are in the table, along with the buckets that name no model.</p>
+    <h3>Comment ratio of added lines, by model</h3>
+    <p>Each Claude Code commit records the model that produced it, so every added line can be credited to one. Each
+    bar divides that model's comment lines by all the lines it added. Models under
+    ${fmtInt(MIN_LINES)} added lines are left out.</p>
   </div>
   <div class="chart" id="c-models"></div>
   <details><summary>See the data, including the unattributed buckets</summary><div id="t-models"></div></details>
+  <details><summary>How a model is credited</summary>
+    <p class="note">The model comes from the <code>Co-Authored-By: Claude &lt;model&gt;</code> trailer, which only a
+    commit carries &mdash; so a bar sums each commit's own diff rather than taking one net diff over a period, as the
+    charts above do. The two are different measures and do not yield the same multiplier between generations. Commits
+    whose message names no model, or names several, go to their own buckets, listed with the data.</p>
+  </details>
 </div>
 
 <span class="eyebrow">By developer</span>
