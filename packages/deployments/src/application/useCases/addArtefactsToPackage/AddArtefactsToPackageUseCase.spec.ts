@@ -1,3 +1,7 @@
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { AddArtefactsToPackageUseCase } from './AddArtefactsToPackageUseCase';
 import {
   AddArtefactsToPackageCommand,
@@ -520,7 +524,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package with id ${packageId} not found`,
+          new PackageNotFoundError(packageId, spaceId),
         );
       });
 
@@ -565,7 +569,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with space id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+          new SpaceNotAccessibleError(spaceId, organizationId),
         );
       });
 
@@ -613,7 +617,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package and organization ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package ${packageId} does not belong to organization ${organizationId}`,
+          new SpaceNotAccessibleError(spaceId, organizationId),
         );
       });
 
@@ -665,7 +669,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package with id ${packageId} does not exist in space ${spaceId}`,
+          new PackageNotFoundError(packageId, spaceId),
         );
       });
 
@@ -710,7 +714,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe with id ${commandId1} not found`,
+          new ArtefactNotInSpaceError('command', commandId1, spaceId),
         );
       });
 
@@ -766,7 +770,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe ${commandId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('command', commandId1, spaceId),
         );
       });
 
@@ -820,7 +824,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with standard id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Standard with id ${standardId1} not found`,
+          new ArtefactNotInSpaceError('standard', standardId1, spaceId),
         );
       });
 
@@ -874,7 +878,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with standard and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Standard ${standardId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('standard', standardId1, spaceId),
         );
       });
 
@@ -931,7 +935,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Failed to retrieve updated package ${packageId}`,
+          new PackageReloadFailedError(packageId),
         );
       });
 
@@ -1039,7 +1043,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with skill id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Skill with id ${skillId1} not found`,
+          new ArtefactNotInSpaceError('skill', skillId1, spaceId),
         );
       });
     });
@@ -1080,7 +1084,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with skill and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Skill ${skillId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('skill', skillId1, spaceId),
         );
       });
     });

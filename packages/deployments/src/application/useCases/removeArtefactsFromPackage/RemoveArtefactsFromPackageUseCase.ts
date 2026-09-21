@@ -14,6 +14,9 @@ import {
   createUserId,
   createOrganizationId,
 } from '@packmind/types';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
 const origin = 'RemoveArtefactsFromPackageUseCase';
@@ -54,28 +57,19 @@ export class RemoveArtefactsFromPackageUseCase
       skillCount: skillIds.length,
     });
 
+    // Missing and belonging-to-another-tenant are one branch on purpose: they
+    // have to be indistinguishable from outside, and a single throw is what
+    // keeps them that way.
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== command.organizationId) {
-      throw new Error(
-        `Package ${packageId} does not belong to organization ${command.organizationId}`,
-      );
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new SpaceNotAccessibleError(spaceId, command.organizationId);
     }
 
     const existingPackage = await this.services
       .getPackageService()
       .findById(packageId);
-    if (!existingPackage) {
-      throw new Error(`Package with id ${packageId} not found`);
-    }
-
-    if (existingPackage.spaceId !== spaceId) {
-      throw new Error(
-        `Package with id ${packageId} does not exist in space ${spaceId}`,
-      );
+    if (!existingPackage || existingPackage.spaceId !== spaceId) {
+      throw new PackageNotFoundError(packageId, spaceId);
     }
 
     // Only remove artefacts that are actually in the package; the rest are skipped
@@ -125,7 +119,7 @@ export class RemoveArtefactsFromPackageUseCase
       .findById(packageId);
 
     if (!updatedPackage) {
-      throw new Error(`Failed to retrieve updated package ${packageId}`);
+      throw new PackageReloadFailedError(packageId);
     }
 
     // Emit an event per removed artefact so deployment drift is tracked. The
