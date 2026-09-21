@@ -329,14 +329,6 @@ const flowNotes = flowMonths.map((m) => {
   return `${fmtInt(a.addedComment)} comment lines out of ${fmtInt(total)} added`;
 });
 
-// One point, spelled out in full, saves the reader from reverse-engineering the
-// definition from the axis. The last complete fortnight is the least arbitrary
-// choice and the closest to what a reader hovers first.
-const sample = flowMonths.filter((m) => !m.partial).at(-1);
-const sampleFlow = sample.flow.all;
-const sampleTotal = sampleFlow.addedCode + sampleFlow.addedComment;
-const sampleStock = stock.find((s) => s.label === sample.periodEnd);
-
 const payload = {
   tMin,
   tMax,
@@ -468,19 +460,8 @@ and barely moves.</p>
 <div class="card">
   <div class="card-head">
     <h3>Share of newly written lines that are comments</h3>
-    <p class="readout"><b>One point, spelled out.</b> Between ${dayEn(sample.period)} and
-    ${dayEn(sample.periodEnd)} ${sample.periodEnd.slice(0, 4)}, <b>${fmtInt(sampleTotal)} lines</b> of TypeScript were
-    added to the repository. <b>${fmtInt(sampleFlow.addedComment)}</b> of them were comment lines. The point therefore
-    sits at ${fmtInt(sampleFlow.addedComment)} ÷ ${fmtInt(sampleTotal)} =
-    <b>${fmtPct(sampleFlow.commentRatio)}</b>. Hover any point to see its own two numbers.</p>
-    <ul class="caveats">
-      <li>It is <b>not</b> a change against the previous point. Each fortnight is measured on its own; two
-      neighbouring points are two independent measurements, not a before and an after.</li>
-      <li>It is <b>not</b> the share of the whole codebase. That figure moves far more slowly &mdash; it was
-      ${fmtPct(sampleStock.totals.all.commentRatio)} on ${dayEn(sample.periodEnd)}, and it has its own chart in
-      section&nbsp;4.</li>
-    </ul>
-    <p>The dashed lines mark the Opus releases; every release is listed in the reference table below.</p>
+    <p>Each point takes every TypeScript line added during that fortnight and divides the comment lines by the total,
+    ignoring blank lines. Hover a point for its two numbers. The dashed lines mark the Opus releases.</p>
   </div>
   <div class="chart" id="c-headline"></div>
   <details><summary>See the data</summary><div id="t-headline"></div></details>

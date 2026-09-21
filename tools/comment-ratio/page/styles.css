@@ -164,42 +164,21 @@ p {
   margin: 0;
 }
 
-/* The plain reading of a single point, set apart from the method notes that
-   follow it: a reader who stops here has understood the chart. */
-.card-head .readout {
-  font-size: 14.5px;
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--series-1) 8%, transparent);
-  border-left: 3px solid var(--series-1);
-  border-radius: 0 8px 8px 0;
-  padding: 12px 14px;
-  margin: 0 0 10px;
-}
-
-/* Two short lists with the same shape: what the figure is not, and what each
-   visual channel encodes. */
-.card-head .caveats,
+/* What each visual channel of a chart encodes, one line each. */
 .card-head .keys {
   font-size: 13.5px;
   color: var(--text-secondary);
-  margin: 0 0 10px;
-  padding-left: 18px;
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0 10px;
 }
 
-.card-head .caveats li,
 .card-head .keys li {
   margin: 0 0 4px;
 }
 
-.card-head .caveats b,
 .card-head .keys b {
   color: var(--text-primary);
-}
-
-.card-head .keys {
-  list-style: none;
-  padding-left: 0;
-  margin: 6px 0 10px;
 }
 
 .chart {

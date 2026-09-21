@@ -167,42 +167,21 @@ p {
   margin: 0;
 }
 
-/* The plain reading of a single point, set apart from the method notes that
-   follow it: a reader who stops here has understood the chart. */
-.card-head .readout {
-  font-size: 14.5px;
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--series-1) 8%, transparent);
-  border-left: 3px solid var(--series-1);
-  border-radius: 0 8px 8px 0;
-  padding: 12px 14px;
-  margin: 0 0 10px;
-}
-
-/* Two short lists with the same shape: what the figure is not, and what each
-   visual channel encodes. */
-.card-head .caveats,
+/* What each visual channel of a chart encodes, one line each. */
 .card-head .keys {
   font-size: 13.5px;
   color: var(--text-secondary);
-  margin: 0 0 10px;
-  padding-left: 18px;
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0 10px;
 }
 
-.card-head .caveats li,
 .card-head .keys li {
   margin: 0 0 4px;
 }
 
-.card-head .caveats b,
 .card-head .keys b {
   color: var(--text-primary);
-}
-
-.card-head .keys {
-  list-style: none;
-  padding-left: 0;
-  margin: 6px 0 10px;
 }
 
 .chart {
@@ -461,19 +440,8 @@ and barely moves.</p>
 <div class="card">
   <div class="card-head">
     <h3>Share of newly written lines that are comments</h3>
-    <p class="readout"><b>One point, spelled out.</b> Between 1 Sept and
-    15 Sept 2026, <b>35,075 lines</b> of TypeScript were
-    added to the repository. <b>6,276</b> of them were comment lines. The point therefore
-    sits at 6,276 ÷ 35,075 =
-    <b>17.9%</b>. Hover any point to see its own two numbers.</p>
-    <ul class="caveats">
-      <li>It is <b>not</b> a change against the previous point. Each fortnight is measured on its own; two
-      neighbouring points are two independent measurements, not a before and an after.</li>
-      <li>It is <b>not</b> the share of the whole codebase. That figure moves far more slowly &mdash; it was
-      5.5% on 15 Sept, and it has its own chart in
-      section&nbsp;4.</li>
-    </ul>
-    <p>The dashed lines mark the Opus releases; every release is listed in the reference table below.</p>
+    <p>Each point takes every TypeScript line added during that fortnight and divides the comment lines by the total,
+    ignoring blank lines. Hover a point for its two numbers. The dashed lines mark the Opus releases.</p>
   </div>
   <div class="chart" id="c-headline"></div>
   <details><summary>See the data</summary><div id="t-headline"></div></details>
