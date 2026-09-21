@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-014",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/constants/messages.ts",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.spec.tsx"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='PackageVersionArea'",
+    "kind": "behavioural",
+    "describes": "AC-1, AC-2, AC-3, AC-4, AC-9"
+  }
+}

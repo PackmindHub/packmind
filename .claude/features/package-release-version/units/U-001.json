@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-001",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/types/src/deployments/packageReleaseVersion.ts",
+    "packages/types/src/deployments/packageReleaseVersion.spec.ts",
+    "packages/types/src/deployments/index.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test types --testNamePattern='packageReleaseVersion'",
+    "kind": "behavioural",
+    "describes": "AC-11"
+  }
+}

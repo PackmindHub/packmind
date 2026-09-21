@@ -28,6 +28,9 @@ import {
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
   IGetDashboardNonLive,
+  IListPackageReleasesUseCase,
+  ICreatePackageReleaseUseCase,
+  IGetPackageReleaseUseCase,
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
@@ -64,4 +67,7 @@ export interface IDeploymentsGateway {
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
+  listPackageReleases: NewGateway<IListPackageReleasesUseCase>;
+  createPackageRelease: NewGateway<ICreatePackageReleaseUseCase>;
+  getPackageRelease: NewGateway<IGetPackageReleaseUseCase>;
 }

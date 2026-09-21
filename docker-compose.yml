@@ -227,6 +227,33 @@ services:
     entrypoint: >
       sh -lc '
         set -eu
+        # Namespaces the rows this container run writes to the Nx
+        # `task_invocations` table. (No apostrophes below: this whole script is
+        # single-quoted for `sh -lc`, so one would end the string.)
+        # Nx keys that table by the root Nx process id and defaults it to
+        # `process.pid`; because each entrypoint `exec`s Nx, it becomes PID 1 in
+        # its own PID namespace, so frontend and backend would both register
+        # under root pid "1" in the `.nx/workspace-data` DB they share through
+        # the `.:/packmind` bind mount, and the second container to start would
+        # collide with the first and abort with a bogus "Recursive task
+        # invocation detected".
+        #
+        # The timestamp keeps each *start* apart, which is the half a fixed
+        # value got wrong. Nx deletes a row only when its task completes, and
+        # `frontend:dev` never completes, so a container killed rather than
+        # stopped gracefully leaves its row behind and a fixed key collides with
+        # it on the next `up` forever. A fresh key per start makes those rows
+        # inert, with no cache clearing needed.
+        #
+        # Parity keeps the two services apart: frontend odd, backend even.
+        # Prefixing a digit instead would overflow -- the native tracker stores
+        # this as u32, so anything above 4294967295 wraps silently (measured:
+        # 21789633201 landed in the table as 314796721). Doubling an epoch stays
+        # inside u32 until well past any lifetime of this file.
+        #
+        # Within one container run the key is constant, so genuine in-container
+        # recursion is still detected.
+        export NX_INVOCATION_ROOT_PID="$$(( $$(date +%s) * 2 + 1 ))"
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
           export NX_DAEMON=false; exec ./node_modules/.bin/nx run frontend:dev
@@ -241,16 +268,6 @@ services:
       '
     environment:
       <<: *nx-env
-      # Namespaces this container's rows in Nx's `task_invocations` table. Nx
-      # keys that table by the root Nx process id and defaults it to
-      # `process.pid`; because each entrypoint `exec`s Nx, it becomes PID 1 in
-      # its own PID namespace, so frontend and backend would both register under
-      # root pid "1" in the `.nx/workspace-data` DB they share through the
-      # `.:/packmind` bind mount. The second container to start then collides
-      # with the first container's rows and Nx aborts with a bogus "Recursive
-      # task invocation detected". Distinct values per container keep genuine
-      # in-container recursion detection working.
-      NX_INVOCATION_ROOT_PID: '100001'
       CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
@@ -279,6 +296,11 @@ services:
     entrypoint: >
       sh -lc '
         set -eu
+        # A fresh Nx `task_invocations` key per container start. See the long
+        # comment on the frontend service for why a fixed value collides with
+        # its own leftover rows on every restart. Even here, odd there, so the
+        # two services cannot share a key.
+        export NX_INVOCATION_ROOT_PID="$$(( $$(date +%s) * 2 ))"
         apk update && \
         apk add --no-cache \
                 bash \
@@ -300,8 +322,6 @@ services:
       '
     environment:
       <<: *nx-env
-      # Distinct from the frontend's — see the comment on that service.
-      NX_INVOCATION_ROOT_PID: '100002'
       CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379

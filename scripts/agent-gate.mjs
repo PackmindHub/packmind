@@ -183,7 +183,11 @@ function distillJest(raw) {
  * assumed. Returns null when the output carries no jest summary at all.
  */
 function assertionsRun(raw) {
-  const m = raw.match(/^\s*Tests:\s+(.+)$/m);
+  // `Tests:` is jest's spelling; vitest writes the same line without the colon
+  // (`      Tests  4 passed | 2133 skipped (2137)`), and apps/frontend runs
+  // vitest. `Test Files` does not match either way — the literal `Tests` fails
+  // on the space.
+  const m = raw.match(/^\s*Tests:?\s+(.+)$/m);
   if (!m) return null;
   const passed = m[1].match(/(\d+)\s+passed/);
   return { passed: passed ? Number(passed[1]) : 0, summary: m[1].trim() };

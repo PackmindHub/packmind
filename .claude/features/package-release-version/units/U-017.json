@@ -1,0 +1,16 @@
+{
+  "unit_id": "U-017",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/components/context/PackageReleasesDrawer.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageReleasesDrawer.spec.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.spec.tsx",
+    "apps/frontend/src/domain/deployments/components/context/ContextPackagePane.spec.tsx"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='PackageReleasesDrawer|PackageVersionArea|ContextPackagePane'",
+    "kind": "behavioural",
+    "describes": "AC-18"
+  }
+}

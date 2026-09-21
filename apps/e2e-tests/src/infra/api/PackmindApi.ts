@@ -3,6 +3,7 @@ import {
   Organization,
   ICreateStandardUseCase,
   ICreatePackageUseCase,
+  ICreatePackageReleaseUseCase,
   INotifyDistributionUseCase,
   IUploadSkillUseCase,
   IListUserSpaces,
@@ -120,6 +121,16 @@ export class PackmindApi implements IPackmindApi {
 
   createPackage: Gateway<ICreatePackageUseCase> = async (command) => {
     return this.post(`/spaces/${command.spaceId}/packages`, command, 201);
+  };
+
+  createPackageRelease: Gateway<ICreatePackageReleaseUseCase> = async (
+    command,
+  ) => {
+    return this.post(
+      `/spaces/${command.spaceId}/packages/${command.packageId}/releases`,
+      { version: command.version },
+      201,
+    );
   };
 
   notifyDistribution: Gateway<INotifyDistributionUseCase> = async (command) => {
