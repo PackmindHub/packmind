@@ -508,10 +508,13 @@ and barely moves.</p>
 <div class="card">
   <div class="card-head">
     <h3>Day by day, ${fmtInt(Math.round((day(daily.to) - day(daily.around)) / 86400000) - 1)} days either side of the Opus 5 release</h3>
-    <p>One dot per day whose TypeScript lines came mostly from an Opus model; its area is how many lines were added.
-    Days carried by Fable 5, Sonnet 5 or by commits with no version recorded are left out — they answer a different
-    question. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend would
-    invent a trend that was not measured.</p>
+    <p>One dot per day, for days whose TypeScript came mostly from an Opus model.</p>
+    <ul class="keys">
+      <li><b>Height</b> — the same ratio as above, over one day instead of a fortnight.</li>
+      <li><b>Size</b> — how many lines that day added.</li>
+      <li><b>Colour</b> — which Opus model wrote most of them.</li>
+    </ul>
+    <p>No connecting line: the days are not evenly spaced.</p>
   </div>
   <div class="chart" id="c-daily"></div>
   <div class="legend" id="l-daily"></div>
@@ -674,6 +677,7 @@ the ${periodFr(worked)} period, which you can find in the table above:</p>
     points: D.daily.points, tMin: D.daily.tMin, tMax: D.daily.tMax,
     annotations: [{ t: D.daily.release, label: 'Opus 5 released' }],
     tickAnchor: D.daily.release, tickDays: 7,
+    yLabel: "Comment ratio of the day's added lines",
     ariaLabel: "Daily comment ratio around the Opus 5 release"
   });
   document.getElementById('l-daily').innerHTML = D.daily.legend.map(function (e) {

@@ -364,8 +364,10 @@
    */
   function dotChart(container, config) {
     var W = 900;
-    var H = 340;
-    var m = { top: 46, right: 20, bottom: 40, left: 54 };
+    // The top margin carries three stacked rows: the axis label, the topmost
+    // gridline (which `ticks` may place above yMax) and the release label.
+    var H = 356;
+    var m = { top: 62, right: 20, bottom: 40, left: 54 };
     var plotW = W - m.left - m.right;
     var plotH = H - m.top - m.bottom;
 
@@ -423,6 +425,20 @@
         }),
       );
     });
+
+    // A bare percentage axis says nothing about what is a percentage of. The
+    // label sits above the axis rather than rotated along it, which reads at
+    // a glance and survives the page being narrow.
+    if (config.yLabel) {
+      svg.appendChild(
+        text(config.yLabel, {
+          x: 4,
+          y: 12,
+          fill: 'var(--text-secondary)',
+          'font-size': 11.5,
+        }),
+      );
+    }
 
     // Ticks sit on a calendar grid, not on whichever days happen to carry
     // commits: spacing them by the data makes the axis look arbitrary. The

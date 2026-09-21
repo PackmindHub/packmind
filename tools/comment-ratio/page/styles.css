@@ -176,19 +176,30 @@ p {
   margin: 0 0 10px;
 }
 
-.card-head .caveats {
+/* Two short lists with the same shape: what the figure is not, and what each
+   visual channel encodes. */
+.card-head .caveats,
+.card-head .keys {
   font-size: 13.5px;
   color: var(--text-secondary);
   margin: 0 0 10px;
   padding-left: 18px;
 }
 
-.card-head .caveats li {
+.card-head .caveats li,
+.card-head .keys li {
   margin: 0 0 4px;
 }
 
-.card-head .caveats b {
+.card-head .caveats b,
+.card-head .keys b {
   color: var(--text-primary);
+}
+
+.card-head .keys {
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0 10px;
 }
 
 .chart {

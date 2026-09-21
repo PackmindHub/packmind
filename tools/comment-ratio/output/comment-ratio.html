@@ -184,19 +184,30 @@ p {
   margin: 0 0 10px;
 }
 
-.card-head .caveats {
+/* Two short lists with the same shape: what the figure is not, and what each
+   visual channel encodes. */
+.card-head .caveats,
+.card-head .keys {
   font-size: 13.5px;
   color: var(--text-secondary);
   margin: 0 0 10px;
   padding-left: 18px;
 }
 
-.card-head .caveats li {
+.card-head .caveats li,
+.card-head .keys li {
   margin: 0 0 4px;
 }
 
-.card-head .caveats b {
+.card-head .caveats b,
+.card-head .keys b {
   color: var(--text-primary);
+}
+
+.card-head .keys {
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0 10px;
 }
 
 .chart {
@@ -497,10 +508,13 @@ and barely moves.</p>
 <div class="card">
   <div class="card-head">
     <h3>Day by day, 45 days either side of the Opus 5 release</h3>
-    <p>One dot per day whose TypeScript lines came mostly from an Opus model; its area is how many lines were added.
-    Days carried by Fable 5, Sonnet 5 or by commits with no version recorded are left out — they answer a different
-    question. There is no connecting line: the days are not evenly spaced, and drawing one across a weekend would
-    invent a trend that was not measured.</p>
+    <p>One dot per day, for days whose TypeScript came mostly from an Opus model.</p>
+    <ul class="keys">
+      <li><b>Height</b> — the same ratio as above, over one day instead of a fortnight.</li>
+      <li><b>Size</b> — how many lines that day added.</li>
+      <li><b>Colour</b> — which Opus model wrote most of them.</li>
+    </ul>
+    <p>No connecting line: the days are not evenly spaced.</p>
   </div>
   <div class="chart" id="c-daily"></div>
   <div class="legend" id="l-daily"></div>
@@ -992,8 +1006,10 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
    */
   function dotChart(container, config) {
     var W = 900;
-    var H = 340;
-    var m = { top: 46, right: 20, bottom: 40, left: 54 };
+    // The top margin carries three stacked rows: the axis label, the topmost
+    // gridline (which `ticks` may place above yMax) and the release label.
+    var H = 356;
+    var m = { top: 62, right: 20, bottom: 40, left: 54 };
     var plotW = W - m.left - m.right;
     var plotH = H - m.top - m.bottom;
 
@@ -1051,6 +1067,20 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
         }),
       );
     });
+
+    // A bare percentage axis says nothing about what is a percentage of. The
+    // label sits above the axis rather than rotated along it, which reads at
+    // a glance and survives the page being narrow.
+    if (config.yLabel) {
+      svg.appendChild(
+        text(config.yLabel, {
+          x: 4,
+          y: 12,
+          fill: 'var(--text-secondary)',
+          'font-size': 11.5,
+        }),
+      );
+    }
 
     // Ticks sit on a calendar grid, not on whichever days happen to carry
     // commits: spacing them by the data makes the axis look arbitrary. The
@@ -1367,6 +1397,7 @@ the 1 Sept → 15 Sept 26 period, which you can find in the table above:</p>
     points: D.daily.points, tMin: D.daily.tMin, tMax: D.daily.tMax,
     annotations: [{ t: D.daily.release, label: 'Opus 5 released' }],
     tickAnchor: D.daily.release, tickDays: 7,
+    yLabel: "Comment ratio of the day's added lines",
     ariaLabel: "Daily comment ratio around the Opus 5 release"
   });
   document.getElementById('l-daily').innerHTML = D.daily.legend.map(function (e) {
