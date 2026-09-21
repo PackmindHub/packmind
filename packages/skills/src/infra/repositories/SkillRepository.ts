@@ -86,7 +86,6 @@ export class SkillRepository
     });
 
     try {
-      // First, get all skills for the space with user information
       const skills = await this.repository.find({
         where: { spaceId },
         withDeleted: opts?.includeDeleted ?? false,

@@ -2,11 +2,10 @@ import { isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 
 /**
- * Ceiling on a single provider round trip. Without one, axios waits forever:
- * a stalled connection held the whole request open long after the browser had
- * given up on it, so the reader waited on a response nobody would ever read.
+ * Ceiling on a single provider round trip. Axios has no default, so a stalled
+ * connection would hold the request open long after the browser gave up.
  */
-export const PROVIDER_REQUEST_TIMEOUT_MS = 10_000;
+export const PROVIDER_REQUEST_TIMEOUT_MS = 30_000;
 
 const RETRY_DELAY_MS = 500;
 
@@ -27,9 +26,9 @@ const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Give one provider call a second chance before it fails the batch around it.
- * Listing repositories can span several provider pages, and a single hiccup on
- * any one of them used to discard every page already fetched.
+ * Give one provider call a second chance before it fails the batch around it:
+ * listing repositories spans several provider pages, and a hiccup on any one
+ * of them would otherwise discard every page already fetched.
  */
 export async function withTransientRetry<T>(
   operation: () => Promise<T>,

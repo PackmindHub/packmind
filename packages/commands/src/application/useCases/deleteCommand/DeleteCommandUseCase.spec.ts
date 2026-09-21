@@ -2,7 +2,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createCommandId,
@@ -20,6 +24,7 @@ import {
   SpaceId,
   User,
   UserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,38 +42,24 @@ describe('DeleteRecipeUseCase', () => {
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: createUserId('00000000-0000-0000-0000-000000000001'),
+      spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+    });
 
-    commandService = {
-      addCommand: jest.fn(),
-      publishToGit: jest.fn(),
-      getCommandById: jest.fn(),
-      updateRecipe: jest.fn(),
-      findCommandBySlug: jest.fn(),
-      listCommandVersions: jest.fn(),
-      deleteCommand: jest.fn(),
-    } as unknown as jest.Mocked<CommandService>;
+    commandService = createMockInstance(CommandService);
 
-    commandVersionService = {
-      addCommandVersion: jest.fn(),
-      listCommandVersions: jest.fn(),
-      getCommandVersion: jest.fn(),
-      getCommandVersionById: jest.fn(),
-      deleteCommandVersionsForCommand: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<CommandVersionService>;
+    commandVersionService = createMockInstance(CommandVersionService);
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     stubLogger();
 

@@ -1,5 +1,5 @@
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   IAccountsPort,
   Organization,
@@ -47,11 +47,7 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
   let organization: Organization;
 
   beforeEach(() => {
-    service = {
-      getConfiguration: jest.fn(),
-      createConfiguration: jest.fn(),
-      updateConfiguration: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    service = createMockInstance(RenderModeConfigurationService);
 
     accountsPort = {
       getUserById: jest.fn(),

@@ -10,11 +10,11 @@ export const ACCESSIBLE_REPOS_PER_REQUEST = 100;
 
 /**
  * Ceiling on the provider round trips a single request may spend. Access
- * filtering can leave a provider page contributing one repository, so chasing a
- * full batch quietly turned "one page" into dozens of sequential calls — past
- * the point where the browser gives up, at which point the reader got nothing
- * at all rather than a short list. Stopping early costs nothing: the caller
- * resumes from `lastLoadedPage + 1`.
+ * filtering can leave a provider page contributing one repository, so chasing
+ * a full batch can turn "one page" into dozens of sequential calls — past the
+ * point where the browser gives up, leaving the reader with nothing rather
+ * than a short list. Stopping early costs nothing: the caller resumes from
+ * `lastLoadedPage + 1`.
  */
 export const MAX_PROVIDER_PAGES_PER_REQUEST = 4;
 

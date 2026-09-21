@@ -42,7 +42,6 @@ export class DeployerService {
 
     const allUpdates: FileUpdates[] = [];
 
-    // Deploy to each target
     for (const target of targets) {
       this.logger.debug('Deploying recipes for target', {
         targetId: target.id,
@@ -108,7 +107,6 @@ export class DeployerService {
 
     const allUpdates: FileUpdates[] = [];
 
-    // Deploy to each target
     for (const target of targets) {
       this.logger.debug('Deploying standards for target', {
         targetId: target.id,
@@ -179,7 +177,6 @@ export class DeployerService {
 
     const allUpdates: FileUpdates[] = [];
 
-    // Deploy to each target
     for (const target of targets) {
       this.logger.debug('Deploying skills for target', {
         targetId: target.id,
@@ -315,10 +312,6 @@ export class DeployerService {
     'agents_md',
   ];
 
-  /**
-   * When multiple agents write to AGENTS.md, suppress writes from lower-priority
-   * agents so only the highest-priority active agent owns the file.
-   */
   private suppressAgentsMdWritesForLowerPriorityAgents(
     agent: CodingAgent,
     updates: FileUpdates,
@@ -360,17 +353,16 @@ export class DeployerService {
 
     const pathMap = new Map<string, FileModification>();
 
-    // Merge createOrUpdate - later entries override earlier ones for same path
+    // Last writer wins for a given path.
     for (const update of updates) {
       for (const file of update.createOrUpdate) {
         pathMap.set(file.path, file);
       }
     }
 
-    // Convert map back to array
     merged.createOrUpdate = Array.from(pathMap.values());
 
-    // Merge delete operations - deduplicate paths while preserving type
+    // First writer wins here, unlike createOrUpdate above.
     const deleteMap = new Map<string, DeleteItem>();
     for (const update of updates) {
       for (const file of update.delete) {

@@ -5,11 +5,9 @@ import {
   PromptConversationRole,
 } from '@packmind/types';
 
-// Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getPrivateAccess = (service: AzureOpenAIService) => service as any;
 
-// Mock Azure OpenAI
 jest.mock('openai');
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
@@ -36,7 +34,6 @@ describe('AzureOpenAIService', () => {
   };
 
   beforeEach(() => {
-    // Create mock Azure OpenAI instance
     mockAzureOpenAIInstance = {
       chat: {
         completions: {

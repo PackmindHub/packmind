@@ -6,6 +6,7 @@ import {
   ICommandsPage,
   ISettingsPage,
   ISkillsPage,
+  ISpaceContextPage,
   ISpaceSettingsPage,
   IStandardsPage,
 } from '../../domain/pages';
@@ -108,6 +109,42 @@ export abstract class AbstractPackmindAppPage
       .click();
 
     return this.pageFactory.getSpaceSettingsPage();
+  }
+
+  /**
+   * The Context surface of the current space, opened on one package.
+   *
+   * The org and space are read off the current URL rather than passed in: a
+   * spec knows the package it seeded, not the slugs the sign-up fixture
+   * produced. `?nav=plugin-first` pins the navigation for the rest of the test,
+   * overriding the `today` mode every browser context starts on — the surface
+   * has no sidebar entry in that mode.
+   */
+  async openPackageInContext(packageId: string): Promise<ISpaceContextPage> {
+    const spaceRoute = /\/org\/([^/]+)\/space\/([^/]+)/;
+
+    if (!spaceRoute.test(this.page.url())) {
+      // Org-only routes (settings/setup/profile) name no space, and the
+      // `packmindApi` fixture leaves the browser on one of them. Open the
+      // space's Packages list first — it knows how to reach the default space
+      // from there — and read the slugs off the URL it lands on.
+      await this.openPackages();
+    }
+
+    const location = spaceRoute.exec(this.page.url());
+
+    if (!location) {
+      throw new Error(
+        `Cannot open the Context surface from ${this.page.url()}: no org and space in the URL.`,
+      );
+    }
+
+    const [, orgSlug, spaceSlug] = location;
+    await this.page.goto(
+      `/org/${orgSlug}/space/${spaceSlug}/context?nav=plugin-first&package=${packageId}`,
+    );
+
+    return this.pageFactory.getSpaceContextPage();
   }
 
   async createSpace(

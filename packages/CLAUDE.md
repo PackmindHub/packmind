@@ -116,10 +116,10 @@ plus one `<entity>Factory.ts` per entity), imported as `@packmind/<pkg>/test` �
 import one. (`packages/node-utils/test/` exists but holds shared test suites, not factories, and is
 not exposed as a subpath.)
 
-Only `commands`, `deployments`, `skills`, `spaces`, `standards` (and the legacy `recipes`) have an
-explicit `"@packmind/<pkg>/test"` entry in `tsconfig.base.json`; `accounts` and `git` resolve through
-the workspace package instead. If a new `/test` subpath fails to resolve under Jest, add the
-alias — `jest.config.ts` maps modules from those `paths`.
+All seven have an explicit `"@packmind/<pkg>/test"` entry in `tsconfig.base.json` (plus the legacy
+`@packmind/recipes/test`, which points at `packages/commands/test/index.ts`). If a new `/test`
+subpath fails to resolve under Jest, add the alias — `jest.config.ts` maps modules from those
+`paths`.
 
 Spec files import factories from there; production code must not. For the split between these and the
 generic helpers in `@packmind/test-utils`, see [test-utils/CLAUDE.md](./test-utils/CLAUDE.md).

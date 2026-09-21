@@ -40,7 +40,6 @@ export class ListPackagesBySpaceUseCase
     });
 
     try {
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', {
@@ -60,7 +59,6 @@ export class ListPackagesBySpaceUseCase
         );
       }
 
-      // Get packages in the specified space
       const packages = await this.services
         .getPackageService()
         .getPackagesBySpaceId(command.spaceId);

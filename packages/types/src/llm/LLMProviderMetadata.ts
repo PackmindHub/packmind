@@ -1,13 +1,3 @@
-/**
- * LLM Provider Metadata for frontend configuration forms.
- * This module exports provider information, default models, and field definitions
- * that enable dynamic form generation in the UI.
- */
-
-/**
- * Enum for LLM service providers.
- * Centralizes provider identifiers to avoid magic strings.
- */
 export enum LLMProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
@@ -17,59 +7,34 @@ export enum LLMProvider {
   PACKMIND = 'packmind',
 }
 
-/**
- * Field input types for configuration forms
- */
 export type FieldType = 'text' | 'password' | 'url';
 
-/**
- * Configuration field definition for provider forms.
- * Each field contains all necessary information for UI rendering.
- */
 export type ProviderConfigField = {
-  /** Field identifier (e.g., 'apiKey', 'endpoint') */
   name: string;
-  /** Display label (e.g., 'API Key', 'Endpoint URL') */
   label: string;
-  /** Input type for form rendering */
   type: FieldType;
-  /** Default value (empty string if none) */
+  /** Empty string when the field has no default. */
   defaultValue: string;
-  /** Help text shown below/beside the field */
   helpMessage: string;
-  /** Whether the field can be left empty */
   optional: boolean;
-  /** Optional placeholder text for input */
   placeholder?: string;
-  /** Whether this field contains sensitive/secret information */
   secret?: boolean;
 };
 
-/**
- * Complete metadata for an LLM provider.
- * Contains all information needed to display and configure a provider in the UI.
- */
 export type ProviderMetadata = {
-  /** Provider identifier matching LLMProvider enum value */
+  /** Matches an `LLMProvider` enum value. */
   id: string;
-  /** Human-readable provider name */
   displayName: string;
-  /** Provider description for UI */
   description: string;
-  /** Standard/high-quality model name */
+  /** The standard, higher-quality model. */
   defaultModel: string;
-  /** Fast/economical model name */
+  /** The cheaper, faster model. */
   defaultFastModel: string;
-  /** All configurable fields for this provider */
   fields: ProviderConfigField[];
-  /** Link to provider documentation */
   documentationUrl?: string;
 };
 
-/**
- * Default model configurations for LLM service providers.
- * These are used as fallback values when models are not explicitly specified in config.
- */
+/** Fallbacks for when a config names no model. */
 export const DEFAULT_OPENAI_MODELS = {
   model: 'gpt-5.2',
   fastestModel: 'gpt-4.1-mini',
@@ -87,10 +52,7 @@ export const DEFAULT_GEMINI_MODELS = {
 
 export const DEFAULT_AZURE_OPENAI_API_VERSION = '2024-12-01-preview';
 
-/**
- * Comprehensive metadata for all LLM providers.
- * Used by frontend to dynamically render provider configuration forms.
- */
+/** Drives the dynamically rendered provider configuration forms in the UI. */
 export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
   [LLMProvider.OPENAI]: {
     id: LLMProvider.OPENAI,

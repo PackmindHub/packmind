@@ -2,10 +2,6 @@ import { ClientSource, OrganizationId, UserId } from '../accounts';
 import { PackmindEvent } from './PackmindEvent';
 
 export type PackmindEventSource = ClientSource;
-/**
- * Base payload for user-triggered events.
- * All UserEvent payloads automatically include userId and organizationId.
- */
 export interface UserEventPayload {
   userId: UserId;
   organizationId: OrganizationId;
@@ -14,24 +10,8 @@ export interface UserEventPayload {
 }
 
 /**
- * Base class for user-triggered domain events.
- *
- * Use this for events that originate from user actions, such as:
- * - Creating, updating, or deleting resources
- * - User authentication events
- * - User-initiated workflows
- *
- * The payload automatically includes userId and organizationId.
- *
- * @example
- * ```typescript
- * export class RecipeCreatedEvent extends UserEvent<{
- *   recipeId: RecipeId;
- *   spaceId: SpaceId;
- * }> {
- *   static readonly eventName = 'recipes.recipe.created';
- * }
- * ```
+ * Base class for events originating from a user action. Extend `SystemEvent`
+ * instead for background processes, which have no `userId` to attribute.
  */
 export abstract class UserEvent<TPayload = object> extends PackmindEvent<
   TPayload & UserEventPayload

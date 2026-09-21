@@ -1,4 +1,8 @@
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CodingAgent,
   CodingAgents,
@@ -78,48 +82,41 @@ describe('GetDeployedContentUseCase', () => {
   let organization: Organization;
 
   beforeEach(() => {
-    targetResolutionService = {
-      findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    targetResolutionService = createMockInstance(TargetResolutionService);
+    targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
 
-    distributionRepository = {
-      findActiveVersionsByTarget: jest.fn().mockResolvedValue({
-        standardVersions: [],
-        commandVersions: [],
-        skillVersions: [],
-      }),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.findActiveVersionsByTarget.mockResolvedValue({
+      standardVersions: [],
+      commandVersions: [],
+      skillVersions: [],
+    });
 
-    codingAgentPort = {
-      deployArtifactsForAgents: jest.fn().mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      }),
-      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+      createOrUpdate: [],
+      delete: [],
+    });
+    codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
 
-    renderModeConfigurationService = {
-      resolveCodingAgents: jest
-        .fn()
-        .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+      CodingAgents.packmind,
+      CodingAgents.claude,
+    ]);
 
-    packageService = {
-      getPackagesBySlugsWithArtefacts: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
 
-    skillsPort = {
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    standardsPort = {
-      getRulesByVersionId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getRulesByVersionId.mockResolvedValue([]);
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
     organizationId = createOrganizationId(uuidv4());
     organization = {

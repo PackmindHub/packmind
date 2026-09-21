@@ -58,17 +58,14 @@ export function PMTable<T extends object = object>({
   stickyHeader = false,
   tableProps,
 }: Readonly<IPMTableProps<T>>) {
-  // getRowId is required for selection
   if (selectable && !getRowId) {
     throw new Error('getRowId prop is required when selectable is true');
   }
 
-  // Internal state for uncontrolled mode
   const [internalSelectedRows, setInternalSelectedRows] = React.useState<
     Set<string>
   >(new Set());
 
-  // Use controlled or uncontrolled selection
   const selectedRows = controlledSelectedRows ?? internalSelectedRows;
   const setSelectedRows = onSelectionChange ?? setInternalSelectedRows;
 
@@ -96,7 +93,6 @@ export function PMTable<T extends object = object>({
     0,
   );
 
-  // Include selection column in calculations if selectable
   const allColumns = selectable
     ? [
         {
@@ -134,10 +130,8 @@ export function PMTable<T extends object = object>({
     }
   };
 
-  // Get all row IDs
   const rowIds: string[] = selectable && getRowId ? data.map(getRowId) : [];
 
-  // Handle individual row selection
   const handleRowSelect = (rowId: string) => {
     const newSelectedRows = new Set(selectedRows);
     if (newSelectedRows.has(rowId)) {
@@ -148,7 +142,6 @@ export function PMTable<T extends object = object>({
     setSelectedRows(newSelectedRows);
   };
 
-  // Handle select all
   const handleSelectAll = () => {
     if (selectedRows.size === rowIds.length) {
       setSelectedRows(new Set());
@@ -157,7 +150,6 @@ export function PMTable<T extends object = object>({
     }
   };
 
-  // Check if all rows are selected
   const isAllSelected =
     rowIds.length > 0 &&
     selectedRows.size === rowIds.length &&

@@ -42,6 +42,9 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
         standardId,
       });
     } catch (error) {
+      // A listener runs outside the HTTP request scope, so DomainExceptionFilter
+      // never sees this: log a domain error at `warn` and an internal one at
+      // `error` with its stack, rather than sending every failure to `error`.
       this.logger.error('Failed to remove standard from packages', {
         standardId,
         error: error instanceof Error ? error.message : String(error),

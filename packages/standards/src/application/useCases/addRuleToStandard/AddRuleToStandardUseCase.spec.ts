@@ -2,7 +2,7 @@ import { AddRuleToStandardUseCase } from './AddRuleToStandardUseCase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { Standard, createStandardId } from '@packmind/types';
+import { Standard, createStandardId, UserSpaceRole } from '@packmind/types';
 import { StandardVersion } from '@packmind/types';
 import { Rule } from '@packmind/types';
 import { standardFactory } from '../../../../test/standardFactory';
@@ -14,7 +14,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   AddRuleToStandardCommand,
   AddRuleToStandardResponse,
@@ -70,57 +74,30 @@ describe('AddRuleToStandardUseCase', () => {
       slug: 'test-org',
     };
 
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
-    // Mock AccountsPort
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    // Mock StandardService
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
-    // Mock RuleRepository
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-      deleteById: jest.fn(),
-      deleteByStandardVersionId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
-    ruleExampleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByRuleId: jest.fn(),
-      updateById: jest.fn(),
-      deleteById: jest.fn(),
-      findAll: jest.fn(),
-    } as unknown as jest.Mocked<IRuleExampleRepository>;
+    ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
     stubbedLogger = stubLogger();
 
@@ -198,7 +175,7 @@ describe('AddRuleToStandardUseCase', () => {
           name: existingStandard.name,
           slug: existingStandard.slug,
           description: existingStandard.description,
-          version: 3, // Incremented version
+          version: 3,
           userId,
           scope: existingStandard.scope,
         });
@@ -213,7 +190,6 @@ describe('AddRuleToStandardUseCase', () => {
           scope: existingStandard.scope,
         });
 
-        // Setup mocks
         standardService.findStandardBySlug.mockResolvedValue(existingStandard);
         standardVersionService.getLatestStandardVersion.mockResolvedValue(
           latestVersion,
@@ -253,7 +229,7 @@ describe('AddRuleToStandardUseCase', () => {
             name: existingStandard.name,
             description: existingStandard.description,
             slug: existingStandard.slug,
-            version: 3, // Incremented from 2 to 3
+            version: 3,
             gitCommit: undefined,
             userId,
             scope: existingStandard.scope,
@@ -300,7 +276,6 @@ describe('AddRuleToStandardUseCase', () => {
         };
 
         const existingStandard = standardFactory({
-          // Same organization
           slug: 'test-standard',
           spaceId,
         });
@@ -480,7 +455,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         existingStandard = standardFactory({
           slug: 'test-standard',
-          version: 5, // Start from version 5
+          version: 5,
           spaceId,
         });
 
@@ -492,7 +467,7 @@ describe('AddRuleToStandardUseCase', () => {
         const existingRules = [ruleFactory()];
         const updatedStandard = standardFactory({
           id: existingStandard.id,
-          version: 6, // Should increment to 6
+          version: 6,
         });
         const newVersion = standardVersionFactory({
           standardId: existingStandard.id,
@@ -514,7 +489,7 @@ describe('AddRuleToStandardUseCase', () => {
         expect(standardService.updateStandard).toHaveBeenCalledWith(
           existingStandard.id,
           expect.objectContaining({
-            version: 6, // Should be incremented to 6
+            version: 6,
           }),
         );
       });
@@ -522,7 +497,7 @@ describe('AddRuleToStandardUseCase', () => {
       it('creates standard version with incremented version number', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            version: 6, // Should be incremented to 6
+            version: 6,
           }),
         );
       });
@@ -572,7 +547,7 @@ describe('AddRuleToStandardUseCase', () => {
               { content: 'Existing rule 1', examples: [] },
               { content: 'Existing rule 2', examples: [] },
               { content: 'Existing rule 3', examples: [] },
-              { content: 'New coding rule', examples: [] }, // New rule appended
+              { content: 'New coding rule', examples: [] },
             ],
           }),
         );
@@ -596,7 +571,7 @@ describe('AddRuleToStandardUseCase', () => {
           standardId: existingStandard.id,
         });
 
-        const existingRules: Rule[] = []; // No existing rules
+        const existingRules: Rule[] = [];
 
         const updatedStandard = standardFactory({ version: 2 });
         const newVersion = standardVersionFactory({ version: 2 });
@@ -613,9 +588,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
-            rules: [
-              { content: 'First rule for this standard', examples: [] }, // Only the new rule
-            ],
+            rules: [{ content: 'First rule for this standard', examples: [] }],
           }),
         );
       });

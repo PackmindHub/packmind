@@ -4,7 +4,7 @@ AST Parser Package for Packmind - Provides Abstract Syntax Tree parsing for mult
 
 ## Overview
 
-This package provides a unified interface for parsing source code into Abstract Syntax Trees (ASTs) across multiple programming languages. It uses language-specific tree-sitter parsers, each isolated in its own sub-package to handle version incompatibilities.
+This package provides a unified interface for parsing source code into Abstract Syntax Trees (ASTs) across multiple programming languages. It uses `web-tree-sitter` together with tree-sitter grammars committed as `.wasm` files in `res/`, so no native module is compiled at install time.
 
 ## Architecture
 
@@ -19,39 +19,25 @@ The package follows a modular architecture with three layers:
 
 ### 2. Language Parsers (`src/parsers/`)
 
-- **TypeScriptParser**: Parses TypeScript and TypeScript+JSX
-- **JavaScriptParser**: Parses JavaScript and JavaScript+JSX
-- **PythonParser**: Parses Python code
-- **JavaParser**: Parses Java code
+One parser class per grammar: `TypeScriptParser` (also used for TSX), `JavaScriptParser` (also used for JSX), `PythonParser`, `JavaParser`, `GoParser`, `KotlinParser`, `SwiftParser`, `RubyParser`, `PHPParser`, `CSharpParser`, `CPPParser`, `CSSParser`, `SCSSParser`, `HTMLParser`, `JSONParser` and `YAMLParser`.
 
 Each parser:
 
 - Extends `BaseParser`
 - Implements lazy initialization
-- Delegates to language-specific sub-packages
+- Loads its `tree-sitter-<language>.wasm` grammar from `res/`
 - Returns a consistent `ASTNode` structure
 
-### 3. Sub-Packages (`parsers/*/`)
+### 3. Application Layer (`src/application/`)
 
-Each language has its own NPM workspace sub-package:
+- **LinterAstAdapter**: Implements the `ILinterAstPort` port consumed by other packages
+- **ConsoleLogRemovalService**: Strips `console.*` statements from source code (JavaScript only)
 
-- `@packmind/linter-ast-typescript` - Uses tree-sitter 0.21.0
-- `@packmind/linter-ast-javascript` - Uses tree-sitter 0.25.0
-- `@packmind/linter-ast-python` - Uses tree-sitter 0.25.0
-- `@packmind/linter-ast-java` - Uses tree-sitter 0.21.1
+## Integration with the Linter Execution Package
 
-**Why separate sub-packages?**
+The `linter-ast` package is consumed by the `@packmind/linter-execution` package through the port-adapter pattern following DDD architecture:
 
-- Different languages require different tree-sitter versions
-- Tree-sitter parsers are compiled native modules (C/C++)
-- Version incompatibilities between tree-sitter core and language parsers
-- Isolating dependencies prevents version conflicts
-
-## Integration with Linter Package
-
-The `linter-ast` package is integrated into the `@packmind/linter` package through the port-adapter pattern following DDD architecture:
-
-### Port Interface (`@packmind/shared/types`)
+### Port Interface (`@packmind/types`)
 
 ```typescript
 interface ILinterAstPort {
@@ -61,6 +47,10 @@ interface ILinterAstPort {
   ): Promise<ASTNode>;
   isLanguageSupported(language: ProgrammingLanguage): boolean;
   getAvailableLanguages(): ProgrammingLanguage[];
+  removeConsoleStatements(
+    sourceCode: string,
+    language: ProgrammingLanguage,
+  ): Promise<string>;
 }
 ```
 
@@ -68,18 +58,16 @@ interface ILinterAstPort {
 
 ```typescript
 import { LinterAstAdapter } from '@packmind/linter-ast';
+import { ProgrammingLanguage } from '@packmind/types';
 
 const adapter = new LinterAstAdapter();
-const ast = await adapter.parseSourceCode(code, 'TYPESCRIPT');
+const ts = ProgrammingLanguage.TYPESCRIPT;
+const ast = await adapter.parseSourceCode(code, ts);
 ```
 
-### Injection into Linter Hexa
+### Injection
 
-The adapter is automatically initialized in `LinterHexa.initialize()` and injected into:
-
-- `LinterHexaFactory`
-- `GenerateProgramJobFactory`
-- AST generation utilities (with fallback to js-playground)
+`ExecuteLinterProgramsUseCase` in `@packmind/linter-execution` takes an `ILinterAstPort` as its first constructor argument and defaults to `new LinterAstAdapter()`.
 
 ## Usage
 
@@ -87,6 +75,7 @@ The adapter is automatically initialized in `LinterHexa.initialize()` and inject
 
 ```typescript
 import { ParserRegistry, LinterAstAdapter } from '@packmind/linter-ast';
+import { ProgrammingLanguage } from '@packmind/types';
 
 // Using the registry directly
 const registry = new ParserRegistry();
@@ -94,133 +83,100 @@ const parser = await registry.getParser('typescript');
 const ast = await parser.parse('const x: number = 42;');
 
 // Using the adapter (recommended)
+const ts = ProgrammingLanguage.TYPESCRIPT;
 const adapter = new LinterAstAdapter();
-const isSupported = adapter.isLanguageSupported('TYPESCRIPT'); // true
-const ast = await adapter.parseSourceCode('const x = 42;', 'TYPESCRIPT');
+const isSupported = adapter.isLanguageSupported(ts); // true
+const adapterAst = await adapter.parseSourceCode('const x = 42;', ts);
 ```
 
-### Integration in Linter Package
+### Locating the WASM grammars
 
-The `getFullAstFromASourceCode` utility in `@packmind/linter` automatically uses the adapter when available:
+`BaseParser` searches a list of known directories for the `.wasm` files. When the grammars are extracted somewhere else at runtime (as the CLI does), point the parsers at that directory first:
 
 ```typescript
-import { getFullAstFromASourceCode } from '@packmind/linter';
+import { BaseParser } from '@packmind/linter-ast';
 
-// This will use linter-ast if available, otherwise falls back to js-playground
-const astJson = await getFullAstFromASourceCode(
-  sourceCode,
-  'TYPESCRIPT',
-  linterAstAdapter,
-);
+BaseParser.setWasmDirectory(wasmDir);
 ```
 
 ## Supported Languages
 
-Currently supported languages:
+`LinterAstAdapter.getAvailableLanguages()` returns: TypeScript, TypeScript (TSX), JavaScript, JavaScript (JSX), C++, Go, Kotlin, CSS, C#, PHP, Python, Ruby, JSON, HTML, Java, Swift, SCSS and YAML.
 
-- ✅ **TypeScript** - Working (TSX is not covered: the grammar ships, the parser does not)
-- ✅ **Java** - Working
-- ⚠️ **JavaScript** (and JSX) - Requires Python < 3.12 for build
-- ⚠️ **Python** - Requires Python < 3.12 for build
+TSX and JSX are parsed with the TypeScript and JavaScript grammars respectively; `res/tree-sitter-tsx.wasm` ships but no parser loads it.
 
 ## Known Limitations
 
-### Python 3.12+ Compatibility Issue
+### Missing CSS grammar
 
-JavaScript and Python parsers fail to install on systems with Python 3.13+ due to:
+`CSSParser` is registered under the `css` key and `CSS` is reported as available, but `res/` contains no `tree-sitter-css.wasm` (only `tree-sitter-scss.wasm`). Parsing CSS therefore throws a `ParserInitializationError` until the grammar file is added.
 
-- `node-gyp` (used by tree-sitter for native compilation) depends on `distutils`
-- `distutils` was removed from Python 3.12+
-- **Workaround**: Use Python 3.11 or earlier for development
+### YAMLParser is not re-exported
 
-To fix this issue on your system:
+`YAMLParser` is registered in `ParserRegistry` and reachable through the adapter, but unlike the other 15 parser classes it is not exported from `src/index.ts`.
 
-```bash
-# Option 1: Use pyenv to switch Python versions
-pyenv install 3.11.0
-pyenv global 3.11.0
+### Console statement removal is JavaScript-only
 
-# Option 2: Use nvm's built-in Python
-nvm use 20  # Uses Node 20's bundled Python
-
-# Then reinstall
-pnpm install
-```
-
-### Fallback Behavior
-
-When a parser fails to initialize (e.g., due to the Python issue), the system gracefully falls back to the existing `js-playground` parsers, ensuring continued operation.
+`removeConsoleStatements()` throws for any language other than `ProgrammingLanguage.JAVASCRIPT`.
 
 ## Production Deployment
 
 ### Webpack Configuration
 
-The API's webpack config externalizes parser sub-packages to ensure native modules work correctly:
+The API's webpack config bundles every `@packmind/*` package, including `linter-ast`, and bundles `web-tree-sitter` rather than externalizing it:
 
 ```javascript
 // apps/api/webpack.config.js
 externals: ({ request }, callback) => {
-  // Externalize parser sub-packages (they contain native tree-sitter modules)
-  if (request?.startsWith('@packmind/linter-ast-')) {
-    return callback(null, 'commonjs ' + request);
+  // Bundle all @packmind packages (including linter-ast with tree-sitter dependencies)
+  if (request?.startsWith('@packmind/')) {
+    return callback();
   }
   // ...
 };
 ```
 
-This ensures:
-
-- Sub-packages are not bundled into the main script
-- Native tree-sitter modules load correctly from `node_modules`
-- Webpack doesn't try to bundle native `.node` files
+The grammar files themselves are not bundled: in proprietary mode the config copies `packages/linter-ast/res` into `dist/apps/api` with `CopyWebpackPlugin`, so the parsers find the `.wasm` files next to the main script at runtime.
 
 ## Testing
 
-The linter-ast package uses tree-sitter parsers which rely on WASM (WebAssembly) files. To run tests, you need to enable Node.js experimental VM modules:
+The linter-ast package uses tree-sitter parsers which rely on WASM (WebAssembly) files, so its tests need Node.js experimental VM modules enabled. The `test` target in `project.json` already sets `NODE_OPTIONS='--experimental-vm-modules'` (and `--runInBand`), so no extra setup is needed:
 
 ```bash
-# Run all tests
-NODE_OPTIONS="--experimental-vm-modules" npx nx test linter-ast
-
-# Run specific parser tests
-NODE_OPTIONS="--experimental-vm-modules" npx nx test linter-ast --testPathPattern="TypeScriptParser"
+# Run all tests (Jest, via packages/linter-ast/jest.config.ts)
+./node_modules/.bin/nx test linter-ast
 
 # Run linting
-npx nx lint linter-ast
+./node_modules/.bin/nx lint linter-ast
 ```
 
 **Why is NODE_OPTIONS needed?**
 
 Tree-sitter parsers load WASM files dynamically at runtime. Jest's default configuration doesn't support dynamic WASM loading, so we need to enable Node.js experimental VM modules support with the `--experimental-vm-modules` flag.
 
-This flag is required for:
+If you invoke Jest directly instead of through Nx, set the flag yourself.
 
-- Running tests locally
-- CI/CD pipelines
-- Any environment where tests are executed
-
-The WASM files are automatically included in the built package via the project configuration (`res/**/*.wasm` in assets).
+The WASM files are automatically included in the built package via the project configuration (`res/**/*.wasm` in the `build` target's assets).
 
 ## Future Enhancements
 
 Planned improvements:
 
-1. **Add more languages**: Go, Ruby, C++, Kotlin, Swift, etc.
-2. **Resolve Python 3.12+ issue**: Investigate alternatives to node-gyp or wait for tree-sitter updates
-3. **Performance optimization**: Cache parsed ASTs for repeated calls
-4. **Stream parsing**: Support for large files
-5. **AST manipulation**: Add utilities to query and modify ASTs
-6. **Error recovery**: Better handling of syntax errors in source code
+1. **Add more languages**: Rust, Dart, SQL, etc.
+2. **Performance optimization**: Cache parsed ASTs for repeated calls
+3. **Stream parsing**: Support for large files
+4. **AST manipulation**: Add utilities to query and modify ASTs
+5. **Error recovery**: Better handling of syntax errors in source code
 
 ## Contributing
 
 When adding a new language:
 
-1. Create a new sub-package in `parsers/new-language/`
-2. Add the appropriate tree-sitter parser dependency
-3. Create the parser class in `src/parsers/NewLanguageParser.ts`
-4. Add the parser to `ParserRegistry.parserClasses`
-5. Update `LinterAstAdapter.getAvailableLanguages()` and mapping
+1. Drop the `tree-sitter-<language>.wasm` grammar into `res/` (see [res/README.md](./res/README.md) for how to build one)
+2. Create the parser class in `src/parsers/NewLanguageParser.ts`, extending `BaseParser` and exported as `default`
+3. Add the parser to `ParserRegistry.parserClasses`
+4. Update `LinterAstAdapter.getAvailableLanguages()` and mapping
+5. Export it from `src/index.ts`
 6. Add tests in `src/parsers/NewLanguageParser.spec.ts`
 7. Update documentation
 

@@ -7,7 +7,11 @@ import {
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { DefaultSpaceNotFoundError } from '../../domain/errors/DefaultSpaceNotFoundError';
 import { SpaceService } from '../services/SpaceService';
 import { GetDefaultSpaceUseCase } from './GetDefaultSpaceUseCase';
@@ -35,14 +39,11 @@ describe('GetDefaultSpaceUseCase', () => {
   });
 
   beforeEach(() => {
-    spaceService = {
-      listSpacesByOrganization: jest.fn(),
-    } as unknown as jest.Mocked<SpaceService>;
+    spaceService = createMockInstance(SpaceService);
 
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new GetDefaultSpaceUseCase(
       spaceService,

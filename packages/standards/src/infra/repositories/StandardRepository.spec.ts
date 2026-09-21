@@ -26,8 +26,6 @@ import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { StandardRepository } from './StandardRepository';
 
 describe('StandardRepository', () => {
-  // Use fixture pattern for faster test execution
-  // Schema is synchronized once per file, tables truncated between tests
   const fixture = createTestDatasourceFixture(
     [
       StandardSchema,
@@ -71,7 +69,6 @@ describe('StandardRepository', () => {
     const organizationId = createOrganizationId(uuidv4());
     const space = spaceFactory({ organizationId });
 
-    // Create a space in the organization
     const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
     await spaceRepo.save(space);
 
@@ -114,7 +111,6 @@ describe('StandardRepository', () => {
       });
       await standardRepository.add(standard);
 
-      // Create standard versions with different scopes
       const versionRepo = fixture.datasource.getRepository(
         StandardVersionSchema,
       );

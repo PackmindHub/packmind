@@ -24,8 +24,6 @@ describe('Broken access control - target ownership validation', () => {
   let commit: GitCommit;
   let otherSpaceId: SpaceId;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -45,8 +43,8 @@ describe('Broken access control - target ownership validation', () => {
     fixture.snapshot();
   });
 
-  // Deployment is asynchronous; stub the commit so no real git work happens.
-  // Spies are restored around every test, so it is re-installed per test.
+  // The publish job runs inline in these tests, so the commit must be stubbed;
+  // spies are restored after each test, hence beforeEach rather than beforeAll.
   beforeEach(() => {
     jest
       .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')

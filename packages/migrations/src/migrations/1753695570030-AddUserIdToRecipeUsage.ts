@@ -7,13 +7,11 @@ export class AddUserIdToRecipeUsage1753695570030 implements MigrationInterface {
             DELETE FROM "recipe_usage"
         `);
 
-    // Add userId column to recipe_usage table
     await queryRunner.query(`
             ALTER TABLE "recipe_usage" 
             ADD COLUMN "user_id" uuid NOT NULL
         `);
 
-    // Add foreign key constraint to users table
     await queryRunner.query(`
             ALTER TABLE "recipe_usage" 
             ADD CONSTRAINT "FK_recipe_usage_user" 
@@ -22,13 +20,11 @@ export class AddUserIdToRecipeUsage1753695570030 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Remove foreign key constraint first
     await queryRunner.query(`
             ALTER TABLE "recipe_usage" 
             DROP CONSTRAINT "FK_recipe_usage_user"
         `);
 
-    // Remove userId column
     await queryRunner.query(`
             ALTER TABLE "recipe_usage" 
             DROP COLUMN "user_id"

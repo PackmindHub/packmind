@@ -6,121 +6,114 @@ A TypeScript package for user and organization management in the Packmind monore
 
 The package follows **hexagonal architecture** with clear separation of concerns:
 
-- **Domain Layer** (`domain/`): Core business entities and repository interfaces
-- **Application Layer** (`application/`): Services orchestrating domain logic
+- **Domain Layer** (`domain/`): Core business entities, repository interfaces, use case contracts and errors
+- **Application Layer** (`application/`): Use cases, services orchestrating domain logic, and the `AccountsAdapter`
 - **Infrastructure Layer** (`infra/`): TypeORM implementations and database schemas
-- **Hexagon** (`AccountsHexa.ts`): Main entry point with dependency injection following hexagonal architecture
+- **Hexagon** (`AccountsHexa.ts`): Main entry point extending `BaseHexa`, exposing the domain through `getAdapter()`
+
+Use case command and response contracts live in `@packmind/types` (`packages/types/src/accounts/contracts/`). Organization-scoped use cases extend `AbstractMemberUseCase`, and the ones restricted to organization admins extend `AbstractAdminUseCase`.
 
 ## Features
 
 ### User Management
 
 - ✅ User creation with bcrypt password hashing
-- ✅ Username uniqueness validation
+- ✅ Email uniqueness validation
 - ✅ Password validation
-- ✅ User lookup by ID or username
+- ✅ User lookup by ID or email
 - ✅ Organization membership management
+- ✅ Invitations, account activation and password reset
+- ✅ API keys and CLI login codes
 
 ### Organization Management
 
 - ✅ Organization creation
-- ✅ Organization name uniqueness validation
-- ✅ Organization lookup by ID or name
+- ✅ Organization name and slug uniqueness validation
+- ✅ Organization lookup by ID, name or slug
 - ✅ Multi-tenant support
 
 ### Security
 
-- ✅ bcrypt password hashing (12 salt rounds)
+- ✅ bcrypt password hashing (10 salt rounds)
 - ✅ Database-level unique constraints
 - ✅ Input validation and error handling
 
 ## Installation
 
-```bash
-pnpm add @packmind/accounts
+This is a private workspace package. Add it to a project's `package.json`:
+
+```json
+{
+  "dependencies": {
+    "@packmind/accounts": "workspace:*"
+  }
+}
 ```
 
 ## Usage
 
 ### Basic Setup
 
+`AccountsHexa` is registered in a `HexaRegistry`, which constructs it with the shared `DataSource` and wires its cross-domain ports:
+
 ```typescript
-import { AccountsHexa } from '@packmind/accounts';
-import { DataSource } from 'typeorm';
+import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
+import { HexaRegistry } from '@packmind/node-utils';
 
-// Initialize with DataSource (recommended)
-const dataSource = new DataSource({
-  type: 'postgres',
-  url: process.env.DATABASE_URL,
-  entities: [...accountsSchemas],
-});
+const registry = new HexaRegistry();
+registry.register(AccountsHexa, { apiKeyService } as Partial<AccountsHexaOpts>);
+await registry.init(dataSource);
 
-const accountsHexa = new AccountsHexa({ dataSource });
+const accounts = registry.get(AccountsHexa).getAdapter();
 ```
+
+The `apiKeyService` option is optional: without it, the API key and CLI login use cases are not initialized.
 
 ### User Management
 
 ```typescript
-// Create a new user
-const user = await accountsHexa.signUpUser('john.doe', 'securePassword123', [
-  'org-1',
-  'org-2',
-]);
+// Sign up a user along with their organization
+const { user, organization } = await accounts.signUpWithOrganization({
+  email: 'john.doe@example.com',
+  password: 'securePassword123!!',
+  method: 'password',
+});
 
 // Get user by ID
-const user = await accountsHexa.getUserById('user-id');
+const user = await accounts.getUserById({ userId });
 
-// Get user by username
-const user = await accountsHexa.getUserByUsername('john.doe');
+// Check whether an email is still available
+const availability = await accounts.checkEmailAvailability({
+  email: 'john.doe@example.com',
+});
 
-// Validate password
-const isValid = await accountsHexa.validatePassword(
-  'securePassword123',
-  user.passwordHash,
-);
+// Validate a password against a hash
+const isValid = await accounts.validatePassword({
+  password: 'securePassword123!!',
+  hash: user.passwordHash,
+});
 
-// List all users
-const users = await accountsHexa.listUsers();
+// List the users of an organization
+const users = await accounts.listOrganizationUsers({ userId, organizationId });
 ```
 
 ### Organization Management
 
 ```typescript
 // Create a new organization
-const org = await accountsHexa.createOrganization('Tech Corporation');
+const org = await accounts.createOrganization({
+  userId,
+  name: 'Tech Corporation',
+});
 
 // Get organization by ID
-const org = await accountsHexa.getOrganizationById('org-id');
+const org = await accounts.getOrganizationById({ organizationId });
 
-// Get organization by name (backend will slugify internally)
-const org = await accountsHexa.getOrganizationByName('Tech Corporation');
-```
+// Get organization by name
+const org = await accounts.getOrganizationByName({ name: 'Tech Corporation' });
 
-### Advanced Setup with Custom Services
-
-```typescript
-import {
-  UserService,
-  OrganizationService,
-  UserRepository,
-  OrganizationRepository,
-} from '@packmind/accounts';
-
-// Custom setup with dependency injection
-const userRepo = new UserRepository(dataSource.getRepository(UserSchema));
-const orgRepo = new OrganizationRepository(
-  dataSource.getRepository(OrganizationSchema),
-);
-
-const userService = new UserService(userRepo);
-const orgService = new OrganizationService(orgRepo);
-
-const accountsHexa = new AccountsHexa({
-  services: {
-    userService,
-    organizationService: orgService,
-  },
-});
+// Get organization by slug
+const org = await accounts.getOrganizationBySlug({ slug: 'tech-corporation' });
 ```
 
 ## Data Models
@@ -129,9 +122,13 @@ const accountsHexa = new AccountsHexa({
 
 ```typescript
 type User = {
-  id: string;
-  username: string;
-  passwordHash: string;
+  id: UserId;
+  email: string;
+  displayName: string | null;
+  passwordHash: string | null;
+  active: boolean;
+  memberships: UserOrganizationMembership[];
+  createdAt?: Date;
 };
 ```
 
@@ -139,10 +136,13 @@ type User = {
 
 ```typescript
 type Organization = {
-  id: string;
+  id: OrganizationId;
   name: string;
+  slug: string;
 };
 ```
+
+Both types are declared in `@packmind/types` (`packages/types/src/accounts/`).
 
 ## Database Schema
 
@@ -161,30 +161,44 @@ const dataSource = new DataSource({
 
 ### Tables Created
 
-- `users`: User records with unique username constraint
-- `organizations`: Organization records with unique name constraint
+- `users`: User records with unique email constraint
+- `organizations`: Organization records with unique name and slug constraints
+- `user_organization_memberships`: Membership records linking users to organizations with a role
+- `user_metadata`: Per-user metadata
+- `invitations`: Invitation records
+- `password_reset_tokens`: Password reset tokens
+- `cli_login_codes`: Short-lived CLI login codes
 
 ## Error Handling
 
-The package provides comprehensive error handling:
+The package provides comprehensive error handling through dedicated error classes exported from `@packmind/accounts`:
 
 ```typescript
+import {
+  EmailAlreadyExistsError,
+  OrganizationSlugConflictError,
+} from '@packmind/accounts';
+
 try {
-  await accountsHexa.signUpUser('existing-username', 'password', 'org-id');
+  await accounts.signUpWithOrganization({
+    email: 'existing@example.com',
+    password: 'securePassword123!!',
+    method: 'password',
+  });
 } catch (error) {
-  // Error: Username 'existing-username' already exists
+  // EmailAlreadyExistsError: An account with this email address already exists
 }
 
 try {
-  await accountsHexa.createOrganization('Existing Organization');
+  await accounts.createOrganization({ userId, name: 'Existing Organization' });
 } catch (error) {
-  // Error: Organization name 'Existing Organization' already exists
+  // OrganizationSlugConflictError: name conflicts with an existing organization's slug
 }
 ```
 
 ## Testing
 
-The package includes comprehensive test coverage:
+The package includes comprehensive test coverage, run with Jest:
 
 ```bash
 # Run tests
@@ -201,8 +215,12 @@ nx lint accounts
 
 - `bcrypt`: Password hashing
 - `uuid`: UUID generation
+- `slug`: Organization slug generation
+- `validator`: Input validation
 - `typeorm`: Database ORM
-- `@packmind/types`: Shared utilities and schemas
+- `@packmind/types`: Shared types and use case contracts
+- `@packmind/node-utils`: `BaseHexa`, `HexaRegistry`, schema helpers and mail/cache services
+- `@packmind/logger`: Structured logging
 
 ## Contributing
 

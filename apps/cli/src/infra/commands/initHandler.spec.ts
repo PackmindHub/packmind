@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import {
@@ -51,24 +52,13 @@ describe('initHandler', () => {
   let deps: InitHandlerDependencies;
 
   beforeEach(() => {
-    mockConfigRepository = {
-      readConfig: jest.fn().mockResolvedValue({
-        packages: {},
-        agents: ['claude'],
-      }),
-      writeConfig: jest.fn(),
-      configExists: jest.fn(),
-      addPackagesToConfig: jest.fn(),
-      findDescendantConfigs: jest.fn(),
-      readHierarchicalConfig: jest.fn(),
-      findAllConfigsInTree: jest.fn(),
-      updateConfig: jest.fn(),
-      updateAgentsConfig: jest.fn(),
-    } as unknown as jest.Mocked<IConfigFileRepository>;
+    mockConfigRepository = mockInterface<IConfigFileRepository>();
+    mockConfigRepository.readConfig.mockResolvedValue({
+      packages: {},
+      agents: ['claude'],
+    });
 
-    mockAgentDetectionService = {
-      detectAgentArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<IAgentArtifactDetectionService>;
+    mockAgentDetectionService = mockInterface<IAgentArtifactDetectionService>();
 
     mockInstallDefaultSkills = jest.fn();
     mockEnsureCliVersion = jest.fn().mockResolvedValue({ kind: 'no-lockfile' });
@@ -534,6 +524,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);

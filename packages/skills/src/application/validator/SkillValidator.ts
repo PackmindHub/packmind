@@ -14,10 +14,7 @@ export const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
 const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
 
 /**
- * Validates the raw content of a skill file and throws if invalid.
- *
- * @param content - The raw file content to validate
- * @throws {SkillValidationError} If the content is empty or exceeds the maximum length
+ * @throws {SkillValidationError} if content is empty or exceeds SKILL_FILE_MAX_CONTENT_LENGTH
  */
 export function validateSkillFileContent(content: string): void {
   if (content.trim().length === 0) {
@@ -36,12 +33,8 @@ export function validateSkillFileContent(content: string): void {
   }
 }
 
-/**
- * Regular expression for valid skill names:
- * - Only lowercase alphanumeric characters and hyphens
- * - Must not start or end with hyphen
- * - Must not contain consecutive hyphens
- */
+// Catch-all for name characters outside [a-z0-9-]; the specific hyphen/case
+// rules below are checked separately so each gets its own error message.
 const NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /**
@@ -50,12 +43,6 @@ const NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
  * @see https://agentskills.io/specification
  */
 export class SkillValidator {
-  /**
-   * Validates the skill metadata and returns validation errors.
-   *
-   * @param metadata - The parsed skill metadata to validate
-   * @returns Array of validation error details (empty if valid)
-   */
   validate(metadata: Partial<SkillProperties>): SkillValidationErrorDetail[] {
     const errors: SkillValidationErrorDetail[] = [];
 

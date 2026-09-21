@@ -18,7 +18,6 @@ import {
   isProbeableSource,
 } from '../shared/probeCandidateCredentials';
 
-// Re-export for backward compatibility
 export { AddGitProviderCommand };
 
 const origin = 'AddGitProviderUseCase';
@@ -80,14 +79,11 @@ export class AddGitProviderUseCase
       );
     }
 
-    // Same contract as re-authentication: a token the user hands us is checked
-    // against the provider before it is stored, so a connection is never created
-    // in a state that looks healthy and cannot fetch anything.
-    //
-    // Only when the caller asked for it, so programmatic creation stays offline:
-    // the CLI tracks repositories through deliberately tokenless providers, and
-    // the GitHub App callback has no PAT to probe — its installation is the
-    // verification.
+    // A token is probed before it is stored, so a connection is never created
+    // looking healthy while unable to fetch anything. Opt-in, because
+    // programmatic creation must stay offline: the CLI tracks repositories
+    // through deliberately tokenless providers, and the GitHub App callback has
+    // no PAT to probe — its installation is the verification.
     if (
       verifyCredentials &&
       authMethod === 'token' &&
@@ -95,10 +91,9 @@ export class AddGitProviderUseCase
       gitProvider.token.length > 0 &&
       isProbeableSource(gitProvider.source)
     ) {
-      // Hand over the same defaulted authMethod the gate just decided on, not
-      // the raw payload: the field is optional at runtime (no DTO validation on
-      // the route) and the token resolver matches it by strict equality, so an
-      // absent one would fall through its branches and abort the probe.
+      // Pass the defaulted authMethod, not the raw payload: the token resolver
+      // matches it by strict equality, so an absent one falls through every
+      // branch and aborts the probe.
       await assertCandidateCredentialsWork(
         this.gitProviderService,
         {

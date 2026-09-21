@@ -30,7 +30,11 @@ import {
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { IPackageRepository } from '../../../domain/repositories/IPackageRepository';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -66,6 +70,7 @@ describe('NotifyDistributionUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [
@@ -163,58 +168,43 @@ describe('NotifyDistributionUseCase', () => {
   });
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockCommandsPort = {
-      listCommandVersions: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getLatestStandardVersion: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getLatestSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
-    mockPackageRepository = {
-      findByOrganizationId: jest.fn(),
-    } as unknown as jest.Mocked<IPackageRepository>;
+    mockPackageRepository = mockInterface<IPackageRepository>();
 
-    mockDistributionRepository = {
-      add: jest.fn(),
-      findActivePackageIdsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockDistributionRepository = mockInterface<IDistributionRepository>();
+    mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
+      [],
+    );
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
-    mockRenderModeConfigurationService = {
-      getActiveRenderModes: jest
-        .fn()
-        .mockResolvedValue(DEFAULT_ACTIVE_RENDER_MODES),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
+    mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
+      DEFAULT_ACTIVE_RENDER_MODES,
+    );
 
-    mockTargetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    mockTargetResolutionService = createMockInstance(TargetResolutionService);
+    mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      buildTarget(),
+    );
 
-    mockSpacesPort = {
-      getSpaceBySlug: jest.fn().mockResolvedValue(null),
-      getDefaultSpace: jest
-        .fn()
-        .mockResolvedValue({ defaultSpace: buildGlobalSpace() }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.getSpaceBySlug.mockResolvedValue(null);
+    mockSpacesPort.getDefaultSpace.mockResolvedValue({
+      defaultSpace: buildGlobalSpace(),
+    });
 
     useCase = new NotifyDistributionUseCase(
       mockAccountsPort,

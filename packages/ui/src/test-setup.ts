@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 
-// Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {
   constructor(cb: ResizeObserverCallback) {
     this.cb = cb;
@@ -9,19 +8,19 @@ global.ResizeObserver = class ResizeObserver {
   cb: ResizeObserverCallback;
 
   observe() {
-    // Mock implementation
+    // no-op
   }
 
   unobserve() {
-    // Mock implementation
+    // no-op
   }
 
   disconnect() {
-    // Mock implementation
+    // no-op
   }
 };
 
-// Polyfill for structuredClone which is not available in Jest environment
+// jsdom's window does not provide structuredClone.
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (obj: unknown) => {
     return JSON.parse(JSON.stringify(obj));

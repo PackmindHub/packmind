@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { GitRepo, GitRepoId } from '@packmind/types';
 import { GetTrackingInfoUseCase } from './GetTrackingInfoUseCase';
 import { IRepositoryTrackingGateway } from '../../../domain/repositories/IRepositoryTrackingGateway';
@@ -13,6 +14,7 @@ function makeGitRepo(branch: string): GitRepo {
     repo: 'my-repo',
     branch,
     providerId: 'provider-id' as GitRepo['providerId'],
+    type: 'standard',
     isTracked: true,
     trackingRemovedAt: null,
   };
@@ -30,13 +32,13 @@ describe('GetTrackingInfoUseCase', () => {
       updateTrackedBranch: jest.fn(),
       removeTrackedRepository: jest.fn(),
     };
-    gitService = {
-      getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
-      getCurrentBranch: jest
-        .fn()
-        .mockReturnValue({ branch: 'dev', detached: false }),
-      branchExists: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<IGitService>;
+    gitService = mockInterface<IGitService>();
+    gitService.getGitRemoteUrl.mockReturnValue({ gitRemoteUrl: REMOTE_URL });
+    gitService.getCurrentBranch.mockReturnValue({
+      branch: 'dev',
+      detached: false,
+    });
+    gitService.branchExists.mockReturnValue(true);
     useCase = new GetTrackingInfoUseCase(gateway, gitService);
   });
 

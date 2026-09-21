@@ -7,7 +7,9 @@ import {
 const OLDER = '2026-06-01T10:00:00.000Z';
 const NEWER = '2026-09-01T10:00:00.000Z';
 
-function version(overrides: Partial<Parameters<typeof historyEntries>[0][0]>) {
+type VersionArg = NonNullable<Parameters<typeof historyEntries>[0]>[number];
+
+function version(overrides: Partial<VersionArg>) {
   return { id: 'v', version: 1, ...overrides };
 }
 

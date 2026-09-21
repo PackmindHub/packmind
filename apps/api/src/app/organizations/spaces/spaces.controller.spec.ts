@@ -1,11 +1,14 @@
+import { spaceFactory } from '@packmind/spaces/test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
   createUserId,
   ListUserSpacesResponse,
   Space,
+  UserSpaceWithRole,
+  UserSpaceRole,
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SpacesService } from '../../spaces/spaces.service';
@@ -23,11 +26,7 @@ describe('OrganizationsSpacesController', () => {
 
   beforeEach(() => {
     logger = stubLogger();
-    spacesService = {
-      listUserSpaces: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-    } as unknown as jest.Mocked<SpacesService>;
+    spacesService = createMockInstance(SpacesService);
     controller = new OrganizationsSpacesController(spacesService, logger);
   });
 
@@ -38,29 +37,37 @@ describe('OrganizationsSpacesController', () => {
   describe('listSpaces', () => {
     describe('when listing user spaces', () => {
       const orgId = createOrganizationId('test-org-id');
-      const mockSpaces: Space[] = [
+      const mockSpaces: UserSpaceWithRole[] = [
         {
-          id: createSpaceId('space-1'),
-          name: 'Space 1',
-          slug: 'space-1',
-          organizationId: orgId,
+          ...spaceFactory({
+            id: createSpaceId('space-1'),
+            name: 'Space 1',
+            slug: 'space-1',
+            organizationId: orgId,
+          }),
+          role: UserSpaceRole.MEMBER,
+          pinned: false,
         },
         {
-          id: createSpaceId('space-2'),
-          name: 'Space 2',
-          slug: 'space-2',
-          organizationId: orgId,
+          ...spaceFactory({
+            id: createSpaceId('space-2'),
+            name: 'Space 2',
+            slug: 'space-2',
+            organizationId: orgId,
+          }),
+          role: UserSpaceRole.MEMBER,
+          pinned: false,
         },
       ];
       let result: ListUserSpacesResponse;
 
       beforeEach(async () => {
-        spacesService.listUserSpaces.mockResolvedValue(mockSpaces);
+        spacesService.listUserSpaces.mockResolvedValue({ spaces: mockSpaces });
         result = await controller.listSpaces(mockReq, orgId);
       });
 
       it('returns user spaces for the organization', () => {
-        expect(result).toEqual(mockSpaces);
+        expect(result).toEqual({ spaces: mockSpaces });
       });
 
       it('calls service with correct user ID and organization ID', () => {
@@ -76,12 +83,12 @@ describe('OrganizationsSpacesController', () => {
     describe('when space exists', () => {
       const orgId = createOrganizationId('test-org-id');
       const slug = 'test-space';
-      const mockSpace: Space = {
+      const mockSpace: Space = spaceFactory({
         id: createSpaceId('test-space-id'),
         name: 'Test Space',
         slug,
         organizationId: orgId,
-      };
+      });
       let result: Space;
 
       beforeEach(async () => {

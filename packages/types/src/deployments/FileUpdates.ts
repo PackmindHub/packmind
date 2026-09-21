@@ -21,15 +21,10 @@ export type FileModification =
       skillFileId?: string;
       skillFilePermissions?: string;
       /**
-       * Origin discriminator propagated to the lockfile entry.
-       *
-       * When set to `'default'`, `PackmindLockFileService.buildLockFile` emits
-       * the entry under the `default:${type}:${slug}` key (default skills
-       * shipped by the CLI server). Otherwise the entry is emitted under the
-       * `user:${type}:${slug}` key (user-authored skills and
-       * package-distributed artifacts).
-       *
-       * See `PackmindLockFileEntrySource` in `PackmindLockFile.ts`.
+       * Picks which half of the lockfile's `artifacts` keyspace the entry lands
+       * in: `PackmindLockFileService.buildLockFile` emits `default:${type}:${slug}`
+       * for `'default'` and `user:${type}:${slug}` otherwise. See
+       * `PackmindLockFileEntrySource`.
        */
       source?: 'default' | 'user';
     }
@@ -47,15 +42,10 @@ export type FileModification =
       skillFileId?: string;
       skillFilePermissions?: string;
       /**
-       * Origin discriminator propagated to the lockfile entry.
-       *
-       * When set to `'default'`, `PackmindLockFileService.buildLockFile` emits
-       * the entry under the `default:${type}:${slug}` key (default skills
-       * shipped by the CLI server). Otherwise the entry is emitted under the
-       * `user:${type}:${slug}` key (user-authored skills and
-       * package-distributed artifacts).
-       *
-       * See `PackmindLockFileEntrySource` in `PackmindLockFile.ts`.
+       * Picks which half of the lockfile's `artifacts` keyspace the entry lands
+       * in: `PackmindLockFileService.buildLockFile` emits `default:${type}:${slug}`
+       * for `'default'` and `user:${type}:${slug}` otherwise. See
+       * `PackmindLockFileEntrySource`.
        */
       source?: 'default' | 'user';
     };

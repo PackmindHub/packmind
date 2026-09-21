@@ -15,7 +15,6 @@ export default class CSSParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('css');
 
       for (const wasmPath of wasmPaths) {

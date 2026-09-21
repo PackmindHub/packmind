@@ -29,8 +29,6 @@ describe('Tracked branch distribution history integration', () => {
   let distributedPackage: Package;
   let commit: GitCommit;
 
-  // Every test in this file starts from the same fixture data, so it is seeded
-  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
   beforeAll(async () => {
     await fixture.initialize();
 
@@ -60,8 +58,8 @@ describe('Tracked branch distribution history integration', () => {
     fixture.snapshot();
   });
 
-  // Deployment is asynchronous; stub the commit so no real git work happens.
-  // Spies are restored after each test, so it is re-installed per test.
+  // The publish job runs inline in these tests, so the commit must be stubbed;
+  // spies are restored after each test, hence beforeEach rather than beforeAll.
   beforeEach(() => {
     jest
       .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')
@@ -149,8 +147,8 @@ describe('Tracked branch distribution history integration', () => {
     return history.map((distribution) => distribution.target.gitRepo?.branch);
   }
 
-  // The Deployments overview / repositories rail. Reviewers reported untracked
-  // branches still showing here after the history lists were filtered.
+  // The Deployments overview rail is a second surface over the same rows, and
+  // has to apply the tracked-branch filter just like the history lists do.
   async function overviewBranches(): Promise<(string | undefined)[]> {
     const overview = await testApp.deploymentsHexa
       .getAdapter()
@@ -350,9 +348,9 @@ describe('Tracked branch distribution history integration', () => {
     });
   });
 
-  // Branch-count equivalence class: two branches, one tracked. Before the
-  // removed-state column, a repository with no tracked sibling was left alone
-  // by the predicate and the overview reverted to listing every branch.
+  // Branch-count equivalence class: two branches, one tracked. Removal has to
+  // hide both, which only works because a removed row shadows itself in
+  // TRACKED_BRANCH_SCOPE; without that the overview would list every branch.
   describe('when tracking is removed on a repository that has a second branch', () => {
     beforeEach(async () => {
       const mainRepo = await setTracked('main');

@@ -31,12 +31,20 @@ domain's schema barrel:
 export const integrationTestSchemas = [
   ...accountsSchemas, ...commandsSchemas, ...standardsSchemas, ...spacesSchemas,
   ...gitSchemas, ...deploymentsSchemas, ...skillsSchemas,
+  ...playbookChangeManagementSchemas,
 ];
 ```
 
 **Adding a schema to a domain package is not enough — it must be added to that barrel too.** A
 missing entry surfaces as a "relation does not exist" failure across unrelated specs, not as a
 targeted error.
+
+That export is the **only** such list: `helpers/integrationTest.ts` imports it rather than keeping
+its own, so `integrationTest` / `integrationTestWithUser` and every spec that calls
+`createIntegrationTestFixture(integrationTestSchemas)` stay in step. Add a barrel once, here.
+
+`playbookChangeManagementSchemas` is edition-routed — `[]` in the OSS edition, the real schemas in
+the proprietary one — so it is a no-op under `PACKMIND_EDITION=oss`.
 
 ## Helpers to reuse
 

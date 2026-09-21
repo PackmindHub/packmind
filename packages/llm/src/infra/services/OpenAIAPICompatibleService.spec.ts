@@ -6,13 +6,11 @@ import {
   PromptConversationRole,
 } from '@packmind/types';
 
-// Helper for accessing protected methods in tests (test-only type assertion)
 const getProtectedAccess = (
   service: OpenAIAPICompatibleService,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => service as any;
 
-// Mock OpenAI
 jest.mock('openai');
 
 import OpenAI from 'openai';
@@ -36,7 +34,6 @@ describe('OpenAIAPICompatibleService', () => {
   const testFastModel = 'test-model-fast';
 
   beforeEach(() => {
-    // Create mock OpenAI instance
     mockOpenAIInstance = {
       chat: {
         completions: {

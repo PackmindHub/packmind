@@ -21,7 +21,6 @@ export class UpdateEmptyRenderModesToDefault1759841953830 implements MigrationIn
     this.logger.info('Starting migration: UpdateEmptyRenderModesToDefault');
 
     try {
-      // Update recipes deployments with empty render_modes
       this.logger.debug(
         'Updating recipes deployments with empty render_modes to default',
       );
@@ -37,7 +36,6 @@ export class UpdateEmptyRenderModesToDefault1759841953830 implements MigrationIn
         `Updated ${recipesResult[1]} recipes deployment records with default render modes`,
       );
 
-      // Update standards deployments with empty render_modes
       this.logger.debug(
         'Updating standards deployments with empty render_modes to default',
       );
@@ -68,7 +66,6 @@ export class UpdateEmptyRenderModesToDefault1759841953830 implements MigrationIn
     this.logger.info('Starting rollback: UpdateEmptyRenderModesToDefault');
 
     try {
-      // Revert recipes deployments back to empty array
       this.logger.debug(
         'Reverting recipes deployments with default render_modes to empty array',
       );
@@ -84,7 +81,6 @@ export class UpdateEmptyRenderModesToDefault1759841953830 implements MigrationIn
         `Reverted ${recipesResult[1]} recipes deployment records to empty render modes`,
       );
 
-      // Revert standards deployments back to empty array
       this.logger.debug(
         'Reverting standards deployments with default render_modes to empty array',
       );

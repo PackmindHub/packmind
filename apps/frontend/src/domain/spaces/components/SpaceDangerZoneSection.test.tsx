@@ -8,7 +8,12 @@ import {
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider, pmToaster } from '@packmind/ui';
-import { SpaceType, createPackageId, createSpaceId } from '@packmind/types';
+import {
+  SpaceType,
+  createPackageId,
+  createOrganizationId,
+  createSpaceId,
+} from '@packmind/types';
 
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import * as SpacesManagementQueriesModule from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
@@ -158,12 +163,13 @@ describe('SpaceDangerZoneSection', () => {
     beforeEach(() => {
       mockUseCurrentSpace({
         space: {
-          id: 'space-1',
+          id: createSpaceId('space-1'),
           name: 'Default Space',
           slug: 'default-space',
           type: SpaceType.open,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: true,
+          color: 'blue',
         },
       });
     });
@@ -181,12 +187,13 @@ describe('SpaceDangerZoneSection', () => {
     beforeEach(() => {
       mockUseCurrentSpace({
         space: {
-          id: 'space-1',
+          id: createSpaceId('space-1'),
           name: 'Test Space',
           slug: 'test-space',
           type: SpaceType.open,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -219,12 +226,13 @@ describe('SpaceDangerZoneSection', () => {
     beforeEach(() => {
       mockUseCurrentSpace({
         space: {
-          id: 'space-1',
+          id: createSpaceId('space-1'),
           name: 'Test Space',
           slug: 'test-space',
           type: SpaceType.restricted,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -259,12 +267,13 @@ describe('SpaceDangerZoneSection', () => {
     beforeEach(() => {
       mockUseCurrentSpace({
         space: {
-          id: 'space-1',
+          id: createSpaceId('space-1'),
           name: 'Test Space',
           slug: 'test-space',
           type: SpaceType.private,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });
@@ -666,8 +675,9 @@ describe('SpaceDangerZoneSection', () => {
           name: 'Default Space',
           slug: 'default-space',
           type: SpaceType.open,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: true,
+          color: 'blue',
         },
       });
     });
@@ -689,8 +699,9 @@ describe('SpaceDangerZoneSection', () => {
           name: 'Test Space',
           slug: 'test-space',
           type: SpaceType.open,
-          organizationId: 'org-1',
+          organizationId: createOrganizationId('org-1'),
           isDefaultSpace: false,
+          color: 'blue',
         },
       });
     });

@@ -23,13 +23,6 @@ import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMem
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 
-/**
- * AccountsRepositories - Repository aggregator implementation for the Accounts domain
- *
- * This class serves as the main repository access point, aggregating all
- * individual repositories. It handles the instantiation of repositories
- * using the shared DataSource and provides them through getter methods.
- */
 export class AccountsRepositories implements IAccountsRepositories {
   private readonly userRepository: IUserRepository;
   private readonly organizationRepository: IOrganizationRepository;
@@ -40,7 +33,6 @@ export class AccountsRepositories implements IAccountsRepositories {
   private readonly userMetadataRepository: IUserMetadataRepository;
 
   constructor(private readonly dataSource: DataSource) {
-    // Initialize all repositories with their respective schemas
     this.userRepository = new UserRepository(
       this.dataSource.getRepository(UserSchema),
     );
@@ -64,10 +56,8 @@ export class AccountsRepositories implements IAccountsRepositories {
       this.dataSource.getRepository(UserMetadataSchema),
     );
 
-    // Covers the repositories that do not extend AbstractRepository, which
-    // instruments itself. An explicit list rather than reflection over the
-    // fields: this class also holds a TypeORM DataSource, which must not be
-    // patched.
+    // An explicit list rather than reflection over the fields: this class also
+    // holds a TypeORM DataSource, which must not be patched.
     instrumentComponents([
       this.userRepository,
       this.organizationRepository,

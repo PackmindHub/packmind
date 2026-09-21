@@ -1,9 +1,4 @@
-/**
- * Prompt template for generating sample coding standards.
- * Used by the generateSamples.ts script to create standards for different technologies.
- *
- * This prompt follows the guidelines from .claude/skills/packmind-create-standard/SKILL.md
- */
+// Mirrors the guidelines in .gitlab/duo/skills/packmind-create-standard/SKILL.md
 
 import { ProgrammingLanguage } from '@packmind/types';
 
@@ -34,7 +29,6 @@ function buildExampleLanguageSection(
 Use ${exampleLanguage} for all code examples in this standard.`;
   }
 
-  // Fallback for samples without a defined example language
   return `## Language for Code Examples
 Choose the most appropriate programming language for ${displayName} code examples from the valid language codes below.`;
 }

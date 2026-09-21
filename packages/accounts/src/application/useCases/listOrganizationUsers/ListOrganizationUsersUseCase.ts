@@ -34,7 +34,6 @@ export class ListOrganizationUsersUseCase
       organizationId: command.organizationId,
     });
 
-    // Get users by organization directly from database
     const users = await this.userService.listUsersByOrganization(
       command.organizationId,
     );
@@ -46,7 +45,6 @@ export class ListOrganizationUsersUseCase
       return { users: [] };
     }
 
-    // Map to organization users with userId, displayName and role
     const organizationUsers: OrganizationUser[] = users.map((user) => {
       const membership = user.memberships?.find(
         (m) => m.organizationId === command.organizationId,

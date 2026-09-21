@@ -1,5 +1,9 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   Distribution,
   DistributionStatus,
@@ -201,57 +205,52 @@ describe('RenderPackageAsPluginUseCase', () => {
       isDefaultSpace: true,
     });
 
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+      [],
+    );
 
-    commandsPort = {
-      listCommandVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    commandsPort = mockInterface<ICommandsPort>();
+    commandsPort.listCommandVersions.mockResolvedValue([]);
 
-    standardsPort = {
-      getLatestStandardVersion: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = mockInterface<IStandardsPort>();
+    standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
-    skillsPort = {
-      getLatestSkillVersion: jest.fn().mockResolvedValue(null),
-      getSkillFiles: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = mockInterface<ISkillsPort>();
+    skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+    skillsPort.getSkillFiles.mockResolvedValue([]);
 
-    spacesPort = {
-      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
-      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
+    spacesPort.getSpaceBySlug.mockResolvedValue(defaultSpace);
 
-    accountsPort = {
-      getUserById: jest
-        .fn()
-        .mockResolvedValue(
-          createUserWithMembership(userId, organization, 'admin'),
-        ),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(
+      createUserWithMembership(userId, organization, 'admin'),
+    );
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    targetResolutionService = {
-      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
-    } as unknown as jest.Mocked<TargetResolutionService>;
+    targetResolutionService = createMockInstance(TargetResolutionService);
+    targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+      buildTarget(),
+    );
 
-    distributionRepository = {
-      add: jest
-        .fn()
-        .mockImplementation((d: Distribution) => Promise.resolve(d)),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    distributionRepository = mockInterface<IDistributionRepository>();
+    distributionRepository.add.mockImplementation((d: Distribution) =>
+      Promise.resolve(d),
+    );
 
-    distributedPackageRepository = {
-      add: jest.fn().mockResolvedValue(undefined),
-      addStandardVersions: jest.fn().mockResolvedValue(undefined),
-      addCommandVersions: jest.fn().mockResolvedValue(undefined),
-      addSkillVersions: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    distributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
+    distributedPackageRepository.addStandardVersions.mockResolvedValue(
+      undefined,
+    );
+    distributedPackageRepository.addCommandVersions.mockResolvedValue(
+      undefined,
+    );
+    distributedPackageRepository.addSkillVersions.mockResolvedValue(undefined);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new RenderPackageAsPluginUseCase(
       packageService,

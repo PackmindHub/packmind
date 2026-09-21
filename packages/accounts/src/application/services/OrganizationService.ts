@@ -23,7 +23,6 @@ export class OrganizationService {
     this.logger.info('Creating organization', { name });
 
     try {
-      // Generate slug from name and check if it conflicts with existing organizations
       this.logger.debug('Generating slug from organization name', { name });
       const baseSlug = slug(name);
       const existingOrganization =
@@ -33,7 +32,6 @@ export class OrganizationService {
         throw new OrganizationSlugConflictError(name);
       }
 
-      // Create the organization
       const organization: Organization = {
         id: createOrganizationId(uuidv4()),
         name,
@@ -66,7 +64,6 @@ export class OrganizationService {
     this.logger.info('Getting organization by name (will slugify internally)', {
       name,
     });
-    // Convert name to slug and search by slug
     const organizationSlug = slug(name);
     this.logger.debug('Slugified name for search', {
       originalName: name,

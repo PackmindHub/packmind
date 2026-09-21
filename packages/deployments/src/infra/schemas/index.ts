@@ -6,6 +6,7 @@ import { PackageStandardsSchema } from './PackageStandardsSchema';
 import { PackageSkillsSchema } from './PackageSkillsSchema';
 import { DistributionSchema } from './DistributionSchema';
 import { DistributedPackageSchema } from './DistributedPackageSchema';
+import { PackageReleaseSchema } from './PackageReleaseSchema';
 
 export {
   TargetSchema,
@@ -16,6 +17,7 @@ export {
   PackageSkillsSchema,
   DistributionSchema,
   DistributedPackageSchema,
+  PackageReleaseSchema,
 };
 export const deploymentsSchemas = [
   TargetSchema,
@@ -26,4 +28,5 @@ export const deploymentsSchemas = [
   PackageSkillsSchema,
   DistributionSchema,
   DistributedPackageSchema,
+  PackageReleaseSchema,
 ];

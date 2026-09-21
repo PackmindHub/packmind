@@ -1,29 +1,21 @@
 import { CommandId } from '../../commands';
 import { Package } from '../Package';
 /**
- * Wire DTO for HTTP responses that carry a persisted {@link Package}.
+ * Wire DTO for HTTP responses carrying a persisted {@link Package}.
  *
- * SUPERSET for the recipes→commands rename: it keeps the existing
- * recipe-named `recipes` field AND adds a command-named twin `commands`
- * carrying the same value. Old clients keep reading `recipes`; new clients
- * read `commands`. The persisted `Package` entity is never modified — the
- * twin is added at the controller boundary.
+ * A superset, for the recipes→commands rename: the inherited `recipes` field
+ * stays for clients that still read it, and `commands` is a twin carrying the
+ * same value. The persisted entity is untouched — the twin is added at the
+ * controller boundary.
  */
 export type PackageResponse = Package & {
   commands: CommandId[];
   /**
-   * When the row was written, and when it last changed, as the entity carries
-   * them.
-   *
-   * Every response has held them since the table was written - both columns
-   * come from `timestampsSchemas` and the controller sends the entity - and no
-   * type said so, so a reader had to know that and cast. Declared here rather
-   * than on `Package` because the persisted entity type is what the schema
-   * intersects with `WithTimestamps`, which types them as `Date`; on the wire
-   * they are strings.
+   * Declared here rather than on `Package` because `WithTimestamps` types these
+   * as `Date`, while on the wire they are strings.
    *
    * Optional because the frontend also builds this shape by hand in fixtures,
-   * and a surface that prints a date has to survive not having one anyway.
+   * so a surface that prints a date has to survive not having one.
    */
   createdAt?: string;
   updatedAt?: string;

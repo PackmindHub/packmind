@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-011",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+    "apps/api/src/app/organizations/spaces/packages/packages.controller.spec.ts",
+    "apps/api/src/app/organizations/deployments/deployments.service.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test api --testNamePattern='OrganizationsSpacesPackagesController.*release'",
+    "kind": "behavioural",
+    "describes": "AC-16"
+  }
+}

@@ -1,3 +1,5 @@
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { RemoveArtefactsFromPackageUseCase } from './RemoveArtefactsFromPackageUseCase';
 import {
   RemoveArtefactsFromPackageCommand,
@@ -13,14 +15,20 @@ import {
   ISpacesPort,
   Space,
   SpaceType,
+  UserSpaceRole,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
+import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
@@ -49,6 +57,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [
@@ -77,46 +86,34 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
     });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      removeCommands: jest.fn(),
-      removeStandards: jest.fn(),
-      removeSkills: jest.fn(),
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageRepository>;
+    mockPackageRepository = createMockInstance(PackageRepository);
 
-    mockPackageService = {
-      findById: jest.fn(),
-      getPackagesBySpaceId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
+    mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
 
-    mockServices = {
-      getPackageService: jest.fn().mockReturnValue(mockPackageService),
-      getRepositories: jest.fn().mockReturnValue({
-        getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      }),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    mockServices = createMockInstance(DeploymentsServices);
+    mockServices.getPackageService.mockReturnValue(mockPackageService);
+    const mockRepositories = mockInterface<IDeploymentsRepositories>();
+    mockRepositories.getPackageRepository.mockReturnValue(
+      mockPackageRepository,
+    );
+    mockServices.getRepositories.mockReturnValue(mockRepositories);
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockSpacesPort = {
-      getSpaceById: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId,
-        spaceId,
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
-    mockEventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     stubbedLogger = stubLogger();
 
@@ -344,7 +341,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
 
     it('throws error with package id', async () => {
       await expect(executePromise).rejects.toThrow(
-        `Package with id ${packageId} not found`,
+        new PackageNotFoundError(packageId, spaceId),
       );
     });
 
@@ -369,7 +366,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space with id ${spaceId} not found`,
+        new SpaceNotAccessibleError(spaceId, organizationId),
       );
     });
   });

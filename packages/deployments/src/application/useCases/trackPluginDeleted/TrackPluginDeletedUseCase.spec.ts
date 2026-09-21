@@ -1,5 +1,9 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   IAccountsPort,
   ISpacesPort,
@@ -98,29 +102,22 @@ describe('TrackPluginDeletedUseCase', () => {
     });
     pkg = buildPackage();
 
-    packageService = {
-      getPackagesBySlugsAndSpaceWithArtefacts: jest
-        .fn()
-        .mockResolvedValue([pkg]),
-    } as unknown as jest.Mocked<PackageService>;
+    packageService = createMockInstance(PackageService);
+    packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+      pkg,
+    ]);
 
-    spacesPort = {
-      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
-      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
+    spacesPort.getSpaceBySlug.mockResolvedValue(defaultSpace);
 
-    accountsPort = {
-      getUserById: jest
-        .fn()
-        .mockResolvedValue(
-          createUserWithMembership(userId, organization, 'admin'),
-        ),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(
+      createUserWithMembership(userId, organization, 'admin'),
+    );
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new TrackPluginDeletedUseCase(
       packageService,

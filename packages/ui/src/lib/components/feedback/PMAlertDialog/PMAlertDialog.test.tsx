@@ -3,7 +3,6 @@ import { PMAlertDialog } from './PMAlertDialog';
 import { PMButton } from '../../form/PMButton/PMButton';
 import { UIProvider } from '../../../UIProvider';
 
-// Mock PMButton to avoid dependency issues
 jest.mock('../../form/PMButton/PMButton', () => ({
   PMButton: ({
     children,
@@ -14,7 +13,6 @@ jest.mock('../../form/PMButton/PMButton', () => ({
   }) => <button {...props}>{children}</button>,
 }));
 
-// Helper function to render with UIProvider
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<UIProvider>{ui}</UIProvider>);
 };
@@ -68,7 +66,6 @@ describe('PMAlertDialog', () => {
       />,
     );
 
-    // Get all Delete buttons and find the one inside the dialog footer
     const deleteButtons = screen.getAllByText('Delete');
     expect(deleteButtons.length).toBeGreaterThan(1);
     expect(deleteButtons[0]).toBeInTheDocument();
@@ -85,7 +82,6 @@ describe('PMAlertDialog', () => {
       />,
     );
 
-    // Should render trigger in uncontrolled mode
     expect(screen.getByText('Delete Item')).toBeInTheDocument();
   });
 
@@ -108,15 +104,11 @@ describe('PMAlertDialog', () => {
   it('does not call onOpenChange when cancel is clicked in uncontrolled mode', () => {
     const onOpenChange = jest.fn();
     renderWithProvider(
-      <PMAlertDialog
-        {...defaultProps}
-        // No open prop = uncontrolled mode
-        onOpenChange={onOpenChange}
-      />,
+      <PMAlertDialog {...defaultProps} onOpenChange={onOpenChange} />,
     );
 
-    // In uncontrolled mode, the dialog starts closed, so we can't test cancel directly
-    // But we can verify that the component renders correctly
+    // Uncontrolled dialog starts closed, so cancel can't be exercised directly;
+    // this just confirms the trigger renders without calling onOpenChange.
     expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 });

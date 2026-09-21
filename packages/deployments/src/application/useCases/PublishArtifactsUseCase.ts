@@ -95,10 +95,6 @@ const commandKey = (version: CommandVersion): string => version.recipeId;
 const standardKey = (version: StandardVersion): string => version.standardId;
 const skillKey = (version: SkillVersion): string => version.skillId;
 
-/**
- * Unified usecase for publishing commands, standards, and skills together
- * Uses the unified renderArtifacts method for atomic updates
- */
 export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   constructor(
     private readonly commandsPort: ICommandsPort,
@@ -137,13 +133,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       throw new Error('At least one target must be provided');
     }
 
-    // Validate all targets belong to the requesting organization
     await this.targetService.findByIdsInOrganization(
       command.targetIds,
       command.organizationId as OrganizationId,
     );
 
-    // Fetch organization's active render modes
     const activeRenderModes =
       await this.renderModeConfigurationService.getActiveRenderModes(
         command.organizationId as OrganizationId,
@@ -154,14 +148,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         activeRenderModes,
       );
 
-    // Group targets by repository
     const repositoryTargetsMap = await this.groupTargetsByRepository(
       command.targetIds,
     );
 
     const requestedVersions = await this.fetchRequestedVersions(command);
 
-    // Process each repository with all its targets
     const distributions: Distribution[] = [];
     for (const [
       repositoryId,
@@ -334,7 +326,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     created: Distribution[],
   ): Promise<void> {
     for (const target of targets) {
-      // Use per-target render modes from packmind.json, fallback to org-level
       const targetRenderModes =
         renderModesPerTarget.get(target.id) ?? activeRenderModes;
       const distribution = await this.createDistribution(
@@ -431,10 +422,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return distribution;
   }
 
-  /**
-   * Prepares unified deployment using renderArtifacts for all targets
-   * Returns a map of targetId -> FileUpdates and names of newly added Packmind skills
-   */
   private async prepareUnifiedDeployment({
     userId,
     organizationId,
@@ -457,16 +444,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     let addedPackmindSkills: string[] = [];
 
     for (const target of targets) {
-      // Fetch existing packmind.json to check for per-target agents
       const existingPackmindJson = await this.fetchExistingPackmindJson(
         gitRepo,
         target,
       );
       const existingPackages = existingPackmindJson?.packages ?? {};
 
-      // Use per-target agents if defined in packmind.json, otherwise use org-level agents
-      // Note: undefined means "use org-level", but any defined array (including []) gets normalized
-      // to always include 'packmind' agent
+      // undefined falls back to the org-level list; any defined array, [] included,
+      // is normalized to contain the 'packmind' agent.
       const targetCodingAgents =
         existingPackmindJson?.agents !== undefined
           ? normalizeCodingAgents(existingPackmindJson.agents)
@@ -480,7 +465,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         });
       }
 
-      // Convert target coding agents to render modes for distribution storage
+      // Stored on each distribution record.
       const targetRenderModes =
         this.renderModeConfigurationService.mapCodingAgentsToRenderModes(
           targetCodingAgents,
@@ -503,7 +488,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         (agent) => !currentAgentSet.has(agent),
       );
 
-      // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
         gitRepo,
@@ -512,7 +496,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
-      // Call unified renderArtifacts with commands, standards, and skills
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
@@ -553,7 +536,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
       }
 
-      // Add packmind.json config file with merged packages (preserving agents if defined)
       const configFile =
         this.packmindConfigService.createConfigFileModification(
           packagesSlugs,
@@ -562,16 +544,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
-      // Fetched once per target: `cliVersion` tells the default-skills renderer
-      // which CLI executable name the installation actually exposes, and the
-      // same lock file is merged into the freshly built one below. This is a git
-      // read, so it must not be fetched twice.
+      // One git read serving two uses below: the renderer's `cliVersion` and the
+      // merge into the freshly built lock file.
       const existingLockFile = await this.fetchExistingLockFile(
         gitRepo,
         target,
       );
 
-      // Include default skills for root targets
       if (target.path === '/') {
         this.logger.info(
           'Including default skills for root target deployment',
@@ -590,7 +569,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       }
 
-      // Generate lock file and merge with existing to preserve inaccessible package entries
       const lockFile = this.lockFileService.buildLockFile({
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
@@ -613,7 +591,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.lockFileService.createLockFileModification(mergedLockFile);
       baseFileUpdates.createOrUpdate.push(lockFileModification);
 
-      // Apply target path prefixing
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(
         baseFileUpdates,
         target,
@@ -632,8 +609,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Fetches and parses the existing packmind.json from the git repository
-   * Returns null if the file doesn't exist or couldn't be parsed
+   * Returns null if the file doesn't exist or couldn't be parsed.
    */
   private async fetchExistingPackmindJson(
     gitRepo: GitRepo,
@@ -651,14 +627,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       }
       return JSON.parse(fileData.content) as PackmindFileConfig;
     } catch {
-      // File doesn't exist or couldn't be parsed
       return null;
     }
   }
 
   /**
-   * Fetches and parses the existing packmind-lock.json from the git repository
-   * Returns null if the file doesn't exist or couldn't be parsed
+   * Returns null if the file doesn't exist or couldn't be parsed.
    */
   private async fetchExistingLockFile(
     gitRepo: GitRepo,
@@ -817,7 +791,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     pick: (versions: ActiveArtifactVersions) => V[],
     keyOf: (version: V) => string,
   ): { previousFromPackages: V[]; installed: V[]; removed: V[] } {
-    // Previously deployed versions across all packages (for combining)
+    // Across every package on the target, not just the ones being deployed.
     const previous = this.latestVersionPerArtifact(
       scopes.flatMap((scope) => (scope ? (pick(scope.all) ?? []) : [])),
       keyOf,
@@ -835,7 +809,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       requested,
       keyOf,
     );
-    // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
+    // In `previous` but not in `previousFromPackages`: owned by packages left untouched.
     const fromOtherPackages = this.excludeByKey(
       previous,
       previousFromPackages,
@@ -847,7 +821,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       keyOf,
     );
 
-    // Filter out removed artifacts from the installed list
     const installed = this.excludeByKey(combined, removed, keyOf);
 
     return { previousFromPackages, installed, removed };
@@ -927,8 +900,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Computes skill versions that were renamed (same skillId but different slug).
-   * Returns the PREVIOUS versions (with old slugs) so their directories can be deleted.
+   * Returns the previous versions of renamed skills (same skillId, new slug), so
+   * the directories under their old slugs can be deleted.
    */
   private computeRenamedSkillVersions(
     previousVersions: SkillVersion[],
@@ -940,7 +913,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     return previousVersions.filter((prevSv) => {
       const currentSv = currentBySkillId.get(prevSv.skillId);
-      // Renamed: same skillId exists in current but slug has changed
       return currentSv && currentSv.slug !== prevSv.slug;
     });
   }
@@ -1014,16 +986,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Deploys default skills using the DeployDefaultSkillsUseCase and merges them
-   * into the provided file updates.
+   * Merges the default skills into `fileUpdates` and returns the names of those
+   * not already present in the repository.
    *
-   * `cliVersion` comes from the target repository's existing lock file so the
-   * rendered skill content names the CLI executable that installation actually
-   * has (`packmind-cli` before 0.24.0, `packmind` from then on). It stays
-   * undefined for a repository with no lock file - that repository has never
-   * been installed by a CLI, so there is no legacy expectation to honour and
-   * the canonical name is correct.
-   * Returns the names of newly added Packmind skills (skills not already in the repository).
+   * `cliVersion` makes the rendered content name the executable that installation
+   * actually has (`packmind-cli` before CLI 0.24.0, `packmind` from then on). It is
+   * undefined for a repository with no lock file: never installed by a CLI, so the
+   * canonical name is correct.
    */
   private async includeDefaultSkills(
     userId: UserId,
@@ -1041,7 +1010,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       cliVersion,
     });
 
-    // Extract skill names from paths and determine which are new
     const addedSkillNames = await this.extractNewlyAddedSkillNames(
       result.fileUpdates,
       gitRepo,
@@ -1062,8 +1030,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Extracts names of skills that are newly added (SKILL.md doesn't exist in repo).
-   * Parses skill names from paths like `.claude/skills/{skill-name}/SKILL.md`.
+   * Newly added means the skill's SKILL.md is not in the repository yet.
    */
   private async extractNewlyAddedSkillNames(
     defaultSkillsUpdates: FileUpdates,
@@ -1076,7 +1043,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       const match = skillPattern.exec(file.path);
       if (match) {
         const skillName = match[1];
-        // Check if the SKILL.md already exists in the repository
         const existingFile = await this.gitPort.getFileFromRepo(
           gitRepo,
           file.path,

@@ -1,3 +1,4 @@
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SignInSocialUserUseCase } from './SignInSocialUserUseCase';
 import { UserService } from '../../services/UserService';
@@ -45,25 +46,18 @@ describe('SignInSocialUserUseCase', () => {
   };
 
   beforeEach(() => {
-    userService = {
-      getUserByEmailCaseInsensitive: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    userService = createMockInstance(UserService);
 
-    membershipResolutionService = {
-      resolveUserOrganizations: jest.fn(),
-    } as unknown as jest.Mocked<MembershipResolutionService>;
+    membershipResolutionService = createMockInstance(
+      MembershipResolutionService,
+    );
 
-    userMetadataService = {
-      addSocialProvider: jest.fn(),
-    } as unknown as jest.Mocked<UserMetadataService>;
+    userMetadataService = createMockInstance(UserMetadataService);
 
-    signUpWithOrganizationUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<ISignUpWithOrganizationUseCase>;
+    signUpWithOrganizationUseCase =
+      mockInterface<ISignUpWithOrganizationUseCase>();
 
-    mockEventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     useCase = new SignInSocialUserUseCase(
       userService,

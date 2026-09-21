@@ -6,6 +6,12 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
@@ -89,341 +95,174 @@ import { TargetWithRepository } from '../TargetWithRepository';
 export const IDeploymentPortName = 'IDeploymentPort' as const;
 
 export interface IDeploymentPort {
-  /**
-   * Get all currently deployed standard versions for a specific target.
-   * This returns the latest deployed version of each unique standard.
-   *
-   * @param command - Command containing targetId and organizationId
-   * @returns Promise of array of StandardVersion
-   */
+  /** Returns the latest deployed version of each unique standard for the target. */
   findActiveStandardVersionsByTarget(
     command: FindActiveStandardVersionsByTargetCommand,
   ): Promise<FindActiveStandardVersionsByTargetResponse>;
 
-  /**
-   * Publishes packages to specified targets
-   *
-   * For each target:
-   * 1. Extracts recipes and standards from packages
-   * 2. Resolves to their latest versions
-   * 3. Combines with previously deployed versions
-   * 4. Prepares file updates for standards first, then recipes
-   * 5. Commits changes to the git repository
-   * 6. Creates individual PackagesDeployment entries per target
-   *
-   * @param command - Command containing target IDs and package IDs to deploy
-   * @returns Promise of created PackagesDeployment entries
-   */
   publishPackages(
     command: PublishPackagesCommand,
   ): Promise<PackagesDeployment[]>;
 
   /**
-   * Publishes artifacts (recipes and standards) to specified targets in a unified operation
-   *
-   * For each repository:
-   * 1. Groups all targets by repository
-   * 2. Collects all previously distributed recipe and standard versions across all targets
-   * 3. Combines with new versions (deduplicates, keeps latest)
-   * 4. Calls renderArtifacts ONCE with both recipes and standards
-   * 5. Makes ONE atomic commit per repository
-   * 6. Creates Distribution records with DistributedPackage for each target
-   *
-   * @param command - Command containing recipe version IDs, standard version IDs, and target IDs
-   * @returns Promise of PublishArtifactsResponse with distributions for each target
+   * Targets are grouped by repository so that each repository receives a single
+   * atomic commit covering all of its targets.
    */
   publishArtifacts(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse>;
 
-  /**
-   * Lists all distributions for a specific package
-   *
-   * @param command - Command containing packageId and organizationId
-   * @returns Promise of history entries for the distributions that include the
-   * specified package — without the artifact versions each package carried
-   */
+  /** History entries carry no artifact versions, unlike the distributions they summarise. */
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
   ): Promise<DistributionHistoryEntry[]>;
 
-  /**
-   * Lists all distributions that include a specific recipe
-   *
-   * @param command - Command containing recipeId and organizationId
-   * @returns Promise of Distribution entries that include versions of the specified recipe
-   */
   listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
   ): Promise<Distribution[]>;
 
-  /**
-   * Lists all distributions that include a specific standard
-   *
-   * @param command - Command containing standardId and organizationId
-   * @returns Promise of Distribution entries that include versions of the specified standard
-   */
   listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
   ): Promise<Distribution[]>;
 
-  /**
-   * Lists all distributions that include a specific skill
-   *
-   * @param command - Command containing skillId and organizationId
-   * @returns Promise of Distribution entries that include versions of the specified skill
-   */
   listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]>;
 
-  /**
-   * Creates a target for a git repository
-   *
-   * A target represents a deployment destination within a git repository,
-   * containing a name and path where recipes and standards can be deployed.
-   *
-   * @param command - Command containing target details and user/organization context
-   * @returns Promise of the created Target
-   * @throws Error if name is empty, path format is invalid, or gitRepoId doesn't exist
-   */
   addTarget(command: AddTargetCommand): Promise<Target>;
 
-  /**
-   * Updates an existing target
-   *
-   * Updates the name and/or path of an existing deployment target.
-   * The Root target (path '/') cannot be updated.
-   *
-   * @param command - Command containing target ID, updated name and path, and user/organization context
-   * @returns Promise of the updated Target
-   * @throws Error if target not found, name is empty, path format is invalid, or target is Root target
-   */
   updateTarget(command: UpdateTargetCommand): Promise<Target>;
 
-  /**
-   * Deletes a target (soft delete)
-   *
-   * Soft-deletes a deployment target, making it unavailable for future deployments
-   * while preserving historical deployment records.
-   * The Root target (path '/') cannot be deleted.
-   *
-   * @param command - Command containing target ID and user/organization context
-   * @returns Promise of deletion confirmation
-   * @throws Error if target not found or target is Root target
-   */
+  /** Soft delete. The Root target (path '/') cannot be deleted. */
   deleteTarget(command: DeleteTargetCommand): Promise<DeleteTargetResponse>;
 
   /**
-   * Gets all targets for a specific git repository (branch-specific)
-   *
-   * Retrieves all deployment targets associated with a given git repository ID.
-   * Since GitRepoId is branch-specific, this returns targets for that specific branch only.
-   * Targets represent specific paths within a repository where recipes and
-   * standards can be deployed.
-   *
-   * @param command - Command containing git repository ID (branch-specific) and user/organization context
-   * @returns Promise of array of targets for the specific repository branch
+   * GitRepoId is branch-specific, so this returns the targets of that one
+   * branch only. Use getTargetsByRepository to span branches.
    */
   getTargetsByGitRepo(command: GetTargetsByGitRepoCommand): Promise<Target[]>;
 
-  /**
-   * Gets a target by its ID
-   *
-   * @param command - Command containing targetId and user/organization context
-   * @returns Promise of the target or null if not found
-   */
   getTargetById(command: GetTargetByIdCommand): Promise<GetTargetByIdResponse>;
 
-  /**
-   * Gets all targets for a repository across all branches
-   *
-   * Retrieves all deployment targets for the specified repository identified by
-   * owner and repo name, across all branches. Each target includes repository information
-   * indicating which branch it belongs to.
-   *
-   * @param command - Command containing owner, repo and user/organization context
-   * @returns Promise of array of targets with repository information for all branches
-   */
+  /** Targets of the owner/repo across all branches, each tagged with its branch. */
   getTargetsByRepository(
     command: GetTargetsByRepositoryCommand,
   ): Promise<TargetWithRepository[]>;
 
-  /**
-   * Gets all targets for an organization
-   *
-   * Retrieves all deployment targets associated with all repositories
-   * belonging to the specified organization. This provides a comprehensive
-   * view of all available deployment targets across the organization.
-   *
-   * @param command - Command containing organization ID and user context
-   * @returns Promise of array of all targets with repository information for the organization
-   */
   getTargetsByOrganization(
     command: GetTargetsByOrganizationCommand,
   ): Promise<TargetWithRepository[]>;
 
-  /**
-   * Retrieves render mode configuration for an organization
-   *
-   * @param command - Command containing organization context
-   * @returns Promise resolving to render mode configuration or null when none exists
-   */
   getRenderModeConfiguration(
     command: GetRenderModeConfigurationCommand,
   ): Promise<GetRenderModeConfigurationResponse>;
 
   /**
-   * Creates render mode configuration for an organization using default values
-   * when none exists yet.
-   *
-   * Non-admins can trigger this as part of first-run distribution flow to ensure
-   * Packmind delivery stays enabled by default.
+   * Creates the configuration with default values when none exists yet.
+   * Deliberately open to non-admins: the first-run distribution flow calls it,
+   * and Packmind delivery must stay enabled by default.
    */
   createRenderModeConfiguration(
     command: CreateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration>;
 
-  /**
-   * Updates render mode configuration for an organization.
-   *
-   * Admin-only entry point to customize which render modes are active.
-   */
+  /** Admin-only, unlike createRenderModeConfiguration. */
   updateRenderModeConfiguration(
     command: UpdateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration>;
 
-  /**
-   * Pulls all content (recipes and standards) for an organization and generates
-   * file updates for all coding agents without requiring git repository context.
-   *
-   * This retrieves all recipes and standards across all organization spaces and
-   * generates file updates for multiple coding agents (Packmind, Claude, Cursor, Copilot).
-   *
-   * @param command - Command containing organization and user context
-   * @returns Promise resolving to file updates for all coding agents
-   */
+  /** Spans every space of the organization and needs no git repository context. */
   pullAllContent(command: PullContentCommand): Promise<IPullContentResponse>;
 
   /**
-   * Installs packages for an organization, respecting space-level access control.
-   *
-   * For each package slug, checks if the user has access to the corresponding space.
-   * Packages in inaccessible spaces are listed in `missingAccess` and their artifacts
-   * are preserved from the provided `packmindLockFile`. Only accessible packages are
-   * deployed and their artifacts are updated.
-   *
-   * @param command - Command containing packagesSlugs, packmindLockFile, and optional agents
-   * @returns Promise resolving to file updates, missing access list, resolved agents, and skill folders
+   * Packages whose space the user cannot access are reported in `missingAccess`
+   * and their artifacts are carried over unchanged from the supplied
+   * `packmindLockFile`, so an install never strips content the caller cannot see.
    */
   installPackages(
     command: InstallPackagesCommand,
   ): Promise<InstallPackagesResponse>;
 
-  /**
-   * Renders a single package as a Claude plugin.
-   *
-   * Resolves the package by slug, fetches the latest artefact versions, and
-   * renders them under the provided plugin root. Standards are skipped; the
-   * skipped count is returned so callers can surface it to users.
-   *
-   * @param command - Command containing packageSlug, mode, pluginRoot, and pluginName
-   * @returns Promise resolving to the rendered files and plugin metadata
-   */
+  /** Standards are skipped; the skipped count is returned so callers can surface it. */
   renderPackageAsPlugin(
     command: RenderPackageAsPluginCommand,
   ): Promise<RenderPackageAsPluginResponse>;
 
   /**
-   * Tracks the deletion of a rendered plugin.
-   *
-   * Resolves the package by slug and emits a `plugin_deleted` analytics event.
-   * No distribution row is written. Tracking is best-effort and callers should
-   * not treat failures as fatal.
-   *
-   * @param command - Command containing packageSlug and optional gitRemoteUrl
-   * @returns Promise resolving to whether the deletion was tracked
+   * Emits a `plugin_deleted` analytics event and writes no distribution row.
+   * Best-effort: callers should not treat failures as fatal.
    */
   trackPluginDeleted(
     command: TrackPluginDeletedCommand,
   ): Promise<TrackPluginDeletedResponse>;
 
-  /**
-   * Lists all packages in a specific space
-   *
-   * @param command - Command containing spaceId and organizationId
-   * @returns Promise of array of packages in the specified space
-   */
   listPackagesBySpace(
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse>;
 
-  /**
-   * Lists all packages for an organization
-   *
-   * @param command - Command containing organizationId
-   * @returns Promise of array of all packages in the organization
-   */
   listPackages(command: ListPackagesCommand): Promise<ListPackagesResponse>;
 
-  /**
-   * Gets a summary of a single package by its slug
-   * @param command - Command containing organizationId and slug
-   * @returns Promise of package summary with summarized artifacts
-   */
   getPackageSummary(
     command: GetPackageSummaryCommand,
   ): Promise<GetPackageSummaryResponse>;
 
-  /**
-   * Creates a new package within a space
-   *
-   * A package is a collection of recipes and standards that belong to the same space.
-   * Only recipes and standards from the same space can be added to the package.
-   *
-   * @param command - Command containing package details including recipes and standards
-   * @returns Promise of the created package with its associated recipes and standards
-   * @throws Error if recipes or standards don't belong to the specified space
-   */
+  /** Only artefacts from the package's own space may be attached. */
   createPackage(command: CreatePackageCommand): Promise<CreatePackageResponse>;
 
-  /**
-   * Updates an existing package
-   *
-   * Updates the package details (name, description) and its associated recipes and standards.
-   * Only recipes and standards from the same space as the package can be added.
-   *
-   * @param command - Command containing packageId and updated package details
-   * @returns Promise of the updated package with its associated recipes and standards
-   * @throws Error if package not found or recipes/standards don't belong to the package's space
-   */
+  /** Only artefacts from the package's own space may be attached. */
   updatePackage(command: UpdatePackageCommand): Promise<UpdatePackageResponse>;
 
-  /**
-   * Gets a package by its ID
-   *
-   * @param command - Command containing packageId and organizationId
-   * @returns Promise of the package details
-   * @throws Error if package not found
-   */
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
 
   /**
-   * System-level package lookup by id, bypassing membership validation.
-   * Intended for sibling hexas and background jobs that operate without a
-   * user context (e.g. marketplace publishing). Mirrors
-   * `PackageService.findById`: resolves to `null` when the package does not
-   * exist or has been soft-deleted.
+   * Cuts an immutable release of a package, pinning the latest version of
+   * every component it holds.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseRefusedError carrying a code and the current
+   *         version, when the package is empty or the version is refused
+   */
+  createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse>;
+
+  /**
+   * Lists a package's releases, newest first, together with everything the
+   * release panel needs: whether a cut is possible and why not, the three
+   * versions it may be offered, and which pinned components have fallen
+   * behind.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   */
+  listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse>;
+
+  /**
+   * Gets one release of a package by its version, with everything it pinned —
+   * including components that have since been deleted.
+   *
+   * @throws PackageNotFoundError when the package does not exist
+   * @throws PackageReleaseNotFoundError when the package has no such version
+   */
+  getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse>;
+
+  /**
+   * System-level lookup by id, bypassing membership validation. Intended for
+   * sibling hexas and background jobs that run without a user context (e.g.
+   * marketplace publishing). Mirrors `PackageService.findById`: resolves to
+   * `null` when the package does not exist or has been soft-deleted.
    */
   findPackageById(packageId: PackageId): Promise<Package | null>;
 
   /**
-   * System-level bulk package lookup by slug within an organization,
-   * hydrated with artefact entities. Intended for sibling hexas and public
-   * flows that operate without a member context (e.g. plugin install
-   * heartbeats).
+   * System-level bulk lookup by slug, bypassing membership validation. Intended
+   * for sibling hexas and public flows that run without a member context (e.g.
+   * plugin install heartbeats).
    */
   getPackagesBySlugsWithArtefacts(
     slugs: string[],
@@ -431,78 +270,47 @@ export interface IDeploymentPort {
   ): Promise<PackageWithArtefacts[]>;
 
   /**
-   * System-level bulk package lookup by (slug, space) pair, hydrated with the
-   * standards of each package. Same contract as
-   * `getPackagesBySlugsWithArtefacts`, except that it honours space
-   * boundaries, resolves entries spanning several spaces in a single query,
-   * and reads the standards only. Intended for sibling hexas and flows that
-   * operate without a member context.
+   * Same contract as `getPackagesBySlugsWithArtefacts`, except that it honours
+   * space boundaries, resolves entries spanning several spaces in one query,
+   * and reads the standards only.
    *
-   * Unlike its `organizationId`-taking sibling, this method performs no
-   * tenant check of its own, so the caller is obliged to have resolved the
-   * entries' spaces within an already validated organization — space ids
-   * taken straight from a request would read across tenants.
+   * Unlike its `organizationId`-taking sibling, this performs no tenant check of
+   * its own, so the caller is obliged to have resolved the entries' spaces
+   * within an already validated organization — space ids taken straight from a
+   * request would read across tenants.
    */
   getPackagesBySlugsAndSpacesWithStandards(
     entries: PackageSlugInSpace[],
   ): Promise<PackageWithStandards[]>;
 
-  /**
-   * Deletes multiple packages in batch
-   *
-   * Soft-deletes multiple packages at once from a specific space.
-   *
-   * @param command - Command containing array of packageIds and spaceId
-   * @returns Promise of deletion confirmation
-   * @throws Error if any package not found or doesn't belong to the specified space
-   */
+  /** Soft delete, restricted to packages of the command's space. */
   deletePackagesBatch(
     command: DeletePackagesBatchCommand,
   ): Promise<DeletePackagesBatchResponse>;
 
   /**
-   * Adds artefacts (recipes and/or standards) to an existing package
-   *
-   * Adds new recipes and standards to a package. Artefacts already in the package
-   * are filtered out (idempotent operation). Only artefacts from the same space
-   * as the package can be added.
-   *
-   * @param command - Command containing packageId and arrays of recipeIds and standardIds to add
-   * @returns Promise of the updated package with its associated recipes and standards
-   * @throws Error if package not found or artefacts don't belong to the package's space
+   * Idempotent: artefacts already in the package are filtered out. Only
+   * artefacts from the package's own space may be added.
    */
   addArtefactsToPackage(
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse>;
 
   /**
-   * Removes artefacts (recipes/standards/skills) from a package. Only artefacts
-   * currently in the package are removed; the rest are reported as skipped.
    * Membership only — the artefacts keep shipping to any targets the package is
-   * deployed to until the next sync, then stop. Emits an
-   * ArtefactRemovedFromPackageEvent per removed artefact for drift tracking.
-   *
-   * @param command - Command containing packageId and arrays of recipeIds, standardIds and skillIds to remove
-   * @returns Promise of the updated package with removed/skipped artefact ids
-   * @throws Error if package not found or does not belong to the space
+   * deployed to until the next sync, then stop. Artefacts not in the package are
+   * reported as skipped. Emits an ArtefactRemovedFromPackageEvent per removed
+   * artefact for drift tracking.
    */
   removeArtefactsFromPackage(
     command: RemoveArtefactsFromPackageCommand,
   ): Promise<RemoveArtefactsFromPackageResponse>;
 
   /**
-   * Notifies about a distribution from external sources (e.g., packmind)
+   * Records a distribution that happened outside the Packmind UI, creating the
+   * git provider (tokenless), repository and target on the fly from the git
+   * remote URL. Resolves the latest version of each package slug.
    *
-   * This use case handles the notification of a distribution that happened outside
-   * of the Packmind UI. It:
-   * 1. Parses the git remote URL to identify the git provider (GitHub only for now)
-   * 2. Creates or finds a tokenless git provider for the organization
-   * 3. Creates or finds the git repository based on URL and branch
-   * 4. Creates or finds a target based on the relative path
-   * 5. Creates a distribution record linking packages to their deployed versions
-   *
-   * @param command - Command containing distribution details from external source
-   * @returns Promise of the created distribution ID
    * @throws UnsupportedGitProviderError if the git URL is not from GitHub
    */
   notifyDistribution(
@@ -510,90 +318,44 @@ export interface IDeploymentPort {
   ): Promise<NotifyDistributionResponse>;
 
   /**
-   * Notifies about a distribution using the packmind-lock file as the source of truth
-   *
-   * Unlike notifyDistribution (which resolves latest versions from package slugs),
-   * this use case uses the exact artifact versions recorded in the lock file.
-   * This is important when some packages may be invisible to the current user due
-   * to space membership restrictions — the lock file preserves the full installed state.
-   *
-   * @param command - Command containing git info and the packmind-lock file
-   * @returns Promise of the created distribution ID
+   * Like notifyDistribution, but takes the exact artifact versions from the lock
+   * file instead of resolving the latest ones. Needed because space membership
+   * can hide some installed packages from the current user, while the lock file
+   * still records the full installed state.
    */
   notifyArtefactsDistribution(
     command: NotifyArtefactsDistributionCommand,
   ): Promise<NotifyArtefactsDistributionResponse>;
 
   /**
-   * Removes a package from specified targets
-   *
-   * For each target:
-   * 1. Resolves which artifacts are exclusive to the package (should be deleted)
-   * 2. Resolves which artifacts are shared with other packages (should be re-rendered)
-   * 3. Renders the updated file contents without the exclusive artifacts
-   * 4. Commits the changes to the git repository
-   * 5. Creates distribution records for each target
-   *
-   * @param command - Command containing packageId and targetIds
-   * @returns Promise of RemovePackageFromTargetsResponse with results per target
-   * @throws PackageNotFoundError if the package doesn't exist
-   * @throws TargetNotFoundError if any target doesn't exist
+   * Artefacts exclusive to the package are deleted from each target; those
+   * shared with another package are re-rendered rather than removed.
    */
   removePackageFromTargets(
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse>;
 
-  /**
-   * Deploys default skills for all configured coding agents
-   *
-   * For each coding agent that supports default skills:
-   * 1. Gets the configured coding agents for the organization
-   * 2. For each agent that supports default skills, generates the file updates
-   * 3. Merges all file updates into a single response
-   *
-   * @param command - Command containing organization context
-   * @returns Promise of DeployDefaultSkillsResponse with merged file updates
-   */
+  /** Covers only the organization's coding agents that support default skills. */
   deployDefaultSkills(
     command: DeployDefaultSkillsCommand,
   ): Promise<DeployDefaultSkillsResponse>;
 
-  /**
-   * Downloads a single skill as a zip file rendered for a specific coding agent
-   *
-   * Fetches the latest version of the skill, renders it for the specified agent,
-   * and packages the files into a zip archive.
-   *
-   * @param command - Command containing skillId, spaceId, agent, and user/organization context
-   * @returns Promise of DownloadSkillZipForAgentResponse with zip file name and base64-encoded content
-   */
+  /** Returns the zip name and its base64-encoded content. */
   downloadSkillZipForAgent(
     command: DownloadSkillZipForAgentCommand,
   ): Promise<DownloadSkillZipForAgentResponse>;
 
   /**
-   * Gets the deployed content for a specific target identified by git repo, branch, and path.
-   *
-   * Fetches the currently deployed artifact versions (standards, recipes, skills) for the
-   * target and renders them for coding agents. This is a simpler alternative to pullAllContent
-   * that only returns what is currently deployed, without any removal or configuration logic.
-   *
-   * @param command - Command containing git target info and organization context
-   * @returns Promise resolving to file updates for all coding agents
+   * Returns what is currently deployed to the target, with no removal or
+   * configuration logic — a simpler alternative to pullAllContent.
    */
   getDeployedContent(
     command: GetDeployedContentCommand,
   ): Promise<GetDeployedContentResponse>;
 
   /**
-   * Gets rendered content for specific artifact versions from a lock file.
-   *
-   * Accepts lock file entries (artifacts with type, id, version) and fetches the
-   * exact versions, renders them for coding agents, and returns file updates.
-   * Unlike getDeployedContent, this does not resolve targets or use distribution history.
-   *
-   * @param command - Command containing artifact version entries and organization context
-   * @returns Promise resolving to file updates for all coding agents
+   * Renders the exact artifact versions listed in a lock file. Unlike
+   * getDeployedContent, it resolves no targets and reads no distribution history.
    */
   getContentByVersions(
     command: GetContentByVersionsCommand,
@@ -608,33 +370,20 @@ export interface IDeploymentPort {
   ): Promise<DashboardNonLiveResponse>;
 
   /**
-   * Lists active distributed packages grouped by target within a space.
-   *
-   * For each target that has at least one actively deployed package, returns the target ID
-   * and the list of package IDs that are currently active (last operation was 'add' with
-   * non-failure status, or 'remove' with failure status).
-   *
-   * @param command - Command containing spaceId and user/organization context
-   * @returns Promise of active distributed packages per target
+   * Grouped by target, and only targets holding at least one active package.
+   * Active means the last operation was 'add' with a non-failure status, or
+   * 'remove' with a failure status.
    */
   listActiveDistributedPackagesBySpace(
     command: ListActiveDistributedPackagesBySpaceCommand,
   ): Promise<ListActiveDistributedPackagesBySpaceResponse>;
 
-  /**
-   * Exposes the typed use case instance for consumers that need the port-typed reference.
-   */
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
 
   /**
-   * For each requested Git provider, return the createdAt of the most recent
-   * successful distribution that targeted any repo under that provider.
-   * Used by the Git connections list view to show "last distribution" per
-   * connection. Providers with no successful distribution are absent from
-   * the returned map.
-   *
-   * @param command - Command containing the provider IDs to look up
-   * @returns Promise of map keyed by GitProviderId → ISO timestamp string
+   * Per provider, the createdAt of its most recent successful distribution to
+   * any of its repos. Providers with no successful distribution are absent from
+   * the returned map rather than present with a null.
    */
   getLastDistributionDateByProviders(
     command: GetLastDistributionDateByProvidersCommand,

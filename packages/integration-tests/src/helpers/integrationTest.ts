@@ -1,11 +1,5 @@
 import { createIntegrationTestFixture } from './createIntegrationTestFixture';
-import { accountsSchemas } from '@packmind/accounts';
-import { spacesSchemas } from '@packmind/spaces';
-import { commandsSchemas } from '@packmind/commands';
-import { standardsSchemas } from '@packmind/standards';
-import { skillsSchemas } from '@packmind/skills';
-import { gitSchemas } from '@packmind/git';
-import { playbookChangeManagementSchemas } from '@packmind/playbook-change-management';
+import { integrationTestSchemas } from './makeIntegrationTestDataSource';
 import { TestApp } from './TestApp';
 import {
   Organization,
@@ -16,7 +10,6 @@ import {
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { deploymentsSchemas } from '@packmind/deployments';
 
 type IntegrationTestContext = {
   testApp: TestApp;
@@ -26,30 +19,16 @@ export type IntegrationTest<
   T extends IntegrationTestContext = IntegrationTestContext,
 > = (tests: (getContext: () => Promise<T>) => void) => () => void;
 
-const integrationTestSchemas = [
-  ...accountsSchemas,
-  ...spacesSchemas,
-  ...commandsSchemas,
-  ...standardsSchemas,
-  ...skillsSchemas,
-  ...gitSchemas,
-  ...playbookChangeManagementSchemas,
-  ...deploymentsSchemas,
-];
-
 /**
  * Builds the describe body shared by `integrationTest` and
  * `integrationTestWithUser`.
  *
- * The context is built **once per file**, in `beforeAll`, and the rows it
- * creates are snapshotted. `getContext()` then hands every test the same
- * context and `afterEach` rewinds the database to the snapshot, so a sign-up —
- * the most expensive thing these fixtures do — is paid once per file rather
- * than once per test.
- *
- * Because the context is shared, anything a test spies on stays spied on
- * without help; `restoreMocks` is enabled for this project, so `jest.spyOn` is
- * reverted after each test.
+ * The context is built once per file, in `beforeAll`, and its rows are
+ * snapshotted; `getContext()` hands every test that same context and
+ * `afterEach` rewinds the database to the snapshot. A sign-up is therefore paid
+ * once per file rather than once per test — at the cost of a shared `TestApp`,
+ * so a test's spies must be installed in `beforeEach` (`restoreMocks` is
+ * enabled for this project and reverts them after each test).
  */
 function describeWithContext<T extends IntegrationTestContext>(
   buildContext: (base: IntegrationTestContext) => Promise<T>,

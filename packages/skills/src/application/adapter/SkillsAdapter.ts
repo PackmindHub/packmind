@@ -82,10 +82,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     );
   }
 
-  /**
-   * Initialize adapter with ports and services from registry.
-   * All use cases are created here with non-null dependencies.
-   */
   public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
@@ -103,7 +99,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       );
     }
 
-    // Create all use cases with non-null dependencies
     this._createSkill = new CreateSkillUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -192,16 +187,10 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     this.logger.info('SkillsAdapter initialized successfully');
   }
 
-  /**
-   * Returns the port interface for cross-domain access.
-   */
   public getPort(): ISkillsPort {
     return this as ISkillsPort;
   }
 
-  /**
-   * Checks if the adapter is ready with all required ports initialized.
-   */
   public isReady(): boolean {
     return (
       this.accountsPort !== null &&

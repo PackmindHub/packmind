@@ -58,11 +58,9 @@ export async function makeTestDatasource(
 }
 
 /**
- * Test datasource fixture for repository tests.
- *
- * Optimized pattern that initializes the database schema once per test file
- * instead of per test case. Uses table truncation for cleanup between tests,
- * which is significantly faster than recreating the schema.
+ * Builds the database schema once per test file instead of per test case, and
+ * uses table truncation for cleanup between tests, which is significantly
+ * faster than recreating the schema.
  *
  * Usage:
  * ```typescript
@@ -135,7 +133,6 @@ export function createTestDatasourceFixture(
       await datasource.initialize();
       await datasource.synchronize();
 
-      // Cache table names for fast cleanup
       tableNames = datasource.entityMetadatas.map(
         (metadata) => metadata.tableName,
       );
@@ -174,8 +171,6 @@ export function createTestDatasourceFixture(
         return;
       }
 
-      // Truncate all tables in a single transaction
-      // Use CASCADE to handle foreign key constraints
       const queryRunner = datasource.createQueryRunner();
       try {
         await queryRunner.startTransaction();

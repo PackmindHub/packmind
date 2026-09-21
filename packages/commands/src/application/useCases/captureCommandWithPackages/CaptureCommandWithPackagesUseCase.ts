@@ -55,7 +55,6 @@ export class CaptureCommandWithPackagesUseCase
       packageSlugsCount: packageSlugs.length,
     });
 
-    // Step 1: Validate space exists and belongs to organization
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
@@ -67,7 +66,6 @@ export class CaptureCommandWithPackagesUseCase
       );
     }
 
-    // Step 2: Create the recipe using CaptureRecipeUseCase
     this.logger.info('Capturing recipe', { name });
     const recipe = await this.captureCommandUseCase.execute({
       name,
@@ -86,7 +84,6 @@ export class CaptureCommandWithPackagesUseCase
       name,
     });
 
-    // Step 3: If packageSlugs provided, add recipe to packages
     if (packageSlugs.length > 0) {
       this.logger.info('Adding recipe to packages', {
         recipeId: recipe.id,
@@ -94,14 +91,12 @@ export class CaptureCommandWithPackagesUseCase
       });
 
       try {
-        // Fetch packages by slugs to validate they exist and get their IDs
         const packages = await this.fetchPackagesBySlugs(
           packageSlugs,
           organizationId,
           userId,
         );
 
-        // Validate all packages belong to the same space as the recipe
         for (const pkg of packages) {
           if (pkg.spaceId !== spaceId) {
             this.logger.warn(
@@ -115,7 +110,6 @@ export class CaptureCommandWithPackagesUseCase
             continue;
           }
 
-          // Add recipe to package
           await this.deploymentsPort.addArtefactsToPackage({
             userId,
             spaceId: createSpaceId(spaceId),
@@ -131,7 +125,6 @@ export class CaptureCommandWithPackagesUseCase
           });
         }
       } catch (error) {
-        // Log error but don't fail the recipe creation
         this.logger.error(
           'Failed to add recipe to packages, recipe created successfully but package associations failed',
           {
@@ -162,18 +155,15 @@ export class CaptureCommandWithPackagesUseCase
       organizationId,
     });
 
-    // List all packages for the organization
     const { packages } = await this.deploymentsPort.listPackages({
       userId,
       organizationId: createOrganizationId(organizationId),
     });
 
-    // Filter to only the requested slugs
     const requestedPackages = packages.filter((pkg) =>
       slugs.includes(pkg.slug),
     );
 
-    // Log any missing packages
     const foundSlugs = new Set(requestedPackages.map((p) => p.slug));
     const missingSlugs = slugs.filter((slug) => !foundSlugs.has(slug));
     if (missingSlugs.length > 0) {

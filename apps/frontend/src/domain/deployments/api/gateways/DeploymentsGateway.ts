@@ -25,6 +25,9 @@ import {
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
   IGetDashboardNonLive,
+  IListPackageReleasesUseCase,
+  ICreatePackageReleaseUseCase,
+  IGetPackageReleaseUseCase,
   PackageId,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
@@ -45,6 +48,9 @@ import {
   GetDashboardNonLiveCommand,
   AddArtefactsToPackageCommand,
   RemoveArtefactsFromPackageCommand,
+  ListPackageReleasesCommand,
+  CreatePackageReleaseCommand,
+  GetPackageReleaseCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -338,4 +344,32 @@ export class DeploymentsGatewayApi
         `/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
       );
     };
+
+  listPackageReleases: NewGateway<IListPackageReleasesUseCase> = async (
+    params: NewPackmindCommandBody<ListPackageReleasesCommand>,
+  ) => {
+    const { organizationId, spaceId, packageId } = params;
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/releases`,
+    );
+  };
+
+  createPackageRelease: NewGateway<ICreatePackageReleaseUseCase> = async (
+    params: NewPackmindCommandBody<CreatePackageReleaseCommand>,
+  ) => {
+    const { organizationId, spaceId, packageId, version } = params;
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/releases`,
+      { version },
+    );
+  };
+
+  getPackageRelease: NewGateway<IGetPackageReleaseUseCase> = async (
+    params: NewPackmindCommandBody<GetPackageReleaseCommand>,
+  ) => {
+    const { organizationId, spaceId, packageId, version } = params;
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/releases/${version}`,
+    );
+  };
 }

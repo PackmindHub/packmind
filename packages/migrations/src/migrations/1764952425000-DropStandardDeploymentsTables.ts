@@ -4,14 +4,12 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'DropStandardDeploymentsTables1764952425000';
 
 /**
- * Migration to drop the StandardsDeployment tables.
+ * Drops the `standard_deployments` and `standard_deployment_versions` tables,
+ * the deployment functionality having moved to the Distribution system.
  *
- * This migration removes the standard_deployments and standard_deployment_versions tables
- * as the deployment functionality has been migrated to the Distribution system.
- *
- * Tables dropped:
- * - standard_deployment_versions (junction table)
- * - standard_deployments (main table)
+ * Both directions work outwards from the junction table: its foreign keys and
+ * the table itself go before `standard_deployments`, and `down` recreates them
+ * in the opposite order so each FK has its referenced table already in place.
  */
 export class DropStandardDeploymentsTables1764952425000 implements MigrationInterface {
   constructor(
@@ -22,7 +20,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
     this.logger.info('Starting migration: DropStandardDeploymentsTables');
 
     try {
-      // Drop foreign key constraints on standard_deployment_versions first
       this.logger.info(
         'Dropping foreign key constraints on standard_deployment_versions',
       );
@@ -35,14 +32,12 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         DROP CONSTRAINT IF EXISTS "FK_standard_deployment_versions_version"
       `);
 
-      // Drop the junction table first
       this.logger.info('Dropping standard_deployment_versions table');
       await queryRunner.query(
         `DROP TABLE IF EXISTS "standard_deployment_versions"`,
       );
       this.logger.info('Successfully dropped standard_deployment_versions');
 
-      // Drop foreign key constraints on standard_deployments
       this.logger.info(
         'Dropping foreign key constraints on standard_deployments',
       );
@@ -59,7 +54,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         DROP CONSTRAINT IF EXISTS "FK_standard_deployment_target"
       `);
 
-      // Drop indexes on standard_deployments
       this.logger.info('Dropping indexes on standard_deployments');
       await queryRunner.query(
         `DROP INDEX IF EXISTS "idx_standard_deployment_organization"`,
@@ -68,7 +62,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         `DROP INDEX IF EXISTS "idx_standard_deployment_author"`,
       );
 
-      // Drop the main table
       this.logger.info('Dropping standard_deployments table');
       await queryRunner.query(`DROP TABLE IF EXISTS "standard_deployments"`);
       this.logger.info('Successfully dropped standard_deployments');
@@ -88,7 +81,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
     this.logger.info('Starting rollback: DropStandardDeploymentsTables');
 
     try {
-      // Recreate standard_deployments table
       this.logger.info('Recreating standard_deployments table');
       await queryRunner.query(`
         CREATE TABLE "standard_deployments" (
@@ -107,7 +99,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         )
       `);
 
-      // Recreate indexes
       this.logger.info('Recreating indexes on standard_deployments');
       await queryRunner.query(`
         CREATE INDEX "idx_standard_deployment_organization" ON "standard_deployments" ("organization_id")
@@ -116,7 +107,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         CREATE INDEX "idx_standard_deployment_author" ON "standard_deployments" ("author_id")
       `);
 
-      // Recreate foreign keys
       this.logger.info(
         'Recreating foreign key constraints on standard_deployments',
       );
@@ -136,7 +126,6 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         FOREIGN KEY ("target_id") REFERENCES "targets"("id")
       `);
 
-      // Recreate standard_deployment_versions junction table
       this.logger.info('Recreating standard_deployment_versions table');
       await queryRunner.query(`
         CREATE TABLE "standard_deployment_versions" (
@@ -145,13 +134,11 @@ export class DropStandardDeploymentsTables1764952425000 implements MigrationInte
         )
       `);
 
-      // Recreate unique index
       await queryRunner.query(`
         CREATE UNIQUE INDEX "idx_standard_deployment_version_unique"
         ON "standard_deployment_versions" ("standard_deployment_id", "standard_version_id")
       `);
 
-      // Recreate foreign keys for junction table
       this.logger.info(
         'Recreating foreign key constraints on standard_deployment_versions',
       );

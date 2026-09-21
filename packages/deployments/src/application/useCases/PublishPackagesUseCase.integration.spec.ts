@@ -26,7 +26,11 @@ import { packageFactory } from '../../../test/packageFactory';
 import { distributionFactory } from '../../../test/distributionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 describe('PublishPackagesUseCase - Integration behavior', () => {
@@ -47,45 +51,26 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
 
-    mockCommandsPort = {
-      getLatestCommandVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
+    mockCommandsPort.getLatestCommandVersions.mockResolvedValue([]);
 
-    mockStandardsPort = {
-      getLatestStandardVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
+    mockStandardsPort.getLatestStandardVersions.mockResolvedValue([]);
 
-    mockSkillsPort = {
-      getLatestSkillVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
+    mockSkillsPort.getLatestSkillVersions.mockResolvedValue([]);
 
-    mockDeploymentPort = {
-      publishArtifacts: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentPort>;
+    mockDeploymentPort = mockInterface<IDeploymentPort>();
 
-    mockPackageService = {
-      getPackagesByIdsInOrganization: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
-    mockDistributedPackageRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByDistributionId: jest.fn(),
-      findByPackageId: jest.fn(),
-      addStandardVersions: jest.fn(),
-      addCommandVersions: jest.fn(),
-      addSkillVersions: jest.fn(),
-    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+    mockDistributedPackageRepository =
+      mockInterface<IDistributedPackageRepository>();
 
-    mockSpacesPort = {
-      getSpaceById: jest
-        .fn()
-        .mockImplementation(async (spaceId) =>
-          spaceFactory({ id: spaceId, slug: 'test-space' }),
-        ),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.getSpaceById.mockImplementation(async (spaceId) =>
+      spaceFactory({ id: spaceId, slug: 'test-space' }),
+    );
 
     useCase = new PublishPackagesUseCase(
       mockCommandsPort,

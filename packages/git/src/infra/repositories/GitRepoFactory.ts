@@ -9,12 +9,9 @@ import { GithubTokenResolverFactory } from './github/auth/GithubTokenResolverFac
 const origin = 'GitRepoFactory';
 
 /**
- * GitRepoFactory - Infrastructure implementation of the git repository factory
- *
- * Creates concrete git repository instances based on the provider type.
- * For GitHub repositories, delegates token resolution to the injected
- * `GithubTokenResolverFactory` which decides between PAT and App Installation
- * auth. GitLab repositories continue to use raw PAT auth.
+ * GitHub repositories delegate token resolution to the injected
+ * `GithubTokenResolverFactory`, which picks between PAT and App installation
+ * auth; GitLab only ever uses a raw PAT.
  */
 export class GitRepoFactory implements IGitRepoFactory {
   constructor(

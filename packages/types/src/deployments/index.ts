@@ -1,4 +1,3 @@
-// Entity types
 export * from './TargetId';
 export * from './Target';
 export * from './TargetWithRepository';
@@ -14,6 +13,10 @@ export * from './StandardDeploymentOverview';
 export * from './SkillDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
+export * from './PackageRelease';
+export * from './InvalidPackageReleaseVersionError';
+export * from './packageReleaseVersion';
+export * from './packageReleaseVersionRules';
 export * from './PackmindFileConfig';
 export * from './PackmindLockFile';
 export * from './DistributionId';
@@ -23,14 +26,10 @@ export * from './DistributionOperation';
 export * from './DistributedPackageId';
 export * from './DistributedPackage';
 
-// Contracts
 export * from './contracts';
 
-// Errors
 export * from './errors';
 
-// Events
 export * from './events';
 
-// Ports
 export * from './ports';

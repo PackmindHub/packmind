@@ -164,7 +164,6 @@ describe('InstallStateSigner', () => {
           kind: 'install',
         });
 
-        // Verify using same "now" — exp is already past
         expect(() => signerInPast.verify(state)).toThrow(
           InvalidInstallStateError,
         );

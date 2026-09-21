@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import {
   ChangeProposalCaptureMode,
   ChangeProposalType,
@@ -6,14 +7,12 @@ import {
 
 import { CheckDiffsUseCase } from './CheckDiffsUseCase';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import {
-  createMockChangeProposalGateway,
-  createMockPackmindGateway,
-} from '../../mocks/createMockGateways';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 
 describe('CheckDiffsUseCase', () => {
   let useCase: CheckDiffsUseCase;
-  const mockChangeProposals = createMockChangeProposalGateway();
+  const mockChangeProposals = mockInterface<IChangeProposalGateway>();
   const mockGateway = createMockPackmindGateway({
     changeProposals: mockChangeProposals,
   });
@@ -173,8 +172,13 @@ describe('CheckDiffsUseCase', () => {
     beforeEach(() => {
       mockChangeProposals.check.mockResolvedValue(
         checkResponse([
-          { index: 0, exists: true, createdAt: '2026-01-01T00:00:00Z' },
-          { index: 1, exists: false, createdAt: null },
+          {
+            index: 0,
+            exists: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            message: null,
+          },
+          { index: 1, exists: false, createdAt: null, message: null },
         ]),
       );
     });
@@ -267,11 +271,18 @@ describe('CheckDiffsUseCase', () => {
       mockChangeProposals.check
         .mockResolvedValueOnce(
           checkResponse([
-            { index: 0, exists: true, createdAt: '2026-01-01T00:00:00Z' },
+            {
+              index: 0,
+              exists: true,
+              createdAt: '2026-01-01T00:00:00Z',
+              message: null,
+            },
           ]),
         )
         .mockResolvedValueOnce(
-          checkResponse([{ index: 0, exists: false, createdAt: null }]),
+          checkResponse([
+            { index: 0, exists: false, createdAt: null, message: null },
+          ]),
         );
     });
 
@@ -340,7 +351,12 @@ describe('CheckDiffsUseCase', () => {
     beforeEach(() => {
       mockChangeProposals.check.mockResolvedValue(
         checkResponse([
-          { index: 0, exists: true, createdAt: '2026-02-15T00:00:00Z' },
+          {
+            index: 0,
+            exists: true,
+            createdAt: '2026-02-15T00:00:00Z',
+            message: null,
+          },
         ]),
       );
     });
@@ -433,8 +449,13 @@ describe('CheckDiffsUseCase', () => {
     beforeEach(() => {
       mockChangeProposals.check.mockResolvedValue(
         checkResponse([
-          { index: 0, exists: true, createdAt: '2026-01-01T00:00:00Z' },
-          { index: 1, exists: false, createdAt: null },
+          {
+            index: 0,
+            exists: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            message: null,
+          },
+          { index: 1, exists: false, createdAt: null, message: null },
         ]),
       );
     });

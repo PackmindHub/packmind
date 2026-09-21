@@ -53,11 +53,12 @@
   "$comment_test_files": "A `characterization` unit must not rewrite these. Used only by that check; a behavioural unit's test file is in scope like any other.",
   "testFiles": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
 
-  "$comment_always": "Pipeline bookkeeping the gate itself writes. Never a scope violation.",
+  "$comment_always": "Bookkeeping the gate and orchestrator write. Never a scope violation.",
   "alwaysInScope": [
     ".claude/features/**/units/*.json",
     ".claude/features/**/metrics.jsonl",
     ".claude/features/**/records.jsonl",
-    ".claude/features/**/decisions.md"
+    ".claude/features/**/decisions.md",
+    ".claude/features/**/charter.md"
   ]
 }

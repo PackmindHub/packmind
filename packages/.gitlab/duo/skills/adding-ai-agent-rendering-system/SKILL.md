@@ -206,7 +206,14 @@ private createDeployer(agent: CodingAgent): ICodingAgentDeployer {
     case 'new_agent':
       return new NewAgentDeployer(this.standardsPort, this.gitPort);
     default:
-      throw new Error(`Unknown coding agent: ${agent}`);
+      // An unreachable switch arm is our bug, not the caller's: PackmindInternalError
+      // keeps the 500 and the stack, puts `agent` in the log as a field, and withholds
+      // the message from the response. A bare Error would do none of that.
+      throw new PackmindInternalError(
+        'unknown_coding_agent',
+        { agent },
+        `No deployer is registered for coding agent "${agent}".`,
+      );
   }
 }
 

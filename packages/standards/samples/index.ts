@@ -1,8 +1,3 @@
-/**
- * Standard sample access utilities.
- * Provides programmatic access to generated standard samples.
- */
-
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -35,10 +30,6 @@ function getGeneratedDir(): string {
   return path.join(__dirname, 'generated');
 }
 
-/**
- * Get all available sample IDs from the StandardSamples definition.
- * @returns Array of sample ID strings
- */
 export function getAllSampleIds(): string[] {
   return [
     ...standardSamples.languageSamples.map((s) => s.id),
@@ -46,11 +37,6 @@ export function getAllSampleIds(): string[] {
   ];
 }
 
-/**
- * Get a standard sample by its ID.
- * @param id The sample ID (e.g., 'java', 'spring')
- * @returns The parsed standard sample content, or null if not found
- */
 export async function getStandardSample(
   id: string,
 ): Promise<StandardSampleContent | null> {
@@ -66,11 +52,6 @@ export async function getStandardSample(
   return JSON.parse(content) as StandardSampleContent;
 }
 
-/**
- * Check if a sample exists in the generated directory.
- * @param id The sample ID to check
- * @returns true if the sample file exists, false otherwise
- */
 export function sampleExists(id: string): boolean {
   const generatedDir = getGeneratedDir();
   const filePath = path.join(generatedDir, `${id}.json`);

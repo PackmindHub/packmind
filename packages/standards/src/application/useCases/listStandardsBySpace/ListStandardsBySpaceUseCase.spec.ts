@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -11,6 +15,7 @@ import {
   Organization,
   Space,
   User,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { spaceFactory } from '@packmind/spaces/test';
@@ -26,28 +31,19 @@ describe('ListStandardsBySpaceUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    standardService = {
-      listStandardsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId: createUserId('00000000-0000-0000-0000-000000000001'),
-        spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
-        role: 'member',
-        createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
-        updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
-      }),
-      createSpace: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: createUserId('00000000-0000-0000-0000-000000000001'),
+      spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+      role: UserSpaceRole.MEMBER,
+      createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      pinned: false,
+    });
 
     stubbedLogger = stubLogger();
 
@@ -233,7 +229,7 @@ describe('ListStandardsBySpaceUseCase', () => {
       };
       const space: Space = spaceFactory({
         id: spaceId,
-        organizationId: otherOrganizationId, // Different organization
+        organizationId: otherOrganizationId,
       });
 
       const command: ListStandardsBySpaceCommand = {

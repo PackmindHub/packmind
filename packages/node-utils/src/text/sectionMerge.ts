@@ -1,12 +1,13 @@
 import { FileSection } from '@packmind/types';
 
 /**
- * Merges sections into an existing file content by finding HTML comment markers
- * and replacing the content between them, or appending if not found.
+ * Rewrites the text between `<!-- start: key -->` and `<!-- end: key -->`,
+ * appending the whole block when those markers are absent. Anything outside a
+ * section is left untouched, which is what lets a hand-edited agent file keep
+ * its own content across deployments.
  *
- * @param existingContent The current file content (empty string if file doesn't exist)
- * @param sections Array of sections with key and content to merge
- * @returns The merged file content
+ * A section whose content is blank is removed markers and all, so an artefact
+ * that no longer applies leaves no empty block behind.
  */
 export function mergeSectionsIntoFileContent(
   existingContent: string,
@@ -21,12 +22,12 @@ export function mergeSectionsIntoFileContent(
     const startIndex = result.indexOf(startMarker);
     const endIndex = result.indexOf(endMarker);
 
-    // If content is empty, remove the entire section (markers included)
     if (section.content.trim() === '') {
       if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
         const before = result.substring(0, startIndex);
         const after = result.substring(endIndex + endMarker.length);
-        // Remove section and clean up extra newlines
+        // The four branches below exist to avoid leaving a blank line, or a
+        // trailing newline on an otherwise empty file, where the block was.
         const trimmedBefore = before.trimEnd();
         const trimmedAfter = after.trimStart();
 
@@ -40,7 +41,6 @@ export function mergeSectionsIntoFileContent(
           result = trimmedBefore + '\n' + trimmedAfter;
         }
       }
-      // If section doesn't exist and content is empty, do nothing
       continue;
     }
 

@@ -1,3 +1,7 @@
+import { mockInterface } from '@packmind/test-utils';
+import { skillFactory } from '@packmind/skills/test';
+import { standardFactory } from '@packmind/standards/test';
+import { commandFactory } from '@packmind/commands/test';
 import {
   playbookSubmitHandler,
   PlaybookSubmitHandlerDependencies,
@@ -7,7 +11,16 @@ import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybook
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PlaybookChangeEntry } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../mocks/createMockGateways';
-import { ChangeProposalType, ChangeProposalCaptureMode } from '@packmind/types';
+import {
+  BatchCreateChangeProposalItem,
+  ChangeProposalCaptureMode,
+  ChangeProposalPayload,
+  ChangeProposalType,
+  PackmindLockFile,
+  createCommandId,
+  createSkillId,
+  createStandardId,
+} from '@packmind/types';
 import { CommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 
 jest.mock('../../utils/consoleLogger', () => ({
@@ -18,6 +31,22 @@ jest.mock('../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   formatCommand: (text: string) => text,
 }));
+
+/**
+ * `batchCall.proposals` is the union over every proposal type; a test that asks
+ * for one type already knows which payload comes back, so narrow it once here
+ * rather than at every assertion.
+ */
+function findProposal<T extends ChangeProposalType>(
+  proposals: BatchCreateChangeProposalItem[],
+  type: T,
+): { type: T; payload: ChangeProposalPayload<T> } {
+  const proposal = proposals.find((p) => p.type === type);
+  if (!proposal) {
+    throw new Error(`No ${type} proposal was created`);
+  }
+  return proposal as unknown as { type: T; payload: ChangeProposalPayload<T> };
+}
 
 const STANDARD_CONTENT = [
   '# My Standard',
@@ -111,26 +140,22 @@ describe('playbookSubmitHandler', () => {
     mockExit = jest.fn();
     mockOpenEditor = jest.fn().mockReturnValue('My commit message');
 
-    mockPlaybookLocalRepository = {
-      addChange: jest.fn(),
-      removeChange: jest.fn(),
-      getChanges: jest.fn().mockReturnValue([]),
-      getChange: jest.fn().mockReturnValue(null),
-      clearAll: jest.fn(),
-    };
+    mockPlaybookLocalRepository = mockInterface<IPlaybookLocalRepository>();
 
-    mockLockFileRepository = {
-      read: jest.fn().mockResolvedValue({
-        lockfileVersion: 1,
-        packageSlugs: ['my-package'],
-        agents: ['packmind'],
-        cliVersion: '1.0.0',
-        targetId: 'target-456',
-        artifacts: {},
-      }),
-      write: jest.fn(),
-      delete: jest.fn(),
-    };
+    mockPlaybookLocalRepository.getChanges.mockReturnValue([]);
+
+    mockPlaybookLocalRepository.getChange.mockReturnValue(null);
+
+    mockLockFileRepository = mockInterface<ILockFileRepository>();
+
+    mockLockFileRepository.read.mockResolvedValue({
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {},
+    });
   });
 
   afterEach(() => {
@@ -420,6 +445,7 @@ describe('playbookSubmitHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-standard': {
+            source: 'user',
             name: 'Old Standard Name',
             type: 'standard',
             id: 'artifact-std-1',
@@ -502,6 +528,7 @@ describe('playbookSubmitHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-command': {
+            source: 'user',
             name: 'Old Command',
             type: 'command',
             id: 'artifact-cmd-1',
@@ -593,6 +620,7 @@ describe('playbookSubmitHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -682,9 +710,9 @@ describe('playbookSubmitHandler', () => {
 
       const batchCall =
         mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-      const descProposal = batchCall.proposals.find(
-        (p: { type: ChangeProposalType }) =>
-          p.type === ChangeProposalType.updateSkillDescription,
+      const descProposal = findProposal(
+        batchCall.proposals,
+        ChangeProposalType.updateSkillDescription,
       );
 
       expect(descProposal.payload).toEqual({
@@ -718,6 +746,7 @@ describe('playbookSubmitHandler', () => {
         targetId: 'target-456',
         artifacts: {
           'my-skill': {
+            source: 'user',
             name: 'My Skill',
             type: 'skill',
             id: 'artifact-skill-1',
@@ -764,9 +793,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const proposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillLicense,
+        const proposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillLicense,
         );
 
         expect(proposal.payload).toEqual({
@@ -782,9 +811,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const proposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillCompatibility,
+        const proposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillCompatibility,
         );
 
         expect(proposal.payload).toEqual({
@@ -800,9 +829,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const proposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillAllowedTools,
+        const proposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillAllowedTools,
         );
 
         expect(proposal.payload).toEqual({
@@ -825,6 +854,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -870,9 +900,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const proposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillPrompt,
+        const proposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillPrompt,
         );
 
         expect(proposal.payload).toEqual({
@@ -903,6 +933,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -955,9 +986,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const fileProposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillFileContent,
+        const fileProposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillFileContent,
         );
 
         expect(fileProposal.payload.targetId).toBe('helper-file-id');
@@ -968,9 +999,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const fileProposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.updateSkillFileContent,
+        const fileProposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.updateSkillFileContent,
         );
 
         expect(fileProposal.payload).toEqual({
@@ -1003,6 +1034,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1055,9 +1087,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const deleteProposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.deleteSkillFile,
+        const deleteProposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.deleteSkillFile,
         );
 
         expect(deleteProposal.payload.targetId).toBe('helper-file-id');
@@ -1085,6 +1117,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1130,9 +1163,9 @@ describe('playbookSubmitHandler', () => {
 
         const batchCall =
           mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-        const addProposal = batchCall.proposals.find(
-          (p: { type: ChangeProposalType }) =>
-            p.type === ChangeProposalType.addSkillFile,
+        const addProposal = findProposal(
+          batchCall.proposals,
+          ChangeProposalType.addSkillFile,
         );
 
         expect(addProposal.payload.item).toEqual({
@@ -1165,6 +1198,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1241,6 +1275,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1296,9 +1331,9 @@ describe('playbookSubmitHandler', () => {
 
           const batchCall =
             mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-          permProposal = batchCall.proposals.find(
-            (p: { type: ChangeProposalType }) =>
-              p.type === ChangeProposalType.updateSkillFilePermissions,
+          permProposal = findProposal(
+            batchCall.proposals,
+            ChangeProposalType.updateSkillFilePermissions,
           );
         });
 
@@ -1322,8 +1357,7 @@ describe('playbookSubmitHandler', () => {
           const batchCall =
             mockGateway.changeProposals.batchCreate.mock.calls[0][0];
           const contentProposal = batchCall.proposals.find(
-            (p: { type: ChangeProposalType }) =>
-              p.type === ChangeProposalType.updateSkillFileContent,
+            (p) => p.type === ChangeProposalType.updateSkillFileContent,
           );
           expect(contentProposal).toBeUndefined();
         });
@@ -1343,6 +1377,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1593,6 +1628,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-standard': {
+              source: 'user',
               name: 'Old Standard Name',
               type: 'standard',
               id: 'artifact-std-1',
@@ -1665,6 +1701,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'Old Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1738,6 +1775,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1831,6 +1869,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -1912,6 +1951,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -1923,6 +1963,7 @@ describe('playbookSubmitHandler', () => {
               ],
             },
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -2035,6 +2076,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-command': {
+              source: 'user',
               name: 'My Command',
               type: 'command',
               id: 'artifact-cmd-1',
@@ -2157,6 +2199,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-standard': {
+              source: 'user',
               name: 'My Standard',
               type: 'standard',
               id: 'artifact-std-1',
@@ -2208,6 +2251,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill',
               id: 'artifact-skill-1',
@@ -2259,6 +2303,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill' as const,
               id: 'artifact-skill-1',
@@ -2386,6 +2431,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill' as const,
               id: 'artifact-skill-1',
@@ -2453,6 +2499,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
+              source: 'user',
               name: 'My Skill',
               type: 'skill' as const,
               id: 'artifact-skill-1',
@@ -2545,11 +2592,11 @@ describe('playbookSubmitHandler', () => {
 
       describe('resolves separate lock files for entries with different configDir values', () => {
         let batchCall: {
-          proposals: { artefactId: string }[];
+          proposals: BatchCreateChangeProposalItem[];
         };
 
         beforeEach(async () => {
-          const frontendLockFile = {
+          const frontendLockFile: PackmindLockFile = {
             lockfileVersion: 1,
             packageSlugs: ['my-package'],
             agents: ['packmind' as const],
@@ -2563,6 +2610,7 @@ describe('playbookSubmitHandler', () => {
                 version: 1,
                 spaceId: 'space-123',
                 packageIds: ['pkg-1'],
+                source: 'user',
                 files: [
                   {
                     path: '.packmind/standards/frontend-std.md',
@@ -2573,7 +2621,7 @@ describe('playbookSubmitHandler', () => {
             },
           };
 
-          const apiLockFile = {
+          const apiLockFile: PackmindLockFile = {
             lockfileVersion: 1,
             packageSlugs: ['my-package'],
             agents: ['packmind' as const],
@@ -2587,6 +2635,7 @@ describe('playbookSubmitHandler', () => {
                 version: 1,
                 spaceId: 'space-123',
                 packageIds: ['pkg-2'],
+                source: 'user',
                 files: [
                   {
                     path: '.packmind/standards/api-std.md',
@@ -2649,16 +2698,12 @@ describe('playbookSubmitHandler', () => {
         });
 
         it('includes frontend artifact', () => {
-          const artefactIds = batchCall.proposals.map(
-            (p: { artefactId: string }) => p.artefactId,
-          );
+          const artefactIds = batchCall.proposals.map((p) => p.artefactId);
           expect(artefactIds).toContain('artifact-fe-1');
         });
 
         it('includes api artifact', () => {
-          const artefactIds = batchCall.proposals.map(
-            (p: { artefactId: string }) => p.artefactId,
-          );
+          const artefactIds = batchCall.proposals.map((p) => p.artefactId);
           expect(artefactIds).toContain('artifact-api-1');
         });
       });
@@ -2680,6 +2725,7 @@ describe('playbookSubmitHandler', () => {
                   version: 1,
                   spaceId: 'space-123',
                   packageIds: ['pkg-1'],
+                  source: 'user',
                   files: [
                     {
                       path: '.claude/commands/my-command.md',
@@ -2763,12 +2809,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2809,12 +2855,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2874,12 +2920,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'other',
               name: 'Other Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -2903,7 +2949,13 @@ describe('playbookSubmitHandler', () => {
           }),
         ]);
         mockGateway.commands.list.mockResolvedValue({
-          recipes: [{ id: 'cmd-1', slug: 'my-command', name: 'My Command' }],
+          recipes: [
+            commandFactory({
+              id: createCommandId('cmd-1'),
+              slug: 'my-command',
+              name: 'My Command',
+            }),
+          ],
         });
       });
 
@@ -2927,7 +2979,11 @@ describe('playbookSubmitHandler', () => {
           }),
         ]);
         mockGateway.skills.list.mockResolvedValue([
-          { id: 'skill-1', slug: 'my-skill', name: 'My Skill' },
+          skillFactory({
+            id: createSkillId('skill-1'),
+            slug: 'my-skill',
+            name: 'My Skill',
+          }),
         ]);
       });
 
@@ -2954,12 +3010,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'taken-standard',
               name: 'Taken Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3030,12 +3086,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3057,6 +3113,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'my-standard': {
+              source: 'user',
               name: 'My Standard',
               type: 'standard',
               id: 'std-1',
@@ -3105,12 +3162,12 @@ describe('playbookSubmitHandler', () => {
 
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3150,12 +3207,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
         mockLockFileRepository.read.mockResolvedValue({
@@ -3166,6 +3223,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'standards/my-standard': {
+              source: 'user',
               name: 'My Standard',
               type: 'standard',
               id: 'std-1',
@@ -3217,12 +3275,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'shared-name',
               name: 'Shared Name',
               description: '',
-            },
+            }),
           ],
         });
         mockGateway.commands.list.mockResolvedValue({ recipes: [] });
@@ -3262,21 +3320,20 @@ describe('playbookSubmitHandler', () => {
             spaceId: 'space-999',
           }),
         ]);
-        mockGateway.standards.list.mockImplementation(
-          ({ spaceId }: { spaceId: string }) =>
-            Promise.resolve({
-              standards:
-                spaceId === 'space-123'
-                  ? [
-                      {
-                        id: 'std-1',
-                        slug: 'shared-name',
-                        name: 'Shared Name',
-                        description: '',
-                      },
-                    ]
-                  : [],
-            }),
+        mockGateway.standards.list.mockImplementation(({ spaceId }) =>
+          Promise.resolve({
+            standards:
+              spaceId === 'space-123'
+                ? [
+                    standardFactory({
+                      id: createStandardId('std-1'),
+                      slug: 'shared-name',
+                      name: 'Shared Name',
+                      description: '',
+                    }),
+                  ]
+                : [],
+          }),
         );
       });
 
@@ -3328,12 +3385,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
         mockGateway.commands.list.mockResolvedValue({ recipes: [] });
@@ -3371,12 +3428,12 @@ describe('playbookSubmitHandler', () => {
         ]);
         mockGateway.standards.list.mockResolvedValue({
           standards: [
-            {
-              id: 'std-1',
+            standardFactory({
+              id: createStandardId('std-1'),
               slug: 'my-standard',
               name: 'My Standard',
               description: '',
-            },
+            }),
           ],
         });
       });
@@ -3403,7 +3460,7 @@ describe('playbookSubmitHandler', () => {
       mockGateway.changeProposals.batchApply.mockResolvedValue({
         success: true,
         created: {
-          standards: [{ id: 'std-1', slug: 'my-standard' }],
+          standards: [{ id: createStandardId('std-1'), slug: 'my-standard' }],
           commands: [],
           skills: [],
         },
@@ -3458,6 +3515,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'standards/my-standard': {
+              source: 'user',
               name: 'My Standard',
               type: 'standard',
               id: 'std-1',
@@ -3561,10 +3619,10 @@ describe('playbookSubmitHandler', () => {
           success: true,
           created: {
             standards: [
-              { id: 'std-1', slug: 'standard-one' },
-              { id: 'std-2', slug: 'standard-two' },
+              { id: createStandardId('std-1'), slug: 'standard-one' },
+              { id: createStandardId('std-2'), slug: 'standard-two' },
             ],
-            commands: [{ id: 'cmd-1', slug: 'my-command' }],
+            commands: [{ id: createCommandId('cmd-1'), slug: 'my-command' }],
             skills: [],
           },
           updated: {
@@ -3622,7 +3680,7 @@ describe('playbookSubmitHandler', () => {
           success: true,
           created: { standards: [], commands: [], skills: [] },
           updated: {
-            standards: ['std-1'],
+            standards: [createStandardId('std-1')],
             commands: [],
             skills: [],
           },
@@ -3643,13 +3701,13 @@ describe('playbookSubmitHandler', () => {
         mockGateway.changeProposals.batchApply.mockResolvedValue({
           success: true,
           created: {
-            standards: [{ id: 'std-1', slug: 'my-standard' }],
+            standards: [{ id: createStandardId('std-1'), slug: 'my-standard' }],
             commands: [],
             skills: [],
           },
           updated: {
             standards: [],
-            commands: ['cmd-1'],
+            commands: [createCommandId('cmd-1')],
             skills: [],
           },
         });
@@ -3676,7 +3734,11 @@ describe('playbookSubmitHandler', () => {
       beforeEach(() => {
         mockGateway.changeProposals.batchApply.mockResolvedValue({
           success: false,
-          error: { index: 0, type: 'standard', message: 'Duplicate name' },
+          error: {
+            index: 0,
+            type: ChangeProposalType.createStandard,
+            message: 'Duplicate name',
+          },
         });
       });
 
@@ -3766,6 +3828,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'standards/old-standard': {
+              source: 'user',
               name: 'Old Standard',
               type: 'standard',
               id: 'std-old',
@@ -3822,6 +3885,7 @@ describe('playbookSubmitHandler', () => {
           targetId: 'target-456',
           artifacts: {
             'standards/old-standard': {
+              source: 'user',
               name: 'Old Standard',
               type: 'standard',
               id: 'std-old',
@@ -3879,7 +3943,7 @@ describe('playbookSubmitHandler', () => {
       mockLockFileRepository.read.mockResolvedValue({
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
-        agents: ['claude-code', 'copilot'],
+        agents: ['claude', 'copilot'],
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -3890,8 +3954,9 @@ describe('playbookSubmitHandler', () => {
             version: 1,
             spaceId: 'space-123',
             packageIds: [],
+            source: 'user',
             files: [
-              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
               {
                 path: '.github/copilot/commands/my-command.md',
                 agent: 'copilot',
@@ -3925,7 +3990,7 @@ describe('playbookSubmitHandler', () => {
           artifactName: 'My Command',
           content: '---\nname: My Command\n---\nUpdated from claude',
           filePath: '.claude/commands/my-command.md',
-          codingAgent: 'claude-code',
+          codingAgent: 'claude',
         }),
         makeEntry({
           changeType: 'updated',
@@ -3942,7 +4007,7 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(buildDeps({ noReview: true }));
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('claude-code'),
+        expect.stringContaining('claude'),
       );
     });
 

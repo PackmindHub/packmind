@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   ChangeUserRoleCommand,
   createOrganizationId,
@@ -38,11 +38,10 @@ describe('ChangeUserRoleUseCase', () => {
       getOrganizationById: mockGetOrganizationById,
     } as unknown as IAccountsPort;
 
-    userService = {
-      getUserById: mockGetUserById,
-      changeUserRole: mockChangeUserRole,
-      listUsersByOrganization: mockListUsersByOrganization,
-    } as unknown as jest.Mocked<UserService>;
+    userService = createMockInstance(UserService);
+    userService.getUserById = mockGetUserById;
+    userService.changeUserRole = mockChangeUserRole;
+    userService.listUsersByOrganization = mockListUsersByOrganization;
 
     const organization = organizationFactory({
       id: createOrganizationId(organizationId),

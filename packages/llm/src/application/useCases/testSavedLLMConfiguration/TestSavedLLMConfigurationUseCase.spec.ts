@@ -4,7 +4,7 @@ import {
   IAccountsPort,
   LLMProvider,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
@@ -58,10 +58,7 @@ describe('TestSavedLLMConfigurationUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
     mockConfigurationRepository = {
       save: jest.fn(),

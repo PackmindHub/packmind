@@ -25,17 +25,6 @@ import { AccountsRepositories } from './infra/repositories/AccountsRepositories'
 
 const origin = 'AccountsHexa';
 
-/**
- * AccountsHexa - Facade for the Accounts domain following hexagonal architecture.
- *
- * This class serves as the main entry point for accounts-related functionality.
- * It handles dependency injection and exposes use cases as a clean facade.
- *
- * The constructor instantiates repositories, services, and the adapter.
- * The initialize method retrieves and sets ports from the registry.
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
- */
 export type AccountsHexaOpts = BaseHexaOpts & {
   apiKeyService?: ApiKeyService;
 };
@@ -105,22 +94,14 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
 
   destroy(): void {
     this.logger.info('Destroying AccountsHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('AccountsHexa destroyed');
   }
 
-  /**
-   * Get the Accounts adapter for cross-domain access to accounts data.
-   * This adapter implements IAccountsPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
-   */
+  // Usable right after construction; initialize() only wires its ports.
   public getAdapter(): IAccountsPort {
     return this.adapter;
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return IAccountsPortName;
   }

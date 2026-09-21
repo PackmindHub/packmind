@@ -5,16 +5,13 @@ import { MarketplaceId } from '../MarketplaceId';
 import { PackageId } from '../../deployments/Package';
 
 /**
- * Command issued by an org member to publish a Packmind package as a managed
- * plugin on a linked marketplace.
- *
- * The publish use case extends `AbstractMemberUseCase` — any member of the
- * organization owning both the marketplace and the package can trigger it.
+ * Member-scoped: any member of the organization owning both the marketplace and
+ * the package can trigger a publish.
  *
  * `distributionSource` defaults to `'app'` when omitted, mirroring the
- * convention used by the code-repository distribution pipeline. It is
- * distinct from `PackmindCommand.source` (`PackmindEventSource`), which
- * already disambiguates UI/CLI/MCP call sites for analytics events.
+ * code-repository distribution pipeline. It is NOT `PackmindCommand.source`
+ * (`PackmindEventSource`), which separately disambiguates UI/CLI/MCP call sites
+ * for analytics events.
  */
 export type PublishPackageOnMarketplaceCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
@@ -23,12 +20,9 @@ export type PublishPackageOnMarketplaceCommand = PackmindCommand & {
 };
 
 /**
- * Response returned by `IPublishPackageOnMarketplaceUseCase`.
- *
- * The use case is asynchronous-by-handoff: it persists an `in_progress`
- * marketplace distribution row, enqueues the BullMQ publish job, and returns
- * the freshly created row identifier so the frontend can poll for the final
- * status (success / failure / no_changes).
+ * Asynchronous by handoff: the use case persists an `in_progress` row, enqueues
+ * the BullMQ publish job, and returns that row's id — hence the hardcoded
+ * `status`. The frontend polls for the terminal success / failure / no_changes.
  */
 export type PublishPackageOnMarketplaceResponse = {
   marketplaceDistributionId: MarketplaceDistributionId;

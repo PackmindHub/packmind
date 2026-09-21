@@ -36,12 +36,10 @@ export class DeleteGitProviderUseCase
   ): Promise<DeleteGitProviderResponse> {
     const { id, userId, force = false, organization } = command;
 
-    // Business rule: provider ID is required
     if (!id) {
       throw new Error('Git provider ID is required');
     }
 
-    // Business rule: provider must exist
     const gitProvider = await this.gitProviderService.findGitProviderById(id);
     if (!gitProvider) {
       this.logger.error('Git provider not found', {
@@ -62,7 +60,6 @@ export class DeleteGitProviderUseCase
       throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
 
-    // Business rule: check for dependent repositories before deletion
     const dependentRepos =
       await this.gitRepoService.findGitReposByProviderId(id);
     if (dependentRepos.length > 0 && !force) {
@@ -79,14 +76,12 @@ export class DeleteGitProviderUseCase
       throw new GitProviderHasRepositoriesError(id, dependentRepos.length);
     }
 
-    // Business rule: if force deletion, remove all dependent repositories first
     if (dependentRepos.length > 0 && force) {
       for (const repo of dependentRepos) {
         await this.gitRepoService.deleteGitRepo(repo.id, createUserId(userId));
       }
     }
 
-    // Delete the git provider
     await this.gitProviderService.deleteGitProvider(id, createUserId(userId));
 
     return {};

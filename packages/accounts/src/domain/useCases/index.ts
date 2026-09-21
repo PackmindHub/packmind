@@ -1,7 +1,3 @@
-// All use case interfaces and types have been migrated to @packmind/types
-// This file now re-exports them for backward compatibility
-
-// Re-export all accounts contracts from @packmind/types
 export type {
   // SignUp & Auth
   ISignUpWithOrganizationUseCase,

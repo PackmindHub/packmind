@@ -5,7 +5,6 @@ import {
 import { TooManyLoginAttemptsError } from '../../domain/errors/TooManyLoginAttemptsError';
 import { Cache, Configuration } from '@packmind/node-utils';
 
-// Mock the dependencies
 jest.mock('@packmind/node-utils', () => ({
   Cache: {
     getInstance: jest.fn(),
@@ -35,7 +34,6 @@ describe('LoginRateLimiterService', () => {
   };
 
   beforeEach(() => {
-    // Create mock cache instance
     mockCache = {
       get: jest.fn(),
       set: jest.fn(),
@@ -45,10 +43,8 @@ describe('LoginRateLimiterService', () => {
       getStats: jest.fn(),
     };
 
-    // Mock Cache.getInstance to return our mock
     (Cache.getInstance as jest.Mock).mockReturnValue(mockCache);
 
-    // Mock Configuration.getConfig to return default values
     (Configuration.getConfig as jest.Mock).mockImplementation((key: string) => {
       if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null);
       if (key === 'MAX_LOGIN_ATTEMPTS') return Promise.resolve(null);
@@ -112,7 +108,6 @@ describe('LoginRateLimiterService', () => {
       ];
 
       mockCache.get.mockResolvedValue(attempts);
-      // Ensure we have explicit mocks for both configuration values
       (Configuration.getConfig as jest.Mock).mockImplementation(
         (key: string) => {
           if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null); // Use default 30 min

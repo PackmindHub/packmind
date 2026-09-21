@@ -1,0 +1,16 @@
+{
+  "unit_id": "U-015",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+    "apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.spec.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.tsx",
+    "apps/frontend/src/domain/deployments/components/context/PackageVersionArea.spec.tsx",
+    "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='CreatePackageReleaseDrawer|PackageVersionArea'",
+    "kind": "behavioural",
+    "describes": "AC-11, AC-12, AC-13, AC-14, AC-15"
+  }
+}

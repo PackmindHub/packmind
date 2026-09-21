@@ -34,10 +34,8 @@ import { GetAvailableProvidersUseCase } from '../useCases/getAvailableProviders/
 const origin = 'LlmAdapter';
 
 export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
-  // Ports
   private accountsPort?: IAccountsPort;
 
-  // Repositories
   private aiProviderRepository: IAIProviderRepository | null = null;
 
   // Use cases - created in initialize()
@@ -56,15 +54,11 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this.logger.info('LlmAdapter constructed - awaiting initialization');
   }
 
-  /**
-   * Initialize adapter with ports from registry.
-   */
   public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
   }): Promise<void> {
     this.logger.info('Initializing LlmAdapter');
 
-    // Set accounts port
     this.accountsPort = ports[IAccountsPortName];
 
     if (!this.accountsPort) {
@@ -73,12 +67,10 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       );
     }
 
-    // Initialize repository with dataSource
     this.aiProviderRepository = new AIProviderRepository(
       this.dataSource.getRepository(AIProviderSchema),
     );
 
-    // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
       this.aiProviderRepository,
     );
@@ -107,29 +99,14 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this.logger.info('LlmAdapter initialized successfully');
   }
 
-  /**
-   * Check if adapter is ready.
-   */
   public isReady(): boolean {
     return !!this.accountsPort && !!this.aiProviderRepository;
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): ILlmPort {
     return this as ILlmPort;
   }
 
-  // ===========================
-  // ILlmPort Implementation
-  // ===========================
-
-  /**
-   * Get an LLM service instance for the specified organization.
-   * Uses the GetAiServiceForOrganizationUseCase to retrieve the service.
-   * Future: Will retrieve organization-specific LLM configuration from database.
-   */
   async getLlmForOrganization(
     command: GetAiServiceForOrganizationCommand,
   ): Promise<GetAiServiceForOrganizationResponse> {
@@ -141,8 +118,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   }
 
   /**
-   * Test an LLM connection configuration.
-   * Executes a simple prompt against both standard and fast models (if different).
+   * Tests the fast model only when it differs from the standard one.
    */
   async testLLMConnection(
     command: TestLLMConnectionCommand,
@@ -154,10 +130,6 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     return this._testLLMConnection.execute(command);
   }
 
-  /**
-   * Get available models for an LLM provider.
-   * Returns a list of model IDs that can be used to configure the LLM.
-   */
   async getModels(command: GetModelsCommand): Promise<GetModelsResponse> {
     this.logger.info('Getting available models', {
       provider: command.config.provider,
@@ -167,8 +139,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   }
 
   /**
-   * Save LLM configuration for an organization.
-   * Requires admin privileges.
+   * Requires the caller to be an organization admin.
    */
   async saveLLMConfiguration(
     command: SaveLLMConfigurationCommand,
@@ -182,9 +153,8 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   }
 
   /**
-   * Get LLM configuration for an organization.
-   * Returns configuration without secrets.
-   * Falls back to Packmind provider if no configuration exists and in proprietary cloud.
+   * Secrets are stripped from the returned configuration. With nothing stored,
+   * falls back to the Packmind provider when that provider is available.
    */
   async getLLMConfiguration(
     command: GetLLMConfigurationCommand,
@@ -197,8 +167,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   }
 
   /**
-   * Test the saved LLM configuration for an organization.
-   * Requires admin privileges.
+   * Requires the caller to be an organization admin.
    */
   async testSavedLLMConfiguration(
     command: TestSavedLLMConfigurationCommand,
@@ -211,8 +180,8 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   }
 
   /**
-   * Get available LLM providers.
-   * Filters providers based on deployment edition (OSS excludes Packmind provider).
+   * The Packmind provider is excluded unless `PACKMIND_EDITION` is `proprietary`
+   * and `PACKMIND_AI_PROVIDER_AVAILABLE` is `true`.
    */
   async getAvailableProviders(
     command: GetAvailableProvidersCommand,

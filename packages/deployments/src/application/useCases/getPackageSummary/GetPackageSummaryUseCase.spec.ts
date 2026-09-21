@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   IAccountsPort,
   Organization,
@@ -64,13 +64,7 @@ describe('GetPackageSummaryUseCase', () => {
   let accountsPort: jest.Mocked<
     Pick<IAccountsPort, 'getUserById' | 'getOrganizationById'>
   >;
-  let packageService: jest.Mocked<
-    Pick<
-      PackageService,
-      | 'getPackagesBySlugsWithArtefacts'
-      | 'getPackagesBySlugsAndSpaceWithArtefacts'
-    >
-  >;
+  let packageService: jest.Mocked<PackageService>;
   let deploymentsServices: jest.Mocked<DeploymentsServices>;
   let useCase: GetPackageSummaryUseCase;
 
@@ -85,14 +79,10 @@ describe('GetPackageSummaryUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     };
 
-    packageService = {
-      getPackagesBySlugsWithArtefacts: jest.fn(),
-      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
-    };
+    packageService = createMockInstance(PackageService);
 
-    deploymentsServices = {
-      getPackageService: jest.fn().mockReturnValue(packageService),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    deploymentsServices = createMockInstance(DeploymentsServices);
+    deploymentsServices.getPackageService.mockReturnValue(packageService);
 
     useCase = new GetPackageSummaryUseCase(
       accountsPort as unknown as IAccountsPort,

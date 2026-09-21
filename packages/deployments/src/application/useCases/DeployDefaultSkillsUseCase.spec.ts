@@ -1,5 +1,9 @@
 import { ICodingAgentDeployer } from '@packmind/coding-agent';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CodingAgent,
   DeployDefaultSkillsCommand,
@@ -23,25 +27,18 @@ import { userFactory } from '@packmind/accounts/test';
 
 const createMockDeployer = (
   overrides?: Partial<ICodingAgentDeployer>,
-): jest.Mocked<ICodingAgentDeployer> =>
-  ({
-    deployCommands: jest.fn(),
-    deployStandards: jest.fn(),
-    deploySkills: jest.fn(),
-    generateFileUpdatesForRecipes: jest.fn(),
-    generateFileUpdatesForStandards: jest.fn(),
-    generateFileUpdatesForSkills: jest.fn(),
-    generateRemovalFileUpdates: jest.fn(),
-    generateAgentCleanupFileUpdates: jest.fn(),
-    deployArtifacts: jest.fn(),
-    deployDefaultSkills: jest.fn().mockResolvedValue({
+): jest.Mocked<ICodingAgentDeployer> => {
+  const deployer = mockInterface<ICodingAgentDeployer>({
+    // `deployDefaultSkills` is optional on the interface, so `jest.Mocked` leaves
+    // it a plain function - it has to be seeded here rather than stubbed after.
+    deployDefaultSkills: async () => ({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skippedSkillsCount: 0,
       deployedSkills: [],
     }),
-    getSkillsFolderPath: jest.fn(),
-    ...overrides,
-  }) as unknown as jest.Mocked<ICodingAgentDeployer>;
+  });
+  return Object.assign(deployer, overrides);
+};
 
 const createUserWithMembership = (
   userId: string,
@@ -77,11 +74,9 @@ describe('DeployDefaultSkillsUseCase', () => {
   let logger: ReturnType<typeof stubLogger>;
 
   beforeEach(() => {
-    renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest.fn(),
-      getConfiguration: jest.fn(),
-      upsertConfiguration: jest.fn(),
-    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    renderModeConfigurationService = createMockInstance(
+      RenderModeConfigurationService,
+    );
 
     deployerRegistry = {
       getDeployer: jest.fn(),
@@ -89,10 +84,8 @@ describe('DeployDefaultSkillsUseCase', () => {
       hasDeployer: jest.fn(),
     };
 
-    codingAgentPort = {
-      renderArtifacts: jest.fn(),
-      getDeployerRegistry: jest.fn().mockReturnValue(deployerRegistry),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
+    codingAgentPort = mockInterface<ICodingAgentPort>();
+    codingAgentPort.getDeployerRegistry.mockReturnValue(deployerRegistry);
 
     accountsPort = {
       getUserById: jest.fn(),

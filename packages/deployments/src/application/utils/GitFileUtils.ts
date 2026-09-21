@@ -3,9 +3,6 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'GitFileUtils';
 
-/**
- * Maps a coding agent to its corresponding file path in the repository
- */
 function getFilePathForAgent(agent: CodingAgent): string {
   const agentToFile: Record<CodingAgent, string> = {
     claude: 'CLAUDE.md',
@@ -25,24 +22,18 @@ function getFilePathForAgent(agent: CodingAgent): string {
   return agentToFile[agent];
 }
 
-/**
- * Applies target path prefix to a file path
- */
 export function getTargetPrefixedPath(
   filePath: string,
   target: Target,
 ): string {
-  // Handle root targets (path is '/' or empty)
   if (!target.path || target.path === '/') {
     return filePath;
   }
 
-  // Remove leading "/" from target path before prefixing
   let cleanTargetPath = target.path.startsWith('/')
     ? target.path.slice(1)
     : target.path;
 
-  // Ensure target path ends with "/" for proper concatenation
   if (!cleanTargetPath.endsWith('/')) {
     cleanTargetPath += '/';
   }
@@ -51,8 +42,7 @@ export function getTargetPrefixedPath(
 }
 
 /**
- * Fetches existing file content from git for each coding agent
- * Returns a map of base file path -> content
+ * Returns a map of base file path -> content.
  */
 export async function fetchExistingFilesFromGit(
   gitPort: IGitPort,
@@ -123,8 +113,7 @@ export async function fetchExistingFilesFromGit(
 }
 
 /**
- * Applies target path prefixing to FileUpdates
- * Transforms base paths from coding-agent domain to target-prefixed paths
+ * Turns the base paths the coding-agent domain emits into target-prefixed ones.
  */
 export function applyTargetPrefixingToFileUpdates(
   fileUpdates: import('@packmind/types').FileUpdates,

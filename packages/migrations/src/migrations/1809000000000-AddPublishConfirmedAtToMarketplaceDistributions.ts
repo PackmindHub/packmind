@@ -4,13 +4,11 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'AddPublishConfirmedAtToMarketplaceDistributions1809000000000';
 
 /**
- * Migration: AddPublishConfirmedAtToMarketplaceDistributions
- *
- * Companion to the introduction of the `pending_merge` DistributionStatus:
- * a publish now lands in `pending_merge` when its commit reaches the rolling
- * sync branch, and only becomes `success` once the reconciliation sweep
- * confirms the change merged onto the marketplace's default branch (matched
- * via the `packmind-lock.json` content hash).
+ * Companion to the introduction of the `pending_merge`
+ * `MarketplaceDistributionStatus`: a publish now lands in `pending_merge` when
+ * its commit reaches the rolling sync branch, and only becomes `success` once
+ * the reconciliation sweep confirms the change merged onto the marketplace's
+ * default branch (matched via the `packmind-lock.json` content hash).
  *
  * The `status` column is a `varchar` (see
  * `1805000000000-AddMarketplaceDistributionsTable`), so the new value needs

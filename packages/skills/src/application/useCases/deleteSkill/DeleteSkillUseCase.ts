@@ -67,7 +67,6 @@ export class DeleteSkillUseCase
         spaceId: existingSkill.spaceId,
       });
 
-      // Verify the space belongs to the organization
       const space = await this.spacesPort.getSpaceById(existingSkill.spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: existingSkill.spaceId });

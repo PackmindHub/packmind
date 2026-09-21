@@ -1,3 +1,7 @@
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { AddArtefactsToPackageUseCase } from './AddArtefactsToPackageUseCase';
 import {
   AddArtefactsToPackageCommand,
@@ -22,11 +26,17 @@ import {
   SpaceType,
   Standard,
   StandardId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
+import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
@@ -59,6 +69,7 @@ describe('AddArtefactsToPackageUseCase', () => {
   const buildUser = () => ({
     id: userId,
     email: 'test@example.com',
+    displayName: null,
     passwordHash: 'hash',
     active: true,
     memberships: [
@@ -128,56 +139,37 @@ describe('AddArtefactsToPackageUseCase', () => {
   });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      addCommands: jest.fn(),
-      addStandards: jest.fn(),
-      addSkills: jest.fn(),
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageRepository>;
+    mockPackageRepository = createMockInstance(PackageRepository);
 
-    mockPackageService = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<PackageService>;
+    mockPackageService = createMockInstance(PackageService);
 
-    mockServices = {
-      getPackageService: jest.fn().mockReturnValue(mockPackageService),
-      getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      getTargetService: jest.fn(),
-      getRenderModeConfigurationService: jest.fn(),
-      getRepositories: jest.fn().mockReturnValue({
-        getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      }),
-    } as unknown as jest.Mocked<DeploymentsServices>;
+    mockServices = createMockInstance(DeploymentsServices);
+    mockServices.getPackageService.mockReturnValue(mockPackageService);
+    const mockRepositories = mockInterface<IDeploymentsRepositories>();
+    mockRepositories.getPackageRepository.mockReturnValue(
+      mockPackageRepository,
+    );
+    mockServices.getRepositories.mockReturnValue(mockRepositories);
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(buildUser()),
-      getOrganizationById: jest.fn().mockResolvedValue(buildOrganization()),
-      isMemberOf: jest.fn().mockResolvedValue(true),
-      isAdminOf: jest.fn(),
-      getOrganizationIdBySlug: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
+    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
+    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
 
-    mockSpacesPort = {
-      getSpaceById: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      findMembership: jest.fn().mockResolvedValue({
-        userId,
-        spaceId,
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.findMembership.mockResolvedValue({
+      userId,
+      spaceId,
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: userId,
+      updatedBy: userId,
+    });
 
-    mockCommandsPort = {
-      getCommandByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<ICommandsPort>;
+    mockCommandsPort = mockInterface<ICommandsPort>();
 
-    mockStandardsPort = {
-      getStandard: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsPort>;
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
-    mockSkillsPort = {
-      getSkill: jest.fn(),
-    } as unknown as jest.Mocked<ISkillsPort>;
+    mockSkillsPort = mockInterface<ISkillsPort>();
 
     stubbedLogger = stubLogger();
 
@@ -532,7 +524,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package with id ${packageId} not found`,
+          new PackageNotFoundError(packageId, spaceId),
         );
       });
 
@@ -577,7 +569,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with space id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+          new SpaceNotAccessibleError(spaceId, organizationId),
         );
       });
 
@@ -625,7 +617,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package and organization ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package ${packageId} does not belong to organization ${organizationId}`,
+          new SpaceNotAccessibleError(spaceId, organizationId),
         );
       });
 
@@ -677,7 +669,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Package with id ${packageId} does not exist in space ${spaceId}`,
+          new PackageNotFoundError(packageId, spaceId),
         );
       });
 
@@ -722,7 +714,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe with id ${commandId1} not found`,
+          new ArtefactNotInSpaceError('command', commandId1, spaceId),
         );
       });
 
@@ -778,7 +770,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe ${commandId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('command', commandId1, spaceId),
         );
       });
 
@@ -832,7 +824,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with standard id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Standard with id ${standardId1} not found`,
+          new ArtefactNotInSpaceError('standard', standardId1, spaceId),
         );
       });
 
@@ -886,7 +878,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with standard and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Standard ${standardId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('standard', standardId1, spaceId),
         );
       });
 
@@ -943,7 +935,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with package id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Failed to retrieve updated package ${packageId}`,
+          new PackageReloadFailedError(packageId),
         );
       });
 
@@ -1051,7 +1043,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with skill id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Skill with id ${skillId1} not found`,
+          new ArtefactNotInSpaceError('skill', skillId1, spaceId),
         );
       });
     });
@@ -1092,7 +1084,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with skill and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Skill ${skillId1} does not belong to space ${spaceId}`,
+          new ArtefactNotInSpaceError('skill', skillId1, spaceId),
         );
       });
     });

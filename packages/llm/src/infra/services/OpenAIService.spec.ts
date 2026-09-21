@@ -1,11 +1,9 @@
 import { OpenAIService } from './OpenAIService';
 import { AIServiceErrorTypes, LLMProvider } from '@packmind/types';
 
-// Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getPrivateAccess = (service: OpenAIService) => service as any;
 
-// Mock OpenAI
 jest.mock('openai');
 
 import OpenAI from 'openai';
@@ -24,7 +22,6 @@ describe('OpenAIService', () => {
   };
 
   beforeEach(() => {
-    // Create mock OpenAI instance
     mockOpenAIInstance = {
       chat: {
         completions: {

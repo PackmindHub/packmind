@@ -1,6 +1,6 @@
 import { ValidatePasswordUseCase } from './ValidatePasswordUseCase';
 import { UserService } from '../../services/UserService';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 
 describe('ValidatePasswordUseCase', () => {
@@ -9,9 +9,7 @@ describe('ValidatePasswordUseCase', () => {
   let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
-    mockUserService = {
-      validatePassword: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
     stubbedLogger = stubLogger();
 

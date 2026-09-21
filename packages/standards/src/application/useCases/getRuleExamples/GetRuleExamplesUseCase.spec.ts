@@ -9,7 +9,7 @@ import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { ProgrammingLanguage } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { createRuleId } from '@packmind/types';
 
 describe('GetRuleExamplesUseCase', () => {
@@ -19,29 +19,9 @@ describe('GetRuleExamplesUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    // Mock RuleExampleRepository
-    ruleExampleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByRuleId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleExampleRepository>;
+    ruleExampleRepository = mockInterface<IRuleExampleRepository>();
 
-    // Mock RuleRepository
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
     stubbedLogger = stubLogger();
 

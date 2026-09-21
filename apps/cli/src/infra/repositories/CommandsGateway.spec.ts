@@ -1,5 +1,6 @@
+import { mockInterface } from '@packmind/test-utils';
 import { CommandsGateway } from './CommandsGateway';
-import { createMockHttpClient } from '../../mocks/createMockHttpClient';
+
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { CaptureCommandResponse, createSpaceId } from '@packmind/types';
 
@@ -10,12 +11,12 @@ describe('CommandsGateway', () => {
   const spaceId = createSpaceId('space-123');
 
   beforeEach(() => {
-    mockHttpClient = createMockHttpClient({
-      getAuthContext: jest.fn().mockReturnValue({
-        host: 'https://api.packmind.com',
-        jwt: 'mock-jwt',
-        organizationId: mockOrganizationId,
-      }),
+    mockHttpClient = mockInterface<PackmindHttpClient>();
+    mockHttpClient.getAuthContext.mockReturnValue({
+      host: 'https://api.packmind.com',
+      jwt: 'mock-jwt',
+      organizationId: mockOrganizationId,
+      role: null,
     });
 
     gateway = new CommandsGateway(mockHttpClient);

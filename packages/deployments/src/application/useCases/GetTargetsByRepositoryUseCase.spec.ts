@@ -9,7 +9,11 @@ import {
   createGitProviderId,
   IGitPort,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
 
@@ -19,14 +23,9 @@ describe('GetTargetsByRepositoryUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
 
   beforeEach(() => {
-    mockTargetService = {
-      getTargetsByGitRepoId: jest.fn(),
-      addTarget: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
-    mockGitPort = {
-      getOrganizationRepositories: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
     useCase = new GetTargetsByRepositoryUseCase(
       mockTargetService,

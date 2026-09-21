@@ -4,14 +4,12 @@ import { PackmindLogger } from '@packmind/logger';
 const origin = 'DropRecipesDeploymentsTables1764952426000';
 
 /**
- * Migration to drop the RecipesDeployment tables.
+ * Drops the `deployments` and `deployment_recipe_versions` tables, the
+ * deployment functionality having moved to the Distribution system.
  *
- * This migration removes the deployments and deployment_recipe_versions tables
- * as the deployment functionality has been migrated to the Distribution system.
- *
- * Tables dropped:
- * - deployment_recipe_versions (junction table)
- * - deployments (main table)
+ * Both directions work outwards from the junction table: its foreign keys and
+ * the table itself go before `deployments`, and `down` recreates them in the
+ * opposite order so each FK has its referenced table already in place.
  */
 export class DropRecipesDeploymentsTables1764952426000 implements MigrationInterface {
   constructor(
@@ -22,7 +20,6 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
     this.logger.info('Starting migration: DropRecipesDeploymentsTables');
 
     try {
-      // Drop foreign key constraints on deployment_recipe_versions first
       this.logger.info(
         'Dropping foreign key constraints on deployment_recipe_versions',
       );
@@ -35,14 +32,12 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         DROP CONSTRAINT IF EXISTS "FK_deployment_recipe_versions_version"
       `);
 
-      // Drop the junction table first
       this.logger.info('Dropping deployment_recipe_versions table');
       await queryRunner.query(
         `DROP TABLE IF EXISTS "deployment_recipe_versions"`,
       );
       this.logger.info('Successfully dropped deployment_recipe_versions');
 
-      // Drop foreign key constraints on deployments
       this.logger.info('Dropping foreign key constraints on deployments');
       await queryRunner.query(`
         ALTER TABLE IF EXISTS "deployments"
@@ -57,14 +52,12 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         DROP CONSTRAINT IF EXISTS "FK_deployment_target"
       `);
 
-      // Drop indexes on deployments
       this.logger.info('Dropping indexes on deployments');
       await queryRunner.query(
         `DROP INDEX IF EXISTS "idx_deployment_organization"`,
       );
       await queryRunner.query(`DROP INDEX IF EXISTS "idx_deployment_author"`);
 
-      // Drop the main table
       this.logger.info('Dropping deployments table');
       await queryRunner.query(`DROP TABLE IF EXISTS "deployments"`);
       this.logger.info('Successfully dropped deployments');
@@ -84,7 +77,6 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
     this.logger.info('Starting rollback: DropRecipesDeploymentsTables');
 
     try {
-      // Recreate deployments table
       this.logger.info('Recreating deployments table');
       await queryRunner.query(`
         CREATE TABLE "deployments" (
@@ -103,7 +95,6 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         )
       `);
 
-      // Recreate indexes
       this.logger.info('Recreating indexes on deployments');
       await queryRunner.query(`
         CREATE INDEX "idx_deployment_organization" ON "deployments" ("organization_id")
@@ -112,7 +103,6 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         CREATE INDEX "idx_deployment_author" ON "deployments" ("author_id")
       `);
 
-      // Recreate foreign keys
       this.logger.info('Recreating foreign key constraints on deployments');
       await queryRunner.query(`
         ALTER TABLE "deployments"
@@ -130,7 +120,6 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         FOREIGN KEY ("target_id") REFERENCES "targets"("id")
       `);
 
-      // Recreate deployment_recipe_versions junction table
       this.logger.info('Recreating deployment_recipe_versions table');
       await queryRunner.query(`
         CREATE TABLE "deployment_recipe_versions" (
@@ -139,13 +128,11 @@ export class DropRecipesDeploymentsTables1764952426000 implements MigrationInter
         )
       `);
 
-      // Recreate unique index
       await queryRunner.query(`
         CREATE UNIQUE INDEX "idx_deployment_recipe_version_unique"
         ON "deployment_recipe_versions" ("deployment_id", "recipe_version_id")
       `);
 
-      // Recreate foreign keys for junction table
       this.logger.info(
         'Recreating foreign key constraints on deployment_recipe_versions',
       );

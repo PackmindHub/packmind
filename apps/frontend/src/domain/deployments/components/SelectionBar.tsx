@@ -73,6 +73,16 @@ export function SelectionBar({
    * bar is the only place a bulk one of either can be asked for.
    */
   actions: readonly SelectionAction[];
+  /**
+   * Dropping the whole selection. Beside the count, for the reason `onSelectAll`
+   * is: it changes what is picked rather than acting on it.
+   *
+   * It spent an iteration in the right-hand group, labelled `Clear`, and was
+   * reported as missing by someone reading the left of the bar for a way to
+   * undo what they had picked there. The two ends were a viewport apart and the
+   * end that offered "pick more" offered nothing else, so the reader who wanted
+   * out looked in the only place that could not answer.
+   */
   onClear: () => void;
 }>) {
   return (
@@ -105,6 +115,18 @@ export function SelectionBar({
             Select all {total}
           </PMButton>
         )}
+        {/*
+          Named against `Select all` rather than `Clear`, so the pair reads as
+          one gesture and its opposite. `Clear` also said nothing about what it
+          cleared, which on the Distribution list put it next to a second button
+          of that exact name emptying the search field.
+
+          Always offered, where `Select all` comes and goes: the bar exists only
+          while something is picked, so there is always something to drop.
+        */}
+        <PMButton variant="tertiary" size="xs" onClick={onClear}>
+          Unselect all
+        </PMButton>
       </PMHStack>
       <PMHStack gap={2}>
         {actions.map((action) => (
@@ -118,9 +140,6 @@ export function SelectionBar({
             {action.label}
           </PMButton>
         ))}
-        <PMButton variant="tertiary" size="xs" onClick={onClear}>
-          Clear
-        </PMButton>
       </PMHStack>
     </PMHStack>
   );

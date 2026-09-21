@@ -9,7 +9,6 @@ import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 
-// Mock axios
 jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -51,10 +50,9 @@ describe('GitlabProvider', () => {
     });
 
     describe('the agent it is given', () => {
-      // Asserting `keepAlive` alone would pass with no code change at all -
-      // Node has defaulted it to true since v19. The finite socket ceiling is
-      // the part that actually changes behaviour, because reuse only happens
-      // when a request finds a free socket instead of opening its own.
+      // `keepAlive` alone would pass without any code change — Node has
+      // defaulted it to true since v19. The finite ceiling is the part that
+      // changes behaviour.
       it('caps how many sockets may be open at once', () => {
         expect(providerHttpsAgent.maxSockets).toBe(PROVIDER_MAX_SOCKETS);
       });

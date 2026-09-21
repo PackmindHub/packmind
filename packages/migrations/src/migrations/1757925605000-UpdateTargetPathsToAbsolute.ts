@@ -15,7 +15,6 @@ export class UpdateTargetPathsToAbsolute1757925605000 implements MigrationInterf
     this.logger.info('Starting migration: UpdateTargetPathsToAbsolute');
 
     try {
-      // Find all targets with relative path '.'
       const targetsWithRelativePath = await queryRunner.query(
         `SELECT id, name, path FROM targets WHERE path = '.'`,
       );
@@ -25,7 +24,6 @@ export class UpdateTargetPathsToAbsolute1757925605000 implements MigrationInterf
       );
 
       if (targetsWithRelativePath.length > 0) {
-        // Log the targets that will be updated
         targetsWithRelativePath.forEach(
           (target: { id: string; name: string; path: string }) => {
             this.logger.debug(
@@ -34,7 +32,6 @@ export class UpdateTargetPathsToAbsolute1757925605000 implements MigrationInterf
           },
         );
 
-        // Update all targets with path '.' to '/'
         await queryRunner.query(
           `UPDATE targets SET path = '/', updated_at = CURRENT_TIMESTAMP WHERE path = '.'`,
         );
@@ -48,7 +45,6 @@ export class UpdateTargetPathsToAbsolute1757925605000 implements MigrationInterf
         );
       }
 
-      // Verify the update
       const remainingRelativePaths = await queryRunner.query(
         `SELECT COUNT(*) as count FROM targets WHERE path = '.'`,
       );

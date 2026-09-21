@@ -2,10 +2,9 @@ import { OrganizationService } from './OrganizationService';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
 
-// Mock the slug package
 jest.mock('slug', () => ({
   __esModule: true,
   default: jest.fn(),
@@ -20,14 +19,7 @@ describe('OrganizationService', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockOrganizationRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findBySlug: jest.fn(),
-      list: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IOrganizationRepository>;
+    mockOrganizationRepository = mockInterface<IOrganizationRepository>();
 
     stubbedLogger = stubLogger();
 

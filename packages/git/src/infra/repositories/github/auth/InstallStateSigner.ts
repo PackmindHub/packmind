@@ -30,12 +30,12 @@ export class InvalidInstallStateError extends Error {
  *
  * Format: base64url(jsonPayload) + '.' + base64url(hmacSha256(key, jsonPayload))
  *
- * IMPORTANT: The HMAC input is the raw UTF-8 JSON bytes of the payload (not the
- * base64url version). The JSON object keys are serialized in stable order:
- * orgId, userId, nonce, exp.
+ * The HMAC input is the raw UTF-8 JSON bytes of the payload, not the base64url
+ * version. Verification re-signs the bytes decoded from the token rather than
+ * re-serializing the parsed payload, so a token stays valid whatever order
+ * `sign()` happens to write its keys in.
  */
 export class InstallStateSigner {
-  // 10 minutes in seconds
   static readonly DEFAULT_TTL_SECONDS = 10 * 60;
 
   constructor(
@@ -58,8 +58,6 @@ export class InstallStateSigner {
     const exp = payload.exp ?? this.now() + this.ttlSeconds;
     const kind: InstallStateKind = payload.kind ?? 'install';
 
-    // Stable key order: orgId, userId, nonce, exp, kind, organizationGitHubAppId,
-    // gitProviderId, displayName
     const fullPayload: Record<string, string | number> = {
       orgId: payload.orgId,
       userId: payload.userId,
@@ -111,12 +109,12 @@ export class InstallStateSigner {
       throw new InvalidInstallStateError();
     }
 
-    // Recompute the HMAC over the decoded JSON bytes.
     const recomputed = createHmac('sha256', this.encryptionKey)
       .update(jsonBytes)
       .digest();
 
-    // Guard against different-length buffers (impossible for SHA-256 but safe).
+    // timingSafeEqual throws on a length mismatch, which a forged token can
+    // cause even though two SHA-256 digests never differ in length.
     if (recomputed.length !== providedDigest.length) {
       throw new InvalidInstallStateError();
     }
@@ -149,7 +147,7 @@ export class InstallStateSigner {
       throw new InvalidInstallStateError();
     }
 
-    // kind defaults to 'install' for tokens signed before the discriminator was introduced
+    // Tokens signed before the discriminator existed carry no kind.
     const kind: InstallStateKind =
       record['kind'] === 'manifest' ? 'manifest' : 'install';
 

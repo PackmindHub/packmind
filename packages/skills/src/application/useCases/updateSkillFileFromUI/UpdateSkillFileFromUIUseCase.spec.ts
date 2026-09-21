@@ -5,7 +5,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -45,34 +49,17 @@ describe('UpdateSkillFileFromUIUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      findMembership: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
 
-    skillService = {
-      getSkillById: jest.fn(),
-      updateSkill: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    skillService = createMockInstance(SkillService);
 
-    skillVersionService = {
-      getLatestSkillVersion: jest.fn(),
-      addSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<SkillVersionService>;
+    skillVersionService = createMockInstance(SkillVersionService);
 
-    skillFileService = {
-      findByVersionId: jest.fn(),
-      addMany: jest.fn(),
-    } as unknown as jest.Mocked<SkillFileService>;
+    skillFileService = createMockInstance(SkillFileService);
 
-    eventEmitterService = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     stubbedLogger = stubLogger();
 

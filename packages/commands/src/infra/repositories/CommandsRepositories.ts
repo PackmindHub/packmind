@@ -20,10 +20,6 @@ export class CommandsRepositories implements ICommandsRepositories {
       this.dataSource.getRepository(CommandVersionSchema),
     );
 
-    // Covers the repositories that do not extend AbstractRepository, which
-    // instruments itself. An explicit list rather than reflection over the
-    // fields: this class also holds a TypeORM DataSource, which must not be
-    // patched.
     instrumentComponents([
       this.commandRepository,
       this.commandVersionRepository,

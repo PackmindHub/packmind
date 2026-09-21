@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -56,20 +56,12 @@ describe('ActivateUserAccountUseCase', () => {
   };
 
   beforeEach(() => {
-    mockUserService = {
-      getUserById: jest.fn(),
-      hashPassword: jest.fn(),
-      updateUser: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
-    mockInvitationService = {
-      findByToken: jest.fn(),
-      delete: jest.fn(),
-    } as unknown as jest.Mocked<InvitationService>;
+    mockInvitationService = createMockInstance(InvitationService);
 
-    mockEventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
+    mockEventEmitterService.emit.mockReturnValue(true);
 
     mockLogger = stubLogger();
 

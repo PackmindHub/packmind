@@ -1,3 +1,4 @@
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import { AddTargetUseCase } from './AddTargetUseCase';
 import {
   AddTargetCommand,
@@ -56,15 +57,9 @@ describe('AddTargetUseCase', () => {
   };
 
   beforeEach(() => {
-    mockTargetService = {
-      addTarget: jest.fn(),
-      getTargetsByGitRepoId: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
-    mockGitPort = {
-      getRepositoryById: jest.fn(),
-      listProviders: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
     useCase = new AddTargetUseCase(mockTargetService, mockGitPort);
   });

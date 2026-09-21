@@ -1,3 +1,4 @@
+import { skillFactory } from '@packmind/skills/test';
 import {
   BadRequestException,
   ForbiddenException,
@@ -13,7 +14,7 @@ import {
   SkillEditForbiddenError,
   SkillFileNotEditableError,
 } from '@packmind/skills';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
@@ -34,13 +35,7 @@ describe('OrganizationsSpacesSkillsController', () => {
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    skillsService = {
-      getSkillsBySpace: jest.fn(),
-      uploadSkill: jest.fn(),
-      deleteSkill: jest.fn(),
-      getLatestVersionNumber: jest.fn(),
-      updateSkillFile: jest.fn(),
-    } as unknown as jest.Mocked<SkillsService>;
+    skillsService = createMockInstance(SkillsService);
 
     logger = stubLogger();
     controller = new OrganizationsSpacesSkillsController(skillsService, logger);
@@ -56,15 +51,14 @@ describe('OrganizationsSpacesSkillsController', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
       const mockSkills: Skill[] = [
-        {
+        skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        },
+        }),
       ];
       const request = {
         organization: {
@@ -91,15 +85,14 @@ describe('OrganizationsSpacesSkillsController', () => {
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
       const mockSkills: Skill[] = [
-        {
+        skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        },
+        }),
       ];
       const request = {
         organization: {
@@ -181,8 +174,10 @@ describe('OrganizationsSpacesSkillsController', () => {
     const userId = createUserId('user-1');
     const mockFiles: UploadSkillFileInput[] = [
       {
-        fileName: 'SKILL.md',
+        path: 'SKILL.md',
         content: '---\nname: test-skill\n---\n\nTest content',
+        permissions: 'rw-r--r--',
+        isBase64: false,
       },
     ];
     const request = {
@@ -210,15 +205,14 @@ describe('OrganizationsSpacesSkillsController', () => {
 
     describe('when creating a new skill', () => {
       it('returns 201 Created status', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        };
+        });
 
         skillsService.uploadSkill.mockResolvedValue({
           skill: mockSkill,
@@ -237,15 +231,14 @@ describe('OrganizationsSpacesSkillsController', () => {
       });
 
       it('returns the upload response in the response body', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        };
+        });
 
         const uploadResponse = {
           skill: mockSkill,
@@ -268,15 +261,14 @@ describe('OrganizationsSpacesSkillsController', () => {
 
     describe('when updating an existing skill', () => {
       it('returns 200 OK status', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 2,
           spaceId,
-        };
+        });
 
         skillsService.uploadSkill.mockResolvedValue({
           skill: mockSkill,
@@ -295,15 +287,14 @@ describe('OrganizationsSpacesSkillsController', () => {
       });
 
       it('returns the upload response in the response body', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Updated content',
           userId,
           version: 3,
           spaceId,
-        };
+        });
 
         const uploadResponse = {
           skill: mockSkill,
@@ -326,15 +317,14 @@ describe('OrganizationsSpacesSkillsController', () => {
 
     describe('when content is identical to latest version', () => {
       it('returns 200 OK status', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        };
+        });
 
         skillsService.uploadSkill.mockResolvedValue({
           skill: mockSkill,
@@ -353,15 +343,14 @@ describe('OrganizationsSpacesSkillsController', () => {
       });
 
       it('returns versionCreated false in response', async () => {
-        const mockSkill: Skill = {
+        const mockSkill: Skill = skillFactory({
           id: createSkillId('skill-1'),
           slug: 'test-skill',
           name: 'Test Skill',
-          content: 'Test content',
           userId,
           version: 1,
           spaceId,
-        };
+        });
 
         const uploadResponse = {
           skill: mockSkill,
@@ -383,15 +372,14 @@ describe('OrganizationsSpacesSkillsController', () => {
     });
 
     it('calls upload service with correct parameters', async () => {
-      const mockSkill: Skill = {
+      const mockSkill: Skill = skillFactory({
         id: createSkillId('skill-1'),
         slug: 'test-skill',
         name: 'Test Skill',
-        content: 'Test content',
         userId,
         version: 1,
         spaceId,
-      };
+      });
 
       skillsService.uploadSkill.mockResolvedValue({
         skill: mockSkill,

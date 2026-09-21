@@ -5,7 +5,6 @@ import {
   serializeSSERedisMessage,
 } from './types';
 
-// Mock Configuration to avoid dependency on actual Redis during tests
 jest.mock('../config/config/Configuration', () => ({
   Configuration: {
     getConfig: jest.fn().mockImplementation((key: string) => {
@@ -17,7 +16,6 @@ jest.mock('../config/config/Configuration', () => ({
   },
 }));
 
-// Mock ioredis to avoid actual Redis connections during tests
 const mockRedisInstance = {
   ping: jest.fn().mockResolvedValue('PONG'),
   publish: jest.fn().mockResolvedValue(1),
@@ -36,13 +34,13 @@ describe('RedisSSEClient', () => {
   let client: RedisSSEClient;
 
   beforeEach(() => {
-    // Reset singleton instance before each test
+    // The client is a singleton, so each test has to clear it or it inherits
+    // the previous test's connections.
     (
       RedisSSEClient as unknown as { instance: RedisSSEClient | undefined }
     ).instance = undefined;
     client = RedisSSEClient.getInstance();
 
-    // Reset publish mock
     mockRedisInstance.publish = jest.fn().mockResolvedValue(1);
   });
 
@@ -112,12 +110,14 @@ describe('RedisSSEClient', () => {
 
   describe('connection management', () => {
     it('disconnects both publisher and subscriber clients', async () => {
-      // Initialize by calling a method
+      // initialize() is private and lazy, so a publish is what builds the two
+      // clients this test then expects to be disconnected.
       await client.publish(SSE_REDIS_CHANNELS.SUBSCRIPTIONS, 'test');
 
       await client.disconnect();
 
-      expect(mockRedisInstance.disconnect).toHaveBeenCalledTimes(2); // Once for publisher, once for subscriber
+      // Once for the publisher, once for the subscriber.
+      expect(mockRedisInstance.disconnect).toHaveBeenCalledTimes(2);
     });
   });
 });

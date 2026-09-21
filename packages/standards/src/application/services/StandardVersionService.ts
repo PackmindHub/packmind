@@ -77,7 +77,6 @@ export class StandardVersionService {
       const savedVersion =
         await this.standardVersionRepository.add(newStandardVersion);
 
-      // Add rules for this version
       this.logger.info('Adding rules for standard version', {
         versionId: savedVersion.id,
         rulesCount: standardVersionData.rules.length,
@@ -93,7 +92,7 @@ export class StandardVersionService {
         };
         const newRule = await this.ruleRepository.add(rule);
 
-        // Track old rule ID to new rule ID mapping for detection program copying
+        // Mapping consumed by copyLinterArtefacts below
         if (ruleData.oldRuleId) {
           ruleMapping.set(ruleData.oldRuleId, newRule.id);
         }
@@ -110,7 +109,6 @@ export class StandardVersionService {
         }
       }
 
-      // Copy detection programs if linter adapter is available and we have mappings
       if (
         this._linterAdapter &&
         ruleMapping.size > 0 &&
@@ -202,7 +200,7 @@ export class StandardVersionService {
         versionId: savedVersion.id,
         error: error instanceof Error ? error.message : String(error),
       });
-      // Don't throw - we want the standard version creation to succeed even if detection program copying fails
+      // Not rethrown: the standard version must survive a failed artefact copy
     }
   }
 
@@ -273,7 +271,8 @@ export class StandardVersionService {
       const standardVersion = await this.standardVersionRepository.findById(id);
 
       if (standardVersion) {
-        // Load rules to prevent deployment bugs where rules are missing
+        // findById hydrates no relations, so rules are fetched separately -
+        // callers (deployments among them) rely on them being present.
         const rules = await this.getRulesByVersionId(id);
 
         this.logger.info('Standard version found by ID successfully', {
@@ -406,11 +405,51 @@ export class StandardVersionService {
     }
   }
 
+  /**
+   * Batched sibling of `getLatestRulesByStandardId`: for every given standard,
+   * its latest version carrying that version's rules. Two queries in total,
+   * whatever the number of standards. Standards with no version at all are
+   * absent from the result.
+   */
+  async getLatestVersionsWithRulesByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Getting latest versions with rules by standard IDs', {
+      count: standardIds.length,
+    });
+
+    try {
+      const latestVersions = await this.withRules(
+        await this.standardVersionRepository.findLatestByStandardIds(
+          standardIds,
+        ),
+      );
+
+      this.logger.info(
+        'Latest versions with rules retrieved by standard IDs successfully',
+        {
+          requestedCount: standardIds.length,
+          foundCount: latestVersions.length,
+        },
+      );
+
+      return latestVersions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to get latest versions with rules by standard IDs',
+        {
+          count: standardIds.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async getLatestRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     this.logger.info('Getting latest rules by standard ID', { standardId });
 
     try {
-      // Get the latest version of the standard
       const latestVersion = await this.getLatestStandardVersion(standardId);
 
       if (!latestVersion) {
@@ -421,7 +460,6 @@ export class StandardVersionService {
         return [];
       }
 
-      // Get rules for the latest version
       const rules = await this.getRulesByVersionId(latestVersion.id);
       this.logger.info('Rules retrieved by standard ID successfully', {
         standardId,

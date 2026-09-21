@@ -293,7 +293,9 @@ describe('PackageDetailPane', () => {
       renderPane();
       await tickFirstInstall();
 
-      await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Unselect all' }),
+      );
 
       expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
     });

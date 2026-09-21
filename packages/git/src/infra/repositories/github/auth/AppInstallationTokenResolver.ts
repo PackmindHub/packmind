@@ -6,26 +6,6 @@ import { IGithubTokenResolver } from '../../../../domain/repositories/IGithubTok
 
 const origin = 'AppInstallationTokenResolver';
 
-/**
- * Resolver that authenticates as a GitHub App **installation**.
- *
- * Flow:
- *  1. Mint a short-lived RS256 JWT signed with the App's private key
- *     (acts on behalf of the App itself, not any installation).
- *  2. Exchange that JWT for an installation access token via
- *     `POST /app/installations/{installation_id}/access_tokens`.
- *  3. Cache the installation token until shortly before it expires
- *     (GitHub installation tokens live for 1 hour).
- *
- * Revocation handling: we follow a "401-on-next-call" strategy. If any
- * downstream API call returns 401, `onUnauthorized()` is invoked by the
- * Axios response interceptor on `GithubProvider`/`GithubRepository` and
- * flushes the in-memory cache so the next `getToken()` re-mints and
- * re-exchanges — letting transient 401s (rate limit, clock skew, brief
- * outage) self-recover. We deliberately do NOT auto-persist revocation
- * here; permanent revocation is an explicit user action handled through
- * `RevokeGithubAppUseCase`.
- */
 export interface AppInstallationTokenResolverParams {
   providerId: GitProviderId;
   appId: number;
@@ -38,16 +18,26 @@ interface CachedToken {
   expiresAt: number; // unix ms
 }
 
-// GitHub installation tokens expire after ~1 hour. Refresh slightly before
-// to absorb clock skew between us and api.github.com.
-const REFRESH_SAFETY_MARGIN_MS = 60_000; // 60s
-const MAX_CACHE_LIFETIME_MS = 50 * 60_000; // 50 minutes hard cap
+// Installation tokens last ~1 hour; refreshing early absorbs clock skew
+// against api.github.com.
+const REFRESH_SAFETY_MARGIN_MS = 60_000;
+const MAX_CACHE_LIFETIME_MS = 50 * 60_000;
 
-// GitHub JWTs may live up to 10 minutes. We sign for 9 minutes and back-
-// date `iat` by 60s to tolerate clock skew, per GitHub's own recommendation.
+// GitHub caps App JWTs at 10 minutes and recommends back-dating `iat` to
+// tolerate clock skew.
 const JWT_PAST_TOLERANCE_SECONDS = 60;
 const JWT_LIFETIME_SECONDS = 9 * 60;
 
+/**
+ * Authenticates as a GitHub App installation: mint an RS256 JWT for the App,
+ * exchange it for an installation access token, cache that token.
+ *
+ * A 401 only flushes the cache, so the next call re-mints and re-exchanges and
+ * a transient 401 (rate limit, clock skew, brief outage) self-recovers.
+ * Revocation is deliberately never persisted here — that is an explicit user
+ * action, which reaches `IOrganizationGitHubAppRepository.markRevoked` through
+ * `GitAdapter.revokeOrganizationGitHubApp`.
+ */
 export class AppInstallationTokenResolver implements IGithubTokenResolver {
   private readonly providerId: GitProviderId;
   private readonly appId: number;
@@ -70,11 +60,10 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
     this.privateKeyPem = params.privateKeyPem;
     this.installationId = params.installationId;
 
-    // IMPORTANT: dedicated Axios instance for /app/installations/.../access_tokens.
-    // It must NOT share interceptors with GithubProvider/GithubRepository —
-    // otherwise a 401 from a downstream API call would recursively trigger
-    // a token exchange against the same client, and a 401 from the token
-    // exchange itself would loop into our own onUnauthorized() handler.
+    // A dedicated instance, never one sharing interceptors with
+    // GithubProvider/GithubRepository: a 401 there would recursively trigger a
+    // token exchange on the same client, and a 401 from the exchange itself
+    // would loop back into onUnauthorized().
     this.httpClient =
       httpClient ??
       axios.create({
@@ -168,7 +157,6 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
         );
       }
 
-      // Pick the earliest of (github expiry - margin) and (now + hard cap).
       const localCap = Date.now() + MAX_CACHE_LIFETIME_MS;
       const safeExpiry = githubExpiry - REFRESH_SAFETY_MARGIN_MS;
       const expiresAt = Math.min(localCap, safeExpiry);
@@ -196,13 +184,10 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
   }
 }
 
-// ---------------------------------------------------------------------------
-// JWT helpers (kept local; only the resolver mints App JWTs today).
-// ---------------------------------------------------------------------------
-
 /**
- * Hand-rolled RS256 JWT for the GitHub App, signed with the App's private
- * key. Returned token authenticates as the App (not any installation).
+ * Authenticates as the App itself, not as any of its installations — which is
+ * what the access_tokens exchange requires. Kept local: this resolver is the
+ * only thing that mints App JWTs.
  */
 export function mintAppJwt(appId: number, privateKeyPem: string): string {
   const nowSeconds = Math.floor(Date.now() / 1000);
@@ -225,10 +210,6 @@ export function mintAppJwt(appId: number, privateKeyPem: string): string {
   return `${signingInput}.${base64Url(signature)}`;
 }
 
-/**
- * Base64url-encode a Buffer per RFC 7515 §C
- * (`+` → `-`, `/` → `_`, strip trailing `=`).
- */
 export function base64Url(buf: Buffer): string {
   return buf.toString('base64url');
 }

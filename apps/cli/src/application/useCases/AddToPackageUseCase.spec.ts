@@ -1,14 +1,10 @@
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { mockInterface } from '@packmind/test-utils';
 import { AddToPackageUseCase } from './AddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 import { ISpaceService } from '../../domain/services/ISpaceService';
-import {
-  createMockCommandsGateway,
-  createMockPackagesGateway,
-  createMockSkillsGateway,
-  createMockStandardsGateway,
-} from '../../mocks/createMockGateways';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { commandFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
 import { standardFactory } from '@packmind/standards/test';
@@ -37,22 +33,21 @@ describe('AddToPackageUseCase', () => {
   let pkg: Package;
 
   beforeEach(() => {
-    commandsGateway = createMockCommandsGateway();
-    skillsGateway = createMockSkillsGateway();
-    standardsGateway = createMockStandardsGateway();
-    packagesGateway = createMockPackagesGateway();
-    mockSpaceService = createMockSpaceService({
-      getDefaultSpace: jest
-        .fn()
-        .mockResolvedValue({ id: 'space-123', slug: 'global' }),
-    });
+    commandsGateway = mockInterface<ICommandsGateway>();
+    skillsGateway = mockInterface<ISkillsGateway>();
+    standardsGateway = mockInterface<IStandardsGateway>();
+    packagesGateway = mockInterface<IPackagesGateway>();
+    mockSpaceService = mockInterface<ISpaceService>();
+    mockSpaceService.getDefaultSpace = jest
+      .fn()
+      .mockResolvedValue({ id: 'space-123', slug: 'global' });
 
-    mockGateway = {
+    mockGateway = createMockPackmindGateway({
       packages: packagesGateway,
       standards: standardsGateway,
       commands: commandsGateway,
       skills: skillsGateway,
-    } as unknown as jest.Mocked<IPackmindGateway>;
+    });
 
     pkg = packageFactory({
       id: createPackageId('package-1'),

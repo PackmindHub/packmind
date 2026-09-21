@@ -1,0 +1,21 @@
+{
+  "unit_id": "U-002",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/types/src/deployments/PackageRelease.ts",
+    "packages/types/src/deployments/index.ts",
+    "packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+    "packages/deployments/src/infra/schemas/index.ts",
+    "packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+    "packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+    "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+    "packages/deployments/src/infra/repositories/PackageReleaseRepository.spec.ts",
+    "packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+    "packages/migrations/src/migrations/1821000000000-CreatePackageReleases.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='PackageReleaseRepository'",
+    "kind": "behavioural",
+    "describes": "AC-16"
+  }
+}

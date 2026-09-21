@@ -7,56 +7,31 @@ import {
 } from '../entities/Invitation';
 import { UserId } from '@packmind/types';
 
-/**
- * Invitation repository contract exposing persistence operations required by
- * invitation use cases.
- */
 export interface IInvitationRepository extends IRepository<Invitation> {
-  /**
-   * Persist a collection of invitations in a single transaction.
-   */
   addMany(invitations: Invitation[]): Promise<Invitation[]>;
 
   /**
-   * Find an invitation by its deterministically encrypted token value.
+   * Tokens are stored encrypted, so the caller passes the plaintext token and
+   * the implementation encrypts it to build the lookup. This only works because
+   * that encryption is deterministic.
    */
   findByToken(
     token: InvitationToken,
     opts?: QueryOption,
   ): Promise<Invitation | null>;
 
-  /**
-   * Find an invitation by its ID.
-   */
   findById(id: InvitationId): Promise<Invitation | null>;
 
-  /**
-   * Retrieve invitations for a given user identifier.
-   */
   findByUserId(userId: UserId): Promise<Invitation[]>;
 
-  /**
-   * Retrieve the latest invitation created for a given user identifier.
-   */
   findLatestByUserId(userId: UserId): Promise<Invitation | null>;
 
-  /**
-   * Fetch invitations for the provided user identifiers.
-   */
   findByUserIds(userIds: UserId[]): Promise<Invitation[]>;
 
-  /**
-   * Fetch invitations for the provided user identifiers (legacy method).
-   */
+  // Superseded by findByUserIds; no caller left outside its own spec.
   listByUserIds(userIds: UserId[], opts?: QueryOption): Promise<Invitation[]>;
 
-  /**
-   * Save an invitation.
-   */
   save(invitation: Invitation): Promise<Invitation>;
 
-  /**
-   * Delete an invitation by ID.
-   */
   delete(id: InvitationId): Promise<void>;
 }

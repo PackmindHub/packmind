@@ -26,7 +26,6 @@ const origin = 'ClaudeDeployer';
 
 export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.claude;
-  /** Packmind-managed subdirectory within the broader standard path */
   private static readonly STANDARD_DEPLOY_DIR =
     CODING_AGENT_ARTEFACT_PATHS.claude.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
@@ -65,7 +64,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual Claude command files for each recipe
     for (const recipeVersion of recipeVersions) {
       const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       const targetPrefixedPath = getTargetPrefixedPath(configFile.path, target);
@@ -78,7 +76,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(
         ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
@@ -87,7 +84,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       type: DeleteItemType.Directory,
     });
 
-    // Clear legacy Packmind recipes section from CLAUDE.md
+    // Empty section content removes the marker-delimited block outright.
     const claudeMdPath = getTargetPrefixedPath(
       ClaudeDeployer.CLAUDE_MD_PATH,
       target,
@@ -100,9 +97,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  /**
-   * Generate Claude command file for a specific recipe
-   */
   private generateClaudeConfigForCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
@@ -142,7 +136,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateClaudeConfigForStandard(standardVersion);
@@ -156,7 +149,7 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Clear legacy Packmind standards section from CLAUDE.md
+    // Empty section content removes the marker-delimited block outright.
     const claudeMdPath = getTargetPrefixedPath(
       ClaudeDeployer.CLAUDE_MD_PATH,
       target,
@@ -181,7 +174,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude command files for each recipe (without target prefix)
     for (const recipeVersion of recipeVersions) {
       const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -193,13 +185,12 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
       type: DeleteItemType.Directory,
     });
 
-    // Clear legacy Packmind recipes section from CLAUDE.md
+    // Empty section content removes the marker-delimited block outright.
     fileUpdates.createOrUpdate.push({
       path: ClaudeDeployer.CLAUDE_MD_PATH,
       sections: [{ key: 'Packmind recipes', content: '' }],
@@ -220,7 +211,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateClaudeConfigForStandard(standardVersion);
@@ -233,7 +223,7 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Clear legacy Packmind standards section from CLAUDE.md
+    // Empty section content removes the marker-delimited block outright.
     fileUpdates.createOrUpdate.push({
       path: ClaudeDeployer.CLAUDE_MD_PATH,
       sections: [{ key: 'Packmind standards', content: '' }],
@@ -259,7 +249,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude skill files for each skill
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateClaudeSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -292,7 +281,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude skill files for each skill (without target prefix)
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateClaudeSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -331,7 +319,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Generate individual Claude command files for each recipe
     for (const recipeVersion of recipeVersions) {
       const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
@@ -343,7 +330,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Generate individual Claude configuration files for each standard
     for (const standardVersion of standardVersions) {
       const configFile =
         await this.generateClaudeConfigForStandard(standardVersion);
@@ -356,7 +342,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Generate individual Claude skill files for each skill
     for (const skillVersion of skillVersions) {
       const skillFiles = this.generateClaudeSkillFiles(skillVersion);
       for (const file of skillFiles) {
@@ -373,13 +358,12 @@ ${recipeVersion.content}`;
       }
     }
 
-    // Clean up legacy packmind commands subdirectory
     fileUpdates.delete.push({
       path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
       type: DeleteItemType.Directory,
     });
 
-    // Clear legacy Packmind sections from CLAUDE.md
+    // Empty section content removes the marker-delimited block outright.
     fileUpdates.createOrUpdate.push({
       path: ClaudeDeployer.CLAUDE_MD_PATH,
       sections: [
@@ -417,7 +401,6 @@ ${recipeVersion.content}`;
       delete: [],
     };
 
-    // Delete individual Claude command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${ClaudeDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -425,7 +408,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Clean up legacy packmind commands subdirectory when recipes are removed
     const hasRemovedCommands = removed.recipeVersions.length > 0;
     if (hasRemovedCommands) {
       fileUpdates.delete.push({
@@ -434,7 +416,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Delete individual Claude configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${ClaudeDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
@@ -442,7 +423,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Delete rules folder if all artifacts are removed and something was actually removed
     const hasRemovedArtifacts =
       removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
     if (
@@ -490,7 +470,6 @@ ${recipeVersion.content}`;
       },
     ];
 
-    // Delete individual command files for recipes
     for (const recipeVersion of artifacts.recipeVersions) {
       deleteItems.push({
         path: `${ClaudeDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -498,7 +477,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       deleteItems.push({
         path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${slug}`,
@@ -506,7 +484,6 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       deleteItems.push({
         path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
@@ -528,14 +505,10 @@ ${recipeVersion.content}`;
     };
   }
 
-  /**
-   * Format paths value for YAML frontmatter.
-   * Parses comma-separated paths and formats them as a YAML block sequence.
-   * All paths are double-quoted for consistency.
-   * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single path).
-   */
+  // Splits a comma-separated scope into a YAML block sequence. Commas inside
+  // braces are not separators, so a brace expansion such as `**/*.{ts,tsx}`
+  // stays a single path.
   private formatPathsValue(scope: string): string {
-    // Parse comma-separated paths, but don't split on commas inside braces {}
     const paths: string[] = [];
     let currentPath = '';
     let braceDepth = 0;
@@ -550,7 +523,6 @@ ${recipeVersion.content}`;
         braceDepth--;
         currentPath += char;
       } else if (char === ',' && braceDepth === 0) {
-        // Only split on commas that are not inside braces
         const trimmed = currentPath.trim();
         if (trimmed) {
           paths.push(trimmed);
@@ -561,19 +533,14 @@ ${recipeVersion.content}`;
       }
     }
 
-    // Add the last path
     const trimmed = currentPath.trim();
     if (trimmed) {
       paths.push(trimmed);
     }
 
-    // Format as YAML block sequence with double-quoted values
     return paths.map((p) => `\n  - "${p}"`).join('');
   }
 
-  /**
-   * Generate Claude configuration file for a specific standard
-   */
   private async generateClaudeConfigForStandard(
     standardVersion: StandardVersion,
   ): Promise<{
@@ -599,7 +566,6 @@ ${recipeVersion.content}`;
     let frontmatter: string;
 
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
-      // When the scope is not null or empty
       frontmatter = `---
 name: '${escapeSingleQuotes(standardVersion.name)}'
 paths:${this.formatPathsValue(standardVersion.scope)}
@@ -607,7 +573,6 @@ alwaysApply: false
 description: '${escapeSingleQuotes(summary)}'
 ---`;
     } else {
-      // When the scope is empty
       frontmatter = `---
 name: '${escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true

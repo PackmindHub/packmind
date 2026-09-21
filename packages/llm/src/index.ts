@@ -27,7 +27,6 @@ export {
   DEFAULT_GEMINI_MODELS,
   DEFAULT_AZURE_OPENAI_API_VERSION,
 } from './constants/defaultModels';
-// Re-export types from @packmind/types for convenience
 export type {
   AIService,
   AIPromptOptions,

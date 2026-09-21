@@ -11,8 +11,6 @@ const origin = 'AddArtefactStatusIndexToChangeProposals1819000000000';
  * expected query shape: `WHERE artefact_id = :id AND status = 'pending'
  * ORDER BY created_at`, so Postgres can satisfy the equality filters and the
  * ordering directly from the index without a separate sort step.
- *
- * The `down` method drops the index, fully reversing the change.
  */
 export class AddArtefactStatusIndexToChangeProposals1819000000000 implements MigrationInterface {
   constructor(

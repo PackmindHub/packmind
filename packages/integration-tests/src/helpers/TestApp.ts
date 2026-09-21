@@ -19,9 +19,6 @@ import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-manageme
 
 const TEST_JWT_SECRET = 'test-jwt-secret-for-integration-tests';
 
-/**
- * Simple JWT service implementation for integration tests
- */
 const testJwtService = {
   sign: (
     payload: Record<string, unknown>,
@@ -79,7 +76,6 @@ export class TestApp {
   }
 
   public async initialize() {
-    // Initialize the registry (this now includes async initialization)
     await this._registry.init(this.dataSource);
 
     this.accountsHexa = this._registry.get(AccountsHexa);

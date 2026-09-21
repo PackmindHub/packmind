@@ -830,8 +830,6 @@ describe('DistributionRepository', () => {
         expect(result.skillVersions).toEqual([skv1]);
       });
 
-      // The whole point of the batched method is to avoid re-running the
-      // DISTINCT ON query once per artifact type.
       it('runs the DISTINCT ON query only once for all three artifact types', () => {
         expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
       });
@@ -960,8 +958,6 @@ describe('DistributionRepository', () => {
         expect(result.get(targetB)?.all.standardVersions).toEqual([svOfB]);
       });
 
-      // The point of the batch: the scan cost stops growing with the target
-      // count.
       it('resolves both targets in one scan', () => {
         expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
       });
@@ -1083,7 +1079,7 @@ describe('DistributionRepository', () => {
         ]);
       });
 
-      // Both views come out of the same rows, so the filter costs nothing.
+      // Both views are reduced from the same scanned rows.
       it('still scans once', () => {
         expect(mockQueryBuilder.getRawMany).toHaveBeenCalledTimes(1);
       });

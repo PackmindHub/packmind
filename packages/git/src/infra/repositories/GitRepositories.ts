@@ -20,13 +20,6 @@ import { GitCommitSchema } from '../schemas/GitCommitSchema';
 import { OrganizationGitHubAppSchema } from '../schemas/OrganizationGitHubAppSchema';
 import { GitHexaOpts } from '../../GitHexa';
 
-/**
- * GitRepositories - Repository aggregator implementation for the Git domain
- *
- * This class serves as the main repository access point, aggregating all
- * individual repositories. It handles the instantiation of repositories
- * using the shared DataSource and provides them through getter methods.
- */
 export class GitRepositories implements IGitRepositories {
   private readonly gitProviderRepository: IGitProviderRepository;
   private readonly gitRepoRepository: IGitRepoRepository;
@@ -39,7 +32,6 @@ export class GitRepositories implements IGitRepositories {
     private readonly dataSource: DataSource,
     opts: GitHexaOpts,
   ) {
-    // Initialize all repositories with their respective schemas
     this.gitProviderRepository = new GitProviderRepository(
       this.dataSource.getRepository(GitProviderSchema),
     );
@@ -53,8 +45,8 @@ export class GitRepositories implements IGitRepositories {
       this.dataSource.getRepository(OrganizationGitHubAppSchema),
     );
 
-    // Initialize the factories — the token resolver factory is the single
-    // chokepoint for "given a GitProvider, give me an IGithubTokenResolver".
+    // The single chokepoint for "given a GitProvider, give me an
+    // IGithubTokenResolver", so both factories share one.
     const tokenResolverFactory =
       (opts as GitHexaOpts)?.githubTokenResolverFactory ??
       new GithubTokenResolverFactory(

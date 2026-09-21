@@ -17,9 +17,8 @@ import {
 import { SingleFileDeployer, DeployerConfig } from './SingleFileDeployer';
 import { v4 as uuidv4 } from 'uuid';
 import { IStandardsPort, IGitPort } from '@packmind/types';
-import { gitRepoFactory } from '@packmind/test-utils';
+import { gitRepoFactory, mockInterface } from '@packmind/test-utils';
 
-// Create a concrete test implementation of the abstract SingleFileDeployer
 class TestSingleFileDeployer extends SingleFileDeployer {
   protected readonly config: DeployerConfig = {
     filePath: 'TEST_AGENT.md',
@@ -36,10 +35,8 @@ describe('SingleFileDeployer', () => {
   let vscodeTarget: Target;
 
   beforeEach(() => {
-    mockGitPort = {
-      getFileFromRepo: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
-    mockStandardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
+    mockGitPort = mockInterface<IGitPort>();
+    mockStandardsPort = mockInterface<IStandardsPort>();
 
     deployer = new TestSingleFileDeployer(mockStandardsPort, mockGitPort);
 
@@ -154,8 +151,6 @@ describe('SingleFileDeployer', () => {
           },
         ];
 
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
         result = await deployer.deployStandards(
           standardWithDescription,
           mockGitRepo,
@@ -209,8 +204,6 @@ describe('SingleFileDeployer', () => {
           },
         ];
 
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
         result = await deployer.deployStandards(
           standardWithLongDescription,
           mockGitRepo,
@@ -260,8 +253,6 @@ describe('SingleFileDeployer', () => {
             scope: 'test',
           },
         ];
-
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
         result = await deployer.deployStandards(
           standardWithMultilineDescription,
@@ -315,8 +306,6 @@ describe('SingleFileDeployer', () => {
             scope: 'test',
           },
         ];
-
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
         result = await deployer.deployStandards(
           standardWithNullDescription,
@@ -390,10 +379,6 @@ describe('SingleFileDeployer', () => {
       const standardA = buildStandard('alpha-standard', 'Zeta Standard');
       const standardB = buildStandard('beta-standard', 'Yankee Standard');
       const standardC = buildStandard('charlie-standard', 'Xray Standard');
-
-      beforeEach(() => {
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
-      });
 
       const getStandardsSectionContent = async (
         standardVersions: StandardVersion[],
@@ -504,19 +489,25 @@ describe('SingleFileDeployer', () => {
     });
   });
 
-  describe('error handling in getExistingContent', () => {
-    describe('when gitPort throws an error', () => {
+  // The deployer renders sections and never reads the repository: existing
+  // content is merged at commit time by CommitToGitUseCase (packages/git).
+  // These cases pin that down, so re-introducing a repository read here fails.
+  describe('independence from the repository', () => {
+    describe('when a gitPort is provided', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
         const mockCommandVersions: CommandVersion[] = [];
-        mockGitPort.getFileFromRepo.mockRejectedValue(new Error('Git error'));
 
         result = await deployer.deployCommands(
           mockCommandVersions,
           mockGitRepo,
           jetbrainsTarget,
         );
+      });
+
+      it('does not read any file from the repository', () => {
+        expect(mockGitPort.getFileFromRepo).not.toHaveBeenCalled();
       });
 
       it('returns one createOrUpdate entry', () => {

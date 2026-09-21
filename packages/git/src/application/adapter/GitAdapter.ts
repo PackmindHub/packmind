@@ -90,7 +90,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private gitDelayedJobs: IGitDelayedJobs | null = null;
   private mode: GithubAppMode = 'on-prem';
 
-  // Use cases - all initialized in initialize()
+  // Definitely assigned by initialize(), never by the constructor.
   private _addGitProvider!: AddGitProviderUseCase;
   private _addGitRepo!: AddGitRepoUseCase;
   private _deleteGitProvider!: DeleteGitProviderUseCase;
@@ -124,12 +124,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   }
 
   /**
-   * Set the GitHub App hosting mode for use in credential validation.
-   * Must be called before use cases that validate credentials are invoked.
+   * Must be called before any use case that validates credentials is invoked.
+   * Tolerates being called before `initialize()`, in which case the mode is
+   * simply picked up when the use cases are built there.
    */
   public setMode(mode: GithubAppMode): void {
     this.mode = mode;
-    // Recreate affected use cases with the new mode
     if (this.accountsPort) {
       this._addGitProvider = new AddGitProviderUseCase(
         this.gitServices.getGitProviderService(),
@@ -145,8 +145,9 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   }
 
   /**
-   * Initialize adapter with ports and services from registry.
-   * All ports are REQUIRED. JobsService is required for delayed jobs.
+   * Every port is required, `jobsService` included: it is optional in the
+   * signature only so callers can omit it, and its absence then fails the
+   * validation below.
    */
   public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
@@ -164,7 +165,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
     }
 
-    // Step 3: Validate all required ports and services are set
     if (
       !this.accountsPort ||
       !this.deploymentsPort ||
@@ -176,8 +176,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       );
     }
 
-    // Step 4: Create all use cases with non-null ports
-    // Use cases that depend on accountsPort
     this._addGitProvider = new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
@@ -209,7 +207,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.mode,
     );
 
-    // Use cases that don't depend on external ports
     this._listAvailableRepos = new ListAvailableReposUseCase(
       this.gitServices.getGitProviderService(),
     );
@@ -274,7 +271,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getResolvedGitRepoService(),
     );
 
-    // Repository-tracking use cases
     this._findOrCreateGitRepo = new FindOrCreateGitRepoUseCase(
       this,
       this.accountsPort,
@@ -314,10 +310,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this.logger.info('GitAdapter initialized successfully with all use cases');
   }
 
-  /**
-   * Build delayed jobs from JobsService.
-   * This is called internally during initialize().
-   */
   private async buildDelayedJobs(
     jobsService: JobsService,
   ): Promise<IGitDelayedJobs> {
@@ -345,9 +337,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     };
   }
 
-  /**
-   * Check if adapter is ready (all required ports and services set).
-   */
   public isReady(): boolean {
     return (
       this.accountsPort != null &&
@@ -357,9 +346,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     );
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): IGitPort {
     return this as IGitPort;
   }
@@ -457,10 +443,8 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     repo: GitRepo,
     branch: string,
   ): Promise<void> {
-    // Mirrors the commitToGit plumbing: resolve the provider via the
-    // GitProviderService and let it dispatch to the right IGitRepo
-    // implementation. The repo's `branch` field is the BASE branch used to
-    // bootstrap the target branch when it is missing.
+    // `repo.branch` is the base branch the target is bootstrapped from, not
+    // the branch being created.
     await this.gitServices
       .getGitProviderService()
       .createBranchFromBase(

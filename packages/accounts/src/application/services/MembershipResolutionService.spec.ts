@@ -1,3 +1,4 @@
+import { createMockInstance } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -96,9 +97,7 @@ describe('MembershipResolutionService', () => {
   };
 
   beforeEach(() => {
-    organizationService = {
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    organizationService = createMockInstance(OrganizationService);
 
     service = new MembershipResolutionService(organizationService);
   });

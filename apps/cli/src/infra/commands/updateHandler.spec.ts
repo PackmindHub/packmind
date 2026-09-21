@@ -82,7 +82,9 @@ describe('updateHandler', () => {
     (fs.chmodSync as jest.Mock).mockReset();
     (childProcess.execSync as jest.Mock).mockReset();
 
-    (fs.realpathSync as jest.Mock).mockImplementation((p: string) => p);
+    (fs.realpathSync as unknown as jest.Mock).mockImplementation(
+      (p: string) => p,
+    );
     // Fresh install by default: nothing at the target path yet
     (fs.lstatSync as jest.Mock).mockImplementation(() => {
       throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
@@ -268,28 +270,28 @@ describe('updateHandler', () => {
 
   describe('isHomebrewInstall', () => {
     it('returns true for macOS ARM Homebrew Cellar path', () => {
-      (fs.realpathSync as jest.Mock).mockReturnValue(
+      (fs.realpathSync as unknown as jest.Mock).mockReturnValue(
         '/opt/homebrew/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
       );
       expect(isHomebrewInstall('/opt/homebrew/bin/packmind-cli')).toBe(true);
     });
 
     it('returns true for macOS Intel Homebrew Cellar path', () => {
-      (fs.realpathSync as jest.Mock).mockReturnValue(
+      (fs.realpathSync as unknown as jest.Mock).mockReturnValue(
         '/usr/local/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
       );
       expect(isHomebrewInstall('/usr/local/bin/packmind-cli')).toBe(true);
     });
 
     it('returns false for standalone executable', () => {
-      (fs.realpathSync as jest.Mock).mockReturnValue(
+      (fs.realpathSync as unknown as jest.Mock).mockReturnValue(
         '/usr/local/bin/packmind-cli',
       );
       expect(isHomebrewInstall('/usr/local/bin/packmind-cli')).toBe(false);
     });
 
     it('returns false for user-local executable', () => {
-      (fs.realpathSync as jest.Mock).mockReturnValue(
+      (fs.realpathSync as unknown as jest.Mock).mockReturnValue(
         '/home/user/.local/bin/packmind-cli',
       );
       expect(isHomebrewInstall('/home/user/.local/bin/packmind-cli')).toBe(
@@ -299,7 +301,7 @@ describe('updateHandler', () => {
 
     describe('when realpathSync throws', () => {
       it('returns false', () => {
-        (fs.realpathSync as jest.Mock).mockImplementation(() => {
+        (fs.realpathSync as unknown as jest.Mock).mockImplementation(() => {
           throw new Error('ENOENT');
         });
         expect(isHomebrewInstall('/nonexistent/path')).toBe(false);
@@ -309,7 +311,7 @@ describe('updateHandler', () => {
 
   describe('Homebrew guard', () => {
     beforeEach(async () => {
-      (fs.realpathSync as jest.Mock).mockReturnValue(
+      (fs.realpathSync as unknown as jest.Mock).mockReturnValue(
         '/opt/homebrew/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
       );
       deps.executablePath = '/opt/homebrew/bin/packmind-cli';

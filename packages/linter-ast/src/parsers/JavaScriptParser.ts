@@ -16,7 +16,6 @@ export default class JavaScriptParser extends BaseParser {
         locateFile: BaseParser.getTreeSitterLocateFile(),
       });
 
-      // Try multiple paths to find the WASM file
       const wasmPaths = BaseParser.getLanguageWasmPaths('javascript');
 
       for (const wasmPath of wasmPaths) {

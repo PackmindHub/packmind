@@ -13,6 +13,12 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
@@ -115,6 +121,9 @@ import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
+import { CreatePackageReleaseUseCase } from '../useCases/createPackageRelease/CreatePackageReleaseUseCase';
+import { GetPackageReleaseUseCase } from '../useCases/getPackageRelease/GetPackageReleaseUseCase';
+import { ListPackageReleasesUseCase } from '../useCases/listPackageReleases/ListPackageReleasesUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeletePackagesBatchUseCase } from '../useCases/deletePackage/DeletePackagesBatchUseCase';
@@ -190,6 +199,9 @@ export class DeploymentsAdapter
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUseCase;
   private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
   private _createPackageUseCase!: CreatePackageUseCase;
+  private _createPackageReleaseUseCase!: CreatePackageReleaseUseCase;
+  private _getPackageReleaseUseCase!: GetPackageReleaseUseCase;
+  private _listPackageReleasesUseCase!: ListPackageReleasesUseCase;
   private _updatePackageUseCase!: UpdatePackageUseCase;
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
@@ -217,10 +229,6 @@ export class DeploymentsAdapter
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  /**
-   * Initialize adapter with ports and services from registry.
-   * All ports and services in signature are REQUIRED.
-   */
   public async initialize(ports: {
     [IGitPortName]: IGitPort;
     [ICommandsPortName]: ICommandsPort;
@@ -232,7 +240,6 @@ export class DeploymentsAdapter
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
-    // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
     this.commandsPort = ports[ICommandsPortName];
     this.codingAgentPort = ports[ICodingAgentPortName];
@@ -241,12 +248,10 @@ export class DeploymentsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
 
-    // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
       ports.jobsService,
     );
 
-    // Step 3: Validate all required ports are set
     if (
       !this.gitPort &&
       !this.commandsPort &&
@@ -260,7 +265,6 @@ export class DeploymentsAdapter
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
-    // Step 4: Create all use cases with non-null ports
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
     this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
       this.deploymentsServices.getRenderModeConfigurationService(),
@@ -494,6 +498,30 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
+    this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
+    this._listPackageReleasesUseCase = new ListPackageReleasesUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
     this._updatePackageUseCase = new UpdatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -583,10 +611,6 @@ export class DeploymentsAdapter
     instrumentUseCases(this);
   }
 
-  /**
-   * Build delayed jobs from JobsService.
-   * This is called internally during initialize().
-   */
   private async buildDelayedJobs(
     jobsService: JobsService,
   ): Promise<IDeploymentsDelayedJobs> {
@@ -773,6 +797,24 @@ export class DeploymentsAdapter
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
+  }
+
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this._createPackageReleaseUseCase.execute(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this._getPackageReleaseUseCase.execute(command);
+  }
+
+  async listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse> {
+    return this._listPackageReleasesUseCase.execute(command);
   }
 
   async updatePackage(

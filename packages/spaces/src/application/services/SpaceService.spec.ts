@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { spaceFactory } from '../../../test/spaceFactory';
@@ -8,15 +9,7 @@ describe('SpaceService.updateSpace', () => {
   let service: SpaceService;
 
   beforeEach(() => {
-    repo = {
-      findById: jest.fn(),
-      findBySlug: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      add: jest.fn(),
-      updateFields: jest.fn(),
-      deleteById: jest.fn(),
-      list: jest.fn(),
-    } as unknown as jest.Mocked<ISpaceRepository>;
+    repo = mockInterface<ISpaceRepository>();
     service = new SpaceService(repo);
   });
 

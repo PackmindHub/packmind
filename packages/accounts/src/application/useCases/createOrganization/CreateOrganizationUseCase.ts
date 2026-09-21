@@ -76,7 +76,6 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
         'admin',
       );
 
-      // Create default "Global" space for the organization
       this.logger.info('Creating default Global space for organization', {
         organizationId: organization.id,
       });

@@ -80,7 +80,6 @@ export class UpdateRecipesWithVersionNumber1751616237714 implements MigrationInt
     this.logger.info('Starting migration: UpdateRecipesWithVersionNumber');
 
     try {
-      // Drop existing tables if they exist
       this.logger.debug('Dropping existing recipe_versions table if it exists');
       await queryRunner.dropTable('recipe_versions', true);
       this.logger.debug('Successfully dropped recipe_versions table');
@@ -89,7 +88,6 @@ export class UpdateRecipesWithVersionNumber1751616237714 implements MigrationInt
       await queryRunner.dropTable('recipes', true);
       this.logger.debug('Successfully dropped recipes table');
 
-      // Create new tables with updated schema
       this.logger.debug('Creating new recipes table with updated schema');
       await queryRunner.createTable(this.recipesTable);
       this.logger.info('Successfully created recipes table');
@@ -100,7 +98,6 @@ export class UpdateRecipesWithVersionNumber1751616237714 implements MigrationInt
       await queryRunner.createTable(this.recipeVersionsTable);
       this.logger.info('Successfully created recipe_versions table');
 
-      // Add foreign key
       this.logger.debug(
         'Adding foreign key constraint between recipe_versions and recipes',
       );
@@ -122,14 +119,12 @@ export class UpdateRecipesWithVersionNumber1751616237714 implements MigrationInt
     this.logger.info('Starting rollback: UpdateRecipesWithVersionNumber');
 
     try {
-      // Drop foreign key
       this.logger.debug(
         'Dropping foreign key constraint between recipe_versions and recipes',
       );
       await queryRunner.dropForeignKey('recipe_versions', this.foreignKey);
       this.logger.info('Successfully dropped foreign key constraint');
 
-      // Drop tables
       this.logger.debug('Dropping recipe_versions table');
       await queryRunner.dropTable(this.recipeVersionsTable);
       this.logger.info('Successfully dropped recipe_versions table');

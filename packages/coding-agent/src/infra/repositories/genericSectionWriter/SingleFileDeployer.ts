@@ -27,6 +27,11 @@ export interface DeployerConfig {
 export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   protected abstract readonly config: DeployerConfig;
 
+  // These deployers only *render* content: they emit `sections` and never read
+  // the repository. Existing content is fetched and merged at commit time by
+  // `CommitToGitUseCase` (packages/git), so `gitPort` is accepted purely to keep
+  // the construction shape uniform across `ICodingAgentDeployer` implementations
+  // (see `CodingAgentDeployerRegistry`) and is deliberately unused here.
   constructor(
     protected readonly standardsPort?: IStandardsPort,
     protected readonly gitPort?: IGitPort,
@@ -177,7 +182,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     const sortedStandardVersions = this.sortStandardVersions(standardVersions);
 
-    // Generate content without fetching existing content or using target prefixing
     const standardsSection = await Promise.all(
       sortedStandardVersions.map((standardVersion) =>
         this.formatStandardContent(
@@ -231,7 +235,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     };
 
     for (const skillVersion of skillVersions) {
-      // Generate SKILL.md with YAML frontmatter
       const skillMarkdown = this.generateSkillMarkdown(skillVersion);
       const basePath = this.getSkillBasePath(skillVersion.slug);
       const skillMdPath = `${basePath}/SKILL.md`;
@@ -244,7 +247,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         artifactId: skillVersion.skillId as string,
       });
 
-      // Deploy additional skill files from skillVersion.files first, fallback to skillFilesMap
+      // skillVersion.files is authoritative; skillFilesMap is the fallback.
       if (skillVersion.files && skillVersion.files.length > 0) {
         for (const file of skillVersion.files) {
           if (file.path.toUpperCase() === 'SKILL.MD') {
@@ -265,7 +268,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         const skillFiles = skillFilesMap.get(skillVersion.id);
         if (skillFiles) {
           for (const skillFile of skillFiles) {
-            // Skip SKILL.md as we already deployed it
+            // Already deployed above from the skill prompt.
             if (skillFile.path !== 'SKILL.md') {
               fileUpdates.createOrUpdate.push({
                 path: `${basePath}/${skillFile.path}`,
@@ -367,7 +370,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       { key: 'Packmind recipes', content: '' }, // Always clear recipes section
     ];
 
-    // Only clear standards section if there are removed standards AND no remaining installed standards
     if (wouldClearStandards) {
       sections.push({ key: 'Packmind standards', content: '' });
     }
@@ -422,37 +424,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return [...standardVersions].sort((a, b) =>
       a.slug.localeCompare(b.slug, 'en'),
     );
-  }
-
-  private async getExistingContent(
-    gitRepo: GitRepo,
-    target: Target,
-  ): Promise<string> {
-    if (!this.gitPort) {
-      this.logger.debug('No GitPort available, returning empty content');
-      return '';
-    }
-
-    try {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        this.config.filePath,
-        target,
-      );
-      const existingFile = await this.gitPort.getFileFromRepo(
-        gitRepo,
-        targetPrefixedPath,
-      );
-      return existingFile?.content || '';
-    } catch (error) {
-      this.logger.debug(
-        `Failed to get existing ${this.config.agentName} content`,
-        {
-          error: error instanceof Error ? error.message : String(error),
-          targetPath: target.path,
-        },
-      );
-      return '';
-    }
   }
 
   private escapeSingleQuotes(value: string): string {

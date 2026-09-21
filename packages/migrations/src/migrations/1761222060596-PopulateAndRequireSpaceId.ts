@@ -15,7 +15,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
     this.logger.info('Starting migration: PopulateAndRequireSpaceId');
 
     try {
-      // Step 1: Find all organizations and their Global spaces
       this.logger.debug('Finding all organizations and their Global spaces');
       const organizationsWithSpaces = await queryRunner.query(`
         SELECT o.id as organization_id, s.id as space_id
@@ -31,7 +30,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
       if (organizationsWithSpaces.length === 0) {
         this.logger.info('No organizations found, skipping spaceId population');
       } else {
-        // Step 2: Update standards with NULL space_id
         this.logger.debug('Updating standards with NULL space_id');
         for (const org of organizationsWithSpaces) {
           const result = await queryRunner.query(
@@ -49,7 +47,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
           );
         }
 
-        // Step 3: Update recipes with NULL space_id
         this.logger.debug('Updating recipes with NULL space_id');
         for (const org of organizationsWithSpaces) {
           const result = await queryRunner.query(
@@ -68,7 +65,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
         }
       }
 
-      // Step 4: Make space_id NOT NULL for standards
       this.logger.debug('Making space_id NOT NULL for standards table');
       await queryRunner.query(`
         ALTER TABLE standards 
@@ -78,7 +74,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
         'Successfully made space_id NOT NULL for standards table',
       );
 
-      // Step 5: Make space_id NOT NULL for recipes
       this.logger.debug('Making space_id NOT NULL for recipes table');
       await queryRunner.query(`
         ALTER TABLE recipes 
@@ -101,7 +96,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
     this.logger.info('Starting rollback: PopulateAndRequireSpaceId');
 
     try {
-      // Step 1: Make space_id nullable for standards
       this.logger.debug('Making space_id nullable for standards table');
       await queryRunner.query(`
         ALTER TABLE standards 
@@ -111,7 +105,6 @@ export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterfac
         'Successfully made space_id nullable for standards table',
       );
 
-      // Step 2: Make space_id nullable for recipes
       this.logger.debug('Making space_id nullable for recipes table');
       await queryRunner.query(`
         ALTER TABLE recipes 

@@ -5,8 +5,10 @@ import { Configuration } from '../config/config/Configuration';
 const origin = 'Cache';
 
 /**
- * Global Redis-based cache service
- * Provides a simple interface for caching data with expiration support
+ * Redis-backed cache, fail-open by design: every operation degrades to a miss
+ * rather than throwing, so a Redis outage - or a process that never called
+ * initialize() - slows callers down instead of breaking them. The only method
+ * that throws is initialize() itself.
  */
 export class Cache {
   private static instance: Cache;
@@ -14,12 +16,8 @@ export class Cache {
   private client?: Redis;
   private initialized = false;
 
-  // Default cache expiration time in seconds (5 minutes)
   private static readonly DEFAULT_EXPIRATION_SECONDS = 300;
 
-  /**
-   * Get the singleton instance of Cache
-   */
   static getInstance(): Cache {
     if (!Cache.instance) {
       Cache.instance = new Cache();
@@ -35,10 +33,7 @@ export class Cache {
     ),
   ) {}
 
-  /**
-   * Initialize the Redis client with configuration
-   * This should be called during application startup
-   */
+  /** Call once at startup; every other method is a no-op until it has run. */
   async initialize(): Promise<void> {
     if (this.initialized) {
       return;
@@ -80,12 +75,7 @@ export class Cache {
     }
   }
 
-  /**
-   * Set a value in the cache with optional expiration
-   * @param key - The cache key
-   * @param value - The value to cache (will be JSON serialized)
-   * @param expirationSeconds - Expiration time in seconds (default: 300s)
-   */
+  /** JSON-serializes `value`; entries always carry a TTL. */
   async set(
     key: string,
     value: unknown,
@@ -109,15 +99,11 @@ export class Cache {
           error: error instanceof Error ? error.message : String(error),
         },
       );
-      // Don't throw - let the application continue without caching
+      // Swallowed: a failed write only costs a later cache miss.
     }
   }
 
-  /**
-   * Get a value from the cache
-   * @param key - The cache key
-   * @returns The cached value or null if not found, expired, or error occurred
-   */
+  /** null covers all of: miss, expired, unparseable, and Redis unreachable. */
   async get<T = unknown>(key: string): Promise<T | null> {
     if (!this.initialized || !this.client) {
       this.logger.warn(
@@ -131,7 +117,7 @@ export class Cache {
       const serializedValue = await this.client.get(key);
 
       if (serializedValue === null) {
-        return null; // Cache miss
+        return null;
       }
 
       const value = JSON.parse(serializedValue) as T;
@@ -141,15 +127,10 @@ export class Cache {
         key,
         error: error instanceof Error ? error.message : String(error),
       });
-      // Return null on error to allow application to continue without cache
       return null;
     }
   }
 
-  /**
-   * Invalidate (delete) a cache entry
-   * @param key - The cache key to invalidate
-   */
   async invalidate(key: string): Promise<void> {
     if (!this.initialized || !this.client) {
       this.logger.warn('Cache not initialized, skipping invalidate operation', {
@@ -168,13 +149,11 @@ export class Cache {
           error: error instanceof Error ? error.message : String(error),
         },
       );
-      // Don't throw - let the application continue
+      // Swallowed, but note this leaves a stale entry readable until its TTL
+      // expires - callers that need a hard guarantee cannot rely on this.
     }
   }
 
-  /**
-   * Disconnect the Redis client (for cleanup during shutdown)
-   */
   async disconnect(): Promise<void> {
     this.logger.info('Disconnecting cache client');
 

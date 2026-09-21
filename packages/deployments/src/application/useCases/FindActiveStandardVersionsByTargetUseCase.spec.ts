@@ -1,4 +1,4 @@
-import { stubLogger } from '@packmind/test-utils';
+import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createStandardId,
@@ -17,17 +17,7 @@ describe('FindActiveStandardVersionsByTargetUseCase', () => {
   let mockRepository: jest.Mocked<IDistributionRepository>;
 
   beforeEach(() => {
-    mockRepository = {
-      findActiveStandardVersionsByTarget: jest.fn(),
-      add: jest.fn(),
-      findById: jest.fn(),
-      listByOrganizationId: jest.fn(),
-      listByPackageId: jest.fn(),
-      listByCommandId: jest.fn(),
-      listByStandardId: jest.fn(),
-      listByTargetIds: jest.fn(),
-      listByOrganizationIdWithStatus: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
+    mockRepository = mockInterface<IDistributionRepository>();
 
     useCase = new FindActiveStandardVersionsByTargetUseCase(
       mockRepository,

@@ -60,27 +60,25 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
 
     for (const artifact of command.artifacts) {
       if (isUuid(artifact.id)) continue;
-      // Pre-316404566 lockfiles stored default-skill artifact ids as slugs.
-      // Tolerate them here so an old lockfile doesn't reject the whole batch
-      // (the entry is silently dropped further down in fetchSkillVersionsWithFiles).
+      // Older lockfiles stored default-skill artifact ids as slugs. Tolerate
+      // them so an old lockfile doesn't reject the whole batch; the entry is
+      // dropped further down, in fetchSkillVersionsWithFiles.
       if (isDefaultSkillSlug(artifact.id)) continue;
       throw new InvalidArtifactIdError(artifact.id);
     }
 
-    // Step 1: Fetch allowed spaces for the organization (IDOR protection)
+    // IDOR protection: the render is restricted to this organization's spaces.
     const spaces = await this.spacesPort.listSpacesByOrganization(
       createOrganizationId(command.organizationId),
     );
     const allowedSpaceIds = spaces.map((s) => s.id);
 
-    // Step 2: Resolve coding agents
     const codingAgents =
       await this.renderModeConfigurationService.resolveCodingAgents(
         command.agents,
         command.organization.id,
       );
 
-    // Step 3: Group artifacts by type
     const standardEntries = command.artifacts.filter(
       (a) => a.type === 'standard',
     );
@@ -95,7 +93,6 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       skillCount: skillEntries.length,
     });
 
-    // Step 4: Fetch specific versions for each artifact type
     const [recipeVersions, standardVersionsWithRules, skillVersions] =
       await Promise.all([
         this.fetchCommandVersions(commandEntries, allowedSpaceIds),
@@ -103,7 +100,6 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
         this.fetchSkillVersionsWithFiles(skillEntries, allowedSpaceIds),
       ]);
 
-    // Step 5: Render artifacts for coding agents
     const fileUpdates = await this.codingAgentPort.deployArtifactsForAgents({
       recipeVersions,
       standardVersions: standardVersionsWithRules,
@@ -116,7 +112,6 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 6: Enrich file modifications with artifact metadata
     const commandSpaceMap = new Map(
       commandEntries.map((e) => [e.id, e.spaceId]),
     );
@@ -139,7 +134,6 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       artifactMetadata,
     );
 
-    // Step 7: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -221,11 +215,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
   ): Promise<SkillVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
-        // Default skills live in the CLI's embedded assets, not the DB. The
-        // lockfile still ships their identifiers back through this endpoint —
-        // synthetic UUIDs in new lockfiles, raw slugs in pre-316404566 ones —
-        // so we short-circuit before the lookup to avoid both a wasted query
-        // and a misleading "Skill version not found" warn.
+        // Default skills live in the CLI's embedded assets, not the DB, yet the
+        // lockfile ships their identifiers back through this endpoint —
+        // synthetic UUIDs, or raw slugs in older lockfiles. Short-circuiting
+        // before the lookup avoids a wasted query and a misleading
+        // "Skill version not found" warn.
         if (isDefaultSkillId(entry.id) || isDefaultSkillSlug(entry.id)) {
           return null;
         }

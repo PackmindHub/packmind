@@ -1,5 +1,7 @@
 # deployments
 
+Distributes commands, standards, and skills to git repositories and records their deployment history.
+
 This library was generated with [Nx](https://nx.dev).
 
 ## Building

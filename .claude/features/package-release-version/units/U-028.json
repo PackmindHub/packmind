@@ -1,0 +1,15 @@
+{
+  "unit_id": "U-028",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+    "packages/deployments/src/index.ts",
+    "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+    "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='CreatePackageReleaseUseCase'",
+    "kind": "behavioural",
+    "describes": "AC-16 (D-061)"
+  }
+}

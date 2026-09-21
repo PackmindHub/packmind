@@ -5,6 +5,7 @@ import {
   createOrganizationId,
   createSpaceId,
   SpaceType,
+  UserSpaceRole,
   UserSpaceWithRole,
 } from '@packmind/types';
 import { UIProvider } from '@packmind/ui';
@@ -111,8 +112,9 @@ const buildUserSpace = (
   type: SpaceType.open,
   organizationId: ORG_ID,
   isDefaultSpace: false,
-  role: 'member',
+  role: UserSpaceRole.MEMBER,
   pinned: false,
+  color: 'blue',
   ...overrides,
 });
 

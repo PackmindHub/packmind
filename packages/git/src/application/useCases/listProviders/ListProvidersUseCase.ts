@@ -50,15 +50,13 @@ export class ListProvidersUseCase
           !rest.revokedAt;
         return {
           ...rest,
-          // Exclude marketplace-typed repos so the "Repos" count and drawer
-          // fallback only reflect standard repositories; marketplaces are
-          // surfaced separately via the marketplaces API.
+          // Marketplaces are surfaced by their own API, so they must not
+          // inflate the standard repository count.
           repos: (rest.repos ?? []).filter((repo) => repo.type === 'standard'),
           hasAuth: hasPatToken || hasActiveAppInstallation,
           authMethod: rest.authMethod,
-          // The Deployments-aware enrichment happens at the API service
-          // layer where both ports are available; this use case stays in
-          // its Git-only domain boundary.
+          // Filled in by the API service layer, which can reach the
+          // Deployments port; this use case stays within the Git domain.
           lastDistributionAt: null,
         };
       },

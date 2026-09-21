@@ -9,7 +9,7 @@ import {
 } from '../../../domain/entities/Invitation';
 import { createUserId, User } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { userFactory } from '../../../../test';
 
 describe('ValidateInvitationTokenUseCase', () => {
@@ -45,13 +45,9 @@ describe('ValidateInvitationTokenUseCase', () => {
   };
 
   beforeEach(() => {
-    mockInvitationService = {
-      findByToken: jest.fn(),
-    } as unknown as jest.Mocked<InvitationService>;
+    mockInvitationService = createMockInstance(InvitationService);
 
-    mockUserService = {
-      getUserById: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
+    mockUserService = createMockInstance(UserService);
 
     mockLogger = stubLogger();
 

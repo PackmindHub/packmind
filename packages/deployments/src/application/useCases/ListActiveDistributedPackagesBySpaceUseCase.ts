@@ -260,12 +260,12 @@ function buildActivePackage(args: {
     lastDistributionStatus: row.lastDistributionStatus,
     lastDistributedAt: row.lastDistributedAt,
     deployedRecipes: packageDeployedCommands,
-    // Command-named twin of `deployedRecipes` (superset); same value.
+    // Same value under the command-named field the type also requires.
     deployedCommands: packageDeployedCommands,
     deployedStandards: packageDeployedStandards,
     deployedSkills: packageDeployedSkills,
     pendingRecipes: pendingCommands,
-    // Command-named twin of `pendingRecipes` (superset); same value.
+    // Same value under the command-named field the type also requires.
     pendingCommands,
     pendingStandards,
     pendingSkills,
@@ -380,7 +380,7 @@ function buildDeployedCommandInfo(
 
   return {
     recipe: recipe ?? syntheticCommand,
-    // Command-named twin of `recipe` (superset); same value.
+    // Same value under the command-named field the type also requires.
     command: recipe ?? syntheticCommand,
     deployedVersion: buildVersion(deployment.deployedVersion),
     latestVersion: buildVersion(latestVersionNumber),

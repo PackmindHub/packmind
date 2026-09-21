@@ -3,7 +3,11 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
@@ -19,6 +23,7 @@ import {
   createSpaceId,
   createUserId,
   createRuleId,
+  UserSpaceRole,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,7 +38,6 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { CreateStandardUseCase } from './CreateStandardUseCase';
 
-// Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
@@ -76,57 +80,32 @@ describe('CreateStandardUseCase', () => {
       slug: 'test-org',
     };
 
-    // Mock SpacesPort
-    spacesPort = {
-      findMembership: jest.fn().mockResolvedValue({
-        userId: testUserId,
-        spaceId: createSpaceId(uuidv4()),
-      }),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
+    spacesPort.findMembership.mockResolvedValue({
+      userId: testUserId,
+      spaceId: createSpaceId(uuidv4()),
+      role: UserSpaceRole.MEMBER,
+      pinned: false,
+      createdBy: testUserId,
+      updatedBy: testUserId,
+    });
 
-    // Mock AccountsPort
-    accountsPort = {
-      getUserById: jest.fn().mockResolvedValue(user),
-      getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsPort = mockInterface<IAccountsPort>();
+    accountsPort.getUserById.mockResolvedValue(user);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    // Mock StandardService
-    standardService = {
-      addStandard: jest.fn(),
-      getStandardById: jest.fn(),
-      findStandardBySlug: jest.fn(),
-      updateStandard: jest.fn(),
-      deleteStandard: jest.fn(),
-      listStandardsBySpace: jest.fn(),
-      listStandardsByUser: jest.fn(),
-    } as unknown as jest.Mocked<StandardService>;
+    standardService = createMockInstance(StandardService);
 
-    // Mock StandardVersionService
-    standardVersionService = {
-      addStandardVersion: jest.fn(),
-      listStandardVersions: jest.fn(),
-      getStandardVersion: jest.fn(),
-      getLatestStandardVersion: jest.fn(),
-      getStandardVersionById: jest.fn(),
-      prepareForGitPublishing: jest.fn(),
-    } as unknown as jest.Mocked<StandardVersionService>;
+    standardVersionService = createMockInstance(StandardVersionService);
 
-    // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
-    eventEmitterService = {
-      emit: jest.fn().mockReturnValue(true),
-    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+    eventEmitterService.emit.mockReturnValue(true);
 
-    ruleRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      findByStandardVersionId: jest.fn(),
-      updateById: jest.fn(),
-      deleteById: jest.fn(),
-    } as unknown as jest.Mocked<IRuleRepository>;
+    ruleRepository = mockInterface<IRuleRepository>();
 
     stubbedLogger = stubLogger();
 
@@ -771,43 +750,21 @@ describe('CreateStandardUseCase', () => {
       let stubbedLogger: jest.Mocked<PackmindLogger>;
 
       beforeEach(() => {
-        standardService = {
-          addStandard: jest.fn(),
-          getStandardById: jest.fn(),
-          findStandardBySlug: jest.fn(),
-          updateStandard: jest.fn(),
-          deleteStandard: jest.fn(),
-          listStandardsBySpace: jest.fn(),
-          listStandardsByUser: jest.fn(),
-        } as unknown as jest.Mocked<StandardService>;
+        standardService = createMockInstance(StandardService);
 
-        standardVersionService = {
-          addStandardVersion: jest.fn(),
-          listStandardVersions: jest.fn(),
-          getStandardVersion: jest.fn(),
-          getLatestStandardVersion: jest.fn(),
-          getStandardVersionById: jest.fn(),
-          prepareForGitPublishing: jest.fn(),
-        } as unknown as jest.Mocked<StandardVersionService>;
+        standardVersionService = createMockInstance(StandardVersionService);
 
         stubbedLogger = stubLogger();
 
-        // Default slug mock: lowercased with hyphens
         (slug as jest.MockedFunction<typeof slug>).mockImplementation(
           (input: string) => input.toLowerCase().replace(/\s+/g, '-'),
         );
 
-        eventEmitterService = {
-          emit: jest.fn().mockReturnValue(true),
-        } as unknown as jest.Mocked<PackmindEventEmitterService>;
+        eventEmitterService = createMockInstance(PackmindEventEmitterService);
+        eventEmitterService.emit.mockReturnValue(true);
 
-        ruleRepository = {
-          add: jest.fn(),
-          findById: jest.fn(),
-          findByStandardVersionId: jest.fn().mockResolvedValue([]),
-          updateById: jest.fn(),
-          deleteById: jest.fn(),
-        } as unknown as jest.Mocked<IRuleRepository>;
+        ruleRepository = mockInterface<IRuleRepository>();
+        ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
         createStandardUseCase = new CreateStandardUseCase(
           spacesPort,

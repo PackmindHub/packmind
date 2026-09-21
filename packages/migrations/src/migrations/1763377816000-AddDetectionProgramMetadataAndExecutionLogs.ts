@@ -19,7 +19,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  // DetectionProgramMetadata table definition
   private readonly detectionProgramMetadataTable = new Table({
     name: 'detection_program_metadata',
     columns: [
@@ -49,7 +48,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     ],
   });
 
-  // ExecutionLog table definition
   private readonly executionLogsTable = new Table({
     name: 'execution_logs',
     columns: [
@@ -79,7 +77,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     ],
   });
 
-  // Index definitions for DetectionProgramMetadata
   private readonly detectionProgramIdIndex = new TableIndex({
     name: 'idx_detection_program_metadata_detection_program_id',
     columnNames: ['detection_program_id'],
@@ -90,7 +87,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     columnNames: ['task_id'],
   });
 
-  // Index definitions for ExecutionLog
   private readonly executionLogsMetadataIdIndex = new TableIndex({
     name: 'idx_execution_logs_detection_program_metadata_id',
     columnNames: ['detection_program_metadata_id'],
@@ -101,7 +97,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     columnNames: ['timestamp'],
   });
 
-  // Foreign key definitions
   private readonly detectionProgramMetadataForeignKey = new TableForeignKey({
     columnNames: ['detection_program_id'],
     referencedTableName: 'detection_programs',
@@ -124,12 +119,10 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     );
 
     try {
-      // Create detection_program_metadata table
       this.logger.info('Creating detection_program_metadata table');
       await queryRunner.createTable(this.detectionProgramMetadataTable);
       this.logger.info('Successfully created detection_program_metadata table');
 
-      // Create indices for detection_program_metadata
       this.logger.info('Creating indices for detection_program_metadata table');
       await queryRunner.createIndex(
         'detection_program_metadata',
@@ -143,7 +136,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
         'Successfully created indices for detection_program_metadata table',
       );
 
-      // Create foreign key for detection_program_metadata
       this.logger.info(
         'Adding foreign key constraint for detection_program_metadata table',
       );
@@ -155,12 +147,10 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
         'Successfully added foreign key constraint for detection_program_metadata table',
       );
 
-      // Create execution_logs table
       this.logger.info('Creating execution_logs table');
       await queryRunner.createTable(this.executionLogsTable);
       this.logger.info('Successfully created execution_logs table');
 
-      // Create indices for execution_logs
       this.logger.info('Creating indices for execution_logs table');
       await queryRunner.createIndex(
         'execution_logs',
@@ -172,7 +162,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
       );
       this.logger.info('Successfully created indices for execution_logs table');
 
-      // Create foreign key for execution_logs
       this.logger.info(
         'Adding foreign key constraint for execution_logs table',
       );
@@ -204,7 +193,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
     );
 
     try {
-      // Drop foreign key from execution_logs
       this.logger.info(
         'Dropping foreign key constraint for execution_logs table',
       );
@@ -216,7 +204,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
         'Successfully dropped foreign key constraint for execution_logs table',
       );
 
-      // Drop indices from execution_logs
       this.logger.info('Dropping indices for execution_logs table');
       await queryRunner.dropIndex(
         'execution_logs',
@@ -228,12 +215,10 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
       );
       this.logger.info('Successfully dropped indices for execution_logs table');
 
-      // Drop execution_logs table
       this.logger.info('Dropping execution_logs table');
       await queryRunner.dropTable('execution_logs', true);
       this.logger.info('Successfully dropped execution_logs table');
 
-      // Drop foreign key from detection_program_metadata
       this.logger.info(
         'Dropping foreign key constraint for detection_program_metadata table',
       );
@@ -245,7 +230,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
         'Successfully dropped foreign key constraint for detection_program_metadata table',
       );
 
-      // Drop indices from detection_program_metadata
       this.logger.info('Dropping indices for detection_program_metadata table');
       await queryRunner.dropIndex(
         'detection_program_metadata',
@@ -259,7 +243,6 @@ export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements
         'Successfully dropped indices for detection_program_metadata table',
       );
 
-      // Drop detection_program_metadata table
       this.logger.info('Dropping detection_program_metadata table');
       await queryRunner.dropTable('detection_program_metadata', true);
       this.logger.info('Successfully dropped detection_program_metadata table');

@@ -7,9 +7,9 @@ export type AddTargetCommand = PackmindCommand & {
   path: string;
   gitRepoId: GitRepoId;
   /**
-   * Optional flag to allow adding targets to repositories on tokenless providers.
-   * This is used internally by the CLI for tokenless distribution tracking.
-   * API endpoints should always override this to false for security.
+   * Allows a target on a repository whose provider has no token. Used internally
+   * by the CLI for tokenless distribution tracking; API endpoints should always
+   * force this to false rather than pass the caller's value through.
    * @default false
    */
   allowTokenlessProvider?: boolean;

@@ -1,12 +1,14 @@
+import { mockInterface } from '@packmind/test-utils';
 import { UninstallUseCase } from './UninstallUseCase';
-import { createMockConfigFileRepository } from '../../mocks/createMockRepositories';
-import { createMockSpaceService } from '../../mocks/createMockServices';
+
 import { spaceFactory } from '@packmind/spaces/test';
 import { createSpaceId } from '@packmind/types';
 import {
   IInstallResult,
   IInstallUseCase,
 } from '../../domain/useCases/IInstallUseCase';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 
 const installResultFactory = (
   overrides: Partial<IInstallResult> = {},
@@ -20,6 +22,9 @@ const installResultFactory = (
   standardsCount: 0,
   commandsCount: 0,
   skillsCount: 0,
+  skillsChanged: 0,
+  standardsChanged: 0,
+  commandsChanged: 0,
   recipesRemoved: 0,
   standardsRemoved: 0,
   commandsRemoved: 0,
@@ -40,10 +45,8 @@ const installResultFactory = (
 
 describe('UninstallUseCase', () => {
   let useCase: UninstallUseCase;
-  let mockConfigFileRepository: ReturnType<
-    typeof createMockConfigFileRepository
-  >;
-  let mockSpaceService: ReturnType<typeof createMockSpaceService>;
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let mockInstallUseCase: jest.Mocked<IInstallUseCase>;
 
   const defaultSpace = spaceFactory({
@@ -53,8 +56,8 @@ describe('UninstallUseCase', () => {
   });
 
   beforeEach(() => {
-    mockConfigFileRepository = createMockConfigFileRepository();
-    mockSpaceService = createMockSpaceService();
+    mockConfigFileRepository = mockInterface<IConfigFileRepository>();
+    mockSpaceService = mockInterface<ISpaceService>();
     mockInstallUseCase = { execute: jest.fn() };
 
     mockSpaceService.getSpaces.mockResolvedValue([defaultSpace]);
@@ -87,7 +90,10 @@ describe('UninstallUseCase', () => {
 
     it('throws an error', async () => {
       await expect(
-        useCase.execute({ packages: ['@my-space/package-a'] }),
+        useCase.execute({
+          cliVersion: '0.0.0-test',
+          packages: ['@my-space/package-a'],
+        }),
       ).rejects.toThrow('No packmind.json found');
     });
   });
@@ -100,7 +106,10 @@ describe('UninstallUseCase', () => {
 
     it('throws an error indicating the file cannot be parsed', async () => {
       await expect(
-        useCase.execute({ packages: ['@my-space/package-a'] }),
+        useCase.execute({
+          cliVersion: '0.0.0-test',
+          packages: ['@my-space/package-a'],
+        }),
       ).rejects.toThrow(
         'packmind.json exists but could not be parsed. Please fix the JSON syntax errors and try again.',
       );
@@ -110,13 +119,17 @@ describe('UninstallUseCase', () => {
   describe('when a package is not installed', () => {
     it('throws an error listing the missing package', async () => {
       await expect(
-        useCase.execute({ packages: ['@my-space/unknown-package'] }),
+        useCase.execute({
+          cliVersion: '0.0.0-test',
+          packages: ['@my-space/unknown-package'],
+        }),
       ).rejects.toThrow('not installed:\n  - @my-space/unknown-package');
     });
 
     it('lists all missing packages if multiple are not installed', async () => {
       await expect(
         useCase.execute({
+          cliVersion: '0.0.0-test',
           packages: ['@my-space/unknown-a', '@my-space/unknown-b'],
         }),
       ).rejects.toThrow('packages are not installed');
@@ -128,6 +141,7 @@ describe('UninstallUseCase', () => {
 
     beforeEach(async () => {
       result = await useCase.execute({
+        cliVersion: '0.0.0-test',
         baseDirectory: '/project',
         packages: ['@my-space/package-a'],
       });
@@ -144,6 +158,7 @@ describe('UninstallUseCase', () => {
     it('calls install after updating config', () => {
       expect(mockInstallUseCase.execute).toHaveBeenCalledWith({
         baseDirectory: '/project',
+        cliVersion: '0.0.0-test',
       });
     });
 
@@ -155,6 +170,7 @@ describe('UninstallUseCase', () => {
   describe('when removing an unprefixed package with a single space', () => {
     beforeEach(async () => {
       await useCase.execute({
+        cliVersion: '0.0.0-test',
         baseDirectory: '/project',
         packages: ['package-a'],
       });
@@ -183,7 +199,7 @@ describe('UninstallUseCase', () => {
 
     it('throws an error asking to use the @space/package format', async () => {
       await expect(
-        useCase.execute({ packages: ['package-a'] }),
+        useCase.execute({ cliVersion: '0.0.0-test', packages: ['package-a'] }),
       ).rejects.toThrow('multiple spaces');
     });
   });
@@ -191,6 +207,7 @@ describe('UninstallUseCase', () => {
   describe('when removing all packages', () => {
     beforeEach(async () => {
       await useCase.execute({
+        cliVersion: '0.0.0-test',
         baseDirectory: '/project',
         packages: ['@my-space/package-a', '@my-space/package-b'],
       });
@@ -219,6 +236,7 @@ describe('UninstallUseCase', () => {
     it('restores the original packages in config', async () => {
       try {
         await useCase.execute({
+          cliVersion: '0.0.0-test',
           baseDirectory: '/project',
           packages: ['@my-space/package-a'],
         });
@@ -236,6 +254,7 @@ describe('UninstallUseCase', () => {
     it('rethrows the install error', async () => {
       await expect(
         useCase.execute({
+          cliVersion: '0.0.0-test',
           baseDirectory: '/project',
           packages: ['@my-space/package-a'],
         }),
@@ -245,7 +264,10 @@ describe('UninstallUseCase', () => {
 
   describe('when no baseDirectory is provided', () => {
     it('uses the current working directory', async () => {
-      await useCase.execute({ packages: ['@my-space/package-a'] });
+      await useCase.execute({
+        cliVersion: '0.0.0-test',
+        packages: ['@my-space/package-a'],
+      });
 
       expect(mockConfigFileRepository.readConfig).toHaveBeenCalledWith(
         process.cwd(),

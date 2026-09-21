@@ -1,7 +1,3 @@
-/**
- * Generic result type for AI prompt execution
- * Supports both string and object responses as specified in user story
- */
 export interface AIPromptResult<T = string> {
   success: boolean;
   data: T | null;
@@ -27,9 +23,6 @@ export enum OpenAIServiceTier {
   PRIORITY = 'PRIORITY',
 }
 
-/**
- * Configuration options for AI prompts
- */
 export interface AIPromptOptions {
   maxTokens?: number;
   temperature?: number;
@@ -38,10 +31,6 @@ export interface AIPromptOptions {
   performance?: LLMModelPerformance;
   service_tier?: OpenAIServiceTier;
 }
-
-/**
- * Error types that can occur during AI service operations
- */
 
 export type AIServiceErrorType =
   | 'RATE_LIMIT'

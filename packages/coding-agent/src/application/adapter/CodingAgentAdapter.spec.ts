@@ -1,3 +1,4 @@
+import { mockInterface } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   CodingAgent,
@@ -132,19 +133,10 @@ describe('CodingAgentAdapter', () => {
     let mockDeployerRegistry: jest.Mocked<ICodingAgentDeployerRegistry>;
 
     beforeEach(() => {
-      mockDeployer = {
-        deployArtifacts: jest.fn(),
-        deployCommands: jest.fn(),
-        deployStandards: jest.fn(),
-        deploySkills: jest.fn(),
-        generateRemovalFileUpdates: jest.fn(),
-        generateAgentCleanupFileUpdates: jest.fn(),
-        getSkillsFolderPath: jest.fn(),
-      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+      mockDeployer = mockInterface<ICodingAgentDeployer>();
 
-      mockDeployerRegistry = {
-        getDeployer: jest.fn().mockReturnValue(mockDeployer),
-      } as unknown as jest.Mocked<ICodingAgentDeployerRegistry>;
+      mockDeployerRegistry = mockInterface<ICodingAgentDeployerRegistry>();
+      mockDeployerRegistry.getDeployer.mockReturnValue(mockDeployer);
 
       (mockRepositories.getDeployerRegistry as jest.Mock).mockReturnValue(
         mockDeployerRegistry,
@@ -254,19 +246,10 @@ describe('CodingAgentAdapter', () => {
     let mockDeployerRegistry: jest.Mocked<ICodingAgentDeployerRegistry>;
 
     beforeEach(() => {
-      mockDeployer = {
-        deployArtifacts: jest.fn(),
-        deployCommands: jest.fn(),
-        deployStandards: jest.fn(),
-        deploySkills: jest.fn(),
-        generateRemovalFileUpdates: jest.fn(),
-        generateAgentCleanupFileUpdates: jest.fn(),
-        getSkillsFolderPath: jest.fn(),
-      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+      mockDeployer = mockInterface<ICodingAgentDeployer>();
 
-      mockDeployerRegistry = {
-        getDeployer: jest.fn().mockReturnValue(mockDeployer),
-      } as unknown as jest.Mocked<ICodingAgentDeployerRegistry>;
+      mockDeployerRegistry = mockInterface<ICodingAgentDeployerRegistry>();
+      mockDeployerRegistry.getDeployer.mockReturnValue(mockDeployer);
 
       (mockRepositories.getDeployerRegistry as jest.Mock).mockReturnValue(
         mockDeployerRegistry,
@@ -334,19 +317,10 @@ describe('CodingAgentAdapter', () => {
     let mockDeployerRegistry: jest.Mocked<ICodingAgentDeployerRegistry>;
 
     beforeEach(() => {
-      mockDeployer = {
-        deployArtifacts: jest.fn(),
-        deployCommands: jest.fn(),
-        deployStandards: jest.fn(),
-        deploySkills: jest.fn(),
-        generateRemovalFileUpdates: jest.fn(),
-        generateAgentCleanupFileUpdates: jest.fn(),
-        getSkillsFolderPath: jest.fn(),
-      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+      mockDeployer = mockInterface<ICodingAgentDeployer>();
 
-      mockDeployerRegistry = {
-        getDeployer: jest.fn().mockReturnValue(mockDeployer),
-      } as unknown as jest.Mocked<ICodingAgentDeployerRegistry>;
+      mockDeployerRegistry = mockInterface<ICodingAgentDeployerRegistry>();
+      mockDeployerRegistry.getDeployer.mockReturnValue(mockDeployer);
 
       (mockRepositories.getDeployerRegistry as jest.Mock).mockReturnValue(
         mockDeployerRegistry,

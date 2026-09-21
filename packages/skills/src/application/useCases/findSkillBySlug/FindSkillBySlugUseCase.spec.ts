@@ -5,7 +5,11 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { userFactory } from '@packmind/accounts/test';
 import { spaceFactory } from '@packmind/spaces/test';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -33,21 +37,11 @@ describe('FindSkillBySlugUseCase', () => {
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    skillService = {
-      findSkillBySlug: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    skillService = createMockInstance(SkillService);
 
-    accountsAdapter = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    accountsAdapter = mockInterface<IAccountsPort>();
 
-    spacesPort = {
-      getSpaceById: jest.fn(),
-      createSpace: jest.fn(),
-      listSpacesByOrganization: jest.fn(),
-      getSpaceBySlug: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
+    spacesPort = mockInterface<ISpacesPort>();
 
     stubbedLogger = stubLogger();
 

@@ -82,7 +82,6 @@ export class StandardsAdapter
   private llmPort: ILlmPort | null = null;
   private eventEmitterService: PackmindEventEmitterService | null = null;
 
-  // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUseCase;
   private _createStandardWithExamples!: CreateStandardWithExamplesUseCase;
   private _createStandardSamples!: CreateStandardSamplesUseCase;
@@ -113,11 +112,6 @@ export class StandardsAdapter
     );
   }
 
-  /**
-   * Initialize adapter with ports and services from registry.
-   * All use cases are created here with non-null dependencies.
-   * Delayed jobs are built internally from JobsService.
-   */
   public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
@@ -149,9 +143,6 @@ export class StandardsAdapter
       );
     }
 
-    // Step 4: Create ALL use cases with non-null ports
-    // At this point, we know standardDelayedJobs is not null due to isReady() check
-    // Use cases that don't depend on external ports
     this._listStandardVersions = new ListStandardVersionsUseCase(
       this.services.getStandardVersionService(),
     );
@@ -195,7 +186,6 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
     );
 
-    // Use cases that depend on accountsPort (required)
     this._getStandardById = new GetStandardByIdUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -238,7 +228,6 @@ export class StandardsAdapter
       this.linterPort,
     );
 
-    // Use cases that depend on linterPort
     this._createStandardWithExamples = new CreateStandardWithExamplesUseCase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
@@ -254,8 +243,6 @@ export class StandardsAdapter
       this,
       this.eventEmitterService,
     );
-
-    // Use case that depends on accountsPort, deploymentsPort, and spacesPort
 
     this._createRuleExample = new CreateRuleExampleUseCase(
       this.spacesPort,
@@ -293,9 +280,6 @@ export class StandardsAdapter
     );
   }
 
-  /**
-   * Check if adapter is ready (all required ports and services set).
-   */
   public isReady(): boolean {
     return (
       this.accountsPort != null &&
@@ -305,21 +289,22 @@ export class StandardsAdapter
     );
   }
 
-  /**
-   * Get the port interface this adapter implements.
-   */
   public getPort(): IStandardsPort {
     return this as IStandardsPort;
   }
-
-  // ===========================
-  // IStandardsPort Implementation
-  // ===========================
 
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]> {
     return this.services
       .getStandardVersionService()
       .getLatestRulesByStandardId(id);
+  }
+
+  getLatestStandardVersionsWithRules(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    return this.services
+      .getStandardVersionService()
+      .getLatestVersionsWithRulesByStandardIds(standardIds);
   }
 
   getRulesByStandardId(id: StandardId): Promise<Rule[]> {
@@ -418,10 +403,6 @@ export class StandardsAdapter
   ): Promise<Standard | null> {
     return this._findStandardBySlug.findStandardBySlug(slug, organizationId);
   }
-
-  // ===========================
-  // Additional Public Methods
-  // ===========================
 
   async createStandard(params: CreateStandardCommand): Promise<Standard> {
     const result = await this._createStandard.execute({

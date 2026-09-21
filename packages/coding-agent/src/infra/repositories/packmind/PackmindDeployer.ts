@@ -50,7 +50,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
       const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       const targetPrefixedPath = getTargetPrefixedPath(commandFilePath, target);
@@ -63,7 +62,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy index files that are no longer generated
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(
         PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
@@ -98,7 +96,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each standard to its own file
     for (const standardVersion of standardVersions) {
       const rules =
         standardVersion.rules ??
@@ -121,7 +118,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the standards index
     const standardsIndexContent =
       this.standardsIndexService.buildStandardsIndex(
         standardVersions.map((standardVersion) => ({
@@ -155,7 +151,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
       const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
@@ -167,7 +162,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy index files that are no longer generated
     fileUpdates.delete.push({
       path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
       type: DeleteItemType.File,
@@ -192,7 +186,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each standard to its own file
     for (const standardVersion of standardVersions) {
       const rules =
         standardVersion.rules ??
@@ -211,7 +204,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the standards index
     const standardsIndexContent =
       this.standardsIndexService.buildStandardsIndex(
         standardVersions.map((standardVersion) => ({
@@ -268,7 +260,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
       const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
@@ -280,7 +271,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Clean up legacy index files that are no longer generated
     if (recipeVersions.length > 0) {
       fileUpdates.delete.push({
         path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
@@ -292,7 +282,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Deploy each standard to its own file
     for (const standardVersion of standardVersions) {
       const rules =
         standardVersion.rules ??
@@ -311,7 +300,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the standards index only if there are standards
     if (standardVersions.length > 0) {
       const standardsIndexContent =
         this.standardsIndexService.buildStandardsIndex(
@@ -356,7 +344,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete individual command files for removed commands
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
@@ -364,7 +351,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete legacy commands index if no commands remain installed
     if (installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
@@ -372,7 +358,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete individual standard files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${PackmindDeployer.ARTEFACT_PATHS.standard}${standardVersion.slug}.md`,
@@ -380,7 +365,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete standards index if no standards remain installed
     if (installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
         path: '.packmind/standards-index.md',
@@ -388,7 +372,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete parent folders if all Packmind content is removed and something was actually removed
     const hasRemovedArtifacts =
       removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
     if (
@@ -465,7 +448,6 @@ ${standardVersion.description}
 ## Rules
 `;
 
-    // Format rules if they exist
     const rulesContent = standardVersion.rules
       ? standardVersion.rules.map((rule) => `* ${rule.content}`).join('\n')
       : '';

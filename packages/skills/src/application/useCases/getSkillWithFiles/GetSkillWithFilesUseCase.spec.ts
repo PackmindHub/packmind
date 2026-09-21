@@ -3,7 +3,11 @@ import {
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  mockInterface,
+  stubLogger,
+  createMockInstance,
+} from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillFileId,
@@ -92,31 +96,13 @@ describe('GetSkillWithFilesUseCase', () => {
   ];
 
   beforeEach(() => {
-    mockAccountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsPort = mockInterface<IAccountsPort>();
 
-    mockSkillService = {
-      getSkillById: jest.fn(),
-      findSkillBySlug: jest.fn(),
-      listSkillsBySpace: jest.fn(),
-      addSkill: jest.fn(),
-      updateSkill: jest.fn(),
-      deleteSkill: jest.fn(),
-    } as unknown as jest.Mocked<SkillService>;
+    mockSkillService = createMockInstance(SkillService);
 
-    mockSkillVersionService = {
-      listSkillVersions: jest.fn(),
-      getLatestSkillVersion: jest.fn(),
-      getSkillVersionById: jest.fn(),
-      getSkillVersion: jest.fn(),
-      addSkillVersion: jest.fn(),
-    } as unknown as jest.Mocked<SkillVersionService>;
+    mockSkillVersionService = createMockInstance(SkillVersionService);
 
-    mockSkillFileService = {
-      findByVersionId: jest.fn(),
-    } as unknown as jest.Mocked<SkillFileService>;
+    mockSkillFileService = createMockInstance(SkillFileService);
 
     usecase = new GetSkillWithFilesUseCase(
       mockAccountsPort,

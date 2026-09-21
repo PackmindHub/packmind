@@ -17,13 +17,11 @@ export class DeleteTargetUseCase implements IDeleteTargetUseCase {
   async execute(command: DeleteTargetCommand): Promise<DeleteTargetResponse> {
     const { targetId, userId, organizationId } = command;
 
-    // Get the target to find its repository
     const target = await this.targetService.findById(targetId);
     if (!target) {
       throw new Error(`Target with id ${targetId} not found`);
     }
 
-    // Check if the git provider has a token
     const repo = await this.gitPort.getRepositoryById(target.gitRepoId);
     if (!repo) {
       throw new Error(`Repository with id ${target.gitRepoId} not found`);

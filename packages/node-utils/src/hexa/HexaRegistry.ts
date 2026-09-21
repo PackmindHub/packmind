@@ -2,9 +2,6 @@ import { DataSource } from 'typeorm';
 import { BaseHexa } from './BaseHexa';
 import { BaseService } from './BaseService';
 
-/**
- * Constructor type for BaseHexa subclasses.
- */
 type ExtractOpts<T extends BaseHexa> =
   T extends BaseHexa<infer X, unknown> ? X : never;
 
@@ -13,17 +10,11 @@ type HexaConstructor<T extends BaseHexa> = new (
   opts?: Partial<ExtractOpts<T>>,
 ) => T;
 
-/**
- * Registration entry for storing hexa constructors before instantiation.
- */
 interface HexaRegistration<T extends BaseHexa = BaseHexa> {
   constructor: HexaConstructor<T>;
   opts?: Partial<ExtractOpts<T>>;
 }
 
-/**
- * Constructor type for BaseService subclasses.
- */
 type ExtractServiceOpts<T extends BaseService> =
   T extends BaseService<infer X> ? X : never;
 
@@ -32,45 +23,17 @@ type ServiceConstructor<T extends BaseService> = new (
   opts?: Partial<ExtractServiceOpts<T>>,
 ) => T;
 
-/**
- * Registration entry for storing service constructors before instantiation.
- */
 interface ServiceRegistration<T extends BaseService = BaseService> {
   constructor: ServiceConstructor<T>;
   opts?: Partial<ExtractServiceOpts<T>>;
 }
 
 /**
- * Registry for managing the lifecycle of domain hexas and infrastructure services.
+ * Lifecycle owner for domain hexas and infrastructure services.
  *
- * The HexaRegistry handles registration, initialization, and cleanup of:
- * - Domain hexas (implementing port-adapter pattern)
- * - Infrastructure services (background jobs, caching, etc.)
- *
- * It ensures proper dependency management and provides a clean way to
- * access different components throughout the system.
- *
- * Usage:
- * ```typescript
- * const registry = new HexaRegistry();
- *
- * // Register hexa types and services (no instantiation yet)
- * registry.register(AccountsHexa);
- * registry.register(RecipesHexa);
- * registry.registerService(JobsService);
- *
- * // Initialize all hexas and services with shared DataSource
- * const dataSource = new DataSource({ ... });
- * await dataSource.initialize();
- * registry.init(dataSource);
- *
- * // Use hexas and services
- * const accountsHexa = registry.get(AccountsHexa);
- * const recipesHexa = registry.get(RecipesHexa);
- * const jobsService = registry.getService(JobsService);
- * await recipesHexa.captureRecipe(...);
- * await jobsService.submitJob(...);
- * ```
+ * Registration is separate from instantiation: `register`/`registerService`
+ * only record constructors, and `init(dataSource)` builds and initializes
+ * everything in registration order against one shared DataSource.
  */
 export class HexaRegistry {
   private readonly registrations = new Map<
@@ -90,12 +53,6 @@ export class HexaRegistry {
   private isInitialized = false;
   private dataSource: DataSource | null = null;
 
-  /**
-   * Register an hexa type (deferred instantiation).
-   *
-   * @param constructor - Constructor function for the hexa
-   * @throws Error if an hexa with the same constructor is already registered
-   */
   public register<T extends BaseHexa>(
     constructor: HexaConstructor<T>,
     opts?: Partial<ExtractOpts<T>>,
@@ -108,12 +65,6 @@ export class HexaRegistry {
     this.registrations.set(constructor, { constructor, opts });
   }
 
-  /**
-   * Register a service type (deferred instantiation).
-   *
-   * @param constructor - Constructor function for the service
-   * @throws Error if a service with the same constructor is already registered
-   */
   public registerService<T extends BaseService>(
     constructor: ServiceConstructor<T>,
     opts?: Partial<ExtractServiceOpts<T>>,
@@ -127,26 +78,22 @@ export class HexaRegistry {
   }
 
   /**
-   * Initialize all registered hexas and services by instantiating them with the provided DataSource,
-   * then calling initialize(registry) on each to set up adapters and async initialization.
-   * Components are created in registration order, so dependencies should be registered first.
-   *
-   * @param dataSource - The TypeORM DataSource that hexas and services will use for database operations
-   * @throws Error if already initialized or if DataSource is not provided
+   * Instantiate every registration, then `initialize(registry)` each one.
+   * Construction follows registration order, so a hexa that another depends on
+   * at construction time must be registered first.
    */
   public async init(dataSource: DataSource): Promise<void> {
     if (this.isInitialized) throw new Error('Registry already initialized');
     if (!dataSource)
       throw new Error('DataSource is required for initialization');
 
-    // Store the DataSource for hexas and services to access
     this.dataSource = dataSource;
 
-    // Mark as initialized before creating components so they can call get()/getService() during initialization
+    // Set before creating components, so they can call get()/getService() on
+    // the registry from their own constructors and initialize().
     this.isInitialized = true;
 
     try {
-      // Instantiate all registered hexas in registration order
       for (const registration of this.registrations.values()) {
         const instance = new registration.constructor(
           dataSource,
@@ -155,7 +102,6 @@ export class HexaRegistry {
         this.hexas.set(registration.constructor, instance);
       }
 
-      // Instantiate all registered services in registration order
       for (const registration of this.serviceRegistrations.values()) {
         const instance = new registration.constructor(
           dataSource,
@@ -164,8 +110,8 @@ export class HexaRegistry {
         this.services.set(registration.constructor, instance);
       }
 
-      // Build port-to-hexa map by getting port name from each hexa
-      // This must be done BEFORE initialization so hexas can use getAdapter() during initialize()
+      // The port map has to be complete before any initialize() runs, since
+      // that is when hexas resolve each other through getAdapter().
       for (const [, hexa] of this.hexas.entries()) {
         try {
           const portName = hexa.getPortName();
@@ -173,23 +119,19 @@ export class HexaRegistry {
             this.portToHexaMap.set(portName, hexa);
           }
         } catch {
-          // Hexa doesn't expose a port (getPortName throws an error)
-          // This is fine - not all hexas need to expose adapters
+          // getPortName() throws for hexas that expose no adapter at all.
           continue;
         }
       }
 
-      // Initialize all services with registry access
       for (const service of this.services.values()) {
         await service.initialize(this);
       }
 
-      // Initialize all hexas with registry access for adapter retrieval
       for (const hexa of this.hexas.values()) {
         await hexa.initialize(this);
       }
     } catch (error) {
-      // If initialization fails, reset the state
       this.isInitialized = false;
       this.dataSource = null;
       this.hexas.clear();
@@ -199,20 +141,12 @@ export class HexaRegistry {
     }
   }
 
-  /**
-   * Get a registered and initialized hexa by its constructor.
-   *
-   * @param constructor - The constructor of the hexa
-   * @returns The hexa instance
-   * @throws Error if the hexa is not registered or not yet instantiated
-   */
   public get<T extends BaseHexa>(constructor: HexaConstructor<T>): T {
     if (!this.isInitialized)
       throw new Error('Registry not initialized. Call init() first.');
 
     const hexa = this.hexas.get(constructor);
     if (!hexa) {
-      // Check if it's registered but not yet instantiated
       if (this.registrations.has(constructor)) {
         throw new Error(
           `Hexa ${constructor.name} is registered but not yet instantiated. Ensure dependencies are registered in the correct order.`,
@@ -223,13 +157,6 @@ export class HexaRegistry {
     return hexa as T;
   }
 
-  /**
-   * Get a registered and initialized service by its constructor.
-   *
-   * @param constructor - The constructor of the service
-   * @returns The service instance
-   * @throws Error if the service is not registered or not yet instantiated
-   */
   public getService<T extends BaseService>(
     constructor: ServiceConstructor<T>,
   ): T {
@@ -238,7 +165,6 @@ export class HexaRegistry {
 
     const service = this.services.get(constructor);
     if (!service) {
-      // Check if it's registered but not yet instantiated
       if (this.serviceRegistrations.has(constructor)) {
         throw new Error(
           `Service ${constructor.name} is registered but not yet instantiated. Ensure dependencies are registered in the correct order.`,
@@ -250,22 +176,9 @@ export class HexaRegistry {
   }
 
   /**
-   * Get an adapter by its port type.
-   * This method allows retrieving adapters without importing the hexa class,
-   * which helps avoid circular dependencies.
-   * The caller must specify the port type as a generic parameter and pass the port name constant.
-   *
-   * @template T - The port type (e.g., IGitPort, IDeploymentPort)
-   * @param portTypeName - The port name constant (e.g., IGitPortName from @packmind/types)
-   * @returns The adapter instance implementing the port type
-   * @throws Error if registry is not initialized or if no hexa provides the requested port type
-   *
-   * @example
-   * ```typescript
-   * import { IGitPortName } from '@packmind/types';
-   * import type { IGitPort } from '@packmind/types';
-   * const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
-   * ```
+   * Look up an adapter by port name rather than by hexa class, so a consumer
+   * never has to import the providing hexa — that import is what would close a
+   * dependency cycle between two domains.
    */
   public getAdapter<T>(portTypeName: string): T {
     if (!this.isInitialized)
@@ -282,7 +195,6 @@ export class HexaRegistry {
       const adapter = hexa.getAdapter();
       return adapter as T;
     } catch (error) {
-      // If the error indicates the hexa isn't initialized yet, provide a more helpful message
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       if (
@@ -299,19 +211,13 @@ export class HexaRegistry {
     }
   }
 
-  /**
-   * Check if the registry has been initialized.
-   *
-   * @returns True if init() has been called
-   */
   public get initialized(): boolean {
     return this.isInitialized;
   }
 
   /**
-   * Destroy all initialized hexas and services, cleaning up resources.
-   * Each hexa's and service's destroy method will be called.
-   * This also resets the registry to allow re-initialization.
+   * Destroy every instance and clear the registry's state. Registrations
+   * themselves are kept, so `init()` can be called again afterwards.
    */
   public destroyAll(): void {
     for (const hexa of this.hexas.values()) {

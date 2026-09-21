@@ -12,7 +12,6 @@ export class AddGitInfoToRecipes1752155443452 implements MigrationInterface {
     this.logger.info('Starting migration: AddGitInfoToRecipes');
 
     try {
-      // Add git-related columns to recipes table
       this.logger.debug('Adding git-related columns to recipes table');
       await queryRunner.query(`
             ALTER TABLE "recipes" 
@@ -24,7 +23,6 @@ export class AddGitInfoToRecipes1752155443452 implements MigrationInterface {
         'Successfully added git-related columns to recipes table',
       );
 
-      // Add git-related columns to recipe_versions table
       this.logger.debug('Adding git-related columns to recipe_versions table');
       await queryRunner.query(`
             ALTER TABLE "recipe_versions" 
@@ -49,7 +47,6 @@ export class AddGitInfoToRecipes1752155443452 implements MigrationInterface {
     this.logger.info('Starting rollback: AddGitInfoToRecipes');
 
     try {
-      // Remove git-related columns from recipes table
       this.logger.debug('Removing git-related columns from recipes table');
       await queryRunner.query(`
             ALTER TABLE "recipes" 
@@ -61,7 +58,6 @@ export class AddGitInfoToRecipes1752155443452 implements MigrationInterface {
         'Successfully removed git-related columns from recipes table',
       );
 
-      // Remove git-related columns from recipe_versions table
       this.logger.debug(
         'Removing git-related columns from recipe_versions table',
       );

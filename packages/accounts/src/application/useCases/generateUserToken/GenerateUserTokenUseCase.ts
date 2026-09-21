@@ -15,13 +15,11 @@ export class GenerateUserTokenUseCase implements IGenerateUserTokenUseCase {
   async execute(
     command: GenerateUserTokenCommand,
   ): Promise<GenerateUserTokenResponse> {
-    // Get user by ID
     const user = await this.userService.getUserById(command.userId);
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Fetch organization data
     const membership = user.memberships.find(
       (item) => item.organizationId === command.organizationId,
     );

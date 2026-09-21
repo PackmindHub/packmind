@@ -2,11 +2,8 @@ import React from 'react';
 import { Tooltip } from '@chakra-ui/react';
 
 export interface PMTooltipProps {
-  /** The trigger element */
   children: React.ReactNode;
-  /** Content to show in the tooltip */
   label: React.ReactNode;
-  /** Where to position the tooltip relative to the trigger */
   placement?:
     | 'top'
     | 'bottom'
@@ -20,15 +17,10 @@ export interface PMTooltipProps {
     | 'left-end'
     | 'right-start'
     | 'right-end';
-  /** Whether the tooltip is disabled */
   disabled?: boolean;
-  /** Delay before showing tooltip (in ms) */
   openDelay?: number;
-  /** Delay before hiding tooltip (in ms) */
   closeDelay?: number;
-  /** Whether to show an arrow pointing to the trigger */
   showArrow?: boolean;
-  /** Custom z-index for the tooltip */
   zIndex?: number;
 }
 

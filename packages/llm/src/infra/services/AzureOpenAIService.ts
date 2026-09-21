@@ -8,31 +8,8 @@ import { DEFAULT_AZURE_OPENAI_API_VERSION } from '../../constants/defaultModels'
 const origin = 'AzureOpenAIService';
 
 /**
- * Azure OpenAI service using the Azure OpenAI client from the openai package.
- * Supports Azure-specific deployment model architecture where models are accessed
- * via deployment names rather than direct model identifiers.
- *
- * @example
- * ```typescript
- * // With explicit endpoint, API key, and API version
- * const azureService = new AzureOpenAIService({
- *   provider: 'azure-openai',
- *   model: 'gpt-4-deployment',
- *   fastestModel: 'gpt-35-turbo-deployment',
- *   endpoint: 'https://my-resource.openai.azure.com',
- *   apiKey: 'my-api-key',
- *   apiVersion: '2024-12-01-preview', // Optional, defaults to DEFAULT_AZURE_OPENAI_API_VERSION
- * });
- *
- * // Or using environment variables
- * const azureService = new AzureOpenAIService({
- *   provider: 'azure-openai',
- *   model: 'gpt-4-deployment',
- *   fastestModel: 'gpt-35-turbo-deployment',
- * });
- *
- * const result = await azureService.executePrompt('Hello world');
- * ```
+ * `defaultModel` / `defaultFastModel` hold Azure *deployment* names, not model
+ * identifiers - see `AzureOpenAIServiceConfig` in `@packmind/types`.
  */
 export class AzureOpenAIService extends BaseOpenAIService {
   protected readonly defaultModel: string;
@@ -53,9 +30,6 @@ export class AzureOpenAIService extends BaseOpenAIService {
     this.apiVersion = config.apiVersion || DEFAULT_AZURE_OPENAI_API_VERSION;
   }
 
-  /**
-   * Check if the Azure OpenAI service is properly configured and ready to use
-   */
   async isConfigured(): Promise<boolean> {
     try {
       const apiKey =
@@ -73,10 +47,6 @@ export class AzureOpenAIService extends BaseOpenAIService {
     }
   }
 
-  /**
-   * Initialize the Azure OpenAI client with API key and endpoint from configuration.
-   * Prioritizes config values over environment variables.
-   */
   protected async initialize(): Promise<void> {
     if (this.initialized) return;
 
@@ -118,16 +88,9 @@ export class AzureOpenAIService extends BaseOpenAIService {
   }
 
   /**
-   * Get a list of available model deployments from Azure OpenAI.
-   *
-   * Note: Azure OpenAI uses deployment names (not model IDs) for executing prompts.
-   * Listing deployments requires the Azure Management API with subscription ID and
-   * resource group information, which is not available through the data plane API.
-   *
-   * Users must obtain deployment names from the Azure Portal:
-   * Azure Portal > Azure OpenAI Resource > Model deployments
-   *
-   * @throws Error - This method is not implemented for Azure OpenAI provider
+   * Always throws. Listing deployments requires the Azure Management API with
+   * subscription ID and resource group information, which is not available
+   * through the data plane API; deployment names must be configured by hand.
    */
   async getModels(): Promise<string[]> {
     this.logger.warn(

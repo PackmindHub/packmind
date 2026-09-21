@@ -2,9 +2,6 @@ import { PackmindLogger } from '@packmind/logger';
 import { IJobRegistry } from '../domain/IJobRegistry';
 import { IJobFactory, IJobQueue } from '../domain/IJobQueue';
 
-/**
- * Implementation of job registry for managing job queues
- */
 const origin = 'JobRegistry';
 
 export class JobRegistry implements IJobRegistry {
@@ -41,10 +38,10 @@ export class JobRegistry implements IJobRegistry {
     const initPromises: Promise<void>[] = [];
 
     for (const [queueName, factory] of this.factories.entries()) {
-      // Idempotency: each registered factory's queue is created and its worker
-      // started at most once per process. Without this guard, multiple Hexas
-      // calling `initJobQueues()` re-invoke `factory.createQueue()` for every
-      // previously-initialized queue and spin up duplicate BullMQ workers.
+      // Each factory's queue is created, and its worker started, at most once
+      // per process. Without this guard a second call would re-invoke
+      // `factory.createQueue()` for already-initialized queues and leave
+      // duplicate BullMQ workers consuming the same jobs.
       if (this.queues.has(queueName)) {
         this.logger.info('Job queue already initialized, skipping', {
           queueName,

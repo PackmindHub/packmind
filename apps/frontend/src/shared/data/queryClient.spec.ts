@@ -10,7 +10,7 @@ function answered(status: number): PackmindError {
   });
 }
 
-function queryRetry(): (failureCount: number, error: unknown) => boolean {
+function queryRetry(): (failureCount: number, error: Error) => boolean {
   const { retry } = queryClient.getDefaultOptions().queries ?? {};
   if (typeof retry !== 'function') {
     throw new Error('The query default retry is expected to be a predicate');

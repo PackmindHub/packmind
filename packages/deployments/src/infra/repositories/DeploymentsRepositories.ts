@@ -7,18 +7,21 @@ import { IRenderModeConfigurationRepository } from '../../domain/repositories/IR
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { IPackageReleaseRepository } from '../../domain/repositories/IPackageReleaseRepository';
 import { TargetRepository } from './TargetRepository';
 import { PackagesDeploymentRepository } from './PackagesDeploymentRepository';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { PackageRepository } from './PackageRepository';
 import { DistributionRepository } from './DistributionRepository';
 import { DistributedPackageRepository } from './DistributedPackageRepository';
+import { PackageReleaseRepository } from './PackageReleaseRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
 import { PackagesDeploymentSchema } from '../schemas/PackagesDeploymentSchema';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
 import { PackageSchema } from '../schemas/PackageSchema';
 import { DistributionSchema } from '../schemas/DistributionSchema';
 import { DistributedPackageSchema } from '../schemas/DistributedPackageSchema';
+import { PackageReleaseSchema } from '../schemas/PackageReleaseSchema';
 import {
   Target,
   RenderModeConfiguration,
@@ -26,15 +29,9 @@ import {
   Package,
   Distribution,
   DistributedPackage,
+  PackageRelease,
 } from '@packmind/types';
 
-/**
- * DeploymentsRepositories - Repository aggregator implementation for the Deployments domain
- *
- * This class serves as the main repository access point, aggregating all
- * individual repositories. It handles the instantiation of repositories
- * using the shared DataSource and provides them through getter methods.
- */
 export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly targetRepository: ITargetRepository;
   private readonly packagesDeploymentRepository: IPackagesDeploymentRepository;
@@ -42,9 +39,9 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly packageRepository: IPackageRepository;
   private readonly distributionRepository: IDistributionRepository;
   private readonly distributedPackageRepository: IDistributedPackageRepository;
+  private readonly packageReleaseRepository: IPackageReleaseRepository;
 
   constructor(private readonly dataSource: DataSource) {
-    // Initialize all repositories with their respective schemas
     this.targetRepository = new TargetRepository(
       this.dataSource.getRepository(TargetSchema) as Repository<Target>,
     );
@@ -73,6 +70,12 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
       ) as Repository<DistributedPackage>,
     );
 
+    this.packageReleaseRepository = new PackageReleaseRepository(
+      this.dataSource.getRepository(
+        PackageReleaseSchema,
+      ) as Repository<PackageRelease>,
+    );
+
     // Covers the repositories that do not extend AbstractRepository, which
     // instruments itself. An explicit list rather than reflection over the
     // fields: this class also holds a TypeORM DataSource, which must not be
@@ -84,6 +87,7 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
       this.packageRepository,
       this.distributionRepository,
       this.distributedPackageRepository,
+      this.packageReleaseRepository,
     ]);
   }
 
@@ -105,5 +109,9 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
 
   getDistributedPackageRepository(): IDistributedPackageRepository {
     return this.distributedPackageRepository;
+  }
+
+  getPackageReleaseRepository(): IPackageReleaseRepository {
+    return this.packageReleaseRepository;
   }
 }

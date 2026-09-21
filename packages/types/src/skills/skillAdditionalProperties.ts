@@ -1,10 +1,4 @@
-/**
- * Returns a deep copy of `value` with all object keys sorted recursively.
- *
- * - Plain objects: keys are sorted with `localeCompare`.
- * - Arrays: each element is sorted recursively (order preserved).
- * - Primitives / nulls: returned as-is.
- */
+/** Array order is preserved; only object keys are reordered. */
 function deepSortKeys(value: unknown): unknown {
   if (value === null || value === undefined || typeof value !== 'object') {
     return value;
@@ -27,22 +21,14 @@ function deepSortKeys(value: unknown): unknown {
 }
 
 /**
- * Deterministic JSON serialization that recursively sorts object keys.
- *
- * Use this instead of `JSON.stringify` whenever two values must compare
- * equal regardless of key insertion order (e.g. YAML parse order vs
- * PostgreSQL JSONB retrieval order).
- *
- * @param value - Any JSON-serializable value
- * @returns Deterministic JSON string
+ * Use this instead of `JSON.stringify` whenever two values must compare equal
+ * regardless of key insertion order — e.g. YAML parse order against PostgreSQL
+ * JSONB retrieval order.
  */
 export function canonicalJsonStringify(value: unknown): string {
   return JSON.stringify(deepSortKeys(value ?? null));
 }
 
-/**
- * Converts a camelCase string to kebab-case.
- */
 export function camelToKebab(str: string): string {
   return str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
@@ -68,8 +54,8 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
 };
 
 /**
- * Canonical ordering of Claude Code additional properties (camelCase storage keys).
- * Used to ensure deterministic YAML frontmatter rendering regardless of JSONB key order.
+ * Canonical order for rendering YAML frontmatter, so the output does not follow
+ * whatever key order JSONB retrieval happens to return.
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'argumentHint',
@@ -87,10 +73,6 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'disallowedTools',
 ];
 
-/**
- * Maps camelCase storage key → YAML kebab-case key for Claude Code additional fields.
- * Derived by inverting `CLAUDE_CODE_ADDITIONAL_FIELDS`.
- */
 export const CAMEL_TO_YAML_KEY: Record<string, string> = Object.fromEntries(
   Object.entries(CLAUDE_CODE_ADDITIONAL_FIELDS).map(([yaml, camel]) => [
     camel,
@@ -111,17 +93,11 @@ export const COPILOT_ADDITIONAL_FIELDS: string[] = [
   'userInvocable',
 ];
 
-/**
- * Additional properties supported by the Cursor agent (camelCase storage keys).
- */
 export const CURSOR_ADDITIONAL_FIELDS: string[] = [
   'disableModelInvocation',
   'paths',
 ];
 
-/**
- * Filters additional properties to only include keys supported by a given agent.
- */
 export function filterAdditionalProperties(
   props: Record<string, unknown>,
   supportedKeys: string[],
@@ -132,8 +108,8 @@ export function filterAdditionalProperties(
 }
 
 /**
- * Sorts additional properties entries: known fields first (in canonical order),
- * then unknown fields alphabetically.
+ * Known fields first in `CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER`, then unknown
+ * fields alphabetically.
  */
 export function sortAdditionalPropertiesKeys(
   props: Record<string, unknown>,

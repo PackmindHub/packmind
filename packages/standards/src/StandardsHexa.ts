@@ -26,14 +26,6 @@ import { StandardsRepositories } from './infra/repositories/StandardsRepositorie
 
 const origin = 'StandardsHexa';
 
-/**
- * StandardsHexa - Facade for the Standards domain following the Hexa pattern.
- *
- * This class serves as the main entry point for standards-related functionality.
- * It manages dependency injection, service instantiation, and exposes the adapter.
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
- */
 export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   public readonly standardsRepositories: StandardsRepositories;
   public readonly standardsServices: StandardsServices;
@@ -52,15 +44,14 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         'Creating repository and service aggregators with DataSource',
       );
 
-      // Instantiate repositories
       this.standardsRepositories = new StandardsRepositories(this.dataSource);
 
-      // Instantiate services (linter adapter will be set later)
+      // Linter adapter is set later, in initialize()
       this.standardsServices = new StandardsServices(
         this.standardsRepositories,
       );
 
-      // Create adapter in constructor - dependencies will be injected in initialize()
+      // Ports are injected later, in initialize()
       this.logger.debug('Creating StandardsAdapter');
       this.adapter = new StandardsAdapter(
         this.standardsServices,
@@ -76,10 +67,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     }
   }
 
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   * Delayed jobs are now built internally by the adapter.
-   */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('StandardsHexa already initialized');
@@ -89,7 +76,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     this.logger.info('Initializing StandardsHexa (adapter retrieval phase)');
 
     try {
-      // Get all required ports (let errors propagate if missing)
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
@@ -100,22 +86,17 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
       this.logger.info('All required ports retrieved from registry');
 
-      // Get JobsService (required) - adapter will build delayed jobs internally
       const jobsService = registry.getService(JobsService);
       if (!jobsService) {
         throw new Error('JobsService not found in registry');
       }
 
-      // Get PackmindEventEmitterService (required) - for domain event emission
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
 
-      // Set adapters on services for backward compatibility
       this.standardsServices.setLinterAdapter(linterPort);
 
-      // Initialize adapter with all ports and services
-      // Delayed jobs are built internally by the adapter
       await this.adapter.initialize({
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
@@ -136,28 +117,16 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     }
   }
 
-  /**
-   * Get the Standards adapter for cross-domain access to standards data.
-   * This adapter implements IStandardsPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
-   */
   public getAdapter(): StandardsAdapter {
     return this.adapter.getPort() as StandardsAdapter;
   }
 
-  /**
-   * Get the port name for this hexa.
-   */
   public getPortName(): string {
     return IStandardsPortName;
   }
 
-  /**
-   * Destroys the StandardsHexa and cleans up resources
-   */
   public destroy(): void {
     this.logger.info('Destroying StandardsHexa');
-    // Add any cleanup logic here if needed
     this.logger.info('StandardsHexa destroyed');
   }
 }

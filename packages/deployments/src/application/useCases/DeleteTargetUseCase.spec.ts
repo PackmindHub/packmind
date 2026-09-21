@@ -1,3 +1,4 @@
+import { mockInterface, createMockInstance } from '@packmind/test-utils';
 import { DeleteTargetUseCase } from './DeleteTargetUseCase';
 import {
   DeleteTargetCommand,
@@ -64,18 +65,9 @@ describe('DeleteTargetUseCase', () => {
   };
 
   beforeEach(() => {
-    mockTargetService = {
-      findById: jest.fn(),
-      deleteTarget: jest.fn(),
-      getTargetsByGitRepoId: jest.fn(),
-      addTarget: jest.fn(),
-      updateTarget: jest.fn(),
-    } as unknown as jest.Mocked<TargetService>;
+    mockTargetService = createMockInstance(TargetService);
 
-    mockGitPort = {
-      getRepositoryById: jest.fn(),
-      listProviders: jest.fn(),
-    } as unknown as jest.Mocked<IGitPort>;
+    mockGitPort = mockInterface<IGitPort>();
 
     useCase = new DeleteTargetUseCase(mockTargetService, mockGitPort);
   });
