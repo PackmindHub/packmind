@@ -21,6 +21,7 @@ import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 import { IStandardsGateway } from '../../domain/repositories/IStandardsGateway';
 import { IPackagesGateway } from '../../domain/repositories/IPackagesGateway';
 import { packageFactory } from '@packmind/deployments/test';
+import { ArtefactAlreadyInPackageError } from '../../domain/errors/ArtefactAlreadyInPackageError';
 
 describe('AddToPackageUseCase', () => {
   let useCase: AddToPackageUseCase;
@@ -412,6 +413,105 @@ describe('AddToPackageUseCase', () => {
     });
 
     it('converts skipped IDs to slugs', () => {
+      expect(result.skipped).toEqual(['std-1']);
+    });
+  });
+
+  describe('when the standard already belongs to another package', () => {
+    let otherPkg: Package;
+
+    beforeEach(() => {
+      otherPkg = packageFactory({
+        id: createPackageId('package-other'),
+        slug: 'other',
+        spaceId: createSpaceId('space-123'),
+        standards: [createStandardId('std-id-1')],
+      });
+
+      standardsGateway.list.mockResolvedValue({
+        standards: [
+          standardFactory({
+            id: createStandardId('std-id-1'),
+            slug: 'std-1',
+            name: 'Std 1',
+            description: 'desc',
+          }),
+        ],
+      });
+      packagesGateway.list.mockResolvedValue({ packages: [pkg, otherPkg] });
+    });
+
+    it('throws ArtefactAlreadyInPackageError', async () => {
+      await expect(
+        useCase.execute({
+          packageSlug: pkg.slug,
+          itemType: 'standard',
+          itemSlugs: ['std-1'],
+        }),
+      ).rejects.toThrow(ArtefactAlreadyInPackageError);
+    });
+
+    it('names the packages already holding it', async () => {
+      const error = await useCase
+        .execute({
+          packageSlug: pkg.slug,
+          itemType: 'standard',
+          itemSlugs: ['std-1'],
+        })
+        .then(() => null)
+        .catch((thrown: ArtefactAlreadyInPackageError) => thrown);
+
+      expect(error?.conflicts).toEqual([
+        { slug: 'std-1', name: 'Std 1', packageSlugs: ['@global/other'] },
+      ]);
+    });
+
+    it('adds nothing', async () => {
+      await useCase
+        .execute({
+          packageSlug: pkg.slug,
+          itemType: 'standard',
+          itemSlugs: ['std-1'],
+        })
+        .catch(() => undefined);
+
+      expect(packagesGateway.addArtefacts).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the standard already belongs to the target package only', () => {
+    beforeEach(() => {
+      pkg = packageFactory({
+        id: createPackageId('package-1'),
+        spaceId: createSpaceId('space-123'),
+        standards: [createStandardId('std-id-1')],
+      });
+
+      standardsGateway.list.mockResolvedValue({
+        standards: [
+          standardFactory({
+            id: createStandardId('std-id-1'),
+            slug: 'std-1',
+            name: 'Std 1',
+            description: 'desc',
+          }),
+        ],
+      });
+      packagesGateway.list.mockResolvedValue({ packages: [pkg] });
+      packagesGateway.addArtefacts.mockResolvedValue({
+        package: pkg,
+        added: { standards: [], commands: [], skills: [] },
+        skipped: { standards: ['std-id-1'], commands: [], skills: [] },
+      });
+    });
+
+    it('reports it as skipped rather than refusing', async () => {
+      const result = await useCase.execute({
+        packageSlug: pkg.slug,
+        itemType: 'standard',
+        itemSlugs: ['std-1'],
+      });
+
       expect(result.skipped).toEqual(['std-1']);
     });
   });

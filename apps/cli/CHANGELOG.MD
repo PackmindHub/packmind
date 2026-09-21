@@ -6,6 +6,8 @@
 
 ## Changed
 
+- An artefact now belongs to a single package. `packmind packages add` refuses an artefact that already belongs to another package instead of adding it to a second one, naming the packages that hold it and printing the `packages move` command that would relocate it. Adding an artefact already in the target package is unchanged — it is still reported as skipped
+
 ## Fixed
 
 ## Removed

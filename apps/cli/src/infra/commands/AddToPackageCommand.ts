@@ -1,10 +1,9 @@
 import { command, option, string, multioption, array } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { logErrorConsole } from '../utils/consoleLogger';
-import { ItemType } from '../../domain/useCases/IAddToPackageUseCase';
 import { originSkillOption } from './sharedOptions';
 import { addToPackageHandler } from './packages/addToPackageHandler';
+import { selectItemType } from './packages/selectItemType';
 import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
 
 export const addToPackageCommand = command({
@@ -35,33 +34,11 @@ export const addToPackageCommand = command({
     originSkill: originSkillOption,
   },
   handler: async ({ to, standards, commands, skills, originSkill }) => {
-    const standardSlugs = standards ?? [];
-    const commandSlugs = commands ?? [];
-    const skillSlugs = skills ?? [];
-
-    const itemTypes = (
-      [
-        { type: 'standard' as ItemType, slugs: standardSlugs },
-        { type: 'command' as ItemType, slugs: commandSlugs },
-        { type: 'skill' as ItemType, slugs: skillSlugs },
-      ] as { type: ItemType; slugs: string[] }[]
-    ).filter((t) => t.slugs.length > 0);
-
-    if (itemTypes.length === 0) {
-      logErrorConsole(
-        'Error: At least one --standard, --command, or --skill is required',
-      );
-      process.exit(1);
-    }
-
-    if (itemTypes.length > 1) {
-      logErrorConsole(
-        'Cannot add standards, commands, and skills simultaneously.  Use dedicated commands for each artefact.',
-      );
-      process.exit(1);
-    }
-
-    const { type: itemType, slugs: itemSlugs } = itemTypes[0];
+    const { itemType, itemSlugs } = selectItemType(
+      { standards, commands, skills },
+      'add',
+      process.exit,
+    );
 
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const hexa = new PackmindCliHexa(packmindLogger);
