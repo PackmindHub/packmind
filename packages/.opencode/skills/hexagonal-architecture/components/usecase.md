@@ -138,3 +138,22 @@ See [contract.md](contract.md) for the pattern.
 - **Use cases call services, not repositories** — use cases orchestrate via services; never access repositories directly
 - **Emit events** when the operation has side effects other domains care about
 - **Test file colocated** — `{name}.usecase.spec.ts` in the same folder
+
+## Errors
+
+- **Never `throw new Error(...)`** — a bare `Error` answers 500 with a stack logged at
+  `error` level, whatever the failure actually was
+- **Throw a class extending the package's `DomainError` base** — see
+  [domain-layer.md](../layers/domain-layer.md); `packages/deployments/src/domain/errors/`
+  is the current model
+- **Missing and wrong-tenant are one branch** — `if (!pkg || pkg.spaceId !== spaceId) throw
+  new PackageNotFoundError(packageId, spaceId)`, one error, one message, `kind: 'not_found'`
+  and never `forbidden`
+- **Ids belong in `context`, not in the message** — `context` is logged, the message is
+  returned to the caller
+- **Broken invariants extend `PackmindInternalError`** — e.g. a record that cannot be read
+  back after it was written
+
+The authorization errors the abstract base classes raise above (`UserNotFoundError`,
+`UserNotInOrganizationError`, `SpaceMembershipRequiredError`) are `UserAccessError`
+subclasses: carrying a `kind` is what makes them answer 404/403 rather than 500.

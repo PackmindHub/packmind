@@ -1,6 +1,6 @@
 ---
 name: 'hexagonal-architecture'
-description: 'Describes the hexagonal architecture (ports and adapters) used across the Packmind monorepo. This skill should be used when creating new domain packages, use cases, services, repositories, or any architectural component to follow established patterns.'
+description: 'Describes the hexagonal architecture (ports and adapters) used across the Packmind monorepo. This skill should be used when creating new domain packages, use cases, services, repositories, domain error classes, or any architectural component to follow established patterns, including how a failure raised in a use case becomes an HTTP response.'
 ---
 
 # Hexagonal Architecture - Packmind Monorepo
@@ -99,6 +99,34 @@ Domains talk to each other through two mechanisms:
 
 See [event.md](components/event.md) and [adapter.md](components/adapter.md) for patterns.
 
+## Error Handling
+
+A failure raised in a use case becomes an HTTP response through `DomainExceptionFilter`,
+registered globally as an `APP_FILTER`. Two disjoint unions in `packages/types/src/errors/`,
+both discriminating on `kind`:
+
+| kind | HTTP | Log level | Message returned | Frontend retries |
+|------|------|-----------|------------------|------------------|
+| `not_found` | 404 | warn | yes | no |
+| `forbidden` | 403 | warn | yes | no |
+| `invalid_input` | 400 | warn | yes | no |
+| `conflict` | 409 | warn | yes | no |
+| `internal` (`PackmindInternalError`) | 500 | error + stack | no, generic body | yes, once |
+
+**Never `throw new Error(...)` from a use case or a service.** A bare `Error` carries no
+`kind`, so it reaches Nest's `ExceptionsHandler` and answers 500 with a full stack logged at
+`error` level — even when the correct answer was a 404.
+
+Controllers **propagate**; they never translate. No `instanceof` plus `throw new
+NotFoundException(...)` — the filter is the only place `kind` maps to a status.
+
+Listeners run outside the HTTP request scope, so the filter never sees their exceptions: a
+listener logs a domain error at `warn` and an internal error at `error` with its stack.
+
+Full rules, including the non-leaking cross-tenant rule, are in the
+`domain-error-handling` standard. See [domain-layer.md](layers/domain-layer.md) for the
+class shape.
+
 ## Key Base Classes (from `@packmind/node-utils`)
 
 | Class | Purpose |
@@ -110,4 +138,6 @@ See [event.md](components/event.md) and [adapter.md](components/adapter.md) for 
 | `AbstractAdminUseCase<C, R>` | Use case with admin authorization |
 | `AbstractRepository<T>` | Base TypeORM repository with soft delete support |
 | `PackmindListener<TAdapter>` | Event subscription base class |
+| `UserAccessError` | Reference shape for a domain error: `kind` + literal `reason` union + typed `context` + fixed message |
+| `DomainExceptionFilter` | Global `APP_FILTER`; holds the only `kind` -> HTTP status mapping (`@packmind/node-utils/filters`) |
 | `PackmindEventEmitterService` | Event bus for domain events |
