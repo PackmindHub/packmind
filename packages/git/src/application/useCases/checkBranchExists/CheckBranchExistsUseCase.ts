@@ -1,5 +1,11 @@
 import { GitProviderService } from '../../GitProviderService';
-import { GitProviderId, GitProviderNotFoundError } from '@packmind/types';
+import {
+  GitProviderId,
+  GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
+  MissingGitInputError,
+} from '@packmind/types';
+import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
 
 export interface CheckBranchExistsUseCaseInput {
   gitProviderId: GitProviderId;
@@ -15,16 +21,16 @@ export class CheckBranchExistsUseCase {
     const { gitProviderId, owner, repo, branch } = input;
 
     if (!gitProviderId) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
     if (!owner) {
-      throw new Error('Repository owner is required');
+      throw new MissingGitInputError('Repository owner');
     }
     if (!repo) {
-      throw new Error('Repository name is required');
+      throw new MissingGitInputError('Repository name');
     }
     if (!branch) {
-      throw new Error('Branch name is required');
+      throw new MissingGitInputError('Branch name');
     }
 
     const gitProvider =
@@ -36,11 +42,11 @@ export class CheckBranchExistsUseCase {
     // App-auth providers carry no token on the row: the installation token is
     // minted on demand by GithubTokenResolverFactory downstream.
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitProviderId);
     }
 
     if (!gitProvider.source) {
-      throw new Error('Git provider source not configured');
+      throw new GitProviderSourceNotConfiguredError(gitProviderId);
     }
 
     return this.gitProviderService.checkBranchExists(

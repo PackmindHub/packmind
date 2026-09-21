@@ -2,9 +2,12 @@ import {
   GitProvider,
   GitProviderId,
   GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
+  MissingGitInputError,
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
+import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
 import { invalidInput, mockInterface } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { CheckBranchExistsUseCase } from './CheckBranchExistsUseCase';
@@ -61,7 +64,7 @@ describe('CheckBranchExistsUseCase', () => {
       it('rejects', async () => {
         await expect(
           useCase.execute({ gitProviderId: providerId, ...args }),
-        ).rejects.toThrow('Git provider token not configured');
+        ).rejects.toBeInstanceOf(GitProviderTokenNotConfiguredError);
       });
 
       it('does not call checkBranchExists', async () => {
@@ -141,7 +144,7 @@ describe('CheckBranchExistsUseCase', () => {
             gitProviderId: invalidInput<GitProviderId>(undefined),
             ...args,
           }),
-        ).rejects.toThrow('Git provider ID is required');
+        ).rejects.toBeInstanceOf(MissingGitInputError);
       });
     });
 
@@ -151,7 +154,20 @@ describe('CheckBranchExistsUseCase', () => {
 
         await expect(
           useCase.execute({ gitProviderId: providerId, ...args }),
-        ).rejects.toThrow(GitProviderNotFoundError);
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
+      });
+    });
+
+    describe('when the provider has no source', () => {
+      it('rejects', async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue({
+          ...tokenProvider,
+          source: invalidInput<GitProvider['source']>(undefined),
+        });
+
+        await expect(
+          useCase.execute({ gitProviderId: providerId, ...args }),
+        ).rejects.toBeInstanceOf(GitProviderSourceNotConfiguredError);
       });
     });
   });

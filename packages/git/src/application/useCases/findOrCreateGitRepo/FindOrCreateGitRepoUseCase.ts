@@ -9,6 +9,7 @@ import {
   IAccountsPort,
   IFindOrCreateGitRepoUseCase,
   IGitPort,
+  UnresolvableGitProviderError,
 } from '@packmind/types';
 import { extractBaseUrl, parseGitProviderVendor } from '@packmind/node-utils';
 
@@ -146,9 +147,7 @@ export class FindOrCreateGitRepoUseCase
     } else if (gitRemoteUrl) {
       expectedProviderUrl = extractBaseUrl(gitRemoteUrl);
     } else {
-      throw new Error(
-        'Cannot resolve a git provider: a gitRemoteUrl is required for unknown providers',
-      );
+      throw new UnresolvableGitProviderError(owner, repo);
     }
 
     let tokenlessProvider = vendorProviders.find(

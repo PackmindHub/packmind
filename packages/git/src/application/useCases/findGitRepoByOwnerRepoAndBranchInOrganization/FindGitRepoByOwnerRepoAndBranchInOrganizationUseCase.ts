@@ -2,6 +2,7 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
+  MissingGitInputError,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
@@ -13,10 +14,20 @@ export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase implements IFi
   ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult> {
     const { owner, repo, branch, organizationId } = command;
 
-    if (!owner || !repo || !branch || !organizationId) {
-      throw new Error(
-        'Owner, repository name, branch, and organization ID are required',
-      );
+    if (!owner) {
+      throw new MissingGitInputError('Repository owner');
+    }
+
+    if (!repo) {
+      throw new MissingGitInputError('Repository name');
+    }
+
+    if (!branch) {
+      throw new MissingGitInputError('Branch name');
+    }
+
+    if (!organizationId) {
+      throw new MissingGitInputError('Organization ID');
     }
 
     const gitRepo =

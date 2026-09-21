@@ -6,6 +6,7 @@ export type GitErrorReason =
   | 'git_repo_not_found'
   | 'git_provider_has_repositories'
   | 'git_provider_missing_token'
+  | 'git_provider_token_not_configured'
   | 'target_path_update_requires_token'
   | 'invalid_git_provider_credentials'
   | 'github_app_revoked'
@@ -15,6 +16,8 @@ export type GitErrorReason =
   | 'no_tracked_repository'
   | 'repository_not_trackable'
   | 'unsupported_git_provider'
+  | 'missing_git_input'
+  | 'unresolvable_git_provider'
   | 'git_repo_already_linked_as_standard';
 
 export type GitErrorContext = {
@@ -28,6 +31,7 @@ export type GitErrorContext = {
   displayName?: string;
   repositoryCount?: number;
   gitRemoteUrl?: string;
+  field?: string;
 };
 
 /**

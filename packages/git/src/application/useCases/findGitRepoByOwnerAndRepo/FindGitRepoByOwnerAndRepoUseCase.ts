@@ -1,4 +1,4 @@
-import { GitRepo } from '@packmind/types';
+import { GitRepo, MissingGitInputError } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { QueryOption } from '@packmind/types';
 
@@ -16,8 +16,12 @@ export class FindGitRepoByOwnerAndRepoUseCase {
   ): Promise<GitRepo | null> {
     const { owner, repo, opts } = input;
 
-    if (!owner || !repo) {
-      throw new Error('Owner and repository name are required');
+    if (!owner) {
+      throw new MissingGitInputError('Repository owner');
+    }
+
+    if (!repo) {
+      throw new MissingGitInputError('Repository name');
     }
 
     return this.gitRepoService.findGitRepoByOwnerAndRepo(owner, repo, opts);
