@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { LuPlus, LuSearch, LuX } from 'react-icons/lu';
+import { LuArrowRight, LuSearch, LuX } from 'react-icons/lu';
 import {
   PMBox,
   PMButton,
@@ -30,8 +30,7 @@ import {
 import { Link as RouterLink } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
 import {
-  AddArtefactsToPackagesEntry,
-  useAddArtefactsToPackagesMutation,
+  useMoveArtefactsToPackageMutation,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageMembership } from '../../hooks/usePackageMembership';
@@ -40,6 +39,7 @@ import {
   deployedPlaceParts,
   RemoveArtifactFromPackageConfirm,
 } from '../PackagesPopover';
+import { MoveArtifactsToPackageConfirm } from './MoveArtifactsToPackageConfirm';
 
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
@@ -70,13 +70,16 @@ const ARTIFACT_KIND_PLURALS: Record<AddToPackagesArtifactKind, string> = {
   skill: 'skills',
 };
 
+type ArtefactIdsPayload = {
+  standardIds?: StandardId[];
+  commandIds?: CommandId[];
+  skillIds?: SkillId[];
+};
+
 function buildArtefactIdsPayload(
   artifactType: ArtifactType,
   ids: ArtifactId[],
-): Pick<
-  AddArtefactsToPackagesEntry,
-  'standardIds' | 'commandIds' | 'skillIds'
-> {
+): ArtefactIdsPayload {
   switch (artifactType) {
     case 'standard':
       return { standardIds: ids as StandardId[] };
@@ -94,9 +97,14 @@ const byName = (a: PackageResponse, b: PackageResponse) =>
  * Drawer-sized twin of the breadcrumb PackagesPopover for a list selection:
  * every package holding at least one selected artifact is removable in place
  * (removal only detaches the ones it holds), every package missing some is
- * one click away from adding them, so a partial overlap shows in both
- * sections. Adds are instant and silent (the row moves up into the members
- * section); removal confirms only when the package is deployed somewhere.
+ * one click away from taking them, so a partial overlap shows in both
+ * sections.
+ *
+ * An artifact belongs to a single package, so picking a package *moves* the
+ * selection there: whatever another package held is taken out of it, in one
+ * server-side move that either lands whole or not at all. Moves are instant
+ * and silent (the row travels up into the members section); removal confirms
+ * only when the package is deployed somewhere.
  */
 export const AddToPackagesDialog = ({
   open,
@@ -114,6 +122,7 @@ export const AddToPackagesDialog = ({
   const [removeTarget, setRemoveTarget] = useState<PackageResponse | null>(
     null,
   );
+  const [moveTarget, setMoveTarget] = useState<PackageResponse | null>(null);
   const [hasChanged, setHasChanged] = useState(false);
 
   const artifactIds = useMemo(() => artifacts.map((a) => a.id), [artifacts]);
@@ -137,11 +146,11 @@ export const AddToPackagesDialog = ({
   const { getDeployedTargets, getDeployedMarketplaces, isDeployed } =
     usePackageDeploymentStatus(spaceId, organizationId);
 
-  const { mutateAsync: addArtefacts, isPending: isAdding } =
-    useAddArtefactsToPackagesMutation();
+  const { mutateAsync: moveArtefacts, isPending: isMoving } =
+    useMoveArtefactsToPackageMutation();
   const { mutateAsync: removeArtefacts, isPending: isRemoving } =
     useRemoveArtefactsFromPackageMutation();
-  const isBusy = isAdding || isRemoving;
+  const isBusy = isMoving || isRemoving;
 
   const sortedMembers = useMemo(
     () => [...memberPackages].sort(byName),
@@ -164,41 +173,28 @@ export const AddToPackagesDialog = ({
       if (hasChanged) onSuccess();
       setQuery('');
       setRemoveTarget(null);
+      setMoveTarget(null);
       setHasChanged(false);
     }
   };
 
-  const handleAdd = async (pkg: PackageResponse) => {
-    const presentSet =
-      presentArtifactIdsByPackageId[pkg.id.toString()] ?? new Set<string>();
-    const remaining = artifactIds.filter(
-      (id) => !presentSet.has(id.toString()),
-    );
+  // The whole selection is sent, already-present artifacts included: the
+  // server skips those and still empties the packages holding the others.
+  const moveToPackage = async (pkg: PackageResponse) => {
     try {
-      const outcomes = await addArtefacts({
+      await moveArtefacts({
         spaceId,
-        entries: [
-          {
-            packageId: pkg.id,
-            ...buildArtefactIdsPayload(artifactType, remaining),
-          },
-        ],
+        packageId: pkg.id,
+        ...buildArtefactIdsPayload(artifactType, artifactIds),
       });
-      if (outcomes.some((o) => !o.ok)) {
-        pmToaster.create({
-          type: 'error',
-          title: `Couldn't add to ${pkg.name}`,
-          description: 'Try again, or check your space access.',
-        });
-        return;
-      }
       setHasChanged(true);
-    } catch {
+    } catch (error) {
       pmToaster.create({
         type: 'error',
-        title: `Couldn't add to ${pkg.name}`,
-        description: 'Try again, or check your space access.',
+        title: `Couldn't move to ${pkg.name}`,
+        description: 'Nothing changed. Try again, or check your space access.',
       });
+      throw error;
     }
   };
 
@@ -208,6 +204,47 @@ export const AddToPackagesDialog = ({
     artifacts.filter((a) =>
       presentArtifactIdsByPackageId[pkg.id.toString()]?.has(a.id.toString()),
     );
+
+  /**
+   * What clicking a package would do to the selection it does not already
+   * hold: an artifact another package holds is relocated, an artifact no
+   * package holds is simply added. The two are counted apart because only the
+   * first one takes something away from somewhere else.
+   */
+  const splitByOutcome = (pkg: PackageResponse) => {
+    const present = presentArtifactIdsByPackageId[pkg.id.toString()];
+    const missing = artifacts.filter((a) => !present?.has(a.id.toString()));
+    const heldElsewhere = (artifact: ManagePackagesArtifact) =>
+      Object.entries(presentArtifactIdsByPackageId).some(
+        ([otherPackageId, ids]) =>
+          otherPackageId !== pkg.id.toString() &&
+          ids.has(artifact.id.toString()),
+      );
+
+    return {
+      moved: missing.filter(heldElsewhere),
+      added: missing.filter((a) => !heldElsewhere(a)),
+    };
+  };
+
+  /** The packages a move to `target` would take the selection out of. */
+  const emptiedBy = (target: PackageResponse): PackageResponse[] =>
+    sortedMembers.filter((pkg) => pkg.id !== target.id);
+
+  /**
+   * Only a package that is live somewhere earns a prompt: moving into a
+   * distributed package adds to what it ships and needs no warning, while
+   * moving out of one takes something away at the next sync.
+   */
+  const requestMove = (pkg: PackageResponse) => {
+    if (emptiedBy(pkg).some((source) => isDeployed(source.id))) {
+      setMoveTarget(pkg);
+    } else {
+      void moveToPackage(pkg).catch(() => {
+        /* error surfaced via toast */
+      });
+    }
+  };
 
   const removeFromPackage = async (pkg: PackageResponse) => {
     const presentIds = presentArtifactsIn(pkg).map((a) => a.id);
@@ -249,8 +286,8 @@ export const AddToPackagesDialog = ({
 
   const membersEmptyCopy =
     artifactCount === 1
-      ? 'Not in any package yet. Pick one below to add it.'
-      : `None of these ${artifactCount} ${kindPlural} are in a package yet. Pick one below to add them.`;
+      ? 'Not in any package yet. Pick one below.'
+      : `None of these ${artifactCount} ${kindPlural} are in a package yet. Pick one below.`;
 
   const allCoveredCopy =
     artifactCount === 1
@@ -332,7 +369,7 @@ export const AddToPackagesDialog = ({
         <PMSeparator />
 
         <PMVStack gap={2} alignItems="stretch">
-          <SectionLabel>Add to a package</SectionLabel>
+          <SectionLabel>Move to a package</SectionLabel>
           {addablePackages.length === 0 ? (
             <PMText variant="small" color="faded">
               {allCoveredCopy}
@@ -365,22 +402,19 @@ export const AddToPackagesDialog = ({
               ) : (
                 <PMVStack gap={0} alignItems="stretch">
                   {filteredAddable.map((pkg) => {
-                    const held = presentArtifactsIn(pkg);
-                    const missing = artifacts.filter((a) => !held.includes(a));
+                    const { moved, added } = splitByOutcome(pkg);
+                    const holdsSome = presentArtifactsIn(pkg).length > 0;
                     return (
-                      <AddRow
+                      <MoveRow
                         key={pkg.id}
                         pkg={pkg}
                         deployedTargets={getDeployedTargets(pkg.id)}
                         deployedMarketplaces={getDeployedMarketplaces(pkg.id)}
-                        missingNames={
-                          artifactCount > 1 && held.length > 0
-                            ? missing.map((a) => a.name)
-                            : null
-                        }
-                        totalCount={artifactCount}
+                        movedNames={moved.map((a) => a.name)}
+                        addedNames={added.map((a) => a.name)}
+                        showAddedOnly={artifactCount > 1 && holdsSome}
                         disabled={isBusy}
-                        onAdd={() => handleAdd(pkg)}
+                        onMove={() => requestMove(pkg)}
                       />
                     );
                   })}
@@ -466,6 +500,35 @@ export const AddToPackagesDialog = ({
             description: `No longer bundled in ${removeTarget.name}.`,
           });
           setRemoveTarget(null);
+        }}
+      />
+
+      <MoveArtifactsToPackageConfirm
+        open={moveTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setMoveTarget(null);
+        }}
+        targetPackageName={moveTarget?.name ?? ''}
+        artifactNames={artifacts.map((a) => a.name)}
+        emptiedPackages={(moveTarget ? emptiedBy(moveTarget) : []).map(
+          (source) => ({
+            packageName: source.name,
+            deployedTargets: getDeployedTargets(source.id),
+            deployedMarketplaces: getDeployedMarketplaces(source.id),
+          }),
+        )}
+        onConfirm={async () => {
+          if (!moveTarget) return;
+          await moveToPackage(moveTarget);
+          pmToaster.create({
+            type: 'success',
+            title:
+              artifactCount === 1
+                ? 'Moved to package'
+                : `${artifactCount} ${kindPlural} moved to package`,
+            description: `Now bundled in ${moveTarget.name} only.`,
+          });
+          setMoveTarget(null);
         }}
       />
     </>
@@ -588,23 +651,63 @@ function MemberRow({
   );
 }
 
-function AddRow({
+/**
+ * The row's hint answers "what happens if I click this?" — how many of the
+ * selection travel here from another package, and how many are placed in one
+ * for the first time. A count of zero is left out rather than printed as zero.
+ *
+ * A move always says so, however small: it is the part that takes something
+ * away from somewhere else. Plain additions are only worth a hint when the
+ * package already holds part of the selection (`showAddedOnly`), since
+ * otherwise every row would repeat the selection count back at the user.
+ */
+function moveHint(
+  movedNames: string[],
+  addedNames: string[],
+  showAddedOnly: boolean,
+): { label: string; detail: string } | null {
+  const moves = `Moves ${movedNames.length}`;
+  const adds = `Adds ${addedNames.length}`;
+
+  if (movedNames.length > 0 && addedNames.length > 0) {
+    return {
+      label: `${moves}, ${adds}`,
+      detail: `Moves: ${movedNames.join(', ')} · Adds: ${addedNames.join(', ')}`,
+    };
+  }
+
+  if (movedNames.length > 0) {
+    return { label: moves, detail: movedNames.join(', ') };
+  }
+
+  if (addedNames.length > 0 && showAddedOnly) {
+    return { label: adds, detail: addedNames.join(', ') };
+  }
+
+  return null;
+}
+
+function MoveRow({
   pkg,
   deployedTargets,
   deployedMarketplaces,
-  missingNames,
-  totalCount,
+  movedNames,
+  addedNames,
+  showAddedOnly,
   disabled,
-  onAdd,
+  onMove,
 }: {
   pkg: PackageResponse;
   deployedTargets: number;
   deployedMarketplaces: number;
-  missingNames: string[] | null;
-  totalCount: number;
+  movedNames: string[];
+  addedNames: string[];
+  showAddedOnly: boolean;
   disabled: boolean;
-  onAdd: () => void;
+  onMove: () => void;
 }) {
+  const hint = moveHint(movedNames, addedNames, showAddedOnly);
+
   return (
     <PMHStack
       as="button"
@@ -620,27 +723,27 @@ function AddRow({
       pointerEvents={disabled ? 'none' : undefined}
       transition="background-color 120ms ease-out"
       _hover={{ backgroundColor: 'background.tertiary' }}
-      aria-label={`Add to ${pkg.name}`}
+      aria-label={`Move to ${pkg.name}`}
       aria-disabled={disabled}
-      onClick={disabled ? undefined : onAdd}
+      onClick={disabled ? undefined : onMove}
     >
       <PackageRowContent
         pkg={pkg}
         deployedTargets={deployedTargets}
         deployedMarketplaces={deployedMarketplaces}
       />
-      {missingNames !== null ? (
-        <PMTooltip label={missingNames.join(', ')} openDelay={300}>
+      {hint ? (
+        <PMTooltip label={hint.detail} openDelay={300}>
           <PMBox as="span" flexShrink={0} cursor="help">
             <PMText variant="small" color="faded">
-              adds {missingNames.length} of {totalCount}
+              {hint.label}
             </PMText>
           </PMBox>
         </PMTooltip>
       ) : null}
       <PMBox flexShrink={0} color="text.faded">
         <PMIcon fontSize="sm">
-          <LuPlus />
+          <LuArrowRight />
         </PMIcon>
       </PMBox>
     </PMHStack>

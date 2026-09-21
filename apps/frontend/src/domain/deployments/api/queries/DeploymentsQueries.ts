@@ -1,5 +1,6 @@
 import {
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
@@ -940,6 +941,57 @@ export const useAddArtefactsToPackagesMutation = () => {
       if (!anySuccess) return;
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+      await invalidatePackageReleaseReadiness(queryClient);
+    },
+  });
+};
+
+export const MOVE_ARTEFACTS_TO_PACKAGE_MUTATION_KEY = 'moveArtefactsToPackage';
+/**
+ * Puts artefacts in one package and takes them out of every other package in
+ * the space. The whole move lands or none of it does, so a rejection here
+ * means membership is unchanged and nothing needs undoing client-side.
+ */
+export const useMoveArtefactsToPackageMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [MOVE_ARTEFACTS_TO_PACKAGE_MUTATION_KEY],
+    mutationFn: async ({
+      spaceId,
+      packageId,
+      standardIds,
+      commandIds,
+      skillIds,
+    }: {
+      spaceId: SpaceId;
+      packageId: PackageId;
+      standardIds?: StandardId[];
+      commandIds?: CommandId[];
+      skillIds?: SkillId[];
+    }): Promise<MoveArtefactsToPackageResponse> => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to move artifacts');
+      }
+      return deploymentsGateways.moveArtefactsToPackage({
+        organizationId: organization.id,
+        spaceId,
+        packageId,
+        standardIds,
+        recipeIds: commandIds,
+        skillIds,
+      });
+    },
+    // A move rewrites the target and every package it emptied, so the whole
+    // package-detail key is invalidated rather than the target's alone.
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_PACKAGE_BY_ID_KEY,
       });
       await invalidatePackageReleaseReadiness(queryClient);
     },

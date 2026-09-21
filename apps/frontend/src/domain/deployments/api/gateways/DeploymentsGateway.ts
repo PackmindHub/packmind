@@ -19,6 +19,8 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IAddArtefactsToPackageUseCase,
+  IMoveArtefactsToPackageUseCase,
+  MoveArtefactsToPackageCommand,
   IRemoveArtefactsFromPackageUseCase,
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
@@ -168,6 +170,20 @@ export class DeploymentsGatewayApi
   }: NewPackmindCommandBody<AddArtefactsToPackageCommand>) => {
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
+      { standardIds, commandIds: recipeIds, skillIds },
+    );
+  };
+
+  moveArtefactsToPackage: NewGateway<IMoveArtefactsToPackageUseCase> = async ({
+    organizationId,
+    spaceId,
+    packageId,
+    standardIds,
+    recipeIds,
+    skillIds,
+  }: NewPackmindCommandBody<MoveArtefactsToPackageCommand>) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/move-artifacts`,
       { standardIds, commandIds: recipeIds, skillIds },
     );
   };
