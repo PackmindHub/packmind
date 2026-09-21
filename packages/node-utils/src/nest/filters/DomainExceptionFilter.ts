@@ -11,6 +11,8 @@ import {
   DomainErrorKind,
   isDomainError,
   isInternalError,
+  isUpstreamError,
+  UpstreamErrorKind,
 } from '@packmind/types';
 
 const origin = 'DomainExceptionFilter';
@@ -40,8 +42,34 @@ const KIND_POLICY: Record<DomainErrorKind, KindPolicy> = {
   conflict: { status: HttpStatus.CONFLICT, logLevel: 'warn' },
 };
 
+/**
+ * What each upstream kind is answered with — the same construction as
+ * `KIND_POLICY`, and total for the same reason: a new `UpstreamErrorKind`
+ * fails to compile until its row is stated here.
+ *
+ * Both rows log at `warn`, not `error`: a third party being down or throttling
+ * us is not our invariant breaking, and an `error` here would drown the ones
+ * that are. The statuses are the point of the type — `upstream_unavailable`
+ * answers 502 rather than 503 because it is the thing behind us that failed,
+ * and `upstream_rate_limited` answers 429 even though a 4xx normally means the
+ * caller erred: they did not, our shared credential hit someone else's quota.
+ */
+const UPSTREAM_KIND_POLICY: Record<UpstreamErrorKind, KindPolicy> = {
+  upstream_unavailable: { status: HttpStatus.BAD_GATEWAY, logLevel: 'warn' },
+  upstream_rate_limited: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    logLevel: 'warn',
+  },
+};
+
 type HttpResponse = {
   status: (code: number) => { json: (body: unknown) => void };
+  /**
+   * Optional, and called defensively below: this is a minimal structural type
+   * standing in for whatever the adapter hands us, and a response object
+   * without `setHeader` must still get its body.
+   */
+  setHeader?: (name: string, value: string) => void;
 };
 
 type ErrorResponseBody = {
@@ -55,7 +83,8 @@ function hasContext(value: unknown): value is { context: unknown } {
 }
 
 /**
- * Answers a domain error with the HTTP status its `kind` implies, and hands
+ * Answers a domain or upstream error with the HTTP status its `kind` implies,
+ * logs an internal error with its structured context, and hands
  * every other exception to Nest's own `BaseExceptionFilter` rather than
  * reproducing it — so `http-errors` statuses (a 413 from body-parser's size
  * limit, say), the already-sent-headers guard a streamed response needs, and
@@ -103,6 +132,41 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         .getResponse<HttpResponse>()
         .status(statusCode)
         .json(body);
+      return;
+    }
+
+    if (isUpstreamError(exception)) {
+      const { status: statusCode, logLevel } =
+        UPSTREAM_KIND_POLICY[exception.kind];
+      const body: ErrorResponseBody = {
+        statusCode,
+        message: exception.message,
+        reason: exception.reason,
+      };
+
+      this.logger[logLevel]('Upstream error mapped to HTTP response', {
+        statusCode,
+        kind: exception.kind,
+        reason: exception.reason,
+        ...(hasContext(exception) ? { context: exception.context } : {}),
+        ...(exception.retryAfterSeconds !== undefined
+          ? { retryAfterSeconds: exception.retryAfterSeconds }
+          : {}),
+      });
+
+      const response = host.switchToHttp().getResponse<HttpResponse>();
+
+      // The message is shown here, unlike an internal error: "GitHub is rate
+      // limiting us, try again shortly" is what the caller needs, and it
+      // discloses nothing.
+      if (exception.retryAfterSeconds !== undefined) {
+        response.setHeader?.(
+          'Retry-After',
+          String(exception.retryAfterSeconds),
+        );
+      }
+
+      response.status(statusCode).json(body);
       return;
     }
 
