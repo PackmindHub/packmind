@@ -370,22 +370,31 @@ function SectionHeader({
           three of forty needs to be told that clicking here takes the other
           thirty-seven, not that nothing is picked.
         */
-        <ContextPickBox shown={isSelecting || selection.selected > 0}>
-          <PMCheckbox
-            size="sm"
-            checked={
-              allSelected
-                ? true
-                : selection.selected > 0
-                  ? 'indeterminate'
-                  : false
-            }
-            onCheckedChange={() => selection.onSelectAll(!allSelected)}
-            inputProps={{
-              'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
-            }}
-          />
-        </ContextPickBox>
+        <PMBox
+          /* Over the strip's padding, in the column of the rows it commands. */
+          width="28px"
+          marginLeft="-12px"
+          alignSelf="stretch"
+          flexShrink={0}
+          display="flex"
+        >
+          <ContextPickBox shown={isSelecting || selection.selected > 0}>
+            <PMCheckbox
+              size="sm"
+              checked={
+                allSelected
+                  ? true
+                  : selection.selected > 0
+                    ? 'indeterminate'
+                    : false
+              }
+              onCheckedChange={() => selection.onSelectAll(!allSelected)}
+              inputProps={{
+                'aria-label': `${allSelected ? 'Clear' : 'Select'} all ${section.label.toLowerCase()}`,
+              }}
+            />
+          </ContextPickBox>
+        </PMBox>
       )}
       {section.icon && (
         <PMIcon fontSize="xs" color="text.faded">
@@ -485,8 +494,12 @@ function ComponentRow({
           Beside the link and not inside it, for the reason the move button is:
           a control nested in an anchor is activated by the anchor, so ticking a
           row would open it.
+
+          The row's left gutter is inside the column, so it picks too: the
+          label is what turns a click into a tick, and it takes the whole
+          column rather than sitting 16px wide in the middle of it.
         */
-        <PMBox display="flex" alignItems="center" paddingLeft={3}>
+        <PMBox width="28px" flexShrink={0} display="flex">
           <ContextPickBox shown={isSelected || isSelecting}>
             <PMCheckbox
               size="sm"
