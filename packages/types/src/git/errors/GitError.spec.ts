@@ -4,6 +4,7 @@ import { GitProviderHasRepositoriesError } from './GitProviderHasRepositoriesErr
 import { GitProviderNotFoundError } from './GitProviderNotFoundError';
 import { GitProviderOrganizationMismatchError } from './GitProviderOrganizationMismatchError';
 import { GitRemoteAccessForbiddenError } from './GitRemoteAccessForbiddenError';
+import { GitRemoteRepositoryNotFoundError } from './GitRemoteRepositoryNotFoundError';
 import { GitRepoAlreadyExistsError } from './GitRepoAlreadyExistsError';
 import { InvalidGitProviderCredentialsError } from './InvalidGitProviderCredentialsError';
 import { NoTrackedRepositoryError } from './NoTrackedRepositoryError';
@@ -228,5 +229,59 @@ describe('GitRemoteAccessForbiddenError', () => {
     ).toBe(
       "Access to the GitLab repository acme/app was refused. Check that the connection's token has write access.",
     );
+  });
+});
+
+describe('GitRemoteRepositoryNotFoundError', () => {
+  const error = new GitRemoteRepositoryNotFoundError('GitLab', 'acme', 'app');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('carries the reason a client branches on', () => {
+    expect(error.reason).toBe('git_remote_repository_not_found');
+  });
+
+  it('keeps the vendor and the coordinate in the context', () => {
+    expect(error.context).toEqual({
+      vendor: 'GitLab',
+      owner: 'acme',
+      repo: 'app',
+    });
+  });
+
+  it('names both readings of a 404, the path and the token', () => {
+    expect(error.message).toBe(
+      "The GitLab repository acme/app was not found. Check that the path is correct and that the connection's token has access to it.",
+    );
+  });
+
+  describe('when the call named a branch', () => {
+    const withBranch = new GitRemoteRepositoryNotFoundError(
+      'GitLab',
+      'acme',
+      'app',
+      'main',
+    );
+
+    it('keeps the branch in the context', () => {
+      expect(withBranch.context).toEqual({
+        vendor: 'GitLab',
+        owner: 'acme',
+        repo: 'app',
+        branch: 'main',
+      });
+    });
+
+    it('says the branch may be what is missing', () => {
+      expect(withBranch.message).toBe(
+        "The GitLab repository acme/app or its branch 'main' was not found. Check that the path is correct and that the connection's token has access to it.",
+      );
+    });
   });
 });

@@ -10,7 +10,11 @@ import {
 } from '../http/withTransientRetry';
 import { gitBlobSha } from '@packmind/node-utils';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
-import { NoFilesToCommitError } from '@packmind/types';
+import {
+  GitRemoteAccessForbiddenError,
+  GitRemoteRepositoryNotFoundError,
+  NoFilesToCommitError,
+} from '@packmind/types';
 import {
   GitlabApiErrorResponseError,
   GitlabApiOperationFailedError,
@@ -479,14 +483,19 @@ export class GitlabRepository implements IGitRepo {
         });
 
         if (axiosError.response?.status === 403) {
-          throw new Error(
-            `Insufficient permissions to commit to GitLab repository. Please ensure your token has write access to ${this.options.owner}/${this.options.repo}`,
+          throw new GitRemoteAccessForbiddenError(
+            'GitLab',
+            this.options.owner,
+            this.options.repo,
+            'write',
           );
         }
 
         if (axiosError.response?.status === 404) {
-          throw new Error(
-            `GitLab repository not found. Please verify the repository path: ${this.projectPath}. Check that the repository exists and your token has access to it.`,
+          throw new GitRemoteRepositoryNotFoundError(
+            'GitLab',
+            this.options.owner,
+            this.options.repo,
           );
         }
       }
@@ -1134,14 +1143,20 @@ export class GitlabRepository implements IGitRepo {
         });
 
         if (axiosError.response?.status === 403) {
-          throw new Error(
-            `Insufficient permissions to list directories in GitLab repository. Please ensure your token has read access to ${owner}/${name}`,
+          throw new GitRemoteAccessForbiddenError(
+            'GitLab',
+            owner,
+            name,
+            'read',
           );
         }
 
         if (axiosError.response?.status === 404) {
-          throw new Error(
-            `GitLab repository not found or branch '${branch}' does not exist. Please verify the repository path: ${owner}/${name} and branch: ${branch}`,
+          throw new GitRemoteRepositoryNotFoundError(
+            'GitLab',
+            owner,
+            name,
+            branch,
           );
         }
       }

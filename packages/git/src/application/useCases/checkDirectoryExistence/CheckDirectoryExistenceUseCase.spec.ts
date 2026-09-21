@@ -19,6 +19,7 @@ import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
 import { DirectoryExistenceCheckFailedError } from '../../../domain/errors/DirectoryExistenceCheckFailedError';
+import { GitlabApiOperationFailedError } from '../../../domain/errors/GitlabApiOperationFailedError';
 
 describe('CheckDirectoryExistenceUseCase', () => {
   let useCase: CheckDirectoryExistenceUseCase;
@@ -263,6 +264,29 @@ describe('CheckDirectoryExistenceUseCase', () => {
         await expect(useCase.execute(validCommand)).rejects.toBeInstanceOf(
           DirectoryExistenceCheckFailedError,
         );
+      });
+
+      describe('when the failure already says whose fault it is', () => {
+        it('lets a domain failure through untouched', async () => {
+          const notFound = new GitRepoNotFoundError(gitRepoId);
+          mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+          mockGitRepoInstance.checkDirectoryExists.mockRejectedValue(notFound);
+
+          await expect(useCase.execute(validCommand)).rejects.toBe(notFound);
+        });
+
+        it('lets an upstream failure through untouched', async () => {
+          const upstream = new GitlabApiOperationFailedError(
+            'list directories from GitLab',
+            new Error('gateway timeout'),
+          );
+          mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+          mockGitRepoInstance.checkDirectoryExists.mockRejectedValue(upstream);
+
+          await expect(useCase.execute(validCommand)).rejects.toBe(upstream);
+        });
       });
     });
   });

@@ -3,6 +3,9 @@ import {
   CheckDirectoryExistenceResult,
   GitRepoNotFoundError,
   ICheckDirectoryExistenceUseCase,
+  isDomainError,
+  isInternalError,
+  isUpstreamError,
   MissingGitInputError,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
@@ -71,12 +74,24 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      this.logger.error('Failed to check directory existence', {
+      this.logger.warn('Failed to check directory existence', {
         gitRepoId,
         directoryPath,
         branch,
         error: errorMessage,
       });
+
+      // Wrapping everything alike cost the answer: a provider that is not
+      // there (404) and a provider that is down (502) both came back as a
+      // 500. A failure that already says whose fault it is passes through
+      // untouched; only what nothing has classified gets wrapped.
+      if (
+        isDomainError(error) ||
+        isUpstreamError(error) ||
+        isInternalError(error)
+      ) {
+        throw error;
+      }
 
       throw new DirectoryExistenceCheckFailedError(
         gitRepoId,

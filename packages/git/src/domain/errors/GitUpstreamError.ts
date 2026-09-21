@@ -7,13 +7,21 @@ export type GitUpstreamErrorReason =
   | 'github_app_token_exchange_failed'
   | 'github_access_token_response_incomplete'
   | 'github_access_token_expiry_unparseable'
-  | 'github_rate_limited';
+  | 'github_rate_limited'
+  | 'gitlab_api_operation_failed'
+  | 'gitlab_available_repositories_failed'
+  | 'gitlab_branch_existence_check_failed'
+  | 'gitlab_api_error_response'
+  | 'gitlab_unexpected_response_format'
+  | 'directory_existence_check_failed'
+  | 'available_remote_directories_failed';
 
 export type GitUpstreamErrorContext = {
   organizationId?: string;
   gitProviderId?: string;
   gitRepoId?: string;
   branch?: string;
+  directoryPath?: string;
   operation?: string;
   owner?: string;
   repo?: string;

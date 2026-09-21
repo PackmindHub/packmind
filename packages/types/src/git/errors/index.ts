@@ -11,6 +11,7 @@ export * from './GitRepoAlreadyExistsError';
 export * from './GitRepoAlreadyLinkedAsStandardError';
 export * from './GitRepoNotFoundError';
 export * from './GitRemoteAccessForbiddenError';
+export * from './GitRemoteRepositoryNotFoundError';
 export * from './InvalidGitProviderCredentialsError';
 export * from './MissingGitInputError';
 export * from './NoFilesToCommitError';

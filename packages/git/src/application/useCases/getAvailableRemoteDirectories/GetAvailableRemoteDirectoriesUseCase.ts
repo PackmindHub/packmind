@@ -2,6 +2,9 @@ import { GitProviderService } from '../../GitProviderService';
 import {
   GetAvailableRemoteDirectoriesCommand,
   IGetAvailableRemoteDirectoriesUseCase,
+  isDomainError,
+  isInternalError,
+  isUpstreamError,
   MissingGitInputError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -84,7 +87,7 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to get available targets', {
+      this.logger.warn('Failed to get available targets', {
         organizationId,
         gitRepoId: gitRepo.id,
         owner: gitRepo.owner,
@@ -92,6 +95,18 @@ export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemote
         branch: gitRepo.branch,
         error: errorMessage,
       });
+
+      // A provider that was never configured is a 404 the caller can act on,
+      // and a GitLab outage is a 502; wrapping the whole try block turned
+      // both into a 500. Anything already attributed keeps its attribution.
+      if (
+        isDomainError(error) ||
+        isUpstreamError(error) ||
+        isInternalError(error)
+      ) {
+        throw error;
+      }
+
       throw new AvailableRemoteDirectoriesFailedError(
         organizationId,
         gitRepo.id,

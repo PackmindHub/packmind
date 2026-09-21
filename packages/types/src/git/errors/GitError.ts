@@ -21,7 +21,8 @@ export type GitErrorReason =
   | 'unresolvable_git_provider'
   | 'git_repo_already_linked_as_standard'
   | 'invalid_install_state'
-  | 'git_remote_access_forbidden';
+  | 'git_remote_access_forbidden'
+  | 'git_remote_repository_not_found';
 
 export type GitErrorContext = {
   organizationId?: string;

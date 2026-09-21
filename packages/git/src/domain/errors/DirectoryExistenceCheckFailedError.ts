@@ -1,12 +1,14 @@
-import { GitInternalError } from './GitInternalError';
+import { GitUpstreamError } from './GitUpstreamError';
 
 /**
- * The provider call behind a directory existence check failed. What went
- * wrong downstream is arbitrary — a rate limit, a revoked token, a network
- * fault — and none of it is the caller's to correct, so it stays a 500 with
- * the original failure carried in `cause`.
+ * The provider call behind a directory existence check failed with something
+ * nothing upstream of it had already named. The use case now re-throws an
+ * already-attributed failure untouched, so what is left to wrap is an
+ * unclassified failure of a call to a git provider — which makes
+ * `upstream_unavailable` the honest default rather than a 500 with our stack
+ * on someone else's outage. The original failure is carried in `cause`.
  */
-export class DirectoryExistenceCheckFailedError extends GitInternalError {
+export class DirectoryExistenceCheckFailedError extends GitUpstreamError {
   constructor(
     gitRepoId: string,
     directoryPath: string,
@@ -14,6 +16,7 @@ export class DirectoryExistenceCheckFailedError extends GitInternalError {
     public readonly cause: unknown,
   ) {
     super(
+      'upstream_unavailable',
       'directory_existence_check_failed',
       { gitRepoId, directoryPath, branch },
       `Failed to check directory existence: ${
