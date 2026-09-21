@@ -302,7 +302,6 @@ function PackageRow({
       transition="background-color 120ms ease-out"
       display="flex"
       alignItems="center"
-      paddingLeft={3}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -318,29 +317,26 @@ function PackageRow({
         />
       )}
 
-      <PMBox
-        width="16px"
-        height="16px"
-        flexShrink={0}
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        onClick={(e) => e.stopPropagation()}
-      >
+      {/*
+        The column is the checkbox, gutter included. A 16px box in the middle
+        of a row that tall is a target the pointer misses, and the miss landed
+        on the column, which swallowed it: the box read as broken and the name
+        was the only way to pick a row. The label is what turns a click into a
+        tick, so it takes the column rather than a second handler beside it.
+      */}
+      <PMBox width="28px" alignSelf="stretch" flexShrink={0} display="flex">
         {hasDrift && (
-          <PMBox
+          <PMCheckbox
+            size="sm"
+            checked={bulkSelected}
+            onCheckedChange={() => onToggleBulk()}
+            aria-label={`Select ${pkg.name} for bulk distribute`}
             opacity={showCheckbox ? 1 : 0}
             transition="opacity 100ms ease-out"
-            display="inline-flex"
-            alignItems="center"
-          >
-            <PMCheckbox
-              size="sm"
-              checked={bulkSelected}
-              onCheckedChange={() => onToggleBulk()}
-              aria-label={`Select ${pkg.name} for bulk distribute`}
-            />
-          </PMBox>
+            width="full"
+            /* The 16px box keeps the place the 12px gutter gave it. */
+            justifyContent="flex-end"
+          />
         )}
       </PMBox>
 
@@ -541,6 +537,15 @@ function RailActionBar({
             }}
             disabled={visibleDrifted.length === 0}
             aria-label="Select all visible drifted packages"
+            /*
+              A 16px box on a bar this size is a target the pointer misses,
+              and the count beside it is a readout rather than a label, so a
+              miss has nothing to land on. The padding grows the target to
+              32px and the negative margin gives back the room it took, so
+              nothing on the bar moves.
+            */
+            padding={2}
+            margin={-2}
           />
           <PMText
             fontSize="xs"
