@@ -10,8 +10,11 @@ import { useListPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 interface UseArtefactPackageOwnersParams {
   spaceId: SpaceId | undefined;
   organizationId: OrganizationId | undefined;
-  /** The package being edited: what it holds is its own to keep or drop. */
-  excludePackageId: PackageId;
+  /**
+   * The package being edited: what it holds is its own to keep or drop. A
+   * package being created holds nothing yet, so there is nothing to exclude.
+   */
+  excludePackageId?: PackageId;
 }
 
 /**
@@ -25,7 +28,7 @@ interface UseArtefactPackageOwnersParams {
  */
 export function getOwnerByArtefactId(
   packages: PackageResponse[] | undefined,
-  excludePackageId: PackageId,
+  excludePackageId?: PackageId,
 ): Record<string, string> {
   const owners: Record<string, string> = {};
 

@@ -22,6 +22,7 @@ import {
   SkillId,
 } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
+import { HeldByPackage, toArtefactOption } from '../packageForm';
 
 interface PackageEditFormContentProps {
   allCommands: Command[];
@@ -41,20 +42,6 @@ interface PackageEditFormContentProps {
   isLoadingSkills: boolean;
   orgSlug: string;
   spaceSlug: string;
-}
-
-/**
- * Why an option cannot be picked: it is somewhere else. Naming the package
- * turns a dead entry into a direction to go.
- */
-function HeldByPackage({ packageName }: { packageName?: string }) {
-  if (!packageName) return null;
-
-  return (
-    <PMText variant="small" color="faded" marginLeft="auto" paddingLeft={2}>
-      In {packageName}
-    </PMText>
-  );
 }
 
 export const PackageEditFormContent = ({
@@ -77,37 +64,16 @@ export const PackageEditFormContent = ({
 }: PackageEditFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  /**
-   * A component held by another package cannot be picked here — it has to be
-   * moved from wherever it lives. One already selected stays selectable
-   * whatever the data says, so a component that somehow ended up in two
-   * packages can still be taken out of this one.
-   */
-  const toItem = <Id extends StandardId | CommandId | SkillId>(
-    artefact: { id: Id; name: string },
-    selectedIds: Id[],
-  ) => {
-    const heldBy = ownerByArtefactId[artefact.id.toString()];
-    const locked = Boolean(heldBy) && !selectedIds.includes(artefact.id);
-
-    return {
-      label: artefact.name,
-      value: artefact.id,
-      disabled: locked,
-      heldBy: locked ? heldBy : undefined,
-    };
-  };
-
   const commandItems = allCommands.map((recipe: Command) =>
-    toItem(recipe, selectedCommandIds),
+    toArtefactOption(recipe, selectedCommandIds, ownerByArtefactId),
   );
 
   const standardItems = allStandards.map((standard: Standard) =>
-    toItem(standard, selectedStandardIds),
+    toArtefactOption(standard, selectedStandardIds, ownerByArtefactId),
   );
 
   const skillItems = allSkills.map((skill: Skill) =>
-    toItem(skill, selectedSkillIds),
+    toArtefactOption(skill, selectedSkillIds, ownerByArtefactId),
   );
 
   const { collection: commandCollection, filter: filterCommands } =
