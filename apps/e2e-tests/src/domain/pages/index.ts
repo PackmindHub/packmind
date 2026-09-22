@@ -110,30 +110,24 @@ export interface ISpaceContextPage extends IPackmindAppPage {
    * for the drawer to close - a refused cut leaves it open.
    */
   attemptRelease(version: string): Promise<string>;
-  /** `Not released yet` before the first release, the version after it. */
-  getCurrentVersion(): Promise<string>;
   /**
-   * Opens the release history drawer for the package, showing all available
-   * releases. Drives only — the assertion belongs to the spec.
+   * What the version bar says is on screen: `Not released yet` while the
+   * package has none, `Unreleased` once it has, the version string while one
+   * is being read.
    */
-  openReleaseHistory(): Promise<void>;
+  getReading(): Promise<string>;
+  /** Every release offered behind the version control, in the order listed. */
+  listReleaseVersions(): Promise<string[]>;
   /**
-   * In the open release history drawer, selects a version and returns the
-   * pinned component lines, each in the form `<name> v<number>`, in DOM order
-   * and trimmed. Waits for the detail view to render after the selection.
+   * Reads the package as one of its releases left it, and returns the pinned
+   * component lines, each in the form `<name> v<number>`, in DOM order.
    */
   listComponentsPinnedBy(version: string): Promise<string[]>;
   /**
-   * Whether the "Create a release" action is currently actionable. Returns
-   * true when enabled, false when disabled.
+   * Whether the release action is offered at all. It is absent, never
+   * disabled, when there is nothing to cut.
    */
   canCreateRelease(): Promise<boolean>;
-  /**
-   * The visible reason text explaining why the release action is disabled.
-   * Returns the trimmed text; waits for the element to be visible. Returns
-   * empty string if the verdict is ready (reason not rendered).
-   */
-  getReleaseBlockedReason(): Promise<string>;
 }
 
 export interface ICreateStandardPage extends IPackmindAppPage {

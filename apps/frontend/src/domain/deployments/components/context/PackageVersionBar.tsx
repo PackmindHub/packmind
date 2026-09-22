@@ -15,6 +15,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
+import { PackageVersionBarDataTestId } from '@packmind/frontend';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { RelativeDate } from '../RelativeDate';
 import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
@@ -156,7 +157,11 @@ function VersionRef({
 }>) {
   if (releases.length === 0) {
     return (
-      <PMText fontSize="xs" color="secondary">
+      <PMText
+        fontSize="xs"
+        color="secondary"
+        data-testid={PackageVersionBarDataTestId.Reading}
+      >
         {PACKAGE_MESSAGES.release.notReleasedYet}
       </PMText>
     );
@@ -165,7 +170,11 @@ function VersionRef({
   return (
     <PMMenu.Root>
       <PMMenu.Trigger asChild>
-        <PMButton variant="tertiary" size="sm">
+        <PMButton
+          variant="tertiary"
+          size="sm"
+          data-testid={PackageVersionBarDataTestId.Reading}
+        >
           {readingVersion ?? PACKAGE_MESSAGES.release.unreleased}
           <LuChevronDown aria-hidden />
         </PMButton>

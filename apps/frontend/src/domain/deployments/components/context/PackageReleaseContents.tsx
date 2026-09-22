@@ -15,6 +15,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
+import { PackageVersionBarDataTestId } from '@packmind/frontend';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import {
   COMPONENT_TYPE_LABELS,
@@ -153,6 +154,7 @@ export function PackageReleaseContents(
               {section.components.map((component) => (
                 <PMHStack
                   key={component.key}
+                  data-testid={PackageVersionBarDataTestId.PinnedComponent}
                   gap={3}
                   justify="space-between"
                   align="center"

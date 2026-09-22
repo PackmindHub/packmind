@@ -1,4 +1,5 @@
 import { Locator } from '@playwright/test';
+import { PackageVersionBarDataTestId } from '@packmind/frontend';
 import { ISpaceContextPage } from '../../domain/pages';
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 
@@ -17,11 +18,7 @@ export class SpaceContextPage
    * here. Drives only — the assertion belongs to the spec.
    */
   async createRelease(version: string): Promise<void> {
-    // `Create a release` is also the drawer's heading, so the trigger is taken
-    // by role rather than by text.
-    await this.page
-      .getByRole('button', { name: 'Create a release', exact: true })
-      .click();
+    await this.releaseAction().click();
 
     const versionField = this.page.locator(`#${VERSION_FIELD_ID}`);
     await versionField.waitFor({ state: 'visible' });
@@ -45,9 +42,7 @@ export class SpaceContextPage
    * which a refused cut never does.
    */
   async attemptRelease(version: string): Promise<string> {
-    await this.page
-      .getByRole('button', { name: 'Create a release', exact: true })
-      .click();
+    await this.releaseAction().click();
 
     const versionField = this.page.locator(`#${VERSION_FIELD_ID}`);
     await versionField.waitFor({ state: 'visible' });
@@ -69,107 +64,95 @@ export class SpaceContextPage
   }
 
   /**
-   * What the version area currently reads: `Not released yet` while the
-   * package has no release, the version string once it has one.
+   * What the version bar says is on screen.
+   *
+   * By test id rather than by its neighbours: the bar reads `Not released yet`
+   * as a sentence and `Unreleased` as the control that opens the versions, and
+   * the release action beside it is absent whenever there is nothing to cut,
+   * so nothing about its position is stable.
    */
-  async getCurrentVersion(): Promise<string> {
-    const versionDisplay = this.versionDisplay();
-    await versionDisplay.waitFor({ state: 'visible' });
+  async getReading(): Promise<string> {
+    const reading = this.reading();
+    await reading.waitFor({ state: 'visible' });
 
-    return (await versionDisplay.innerText()).trim();
+    return (await reading.innerText()).trim();
   }
 
-  /**
-   * Opens the release history drawer for the package, showing all available
-   * releases. Drives only — the assertion belongs to the spec.
-   */
-  async openReleaseHistory(): Promise<void> {
-    // The version display is a button only when the package has at least one
-    // release, and it is the trigger for the history drawer.
-    await this.versionDisplay().click();
+  async listReleaseVersions(): Promise<string[]> {
+    await this.openVersions();
 
-    // The drawer opens only once the click resolves, and it is the dialog
-    // containing the heading `Release history`.
-    const historyDrawer = this.page.locator('[role="dialog"]').filter({
-      has: this.page.getByRole('heading', { name: 'Release history' }),
-    });
-    await historyDrawer.waitFor({ state: 'visible' });
+    // Every reading but the first is a release; the first is the package as it
+    // stands, which is not a version and carries no date.
+    const items = await this.page.getByRole('menuitemradio').all();
+    const labels = await Promise.all(
+      items.map(async (item) => (await item.innerText()).trim()),
+    );
+
+    await this.page.keyboard.press('Escape');
+
+    // The date travels on the same row, under it in the flow, so the version is
+    // the first line of the label.
+    return labels.slice(1).map((label) => label.split('\n')[0].trim());
   }
 
-  /**
-   * In the open release history drawer, selects a version and returns the
-   * pinned component lines, each in the form `<name> v<number>`, in DOM order
-   * and trimmed. Waits for the detail view to render after the selection.
-   */
   async listComponentsPinnedBy(version: string): Promise<string[]> {
-    // The version is listed as a button in the release history drawer. Use
-    // exact match to avoid substring overlaps.
-    const historyDrawer = this.page.locator('[role="dialog"]').filter({
-      has: this.page.getByRole('heading', { name: 'Release history' }),
-    });
-    await historyDrawer
-      .getByRole('button', { name: version, exact: true })
+    await this.openVersions();
+    await this.page
+      .getByRole('menuitemradio', { name: new RegExp(`^${version}\\b`) })
       .click();
 
-    // The detail view fetches over the network; wait for it to appear by
-    // waiting for the Standards section to be visible. The detail view is
-    // rendered only once the fetch resolves, so this ensures the full content
-    // has arrived.
-    await historyDrawer
-      .getByText('Standards', { exact: true })
-      .waitFor({ state: 'visible' });
+    // The pane reads the release over the network, so the rows are what says
+    // the switch landed rather than the click that asked for it.
+    const rows = this.page.getByTestId(
+      PackageVersionBarDataTestId.PinnedComponent,
+    );
+    await rows.first().waitFor({ state: 'visible' });
 
-    // Extract all component lines in the drawer. Each line is `<name> v<number>`.
-    // The regex filters out headers and description by matching the pattern.
-    const componentPattern = / v\d+$/;
-    const allText = await historyDrawer.innerText();
-    const lines = allText.split('\n').map((line) => line.trim());
-    const componentLines = lines.filter((line) => componentPattern.test(line));
+    const lines = await rows.allInnerTexts();
 
-    return componentLines;
+    // Each row is the component's name and the version it was frozen at, laid
+    // out as two columns rather than one string.
+    return lines.map((line) =>
+      line
+        .split('\n')
+        .map((p) => p.trim())
+        .join(' '),
+    );
   }
 
   /**
-   * Whether the "Create a release" button is currently enabled. Returns the
-   * negation of Playwright's isDisabled() check.
+   * Whether the release action is offered.
+   *
+   * Presence and not `isDisabled`: the bar drops the action when the package is
+   * identical to its last release or holds nothing, on the same rule the rest
+   * of this header follows.
    */
   async canCreateRelease(): Promise<boolean> {
-    const button = this.page.getByRole('button', {
-      name: 'Create a release',
-      exact: true,
+    return (await this.releaseAction().count()) > 0;
+  }
+
+  /** Opens the list of readings, and waits for it to be on screen. */
+  private async openVersions(): Promise<void> {
+    await this.reading().click();
+    await this.page
+      .getByRole('menuitemradio')
+      .first()
+      .waitFor({ state: 'visible' });
+  }
+
+  private reading(): Locator {
+    return this.page.getByTestId(PackageVersionBarDataTestId.Reading);
+  }
+
+  /**
+   * `Create a release` is also the drawer's heading, so the trigger is taken by
+   * role rather than by text. Its label names the first cut when there is no
+   * release behind the package.
+   */
+  private releaseAction(): Locator {
+    return this.page.getByRole('button', {
+      name: /^Create (a|the first) release$/,
     });
-    return !(await button.isDisabled());
-  }
-
-  /**
-   * The visible reason text explaining why the release action is disabled.
-   * Returns the trimmed text from the element immediately after the button row.
-   * Waits for it to be visible; returns empty string if not found.
-   */
-  async getReleaseBlockedReason(): Promise<string> {
-    const reasonElement = this.page
-      .getByRole('button', { name: 'Create a release', exact: true })
-      .locator('xpath=ancestor::*[1]/following-sibling::*[1]');
-
-    try {
-      await reasonElement.waitFor({ state: 'visible' });
-      return (await reasonElement.innerText()).trim();
-    } catch {
-      return '';
-    }
-  }
-
-  /**
-   * The badge (no release) or button (released) sitting just before the
-   * `Create a release` trigger in the version area. Both states have to be
-   * reachable through one locator, and only the second one is a button — hence
-   * the sibling hop rather than a role. The whole area renders only once the
-   * releases query answered.
-   */
-  private versionDisplay(): Locator {
-    return this.page
-      .getByRole('button', { name: 'Create a release', exact: true })
-      .locator('xpath=preceding-sibling::*[1]');
   }
 
   expectedUrl(): RegExp {

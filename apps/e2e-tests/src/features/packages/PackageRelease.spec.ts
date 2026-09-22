@@ -22,26 +22,19 @@ testWithApi.describe('package release', () => {
   });
 
   testWithApi(
-    'it cuts a release and shows the new version as the current version',
+    'it says the package has no version before the first cut',
     async ({ dashboardPage }) => {
       const contextPage = await dashboardPage.openPackageInContext(
         releasablePackage.id,
       );
 
       // eslint-disable-next-line playwright/no-standalone-expect
-      expect(await contextPage.getCurrentVersion()).toBe('Not released yet');
-
-      await contextPage.createRelease('0.1.0');
-
-      // The version area re-renders when the mutation's invalidation lands, so
-      // a single immediate read would be a coin toss.
-      // eslint-disable-next-line playwright/no-standalone-expect
-      await expect.poll(() => contextPage.getCurrentVersion()).toBe('0.1.0');
+      expect(await contextPage.getReading()).toBe('Not released yet');
     },
   );
 
   testWithApi(
-    'it lists what a release pinned when browsing that version',
+    'it cuts a release and offers it as a reading of the package',
     async ({ dashboardPage }) => {
       const contextPage = await dashboardPage.openPackageInContext(
         releasablePackage.id,
@@ -49,7 +42,37 @@ testWithApi.describe('package release', () => {
 
       await contextPage.createRelease('0.1.0');
 
-      await contextPage.openReleaseHistory();
+      // The bar re-renders when the mutation's invalidation lands, so a single
+      // immediate read would be a coin toss.
+      // eslint-disable-next-line playwright/no-standalone-expect
+      await expect
+        .poll(() => contextPage.listReleaseVersions())
+        .toEqual(['0.1.0']);
+    },
+  );
+
+  testWithApi(
+    'it stays on the package as it stands once a release is cut',
+    async ({ dashboardPage }) => {
+      const contextPage = await dashboardPage.openPackageInContext(
+        releasablePackage.id,
+      );
+
+      await contextPage.createRelease('0.1.0');
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      await expect.poll(() => contextPage.getReading()).toBe('Unreleased');
+    },
+  );
+
+  testWithApi(
+    'it lists what a release pinned when reading that version',
+    async ({ dashboardPage }) => {
+      const contextPage = await dashboardPage.openPackageInContext(
+        releasablePackage.id,
+      );
+
+      await contextPage.createRelease('0.1.0');
 
       // eslint-disable-next-line playwright/no-standalone-expect
       expect(await contextPage.listComponentsPinnedBy('0.1.0')).toEqual([
@@ -65,10 +88,10 @@ testWithApi.describe('package release', () => {
         releasablePackage.id,
       );
 
-      // Reading the version first is what says the form has the package's
-      // releases as they are now: nothing released, so the cut is offered.
+      // Reading the bar first is what says the form has the package's releases
+      // as they are now: nothing released, so the cut is offered.
       // eslint-disable-next-line playwright/no-standalone-expect
-      expect(await contextPage.getCurrentVersion()).toBe('Not released yet');
+      expect(await contextPage.getReading()).toBe('Not released yet');
 
       // Two cuts behind the page's back and without reloading: the open form
       // still believes nothing has been released, the database is at 0.2.0.
@@ -92,7 +115,7 @@ testWithApi.describe('package release', () => {
   );
 
   testWithApi(
-    'it states why the action is disabled when nothing has changed',
+    'it offers no cut once the package is identical to its last release',
     async ({ dashboardPage }) => {
       const contextPage = await dashboardPage.openPackageInContext(
         releasablePackage.id,
@@ -101,14 +124,9 @@ testWithApi.describe('package release', () => {
       await contextPage.createRelease('0.1.0');
 
       // The readiness is recomputed server-side and re-read when the mutation's
-      // invalidation lands, so poll until the button is disabled.
+      // invalidation lands, so poll until the action goes.
       // eslint-disable-next-line playwright/no-standalone-expect
       await expect.poll(() => contextPage.canCreateRelease()).toBe(false);
-
-      // eslint-disable-next-line playwright/no-standalone-expect
-      expect(await contextPage.getReleaseBlockedReason()).toBe(
-        'Nothing has changed since 0.1.0',
-      );
     },
   );
 });
