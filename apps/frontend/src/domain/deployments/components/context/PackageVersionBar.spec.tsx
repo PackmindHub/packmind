@@ -138,7 +138,7 @@ describe('PackageVersionBar', () => {
     });
   });
 
-  describe('when the working copy is ahead of the last release', () => {
+  describe('when the package has releases behind it', () => {
     const ahead: PackageReleaseReadiness = {
       currentVersion: '0.1.0',
       verdict: 'ready',
@@ -150,15 +150,7 @@ describe('PackageVersionBar', () => {
       renderBar({ readiness: ahead, releases: [release('0.1.0')] });
 
       expect(
-        screen.getByRole('button', { name: /Working copy/ }),
-      ).toBeInTheDocument();
-    });
-
-    it('says how far it stands from the release', () => {
-      renderBar({ readiness: ahead, releases: [release('0.1.0')] });
-
-      expect(
-        screen.getByText('Unreleased changes since 0.1.0'),
+        screen.getByRole('button', { name: /Unreleased/ }),
       ).toBeInTheDocument();
     });
 
@@ -169,9 +161,15 @@ describe('PackageVersionBar', () => {
         screen.getByRole('button', { name: 'Create a release' }),
       ).toBeEnabled();
     });
+
+    it('measures nothing against the last release', () => {
+      renderBar({ readiness: ahead, releases: [release('0.1.0')] });
+
+      expect(screen.queryByText(/since 0\.1\.0/)).not.toBeInTheDocument();
+    });
   });
 
-  describe('when the working copy is identical to the last release', () => {
+  describe('when nothing has changed since the last release', () => {
     const unchanged: PackageReleaseReadiness = {
       currentVersion: '0.1.0',
       verdict: 'no_change',
@@ -179,34 +177,20 @@ describe('PackageVersionBar', () => {
       outdatedComponents: [],
     };
 
-    it('says it is identical rather than greying an action', () => {
-      renderBar({ readiness: unchanged, releases: [release('0.1.0')] });
-
-      expect(screen.getByText('Identical to 0.1.0')).toBeInTheDocument();
-    });
-
-    it('offers no release at all', () => {
+    it('drops the action rather than greying it', () => {
       renderBar({ readiness: unchanged, releases: [release('0.1.0')] });
 
       expect(
         screen.queryByRole('button', { name: /Create a release/ }),
       ).not.toBeInTheDocument();
     });
-  });
 
-  describe('when the package was emptied after a release', () => {
-    it('names the emptying rather than the absence of components', () => {
-      renderBar({
-        readiness: {
-          currentVersion: '0.1.0',
-          verdict: 'no_components',
-          nextVersions: ['0.1.1', '0.2.0', '1.0.0'],
-          outdatedComponents: [],
-        },
-        releases: [release('0.1.0')],
-      });
+    it('still names what is on screen', () => {
+      renderBar({ readiness: unchanged, releases: [release('0.1.0')] });
 
-      expect(screen.getByText('Emptied since 0.1.0')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Unreleased/ }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -226,28 +210,18 @@ describe('PackageVersionBar', () => {
       ],
     };
 
-    it('counts them beside the sentence', () => {
+    it('keeps the pinning out of the bar entirely', () => {
+      renderBar({ readiness: behind, releases: [release('0.1.0')] });
+
+      expect(screen.queryByText(/Work with Jest/)).not.toBeInTheDocument();
+    });
+
+    it('offers the release the change earned', () => {
       renderBar({ readiness: behind, releases: [release('0.1.0')] });
 
       expect(
-        screen.getByRole('button', { name: '1 newer component' }),
-      ).toBeInTheDocument();
-    });
-
-    it('keeps them out of the bar until they are asked for', () => {
-      renderBar({ readiness: behind, releases: [release('0.1.0')] });
-
-      expect(screen.queryByText('Work with Jest')).not.toBeInTheDocument();
-    });
-
-    it('names each of them behind the disclosure', async () => {
-      renderBar({ readiness: behind, releases: [release('0.1.0')] });
-
-      await userEvent.click(
-        screen.getByRole('button', { name: '1 newer component' }),
-      );
-
-      expect(await screen.findByText('Work with Jest')).toBeInTheDocument();
+        screen.getByRole('button', { name: 'Create a release' }),
+      ).toBeEnabled();
     });
   });
 
@@ -265,9 +239,7 @@ describe('PackageVersionBar', () => {
         releases: [release('0.2.0'), release('0.1.0')],
       });
 
-      await userEvent.click(
-        screen.getByRole('button', { name: /Working copy/ }),
-      );
+      await userEvent.click(screen.getByRole('button', { name: /Unreleased/ }));
 
       expect(await screen.findByText('0.1.0')).toBeInTheDocument();
     });
@@ -278,9 +250,7 @@ describe('PackageVersionBar', () => {
         releases: [release('0.2.0'), release('0.1.0')],
       });
 
-      await userEvent.click(
-        screen.getByRole('button', { name: /Working copy/ }),
-      );
+      await userEvent.click(screen.getByRole('button', { name: /Unreleased/ }));
       await userEvent.click(await screen.findByText('0.1.0'));
 
       expect(onReadVersion).toHaveBeenCalledWith('0.1.0');
@@ -304,12 +274,10 @@ describe('PackageVersionBar', () => {
       ).toBeInTheDocument();
     });
 
-    it('dates it rather than comparing it to itself', () => {
+    it('dates the cut it is showing', () => {
       renderBar({ readiness: ahead, releases, readingVersion: '0.1.0' });
 
-      expect(
-        screen.queryByText('Unreleased changes since 0.2.0'),
-      ).not.toBeInTheDocument();
+      expect(screen.getByText(/^Released/)).toBeInTheDocument();
     });
 
     it('offers no cut from a past reading', () => {

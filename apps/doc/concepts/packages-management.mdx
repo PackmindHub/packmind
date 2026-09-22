@@ -140,7 +140,7 @@ Learn more in the [Distribution documentation](/governance/distribution).
 
 A package can be released under a version. A **release** is an immutable snapshot of the package: it records the package's name and description, and pins the exact version of every command, standard, and skill the package contains at the moment you create it. Nothing changes a release afterwards—publishing a newer version of a component, renaming the package, or removing a component leaves it untouched.
 
-Open a package and its header shows the current version beside the name, or **Not released yet** if it has never been released.
+Open a package and a bar under its name says which version you are reading. It reads **Unreleased**—the package as it stands, the only reading with no version number—or **Not released yet** when the package has never been released.
 
 <Note>
   **Distribution always sends current content** — A release names a state, it
@@ -153,7 +153,7 @@ Open a package and its header shows the current version beside the name, or **No
 ### Creating a Release
 
 1. Navigate to **Packages** and select your package
-2. Click **Create a release**, beside the version in the package header
+2. Click **Create a release**, beside **Unreleased** in the bar under the package name
 3. Enter a version number as `X.Y.Z`, or click one of the three suggested increments
 4. Submit the form
 
@@ -165,19 +165,16 @@ Any member of the **space** can create a release.
 
 ### When You Can Create a Release
 
-**Create a release** is available once the package has changed since its last release. Any one of these counts as a change:
+**Create a release** appears once the package has changed since its last release. Any one of these counts as a change:
 
 - A command, standard, or skill in the package has a newer version than the release pinned
 - The package's name or description was edited
 - A component was added to or removed from the package
 
-Otherwise, the reason appears beside the action:
+When there is nothing to release, the action isn't there: the package is identical to its last release, or it holds no component at all. Nothing else in the bar changes.
 
-- `Add at least one component` — the package contains no components
-- `Nothing has changed since 0.1.0` — the package is identical to its last release, naming that version
+### Reading an Earlier Version
 
-When a component pinned by the last release has a newer version available, the package header says so for each one: the component's name, the version the release pinned, and the version available now.
+Open the menu on **Unreleased** to see every release of the package, newest first, each with the day it was cut. Select one and the package is shown as that version left it: the components it pinned, at the versions it pinned them, including components deleted since. The reading is read-only—a release never changes—so the controls that write the package leave while you are on it.
 
-### Release History
-
-Select the version in the package header to open the release history, which lists every release, newest first. Select a release to see exactly what that version pinned, including components deleted since—at the version the release pinned.
+The version you are reading is part of the address, so a link to `1.1.0` opens on `1.1.0` for whoever you send it to. Select **Unreleased** in the same menu, or the link beside the list, to come back to the package as it stands.

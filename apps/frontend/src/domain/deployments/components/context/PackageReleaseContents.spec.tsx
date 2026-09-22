@@ -21,7 +21,7 @@ const packageId = createPackageId('pkg-1');
 const spaceId = createSpaceId('space-1');
 const organizationId = createOrganizationId('org-1');
 
-const onReadWorkingCopy = vi.fn();
+const onReadUnreleased = vi.fn();
 
 const release = (
   overrides: Partial<PackageReleaseContent> = {},
@@ -60,7 +60,7 @@ const renderContents = ({
         spaceId={spaceId}
         organizationId={organizationId}
         version="1.1.0"
-        onReadWorkingCopy={onReadWorkingCopy}
+        onReadUnreleased={onReadUnreleased}
       />
     </UIProvider>,
   );
@@ -110,11 +110,9 @@ describe('PackageReleaseContents', () => {
     it('hands the reader back to the editable package', async () => {
       renderContents({ data: { release: pinned } });
 
-      await userEvent.click(
-        screen.getByRole('button', { name: 'Working copy' }),
-      );
+      await userEvent.click(screen.getByRole('button', { name: 'Unreleased' }));
 
-      expect(onReadWorkingCopy).toHaveBeenCalled();
+      expect(onReadUnreleased).toHaveBeenCalled();
     });
   });
 

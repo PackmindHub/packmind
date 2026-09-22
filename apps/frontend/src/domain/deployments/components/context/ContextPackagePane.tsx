@@ -1140,7 +1140,7 @@ export function ContextPackagePane({
             spaceId={spaceId}
             organizationId={organizationId}
             version={readingVersion}
-            onReadWorkingCopy={() => readVersion(null)}
+            onReadUnreleased={() => readVersion(null)}
           />
         ) : groups.length === 0 ? (
           <EmptyPackageBody

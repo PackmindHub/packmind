@@ -255,7 +255,7 @@ describe('ContextPackagePane', () => {
     expect(screen.queryByText('Not released yet')).not.toBeInTheDocument();
   });
 
-  it('measures the working copy against the last release', async () => {
+  it('names the reading the pane is on once the package has releases', async () => {
     await renderPane({
       currentVersion: '1.2.0',
       verdict: 'ready',
@@ -264,7 +264,7 @@ describe('ContextPackagePane', () => {
     });
 
     expect(
-      screen.getByText('Unreleased changes since 1.2.0'),
+      screen.getByRole('button', { name: /Unreleased/ }),
     ).toBeInTheDocument();
   });
 

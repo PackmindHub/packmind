@@ -48,14 +48,16 @@ export const PACKAGE_MESSAGES = {
     notReleasedYet: 'Not released yet',
     /**
      * The package as it stands now, which is the one reading of it that has no
-     * version string. Named rather than left to "Current": a working copy is
-     * the thing releases are cut from, and "current" is also what a reader
-     * would call the newest release.
+     * version string.
+     *
+     * Not "Current", which in a list reading `Current / 1.2.0 / 1.1.0` is as
+     * easily read as naming 1.2.0. Not "Draft" either: this state is exactly
+     * what the agents in every repository read today, so calling it a draft
+     * would be untrue about what is shipped. What is true in both eras is that
+     * it is the part of the package that is not in any release.
      */
-    workingCopy: 'Working copy',
+    unreleased: 'Unreleased',
     no_components: 'Add at least one component',
-    no_change: (currentVersion: string) =>
-      `Nothing has changed since ${currentVersion}`,
     not_greater: (currentVersion: string) =>
       `Version must be greater than ${currentVersion}`,
     malformed: 'Version must follow X.Y.Z',

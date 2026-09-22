@@ -15,6 +15,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 import {
   COMPONENT_TYPE_LABELS,
   type ContextComponentType,
@@ -49,7 +50,7 @@ export function PackageReleaseContents(
     organizationId: OrganizationId;
     version: string;
     /** Back to the editable package, which is where changes are made. */
-    onReadWorkingCopy: () => void;
+    onReadUnreleased: () => void;
   }>,
 ) {
   const { data, isLoading, isError } = useGetPackageReleaseQuery(
@@ -108,8 +109,8 @@ export function PackageReleaseContents(
           {props.version} pins {pinned} component{pinned === 1 ? '' : 's'} at
           the versions below.
         </PMText>
-        <PMLink as="button" fontSize="xs" onClick={props.onReadWorkingCopy}>
-          Working copy
+        <PMLink as="button" fontSize="xs" onClick={props.onReadUnreleased}>
+          {PACKAGE_MESSAGES.release.unreleased}
         </PMLink>
       </PMHStack>
 

@@ -3,18 +3,14 @@ import {
   PMBox,
   PMButton,
   PMHStack,
-  PMLink,
   PMMenu,
-  PMPopover,
   PMPortal,
   PMText,
-  PMVStack,
 } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 import {
   OrganizationId,
   PackageId,
-  PackageReleaseReadiness,
   PackageReleaseSummary,
   SpaceId,
 } from '@packmind/types';
@@ -23,8 +19,8 @@ import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { RelativeDate } from '../RelativeDate';
 import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 
-/** What the ref menu calls the editable package, which has no version string. */
-const WORKING_COPY = 'working-copy';
+/** What the ref menu calls the package as it stands, which has no version. */
+const UNRELEASED = 'unreleased';
 
 /**
  * Which version of the package is on screen, and the one action that adds to
@@ -34,17 +30,20 @@ const WORKING_COPY = 'working-copy';
  * of controls under the name. The version used to sit inside the identity
  * block, left aligned, while every other thing that acts on the package sat in
  * the cluster on the right: two action zones on one header, and the quieter of
- * the two holding a verb. Worse, it was read as a property of the package, so
- * the description, the readiness sentence and the list of what had moved all
- * piled into a header that cannot grow without pushing the components off the
- * pane.
+ * the two holding a verb.
  *
  * It is a bar because the version is not one more fact about the package: it is
  * the frame the pane below is read through. The menu names what is on screen,
- * the sentence beside it says how far that is from the last cut, and the action
- * is what closes the distance. When a destination installs a version rather
- * than the latest state, this same control is the axis the Distribution tab
- * will be read through too.
+ * and the action is what turns it into a version. When a destination installs a
+ * version rather than the latest state, this same control is the axis the
+ * Distribution tab will be read through too.
+ *
+ * It says nothing else. An earlier draft measured the distance to the last
+ * release in a sentence beside the menu, and named the pinned components that
+ * had moved on behind a disclosure: two readings of the gate's verdict that ask
+ * the reader to hold a model of pinning before they can be understood, printed
+ * on a header whose job is to say what is on screen. The action carries the
+ * whole of it already, by being there or not: something to release, or nothing.
  *
  * The drawer that cuts a release is owned here for the reason it always was:
  * the readiness this bar already reads is exactly what the form needs.
@@ -55,7 +54,7 @@ export function PackageVersionBar(
     spaceId: SpaceId;
     organizationId: OrganizationId;
     componentsCount: number;
-    /** The release being read, or null for the working copy. */
+    /** The release being read, or null for the package as it stands. */
     readingVersion: string | null;
     onReadVersion: (version: string | null) => void;
   }>,
@@ -79,6 +78,9 @@ export function PackageVersionBar(
   }
 
   const { readiness, releases } = data;
+  const readRelease = props.readingVersion
+    ? releases.find((release) => release.version === props.readingVersion)
+    : undefined;
 
   return (
     <PMHStack minHeight={8} gap={3} align="center" wrap="wrap" width="100%">
@@ -87,17 +89,23 @@ export function PackageVersionBar(
         readingVersion={props.readingVersion}
         onReadVersion={props.onReadVersion}
       />
-      <VersionState
-        readiness={readiness}
-        releases={releases}
-        readingVersion={props.readingVersion}
-      />
+
       {/*
-        Absent rather than disabled when the package has nothing to cut. A
-        greyed control with a sentence under it saying why is a sentence written
-        as a button, and the sentence beside it already says it: identical to
-        the last release, or emptied since it. The same rule the header's own
-        update control follows.
+        When the release was cut, beside the version it names. The identity of
+        what is on screen, not a comparison with anything: a version string on
+        its own does not say whether this is the cut the reader remembers.
+        Absent, never invented, when the row carries no instant.
+      */}
+      {readRelease?.releasedAt && (
+        <PMText fontSize="xs" color="secondary">
+          Released <RelativeDate iso={readRelease.releasedAt} />
+        </PMText>
+      )}
+
+      {/*
+        Absent rather than disabled when the package has nothing to cut, which
+        is the rule the header's own update control follows: a greyed control is
+        a sentence written as a button.
 
         Absent too while a release is on screen. Cutting a version from a past
         one is not a thing this action does, and offering it under a bar that
@@ -131,9 +139,11 @@ export function PackageVersionBar(
 /**
  * What the pane is showing, and every other thing it could show.
  *
- * A badge and not a menu until there is a second thing to pick: a package with
- * no release has one state, and a control that opens onto a list of one is a
- * control that lies about what is behind it.
+ * A sentence and not a menu until there is a second thing to pick: a package
+ * with no release has one state, and a control that opens onto a list of one is
+ * a control that lies about what is behind it. It was a bordered badge, which
+ * beside the action put two rounded rectangles of the same size in a row, one
+ * of them a control and one of them not.
  */
 function VersionRef({
   releases,
@@ -144,12 +154,6 @@ function VersionRef({
   readingVersion: string | null;
   onReadVersion: (version: string | null) => void;
 }>) {
-  /*
-   * A sentence, not a badge, and not a menu: a package with no release has one
-   * state and nothing to switch to. It was a bordered badge, which beside the
-   * action put two rounded rectangles of the same size in a row, one of them a
-   * control and one of them not, and the fact read as a disabled button.
-   */
   if (releases.length === 0) {
     return (
       <PMText fontSize="xs" color="secondary">
@@ -162,7 +166,7 @@ function VersionRef({
     <PMMenu.Root>
       <PMMenu.Trigger asChild>
         <PMButton variant="tertiary" size="sm">
-          {readingVersion ?? PACKAGE_MESSAGES.release.workingCopy}
+          {readingVersion ?? PACKAGE_MESSAGES.release.unreleased}
           <LuChevronDown aria-hidden />
         </PMButton>
       </PMMenu.Trigger>
@@ -176,14 +180,14 @@ function VersionRef({
               is opened, and what a reader coming back to it needs it to say.
             */}
             <PMMenu.RadioItemGroup
-              value={readingVersion ?? WORKING_COPY}
+              value={readingVersion ?? UNRELEASED}
               onValueChange={({ value }) =>
-                onReadVersion(value === WORKING_COPY ? null : value)
+                onReadVersion(value === UNRELEASED ? null : value)
               }
             >
-              <PMMenu.RadioItem value={WORKING_COPY}>
+              <PMMenu.RadioItem value={UNRELEASED}>
                 <PMMenu.ItemIndicator />
-                {PACKAGE_MESSAGES.release.workingCopy}
+                {PACKAGE_MESSAGES.release.unreleased}
               </PMMenu.RadioItem>
               <PMMenu.Separator />
               {releases.map((release) => (
@@ -194,8 +198,7 @@ function VersionRef({
                     {/*
                       The date beside the number, because a version string on
                       its own does not say which of two releases is the one the
-                      reader remembers. Absent, never invented, when the row
-                      carries no instant.
+                      reader remembers.
                     */}
                     {release.releasedAt && (
                       <PMText fontSize="xs" color="faded">
@@ -211,153 +214,4 @@ function VersionRef({
       </PMPortal>
     </PMMenu.Root>
   );
-}
-
-/**
- * How far what is on screen stands from the last release, in one line.
- *
- * Said in the words the verdict can carry and no others. The gate answers with
- * three states and names no count, so "3 changes" would be a number this
- * surface invented: what it does know by name is which pinned components have
- * moved on, and those go behind a disclosure rather than into the header as a
- * column of grey lines.
- */
-function VersionState({
-  readiness,
-  releases,
-  readingVersion,
-}: Readonly<{
-  readiness: PackageReleaseReadiness;
-  releases: PackageReleaseSummary[];
-  readingVersion: string | null;
-}>) {
-  if (readingVersion !== null) {
-    const release = releases.find(
-      (candidate) => candidate.version === readingVersion,
-    );
-
-    if (!release?.releasedAt) return null;
-
-    return (
-      <PMText fontSize="xs" color="secondary">
-        Released <RelativeDate iso={release.releasedAt} />
-      </PMText>
-    );
-  }
-
-  const { currentVersion, verdict, outdatedComponents } = readiness;
-
-  /*
-   * Nothing to compare against on a package that has never been released: the
-   * badge beside this already says so, and a second sentence saying it twice is
-   * what this bar replaced.
-   */
-  if (currentVersion === null) return null;
-
-  return (
-    <PMHStack gap={2} align="center" wrap="wrap">
-      <PMText fontSize="xs" color="secondary">
-        {stateSentence(verdict, currentVersion)}
-      </PMText>
-      {/*
-        The separator the surrounding surfaces already use between two facts on
-        one line. Without it the sentence ends on a version and the disclosure
-        opens on a count, and "since 1.0.0 1 newer component" reads as one
-        number run into another.
-      */}
-      {outdatedComponents.length > 0 && (
-        <PMText fontSize="xs" color="faded" aria-hidden>
-          &middot;
-        </PMText>
-      )}
-      {/*
-        `lazyMount` and `unmountOnExit` on the disclosure, because this list is
-        as long as the package is behind: a header that cannot grow was carrying
-        every one of these lines, and a closed disclosure that still holds them
-        is the same weight with the paint turned off.
-      */}
-      {outdatedComponents.length > 0 && (
-        <PMPopover.Root
-          positioning={{ placement: 'bottom-start' }}
-          lazyMount
-          unmountOnExit
-        >
-          <PMPopover.Trigger asChild>
-            <PMLink
-              as="button"
-              type="button"
-              variant="underline"
-              fontSize="xs"
-              cursor="pointer"
-            >
-              {outdatedComponents.length} newer{' '}
-              {outdatedComponents.length === 1 ? 'component' : 'components'}
-            </PMLink>
-          </PMPopover.Trigger>
-          <PMPopover.Positioner>
-            {/*
-              Its own surface and border. The default content is close enough
-              in tone to the page that the list read as printed on it rather
-              than over it, which is the one thing an overlay has to say.
-            */}
-            <PMPopover.Content
-              width="22rem"
-              bg="background.primary"
-              borderWidth="1px"
-              borderColor="border.tertiary"
-            >
-              <PMPopover.Arrow>
-                <PMPopover.ArrowTip />
-              </PMPopover.Arrow>
-              <PMPopover.Body>
-                <PMPopover.Title fontSize="sm" fontWeight="medium">
-                  Newer than what {currentVersion} pins
-                </PMPopover.Title>
-                <PMVStack gap={1} align="stretch" marginTop={3}>
-                  {outdatedComponents.map((component) => (
-                    <PMHStack
-                      key={`${component.family}:${component.id}`}
-                      gap={3}
-                      justify="space-between"
-                    >
-                      <PMText fontSize="xs" truncate>
-                        {component.name}
-                      </PMText>
-                      <PMText
-                        fontSize="xs"
-                        color="faded"
-                        flexShrink={0}
-                        fontVariantNumeric="tabular-nums"
-                      >
-                        v{component.pinnedVersion} &rarr; v
-                        {component.latestVersion}
-                      </PMText>
-                    </PMHStack>
-                  ))}
-                </PMVStack>
-              </PMPopover.Body>
-            </PMPopover.Content>
-          </PMPopover.Positioner>
-        </PMPopover.Root>
-      )}
-    </PMHStack>
-  );
-}
-
-/**
- * The working copy against the last release, in the one voice each verdict
- * earns.
- *
- * `no_components` reads as a package that was emptied rather than one that is
- * empty, because a package with a release behind it and nothing in it now is
- * exactly that, and the body below already tells a never-filled package what to
- * do about it.
- */
-function stateSentence(
-  verdict: PackageReleaseReadiness['verdict'],
-  currentVersion: string,
-): string {
-  if (verdict === 'no_change') return `Identical to ${currentVersion}`;
-  if (verdict === 'no_components') return `Emptied since ${currentVersion}`;
-  return `Unreleased changes since ${currentVersion}`;
 }
