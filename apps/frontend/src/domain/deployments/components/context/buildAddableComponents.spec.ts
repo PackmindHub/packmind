@@ -14,6 +14,7 @@ import {
   filterAddableComponents,
   groupPickState,
   groupedComponentCount,
+  isPickable,
   withGroupPicked,
 } from './buildAddableComponents';
 import {
@@ -655,6 +656,34 @@ describe('countAddableComponents', () => {
   });
 });
 
+describe('isPickable', () => {
+  const skillGroupHeldBy = (packages: readonly PackageResponse[]) => {
+    const { groups } = buildAddableComponents(
+      holds(),
+      packages,
+      catalogue({ skills: [skill('k1', 'Onboard')] }),
+      TARGET,
+    );
+    return groups[0].entries[0];
+  };
+
+  describe('when no package carries the candidate', () => {
+    it('lets the picker take it', () => {
+      expect(isPickable(skillGroupHeldBy(ALONE))).toBe(true);
+    });
+  });
+
+  describe('when another package carries the candidate', () => {
+    it('keeps the picker off it', () => {
+      const elsewhere = [
+        pack('p1', 'frontend-rules', { skills: [createSkillId('k1')] }),
+      ];
+
+      expect(isPickable(skillGroupHeldBy(elsewhere))).toBe(false);
+    });
+  });
+});
+
 describe('the heading of a group', () => {
   const skillGroup = (): InventoryGroup => {
     const { groups } = buildAddableComponents(
@@ -679,6 +708,23 @@ describe('the heading of a group', () => {
         .map(({ component }) => componentSelectionKey(component)),
     );
 
+  /** Three skills of which one already ships from another package. */
+  const skillGroupWithOneHeld = (): InventoryGroup => {
+    const { groups } = buildAddableComponents(
+      holds(),
+      [pack('p1', 'frontend-rules', { skills: [createSkillId('k3')] })],
+      catalogue({
+        skills: [
+          skill('k1', 'Onboard'),
+          skill('k2', 'Release'),
+          skill('k3', 'Triage'),
+        ],
+      }),
+      TARGET,
+    );
+    return groups[0];
+  };
+
   describe('groupPickState', () => {
     it('reads nothing picked as none', () => {
       expect(groupPickState(new Set(), skillGroup())).toBe('none');
@@ -696,6 +742,22 @@ describe('the heading of a group', () => {
       expect(
         groupPickState(keysOf(group, ['Onboard', 'Release', 'Triage']), group),
       ).toBe('all');
+    });
+
+    describe('when the group lists a candidate another package holds', () => {
+      it('reads every free one picked as all', () => {
+        const group = skillGroupWithOneHeld();
+
+        expect(
+          groupPickState(keysOf(group, ['Onboard', 'Release']), group),
+        ).toBe('all');
+      });
+
+      it('reads none of the free ones picked as none', () => {
+        const group = skillGroupWithOneHeld();
+
+        expect(groupPickState(keysOf(group, ['Triage']), group)).toBe('none');
+      });
     });
 
     it('reads a group with no entry as none', () => {
@@ -717,6 +779,21 @@ describe('the heading of a group', () => {
       const all = keysOf(group, ['Onboard', 'Release', 'Triage']);
 
       expect(withGroupPicked(all, group, false).size).toBe(0);
+    });
+
+    describe('when the group lists a candidate another package holds', () => {
+      it('picks only the free ones', () => {
+        const group = skillGroupWithOneHeld();
+
+        expect(withGroupPicked(new Set(), group, true).size).toBe(2);
+      });
+
+      it('clears a stale pick of the held one', () => {
+        const group = skillGroupWithOneHeld();
+        const stale = keysOf(group, ['Triage']);
+
+        expect(withGroupPicked(stale, group, false).size).toBe(0);
+      });
     });
 
     it('leaves a pick made outside the group alone', () => {

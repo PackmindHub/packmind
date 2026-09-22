@@ -279,6 +279,64 @@ describe('AddComponentsDrawer', () => {
   });
 
   /*
+   * A component belongs to a single package, so one another package already
+   * carries is listed — where it went is the answer the reader is after — and
+   * cannot be taken from here.
+   */
+  describe('a candidate another package already carries', () => {
+    const mixed = {
+      catalogue: { ...emptyCatalogue, standards: [NAMING, SHIPPED] },
+      holds: [] as readonly StandardId[],
+      alongside: [otherPackage([SHIPPED.id])],
+    };
+
+    /* The held candidates sit behind the coverage filter the drawer opens on. */
+    const showEveryCandidate = () =>
+      userEvent.click(screen.getByRole('button', { name: 'In no package, 1' }));
+
+    beforeEach(async () => {
+      renderDrawer(mixed);
+      await showEveryCandidate();
+    });
+
+    it('cannot be picked', () => {
+      expect(
+        screen.getByRole('checkbox', { name: /Error handling/ }),
+      ).toBeDisabled();
+    });
+
+    it('says which package holds it', () => {
+      expect(screen.getByText('In Legacy guidelines')).toBeInTheDocument();
+    });
+
+    it('leaves a free candidate pickable', () => {
+      expect(
+        screen.getByRole('checkbox', { name: /Naming conventions/ }),
+      ).toBeEnabled();
+    });
+
+    describe('when the whole group is selected at once', () => {
+      beforeEach(async () => {
+        await userEvent.click(
+          screen.getByRole('checkbox', { name: /Select the 1 standard/ }),
+        );
+      });
+
+      it('takes only the free one', () => {
+        expect(
+          screen.getByRole('button', { name: 'Add 1 standard' }),
+        ).toBeInTheDocument();
+      });
+
+      it('leaves the held one unticked', () => {
+        expect(
+          screen.getByRole('checkbox', { name: /Error handling/ }),
+        ).not.toBeChecked();
+      });
+    });
+  });
+
+  /*
    * The filter cannot strand the reader either, which is the harder half: the
    * count it filters on can fall to zero while the drawer stands, and the chip
    * that would undo it is drawn only while both populations exist.

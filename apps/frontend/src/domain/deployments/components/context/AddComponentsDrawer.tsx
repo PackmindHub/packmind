@@ -29,6 +29,7 @@ import {
   groupPickState,
   groupedComponentCount,
   withGroupPicked,
+  isPickable,
 } from './buildAddableComponents';
 import {
   filterInventoryGroups,
@@ -265,6 +266,9 @@ export function AddComponentsDrawer({
     () =>
       covered
         .flatMap((group) => group.entries)
+        // A component another package holds is listed but never picked: it is
+        // shown so the reader can see where it went, not so it can be taken.
+        .filter(isPickable)
         .map((entry) => entry.component)
         .filter((component) =>
           pickedKeys.has(componentSelectionKey(component)),
@@ -716,6 +720,11 @@ function CandidateGroup({
   disabled: boolean;
 }>) {
   const state = groupPickState(pickedKeys, group);
+  /*
+   * The rows this heading can actually tick. A group can be all candidates and
+   * none of them free, in which case the heading has nothing to offer.
+   */
+  const pickableCount = group.entries.filter(isPickable).length;
 
   return (
     <PMBox>
@@ -736,7 +745,7 @@ function CandidateGroup({
           onCheckedChange={(details) =>
             onToggleGroup(group, details.checked === true)
           }
-          disabled={disabled || group.entries.length === 0}
+          disabled={disabled || pickableCount === 0}
           /*
             The count is in the words beside it, and it is the shown count, so
             the label says the same thing the reader sees. Without it the
@@ -749,8 +758,8 @@ function CandidateGroup({
               group's label, which is not: a group of one read "the 1 commands
               listed".
             */
-            'aria-label': `Select the ${group.entries.length} ${group.type}${
-              group.entries.length === 1 ? '' : 's'
+            'aria-label': `Select the ${pickableCount} ${group.type}${
+              pickableCount === 1 ? '' : 's'
             } listed`,
           }}
         />
@@ -824,14 +833,25 @@ function CandidateRow({
   disabled: boolean;
 }>) {
   const { component, packageNames } = entry;
+  /*
+   * Another package holds it, so this one cannot: a component belongs to a
+   * single package and getting it here is a move, made from the package that
+   * holds it. Listed rather than hidden, because where it went is the answer
+   * the reader is looking for once it is not among the free ones.
+   */
+  const heldElsewhere = !isPickable(entry);
 
   return (
     <PMCheckbox
       size="sm"
       checked={isPicked}
       onCheckedChange={() => onToggle(component)}
-      disabled={disabled}
-      inputProps={{ 'aria-label': `Add ${component.name}` }}
+      disabled={disabled || heldElsewhere}
+      inputProps={{
+        'aria-label': heldElsewhere
+          ? `${component.name} is already in another package`
+          : `Add ${component.name}`,
+      }}
       width="full"
       gap={3}
       /*
@@ -872,7 +892,14 @@ function CandidateRow({
               {component.summary}
             </PMText>
           )}
-          {showPackages && <CurrentPackages names={packageNames} />}
+          {/*
+            Always on a row that cannot be ticked, whatever the coverage
+            filter says: the line naming the package is the only thing on
+            screen that explains the disabled control.
+          */}
+          {(showPackages || heldElsewhere) && (
+            <CurrentPackages names={packageNames} />
+          )}
         </PMBox>
         <PMText
           fontSize="xs"
