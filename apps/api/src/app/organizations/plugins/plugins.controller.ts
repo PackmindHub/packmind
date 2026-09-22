@@ -54,46 +54,32 @@ export class PluginsController {
       },
     );
 
-    try {
-      const command: RenderPackageAsPluginCommand = {
-        userId: request.user.userId,
+    const command: RenderPackageAsPluginCommand = {
+      userId: request.user.userId,
+      organizationId,
+      source: request.clientSource,
+      packageSlug: body.packageSlug,
+      mode: body.mode,
+      pluginRoot: body.pluginRoot,
+      pluginName: body.pluginName,
+      gitRemoteUrl: body.gitRemoteUrl,
+      gitBranch: body.gitBranch,
+      targetVendor: body.targetVendor,
+    };
+
+    const response = await this.pluginsService.renderPlugin(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/plugins/render - Package rendered successfully',
+      {
         organizationId,
-        source: request.clientSource,
         packageSlug: body.packageSlug,
-        mode: body.mode,
-        pluginRoot: body.pluginRoot,
-        pluginName: body.pluginName,
-        gitRemoteUrl: body.gitRemoteUrl,
-        gitBranch: body.gitBranch,
-        targetVendor: body.targetVendor,
-      };
+        fileCount: response.files.length,
+        skippedStandardsCount: response.skippedStandardsCount,
+      },
+    );
 
-      const response = await this.pluginsService.renderPlugin(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/plugins/render - Package rendered successfully',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          fileCount: response.files.length,
-          skippedStandardsCount: response.skippedStandardsCount,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/plugins/render - Failed to render package as plugin',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Post('track-deleted')
@@ -110,39 +96,25 @@ export class PluginsController {
       },
     );
 
-    try {
-      const command: TrackPluginDeletedCommand = {
-        userId: request.user.userId,
+    const command: TrackPluginDeletedCommand = {
+      userId: request.user.userId,
+      organizationId,
+      source: request.clientSource,
+      packageSlug: body.packageSlug,
+      gitRemoteUrl: body.gitRemoteUrl,
+    };
+
+    const response = await this.pluginsService.trackPluginDeleted(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/plugins/track-deleted - Plugin deletion tracked successfully',
+      {
         organizationId,
-        source: request.clientSource,
         packageSlug: body.packageSlug,
-        gitRemoteUrl: body.gitRemoteUrl,
-      };
+        tracked: response.tracked,
+      },
+    );
 
-      const response = await this.pluginsService.trackPluginDeleted(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/plugins/track-deleted - Plugin deletion tracked successfully',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          tracked: response.tracked,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/plugins/track-deleted - Failed to track plugin deletion',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 }
