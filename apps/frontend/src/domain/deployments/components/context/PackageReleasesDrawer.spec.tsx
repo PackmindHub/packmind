@@ -77,9 +77,9 @@ describe('PackageReleasesDrawer', () => {
   it('lists every release, newest first', async () => {
     renderComponent({
       releases: [
-        { version: '0.1.0' },
-        { version: '0.10.0' },
-        { version: '0.9.0' },
+        { version: '0.1.0', releasedAt: null },
+        { version: '0.10.0', releasedAt: null },
+        { version: '0.9.0', releasedAt: null },
       ],
     });
 
@@ -130,7 +130,7 @@ describe('PackageReleasesDrawer', () => {
     };
 
     renderComponent({
-      releases: [{ version: '0.1.0' }],
+      releases: [{ version: '0.1.0', releasedAt: null }],
       getReleaseMock: (version) => {
         if (version === '0.1.0') {
           return {

@@ -89,9 +89,18 @@ export type PackageReleaseRefusal =
  */
 export type PackageReleaseRefusalCode = PackageReleaseRefusal | 'no_components';
 
-/** One release, as a list read sees it: the version string and nothing else. */
+/** One release, as a list read sees it: the version string and when it was cut. */
 export type PackageReleaseSummary = {
   version: string;
+  /**
+   * When the cut was made, ISO-8601, or `null` when the row carries no instant.
+   *
+   * Nullable rather than absent, and never invented: `createdAt` is a `Date`
+   * once TypeORM hydrates a release and nothing at all on one built by hand, so
+   * a summary that fell back to now would date a two-year-old release today.
+   * A version listed without its date is a version listed without its date.
+   */
+  releasedAt: string | null;
 };
 
 /** A pinned component whose family has a newer version than the release pins. */

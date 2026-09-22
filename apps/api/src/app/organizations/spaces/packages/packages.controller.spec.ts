@@ -66,7 +66,7 @@ describe('OrganizationsSpacesPackagesController', () => {
 
   describe('listPackageReleases', () => {
     const response: ListPackageReleasesResponse = {
-      releases: [{ version: '1.0.0' }],
+      releases: [{ version: '1.0.0', releasedAt: null }],
       readiness: {
         currentVersion: '1.0.0',
         verdict: 'ready',

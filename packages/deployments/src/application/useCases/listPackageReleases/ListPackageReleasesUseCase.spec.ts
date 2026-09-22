@@ -309,10 +309,10 @@ describe('ListPackageReleasesUseCase', () => {
       expect(result.readiness.outdatedComponents).toEqual([]);
     });
 
-    it('summarises a release with its version and nothing else', async () => {
+    it('summarises a release with its version and the instant it was cut', async () => {
       const result = await useCase.execute(buildCommand());
 
-      expect(result.releases).toEqual([{ version: '0.1.0' }]);
+      expect(result.releases).toEqual([{ version: '0.1.0', releasedAt: null }]);
     });
   });
 
@@ -362,8 +362,8 @@ describe('ListPackageReleasesUseCase', () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.releases).toEqual([
-        { version: '0.10.0' },
-        { version: '0.9.0' },
+        { version: '0.10.0', releasedAt: null },
+        { version: '0.9.0', releasedAt: null },
       ]);
     });
 
@@ -395,6 +395,25 @@ describe('ListPackageReleasesUseCase', () => {
         '0.10.1',
         '0.11.0',
         '1.0.0',
+      ]);
+    });
+  });
+
+  describe('when a release carries the instant it was persisted', () => {
+    beforeEach(() => {
+      packageReleaseService.listReleases.mockResolvedValue([
+        buildRelease('0.1.0', { createdAt: new Date('2026-03-04T09:15:00Z') }),
+      ]);
+      packageReleaseService.findByVersion.mockResolvedValue(
+        buildIdenticalRelease('0.1.0'),
+      );
+    });
+
+    it('dates the summary with it', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.releases).toEqual([
+        { version: '0.1.0', releasedAt: '2026-03-04T09:15:00.000Z' },
       ]);
     });
   });

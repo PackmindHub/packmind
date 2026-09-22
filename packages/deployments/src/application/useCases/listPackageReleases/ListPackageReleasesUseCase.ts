@@ -50,6 +50,24 @@ const byVersionDescending = (
   return comparePackageReleaseVersions(parsedB, parsedA);
 };
 
+/**
+ * When a release was cut, as a string a response can carry.
+ *
+ * `createdAt` is a `Date` once TypeORM hydrates the row and absent from a
+ * release built by hand, so the two things this can be handed are an instant
+ * and nothing. Nothing rather than a fallback: the surface prints a date beside
+ * a version, and one invented here would be read as the day that version
+ * shipped.
+ */
+const releasedAtOf = (release: PackageReleaseEntry): string | null => {
+  if (!release.createdAt) {
+    return null;
+  }
+
+  const at = new Date(release.createdAt);
+  return Number.isNaN(at.getTime()) ? null : at.toISOString();
+};
+
 /** What a release pins, keyed by `${family}:${componentId}`. */
 const pinnedByComponent = (
   release: PackageReleaseDetail,
@@ -231,7 +249,10 @@ export class ListPackageReleasesUseCase
 
     const summaries: PackageReleaseSummary[] = [...releases]
       .sort(byVersionDescending)
-      .map((release) => ({ version: release.version }));
+      .map((release) => ({
+        version: release.version,
+        releasedAt: releasedAtOf(release),
+      }));
 
     return {
       releases: summaries,

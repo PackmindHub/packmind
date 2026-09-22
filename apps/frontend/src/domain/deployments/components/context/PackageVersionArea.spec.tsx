@@ -271,7 +271,7 @@ describe('PackageVersionArea', () => {
         nextVersions: ['0.2.0', '1.0.0', '2.0.0'],
         outdatedComponents: [],
       },
-      releases: [{ version: '0.1.0' }],
+      releases: [{ version: '0.1.0', releasedAt: null }],
     });
 
     // The badge should be visible as a button
