@@ -166,6 +166,10 @@ import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/
 import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
+import {
+  AdapterPortsMissingError,
+  DelayedJobNotCreatedError,
+} from '../../domain/errors/DeploymentsAdapterErrors';
 
 const origin = 'DeploymentsAdapter';
 
@@ -268,7 +272,7 @@ export class DeploymentsAdapter
       !this.accountsPort &&
       !this.deploymentsServices
     ) {
-      throw new Error('DeploymentsAdapter: Required ports not provided');
+      throw new AdapterPortsMissingError();
     }
 
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
@@ -641,9 +645,7 @@ export class DeploymentsAdapter
     await jobFactory.createQueue();
 
     if (!jobFactory.delayedJob) {
-      throw new Error(
-        'DeploymentsAdapter: Failed to create delayed job for publish artifacts',
-      );
+      throw new DelayedJobNotCreatedError();
     }
 
     this.logger.debug('Deployments delayed jobs built successfully');

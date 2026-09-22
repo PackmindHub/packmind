@@ -4,7 +4,13 @@ import { NoFileUpdatesResolvedError } from './NoFileUpdatesResolvedError';
 import { NoPackageSlugsProvidedError } from './NoPackageSlugsProvidedError';
 import { NoPackagesProvidedError } from './NoPackagesProvidedError';
 import { NoTargetsProvidedError } from './NoTargetsProvidedError';
+import { DefaultSkillIdMissingError } from './DefaultSkillIdMissingError';
+import {
+  AdapterPortsMissingError,
+  DelayedJobNotCreatedError,
+} from './DeploymentsAdapterErrors';
 import { GitRepositoryNotFoundError } from './GitRepositoryNotFoundError';
+import { InvalidRenderModeError } from './InvalidRenderModeError';
 import { InvalidTargetNameError } from './InvalidTargetNameError';
 import { InvalidTargetPathError } from './InvalidTargetPathError';
 import { PackageComponentHasNoVersionError } from './PackageComponentHasNoVersionError';
@@ -15,7 +21,9 @@ import { PackageReleaseNotPersistedError } from './PackageReleaseNotPersistedErr
 import { PackageReleaseRefusedError } from './PackageReleaseRefusedError';
 import { PackageReloadFailedError } from './PackageReloadFailedError';
 import { PackagesNotFoundError } from './PackagesNotFoundError';
+import { RenderModeConfigurationMissingError } from './RenderModeConfigurationMissingError';
 import { RootTargetNotDeletableError } from './RootTargetNotDeletableError';
+import { UnsupportedRenderModeError } from './UnsupportedRenderModeError';
 import { SpaceNotAccessibleError } from './SpaceNotAccessibleError';
 import { TargetResolutionMissingError } from './TargetResolutionMissingError';
 import { TargetNotFoundError } from './TargetNotFoundError';
@@ -394,5 +402,70 @@ describe('TargetResolutionMissingError', () => {
           .message,
       ).not.toBe(error.message);
     });
+  });
+});
+
+describe('InvalidRenderModeError', () => {
+  const error = new InvalidRenderModeError('NOPE');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers invalid_input', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+
+  it('names the mode back, since the caller is the one who supplied it', () => {
+    expect(error.message).toContain('NOPE');
+  });
+});
+
+describe('UnsupportedRenderModeError', () => {
+  const error = new UnsupportedRenderModeError('NOPE');
+
+  it('is an internal error, since the argument is typed as a RenderMode', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error, so a gap in our table is never a 400', () => {
+    expect(isDomainError(error)).toBe(false);
+  });
+});
+
+describe('RenderModeConfigurationMissingError', () => {
+  const error = new RenderModeConfigurationMissingError('org-1');
+
+  it('is an internal error, since the use case creates what it cannot read', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('keeps the organization in the context', () => {
+    expect(error.context).toEqual({ organizationId: 'org-1' });
+  });
+});
+
+describe('DefaultSkillIdMissingError', () => {
+  const error = new DefaultSkillIdMissingError('some-skill');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('keeps the slug in the context', () => {
+    expect(error.context).toEqual({ slug: 'some-skill' });
+  });
+});
+
+describe.each([
+  ['AdapterPortsMissingError', new AdapterPortsMissingError()],
+  ['DelayedJobNotCreatedError', new DelayedJobNotCreatedError()],
+] as const)('%s', (_name, error) => {
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error, so a wiring fault is never a 4xx', () => {
+    expect(isDomainError(error)).toBe(false);
   });
 });

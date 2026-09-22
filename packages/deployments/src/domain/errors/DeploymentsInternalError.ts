@@ -9,7 +9,12 @@ export type DeploymentsInternalErrorReason =
   | 'package_component_has_no_version'
   | 'package_space_missing'
   | 'no_file_updates_resolved'
-  | 'target_resolution_missing';
+  | 'target_resolution_missing'
+  | 'unsupported_render_mode'
+  | 'render_mode_configuration_missing'
+  | 'default_skill_id_missing'
+  | 'adapter_ports_missing'
+  | 'delayed_job_not_created';
 
 export type DeploymentsInternalErrorContext = {
   packageId?: string;
@@ -21,6 +26,9 @@ export type DeploymentsInternalErrorContext = {
   reverted?: boolean;
   cause?: string;
   stage?: 'removal_data' | 'artifact_resolution';
+  organizationId?: string;
+  renderMode?: string;
+  slug?: string;
 };
 
 /**

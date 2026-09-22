@@ -14,7 +14,8 @@ export type DeploymentsErrorReason =
   | 'git_repository_not_found'
   | 'root_target_not_deletable'
   | 'no_targets_provided'
-  | 'no_packages_provided';
+  | 'no_packages_provided'
+  | 'invalid_render_mode';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;
@@ -27,6 +28,7 @@ export type DeploymentsErrorContext = {
   slugs?: string[];
   gitRepoId?: string;
   path?: string;
+  renderMode?: string;
 };
 
 /**
