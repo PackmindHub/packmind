@@ -9,6 +9,7 @@ import {
   GitProvider,
   GitProviderId,
   GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
   ListAvailableReposResponse,
   createGitProviderId,
   createGitRepoId,
@@ -151,7 +152,7 @@ export class GitProviderService {
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitProviderId);
     }
 
     const syntheticGitRepo: GitRepo = {
@@ -185,7 +186,7 @@ export class GitProviderService {
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitProviderId);
     }
 
     const syntheticGitRepo: GitRepo = {
@@ -224,7 +225,7 @@ export class GitProviderService {
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
@@ -245,7 +246,7 @@ export class GitProviderService {
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
@@ -267,7 +268,7 @@ export class GitProviderService {
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);

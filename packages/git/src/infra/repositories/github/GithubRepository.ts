@@ -14,6 +14,8 @@ import {
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { gitBlobSha } from '@packmind/node-utils';
+import { NoFilesToCommitError } from '@packmind/types';
+import { GithubApiOperationFailedError } from '../../../domain/errors';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -108,7 +110,7 @@ export class GithubRepository implements IGitRepo {
     });
 
     if (files.length === 0 && (!deleteFiles || deleteFiles.length === 0)) {
-      throw new Error('No files to commit');
+      throw new NoFilesToCommitError();
     }
 
     try {
@@ -353,7 +355,10 @@ export class GithubRepository implements IGitRepo {
         repo: this.options.repo,
         error: errorMessage,
       });
-      throw new Error(`Failed to commit files to GitHub: ${errorMessage}`);
+      throw new GithubApiOperationFailedError('commit files to GitHub', error, {
+        owner: this.options.owner,
+        repo: this.options.repo,
+      });
     }
   }
 
@@ -390,8 +395,10 @@ export class GithubRepository implements IGitRepo {
           targetBranch,
           error: errorMessage,
         });
-        throw new Error(
-          `Failed to ensure branch '${targetBranch}' on GitHub: ${errorMessage}`,
+        throw new GithubApiOperationFailedError(
+          `ensure branch '${targetBranch}' on GitHub`,
+          error,
+          { owner, repo, branch: targetBranch },
         );
       }
       // 404 is the only tolerated failure: the branch is simply missing.
@@ -418,8 +425,10 @@ export class GithubRepository implements IGitRepo {
         baseBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to fetch base branch '${baseBranch}' on GitHub: ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        `fetch base branch '${baseBranch}' on GitHub`,
+        error,
+        { owner, repo, branch: baseBranch },
       );
     }
 
@@ -445,8 +454,10 @@ export class GithubRepository implements IGitRepo {
         targetBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to create branch '${targetBranch}' on GitHub: ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        `create branch '${targetBranch}' on GitHub`,
+        error,
+        { owner, repo, branch: targetBranch },
       );
     }
   }
@@ -488,8 +499,10 @@ export class GithubRepository implements IGitRepo {
         targetBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to delete branch '${targetBranch}' on GitHub: ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        `delete branch '${targetBranch}' on GitHub`,
+        error,
+        { owner, repo, branch: targetBranch },
       );
     }
   }
@@ -581,8 +594,10 @@ export class GithubRepository implements IGitRepo {
         base: baseBranch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to open pull request on GitHub for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        `open pull request on GitHub for '${head}' -> '${baseBranch}'`,
+        error,
+        { owner, repo, branch: head },
       );
     }
   }
@@ -680,8 +695,10 @@ export class GithubRepository implements IGitRepo {
         head,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to compare '${base}'...'${head}' on GitHub: ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        `compare '${base}'...'${head}' on GitHub`,
+        error,
+        { owner, repo },
       );
     }
   }
@@ -952,8 +969,10 @@ export class GithubRepository implements IGitRepo {
         branch,
         error: errorMessage,
       });
-      throw new Error(
-        `Failed to list repositories from GitHub: ${errorMessage}`,
+      throw new GithubApiOperationFailedError(
+        'list repositories from GitHub',
+        error,
+        { owner, repo: name, branch },
       );
     }
   }

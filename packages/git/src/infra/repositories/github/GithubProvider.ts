@@ -4,7 +4,11 @@ import {
   IGitProvider,
   ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
-import { ExternalRepository } from '@packmind/types';
+import {
+  ExternalRepository,
+  GitRemoteAccessForbiddenError,
+  InvalidGitProviderCredentialsError,
+} from '@packmind/types';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
@@ -15,6 +19,12 @@ import {
   withTransientRetry,
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
+import { detectGithubRateLimit } from '../http/githubRateLimit';
+import {
+  GithubAvailableRepositoriesFailedError,
+  GithubBranchExistenceCheckFailedError,
+  GithubRateLimitedError,
+} from '../../../domain/errors';
 
 const origin = 'GithubProvider';
 
@@ -87,7 +97,7 @@ export class GithubProvider implements IGitProvider {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
       });
-      throw new Error('Failed to fetch repositories from GitHub');
+      throw new GithubAvailableRepositoriesFailedError(error);
     }
   }
 
@@ -239,53 +249,66 @@ export class GithubProvider implements IGitProvider {
       this.logger.debug('Branch exists on GitHub', { owner, repo, branch });
       return true;
     } catch (error) {
-      if (isNativeError(error)) {
-        if (error.message.includes('404')) {
-          this.logger.debug('Branch not found on GitHub', {
-            owner,
-            repo,
-            branch,
-          });
-          return false;
-        }
-        if (error.message.includes('403')) {
-          this.logger.error(
-            'GitHub API rate limit exceeded or forbidden access',
-            { owner, repo, branch, error },
-          );
-          throw new Error(
-            'GitHub API rate limit exceeded or access forbidden. Please try again later.',
-          );
-        }
-        if (error.message.includes('401')) {
-          this.logger.error('GitHub API authentication failed', {
-            owner,
-            repo,
-            branch,
-            error,
-          });
-          throw new Error(
-            'GitHub API authentication failed. Please check your token.',
-          );
-        }
-
-        this.logger.error('Failed to check if branch exists on GitHub', {
+      // The status, not the message: `error.message.includes('403')` matched
+      // axios's default text and could not tell a throttle from a refusal,
+      // which is why the failure it raised had to claim both at once.
+      const rateLimit = detectGithubRateLimit(error);
+      if (rateLimit) {
+        this.logger.warn('GitHub is rate limiting us', {
           owner,
           repo,
           branch,
-          error,
+          retryAfterSeconds: rateLimit.retryAfterSeconds,
         });
-        throw new Error(
-          `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${error.message}`,
+        throw new GithubRateLimitedError(rateLimit.retryAfterSeconds, {
+          owner,
+          repo,
+          branch,
+        });
+      }
+
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      if (status === 404) {
+        this.logger.debug('Branch not found on GitHub', {
+          owner,
+          repo,
+          branch,
+        });
+        return false;
+      }
+
+      if (status === 403) {
+        this.logger.warn('GitHub refused access to the repository', {
+          owner,
+          repo,
+          branch,
+        });
+        throw new GitRemoteAccessForbiddenError('GitHub', owner, repo, 'read');
+      }
+
+      if (status === 401) {
+        this.logger.warn('GitHub rejected the stored credentials', {
+          owner,
+          repo,
+          branch,
+        });
+        throw new InvalidGitProviderCredentialsError(
+          'GitHub API authentication failed. Please check your token.',
         );
       }
 
-      this.logger.error(
-        'Failed to check if branch exists with unknown error type',
-        { owner, repo, branch, error },
-      );
-      throw new Error(
-        `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: ${error}`,
+      this.logger.warn('Failed to check if branch exists on GitHub', {
+        owner,
+        repo,
+        branch,
+        error: isNativeError(error) ? error.message : String(error),
+      });
+      throw new GithubBranchExistenceCheckFailedError(
+        owner,
+        repo,
+        branch,
+        error,
       );
     }
   }
@@ -318,15 +341,12 @@ function totalPagesFromLinkHeader(
 
 function mapGithubAuthError(error: unknown): CheckAuthFailureReason {
   if (!isAxiosError(error)) return 'network';
+  // GitHub returns 403 both for permission denials and for a spent quota;
+  // `detectGithubRateLimit` owns that distinction, here and at the throw
+  // sites, so there is one reading of the headers rather than two.
+  if (detectGithubRateLimit(error)) return 'rate_limited';
   const status = error.response?.status;
   if (status === 401) return 'unauthorized';
-  if (status === 429) return 'rate_limited';
-  if (status === 403) {
-    // GitHub returns 403 both for permission denials and for primary rate
-    // limit exhaustion; the latter is signalled by `x-ratelimit-remaining: 0`.
-    const remaining = error.response?.headers?.['x-ratelimit-remaining'];
-    if (remaining === '0' || remaining === 0) return 'rate_limited';
-    return 'forbidden';
-  }
+  if (status === 403) return 'forbidden';
   return 'network';
 }

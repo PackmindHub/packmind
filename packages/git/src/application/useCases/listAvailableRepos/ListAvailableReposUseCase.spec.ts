@@ -2,10 +2,13 @@ import {
   GitProvider,
   GitProviderId,
   GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
   ListAvailableReposResponse,
+  MissingGitInputError,
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
+import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
 import { invalidInput, mockInterface } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
@@ -73,7 +76,7 @@ describe('ListAvailableReposUseCase', () => {
       it('rejects', async () => {
         await expect(
           useCase.execute({ ...baseCommand, gitProviderId: providerId }),
-        ).rejects.toThrow('Git provider token not configured');
+        ).rejects.toBeInstanceOf(GitProviderTokenNotConfiguredError);
       });
 
       it('does not call getAvailableRepos', async () => {
@@ -178,7 +181,7 @@ describe('ListAvailableReposUseCase', () => {
             ...baseCommand,
             gitProviderId: invalidInput<GitProviderId>(undefined),
           }),
-        ).rejects.toThrow('Git provider ID is required');
+        ).rejects.toBeInstanceOf(MissingGitInputError);
       });
     });
 
@@ -188,7 +191,7 @@ describe('ListAvailableReposUseCase', () => {
 
         await expect(
           useCase.execute({ ...baseCommand, gitProviderId: providerId }),
-        ).rejects.toThrow(GitProviderNotFoundError);
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
 
@@ -201,7 +204,7 @@ describe('ListAvailableReposUseCase', () => {
 
         await expect(
           useCase.execute({ ...baseCommand, gitProviderId: providerId }),
-        ).rejects.toThrow('Git provider source not configured');
+        ).rejects.toBeInstanceOf(GitProviderSourceNotConfiguredError);
       });
     });
   });

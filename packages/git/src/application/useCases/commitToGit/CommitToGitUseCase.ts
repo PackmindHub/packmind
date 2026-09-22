@@ -4,6 +4,7 @@ import {
   GitCommit,
   DeleteItem,
   DeleteItemType,
+  NoFilesToCommitError,
 } from '@packmind/types';
 import { CommitFile } from '../../../domain/repositories/IGitRepo';
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
@@ -34,7 +35,7 @@ export class CommitToGitUseCase {
     });
 
     if (!files.length) {
-      throw new Error('No files to commit');
+      throw new NoFilesToCommitError();
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(repo);
@@ -125,7 +126,7 @@ export class CommitToGitUseCase {
     );
 
     if (processedFiles.length === 0 && filteredFilesToDelete.length === 0) {
-      throw new Error('No files to commit');
+      throw new NoFilesToCommitError();
     }
 
     const commitData = await gitRepoInstance.commitFiles(

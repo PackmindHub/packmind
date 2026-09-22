@@ -1,7 +1,9 @@
 import {
   CheckTrackedBranchExistsCommand,
   CheckTrackedBranchExistsResponse,
+  GitRepoNotFoundError,
   ICheckTrackedBranchExistsUseCase,
+  MissingGitInputError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Cache } from '@packmind/node-utils';
@@ -43,13 +45,13 @@ export class CheckTrackedBranchExistsUseCase implements ICheckTrackedBranchExist
     const { repositoryId } = command;
 
     if (!repositoryId) {
-      throw new Error('Repository ID is required');
+      throw new MissingGitInputError('Repository ID');
     }
 
     const gitRepo = await this.gitRepoService.findGitRepoById(repositoryId);
 
     if (!gitRepo) {
-      throw new Error(`Repository with ID ${repositoryId} not found`);
+      throw new GitRepoNotFoundError(repositoryId);
     }
 
     // The branch is part of the key, so moving tracking asks the provider again

@@ -1,4 +1,4 @@
-import { GitRepo } from '@packmind/types';
+import { GitRepo, MissingGitInputError } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
@@ -15,7 +15,7 @@ export class GetOrganizationRepositoriesUseCase {
     const { organizationId } = input;
 
     if (!organizationId) {
-      throw new Error('Organization ID is required');
+      throw new MissingGitInputError('Organization ID');
     }
 
     return this.gitRepoService.findGitReposByOrganizationId(organizationId);

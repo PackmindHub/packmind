@@ -1,10 +1,16 @@
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../domain/repositories/IGitRepo';
-import { GitProvider, GitProviderVendors, GitRepo } from '@packmind/types';
+import {
+  GitProvider,
+  GitProviderTokenNotConfiguredError,
+  GitProviderVendors,
+  GitRepo,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { GithubRepository } from './github/GithubRepository';
 import { GitlabRepository } from './gitlab/GitlabRepository';
 import { GithubTokenResolverFactory } from './github/auth/GithubTokenResolverFactory';
+import { UnsupportedGitProviderSourceError } from '../../domain/errors';
 
 const origin = 'GitRepoFactory';
 
@@ -37,7 +43,7 @@ export class GitRepoFactory implements IGitRepoFactory {
 
       case GitProviderVendors.gitlab:
         if (!provider.token) {
-          throw new Error('GitLab provider token not configured');
+          throw new GitProviderTokenNotConfiguredError(provider.id);
         }
         return new GitlabRepository(
           provider.token,
@@ -46,7 +52,7 @@ export class GitRepoFactory implements IGitRepoFactory {
         );
 
       default:
-        throw new Error(`Unsupported git provider source: ${provider.source}`);
+        throw new UnsupportedGitProviderSourceError(provider.source);
     }
   }
 }

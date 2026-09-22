@@ -3,7 +3,6 @@ import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import {
   GitProviderDisplayNameAlreadyUsedError,
   GitProviderDisplayNameNotEditableError,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   GitProviderVendors,
   IAccountsPort,
@@ -328,7 +327,7 @@ describe('UpdateGitProviderUseCase', () => {
 
   describe('existing error cases', () => {
     describe('when provider does not exist', () => {
-      it('throws GitProviderNotFoundError', async () => {
+      it('throws GitProviderOrganizationMismatchError', async () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue(null);
         const provider = gitProviderFactory({ organizationId });
 
@@ -339,7 +338,7 @@ describe('UpdateGitProviderUseCase', () => {
             userId: String(adminUser.id),
             organizationId: String(organizationId),
           }),
-        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
+        ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
       });
     });
 

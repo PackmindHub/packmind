@@ -10,6 +10,8 @@ import {
   DomainError,
   DomainErrorKind,
   PackmindInternalError,
+  PackmindUpstreamError,
+  UpstreamErrorKind,
 } from '@packmind/types';
 import { DomainExceptionFilter } from './DomainExceptionFilter';
 
@@ -40,6 +42,7 @@ describe('DomainExceptionFilter', () => {
   let reply: jest.Mock;
   let end: jest.Mock;
   let isHeadersSent: jest.Mock;
+  let setHeader: jest.Mock;
   let host: ArgumentsHost;
 
   const capturedStatus = (): number => status.mock.calls[0][0];
@@ -57,8 +60,9 @@ describe('DomainExceptionFilter', () => {
     reply = jest.fn();
     end = jest.fn();
     isHeadersSent = jest.fn().mockReturnValue(false);
+    setHeader = jest.fn();
 
-    const response = { status };
+    const response = { status, setHeader };
 
     host = {
       switchToHttp: () => ({ getResponse: () => response }),
@@ -226,6 +230,145 @@ describe('DomainExceptionFilter', () => {
     (kind, expectedStatus) => {
       beforeEach(() => {
         filter.catch(new TestDomainError(kind, 'a_reason', 'A message.'), host);
+      });
+
+      it('answers with the status the policy table states', () => {
+        expect(capturedStatus()).toBe(expectedStatus);
+      });
+    },
+  );
+
+  describe('when the exception is an upstream_unavailable error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_unavailable',
+          'gitlab_unreachable',
+          { provider: 'gitlab' },
+          'GitLab did not answer, try again shortly.',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 502, because the failure is behind us and not ours', () => {
+      expect(capturedStatus()).toBe(HttpStatus.BAD_GATEWAY);
+    });
+
+    it('returns the message to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 502,
+        message: 'GitLab did not answer, try again shortly.',
+        reason: 'gitlab_unreachable',
+      });
+    });
+
+    it('sets no Retry-After header, because no delay was given', () => {
+      expect(setHeader).not.toHaveBeenCalled();
+    });
+
+    it('keeps the context out of the body', () => {
+      expect(Object.keys(capturedBody()).sort()).toEqual([
+        'message',
+        'reason',
+        'statusCode',
+      ]);
+    });
+  });
+
+  describe('when the exception is an upstream_rate_limited error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_rate_limited',
+          'github_rate_limited',
+          { provider: 'github' },
+          'GitHub is rate limiting us, try again shortly.',
+          60,
+        ),
+        host,
+      );
+    });
+
+    it('responds with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+
+    it('returns the message to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 429,
+        message: 'GitHub is rate limiting us, try again shortly.',
+        reason: 'github_rate_limited',
+      });
+    });
+
+    it('sets Retry-After from the delay the provider gave', () => {
+      expect(setHeader).toHaveBeenCalledWith('Retry-After', '60');
+    });
+  });
+
+  describe('when a rate-limited error carries no delay', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_rate_limited',
+          'github_rate_limited',
+          {},
+          'GitHub is rate limiting us, try again shortly.',
+        ),
+        host,
+      );
+    });
+
+    it('omits the Retry-After header', () => {
+      expect(setHeader).not.toHaveBeenCalled();
+    });
+
+    it('still answers with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+
+  describe('when the response object has no setHeader', () => {
+    beforeEach(() => {
+      const bareResponse = { status };
+      const bareHost = {
+        switchToHttp: () => ({ getResponse: () => bareResponse }),
+        getArgByIndex: (index: number) =>
+          index === 1 ? bareResponse : undefined,
+      } as unknown as ArgumentsHost;
+
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_rate_limited',
+          'github_rate_limited',
+          {},
+          'GitHub is rate limiting us, try again shortly.',
+          60,
+        ),
+        bareHost,
+      );
+    });
+
+    it('still writes the body', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+
+  // The upstream policy table, stated as behaviour: a new kind added to the
+  // union without a row fails to compile, and a row given the wrong status
+  // fails here.
+  describe.each([
+    ['upstream_unavailable', HttpStatus.BAD_GATEWAY],
+    ['upstream_rate_limited', HttpStatus.TOO_MANY_REQUESTS],
+  ] satisfies ReadonlyArray<[UpstreamErrorKind, number]>)(
+    'when the upstream error kind is %s',
+    (kind, expectedStatus) => {
+      beforeEach(() => {
+        filter.catch(
+          new PackmindUpstreamError(kind, 'a_reason', {}, 'A message.'),
+          host,
+        );
       });
 
       it('answers with the status the policy table states', () => {

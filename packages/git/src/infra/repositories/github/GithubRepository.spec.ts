@@ -5,6 +5,7 @@ import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenR
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { gitBlobSha } from '@packmind/node-utils';
+import { NoFilesToCommitError } from '@packmind/types';
 import {
   PROVIDER_MAX_SOCKETS,
   providerHttpsAgent,
@@ -416,7 +417,7 @@ describe('GithubRepository', () => {
       it('throws an error', async () => {
         await expect(
           githubRepository.commitFiles([], 'Commit message'),
-        ).rejects.toThrow('No files to commit');
+        ).rejects.toBeInstanceOf(NoFilesToCommitError);
       });
     });
 
@@ -531,7 +532,7 @@ describe('GithubRepository', () => {
       it('throws an error', async () => {
         await expect(
           githubRepository.commitFiles([], 'Commit message', []),
-        ).rejects.toThrow('No files to commit');
+        ).rejects.toBeInstanceOf(NoFilesToCommitError);
       });
     });
 

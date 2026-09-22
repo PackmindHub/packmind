@@ -434,9 +434,7 @@ describe('UpdateTargetUseCase', () => {
         });
 
         it('throws error if the gitProvider does not have a token', () => {
-          expect(thrownError.message).toBe(
-            `Cannot update path for target '${targetId}'. The associated git provider has no token configured.`,
-          );
+          expect(thrownError).toBeInstanceOf(TargetPathUpdateForbiddenError);
         });
 
         it('does not call updateTarget', () => {

@@ -53,6 +53,10 @@ import {
   UserId,
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
+import {
+  FetchFileContentDelayedJobMissingError,
+  GitAdapterPortsNotProvidedError,
+} from '../../domain/errors';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
 import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { GitServices } from '../GitServices';
@@ -171,9 +175,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       !this.eventEmitterService ||
       !this.gitDelayedJobs
     ) {
-      throw new Error(
-        'GitAdapter: Required ports/services not provided. Ensure JobsService and PackmindEventEmitterService are passed to initialize().',
-      );
+      throw new GitAdapterPortsNotProvidedError();
     }
 
     this._addGitProvider = new AddGitProviderUseCase(
@@ -328,7 +330,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     await fetchFileContentJobFactory.createQueue();
 
     if (!fetchFileContentJobFactory.delayedJob) {
-      throw new Error('DelayedJob not found for FetchFileContent');
+      throw new FetchFileContentDelayedJobMissingError();
     }
 
     this.logger.debug('Git delayed jobs built successfully');

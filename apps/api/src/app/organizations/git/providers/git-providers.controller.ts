@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -11,9 +10,7 @@ import {
   Put,
   Query,
   Request,
-  ConflictException,
   BadRequestException,
-  BadGatewayException,
   NotImplementedException,
   UseGuards,
 } from '@nestjs/common';
@@ -21,14 +18,9 @@ import { GitProvidersService } from './git-providers.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitProvider,
-  GitProviderDisplayNameAlreadyUsedError,
-  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitRepo,
-  GitRepoAlreadyExistsError,
   GitRepoId,
-  GitProviderHasRepositoriesError,
-  InvalidGitProviderCredentialsError,
   ListAvailableReposResponse,
   ListProvidersResponse,
   OrganizationId,
@@ -77,31 +69,12 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.addGitProvider(
-        userId,
-        organizationId,
-        gitProvider,
-        req.clientSource,
-      );
-    } catch (error) {
-      if (error instanceof InvalidGitProviderCredentialsError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
-        throw new ConflictException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PUT /organizations/:orgId/git/providers - Failed to add git provider',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.addGitProvider(
+      userId,
+      organizationId,
+      gitProvider,
+      req.clientSource,
+    );
   }
 
   @Get('github/app/install-url')
@@ -120,22 +93,12 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.buildGithubAppInstallUrl({
-        organizationId,
-        userId: req.user.userId,
-        gitProviderId: gitProviderId || undefined,
-        displayName: displayName || undefined,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/github/app/install-url - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.buildGithubAppInstallUrl({
+      organizationId,
+      userId: req.user.userId,
+      gitProviderId: gitProviderId || undefined,
+      displayName: displayName || undefined,
+    });
   }
 
   @Get('github/app/manifest')
@@ -165,22 +128,12 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.buildGithubAppManifest({
-        orgId: organizationId,
-        userId: req.user.userId,
-        githubOrg: githubOrg?.trim() || undefined,
-        displayName: displayName || undefined,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/github/app/manifest - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.buildGithubAppManifest({
+      orgId: organizationId,
+      userId: req.user.userId,
+      githubOrg: githubOrg?.trim() || undefined,
+      displayName: displayName || undefined,
+    });
   }
 
   @Post('github/app/manifest-callback')
@@ -217,22 +170,12 @@ export class GitProvidersController {
       );
     }
 
-    try {
-      return await this.gitProvidersService.completeGithubAppManifest({
-        orgId: organizationId,
-        userId: req.user.userId,
-        code: body.code,
-        state: body.state,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/git/providers/github/app/manifest-callback - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.completeGithubAppManifest({
+      orgId: organizationId,
+      userId: req.user.userId,
+      code: body.code,
+      state: body.state,
+    });
   }
 
   @Get('github/app/status')
@@ -250,20 +193,10 @@ export class GitProvidersController {
       { organizationId },
     );
 
-    try {
-      return await this.gitProvidersService.getGithubAppStatus({
-        orgId: organizationId,
-        userId: req.user.userId,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/github/app/status - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.getGithubAppStatus({
+      orgId: organizationId,
+      userId: req.user.userId,
+    });
   }
 
   @Delete('github/app')
@@ -283,20 +216,10 @@ export class GitProvidersController {
       organizationId,
     });
 
-    try {
-      await this.gitProvidersService.revokeGithubApp({
-        orgId: organizationId,
-        userId: req.user.userId,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/git/providers/github/app - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    await this.gitProvidersService.revokeGithubApp({
+      orgId: organizationId,
+      userId: req.user.userId,
+    });
   }
 
   @Post('github/app/callback')
@@ -328,23 +251,13 @@ export class GitProvidersController {
       );
     }
 
-    try {
-      return await this.gitProvidersService.completeGithubAppInstall({
-        organizationId,
-        userId: req.user.userId,
-        installationId: body.installationId,
-        state: body.state,
-        source: req.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/git/providers/github/app/callback - failed',
-        { organizationId, error: errorMessage },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.completeGithubAppInstall({
+      organizationId,
+      userId: req.user.userId,
+      installationId: body.installationId,
+      state: body.state,
+      source: req.clientSource,
+    });
   }
 
   @Get()
@@ -362,23 +275,10 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.listProviders({
-        userId,
-        organizationId,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers - Failed to fetch git providers',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.listProviders({
+      userId,
+      organizationId,
+    });
   }
 
   @Get(':id/available-repos')
@@ -398,44 +298,28 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      const response = await this.gitProvidersService.listAvailableRepos({
-        gitProviderId,
+    const response = await this.gitProvidersService.listAvailableRepos({
+      gitProviderId,
+      organizationId,
+      userId: req.user.userId,
+      page:
+        parsedPage !== undefined && Number.isFinite(parsedPage)
+          ? parsedPage
+          : undefined,
+    });
+
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/available-repos - Successfully fetched available repositories',
+      {
         organizationId,
-        userId: req.user.userId,
-        page:
-          parsedPage !== undefined && Number.isFinite(parsedPage)
-            ? parsedPage
-            : undefined,
-      });
+        gitProviderId,
+        currentPage: response.currentPage,
+        availablePages: response.availablePages,
+        repositoryCount: response.repositories.length,
+      },
+    );
 
-      this.logger.info(
-        'GET /organizations/:orgId/git/providers/:id/available-repos - Successfully fetched available repositories',
-        {
-          organizationId,
-          gitProviderId,
-          currentPage: response.currentPage,
-          availablePages: response.availablePages,
-          repositoryCount: response.repositories.length,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/:id/available-repos - Error fetching available repositories',
-        {
-          organizationId,
-          gitProviderId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw new BadGatewayException(
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch available repositories',
-      );
-    }
+    return response;
   }
 
   @Get(':id/check-auth')
@@ -450,23 +334,11 @@ export class GitProvidersController {
       { organizationId, gitProviderId, userId },
     );
 
-    try {
-      return await this.gitProvidersService.checkProviderAuth(
-        organizationId,
-        gitProviderId,
-        userId,
-      );
-    } catch (error) {
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/:id/check-auth - Error probing provider auth',
-        {
-          organizationId,
-          gitProviderId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
+    return await this.gitProvidersService.checkProviderAuth(
+      organizationId,
+      gitProviderId,
+      userId,
+    );
   }
 
   @Put(':id')
@@ -485,43 +357,20 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      const updatedProvider = await this.gitProvidersService.updateGitProvider(
-        gitProviderId,
-        gitProvider,
-        req.user.userId,
+    const updatedProvider = await this.gitProvidersService.updateGitProvider(
+      gitProviderId,
+      gitProvider,
+      req.user.userId,
+      organizationId,
+    );
+    this.logger.info(
+      'PUT /organizations/:orgId/git/providers/:id - Git provider updated successfully',
+      {
         organizationId,
-      );
-      this.logger.info(
-        'PUT /organizations/:orgId/git/providers/:id - Git provider updated successfully',
-        {
-          organizationId,
-          gitProviderId,
-        },
-      );
-      return updatedProvider;
-    } catch (error) {
-      if (error instanceof InvalidGitProviderCredentialsError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
-        throw new ConflictException(error.message);
-      }
-      if (error instanceof GitProviderDisplayNameNotEditableError) {
-        throw new ForbiddenException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PUT /organizations/:orgId/git/providers/:id - Failed to update git provider',
-        {
-          organizationId,
-          gitProviderId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+        gitProviderId,
+      },
+    );
+    return updatedProvider;
   }
 
   @Delete(':id')
@@ -538,26 +387,18 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      await this.gitProvidersService.deleteGitProvider(
-        gitProviderId,
-        req.user.userId,
+    await this.gitProvidersService.deleteGitProvider(
+      gitProviderId,
+      req.user.userId,
+      organizationId,
+    );
+    this.logger.info(
+      'DELETE /organizations/:orgId/git/providers/:id - Git provider deleted successfully',
+      {
         organizationId,
-      );
-      this.logger.info(
-        'DELETE /organizations/:orgId/git/providers/:id - Git provider deleted successfully',
-        {
-          organizationId,
-          gitProviderId,
-        },
-      );
-    } catch (error) {
-      if (error instanceof GitProviderHasRepositoriesError) {
-        throw new BadRequestException(error.message);
-      }
-
-      throw error;
-    }
+        gitProviderId,
+      },
+    );
   }
 
   @Post(':id/repositories')
@@ -578,23 +419,15 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      return await this.gitProvidersService.addRepositoryToProvider(
-        req.user.userId,
-        organizationId,
-        gitProviderId,
-        addRepositoryDto.owner,
-        addRepositoryDto.repo,
-        addRepositoryDto.branch,
-        req.clientSource,
-      );
-    } catch (error) {
-      if (error instanceof GitRepoAlreadyExistsError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
-    }
+    return this.gitProvidersService.addRepositoryToProvider(
+      req.user.userId,
+      organizationId,
+      gitProviderId,
+      addRepositoryDto.owner,
+      addRepositoryDto.repo,
+      addRepositoryDto.branch,
+      req.clientSource,
+    );
   }
 
   @Delete(':providerId/repositories/:repositoryId')
@@ -613,34 +446,19 @@ export class GitProvidersController {
       },
     );
 
-    try {
-      await this.gitProvidersService.removeRepositoryFromProvider(
-        providerId,
-        req.user.userId,
+    await this.gitProvidersService.removeRepositoryFromProvider(
+      providerId,
+      req.user.userId,
+      organizationId,
+      repositoryId,
+    );
+    this.logger.info(
+      'DELETE /organizations/:orgId/git/providers/:providerId/repositories/:repositoryId - Repository removed successfully',
+      {
         organizationId,
+        providerId,
         repositoryId,
-      );
-      this.logger.info(
-        'DELETE /organizations/:orgId/git/providers/:providerId/repositories/:repositoryId - Repository removed successfully',
-        {
-          organizationId,
-          providerId,
-          repositoryId,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/git/providers/:providerId/repositories/:repositoryId - Failed to remove repository from provider',
-        {
-          organizationId,
-          providerId,
-          repositoryId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+      },
+    );
   }
 }
