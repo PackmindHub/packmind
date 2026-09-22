@@ -12,7 +12,7 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { deployedPlaceParts } from '../PackagesPopover';
+import { deployedPlaceParts } from './RemoveArtifactFromPackageConfirm';
 
 export interface EmptiedPackage {
   packageName: string;

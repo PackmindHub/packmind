@@ -37,9 +37,9 @@ import { usePackageMembership } from '../../hooks/usePackageMembership';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import {
   deployedPlaceParts,
+  MoveArtifactsToPackageConfirm,
   RemoveArtifactFromPackageConfirm,
 } from '../PackagesPopover';
-import { MoveArtifactsToPackageConfirm } from './MoveArtifactsToPackageConfirm';
 
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
