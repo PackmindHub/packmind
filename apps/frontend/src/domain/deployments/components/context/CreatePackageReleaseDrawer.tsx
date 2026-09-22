@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 import {
   PMButton,
   PMCloseButton,
@@ -35,7 +41,7 @@ const VERSION_FIELD_ID = 'create-package-release-version';
  * stepper or a select would each rewrite what is being typed, and a version
  * mistyped on a keyboard whose comma sits where the period is expected would
  * be silently reshaped into something else. Nothing here transforms the value -
- * it is judged once, on submit, and kept when it is refused so the two
+ * it is judged where it stands and kept when it is refused, so the two
  * separators are fixed rather than the whole version retyped.
  */
 export function CreatePackageReleaseDrawer({
@@ -129,10 +135,37 @@ export function CreatePackageReleaseDrawer({
     onOpenChange(next);
   };
 
+  const judgedAgainst = effectiveCurrentVersion ?? '0.0.0';
+
+  const refusalFor = (candidate: string) => {
+    const refused = validatePackageReleaseVersion(candidate, judgedAgainst);
+    return refused ? { code: refused, currentVersion: judgedAgainst } : null;
+  };
+
+  /**
+   * Whether typing on could still land on a version the server would take.
+   *
+   * The three increments are the whole accepted set, so a value one of them
+   * starts with is not wrong yet, only unfinished - `1.2` on the way to
+   * `1.2.10`, or the empty field after a clear. Anything else can only get
+   * worse by typing on, and is refused where it stands rather than at submit.
+   */
+  const mayStillBecomeValid = (candidate: string) =>
+    suggestions.some((suggestion) => suggestion.startsWith(candidate));
+
+  const handleVersionChange = (next: string) => {
+    setVersion(next);
+    setRefusal(mayStillBecomeValid(next) ? null : refusalFor(next));
+  };
+
+  // Leaving the field ends the benefit of the doubt an unfinished version got.
+  const handleVersionBlur = () => {
+    setRefusal(refusalFor(version));
+  };
+
   const handleCreate = async () => {
     if (isPending) return;
 
-    const judgedAgainst = effectiveCurrentVersion ?? '0.0.0';
     const refused = validatePackageReleaseVersion(version, judgedAgainst);
 
     if (refused) {
@@ -222,7 +255,15 @@ export function CreatePackageReleaseDrawer({
                   <PMInput
                     id={VERSION_FIELD_ID}
                     value={version}
-                    onChange={(event) => setVersion(event.target.value)}
+                    onChange={(event) =>
+                      handleVersionChange(event.target.value)
+                    }
+                    onBlur={handleVersionBlur}
+                    onKeyDown={(event: KeyboardEvent) => {
+                      if (event.key === 'Enter' && !isPending) {
+                        void handleCreate();
+                      }
+                    }}
                     disabled={isPending}
                     autoFocus
                   />
@@ -240,7 +281,15 @@ export function CreatePackageReleaseDrawer({
                       variant="secondary"
                       size="sm"
                       disabled={isPending}
-                      onClick={() => setVersion(nextVersion)}
+                      /*
+                       * Without this the field blurs on mousedown, the refusal
+                       * line appears under it and moves the button out from
+                       * under the pointer before the click lands.
+                       */
+                      onMouseDown={(event: MouseEvent) =>
+                        event.preventDefault()
+                      }
+                      onClick={() => handleVersionChange(nextVersion)}
                     >
                       {nextVersion}
                     </PMButton>

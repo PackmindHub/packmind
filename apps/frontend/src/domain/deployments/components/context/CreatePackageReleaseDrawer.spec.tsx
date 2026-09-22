@@ -408,4 +408,102 @@ describe('CreatePackageReleaseDrawer', () => {
     ).toBeInTheDocument();
     expect(mutateAsync).not.toHaveBeenCalled();
   });
+
+  describe('while the version is being typed', () => {
+    const readiness = readinessOf('1.2.0', ['1.2.1', '1.3.0', '2.0.0']);
+
+    it('says nothing of a version that may still become valid', async () => {
+      renderDrawer({ readiness });
+
+      await typeVersion('1.2');
+
+      expect(
+        screen.queryByText('Version must follow X.Y.Z'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('says nothing of an emptied field', async () => {
+      renderDrawer({ readiness });
+
+      await userEvent.clear(versionField());
+
+      expect(
+        screen.queryByText('Version must follow X.Y.Z'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('refuses a separator no version can recover from', async () => {
+      renderDrawer({ readiness });
+
+      await typeVersion('1,');
+
+      expect(
+        await screen.findByText('Version must follow X.Y.Z'),
+      ).toBeInTheDocument();
+    });
+
+    it('refuses a version already behind, without waiting for the submit', async () => {
+      renderDrawer({ readiness });
+
+      await typeVersion('1.1.0');
+
+      expect(
+        await screen.findByText('Version must be greater than 1.2.0'),
+      ).toBeInTheDocument();
+    });
+
+    it('takes the refusal back once the version can work again', async () => {
+      renderDrawer({ readiness });
+
+      await typeVersion('1,');
+      await typeVersion('1.2.1');
+
+      expect(
+        screen.queryByText('Version must follow X.Y.Z'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('judges an unfinished version once the field is left', async () => {
+      renderDrawer({ readiness });
+
+      await typeVersion('1.2');
+      await userEvent.tab();
+
+      expect(
+        await screen.findByText('Version must follow X.Y.Z'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when Enter is pressed in the version field', () => {
+    it('releases a valid version', async () => {
+      const { mutateAsync } = renderDrawer({
+        readiness: readinessOf('0.1.0', ['0.1.1', '0.2.0', '1.0.0']),
+      });
+
+      await userEvent.type(versionField(), '{Enter}');
+
+      await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+      expect(mutateAsync).toHaveBeenCalledWith({
+        packageId,
+        spaceId,
+        organizationId,
+        version: '0.1.1',
+      });
+    });
+
+    it('refuses an invalid version instead of releasing it', async () => {
+      const { mutateAsync } = renderDrawer({
+        readiness: readinessOf('1.2.0', ['1.2.1', '1.3.0', '2.0.0']),
+      });
+
+      await typeVersion('1,2,3');
+      await userEvent.type(versionField(), '{Enter}');
+
+      expect(
+        await screen.findByText('Version must follow X.Y.Z'),
+      ).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+  });
 });
