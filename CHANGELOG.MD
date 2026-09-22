@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [1.18.0] - 2026-09-22
 
 ## Added
@@ -413,6 +423,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...HEAD
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
 [1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
