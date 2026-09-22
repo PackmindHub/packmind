@@ -7,6 +7,10 @@ import {
   OrganizationId,
 } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
+import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 export class UpdateTargetUseCase implements IUpdateTargetUseCase {
   constructor(
@@ -18,21 +22,21 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
     const { targetId, name, path, userId, organizationId } = command;
 
     if (!name || name.trim().length === 0) {
-      throw new Error('Target name cannot be empty');
+      throw new InvalidTargetNameError();
     }
 
     if (!path || (path !== '/' && !path.match(new RegExp('\\/.+(?=\\/)\\/')))) {
-      throw new Error('Invalid path format');
+      throw new InvalidTargetPathError(path);
     }
 
     // Prevent path traversal attacks
     if (path.includes('..')) {
-      throw new Error('Invalid path format');
+      throw new InvalidTargetPathError(path);
     }
 
     const currentTarget = await this.targetService.findById(targetId);
     if (!currentTarget) {
-      throw new Error(`Target with id ${targetId} not found`);
+      throw new TargetNotFoundError(targetId);
     }
 
     if (currentTarget.path !== path) {
@@ -40,9 +44,7 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
         currentTarget.gitRepoId,
       );
       if (!repo) {
-        throw new Error(
-          `Repository with id ${currentTarget.gitRepoId} not found`,
-        );
+        throw new GitRepositoryNotFoundError(currentTarget.gitRepoId);
       }
 
       const providersResponse = await this.gitPort.listProviders({

@@ -2,6 +2,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Target, GitRepoId, TargetId, OrganizationId } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { RootTargetNotDeletableError } from '../../domain/errors/RootTargetNotDeletableError';
 
 const origin = 'TargetService';
 
@@ -175,11 +176,11 @@ export class TargetService {
     try {
       const target = await this.targetRepository.findById(targetId);
       if (!target) {
-        throw new Error(`Target with id ${targetId} not found`);
+        throw new TargetNotFoundError(targetId);
       }
 
       if (target.path === '/') {
-        throw new Error('Root target cannot be deleted');
+        throw new RootTargetNotDeletableError(targetId);
       }
 
       await this.targetRepository.deleteById(targetId);

@@ -1,6 +1,9 @@
 import { isDomainError, isInternalError } from '@packmind/types';
 import { ArtefactNotInSpaceError } from './ArtefactNotInSpaceError';
 import { NoPackageSlugsProvidedError } from './NoPackageSlugsProvidedError';
+import { GitRepositoryNotFoundError } from './GitRepositoryNotFoundError';
+import { InvalidTargetNameError } from './InvalidTargetNameError';
+import { InvalidTargetPathError } from './InvalidTargetPathError';
 import { PackageComponentHasNoVersionError } from './PackageComponentHasNoVersionError';
 import { PackageNotFoundError } from './PackageNotFoundError';
 import { PackageReleaseNotFoundError } from './PackageReleaseNotFoundError';
@@ -8,6 +11,7 @@ import { PackageReleaseNotPersistedError } from './PackageReleaseNotPersistedErr
 import { PackageReleaseRefusedError } from './PackageReleaseRefusedError';
 import { PackageReloadFailedError } from './PackageReloadFailedError';
 import { PackagesNotFoundError } from './PackagesNotFoundError';
+import { RootTargetNotDeletableError } from './RootTargetNotDeletableError';
 import { SpaceNotAccessibleError } from './SpaceNotAccessibleError';
 import { TargetNotFoundError } from './TargetNotFoundError';
 
@@ -248,5 +252,71 @@ describe('PackageComponentHasNoVersionError', () => {
 
   it('keeps the component in the context', () => {
     expect(error.context).toEqual({ family: 'skill', componentId: 'skill-1' });
+  });
+});
+
+describe('InvalidTargetNameError', () => {
+  const error = new InvalidTargetNameError();
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers invalid_input, since it does not depend on stored state', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+});
+
+describe('InvalidTargetPathError', () => {
+  const error = new InvalidTargetPathError('/../etc');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers invalid_input', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+
+  it('keeps the rejected path in the context', () => {
+    expect(error.context).toEqual({ path: '/../etc' });
+  });
+
+  describe('when the path tried to climb out of the repository', () => {
+    it('reads exactly like a path that was merely malformed', () => {
+      expect(error.message).toBe(new InvalidTargetPathError('nope').message);
+    });
+  });
+});
+
+describe('GitRepositoryNotFoundError', () => {
+  const error = new GitRepositoryNotFoundError('repo-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('keeps the repository in the context', () => {
+    expect(error.context).toEqual({ gitRepoId: 'repo-1' });
+  });
+});
+
+describe('RootTargetNotDeletableError', () => {
+  const error = new RootTargetNotDeletableError('target-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers conflict, since it is the target role that rules it out', () => {
+    expect(error.kind).toBe('conflict');
+  });
+
+  it('keeps the target in the context', () => {
+    expect(error.context).toEqual({ targetId: 'target-1' });
   });
 });

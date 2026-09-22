@@ -15,6 +15,10 @@ import {
   GitProviderVendors,
 } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
+import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
+import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
 
 describe('UpdateTargetUseCase', () => {
   let useCase: UpdateTargetUseCase;
@@ -237,8 +241,8 @@ describe('UpdateTargetUseCase', () => {
         }
       });
 
-      it('throws error for empty name', () => {
-        expect(thrownError.message).toBe('Target name cannot be empty');
+      it('throws InvalidTargetNameError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetNameError);
       });
 
       it('does not call updateTarget', () => {
@@ -265,8 +269,8 @@ describe('UpdateTargetUseCase', () => {
         }
       });
 
-      it('throws error for whitespace-only name', () => {
-        expect(thrownError.message).toBe('Target name cannot be empty');
+      it('throws InvalidTargetNameError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetNameError);
       });
 
       it('does not call updateTarget', () => {
@@ -293,8 +297,8 @@ describe('UpdateTargetUseCase', () => {
         }
       });
 
-      it('throws error for invalid path format', () => {
-        expect(thrownError.message).toBe('Invalid path format');
+      it('throws InvalidTargetPathError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetPathError);
       });
 
       it('does not call updateTarget', () => {
@@ -321,8 +325,8 @@ describe('UpdateTargetUseCase', () => {
         }
       });
 
-      it('throws error for path traversal attempt', () => {
-        expect(thrownError.message).toBe('Invalid path format');
+      it('throws InvalidTargetPathError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetPathError);
       });
 
       it('does not call updateTarget', () => {
@@ -351,10 +355,8 @@ describe('UpdateTargetUseCase', () => {
         }
       });
 
-      it('throws error for target not found', () => {
-        expect(thrownError.message).toBe(
-          `Target with id ${targetId} not found`,
-        );
+      it('throws TargetNotFoundError', () => {
+        expect(thrownError).toBeInstanceOf(TargetNotFoundError);
       });
 
       it('does not call updateTarget', () => {
@@ -385,10 +387,8 @@ describe('UpdateTargetUseCase', () => {
           }
         });
 
-        it('throws error for repository not found', () => {
-          expect(thrownError.message).toBe(
-            `Repository with id ${gitRepoId} not found`,
-          );
+        it('throws GitRepositoryNotFoundError', () => {
+          expect(thrownError).toBeInstanceOf(GitRepositoryNotFoundError);
         });
 
         it('does not call updateTarget', () => {

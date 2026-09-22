@@ -8,7 +8,11 @@ export type DeploymentsErrorReason =
   | 'package_release_refused'
   | 'no_package_slugs_provided'
   | 'artefact_not_in_space'
-  | 'target_not_found';
+  | 'target_not_found'
+  | 'invalid_target_name'
+  | 'invalid_target_path'
+  | 'git_repository_not_found'
+  | 'root_target_not_deletable';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;
@@ -19,6 +23,8 @@ export type DeploymentsErrorContext = {
   targetId?: string;
   version?: string;
   slugs?: string[];
+  gitRepoId?: string;
+  path?: string;
 };
 
 /**
