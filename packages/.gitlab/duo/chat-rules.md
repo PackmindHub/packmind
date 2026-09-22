@@ -21,8 +21,8 @@ Full standard is available here for further request: [Back-end repositories SQL 
 # Standard: Back-end TypeScript Clean Code Practices
 
 This standard establishes clean code practices in TypeScript for back-end development to enhance maintainability and ensure consistent patterns across services. It covers logging best practices, error... :
-* Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
-* Extend the package's `DomainError` base or `PackmindInternalError` when defining an error class, never `Error` directly, so the HTTP status and log level follow.
+* Avoid excessive logger.debug in production code; use logger.info for important business events and logger.error only for failures nothing else records, adding logger.debug while debugging.
+* Extend the package's `DomainError`, `PackmindInternalError` or `PackmindUpstreamError` base when defining an error class; only a family base itself extends `Error`.
 * Inject PackmindLogger as a constructor parameter with a default value using a variable or a string representing the class name.
 * Instantiate use cases in adapters without passing the adapter's logger; use cases must create their own logger for proper origin tracking.
 * Keep all import statements at the top of the file before any other code. Never use dynamic imports in the middle of the code unless absolutely necessary for code splitting or lazy loading.
@@ -32,11 +32,17 @@ Full standard is available here for further request: [Back-end TypeScript Clean 
 # Standard: Domain Error Handling
 
 Failures raised by a use case are answered centrally by `DomainExceptionFilter`, which maps them to an HTTP status and a log level. A failure carrying no `kind` reaches Nest's `ExceptionsHandler` as a... :
+* Classify a third-party HTTP failure from `error.response?.status` and its headers; never derive a status from a substring of `error.message`.
 * Extend `PackmindInternalError` for broken invariants the caller cannot correct.
-* Give each package one error base extending `Error` and implementing `DomainError`, carrying a `kind`, a literal `reason` union and a typed `context`.
+* Give each package one base per error family it raises — domain, internal, upstream — each with a literal `reason` union and a typed `context`.
+* Never add an upstream kind to `DomainErrorKind`: `upstream_rate_limited` answers 429 and stays an `UpstreamError`, because the axis is fault, not status class.
+* Never log an error you rethrow: the filter records every thrown failure once, with its level, stack and typed `context`.
 * Never map domain errors in a controller with `instanceof` and a Nest `HttpException`; the filter maps `kind` centrally.
-* Never throw `new Error(...)` from a use case; throw a class extending the package's `DomainError` base or `PackmindInternalError`.
-* Put resource ids in the error's `context`, never in its user-facing message.
+* Never throw `new Error(...)` from a use case; throw a class extending the package's `DomainError`, `PackmindInternalError` or `PackmindUpstreamError` base.
+* Pass `retryAfterSeconds` on an upstream throttle when the provider said how long; the filter emits it as the `Retry-After` header.
+* Pick the error family by fault: the caller's fault is a domain error, ours is `PackmindInternalError`, a third party's is `PackmindUpstreamError`.
+* Put resource ids in the error's `context`, never in a message: an upstream error's message reaches the caller, an internal error's never does.
+* Throw `upstream_unavailable` (502, not 503) for an upstream outage, and for any upstream refusal the package does not yet model.
 * Throw a missing resource and a resource owned by another tenant from a single branch, with one error and one message.
 * Use `kind: 'not_found'` when a resource belongs to another tenant; reserve `forbidden` for when the caller's own rights are the subject.
 

@@ -1,14 +1,20 @@
 ---
-applyTo: '**'
+applyTo: '**/packages/**/*.ts, **/apps/api/**/*.controller.ts'
 ---
 # Standard: Domain Error Handling
 
 Failures raised by a use case are answered centrally by `DomainExceptionFilter`, which maps them to an HTTP status and a log level. A failure carrying no `kind` reaches Nest's `ExceptionsHandler` as a... :
+* Classify a third-party HTTP failure from `error.response?.status` and its headers; never derive a status from a substring of `error.message`.
 * Extend `PackmindInternalError` for broken invariants the caller cannot correct.
-* Give each package one error base extending `Error` and implementing `DomainError`, carrying a `kind`, a literal `reason` union and a typed `context`.
+* Give each package one base per error family it raises — domain, internal, upstream — each with a literal `reason` union and a typed `context`.
+* Never add an upstream kind to `DomainErrorKind`: `upstream_rate_limited` answers 429 and stays an `UpstreamError`, because the axis is fault, not status class.
+* Never log an error you rethrow: the filter records every thrown failure once, with its level, stack and typed `context`.
 * Never map domain errors in a controller with `instanceof` and a Nest `HttpException`; the filter maps `kind` centrally.
-* Never throw `new Error(...)` from a use case; throw a class extending the package's `DomainError` base or `PackmindInternalError`.
-* Put resource ids in the error's `context`, never in its user-facing message.
+* Never throw `new Error(...)` from a use case; throw a class extending the package's `DomainError`, `PackmindInternalError` or `PackmindUpstreamError` base.
+* Pass `retryAfterSeconds` on an upstream throttle when the provider said how long; the filter emits it as the `Retry-After` header.
+* Pick the error family by fault: the caller's fault is a domain error, ours is `PackmindInternalError`, a third party's is `PackmindUpstreamError`.
+* Put resource ids in the error's `context`, never in a message: an upstream error's message reaches the caller, an internal error's never does.
+* Throw `upstream_unavailable` (502, not 503) for an upstream outage, and for any upstream refusal the package does not yet model.
 * Throw a missing resource and a resource owned by another tenant from a single branch, with one error and one message.
 * Use `kind: 'not_found'` when a resource belongs to another tenant; reserve `forbidden` for when the caller's own rights are the subject.
 

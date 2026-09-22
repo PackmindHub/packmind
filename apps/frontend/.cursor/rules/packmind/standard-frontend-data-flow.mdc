@@ -10,6 +10,7 @@ This standard defines the recommended data flow pattern for frontend routes in t
 * Enable query options conditionally using the enabled property to prevent execution when required parameters are missing or invalid
 * Export query hooks (e.g., useGetStandardByIdQuery) alongside query options to provide consistent component-level data access patterns
 * Export query options as standalone functions (e.g., getStandardByIdOptions) separate from hooks to enable reuse in both hooks and route loaders
+* Leave `retry` to the shared `shouldRetryTransient` policy; never retry a 4xx, as only network failures and 5xx are retried, once
 * Name route module default export functions with a suffix of RouteModule (e.g., StandardDetailRouteModule) to clearly identify route-level components
 * Prefer `queryClient.ensureQueryData()` over `queryClient.fetchQuery()` in clientLoaders to return cached data when available instead of always fetching
 * Store domain queries in the domain folder organized by entity at apps/frontend/src/domain/{entity}/api/queries/ to maintain clear separation of concerns and domain boundaries
