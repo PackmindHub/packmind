@@ -1,3 +1,5 @@
+import { DeploymentsInternalError } from './DeploymentsInternalError';
+
 /**
  * The write reported success and the read straight after it found nothing.
  *
@@ -7,12 +9,14 @@
  * from `PackageReleaseNotFoundError`, which is the ordinary answer to asking
  * for a version that was never cut.
  */
-export class PackageReleaseNotPersistedError extends Error {
+export class PackageReleaseNotPersistedError extends DeploymentsInternalError {
   constructor(
     readonly packageId: string,
     readonly version: string,
   ) {
     super(
+      'package_release_not_persisted',
+      { packageId, version },
       `Package release ${version} of package ${packageId} could not be read back after being written`,
     );
     this.name = 'PackageReleaseNotPersistedError';

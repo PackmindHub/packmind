@@ -1,8 +1,15 @@
 import { isDomainError, isInternalError } from '@packmind/types';
 import { ArtefactNotInSpaceError } from './ArtefactNotInSpaceError';
+import { NoPackageSlugsProvidedError } from './NoPackageSlugsProvidedError';
+import { PackageComponentHasNoVersionError } from './PackageComponentHasNoVersionError';
 import { PackageNotFoundError } from './PackageNotFoundError';
+import { PackageReleaseNotFoundError } from './PackageReleaseNotFoundError';
+import { PackageReleaseNotPersistedError } from './PackageReleaseNotPersistedError';
+import { PackageReleaseRefusedError } from './PackageReleaseRefusedError';
 import { PackageReloadFailedError } from './PackageReloadFailedError';
+import { PackagesNotFoundError } from './PackagesNotFoundError';
 import { SpaceNotAccessibleError } from './SpaceNotAccessibleError';
+import { TargetNotFoundError } from './TargetNotFoundError';
 
 describe('SpaceNotAccessibleError', () => {
   const error = new SpaceNotAccessibleError('space-1', 'org-1');
@@ -115,5 +122,131 @@ describe('PackageReloadFailedError', () => {
 
   it('keeps the package in the context', () => {
     expect(error.context).toEqual({ packageId: 'pkg-1' });
+  });
+});
+
+describe('PackagesNotFoundError', () => {
+  const error = new PackagesNotFoundError(['alpha', 'beta']);
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('keeps the slugs in the context', () => {
+    expect(error.context).toEqual({ slugs: ['alpha', 'beta'] });
+  });
+
+  it('still exposes the slugs the API branches on', () => {
+    expect(error.unknownSlugs).toEqual(['alpha', 'beta']);
+  });
+
+  describe('when a single slug is unknown', () => {
+    it('reads in the singular', () => {
+      expect(new PackagesNotFoundError(['alpha']).message).toBe(
+        'Package "alpha" was not found',
+      );
+    });
+  });
+});
+
+describe('NoPackageSlugsProvidedError', () => {
+  const error = new NoPackageSlugsProvidedError();
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers invalid_input, since it does not depend on stored state', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+});
+
+describe('TargetNotFoundError', () => {
+  const error = new TargetNotFoundError('target-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('keeps the target in the context', () => {
+    expect(error.context).toEqual({ targetId: 'target-1' });
+  });
+});
+
+describe('PackageReleaseNotFoundError', () => {
+  const error = new PackageReleaseNotFoundError('pkg-1', '1.2.0');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('keeps the package and the version in the context', () => {
+    expect(error.context).toEqual({ packageId: 'pkg-1', version: '1.2.0' });
+  });
+});
+
+describe('PackageReleaseRefusedError', () => {
+  const error = new PackageReleaseRefusedError('no_components', '1.0.0');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers conflict, since the stored state is what refuses the cut', () => {
+    expect(error.kind).toBe('conflict');
+  });
+
+  it('still exposes the refusal code the frontend branches on', () => {
+    expect(error.code).toBe('no_components');
+  });
+
+  it('still exposes the current version the frontend names', () => {
+    expect(error.currentVersion).toBe('1.0.0');
+  });
+});
+
+describe('PackageReleaseNotPersistedError', () => {
+  const error = new PackageReleaseNotPersistedError('pkg-1', '1.2.0');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error, so it is never answered as a 4xx', () => {
+    expect(isDomainError(error)).toBe(false);
+  });
+
+  describe('when compared with the release that was never cut', () => {
+    it('is told apart from PackageReleaseNotFoundError', () => {
+      expect(error).not.toBeInstanceOf(PackageReleaseNotFoundError);
+    });
+  });
+});
+
+describe('PackageComponentHasNoVersionError', () => {
+  const error = new PackageComponentHasNoVersionError('skill', 'skill-1');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error, so it is never answered as a 4xx', () => {
+    expect(isDomainError(error)).toBe(false);
+  });
+
+  it('keeps the component in the context', () => {
+    expect(error.context).toEqual({ family: 'skill', componentId: 'skill-1' });
   });
 });

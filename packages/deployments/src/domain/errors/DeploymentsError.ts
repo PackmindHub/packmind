@@ -3,7 +3,12 @@ import { ArtifactType, DomainError, DomainErrorKind } from '@packmind/types';
 export type DeploymentsErrorReason =
   | 'space_not_accessible'
   | 'package_not_found'
-  | 'artefact_not_in_space';
+  | 'packages_not_found'
+  | 'package_release_not_found'
+  | 'package_release_refused'
+  | 'no_package_slugs_provided'
+  | 'artefact_not_in_space'
+  | 'target_not_found';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;
@@ -11,6 +16,9 @@ export type DeploymentsErrorContext = {
   packageId?: string;
   artefactId?: string;
   artefactType?: ArtifactType;
+  targetId?: string;
+  version?: string;
+  slugs?: string[];
 };
 
 /**
