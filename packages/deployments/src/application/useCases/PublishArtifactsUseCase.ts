@@ -50,18 +50,9 @@ import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { NoTargetsProvidedError } from '../../domain/errors/NoTargetsProvidedError';
 import { NoFileUpdatesResolvedError } from '../../domain/errors/NoFileUpdatesResolvedError';
 import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
+import { ArtifactVersionNotFoundError } from '../../domain/errors/ArtifactVersionNotFoundError';
 
 const origin = 'PublishArtifactsUseCase';
-
-export class ArtifactVersionNotFoundError extends Error {
-  constructor(
-    public readonly artifactLabel: 'Command' | 'Standard' | 'Skill',
-    public readonly versionId: string,
-  ) {
-    super(`${artifactLabel} version with ID ${versionId} not found`);
-    this.name = 'ArtifactVersionNotFoundError';
-  }
-}
 
 type ArtifactVersions = ActiveArtifactVersions;
 

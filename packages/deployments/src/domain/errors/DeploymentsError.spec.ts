@@ -1,5 +1,6 @@
 import { isDomainError, isInternalError } from '@packmind/types';
 import { ArtefactNotInSpaceError } from './ArtefactNotInSpaceError';
+import { ArtifactVersionNotFoundError } from './ArtifactVersionNotFoundError';
 import { NoFileUpdatesResolvedError } from './NoFileUpdatesResolvedError';
 import { NoPackageSlugsProvidedError } from './NoPackageSlugsProvidedError';
 import { NoPackagesProvidedError } from './NoPackagesProvidedError';
@@ -467,5 +468,24 @@ describe.each([
 
   it('is not a domain error, so a wiring fault is never a 4xx', () => {
     expect(isDomainError(error)).toBe(false);
+  });
+});
+
+describe('ArtifactVersionNotFoundError', () => {
+  const error = new ArtifactVersionNotFoundError('Skill', 'skv-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers not_found rather than the 500 a stale lockfile used to get', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('keeps the version and its family in the context', () => {
+    expect(error.context).toEqual({
+      artifactLabel: 'Skill',
+      versionId: 'skv-1',
+    });
   });
 });

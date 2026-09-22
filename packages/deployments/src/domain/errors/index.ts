@@ -1,5 +1,6 @@
 export * from './ArtefactNotInSpaceError';
 export * from './ArtefactsMoveFailedError';
+export * from './ArtifactVersionNotFoundError';
 export * from './DefaultSkillIdMissingError';
 export * from './DeploymentsAdapterErrors';
 export * from './DeploymentsInternalError';

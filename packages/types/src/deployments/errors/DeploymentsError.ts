@@ -18,7 +18,8 @@ export type DeploymentsErrorReason =
   | 'no_packages_provided'
   | 'invalid_render_mode'
   | 'invalid_artifact_id'
-  | 'package_not_publishable_as_plugin';
+  | 'package_not_publishable_as_plugin'
+  | 'artifact_version_not_found';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;
@@ -33,6 +34,8 @@ export type DeploymentsErrorContext = {
   path?: string;
   renderMode?: string;
   packageSlug?: string;
+  artifactLabel?: string;
+  versionId?: string;
 };
 
 /**
