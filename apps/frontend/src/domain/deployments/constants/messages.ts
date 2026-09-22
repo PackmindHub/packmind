@@ -46,6 +46,13 @@ export const PACKAGE_MESSAGES = {
   },
   release: {
     notReleasedYet: 'Not released yet',
+    /**
+     * The package as it stands now, which is the one reading of it that has no
+     * version string. Named rather than left to "Current": a working copy is
+     * the thing releases are cut from, and "current" is also what a reader
+     * would call the newest release.
+     */
+    workingCopy: 'Working copy',
     no_components: 'Add at least one component',
     no_change: (currentVersion: string) =>
       `Nothing has changed since ${currentVersion}`,

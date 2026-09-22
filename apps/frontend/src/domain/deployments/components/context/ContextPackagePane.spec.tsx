@@ -8,7 +8,11 @@ import {
   createSpaceId,
   createUserId,
 } from '@packmind/types';
-import type { PackageReleaseReadiness, PackageResponse } from '@packmind/types';
+import type {
+  PackageReleaseReadiness,
+  PackageReleaseSummary,
+  PackageResponse,
+} from '@packmind/types';
 import type { Mock } from 'vitest';
 
 import { ContextPackagePane } from './ContextPackagePane';
@@ -177,7 +181,14 @@ function resetHooks() {
 
 async function renderPane(
   readiness: PackageReleaseReadiness,
-  releases: { version: string }[] = [],
+  {
+    releases = [],
+    address = '/',
+  }: {
+    releases?: PackageReleaseSummary[];
+    /** The address the pane opens at, which is what names the version read. */
+    address?: string;
+  } = {},
 ) {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
     data: {
@@ -185,7 +196,7 @@ async function renderPane(
         releases.length > 0
           ? releases
           : readiness.currentVersion
-            ? [{ version: readiness.currentVersion }]
+            ? [{ version: readiness.currentVersion, releasedAt: null }]
             : [],
       readiness,
     },
@@ -195,7 +206,7 @@ async function renderPane(
   await act(async () => {
     render(
       <UIProvider>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[address]}>
           <ContextPackagePane
             pkg={pkg}
             packages={[pkg]}
@@ -228,16 +239,13 @@ describe('ContextPackagePane', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the version area in the header', async () => {
+  it('renders the version bar under the header', async () => {
     await renderPane(READY_NEVER_RELEASED);
 
     expect(screen.getByText('Not released yet')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /create a release/i }),
-    ).toBeEnabled();
   });
 
-  it('hides the version area from a user outside the flag audience', async () => {
+  it('hides the version bar from a user outside the flag audience', async () => {
     (useAuthContext as Mock).mockReturnValue({
       user: { email: 'someone@example.com' },
     });
@@ -245,12 +253,9 @@ describe('ContextPackagePane', () => {
     await renderPane(READY_NEVER_RELEASED);
 
     expect(screen.queryByText('Not released yet')).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /create a release/i }),
-    ).not.toBeInTheDocument();
   });
 
-  it('shows the current version once the package has been released', async () => {
+  it('measures the working copy against the last release', async () => {
     await renderPane({
       currentVersion: '1.2.0',
       verdict: 'ready',
@@ -258,10 +263,12 @@ describe('ContextPackagePane', () => {
       outdatedComponents: [],
     });
 
-    expect(screen.getByText('1.2.0')).toBeInTheDocument();
+    expect(
+      screen.getByText('Unreleased changes since 1.2.0'),
+    ).toBeInTheDocument();
   });
 
-  it('disables the release action when the package holds no components', async () => {
+  it('offers no release action when the package holds no components', async () => {
     await renderPane({
       currentVersion: null,
       verdict: 'no_components',
@@ -270,8 +277,8 @@ describe('ContextPackagePane', () => {
     });
 
     expect(
-      screen.getByRole('button', { name: /create a release/i }),
-    ).toBeDisabled();
+      screen.queryByRole('button', { name: /release/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("asks for this package's releases, in this space and organization", async () => {
@@ -284,9 +291,76 @@ describe('ContextPackagePane', () => {
     );
   });
 
-  it('still renders the package name beside the version area', async () => {
+  it('still renders the package name above the version bar', async () => {
     await renderPane(READY_NEVER_RELEASED);
 
     expect(screen.getByText('Backend conventions')).toBeInTheDocument();
+  });
+
+  describe('when the address names a release', () => {
+    const released: PackageReleaseReadiness = {
+      currentVersion: '1.2.0',
+      verdict: 'ready',
+      nextVersions: ['1.2.1', '1.3.0', '2.0.0'],
+      outdatedComponents: [],
+    };
+    const address = '/?release=1.1.0';
+    const releases: PackageReleaseSummary[] = [
+      { version: '1.2.0', releasedAt: null },
+      { version: '1.1.0', releasedAt: null },
+    ];
+
+    beforeEach(() => {
+      (useGetPackageReleaseQuery as Mock).mockReturnValue({
+        data: {
+          release: {
+            id: 'release-1',
+            packageId,
+            version: '1.1.0',
+            name: 'Backend conventions',
+            description: '',
+            recipeVersions: [],
+            standardVersions: [
+              { id: 'sv-1', standardId: 'std-1', name: 'Naming', version: 2 },
+            ],
+            skillVersions: [],
+          },
+        },
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    it('reads that release rather than the working copy', async () => {
+      await renderPane(released, { releases, address });
+
+      expect(screen.getByText('Naming')).toBeInTheDocument();
+    });
+
+    it('drops the control that writes the working copy', async () => {
+      await renderPane(released, { releases, address });
+
+      expect(
+        screen.queryByRole('button', { name: /Add components/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('counts the pins of that release on the tab', async () => {
+      await renderPane(released, { releases, address });
+
+      expect(
+        screen.getByRole('tab', { name: /Components/ }).textContent,
+      ).toContain('1');
+    });
+
+    it('leaves a reader outside the flag audience on the working copy', async () => {
+      (useAuthContext as Mock).mockReturnValue({
+        user: { email: 'someone@example.com' },
+      });
+
+      await renderPane(released, { releases, address });
+
+      expect(screen.queryByText('Naming')).not.toBeInTheDocument();
+    });
   });
 });
