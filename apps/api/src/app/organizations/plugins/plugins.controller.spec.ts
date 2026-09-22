@@ -1,5 +1,5 @@
 import { createMockInstance } from '@packmind/test-utils';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
 import {
@@ -119,13 +119,13 @@ describe('PluginsController', () => {
       );
     });
 
-    it('translates PackagesNotFoundError to a NotFoundException', async () => {
+    it('lets PackagesNotFoundError through for the filter to answer', async () => {
       service.renderPlugin.mockRejectedValue(
         new PackagesNotFoundError(['security']),
       );
 
       await expect(controller.render(orgId, body, request)).rejects.toThrow(
-        NotFoundException,
+        PackagesNotFoundError,
       );
     });
 
@@ -192,14 +192,14 @@ describe('PluginsController', () => {
       });
     });
 
-    it('translates PackagesNotFoundError to a NotFoundException', async () => {
+    it('lets PackagesNotFoundError through for the filter to answer', async () => {
       service.trackPluginDeleted.mockRejectedValue(
         new PackagesNotFoundError(['security']),
       );
 
       await expect(
         controller.trackDeleted(orgId, trackBody, request),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(PackagesNotFoundError);
     });
   });
 });

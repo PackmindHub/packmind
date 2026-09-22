@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -28,10 +27,7 @@ import {
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  NoPackageSlugsProvidedError,
-  PackagesNotFoundError,
-} from '@packmind/deployments';
+import {} from '@packmind/deployments';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
@@ -173,14 +169,6 @@ export class OrganizationsController {
         },
       );
 
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-
       throw error;
     }
   }
@@ -264,14 +252,6 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
-
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
 
       throw error;
     }
@@ -485,14 +465,6 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
-
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
 
       throw error;
     }

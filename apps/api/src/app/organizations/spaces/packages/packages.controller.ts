@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -39,10 +38,7 @@ import {
   CreatePackageReleaseResponse,
   GetPackageReleaseResponse,
 } from '@packmind/types';
-import {
-  PackageReleaseNotFoundError,
-  PackageReleaseRefusedError,
-} from '@packmind/deployments';
+import { PackageReleaseRefusedError } from '@packmind/deployments';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
@@ -184,9 +180,6 @@ export class OrganizationsSpacesPackagesController {
         'GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug - Failed to fetch package summary',
         { organizationId, spaceId, slug, error: errorMessage },
       );
-      if (error instanceof Error && error.message.includes('does not exist')) {
-        throw new NotFoundException(error.message);
-      }
       throw error;
     }
   }
@@ -344,9 +337,6 @@ export class OrganizationsSpacesPackagesController {
         'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version - Failed to fetch release',
         { organizationId, spaceId, packageId, version, error: errorMessage },
       );
-      if (error instanceof PackageReleaseNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
       throw error;
     }
   }

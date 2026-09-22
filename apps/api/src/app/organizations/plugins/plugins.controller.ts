@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  NotFoundException,
   Param,
   Post,
   Req,
@@ -10,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { PackagesNotFoundError } from '@packmind/deployments';
 import {
   MarketplaceVendor,
   OrganizationId,
@@ -93,9 +91,6 @@ export class PluginsController {
 
       return response;
     } catch (error) {
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
       // A standards-only package is a caller mistake, not a server fault. The
       // CLI has no client-side gate (unlike the marketplace publish UI), so
       // this is where the error surfaces; left unmapped it escapes as a 500
@@ -153,9 +148,6 @@ export class PluginsController {
 
       return response;
     } catch (error) {
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
