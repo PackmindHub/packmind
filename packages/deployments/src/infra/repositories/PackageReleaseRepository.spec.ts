@@ -6,7 +6,7 @@ import {
   createPackageReleaseId,
   createSkillVersionId,
   Package,
-  PackageRelease,
+  PackageReleaseEntry,
   Skill,
   SkillVersion,
   Standard,
@@ -41,14 +41,29 @@ import { PackageReleaseRepository } from './PackageReleaseRepository';
 import { PackageReleaseNotPersistedError } from '../../domain/errors/PackageReleaseNotPersistedError';
 
 describe('PackageReleaseRepository', () => {
-  const fixture = createTestDatasourceFixture([
-    GitCommitSchema,
-    ...standardsSchemas,
-    ...commandsSchemas,
-    ...skillsSchemas,
-    PackageSchema,
-    PackageReleaseSchema,
-  ]);
+  const fixture = createTestDatasourceFixture(
+    [
+      GitCommitSchema,
+      ...standardsSchemas,
+      ...commandsSchemas,
+      ...skillsSchemas,
+      PackageSchema,
+      PackageReleaseSchema,
+    ],
+    { recordQueries: true },
+  );
+
+  const VERSION_TABLES = [
+    '"command_versions"',
+    '"standard_versions"',
+    '"skill_versions"',
+  ];
+
+  const statementsReadingTwoFamilies = () =>
+    fixture.queries.queries.filter(
+      (query) =>
+        VERSION_TABLES.filter((table) => query.includes(table)).length > 1,
+    );
 
   let repository: PackageReleaseRepository;
 
@@ -119,7 +134,7 @@ describe('PackageReleaseRepository', () => {
   });
 
   describe('when a release has been cut', () => {
-    let release: PackageRelease;
+    let release: PackageReleaseEntry;
 
     beforeEach(async () => {
       release = await repository.createWithVersions(
@@ -135,27 +150,33 @@ describe('PackageReleaseRepository', () => {
     });
 
     it('hydrates the pinned command version', async () => {
-      const [found] = await repository.findByPackageId(pkg.id);
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '1.2.0');
 
-      expect(found.recipeVersions.map((version) => version.id)).toEqual([
+      expect(found?.recipeVersions.map((version) => version.id)).toEqual([
         commandVersion.id,
       ]);
     });
 
     it('hydrates the pinned standard version', async () => {
-      const [found] = await repository.findByPackageId(pkg.id);
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '1.2.0');
 
-      expect(found.standardVersions.map((version) => version.id)).toEqual([
+      expect(found?.standardVersions.map((version) => version.id)).toEqual([
         standardVersion.id,
       ]);
     });
 
     it('hydrates the pinned skill version', async () => {
-      const [found] = await repository.findByPackageId(pkg.id);
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '1.2.0');
 
-      expect(found.skillVersions.map((version) => version.id)).toEqual([
+      expect(found?.skillVersions.map((version) => version.id)).toEqual([
         skillVersion.id,
       ]);
+    });
+
+    it('carries no pin on the listing', async () => {
+      const [found] = await repository.findByPackageId(pkg.id);
+
+      expect(found).not.toHaveProperty('recipeVersions');
     });
 
     it('returns the persisted release from the write', () => {
@@ -247,7 +268,12 @@ describe('PackageReleaseRepository', () => {
   describe('when a committed release cannot be read back', () => {
     it('refuses with a named error rather than a generic one', async () => {
       jest
-        .spyOn(repository, 'findByPackageIdAndVersion')
+        .spyOn(
+          repository as unknown as {
+            findEntry: () => Promise<PackageReleaseEntry | null>;
+          },
+          'findEntry',
+        )
         .mockResolvedValue(null);
 
       await expect(
@@ -293,24 +319,6 @@ describe('PackageReleaseRepository', () => {
             version.version,
           ]),
         ).toEqual([[standardVersion.id, 2]]);
-      });
-    });
-
-    describe('reading it by package id', () => {
-      it('hydrates both deleted versions', async () => {
-        await fixture.datasource
-          .getRepository(CommandVersionSchema)
-          .softDelete({ id: commandVersion.id });
-        await fixture.datasource
-          .getRepository(StandardVersionSchema)
-          .softDelete({ id: standardVersion.id });
-
-        const [found] = await repository.findByPackageId(pkg.id);
-
-        expect([
-          found.recipeVersions.map((version) => version.id),
-          found.standardVersions.map((version) => version.id),
-        ]).toEqual([[commandVersion.id], [standardVersion.id]]);
       });
     });
   });
@@ -367,24 +375,81 @@ describe('PackageReleaseRepository', () => {
         ).toEqual([[skillVersion.id, 5]]);
       });
     });
+  });
+  describe('SQL shape', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('5.0.0'), pinnedVersions());
+    });
 
-    describe('reading it by package id', () => {
-      it('keeps all three pinned versions', async () => {
-        const [found] = await repository.findByPackageId(pkg.id);
+    it('issues one statement when listing a package history', async () => {
+      fixture.queries.reset();
 
-        expect([
-          found.recipeVersions.map((version) => [version.id, version.version]),
-          found.standardVersions.map((version) => [
-            version.id,
-            version.version,
-          ]),
-          found.skillVersions.map((version) => [version.id, version.version]),
-        ]).toEqual([
-          [[commandVersion.id, 3]],
-          [[standardVersion.id, 2]],
-          [[skillVersion.id, 5]],
-        ]);
+      await repository.findByPackageId(pkg.id);
+
+      expect(fixture.queries.queries).toHaveLength(1);
+    });
+
+    it('reads no artefact family when listing a package history', async () => {
+      fixture.queries.reset();
+
+      await repository.findByPackageId(pkg.id);
+
+      expect(
+        fixture.queries.countMatching(/"(command|standard|skill)_versions"/),
+      ).toBe(0);
+    });
+
+    it('never reads two artefact families in one statement', async () => {
+      fixture.queries.reset();
+
+      await repository.findByPackageIdAndVersion(pkg.id, '5.0.0');
+
+      expect(statementsReadingTwoFamilies()).toEqual([]);
+    });
+
+    it('reads no command body, standard description or skill prompt', async () => {
+      fixture.queries.reset();
+
+      await repository.findByPackageIdAndVersion(pkg.id, '5.0.0');
+
+      expect([
+        fixture.queries.countMatching('"recipeVersion"."content"'),
+        fixture.queries.countMatching('"standardVersion"."description"'),
+        fixture.queries.countMatching('"skillVersion"."prompt"'),
+      ]).toEqual([0, 0, 0]);
+    });
+
+    it('reads back no pin when cutting a release', async () => {
+      fixture.queries.reset();
+
+      await repository.createWithVersions(releaseOf('5.1.0'), pinnedVersions());
+
+      expect(statementsReadingTwoFamilies()).toEqual([]);
+    });
+  });
+
+  describe('when a release pins no command', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('6.0.0'), {
+        recipeVersionIds: [],
+        standardVersionIds: [standardVersion.id],
+        skillVersionIds: [skillVersion.id],
       });
+    });
+
+    it('carries an empty command family', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '6.0.0');
+
+      expect(found?.recipeVersions).toEqual([]);
+    });
+
+    it('still carries the families it pinned', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '6.0.0');
+
+      expect([
+        found?.standardVersions.map((version) => version.id),
+        found?.skillVersions.map((version) => version.id),
+      ]).toEqual([[standardVersion.id], [skillVersion.id]]);
     });
   });
 });

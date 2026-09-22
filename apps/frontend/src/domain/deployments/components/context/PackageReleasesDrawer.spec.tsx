@@ -12,7 +12,6 @@ import {
   createStandardId,
   createSkillVersionId,
   createSkillId,
-  createUserId,
   createPackageReleaseId,
   type GetPackageReleaseResponse,
   type PackageReleaseSummary,
@@ -96,7 +95,7 @@ describe('PackageReleasesDrawer', () => {
     const standardVersionId = createStandardVersionId('std-v-1');
     const skillVersionId = createSkillVersionId('skill-v-1');
 
-    const mockRelease = {
+    const mockRelease: GetPackageReleaseResponse = {
       release: {
         id: createPackageReleaseId('release-1'),
         packageId,
@@ -108,10 +107,7 @@ describe('PackageReleasesDrawer', () => {
             id: commandVersionId,
             recipeId: createCommandId('cmd-1'),
             name: 'Build Script',
-            slug: 'build-script',
-            content: 'echo "building"',
             version: 2,
-            userId: createUserId('user-1'),
           },
         ],
         standardVersions: [
@@ -119,10 +115,7 @@ describe('PackageReleasesDrawer', () => {
             id: standardVersionId,
             standardId: createStandardId('std-1'),
             name: 'Code Style',
-            slug: 'code-style',
-            description: 'Style guide',
             version: 1,
-            scope: null,
           },
         ],
         skillVersions: [
@@ -130,11 +123,7 @@ describe('PackageReleasesDrawer', () => {
             id: skillVersionId,
             skillId: createSkillId('skill-1'),
             name: 'Error Handler',
-            slug: 'error-handler',
-            description: 'Handles errors',
             version: 3,
-            userId: createUserId('user-1'),
-            prompt: 'prompt content',
           },
         ],
       },

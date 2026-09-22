@@ -1,5 +1,9 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { PackageId, PackageRelease } from '@packmind/types';
+import {
+  PackageId,
+  PackageReleaseDetail,
+  PackageReleaseEntry,
+} from '@packmind/types';
 import {
   IPackageReleaseRepository,
   PackageReleaseVersionIds,
@@ -25,12 +29,9 @@ export class PackageReleaseService {
    * the use case's business.
    */
   async createRelease(
-    release: Omit<
-      PackageRelease,
-      'recipeVersions' | 'standardVersions' | 'skillVersions'
-    >,
+    release: PackageReleaseEntry,
     versions: PackageReleaseVersionIds,
-  ): Promise<PackageRelease> {
+  ): Promise<PackageReleaseEntry> {
     this.logger.info('Creating package release', {
       packageId: release.packageId,
       version: release.version,
@@ -66,7 +67,7 @@ export class PackageReleaseService {
    * Unordered: `0.10.0` sorts below `0.9.0` as a string, so callers order by
    * the parsed triple.
    */
-  async listReleases(packageId: PackageId): Promise<PackageRelease[]> {
+  async listReleases(packageId: PackageId): Promise<PackageReleaseEntry[]> {
     this.logger.info('Listing package releases', { packageId });
 
     try {
@@ -91,7 +92,7 @@ export class PackageReleaseService {
   async findByVersion(
     packageId: PackageId,
     version: string,
-  ): Promise<PackageRelease | null> {
+  ): Promise<PackageReleaseDetail | null> {
     this.logger.info('Finding package release by version', {
       packageId,
       version,

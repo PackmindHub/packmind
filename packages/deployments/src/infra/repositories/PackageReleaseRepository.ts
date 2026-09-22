@@ -1,6 +1,21 @@
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { PackageId, PackageRelease } from '@packmind/types';
+import {
+  PackageId,
+  PackageRelease,
+  PackageReleaseDetail,
+  PackageReleaseEntry,
+  PackageReleaseId,
+  PinnedCommandVersion,
+  PinnedSkillVersion,
+  PinnedStandardVersion,
+  createCommandId,
+  createCommandVersionId,
+  createSkillId,
+  createSkillVersionId,
+  createStandardId,
+  createStandardVersionId,
+} from '@packmind/types';
 import { EntityManager, Repository } from 'typeorm';
 import {
   IPackageReleaseRepository,
@@ -10,6 +25,13 @@ import { PackageReleaseSchema } from '../schemas/PackageReleaseSchema';
 import { PackageReleaseNotPersistedError } from '../../domain/errors/PackageReleaseNotPersistedError';
 
 const origin = 'PackageReleaseRepository';
+
+type PinRow = {
+  id: string;
+  componentId: string;
+  name: string;
+  version: number;
+};
 
 export class PackageReleaseRepository
   extends AbstractRepository<PackageRelease>
@@ -36,12 +58,9 @@ export class PackageReleaseRepository
   }
 
   async createWithVersions(
-    release: Omit<
-      PackageRelease,
-      'recipeVersions' | 'standardVersions' | 'skillVersions'
-    >,
+    release: PackageReleaseEntry,
     versions: PackageReleaseVersionIds,
-  ): Promise<PackageRelease> {
+  ): Promise<PackageReleaseEntry> {
     this.logger.info('Creating package release', {
       packageId: release.packageId,
       version: release.version,
@@ -74,7 +93,7 @@ export class PackageReleaseRepository
         );
       });
 
-      const persisted = await this.findByPackageIdAndVersion(
+      const persisted = await this.findEntry(
         release.packageId,
         release.version,
       );
@@ -92,8 +111,6 @@ export class PackageReleaseRepository
       });
       return persisted;
     } catch (error) {
-      // A unique violation lands here too, and leaves here unchanged: reading
-      // it as a refusal is the caller's job.
       this.logger.error('Failed to create package release', {
         packageId: release.packageId,
         version: release.version,
@@ -103,11 +120,12 @@ export class PackageReleaseRepository
     }
   }
 
-  async findByPackageId(packageId: PackageId): Promise<PackageRelease[]> {
+  async findByPackageId(packageId: PackageId): Promise<PackageReleaseEntry[]> {
     this.logger.info('Finding package releases by package ID', { packageId });
 
     try {
-      const releases = await this.hydratedQuery()
+      const releases = await this.repository
+        .createQueryBuilder('packageRelease')
         .where('packageRelease.packageId = :packageId', { packageId })
         .getMany();
 
@@ -128,25 +146,31 @@ export class PackageReleaseRepository
   async findByPackageIdAndVersion(
     packageId: PackageId,
     version: string,
-  ): Promise<PackageRelease | null> {
+  ): Promise<PackageReleaseDetail | null> {
     this.logger.info('Finding package release by package ID and version', {
       packageId,
       version,
     });
 
     try {
-      const release = await this.hydratedQuery()
-        .where('packageRelease.packageId = :packageId', { packageId })
-        .andWhere('packageRelease.version = :version', { version })
-        .getOne();
+      const release = await this.findEntry(packageId, version);
 
       if (!release) {
         this.logger.warn('No package release for that package and version', {
           packageId,
           version,
         });
+        return null;
       }
-      return release;
+
+      const [recipeVersions, standardVersions, skillVersions] =
+        await Promise.all([
+          this.findRecipePins(release.id),
+          this.findStandardPins(release.id),
+          this.findSkillPins(release.id),
+        ]);
+
+      return { ...release, recipeVersions, standardVersions, skillVersions };
     } catch (error) {
       this.logger.error(
         'Failed to find package release by package ID and version',
@@ -160,22 +184,87 @@ export class PackageReleaseRepository
     }
   }
 
-  /**
-   * All three families, with the deleted ones: a release keeps showing what it
-   * pinned even once the command, standard or skill has been soft deleted.
-   *
-   * The order is critical: .withDeleted() must be called before the joins.
-   * TypeORM bakes the soft-delete predicate into each join at the moment the
-   * join is registered. If .withDeleted() is called after the joins, it has
-   * no effect on them, and they will filter out deleted versions.
-   */
-  private hydratedQuery() {
+  private async findEntry(
+    packageId: PackageId,
+    version: string,
+  ): Promise<PackageReleaseEntry | null> {
     return this.repository
       .createQueryBuilder('packageRelease')
+      .where('packageRelease.packageId = :packageId', { packageId })
+      .andWhere('packageRelease.version = :version', { version })
+      .getOne();
+  }
+
+  private async findRecipePins(
+    releaseId: PackageReleaseId,
+  ): Promise<PinnedCommandVersion[]> {
+    const rows = await this.repository
+      .createQueryBuilder('packageRelease')
       .withDeleted()
-      .leftJoinAndSelect('packageRelease.recipeVersions', 'recipeVersion')
-      .leftJoinAndSelect('packageRelease.standardVersions', 'standardVersion')
-      .leftJoinAndSelect('packageRelease.skillVersions', 'skillVersion');
+      .innerJoin('packageRelease.recipeVersions', 'recipeVersion')
+      .where('packageRelease.id = :releaseId', { releaseId })
+      .select('recipeVersion.id', 'id')
+      .addSelect('recipeVersion.recipeId', 'componentId')
+      .addSelect('recipeVersion.name', 'name')
+      .addSelect('recipeVersion.version', 'version')
+      .orderBy('recipeVersion.name', 'ASC')
+      .addOrderBy('recipeVersion.id', 'ASC')
+      .getRawMany<PinRow>();
+
+    return rows.map((row) => ({
+      id: createCommandVersionId(row.id),
+      recipeId: createCommandId(row.componentId),
+      name: row.name,
+      version: row.version,
+    }));
+  }
+
+  private async findStandardPins(
+    releaseId: PackageReleaseId,
+  ): Promise<PinnedStandardVersion[]> {
+    const rows = await this.repository
+      .createQueryBuilder('packageRelease')
+      .withDeleted()
+      .innerJoin('packageRelease.standardVersions', 'standardVersion')
+      .where('packageRelease.id = :releaseId', { releaseId })
+      .select('standardVersion.id', 'id')
+      .addSelect('standardVersion.standardId', 'componentId')
+      .addSelect('standardVersion.name', 'name')
+      .addSelect('standardVersion.version', 'version')
+      .orderBy('standardVersion.name', 'ASC')
+      .addOrderBy('standardVersion.id', 'ASC')
+      .getRawMany<PinRow>();
+
+    return rows.map((row) => ({
+      id: createStandardVersionId(row.id),
+      standardId: createStandardId(row.componentId),
+      name: row.name,
+      version: row.version,
+    }));
+  }
+
+  private async findSkillPins(
+    releaseId: PackageReleaseId,
+  ): Promise<PinnedSkillVersion[]> {
+    const rows = await this.repository
+      .createQueryBuilder('packageRelease')
+      .withDeleted()
+      .innerJoin('packageRelease.skillVersions', 'skillVersion')
+      .where('packageRelease.id = :releaseId', { releaseId })
+      .select('skillVersion.id', 'id')
+      .addSelect('skillVersion.skillId', 'componentId')
+      .addSelect('skillVersion.name', 'name')
+      .addSelect('skillVersion.version', 'version')
+      .orderBy('skillVersion.name', 'ASC')
+      .addOrderBy('skillVersion.id', 'ASC')
+      .getRawMany<PinRow>();
+
+    return rows.map((row) => ({
+      id: createSkillVersionId(row.id),
+      skillId: createSkillId(row.componentId),
+      name: row.name,
+      version: row.version,
+    }));
   }
 
   private async insertJoinRows(

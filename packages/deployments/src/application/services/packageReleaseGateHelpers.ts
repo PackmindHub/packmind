@@ -1,4 +1,4 @@
-import { PackageRelease } from '@packmind/types';
+import { PackageReleaseDetail } from '@packmind/types';
 
 /** One component of a package, resolved to its current latest version. */
 export type PackageComponentSnapshot = {
@@ -44,7 +44,7 @@ export const packageDescriptionMatches = (a: string, b: string): boolean => {
  */
 export const componentListMatches = (
   pkg: PackageGateSnapshot,
-  release: PackageRelease,
+  release: PackageReleaseDetail,
 ): boolean => {
   const currentSet = new Set<string>();
   pkg.recipes.forEach((c) => currentSet.add(`recipe:${c.id}`));
@@ -80,7 +80,7 @@ export const componentListMatches = (
  */
 export const pinnedVersionsMatch = (
   pkg: PackageGateSnapshot,
-  release: PackageRelease,
+  release: PackageReleaseDetail,
 ): boolean => {
   // Build maps of component id to pinned version id from the release
   const releasePinnedVersions = new Map<string, string>();
@@ -148,7 +148,7 @@ export const pinnedVersionsMatch = (
  */
 export const evaluatePackageReleaseGate = (
   pkg: PackageGateSnapshot,
-  latestRelease: PackageRelease | null,
+  latestRelease: PackageReleaseDetail | null,
 ): 'ready' | 'no_components' | 'no_change' => {
   // Step 1: Package holds no component → no_components (regardless of release history)
   const hasComponents =

@@ -31,6 +31,32 @@ export type PackageRelease = {
   updatedAt?: Date;
 };
 
+export type PinnedCommandVersion = Pick<
+  CommandVersion,
+  'id' | 'recipeId' | 'name' | 'version'
+>;
+
+export type PinnedStandardVersion = Pick<
+  StandardVersion,
+  'id' | 'standardId' | 'name' | 'version'
+>;
+
+export type PinnedSkillVersion = Pick<
+  SkillVersion,
+  'id' | 'skillId' | 'name' | 'version'
+>;
+
+export type PackageReleaseEntry = Omit<
+  PackageRelease,
+  'recipeVersions' | 'standardVersions' | 'skillVersions'
+>;
+
+export type PackageReleaseDetail = PackageReleaseEntry & {
+  recipeVersions: PinnedCommandVersion[];
+  standardVersions: PinnedStandardVersion[];
+  skillVersions: PinnedSkillVersion[];
+};
+
 /**
  * What a release response carries: the release without its timestamps.
  *
@@ -38,7 +64,12 @@ export type PackageRelease = {
  * string by the time they reach a client, so no release response carries them.
  */
 export type PackageReleaseContent = Omit<
-  PackageRelease,
+  PackageReleaseDetail,
+  'createdAt' | 'updatedAt'
+>;
+
+export type PackageReleaseReceipt = Omit<
+  PackageReleaseEntry,
   'createdAt' | 'updatedAt'
 >;
 

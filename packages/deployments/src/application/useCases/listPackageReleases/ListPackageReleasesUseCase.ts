@@ -13,7 +13,8 @@ import {
   ListPackageReleasesCommand,
   ListPackageReleasesResponse,
   OutdatedPackageComponent,
-  PackageRelease,
+  PackageReleaseDetail,
+  PackageReleaseEntry,
   PackageReleaseSummary,
   comparePackageReleaseVersions,
   nextVersions,
@@ -35,7 +36,10 @@ import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundErro
 const origin = 'ListPackageReleasesUseCase';
 
 /** Newest first by parsed triple — never by the version string (D-009). */
-const byVersionDescending = (a: PackageRelease, b: PackageRelease): number => {
+const byVersionDescending = (
+  a: PackageReleaseEntry,
+  b: PackageReleaseEntry,
+): number => {
   const parsedA = parsePackageReleaseVersion(a.version);
   const parsedB = parsePackageReleaseVersion(b.version);
 
@@ -48,7 +52,7 @@ const byVersionDescending = (a: PackageRelease, b: PackageRelease): number => {
 
 /** What a release pins, keyed by `${family}:${componentId}`. */
 const pinnedByComponent = (
-  release: PackageRelease,
+  release: PackageReleaseDetail,
 ): Map<string, { versionId: string; versionNumber: number }> => {
   const pinned = new Map<
     string,
@@ -131,7 +135,7 @@ const toGateSnapshot = (
  */
 const findOutdatedComponents = (
   resolved: ResolvedComponentVersion[],
-  latestRelease: PackageRelease | null,
+  latestRelease: PackageReleaseDetail | null,
 ): OutdatedPackageComponent[] => {
   if (!latestRelease) {
     return [];
@@ -217,7 +221,11 @@ export class ListPackageReleasesUseCase
     const snapshot = toGateSnapshot(pkg.name, pkg.description, resolution);
 
     const latestRelease =
-      releases.find((release) => release.version === currentSentinel) ?? null;
+      releases.length > 0
+        ? await this.services
+            .getPackageReleaseService()
+            .findByVersion(packageId, currentSentinel)
+        : null;
 
     const verdict = evaluatePackageReleaseGate(snapshot, latestRelease);
 

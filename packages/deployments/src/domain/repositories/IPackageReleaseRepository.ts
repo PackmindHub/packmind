@@ -3,6 +3,8 @@ import {
   IRepository,
   PackageId,
   PackageRelease,
+  PackageReleaseDetail,
+  PackageReleaseEntry,
   SkillVersionId,
   StandardVersionId,
 } from '@packmind/types';
@@ -28,21 +30,18 @@ export interface IPackageReleaseRepository extends IRepository<PackageRelease> {
    * caller's business, not this repository's.
    */
   createWithVersions(
-    release: Omit<
-      PackageRelease,
-      'recipeVersions' | 'standardVersions' | 'skillVersions'
-    >,
+    release: PackageReleaseEntry,
     versions: PackageReleaseVersionIds,
-  ): Promise<PackageRelease>;
+  ): Promise<PackageReleaseEntry>;
 
   /**
-   * Hydrated, and deliberately unordered: `0.10.0` sorts below `0.9.0` as a
-   * string, so ordering is the caller's job once versions are parsed.
+   * Deliberately unordered: `0.10.0` sorts below `0.9.0` as a string, so
+   * ordering is the caller's job once versions are parsed.
    */
-  findByPackageId(packageId: PackageId): Promise<PackageRelease[]>;
+  findByPackageId(packageId: PackageId): Promise<PackageReleaseEntry[]>;
 
   findByPackageIdAndVersion(
     packageId: PackageId,
     version: string,
-  ): Promise<PackageRelease | null>;
+  ): Promise<PackageReleaseDetail | null>;
 }

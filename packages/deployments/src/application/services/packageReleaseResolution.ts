@@ -4,7 +4,7 @@ import {
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
-  PackageRelease,
+  PackageReleaseEntry,
   SkillId,
   SkillVersionId,
   StandardId,
@@ -147,7 +147,7 @@ export const resolveLatestComponentVersions = async (
 };
 
 /** The greatest release version by parsed triple, or '0.0.0' for none. */
-export const currentVersionOf = (releases: PackageRelease[]): string => {
+export const currentVersionOf = (releases: PackageReleaseEntry[]): string => {
   const NEVER_RELEASED = '0.0.0';
   let current = NEVER_RELEASED;
   let currentParsed = parsePackageReleaseVersion(NEVER_RELEASED);

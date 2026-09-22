@@ -1,6 +1,6 @@
 import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 import { PackageId } from '../Package';
-import { PackageReleaseContent } from '../PackageRelease';
+import { PackageReleaseReceipt } from '../PackageRelease';
 
 export type CreatePackageReleaseCommand = SpaceMemberCommand & {
   packageId: PackageId;
@@ -8,7 +8,7 @@ export type CreatePackageReleaseCommand = SpaceMemberCommand & {
 };
 
 export type CreatePackageReleaseResponse = {
-  release: PackageReleaseContent;
+  release: PackageReleaseReceipt;
 };
 
 export type ICreatePackageReleaseUseCase = IUseCase<

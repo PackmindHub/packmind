@@ -265,6 +265,12 @@ describe('ListPackageReleasesUseCase', () => {
 
       expect(result.readiness.outdatedComponents).toEqual([]);
     });
+
+    it('reads no release detail', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(packageReleaseService.findByVersion).not.toHaveBeenCalled();
+    });
   });
 
   describe('when the package holds no component', () => {
@@ -286,6 +292,9 @@ describe('ListPackageReleasesUseCase', () => {
       packageReleaseService.listReleases.mockResolvedValue([
         buildIdenticalRelease('0.1.0'),
       ]);
+      packageReleaseService.findByVersion.mockResolvedValue(
+        buildIdenticalRelease('0.1.0'),
+      );
     });
 
     it('reports no_change', async () => {
@@ -312,6 +321,9 @@ describe('ListPackageReleasesUseCase', () => {
       packageReleaseService.listReleases.mockResolvedValue([
         buildBehindRelease('0.1.0'),
       ]);
+      packageReleaseService.findByVersion.mockResolvedValue(
+        buildBehindRelease('0.1.0'),
+      );
     });
 
     it('is ready to be released', async () => {
@@ -341,6 +353,9 @@ describe('ListPackageReleasesUseCase', () => {
         buildRelease('0.9.0'),
         buildRelease('0.10.0'),
       ]);
+      packageReleaseService.findByVersion.mockResolvedValue(
+        buildRelease('0.10.0'),
+      );
     });
 
     it('lists them newest first by parsed triple', async () => {
@@ -356,6 +371,16 @@ describe('ListPackageReleasesUseCase', () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.readiness.currentVersion).toBe('0.10.0');
+    });
+
+    it('reads the pins of the newest release only', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(packageReleaseService.findByVersion).toHaveBeenCalledTimes(1);
+      expect(packageReleaseService.findByVersion).toHaveBeenCalledWith(
+        pkg.id,
+        '0.10.0',
+      );
     });
 
     it('offers the three increments of 0.10.0', async () => {
@@ -375,6 +400,9 @@ describe('ListPackageReleasesUseCase', () => {
       packageReleaseService.listReleases.mockResolvedValue([
         buildBehindRelease('0.1.0'),
       ]);
+      packageReleaseService.findByVersion.mockResolvedValue(
+        buildBehindRelease('0.1.0'),
+      );
     });
 
     it('answers instead of throwing', async () => {
