@@ -20,10 +20,7 @@ import type {
   PackageResponse,
   SpaceId,
 } from '@packmind/types';
-import {
-  useAddArtefactsToPackagesMutation,
-  useRemoveArtefactsFromPackageMutation,
-} from '../../api/queries/DeploymentsQueries';
+import { useMoveArtefactsToPackageMutation } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import { deployedPlaceParts } from '../PackagesPopover';
 import {
@@ -64,15 +61,15 @@ const SEARCHABLE_FROM = 7;
  * are the same question asked of the same packages, and two of them would have
  * answered it two ways.
  *
- * There is no move endpoint: the server knows how to add components to a
- * package and how to remove them from one. The order is what makes it a move
- * rather than a gap: the add goes first, so a failure between the two leaves
- * the components in both packages instead of in none. That state is recoverable
- * from this same drawer, which then offers to remove them from here.
+ * One call, whatever the size of the selection: the server places the
+ * components in the destination and empties every package that held them, and
+ * rolls the lot back if any part of it fails. So there is no half-done state
+ * to describe here any more — a failure leaves the packages exactly as they
+ * were, which is what the error says.
  *
- * A selection is two calls, not two calls per component. Both mutations take a
- * bag of ids grouped by type, so a mixed selection leaves the source in one
- * request and cannot half-leave it.
+ * Note this reaches further than the source on screen: a component that legacy
+ * data left in a third package leaves that one too, because a component
+ * belongs to a single package.
  *
  * One drawer and no second confirmation, unlike the manage-packages drawer.
  * What that one confirms is a removal it presents as a removal; here the
@@ -121,9 +118,7 @@ export function MoveComponentDrawer({
   const [query, setQuery] = useState('');
   const [busyPackageId, setBusyPackageId] = useState<PackageId | null>(null);
 
-  const { mutateAsync: addArtefacts } = useAddArtefactsToPackagesMutation();
-  const { mutateAsync: removeArtefacts } =
-    useRemoveArtefactsFromPackageMutation();
+  const { mutateAsync: moveArtefacts } = useMoveArtefactsToPackageMutation();
   const { getDeployedTargets, getDeployedMarketplaces } =
     usePackageDeploymentStatus(spaceId, organizationId);
   /* Read often enough below that the comparison is worth a name. */
@@ -166,50 +161,17 @@ export function MoveComponentDrawer({
 
   const apply = async (target: MoveTarget) => {
     setBusyPackageId(target.pkg.id);
-    let added = false;
     try {
       /*
-       * Only what the destination does not carry yet. Sending the whole
-       * selection would be harmless for the server and wrong for the reader:
-       * the outcome it reports would cover memberships this move did not
-       * create.
+       * The whole selection, already-held components included: the server
+       * skips those in the destination and still empties whatever else holds
+       * them.
        */
-      if (target.missing.length > 0) {
-        const outcomes = await addArtefacts({
-          spaceId,
-          entries: [
-            {
-              packageId: target.pkg.id,
-              ...componentIdsPayload(target.missing),
-            },
-          ],
-        });
-        if (outcomes.some((outcome) => !outcome.ok)) {
-          pmToaster.create({
-            type: 'error',
-            title: `Couldn't add to ${target.pkg.name}`,
-            description: source
-              ? `${subject} ${
-                  components.length === 1 ? 'is' : 'are'
-                } still in ${source.name}.`
-              : 'Nothing was added.',
-          });
-          return;
-        }
-        added = true;
-      }
-
-      /*
-       * Skipped without a source: what was picked is in no package, so there is
-       * nothing to leave and the add was the whole operation.
-       */
-      if (source) {
-        await removeArtefacts({
-          spaceId,
-          packageId: source.id,
-          ...componentIdsPayload(components),
-        });
-      }
+      await moveArtefacts({
+        spaceId,
+        packageId: target.pkg.id,
+        ...componentIdsPayload(components),
+      });
 
       pmToaster.create({
         type: 'success',
@@ -227,18 +189,12 @@ export function MoveComponentDrawer({
     } catch {
       pmToaster.create({
         type: 'error',
-        // The half-done state, said in full. What was picked is in both
-        // packages and the drawer can finish the job: reopening it on the same
-        // destination now offers to remove it from here.
-        title: !source
-          ? `Couldn't add to ${target.pkg.name}`
-          : added
-            ? `${subject} ${components.length === 1 ? 'is' : 'are'} in both packages`
-            : `Couldn't remove from ${source.name}`,
-        description:
-          source && added
-            ? `Added to ${target.pkg.name} but not removed from ${source.name}. Move again to finish.`
-            : 'Try again, or check your space access.',
+        title: `Couldn't move to ${target.pkg.name}`,
+        description: source
+          ? `Nothing changed — ${subject} ${
+              components.length === 1 ? 'is' : 'are'
+            } still in ${source.name}.`
+          : 'Nothing changed. Try again, or check your space access.',
       });
     } finally {
       setBusyPackageId(null);
