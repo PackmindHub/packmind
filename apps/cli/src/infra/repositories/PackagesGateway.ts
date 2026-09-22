@@ -6,6 +6,7 @@ import {
   Gateway,
   ICreatePackageUseCase,
   IAddArtefactsToPackageUseCase,
+  IMoveArtefactsToPackageUseCase,
   IRemoveArtefactsFromPackageUseCase,
 } from '@packmind/types';
 
@@ -59,6 +60,23 @@ export class PackagesGateway implements IPackagesGateway {
 
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
+      {
+        method: 'POST',
+        body: { ...rest, packageId, spaceId, commandIds: recipeIds },
+      },
+    );
+  };
+
+  public moveArtefacts: Gateway<IMoveArtefactsToPackageUseCase> = async (
+    command,
+  ) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    // Migrate the wire body key onto the new command surface: send `commandIds`
+    // instead of the legacy `recipeIds`.
+    const { packageId, spaceId, recipeIds, ...rest } = command;
+
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/move-artifacts`,
       {
         method: 'POST',
         body: { ...rest, packageId, spaceId, commandIds: recipeIds },

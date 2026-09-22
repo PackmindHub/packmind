@@ -1,4 +1,8 @@
-import { Package } from '@packmind/types';
+import {
+  ArtefactsRemovedFromPackage,
+  MoveArtefactsToPackageResponse,
+  Package,
+} from '@packmind/types';
 import {
   IMoveToPackageCommand,
   IMoveToPackageResult,
@@ -10,12 +14,14 @@ import {
   artefactIdsByType,
   fullPackageSlug,
   PackageArtefactService,
-  ResolvedArtefact,
 } from '../services/PackageArtefactService';
 
 /**
  * Makes a package the sole owner of artefacts: adds them to the target and
  * takes them out of every other package of the space.
+ *
+ * One server-side call, which either lands whole or is rolled back, so a
+ * failure leaves membership exactly as it was rather than half-moved.
  *
  * Idempotent — an artefact already in the target and nowhere else is left
  * alone, and the result says so, so the handler can tell the user nothing
@@ -45,51 +51,29 @@ export class MoveToPackageUseCase implements IMoveToPackageUseCase {
       spaceSlug,
     );
 
-    const plan = resolved.map((artefact) => {
-      const owners = this.artefacts.packagesContaining(
-        packages,
+    const result = await this.gateway.packages.moveArtefacts({
+      packageId: target.id,
+      spaceId: space.id,
+      ...artefactIdsByType(
         itemType,
-        artefact.id,
-      );
-      return {
-        artefact,
-        alreadyInTarget: owners.some((pkg) => pkg.id === target.id),
-        sources: owners.filter((pkg) => pkg.id !== target.id),
-      };
+        resolved.map((artefact) => artefact.id),
+      ),
+      originSkill: command.originSkill,
     });
 
-    const toAdd = plan
-      .filter((entry) => !entry.alreadyInTarget)
-      .map((entry) => entry.artefact.id);
-
-    if (toAdd.length > 0) {
-      await this.gateway.packages.addArtefacts({
-        packageId: target.id,
-        spaceId: space.id,
-        ...artefactIdsByType(itemType, toAdd),
-        originSkill: command.originSkill,
-      });
-    }
-
-    // One call per source package, each carrying every artefact it loses.
-    for (const source of groupBySource(plan).values()) {
-      await this.gateway.packages.removeArtefacts({
-        packageId: source.pkg.id,
-        spaceId: space.id,
-        ...artefactIdsByType(
-          itemType,
-          source.artefacts.map((artefact) => artefact.id),
-        ),
-      });
-    }
+    // What the move did, reported from the server's answer rather than from the
+    // state read before it: the two agree, and only one of them is the record
+    // of what happened.
+    const added = new Set(addedIds(result));
+    const leftBehind = leftPackagesByArtefact(result.removedFrom, packages);
 
     return {
       targetPackageSlug: fullPackageSlug(space.slug, target.slug),
-      moved: plan.map((entry) => ({
-        slug: entry.artefact.slug,
-        name: entry.artefact.name,
-        addedToTarget: !entry.alreadyInTarget,
-        removedFrom: entry.sources.map((pkg) =>
+      moved: resolved.map((artefact) => ({
+        slug: artefact.slug,
+        name: artefact.name,
+        addedToTarget: added.has(artefact.id),
+        removedFrom: (leftBehind.get(artefact.id) ?? []).map((pkg) =>
           fullPackageSlug(space.slug, pkg.slug),
         ),
       })),
@@ -97,28 +81,35 @@ export class MoveToPackageUseCase implements IMoveToPackageUseCase {
   }
 }
 
-type MovePlanEntry = {
-  artefact: ResolvedArtefact;
-  alreadyInTarget: boolean;
-  sources: Package[];
-};
+function addedIds(result: MoveArtefactsToPackageResponse): string[] {
+  return [
+    ...result.added.standards,
+    ...result.added.commands,
+    ...result.added.skills,
+  ];
+}
 
-/** Inverts the plan: one entry per source package, with what it gives up. */
-function groupBySource(
-  plan: MovePlanEntry[],
-): Map<string, { pkg: Package; artefacts: ResolvedArtefact[] }> {
-  const bySource = new Map<
-    string,
-    { pkg: Package; artefacts: ResolvedArtefact[] }
-  >();
+/**
+ * Inverts the server's per-package report into the per-artefact one the user
+ * reads: each line names an artefact, then the packages it left.
+ */
+function leftPackagesByArtefact(
+  removedFrom: ArtefactsRemovedFromPackage[],
+  packages: Package[],
+): Map<string, Package[]> {
+  const byArtefact = new Map<string, Package[]>();
 
-  for (const entry of plan) {
-    for (const source of entry.sources) {
-      const grouped = bySource.get(source.id) ?? { pkg: source, artefacts: [] };
-      grouped.artefacts.push(entry.artefact);
-      bySource.set(source.id, grouped);
+  for (const emptied of removedFrom) {
+    const pkg = packages.find(
+      (candidate) => candidate.id === emptied.packageId,
+    );
+    if (!pkg) continue;
+
+    const ids = [...emptied.standards, ...emptied.commands, ...emptied.skills];
+    for (const artefactId of ids) {
+      byArtefact.set(artefactId, [...(byArtefact.get(artefactId) ?? []), pkg]);
     }
   }
 
-  return bySource;
+  return byArtefact;
 }

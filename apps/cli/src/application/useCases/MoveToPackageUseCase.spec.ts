@@ -2,6 +2,7 @@ import { mockInterface } from '@packmind/test-utils';
 import { commandFactory } from '@packmind/commands/test';
 import { packageFactory } from '@packmind/deployments/test';
 import {
+  ArtefactsRemovedFromPackage,
   Command,
   createCommandId,
   createPackageId,
@@ -29,6 +30,26 @@ describe('MoveToPackageUseCase', () => {
 
   function givenPackages(packages: Package[]) {
     packagesGateway.list.mockResolvedValue({ packages });
+  }
+
+  /** What the server reports it did, which is what the result is built from. */
+  function givenMoveResult({
+    addedCommands = [] as string[],
+    removedFrom = [] as ArtefactsRemovedFromPackage[],
+  } = {}) {
+    packagesGateway.moveArtefacts.mockResolvedValue({
+      package: target,
+      added: { standards: [], commands: addedCommands, skills: [] },
+      skipped: { standards: [], commands: [], skills: [] },
+      removedFrom,
+    });
+  }
+
+  function emptied(
+    pkg: Package,
+    commands: string[] = [COMMAND_ID],
+  ): ArtefactsRemovedFromPackage {
+    return { packageId: pkg.id, standards: [], commands, skills: [] };
   }
 
   async function moveCommandToTarget() {
@@ -65,16 +86,7 @@ describe('MoveToPackageUseCase', () => {
     });
 
     commandsGateway.list.mockResolvedValue({ recipes: [command] });
-    packagesGateway.addArtefacts.mockResolvedValue({
-      package: target,
-      added: { standards: [], commands: [COMMAND_ID], skills: [] },
-      skipped: { standards: [], commands: [], skills: [] },
-    });
-    packagesGateway.removeArtefacts.mockResolvedValue({
-      package: target,
-      removed: { standards: [], commands: [COMMAND_ID], skills: [] },
-      skipped: { standards: [], commands: [], skills: [] },
-    });
+    givenMoveResult({ addedCommands: [COMMAND_ID] });
 
     useCase = new MoveToPackageUseCase(mockGateway, spaceService);
   });
@@ -86,12 +98,13 @@ describe('MoveToPackageUseCase', () => {
   describe('when the command belongs to no package', () => {
     beforeEach(() => {
       givenPackages([target]);
+      givenMoveResult({ addedCommands: [COMMAND_ID] });
     });
 
-    it('adds it to the target package', async () => {
+    it('moves it to the target package', async () => {
       await moveCommandToTarget();
 
-      expect(packagesGateway.addArtefacts).toHaveBeenCalledWith(
+      expect(packagesGateway.moveArtefacts).toHaveBeenCalledWith(
         expect.objectContaining({
           packageId: target.id,
           spaceId: SPACE_ID,
@@ -100,10 +113,10 @@ describe('MoveToPackageUseCase', () => {
       );
     });
 
-    it('removes it from nothing', async () => {
+    it('asks the server once', async () => {
       await moveCommandToTarget();
 
-      expect(packagesGateway.removeArtefacts).not.toHaveBeenCalled();
+      expect(packagesGateway.moveArtefacts).toHaveBeenCalledTimes(1);
     });
 
     it('reports it as added to the target', async () => {
@@ -137,26 +150,10 @@ describe('MoveToPackageUseCase', () => {
         recipes: [COMMAND_ID],
       });
       givenPackages([target, source]);
-    });
-
-    it('adds it to the target package', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.addArtefacts).toHaveBeenCalledWith(
-        expect.objectContaining({ packageId: target.id }),
-      );
-    });
-
-    it('removes it from the source package', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.removeArtefacts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          packageId: source.id,
-          spaceId: SPACE_ID,
-          recipeIds: [COMMAND_ID],
-        }),
-      );
+      givenMoveResult({
+        addedCommands: [COMMAND_ID],
+        removedFrom: [emptied(source)],
+      });
     });
 
     it('reports the package it was removed from', async () => {
@@ -164,31 +161,33 @@ describe('MoveToPackageUseCase', () => {
 
       expect(result.moved[0].removedFrom).toEqual(['@global/source']);
     });
+
+    it('still asks the server once', async () => {
+      await moveCommandToTarget();
+
+      expect(packagesGateway.moveArtefacts).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('when the command belongs to several other packages', () => {
     beforeEach(() => {
-      givenPackages([
-        target,
-        packageFactory({
-          id: createPackageId('package-source-1'),
-          slug: 'source-1',
-          spaceId: SPACE_ID,
-          recipes: [COMMAND_ID],
-        }),
-        packageFactory({
-          id: createPackageId('package-source-2'),
-          slug: 'source-2',
-          spaceId: SPACE_ID,
-          recipes: [COMMAND_ID],
-        }),
-      ]);
-    });
-
-    it('removes it from each of them', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.removeArtefacts).toHaveBeenCalledTimes(2);
+      const first = packageFactory({
+        id: createPackageId('package-source-1'),
+        slug: 'source-1',
+        spaceId: SPACE_ID,
+        recipes: [COMMAND_ID],
+      });
+      const second = packageFactory({
+        id: createPackageId('package-source-2'),
+        slug: 'source-2',
+        spaceId: SPACE_ID,
+        recipes: [COMMAND_ID],
+      });
+      givenPackages([target, first, second]);
+      givenMoveResult({
+        addedCommands: [COMMAND_ID],
+        removedFrom: [emptied(first), emptied(second)],
+      });
     });
 
     it('reports every package it was removed from', async () => {
@@ -210,24 +209,19 @@ describe('MoveToPackageUseCase', () => {
         recipes: [COMMAND_ID],
       });
       givenPackages([target]);
-    });
-
-    it('adds nothing', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.addArtefacts).not.toHaveBeenCalled();
-    });
-
-    it('removes nothing', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.removeArtefacts).not.toHaveBeenCalled();
+      givenMoveResult();
     });
 
     it('reports that nothing was added', async () => {
       const result = await moveCommandToTarget();
 
       expect(result.moved[0].addedToTarget).toBe(false);
+    });
+
+    it('reports that it left no package', async () => {
+      const result = await moveCommandToTarget();
+
+      expect(result.moved[0].removedFrom).toEqual([]);
     });
   });
 
@@ -248,20 +242,13 @@ describe('MoveToPackageUseCase', () => {
         recipes: [COMMAND_ID],
       });
       givenPackages([target, source]);
+      givenMoveResult({ removedFrom: [emptied(source)] });
     });
 
-    it('adds nothing', async () => {
-      await moveCommandToTarget();
+    it('reports that nothing was added', async () => {
+      const result = await moveCommandToTarget();
 
-      expect(packagesGateway.addArtefacts).not.toHaveBeenCalled();
-    });
-
-    it('removes it from the other package', async () => {
-      await moveCommandToTarget();
-
-      expect(packagesGateway.removeArtefacts).toHaveBeenCalledWith(
-        expect.objectContaining({ packageId: source.id }),
-      );
+      expect(result.moved[0].addedToTarget).toBe(false);
     });
 
     it('reports the package it was removed from', async () => {
@@ -271,7 +258,7 @@ describe('MoveToPackageUseCase', () => {
     });
   });
 
-  describe('when several commands share a source package', () => {
+  describe('when several commands are moved at once', () => {
     const OTHER_COMMAND_ID = createCommandId('cmd-id-2');
     let source: Package;
 
@@ -293,21 +280,61 @@ describe('MoveToPackageUseCase', () => {
           }),
         ],
       });
+      givenMoveResult({
+        addedCommands: [COMMAND_ID, OTHER_COMMAND_ID],
+        removedFrom: [emptied(source, [COMMAND_ID, OTHER_COMMAND_ID])],
+      });
     });
 
-    it('removes them from that package in a single call', async () => {
-      await useCase.execute({
+    async function moveBothCommands() {
+      return useCase.execute({
         packageSlug: target.slug,
         itemType: 'command',
         itemSlugs: ['cmd-1', 'cmd-2'],
       });
+    }
 
-      expect(packagesGateway.removeArtefacts).toHaveBeenCalledWith(
+    it('sends them in a single call', async () => {
+      await moveBothCommands();
+
+      expect(packagesGateway.moveArtefacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          packageId: source.id,
+          packageId: target.id,
           recipeIds: [COMMAND_ID, OTHER_COMMAND_ID],
         }),
       );
+    });
+
+    it('reports the source package on each of them', async () => {
+      const result = await moveBothCommands();
+
+      expect(result.moved.map((moved) => moved.removedFrom)).toEqual([
+        ['@global/source'],
+        ['@global/source'],
+      ]);
+    });
+  });
+
+  describe('when the server empties a package the CLI has not seen', () => {
+    beforeEach(() => {
+      givenPackages([target]);
+      givenMoveResult({
+        addedCommands: [COMMAND_ID],
+        removedFrom: [
+          {
+            packageId: createPackageId('package-unknown'),
+            standards: [],
+            commands: [COMMAND_ID],
+            skills: [],
+          },
+        ],
+      });
+    });
+
+    it('names no package it cannot name', async () => {
+      const result = await moveCommandToTarget();
+
+      expect(result.moved[0].removedFrom).toEqual([]);
     });
   });
 
