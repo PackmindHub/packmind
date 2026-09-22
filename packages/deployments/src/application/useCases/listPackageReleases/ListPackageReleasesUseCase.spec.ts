@@ -373,10 +373,15 @@ describe('ListPackageReleasesUseCase', () => {
       expect(result.readiness.currentVersion).toBe('0.10.0');
     });
 
-    it('reads the pins of the newest release only', async () => {
+    it('reads one release detail', async () => {
       await useCase.execute(buildCommand());
 
       expect(packageReleaseService.findByVersion).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads the pins of the newest release', async () => {
+      await useCase.execute(buildCommand());
+
       expect(packageReleaseService.findByVersion).toHaveBeenCalledWith(
         pkg.id,
         '0.10.0',

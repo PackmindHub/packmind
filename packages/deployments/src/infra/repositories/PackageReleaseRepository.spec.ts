@@ -381,50 +381,57 @@ describe('PackageReleaseRepository', () => {
       await repository.createWithVersions(releaseOf('5.0.0'), pinnedVersions());
     });
 
-    it('issues one statement when listing a package history', async () => {
-      fixture.queries.reset();
+    describe('when listing a package history', () => {
+      beforeEach(async () => {
+        fixture.queries.reset();
 
-      await repository.findByPackageId(pkg.id);
+        await repository.findByPackageId(pkg.id);
+      });
 
-      expect(fixture.queries.queries).toHaveLength(1);
+      it('issues one statement', () => {
+        expect(fixture.queries.queries).toHaveLength(1);
+      });
+
+      it('reads no artefact family', () => {
+        expect(
+          fixture.queries.countMatching(/"(command|standard|skill)_versions"/),
+        ).toBe(0);
+      });
     });
 
-    it('reads no artefact family when listing a package history', async () => {
-      fixture.queries.reset();
+    describe('when reading a release by version', () => {
+      beforeEach(async () => {
+        fixture.queries.reset();
 
-      await repository.findByPackageId(pkg.id);
+        await repository.findByPackageIdAndVersion(pkg.id, '5.0.0');
+      });
 
-      expect(
-        fixture.queries.countMatching(/"(command|standard|skill)_versions"/),
-      ).toBe(0);
+      it('never reads two artefact families in one statement', () => {
+        expect(statementsReadingTwoFamilies()).toEqual([]);
+      });
+
+      it('reads no command body, standard description or skill prompt', () => {
+        expect([
+          fixture.queries.countMatching('"recipeVersion"."content"'),
+          fixture.queries.countMatching('"standardVersion"."description"'),
+          fixture.queries.countMatching('"skillVersion"."prompt"'),
+        ]).toEqual([0, 0, 0]);
+      });
     });
 
-    it('never reads two artefact families in one statement', async () => {
-      fixture.queries.reset();
+    describe('when cutting a release', () => {
+      beforeEach(async () => {
+        fixture.queries.reset();
 
-      await repository.findByPackageIdAndVersion(pkg.id, '5.0.0');
+        await repository.createWithVersions(
+          releaseOf('5.1.0'),
+          pinnedVersions(),
+        );
+      });
 
-      expect(statementsReadingTwoFamilies()).toEqual([]);
-    });
-
-    it('reads no command body, standard description or skill prompt', async () => {
-      fixture.queries.reset();
-
-      await repository.findByPackageIdAndVersion(pkg.id, '5.0.0');
-
-      expect([
-        fixture.queries.countMatching('"recipeVersion"."content"'),
-        fixture.queries.countMatching('"standardVersion"."description"'),
-        fixture.queries.countMatching('"skillVersion"."prompt"'),
-      ]).toEqual([0, 0, 0]);
-    });
-
-    it('reads back no pin when cutting a release', async () => {
-      fixture.queries.reset();
-
-      await repository.createWithVersions(releaseOf('5.1.0'), pinnedVersions());
-
-      expect(statementsReadingTwoFamilies()).toEqual([]);
+      it('reads back no pin', () => {
+        expect(statementsReadingTwoFamilies()).toEqual([]);
+      });
     });
   });
 
