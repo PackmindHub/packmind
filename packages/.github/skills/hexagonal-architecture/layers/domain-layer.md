@@ -80,8 +80,9 @@ export type GenerateStandardSummaryInput = {
 
 ## Errors
 
-`errors/` holds one base class per package plus a named subclass per failure. The base
-`implements DomainError` from `@packmind/types`; each subclass fixes its own `kind`,
+`errors/` holds one base class per error family the package raises — `git` keeps an
+internal and an upstream base side by side — plus a named subclass per failure. The domain
+base `implements DomainError` from `@packmind/types`; each subclass fixes its own `kind`,
 `reason` and user-facing message, and the constructor takes the ids that go into `context`.
 
 ```typescript
@@ -108,14 +109,27 @@ error with the **same** message, thrown from a **single** branch — two branche
 the moment one message is edited, and a distinct message tells an outsider the resource
 exists. Use `kind: 'not_found'` for cross-tenant, never `forbidden`.
 
-Broken invariants the caller cannot correct extend `PackmindInternalError` instead, keeping
-the 500, the stack and the withheld message. Do not use `Object.setPrototypeOf`.
+The base to extend is chosen by **fault**, and there are three. A failure the caller caused
+and can correct is a domain error, as above. A broken invariant the caller could not have
+caused extends `PackmindInternalError`, keeping the 500, the stack and the withheld message.
+A failure that belongs to a third party — GitHub or GitLab refusing, timing out, or
+answering something we cannot read — extends the package's `PackmindUpstreamError` base:
+`packages/git/src/domain/errors/GitUpstreamError.ts` is the model, and
+`GithubRateLimitedError.ts` beside it shows the throttle case, passing `retryAfterSeconds`
+so the filter can emit `Retry-After`.
+
+An upstream error's message **is** returned to the caller — the opposite of the internal
+rule just above. "GitHub is rate limiting us, try again shortly" is exactly what the user
+needs to read and discloses nothing about our internals; ids still belong in `context`.
+
+Do not use `Object.setPrototypeOf`.
 
 ## Rules
 
 1. **No imports from `application/` or `infra/`** — dependency flows inward only
 2. **No framework imports** — no TypeORM, no NestJS, no BullMQ. `DomainError` /
-   `DomainErrorKind` / `PackmindInternalError` from `@packmind/types` are not framework
-   imports and are allowed here
+   `DomainErrorKind` / `PackmindInternalError` / `UpstreamError` / `UpstreamErrorKind` /
+   `PackmindUpstreamError` from `@packmind/types` are not framework imports and are allowed
+   here
 3. **Interfaces only for ports** — implementations live in other layers
 4. **Types from `@packmind/types`** — shared entity types are defined centrally

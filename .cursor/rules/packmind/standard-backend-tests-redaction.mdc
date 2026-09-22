@@ -1,5 +1,5 @@
 ---
-globs: **/*.spec.ts
+globs: apps/api/**/*.spec.ts,packages/**/*.spec.ts
 alwaysApply: false
 ---
 # Standard: Backend Tests Redaction
