@@ -607,7 +607,7 @@ describe('OrganizationsController', () => {
     });
 
     describe('when the adapter throws InvalidArtifactIdError', () => {
-      it('translates it to a BadRequestException', async () => {
+      it('lets the error through for the filter to answer', async () => {
         mockDeploymentAdapter.getContentByVersions.mockRejectedValue(
           new InvalidArtifactIdError('packmind-cli-list-commands'),
         );
@@ -616,10 +616,10 @@ describe('OrganizationsController', () => {
           controller.getContentByVersions(orgId, mockRequest, {
             artifacts: defaultArtifacts,
           }),
-        ).rejects.toBeInstanceOf(BadRequestException);
+        ).rejects.toBeInstanceOf(InvalidArtifactIdError);
       });
 
-      it('includes the invalid id in the BadRequestException message', async () => {
+      it('includes the invalid id in the message', async () => {
         mockDeploymentAdapter.getContentByVersions.mockRejectedValue(
           new InvalidArtifactIdError('packmind-cli-list-commands'),
         );

@@ -1,4 +1,4 @@
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError } from '@packmind/types';
 
 /**
  * The command named no package to act on.

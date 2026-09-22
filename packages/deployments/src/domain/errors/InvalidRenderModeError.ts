@@ -1,4 +1,4 @@
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError } from '@packmind/types';
 
 /**
  * The command asked for a render mode that is not one this deployment accepts.

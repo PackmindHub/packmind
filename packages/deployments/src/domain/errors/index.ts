@@ -2,7 +2,6 @@ export * from './ArtefactNotInSpaceError';
 export * from './ArtefactsMoveFailedError';
 export * from './DefaultSkillIdMissingError';
 export * from './DeploymentsAdapterErrors';
-export * from './DeploymentsError';
 export * from './DeploymentsInternalError';
 export * from './GitRepositoryNotFoundError';
 export * from './InvalidRenderModeError';

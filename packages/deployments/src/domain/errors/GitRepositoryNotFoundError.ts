@@ -1,4 +1,4 @@
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError } from '@packmind/types';
 
 /**
  * The git repository a target points at does not exist, or it is not

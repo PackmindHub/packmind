@@ -13,7 +13,6 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   IPullContentResponse,
   InstallPackagesResponse,
-  InvalidArtifactIdError,
   ListPackagesResponse,
   GetPackageSummaryResponse,
   IAccountsPort,
@@ -323,10 +322,6 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
-
-      if (error instanceof InvalidArtifactIdError) {
-        throw new BadRequestException(error.message);
-      }
 
       throw error;
     }

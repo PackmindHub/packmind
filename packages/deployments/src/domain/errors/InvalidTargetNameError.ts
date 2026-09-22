@@ -1,4 +1,4 @@
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError } from '@packmind/types';
 
 /**
  * The target was given no name, or a name that is only whitespace.

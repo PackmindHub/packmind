@@ -1,4 +1,5 @@
-import { ArtifactType, DomainError, DomainErrorKind } from '@packmind/types';
+import { DomainError, DomainErrorKind } from '../../errors';
+import { ArtifactType } from '../FileUpdates';
 
 export type DeploymentsErrorReason =
   | 'space_not_accessible'
@@ -15,7 +16,9 @@ export type DeploymentsErrorReason =
   | 'root_target_not_deletable'
   | 'no_targets_provided'
   | 'no_packages_provided'
-  | 'invalid_render_mode';
+  | 'invalid_render_mode'
+  | 'invalid_artifact_id'
+  | 'package_not_publishable_as_plugin';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;
@@ -29,13 +32,20 @@ export type DeploymentsErrorContext = {
   gitRepoId?: string;
   path?: string;
   renderMode?: string;
+  packageSlug?: string;
 };
 
 /**
- * Base for the deployments domain errors, in the same shape as
- * `UserAccessError`: the `kind` decides the HTTP answer, the literal `reason`
- * is what a client branches on, and `context` carries the ids for the log
- * instead of only being interpolated into the message.
+ * Base for the deployments domain errors, in the same shape as `GitError`:
+ * the `kind` decides the HTTP answer, the literal `reason` is what a client
+ * branches on, and `context` carries the ids for the log instead of only
+ * being interpolated into the message.
+ *
+ * It lives here rather than in `packages/deployments` because two of its
+ * subclasses do: an error class consumed across the API boundary has to sit
+ * in a package the browser side may also reach. Its internal sibling,
+ * `DeploymentsInternalError`, stays inside the package — nothing outside
+ * branches on a broken invariant.
  */
 export class DeploymentsError extends Error implements DomainError {
   readonly kind: DomainErrorKind;

@@ -1,5 +1,4 @@
 import { createMockInstance } from '@packmind/test-utils';
-import { BadRequestException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
 import {
@@ -130,11 +129,6 @@ describe('PluginsController', () => {
     });
 
     describe('when the package holds only standards', () => {
-      // A standards-only package is a user mistake, not a server fault: the
-      // CLI (`packmind plugins render`) has no client-side gate, so this is
-      // the one path where the domain error is reachable. Left unmapped it
-      // escapes as a 500 whose body is the opaque "Internal server error",
-      // hiding the explanatory message the error already carries.
       let thrown: unknown;
 
       beforeEach(async () => {
@@ -147,17 +141,19 @@ describe('PluginsController', () => {
           .catch((error: unknown) => error);
       });
 
-      it('translates PackageNotPublishableAsPluginError to a BadRequestException', () => {
-        expect(thrown).toBeInstanceOf(BadRequestException);
+      it('lets PackageNotPublishableAsPluginError through for the filter', () => {
+        expect(thrown).toBeInstanceOf(PackageNotPublishableAsPluginError);
+      });
+
+      it('answers conflict, since the package contents rule the publish out', () => {
+        expect((thrown as PackageNotPublishableAsPluginError).kind).toBe(
+          'conflict',
+        );
       });
 
       it('keeps the domain error message so the CLI can show it', () => {
-        expect((thrown as BadRequestException).getResponse()).toEqual(
-          expect.objectContaining({
-            statusCode: 400,
-            message:
-              'Cannot publish: package "Security" has no skill or command. A marketplace plugin needs at least one skill or command — standards alone are not enough.',
-          }),
+        expect((thrown as Error).message).toBe(
+          'Cannot publish: package "Security" has no skill or command. A marketplace plugin needs at least one skill or command — standards alone are not enough.',
         );
       });
     });

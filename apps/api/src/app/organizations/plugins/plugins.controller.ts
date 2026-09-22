@@ -1,18 +1,9 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Param,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   MarketplaceVendor,
   OrganizationId,
-  PackageNotPublishableAsPluginError,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginMode,
   RenderPackageAsPluginResponse,
@@ -91,13 +82,6 @@ export class PluginsController {
 
       return response;
     } catch (error) {
-      // A standards-only package is a caller mistake, not a server fault. The
-      // CLI has no client-side gate (unlike the marketplace publish UI), so
-      // this is where the error surfaces; left unmapped it escapes as a 500
-      // whose opaque body hides the message the error already carries.
-      if (error instanceof PackageNotPublishableAsPluginError) {
-        throw new BadRequestException(error.message);
-      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(

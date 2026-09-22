@@ -1,6 +1,4 @@
-import { PackageReleaseRefusalCode } from '@packmind/types';
-
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError, PackageReleaseRefusalCode } from '@packmind/types';
 
 /**
  * A cut the server refused: the request is well-formed, and the current state
