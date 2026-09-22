@@ -11,9 +11,12 @@ import { InvalidPackageReleaseVersionError } from './InvalidPackageReleaseVersio
  * Returns null when it may, or the refusal that applies.
  *
  * `currentVersion` is '0.0.0' for a package that has never been released.
+ *
+ * `submitted` is `unknown` because it reaches the API straight from a request
+ * body: anything that is not an X.Y.Z string is refused as 'malformed'.
  */
 export const validatePackageReleaseVersion = (
-  submitted: string,
+  submitted: unknown,
   currentVersion: string,
 ): PackageReleaseRefusal | null => {
   // Check 1: submitted does not parse → 'malformed'

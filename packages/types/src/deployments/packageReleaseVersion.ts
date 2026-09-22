@@ -11,9 +11,15 @@ export const PACKAGE_RELEASE_VERSION_PATTERN =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 // Returns null for anything the pattern refuses. Never throws.
+// Takes `unknown` on purpose: the version reaches the API as an unvalidated
+// request body, so a non-string is a malformed version, not a crash.
 export const parsePackageReleaseVersion = (
-  value: string,
+  value: unknown,
 ): PackageReleaseVersion | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
   const match = value.match(PACKAGE_RELEASE_VERSION_PATTERN);
   if (!match) {
     return null;

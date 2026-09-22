@@ -52,6 +52,26 @@ describe('packageReleaseVersion', () => {
     it('returns null for the empty string', () => {
       expect(parsePackageReleaseVersion('')).toBeNull();
     });
+
+    it('returns null for undefined', () => {
+      expect(parsePackageReleaseVersion(undefined)).toBeNull();
+    });
+
+    it('returns null for null', () => {
+      expect(parsePackageReleaseVersion(null)).toBeNull();
+    });
+
+    it('returns null for a number', () => {
+      expect(parsePackageReleaseVersion(123)).toBeNull();
+    });
+
+    it('returns null for an object', () => {
+      expect(parsePackageReleaseVersion({ major: 1 })).toBeNull();
+    });
+
+    it('returns null for an array', () => {
+      expect(parsePackageReleaseVersion(['1.2.3'])).toBeNull();
+    });
   });
 
   describe('formatPackageReleaseVersion', () => {

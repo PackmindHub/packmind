@@ -33,6 +33,16 @@ describe('packageReleaseVersionRules', () => {
       expect(validatePackageReleaseVersion('', '0.0.0')).toBe('malformed');
     });
 
+    it('refuses a missing version', () => {
+      expect(validatePackageReleaseVersion(undefined, '0.0.0')).toBe(
+        'malformed',
+      );
+    });
+
+    it('refuses a non-string version', () => {
+      expect(validatePackageReleaseVersion(123, '0.0.0')).toBe('malformed');
+    });
+
     it('refuses surrounding whitespace', () => {
       expect(validatePackageReleaseVersion(' 1.2.3 ', '0.0.0')).toBe(
         'malformed',
