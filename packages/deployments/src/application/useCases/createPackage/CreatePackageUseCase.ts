@@ -15,6 +15,8 @@ import {
   createPackageId,
   createUserId,
 } from '@packmind/types';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
@@ -63,14 +65,8 @@ export class CreatePackageUseCase
     });
 
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== command.organizationId) {
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${command.organizationId}`,
-      );
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new SpaceNotAccessibleError(spaceId, command.organizationId);
     }
 
     this.logger.info('Generating slug from package name', { name });
@@ -106,13 +102,8 @@ export class CreatePackageUseCase
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
-        if (!recipe) {
-          throw new Error(`Recipe with id ${recipeIds[i]} not found`);
-        }
-        if (recipe.spaceId !== spaceId) {
-          throw new Error(
-            `Recipe ${recipeIds[i]} does not belong to space ${spaceId}`,
-          );
+        if (!recipe || recipe.spaceId !== spaceId) {
+          throw new ArtefactNotInSpaceError('command', recipeIds[i], spaceId);
         }
       }
     }
@@ -126,12 +117,11 @@ export class CreatePackageUseCase
 
       for (let i = 0; i < standards.length; i++) {
         const standard = standards[i];
-        if (!standard) {
-          throw new Error(`Standard with id ${standardIds[i]} not found`);
-        }
-        if (standard.spaceId !== spaceId) {
-          throw new Error(
-            `Standard ${standardIds[i]} does not belong to space ${spaceId}`,
+        if (!standard || standard.spaceId !== spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'standard',
+            standardIds[i],
+            spaceId,
           );
         }
       }
@@ -144,13 +134,8 @@ export class CreatePackageUseCase
 
       for (let i = 0; i < skills.length; i++) {
         const skill = skills[i];
-        if (!skill) {
-          throw new Error(`Skill with id ${skillIds[i]} not found`);
-        }
-        if (skill.spaceId !== spaceId) {
-          throw new Error(
-            `Skill ${skillIds[i]} does not belong to space ${spaceId}`,
-          );
+        if (!skill || skill.spaceId !== spaceId) {
+          throw new ArtefactNotInSpaceError('skill', skillIds[i], spaceId);
         }
       }
     }

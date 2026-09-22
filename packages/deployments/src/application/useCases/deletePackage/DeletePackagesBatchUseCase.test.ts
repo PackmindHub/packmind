@@ -12,6 +12,7 @@ import {
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
 } from '@packmind/types';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 
 describe('DeletePackagesBatchUseCase', () => {
   let usecase: DeletePackagesBatchUseCase;
@@ -190,9 +191,7 @@ describe('DeletePackagesBatchUseCase', () => {
       });
 
       it('throws a not found error', async () => {
-        await expect(executePromise).rejects.toThrow(
-          `Package ${packageId2} not found`,
-        );
+        await expect(executePromise).rejects.toThrow(PackageNotFoundError);
       });
 
       it('calls findByIdInOrganization for both packages', async () => {
@@ -245,10 +244,8 @@ describe('DeletePackagesBatchUseCase', () => {
         executePromise = usecase.execute(command);
       });
 
-      it('throws an error about wrong space', async () => {
-        await expect(executePromise).rejects.toThrow(
-          `Package ${packageId2} does not belong to space ${correctSpaceId}`,
-        );
+      it('reads exactly like a package that was never there', async () => {
+        await expect(executePromise).rejects.toThrow(PackageNotFoundError);
       });
 
       it('calls findByIdInOrganization for both packages', async () => {
@@ -358,9 +355,7 @@ describe('DeletePackagesBatchUseCase', () => {
       });
 
       it('throws error for missing package', async () => {
-        await expect(executePromise).rejects.toThrow(
-          `Package ${packageId3} not found`,
-        );
+        await expect(executePromise).rejects.toThrow(PackageNotFoundError);
       });
 
       it('does not call deletePackages', async () => {

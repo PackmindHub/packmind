@@ -8,6 +8,7 @@ import {
   SummarizedArtifact,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 
 const origin = 'GetPackageSummaryUseCase';
 
@@ -44,7 +45,7 @@ export class GetPackageSummaryUseCase
           );
 
     if (packages.length === 0) {
-      throw new Error(`Package '${command.slug}' does not exist`);
+      throw new PackagesNotFoundError([command.slug]);
     }
 
     const pkg = packages[0];
