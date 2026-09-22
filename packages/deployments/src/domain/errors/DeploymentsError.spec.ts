@@ -1,18 +1,23 @@
 import { isDomainError, isInternalError } from '@packmind/types';
 import { ArtefactNotInSpaceError } from './ArtefactNotInSpaceError';
+import { NoFileUpdatesResolvedError } from './NoFileUpdatesResolvedError';
 import { NoPackageSlugsProvidedError } from './NoPackageSlugsProvidedError';
+import { NoPackagesProvidedError } from './NoPackagesProvidedError';
+import { NoTargetsProvidedError } from './NoTargetsProvidedError';
 import { GitRepositoryNotFoundError } from './GitRepositoryNotFoundError';
 import { InvalidTargetNameError } from './InvalidTargetNameError';
 import { InvalidTargetPathError } from './InvalidTargetPathError';
 import { PackageComponentHasNoVersionError } from './PackageComponentHasNoVersionError';
 import { PackageNotFoundError } from './PackageNotFoundError';
 import { PackageReleaseNotFoundError } from './PackageReleaseNotFoundError';
+import { PackageSpaceMissingError } from './PackageSpaceMissingError';
 import { PackageReleaseNotPersistedError } from './PackageReleaseNotPersistedError';
 import { PackageReleaseRefusedError } from './PackageReleaseRefusedError';
 import { PackageReloadFailedError } from './PackageReloadFailedError';
 import { PackagesNotFoundError } from './PackagesNotFoundError';
 import { RootTargetNotDeletableError } from './RootTargetNotDeletableError';
 import { SpaceNotAccessibleError } from './SpaceNotAccessibleError';
+import { TargetResolutionMissingError } from './TargetResolutionMissingError';
 import { TargetNotFoundError } from './TargetNotFoundError';
 
 describe('SpaceNotAccessibleError', () => {
@@ -318,5 +323,76 @@ describe('RootTargetNotDeletableError', () => {
 
   it('keeps the target in the context', () => {
     expect(error.context).toEqual({ targetId: 'target-1' });
+  });
+});
+
+describe.each([
+  ['NoTargetsProvidedError', new NoTargetsProvidedError()],
+  ['NoPackagesProvidedError', new NoPackagesProvidedError()],
+] as const)('%s', (_name, error) => {
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers invalid_input, since it does not depend on stored state', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+});
+
+describe('PackageSpaceMissingError', () => {
+  const error = new PackageSpaceMissingError('pkg-1', 'space-1');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error, so a dangling reference is never a 404', () => {
+    expect(isDomainError(error)).toBe(false);
+  });
+
+  it('keeps both ends of the dangling reference in the context', () => {
+    expect(error.context).toEqual({ packageId: 'pkg-1', spaceId: 'space-1' });
+  });
+});
+
+describe('NoFileUpdatesResolvedError', () => {
+  const error = new NoFileUpdatesResolvedError('pkg-1');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('keeps the package in the context', () => {
+    expect(error.context).toEqual({ packageId: 'pkg-1' });
+  });
+
+  describe('when raised from a path with no package in hand', () => {
+    it('carries an empty context rather than an undefined id', () => {
+      expect(new NoFileUpdatesResolvedError().context).toEqual({});
+    });
+  });
+});
+
+describe('TargetResolutionMissingError', () => {
+  const error = new TargetResolutionMissingError('removal_data', 'target-1');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('names which resolution dropped the target in the context', () => {
+    expect(error.context).toEqual({
+      targetId: 'target-1',
+      stage: 'removal_data',
+    });
+  });
+
+  describe('when the artifact resolution is the one that dropped it', () => {
+    it('reads differently, so the log says where the two diverged', () => {
+      expect(
+        new TargetResolutionMissingError('artifact_resolution', 'target-1')
+          .message,
+      ).not.toBe(error.message);
+    });
   });
 });

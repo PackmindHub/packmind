@@ -12,7 +12,9 @@ export type DeploymentsErrorReason =
   | 'invalid_target_name'
   | 'invalid_target_path'
   | 'git_repository_not_found'
-  | 'root_target_not_deletable';
+  | 'root_target_not_deletable'
+  | 'no_targets_provided'
+  | 'no_packages_provided';
 
 export type DeploymentsErrorContext = {
   organizationId?: string;

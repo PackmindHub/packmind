@@ -6,7 +6,10 @@ export type DeploymentsInternalErrorReason =
   | 'artefacts_move_failed'
   | 'package_reload_failed'
   | 'package_release_not_persisted'
-  | 'package_component_has_no_version';
+  | 'package_component_has_no_version'
+  | 'package_space_missing'
+  | 'no_file_updates_resolved'
+  | 'target_resolution_missing';
 
 export type DeploymentsInternalErrorContext = {
   packageId?: string;
@@ -17,6 +20,7 @@ export type DeploymentsInternalErrorContext = {
   family?: ComponentFamily;
   reverted?: boolean;
   cause?: string;
+  stage?: 'removal_data' | 'artifact_resolution';
 };
 
 /**
