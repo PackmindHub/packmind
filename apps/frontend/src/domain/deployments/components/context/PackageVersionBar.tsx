@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  PMBadge,
   PMBox,
   PMButton,
   PMHStack,
@@ -145,11 +144,17 @@ function VersionRef({
   readingVersion: string | null;
   onReadVersion: (version: string | null) => void;
 }>) {
+  /*
+   * A sentence, not a badge, and not a menu: a package with no release has one
+   * state and nothing to switch to. It was a bordered badge, which beside the
+   * action put two rounded rectangles of the same size in a row, one of them a
+   * control and one of them not, and the fact read as a disabled button.
+   */
   if (releases.length === 0) {
     return (
-      <PMBadge variant="outline" size="sm">
+      <PMText fontSize="xs" color="secondary">
         {PACKAGE_MESSAGES.release.notReleasedYet}
-      </PMBadge>
+      </PMText>
     );
   }
 
@@ -255,6 +260,17 @@ function VersionState({
         {stateSentence(verdict, currentVersion)}
       </PMText>
       {/*
+        The separator the surrounding surfaces already use between two facts on
+        one line. Without it the sentence ends on a version and the disclosure
+        opens on a count, and "since 1.0.0 1 newer component" reads as one
+        number run into another.
+      */}
+      {outdatedComponents.length > 0 && (
+        <PMText fontSize="xs" color="faded" aria-hidden>
+          &middot;
+        </PMText>
+      )}
+      {/*
         `lazyMount` and `unmountOnExit` on the disclosure, because this list is
         as long as the package is behind: a header that cannot grow was carrying
         every one of these lines, and a closed disclosure that still holds them
@@ -267,13 +283,29 @@ function VersionState({
           unmountOnExit
         >
           <PMPopover.Trigger asChild>
-            <PMLink as="button" type="button" fontSize="xs" cursor="pointer">
+            <PMLink
+              as="button"
+              type="button"
+              variant="underline"
+              fontSize="xs"
+              cursor="pointer"
+            >
               {outdatedComponents.length} newer{' '}
               {outdatedComponents.length === 1 ? 'component' : 'components'}
             </PMLink>
           </PMPopover.Trigger>
           <PMPopover.Positioner>
-            <PMPopover.Content width="22rem">
+            {/*
+              Its own surface and border. The default content is close enough
+              in tone to the page that the list read as printed on it rather
+              than over it, which is the one thing an overlay has to say.
+            */}
+            <PMPopover.Content
+              width="22rem"
+              bg="background.primary"
+              borderWidth="1px"
+              borderColor="border.tertiary"
+            >
               <PMPopover.Arrow>
                 <PMPopover.ArrowTip />
               </PMPopover.Arrow>
