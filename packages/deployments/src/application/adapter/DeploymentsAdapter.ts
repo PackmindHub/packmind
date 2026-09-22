@@ -32,7 +32,6 @@ import {
   DeleteTargetResponse,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  Distribution,
   DistributionHistoryEntry,
   DownloadSkillZipForAgentCommand,
   DownloadSkillZipForAgentResponse,
@@ -86,6 +85,9 @@ import {
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
+  ListDistributionsByStandardResponse,
+  ListDistributionsBySkillResponse,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   ListPackagesCommand,
@@ -693,19 +695,19 @@ export class DeploymentsAdapter
 
   listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     return this._listDistributionsByCommandUseCase.execute(command);
   }
 
   listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     return this._listDistributionsByStandardUseCase.execute(command);
   }
 
   listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     return this._listDistributionsBySkillUseCase.execute(command);
   }
 

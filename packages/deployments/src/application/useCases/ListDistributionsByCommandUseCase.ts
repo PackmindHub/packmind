@@ -1,7 +1,7 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationId,
-  Distribution,
+  ListDistributionsByCommandResponse,
   IListDistributionsByCommand,
   ListDistributionsByCommandCommand,
 } from '@packmind/types';
@@ -11,11 +11,11 @@ export class ListDistributionsByCommandUseCase implements IListDistributionsByCo
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(
-      'ListDistributionsByRecipeUseCase',
+      'ListDistributionsByCommandUseCase',
       LogLevel.INFO,
     ),
   ) {
-    this.logger.info('ListDistributionsByRecipeUseCase initialized');
+    this.logger.info('ListDistributionsByCommandUseCase initialized');
   }
 
   /**
@@ -25,7 +25,7 @@ export class ListDistributionsByCommandUseCase implements IListDistributionsByCo
    */
   public async execute(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     this.logger.info('Listing distributions for recipe', {
       recipeId: command.recipeId,
       organizationId: command.organizationId,

@@ -1,7 +1,7 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationId,
-  Distribution,
+  ListDistributionsBySkillResponse,
   IListDistributionsBySkill,
   ListDistributionsBySkillCommand,
 } from '@packmind/types';
@@ -25,7 +25,7 @@ export class ListDistributionsBySkillUseCase implements IListDistributionsBySkil
    */
   public async execute(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     this.logger.info('Listing distributions for skill', {
       skillId: command.skillId,
       organizationId: command.organizationId,

@@ -3,6 +3,7 @@ import { localDataSource, getErrorMessage } from '@packmind/node-utils';
 import {
   Distribution,
   DistributedPackage,
+  CommandDistributionHistoryEntry,
   DistributionHistoryEntry,
   DistributionId,
   DistributionOperation,
@@ -14,9 +15,11 @@ import {
   CommandId,
   CommandVersion,
   RenderMode,
+  SkillDistributionHistoryEntry,
   SkillId,
   SkillVersion,
   SpaceId,
+  StandardDistributionHistoryEntry,
   StandardId,
   StandardVersion,
   TargetId,
@@ -286,7 +289,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listByCommandId(
     commandId: CommandId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<CommandDistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by command ID and organization ID',
       {
@@ -303,10 +306,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
         .innerJoinAndSelect(
           'distributedPackage.recipeVersions',
           'commandVersion',
@@ -348,7 +347,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listByStandardId(
     standardId: StandardId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<StandardDistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by standard ID and organization ID',
       {
@@ -369,11 +368,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -932,7 +926,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listBySkillId(
     skillId: SkillId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<SkillDistributionHistoryEntry[]> {
     this.logger.info('Listing distributions by skill ID and organization ID', {
       skillId,
       organizationId,
@@ -946,14 +940,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
         .innerJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')

@@ -17,10 +17,13 @@ import {
 import { LuInfo } from 'react-icons/lu';
 import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import {
-  Distribution,
+  CommandDistributionHistoryEntry,
+  DistributedPackageHistoryEntry,
   DistributionHistoryEntry,
+  DistributionHistoryEntryOf,
   RenderMode,
-  DistributedPackage,
+  SkillDistributionHistoryEntry,
+  StandardDistributionHistoryEntry,
 } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
@@ -44,7 +47,9 @@ type DeploymentsHistoryProps = {
   hideVersionColumn?: boolean;
 } & (
   | { type: 'package'; deployments: DistributionHistoryEntry[] }
-  | { type: Exclude<DeploymentType, 'package'>; deployments: Distribution[] }
+  | { type: 'command'; deployments: CommandDistributionHistoryEntry[] }
+  | { type: 'standard'; deployments: StandardDistributionHistoryEntry[] }
+  | { type: 'skill'; deployments: SkillDistributionHistoryEntry[] }
 );
 
 type HistoryRow = {
@@ -144,34 +149,28 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
-  const getVersion = (deployment: Distribution) => {
-    // Search through all distributed packages for the version
-    for (const dp of deployment.distributedPackages || []) {
-      if (type === 'command') {
-        const commandVersion = dp.recipeVersions?.find(
-          (v) => v.recipeId === entityId,
-        );
-        if (commandVersion) {
-          return commandVersion.version;
-        }
-      } else if (type === 'standard') {
-        const standardVersion = dp.standardVersions?.find(
-          (v) => v.standardId === entityId,
-        );
-        if (standardVersion) {
-          return standardVersion.version;
-        }
-      } else if (type === 'skill') {
-        const skillVersion = dp.skillVersions?.find(
-          (v) => v.skillId === entityId,
-        );
-        if (skillVersion) {
-          return skillVersion.version;
-        }
+  /**
+   * The row for one distribution in an artifact's history, read from the first
+   * distributed package carrying a version of that artifact: no version and no
+   * removal when none does. The version column and the Removed badge both
+   * describe that same package, so they are read in one pass.
+   */
+  const artifactHistoryRow = <DP extends DistributedPackageHistoryEntry>(
+    deployment: DistributionHistoryEntryOf<DP>,
+    versionIn: (distributedPackage: DP) => { version: number } | undefined,
+  ): HistoryRow => {
+    for (const dp of deployment.distributedPackages) {
+      const carried = versionIn(dp);
+      if (carried) {
+        return {
+          deployment,
+          version: carried.version,
+          removed: dp.operation === 'remove',
+        };
       }
     }
 
-    return '-';
+    return { deployment, version: '-', removed: false };
   };
 
   /*
@@ -367,30 +366,6 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return packages.map((pkg) => pkg!.name).join(', ');
   };
 
-  /** Whether this event took the artifact out of the target rather than put it in. */
-  const isRemoval = (deployment: Distribution): boolean => {
-    let distributedPackage: DistributedPackage | undefined;
-
-    if (type === 'command') {
-      distributedPackage = deployment.distributedPackages?.find(
-        (dp: DistributedPackage) =>
-          dp.recipeVersions?.some((cv) => cv.recipeId === entityId),
-      );
-    } else if (type === 'standard') {
-      distributedPackage = deployment.distributedPackages?.find(
-        (dp: DistributedPackage) =>
-          dp.standardVersions?.some((sv) => sv.standardId === entityId),
-      );
-    } else if (type === 'skill') {
-      distributedPackage = deployment.distributedPackages?.find(
-        (dp: DistributedPackage) =>
-          dp.skillVersions?.some((sv) => sv.skillId === entityId),
-      );
-    }
-
-    return distributedPackage?.operation === 'remove';
-  };
-
   const baseColumns: PMTableColumn[] = [
     ...(hideVersionColumn
       ? []
@@ -432,12 +407,24 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         deployment.distributedPackages.find((dp) => dp.packageId === entityId)
           ?.operation === 'remove',
     }));
+  } else if (type === 'command') {
+    rows = deployments.map((deployment) =>
+      artifactHistoryRow(deployment, (dp) =>
+        dp.recipeVersions.find((version) => version.recipeId === entityId),
+      ),
+    );
+  } else if (type === 'standard') {
+    rows = deployments.map((deployment) =>
+      artifactHistoryRow(deployment, (dp) =>
+        dp.standardVersions.find((version) => version.standardId === entityId),
+      ),
+    );
   } else {
-    rows = deployments.map((deployment) => ({
-      deployment,
-      version: getVersion(deployment),
-      removed: isRemoval(deployment),
-    }));
+    rows = deployments.map((deployment) =>
+      artifactHistoryRow(deployment, (dp) =>
+        dp.skillVersions.find((version) => version.skillId === entityId),
+      ),
+    );
   }
 
   const tableData: PMTableRow[] = rows.map(

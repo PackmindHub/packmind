@@ -1,6 +1,9 @@
 import {
   Distribution,
+  CommandDistributionHistoryEntry,
   DistributionHistoryEntry,
+  SkillDistributionHistoryEntry,
+  StandardDistributionHistoryEntry,
   DistributionId,
   DistributionStatus,
   GitCommit,
@@ -45,17 +48,17 @@ export interface IDistributionRepository {
   listByCommandId(
     commandId: CommandId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<CommandDistributionHistoryEntry[]>;
 
   listByStandardId(
     standardId: StandardId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<StandardDistributionHistoryEntry[]>;
 
   listBySkillId(
     skillId: SkillId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<SkillDistributionHistoryEntry[]>;
 
   listByTargetIds(
     organizationId: OrganizationId,
