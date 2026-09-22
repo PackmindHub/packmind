@@ -24,7 +24,9 @@ These are alternative distribution methods—you can choose the approach that fi
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
 3. Provide a name and description
-4. Select commands, standards, and skills to include
+4. Select commands, standards, and skills to include — only items that belong
+   to no package can be picked here, see
+   [Choosing Items](#choosing-items-when-you-create-or-edit-a-package)
 5. Save the package
 
 ### Via CLI
@@ -39,33 +41,65 @@ See the [CLI documentation](/tools/cli#packages-command) for details.
 
 ### Adding Items to Packages
 
-There are two ways to add items to packages:
-
-- **Via CLI** — Use `packmind packages add` to add existing standards, commands, or skills to a package:
-  ```bash
-  packmind packages add --to backend --standard error-handling
-  packmind packages add --to backend --command create-api-endpoint
-  packmind packages add --to backend --skill debugging-workflow
-  ```
-- **Via Web Interface** — Add items to packages through the Packmind UI
-
 <Note>
-  An item belongs to a single package. `packmind packages add` refuses an item
-  that already belongs to another package and points you at `packmind packages
-  move`, which relocates it in one step.
+  An item belongs to a single package. Putting an item in a package takes it out
+  of the one it was in.
 </Note>
 
-### Moving and Removing Items
+**Via Web Interface** — from the list of standards, commands, or skills:
 
-- **`packmind packages move`** puts an item in a package and takes it out of every other one:
-  ```bash
-  packmind packages move --to backend --command create-api-endpoint
-  ```
-- **`packmind packages remove`** takes an item out of a package without adding it anywhere:
+1. Select one or more items
+2. Click **Manage packages**
+3. Under **Move to a package**, pick the destination
+
+Each package in that list says what picking it would do. **Moves 2, Adds 1**
+means two of the selected items come from another package and one is in no
+package yet; hover the count to see which items those are.
+
+You can do the same for a single item from its own page, using the package
+control at the top: it reads **In 1 package**, or **Add to a package** when the
+item belongs to none.
+
+**Via CLI** — use `packmind packages add` for an item that is in no package,
+and `packmind packages move` to take one from another package:
+
+```bash
+packmind packages add --to backend --standard error-handling
+packmind packages move --to backend --command create-api-endpoint
+```
+
+`packmind packages add` refuses an item that already belongs to another package
+and prints the `move` command to run instead.
+
+<Warning>
+  Moving an item out of a package that is distributed to repositories or
+  marketplaces removes it from them. Packmind asks you to confirm first and
+  names the places affected: anyone working there loses the item at their next
+  sync.
+</Warning>
+
+### Choosing Items When You Create or Edit a Package
+
+The **Standards**, **Commands**, and **Skills** dropdowns of a package form only
+offer items that belong to no package. An item another package holds is greyed
+out and labelled with the package holding it — move it from the item's own page,
+or from the list of items, to bring it here.
+
+Items already in the package you are editing stay selectable, so you can always
+take one out.
+
+### Removing Items from a Package
+
+An item that belongs to no package is not installed or distributed anywhere, so
+Packmind always tells you where the item still lives after a removal.
+
+- **Via Web Interface** — click the **×** next to a package name, either on the
+  item's row in a list or in the **In these packages** section of the
+  **Manage packages** panel
+- **Via CLI** — use `packmind packages remove`:
   ```bash
   packmind packages remove --from backend --command create-api-endpoint
   ```
-  An item that belongs to no package is not installed or distributed anywhere, so `remove` always tells you what the item still belongs to.
 
 ## Using Packages
 
