@@ -38,9 +38,12 @@ export type ComponentVersionPorts = {
 };
 
 /**
- * Resolves every component of a package to its latest version, caching per
- * component id. Reports what it could not resolve rather than throwing —
- * the cut refuses on an unresolved component, the readiness read omits it.
+ * Resolves every component of a package to its latest version. Reports what it
+ * could not resolve rather than throwing — the cut refuses on an unresolved
+ * component, the readiness read omits it.
+ *
+ * One batched call per family, in parallel: this runs on every package page
+ * open through the readiness read, not only when a release is cut.
  */
 export const resolveLatestComponentVersions = async (
   components: {
@@ -50,98 +53,50 @@ export const resolveLatestComponentVersions = async (
   },
   ports: ComponentVersionPorts,
 ): Promise<ResolvedComponentVersions> => {
+  const [commandVersions, standardVersions, skillVersions] = await Promise.all([
+    ports.commandsPort.getLatestCommandVersions(components.recipeIds),
+    ports.standardsPort.getLatestStandardVersions(components.standardIds),
+    ports.skillsPort.getLatestSkillVersions(components.skillIds),
+  ]);
+
+  const latestByCommandId = new Map(
+    commandVersions.map((version) => [version.recipeId, version]),
+  );
+  const latestByStandardId = new Map(
+    standardVersions.map((version) => [version.standardId, version]),
+  );
+  const latestBySkillId = new Map(
+    skillVersions.map((version) => [version.skillId, version]),
+  );
+
   const resolved: ResolvedComponentVersion[] = [];
   const unresolved: { family: ComponentFamily; componentId: string }[] = [];
 
-  const commandVersionCache = new Map<
-    CommandId,
-    ResolvedComponentVersion | null
-  >();
-  const standardVersionCache = new Map<
-    StandardId,
-    ResolvedComponentVersion | null
-  >();
-  const skillVersionCache = new Map<SkillId, ResolvedComponentVersion | null>();
-
-  // Resolve recipes
-  for (const recipeId of components.recipeIds) {
-    if (!commandVersionCache.has(recipeId)) {
-      const versions = await ports.commandsPort.listCommandVersions(recipeId);
-      if (versions.length > 0) {
-        const latestVersion = [...versions].sort(
-          (a, b) => b.version - a.version,
-        )[0];
-        commandVersionCache.set(recipeId, {
-          family: 'recipe',
-          componentId: recipeId,
-          name: latestVersion.name,
-          versionId: latestVersion.id,
-          versionNumber: latestVersion.version,
-        });
-      } else {
-        commandVersionCache.set(recipeId, null);
-      }
-    }
-
-    const resolved_ver = commandVersionCache.get(recipeId);
-    if (resolved_ver) {
-      resolved.push(resolved_ver);
-    } else {
-      unresolved.push({ family: 'recipe', componentId: recipeId });
-    }
-  }
-
-  // Resolve standards
-  for (const standardId of components.standardIds) {
-    if (!standardVersionCache.has(standardId)) {
-      const latestVersion =
-        await ports.standardsPort.getLatestStandardVersion(standardId);
+  // Walked family by family, in the order the callers assert on.
+  const collect = <Id extends string>(
+    family: ComponentFamily,
+    componentIds: Id[],
+    latestById: Map<Id, { id: string; name: string; version: number }>,
+  ) => {
+    for (const componentId of componentIds) {
+      const latestVersion = latestById.get(componentId);
       if (latestVersion) {
-        standardVersionCache.set(standardId, {
-          family: 'standard',
-          componentId: standardId,
+        resolved.push({
+          family,
+          componentId,
           name: latestVersion.name,
           versionId: latestVersion.id,
           versionNumber: latestVersion.version,
         });
       } else {
-        standardVersionCache.set(standardId, null);
+        unresolved.push({ family, componentId });
       }
     }
+  };
 
-    const resolved_ver = standardVersionCache.get(standardId);
-    if (resolved_ver) {
-      resolved.push(resolved_ver);
-    } else {
-      unresolved.push({ family: 'standard', componentId: standardId });
-    }
-  }
-
-  // Resolve skills
-  for (const skillId of components.skillIds) {
-    if (!skillVersionCache.has(skillId)) {
-      const latestVersion =
-        await ports.skillsPort.getLatestSkillVersion(skillId);
-      if (latestVersion) {
-        skillVersionCache.set(skillId, {
-          family: 'skill',
-          componentId: skillId,
-          name: latestVersion.name,
-          versionId: latestVersion.id,
-          versionNumber: latestVersion.version,
-        });
-      } else {
-        skillVersionCache.set(skillId, null);
-      }
-    }
-
-    const resolved_ver = skillVersionCache.get(skillId);
-    if (resolved_ver) {
-      resolved.push(resolved_ver);
-    } else {
-      unresolved.push({ family: 'skill', componentId: skillId });
-    }
-  }
+  collect('recipe', components.recipeIds, latestByCommandId);
+  collect('standard', components.standardIds, latestByStandardId);
+  collect('skill', components.skillIds, latestBySkillId);
 
   return { resolved, unresolved };
 };

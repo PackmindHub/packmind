@@ -183,23 +183,21 @@ describe('CreatePackageReleaseUseCase', () => {
     });
 
     commandsPort = {
-      listCommandVersions: jest
+      getLatestCommandVersions: jest
         .fn()
-        .mockResolvedValue([
-          buildCommandVersion(1),
-          buildCommandVersion(3),
-          buildCommandVersion(2),
-        ]),
+        .mockResolvedValue([buildCommandVersion(3)]),
     } as unknown as jest.Mocked<ICommandsPort>;
 
     standardsPort = {
-      getLatestStandardVersion: jest
+      getLatestStandardVersions: jest
         .fn()
-        .mockResolvedValue(buildStandardVersion()),
+        .mockResolvedValue([buildStandardVersion()]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     skillsPort = {
-      getLatestSkillVersion: jest.fn().mockResolvedValue(buildSkillVersion()),
+      getLatestSkillVersions: jest
+        .fn()
+        .mockResolvedValue([buildSkillVersion()]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     stubbedLogger = stubLogger();
@@ -345,7 +343,7 @@ describe('CreatePackageReleaseUseCase', () => {
 
   describe('when a command has no version', () => {
     beforeEach(() => {
-      commandsPort.listCommandVersions.mockResolvedValue([]);
+      commandsPort.getLatestCommandVersions.mockResolvedValue([]);
     });
 
     it('refuses the whole release', async () => {
@@ -361,7 +359,7 @@ describe('CreatePackageReleaseUseCase', () => {
 
   describe('when a standard has no version', () => {
     beforeEach(() => {
-      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+      standardsPort.getLatestStandardVersions.mockResolvedValue([]);
     });
 
     it('refuses the whole release', async () => {
@@ -439,7 +437,7 @@ describe('CreatePackageReleaseUseCase', () => {
 
   describe('when a component has no version at all', () => {
     const refusal = async () => {
-      commandsPort.listCommandVersions.mockResolvedValue([]);
+      commandsPort.getLatestCommandVersions.mockResolvedValue([]);
       return useCase
         .execute(buildCommand('0.1.0'))
         .catch((caught: unknown) => caught);

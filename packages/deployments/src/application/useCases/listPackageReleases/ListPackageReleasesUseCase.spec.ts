@@ -195,23 +195,21 @@ describe('ListPackageReleasesUseCase', () => {
     });
 
     commandsPort = {
-      listCommandVersions: jest
+      getLatestCommandVersions: jest
         .fn()
-        .mockResolvedValue([
-          buildCommandVersion(1),
-          buildCommandVersion(3),
-          buildCommandVersion(2),
-        ]),
+        .mockResolvedValue([buildCommandVersion(3)]),
     } as unknown as jest.Mocked<ICommandsPort>;
 
     standardsPort = {
-      getLatestStandardVersion: jest
+      getLatestStandardVersions: jest
         .fn()
-        .mockResolvedValue(buildStandardVersion()),
+        .mockResolvedValue([buildStandardVersion()]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     skillsPort = {
-      getLatestSkillVersion: jest.fn().mockResolvedValue(buildSkillVersion()),
+      getLatestSkillVersions: jest
+        .fn()
+        .mockResolvedValue([buildSkillVersion()]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     stubbedLogger = stubLogger();
@@ -420,7 +418,7 @@ describe('ListPackageReleasesUseCase', () => {
 
   describe('when a component has no version at all', () => {
     beforeEach(() => {
-      commandsPort.listCommandVersions.mockResolvedValue([]);
+      commandsPort.getLatestCommandVersions.mockResolvedValue([]);
       packageReleaseService.listReleases.mockResolvedValue([
         buildBehindRelease('0.1.0'),
       ]);
