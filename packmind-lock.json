@@ -1567,6 +1567,35 @@
         }
       ]
     },
+    "user:standard:code-comments": {
+      "name": "Code comments",
+      "type": "standard",
+      "id": "b23509db-2a8f-460f-a4a3-0ae17b57c954",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "4c075497-1d6d-452a-833f-4a56f5df8489"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-code-comments.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-code-comments.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-code-comments.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/code-comments.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:compliance-logging-personal-information": {
       "name": "Compliance - Logging Personal Information",
       "type": "standard",

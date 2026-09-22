@@ -107,6 +107,13 @@ Maintain a consistent and well-structured CHANGELOG.MD file following the Keep a
 
 Full standard is available here for further request: [Changelog](.packmind/standards/changelog.md)
 
+# Standard: Code comments
+
+When a code comment earns its place in TypeScript sources, and when the code should speak for itself :
+* Write a comment only when the code cannot carry the information itself — a non-obvious constraint, a side effect invisible at the call site, or why an alternative was rejected; never to restate what the code does.
+
+Full standard is available here for further request: [Code comments](.packmind/standards/code-comments.md)
+
 # Standard: Compliance - Logging Personal Information
 
 This standard ensures personal information is not exposed in application logs across all environments (development, staging, and production). Logs are often forwarded to external processors such as Da... :
