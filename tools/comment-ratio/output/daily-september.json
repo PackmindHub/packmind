@@ -1,0 +1,234 @@
+{
+  "generatedAt": "2026-09-23T13:01:43.953Z",
+  "around": "2026-09-12",
+  "from": "2026-09-01",
+  "to": "2026-09-24",
+  "days": [
+    {
+      "date": "2026-09-01",
+      "addedCode": 1240,
+      "addedComment": 116,
+      "commits": 6,
+      "byModel": {
+        "Claude Opus 5": 1356
+      },
+      "added": 1356,
+      "commentRatio": 0.0855457227138643,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-02",
+      "addedCode": 5968,
+      "addedComment": 2020,
+      "commits": 31,
+      "byModel": {
+        "Claude Opus 5": 7988
+      },
+      "added": 7988,
+      "commentRatio": 0.2528793189784677,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-03",
+      "addedCode": 1831,
+      "addedComment": 399,
+      "commits": 8,
+      "byModel": {
+        "Claude Opus 5": 2230
+      },
+      "added": 2230,
+      "commentRatio": 0.1789237668161435,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-04",
+      "addedCode": 1139,
+      "addedComment": 451,
+      "commits": 12,
+      "byModel": {
+        "no Claude trailer": 188,
+        "Claude Opus 5": 1402
+      },
+      "added": 1590,
+      "commentRatio": 0.28364779874213836,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-07",
+      "addedCode": 2650,
+      "addedComment": 888,
+      "commits": 25,
+      "byModel": {
+        "Claude Opus 5": 3538
+      },
+      "added": 3538,
+      "commentRatio": 0.2509892594686263,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-08",
+      "addedCode": 4371,
+      "addedComment": 1172,
+      "commits": 19,
+      "byModel": {
+        "Claude Opus 5": 5512,
+        "Claude Fable 5.1": 31
+      },
+      "added": 5543,
+      "commentRatio": 0.2114378495399603,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-09",
+      "addedCode": 2711,
+      "addedComment": 537,
+      "commits": 12,
+      "byModel": {
+        "Claude Opus 5": 3248
+      },
+      "added": 3248,
+      "commentRatio": 0.16533251231527094,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-10",
+      "addedCode": 5468,
+      "addedComment": 765,
+      "commits": 14,
+      "byModel": {
+        "Claude Opus 5": 3889,
+        "no Claude trailer": 2344
+      },
+      "added": 6233,
+      "commentRatio": 0.12273383603401251,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-11",
+      "addedCode": 4822,
+      "addedComment": 468,
+      "commits": 27,
+      "byModel": {
+        "Claude Opus 5": 5290
+      },
+      "added": 5290,
+      "commentRatio": 0.08846880907372401,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-14",
+      "addedCode": 3568,
+      "addedComment": 1017,
+      "commits": 21,
+      "byModel": {
+        "Claude Opus 5": 2848,
+        "no Claude trailer": 1737
+      },
+      "added": 4585,
+      "commentRatio": 0.2218102508178844,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-15",
+      "addedCode": 3043,
+      "addedComment": 365,
+      "commits": 15,
+      "byModel": {
+        "Claude Opus 5": 2374,
+        "Claude Fable 5.1": 261,
+        "no Claude trailer": 773
+      },
+      "added": 3408,
+      "commentRatio": 0.10710093896713616,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-16",
+      "addedCode": 2244,
+      "addedComment": 454,
+      "commits": 15,
+      "byModel": {
+        "Claude Opus 5": 2542,
+        "no Claude trailer": 8,
+        "Claude Fable 5.1": 148
+      },
+      "added": 2698,
+      "commentRatio": 0.1682727946627131,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-17",
+      "addedCode": 2863,
+      "addedComment": 235,
+      "commits": 12,
+      "byModel": {
+        "Claude Opus 5": 2569,
+        "Claude (version not recorded)": 529
+      },
+      "added": 3098,
+      "commentRatio": 0.07585539057456424,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-18",
+      "addedCode": 1945,
+      "addedComment": 1747,
+      "commits": 7,
+      "byModel": {
+        "Claude Opus 5": 3692
+      },
+      "added": 3692,
+      "commentRatio": 0.4731852654387866,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-20",
+      "addedCode": 472,
+      "addedComment": 111,
+      "commits": 3,
+      "byModel": {
+        "Claude Opus 5": 583
+      },
+      "added": 583,
+      "commentRatio": 0.19039451114922812,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-21",
+      "addedCode": 11358,
+      "addedComment": 1022,
+      "commits": 18,
+      "byModel": {
+        "Claude Opus 5": 12380
+      },
+      "added": 12380,
+      "commentRatio": 0.0825525040387722,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-22",
+      "addedCode": 6229,
+      "addedComment": 930,
+      "commits": 16,
+      "byModel": {
+        "Claude Opus 5": 7159
+      },
+      "added": 7159,
+      "commentRatio": 0.12990641150998744,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-23",
+      "addedCode": 4355,
+      "addedComment": 590,
+      "commits": 6,
+      "byModel": {
+        "Claude Opus 5": 3214,
+        "several models named": 1731
+      },
+      "added": 4945,
+      "commentRatio": 0.11931243680485339,
+      "model": "Claude Opus 5"
+    }
+  ]
+}

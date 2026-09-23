@@ -11,7 +11,7 @@
  * Usage:
  *   node tools/comment-ratio/daily.mjs [--repo <path>] [--ref <ref>]
  *                                      [--around <YYYY-MM-DD>] [--days <n>]
- *                                      [--out <dir>]
+ *                                      [--out <dir>] [--name <file>]
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,6 +26,9 @@ const options = {
   around: '2026-07-24',
   days: '14',
   out: null,
+  // A second window (a rule change, say) needs its own file rather than
+  // overwriting the release one.
+  name: 'daily.json',
 };
 const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i += 2)
@@ -124,7 +127,7 @@ const rows = [...days.values()]
 
 fs.mkdirSync(options.out, { recursive: true });
 fs.writeFileSync(
-  path.join(options.out, 'daily.json'),
+  path.join(options.out, options.name),
   JSON.stringify(
     {
       generatedAt: new Date().toISOString(),
@@ -144,4 +147,4 @@ for (const d of rows)
     `  ${d.date}  ${String(d.added).padStart(6)} lines  ` +
       `${(d.commentRatio * 100).toFixed(1).padStart(5)}%  ${d.model}\n`,
   );
-process.stderr.write(`\nWrote ${path.join(options.out, 'daily.json')}\n`);
+process.stderr.write(`\nWrote ${path.join(options.out, options.name)}\n`);

@@ -31,6 +31,20 @@ node tools/comment-ratio/daily.mjs --around 2026-07-24 --days 45  # daily
 node tools/comment-ratio/render.mjs         # build the HTML report
 ```
 
+To watch whether a change of our own (a new rule, say) moved anything, collect a
+window around the day it landed and render the small companion page:
+
+```bash
+node tools/comment-ratio/daily.mjs --ref origin/main \
+  --around 2026-09-12 --days 11 --name daily-september.json
+node tools/comment-ratio/render-window.mjs --mark 2026-09-22 \
+  --label 'Instructions updated' --exclude 2026-09-18
+```
+
+Re-run both to refresh it; `--days` widens the window as days accumulate.
+`--exclude` drops a day that measures something other than ordinary authoring
+(a bulk comment rewrite) from the chart and the figures, keeping it in the table.
+
 Everything lands in `tools/comment-ratio/output/`:
 
 | File                          | What it holds                                 |
@@ -39,6 +53,7 @@ Everything lands in `tools/comment-ratio/output/`:
 | `by-model.json` / `.csv`      | per-model flow, with per-commit distribution  |
 | `daily.json`                  | one row per day in a window around a date     |
 | `comment-ratio.html`          | self-contained report, no external dependency |
+| `window.html`                 | the companion page for one window             |
 
 `collect.mjs` takes `--repo`, `--ref`, `--to YYYY-MM`, `--until YYYY-MM-DD`,
 `--step` and `--out`; `by-model.mjs` takes `--repo`, `--ref`, `--until` and
@@ -78,6 +93,7 @@ like newly written code.
 | `by-model.mjs`        | per-model flow from commit trailers                              |
 | `daily.mjs`           | day-by-day flow over a window, labelled by model                 |
 | `render.mjs`          | builds the HTML report                                           |
+| `render-window.mjs`   | builds the companion page for one window around a change         |
 | `model-releases.json` | Anthropic model release dates, with their provenance             |
 | `page/`               | stylesheet and chart runtime inlined into the report             |
 | `selftest.mjs`        | classifier expectations                                          |
