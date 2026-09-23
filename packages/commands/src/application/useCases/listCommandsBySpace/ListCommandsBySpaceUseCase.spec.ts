@@ -1,4 +1,5 @@
 import { ListCommandsBySpaceUseCase } from './ListCommandsBySpaceUseCase';
+import { CommandSpaceNotAccessibleError } from '../../../domain/errors';
 import { CommandService } from '../../services/CommandService';
 import { commandFactory } from '../../../../test/commandFactory';
 import {
@@ -351,7 +352,7 @@ describe('ListRecipesBySpaceUseCase', () => {
     });
 
     describe('when space is not found', () => {
-      it('throws Space not found error', async () => {
+      it('throws CommandSpaceNotAccessibleError', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
@@ -386,12 +387,12 @@ describe('ListRecipesBySpaceUseCase', () => {
             organizationId,
             spaceId,
           }),
-        ).rejects.toThrow(`Space with id ${spaceId} not found`);
+        ).rejects.toBeInstanceOf(CommandSpaceNotAccessibleError);
       });
     });
 
     describe('when space does not belong to organization', () => {
-      it('throws Space does not belong to organization error', async () => {
+      it('throws CommandSpaceNotAccessibleError', async () => {
         const organizationId = createOrganizationId('org-1');
         const differentOrgId = createOrganizationId('org-2');
         const spaceId = createSpaceId('space-1');
@@ -431,9 +432,7 @@ describe('ListRecipesBySpaceUseCase', () => {
             organizationId,
             spaceId,
           }),
-        ).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
-        );
+        ).rejects.toBeInstanceOf(CommandSpaceNotAccessibleError);
       });
     });
 

@@ -2,6 +2,10 @@ import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CommandNotFoundError,
+  CommandSpaceNotAccessibleError,
+} from '../../../domain/errors';
+import {
   AbstractSpaceMemberUseCase,
   SpaceMemberContext,
   PackmindEventEmitterService,
@@ -56,81 +60,43 @@ export class DeleteCommandUseCase
       organizationId,
     });
 
-    try {
-      // Verify the space belongs to the organization
-      const space = await this.spacesPort.getSpaceById(spaceId);
-      if (!space) {
-        this.logger.error('Space not found', { spaceId });
-        throw new Error(`Space with id ${spaceId} not found`);
-      }
-
-      if (space.organizationId !== organizationId) {
-        this.logger.error('Space does not belong to organization', {
-          spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: organizationId,
-        });
-        throw new Error(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
-        );
-      }
-
-      this.logger.info('Fetching recipe to validate space ownership', {
-        recipeId,
-      });
-      const existingCommand =
-        await this.commandService.getCommandById(recipeId);
-
-      if (!existingCommand) {
-        this.logger.error('Recipe not found', { recipeId });
-        throw new Error(`Recipe ${recipeId} not found`);
-      }
-
-      // Security validation: ensure recipe belongs to the specified space
-      if (existingCommand.spaceId !== spaceId) {
-        this.logger.error('Recipe does not belong to specified space', {
-          recipeId,
-          recipeSpaceId: existingCommand.spaceId,
-          requestedSpaceId: spaceId,
-        });
-        throw new Error(
-          `Recipe ${recipeId} does not belong to space ${spaceId}`,
-        );
-      }
-
-      this.logger.info('Deleting recipe', { recipeId });
-      await this.commandService.deleteCommand(recipeId, userId as UserId);
-
-      this.logger.info('Deleting all recipe versions for recipe', { recipeId });
-      await this.commandVersionService.deleteCommandVersionsForCommand(
-        recipeId,
-        userId,
-      );
-
-      const event = new CommandDeletedEvent({
-        id: recipeId,
-        spaceId,
-        organizationId: createOrganizationId(organizationId),
-        userId: createUserId(userId),
-        source,
-      });
-      this.eventEmitterService.emit(event);
-      this.logger.info('RecipeDeletedEvent emitted', {
-        recipeId,
-        spaceId,
-      });
-
-      this.logger.info('Recipe deletion completed successfully', { recipeId });
-      return {};
-    } catch (error) {
-      this.logger.error('Failed to delete recipe', {
-        recipeId,
-        spaceId,
-        userId,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space || space.organizationId !== organizationId) {
+      throw new CommandSpaceNotAccessibleError(spaceId, organizationId);
     }
+
+    this.logger.info('Fetching recipe to validate space ownership', {
+      recipeId,
+    });
+    const existingCommand = await this.commandService.getCommandById(recipeId);
+
+    if (!existingCommand || existingCommand.spaceId !== spaceId) {
+      throw new CommandNotFoundError(recipeId, spaceId);
+    }
+
+    this.logger.info('Deleting recipe', { recipeId });
+    await this.commandService.deleteCommand(recipeId, userId as UserId);
+
+    this.logger.info('Deleting all recipe versions for recipe', { recipeId });
+    await this.commandVersionService.deleteCommandVersionsForCommand(
+      recipeId,
+      userId,
+    );
+
+    const event = new CommandDeletedEvent({
+      id: recipeId,
+      spaceId,
+      organizationId: createOrganizationId(organizationId),
+      userId: createUserId(userId),
+      source,
+    });
+    this.eventEmitterService.emit(event);
+    this.logger.info('RecipeDeletedEvent emitted', {
+      recipeId,
+      spaceId,
+    });
+
+    this.logger.info('Recipe deletion completed successfully', { recipeId });
+    return {};
   }
 }

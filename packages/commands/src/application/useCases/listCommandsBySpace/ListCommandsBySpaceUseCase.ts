@@ -10,6 +10,7 @@ import {
   ListCommandsBySpaceCommand,
   ListCommandsBySpaceResponse,
 } from '@packmind/types';
+import { CommandSpaceNotAccessibleError } from '../../../domain/errors';
 import { CommandService } from '../../services/CommandService';
 
 const origin = 'ListRecipesBySpaceUseCase';
@@ -39,46 +40,25 @@ export class ListCommandsBySpaceUseCase
       organizationId: command.organizationId,
     });
 
-    try {
-      // Verify the space belongs to the organization
-      const space = await this.spacesPort.getSpaceById(command.spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', {
-          spaceId: command.spaceId,
-        });
-        throw new Error(`Space with id ${command.spaceId} not found`);
-      }
-
-      if (space.organizationId !== command.organizationId) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: command.spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: command.organizationId,
-        });
-        throw new Error(
-          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
-        );
-      }
-
-      const recipes = await this.commandService.listCommandsBySpace(
+    const space = await this.spacesPort.getSpaceById(command.spaceId);
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new CommandSpaceNotAccessibleError(
         command.spaceId,
-        { includeDeleted: command.includeDeleted },
+        command.organizationId,
       );
-
-      this.logger.info('Recipes listed by space successfully', {
-        spaceId: command.spaceId,
-        organizationId: command.organizationId,
-        count: recipes.length,
-      });
-
-      return { recipes };
-    } catch (error) {
-      this.logger.error('Failed to list recipes by space', {
-        spaceId: command.spaceId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
     }
+
+    const recipes = await this.commandService.listCommandsBySpace(
+      command.spaceId,
+      { includeDeleted: command.includeDeleted },
+    );
+
+    this.logger.info('Recipes listed by space successfully', {
+      spaceId: command.spaceId,
+      organizationId: command.organizationId,
+      count: recipes.length,
+    });
+
+    return { recipes };
   }
 }
