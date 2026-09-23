@@ -11,6 +11,7 @@ import {
   createOrganizationId,
   createSpaceId,
 } from '@packmind/types';
+import { CommandSpaceNotAccessibleError } from '../../../domain/errors';
 import { CaptureCommandUseCase } from '../captureCommand/CaptureCommandUseCase';
 
 const origin = 'CaptureRecipeWithPackagesUseCase';
@@ -56,14 +57,8 @@ export class CaptureCommandWithPackagesUseCase
     });
 
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== organizationId) {
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
+    if (!space || space.organizationId !== organizationId) {
+      throw new CommandSpaceNotAccessibleError(spaceId, organizationId);
     }
 
     this.logger.info('Capturing recipe', { name });

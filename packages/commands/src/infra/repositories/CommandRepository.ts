@@ -45,61 +45,44 @@ export class CommandRepository
       organizationId,
     });
 
-    try {
-      let queryBuilder = this.repository
-        .createQueryBuilder('recipe')
-        .innerJoin('spaces', 'space', 'recipe.space_id = space.id')
-        .where('recipe.slug = :slug', { slug })
-        .andWhere('space.organization_id = :organizationId', {
-          organizationId,
-        });
+    let queryBuilder = this.repository
+      .createQueryBuilder('recipe')
+      .innerJoin('spaces', 'space', 'recipe.space_id = space.id')
+      .where('recipe.slug = :slug', { slug })
+      .andWhere('space.organization_id = :organizationId', {
+        organizationId,
+      });
 
-      if (opts?.includeDeleted) {
-        queryBuilder = queryBuilder.withDeleted();
-      }
+    if (opts?.includeDeleted) {
+      queryBuilder = queryBuilder.withDeleted();
+    }
 
-      const recipe = await queryBuilder.getOne();
+    const recipe = await queryBuilder.getOne();
 
-      if (recipe) {
-        this.logger.info('Recipe found by slug and organization', {
-          slug,
-          organizationId,
-          recipeId: recipe.id,
-        });
-      } else {
-        this.logger.warn('Recipe not found by slug and organization', {
-          slug,
-          organizationId,
-        });
-      }
-      return recipe;
-    } catch (error) {
-      this.logger.error('Failed to find recipe by slug and organization', {
+    if (recipe) {
+      this.logger.info('Recipe found by slug and organization', {
         slug,
         organizationId,
-        error: error instanceof Error ? error.message : String(error),
+        recipeId: recipe.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Recipe not found by slug and organization', {
+        slug,
+        organizationId,
+      });
     }
+    return recipe;
   }
 
   async findByUserId(userId: UserId): Promise<Command[]> {
     this.logger.info('Finding recipes by user ID', { userId });
 
-    try {
-      const recipes = await this.repository.find({ where: { userId } });
-      this.logger.info('Recipes found by user ID', {
-        userId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to find recipes by user ID', {
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const recipes = await this.repository.find({ where: { userId } });
+    this.logger.info('Recipes found by user ID', {
+      userId,
+      count: recipes.length,
+    });
+    return recipes;
   }
 
   async findBySpaceId(
@@ -111,34 +94,26 @@ export class CommandRepository
       includeDeleted: opts?.includeDeleted ?? false,
     });
 
-    try {
-      const recipes = await this.repository.find({
-        where: { spaceId },
-        relations: ['gitCommit'],
-        withDeleted: opts?.includeDeleted ?? false,
-      });
+    const recipes = await this.repository.find({
+      where: { spaceId },
+      relations: ['gitCommit'],
+      withDeleted: opts?.includeDeleted ?? false,
+    });
 
-      const createdByUserId = await this.getCreatedByMany(
-        recipes.map((recipe) => recipe.userId),
-      );
+    const createdByUserId = await this.getCreatedByMany(
+      recipes.map((recipe) => recipe.userId),
+    );
 
-      const commandsWithScope = recipes.map((recipe) => ({
-        ...recipe,
-        createdBy: createdByUserId.get(recipe.userId),
-      }));
+    const commandsWithScope = recipes.map((recipe) => ({
+      ...recipe,
+      createdBy: createdByUserId.get(recipe.userId),
+    }));
 
-      this.logger.info('Recipes with scope found by space ID', {
-        spaceId,
-        count: commandsWithScope.length,
-      });
-      return commandsWithScope;
-    } catch (error) {
-      this.logger.error('Failed to find recipes with scope by space ID', {
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('Recipes with scope found by space ID', {
+      spaceId,
+      count: commandsWithScope.length,
+    });
+    return commandsWithScope;
   }
 
   async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
@@ -150,22 +125,15 @@ export class CommandRepository
       spaceCount: spaceIds.length,
     });
 
-    try {
-      const rows = await this.repository
-        .createQueryBuilder('recipe')
-        .select('recipe.space_id', 'spaceId')
-        .addSelect('COUNT(*)', 'count')
-        .where('recipe.space_id IN (:...spaceIds)', { spaceIds })
-        .groupBy('recipe.space_id')
-        .getRawMany<{ spaceId: SpaceId; count: string }>();
+    const rows = await this.repository
+      .createQueryBuilder('recipe')
+      .select('recipe.space_id', 'spaceId')
+      .addSelect('COUNT(*)', 'count')
+      .where('recipe.space_id IN (:...spaceIds)', { spaceIds })
+      .groupBy('recipe.space_id')
+      .getRawMany<{ spaceId: SpaceId; count: string }>();
 
-      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
-    } catch (error) {
-      this.logger.error('Failed to count recipes by space IDs', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
   }
 
   async markAsMoved(
@@ -177,26 +145,18 @@ export class CommandRepository
       destinationSpaceId,
     });
 
-    try {
-      await this.repository.manager.transaction(async (manager) => {
-        const transactionalRepository = manager.getRepository(CommandSchema);
-        await transactionalRepository.update(
-          { id: recipeId },
-          { movedTo: destinationSpaceId },
-        );
-        await transactionalRepository.softDelete({ id: recipeId });
-      });
+    await this.repository.manager.transaction(async (manager) => {
+      const transactionalRepository = manager.getRepository(CommandSchema);
+      await transactionalRepository.update(
+        { id: recipeId },
+        { movedTo: destinationSpaceId },
+      );
+      await transactionalRepository.softDelete({ id: recipeId });
+    });
 
-      this.logger.info('Recipe marked as moved successfully', {
-        recipeId,
-        destinationSpaceId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to mark recipe as moved', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('Recipe marked as moved successfully', {
+      recipeId,
+      destinationSpaceId,
+    });
   }
 }

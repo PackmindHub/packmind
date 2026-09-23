@@ -32,6 +32,10 @@ import { commandFactory } from '../../../../test/commandFactory';
 import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { DeleteCommandUseCase } from './DeleteCommandUseCase';
+import {
+  CommandNotFoundError,
+  CommandSpaceNotAccessibleError,
+} from '../../../domain/errors';
 
 describe('DeleteRecipeUseCase', () => {
   let deleteCommandUseCase: DeleteCommandUseCase;
@@ -235,10 +239,51 @@ describe('DeleteRecipeUseCase', () => {
         commandService.getCommandById.mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws CommandNotFoundError', async () => {
         await expect(
           deleteCommandUseCase.execute(nonExistentCommand),
-        ).rejects.toThrow(`Recipe ${nonExistentCommandId} not found`);
+        ).rejects.toBeInstanceOf(CommandNotFoundError);
+      });
+    });
+
+    describe('when recipe belongs to another space', () => {
+      beforeEach(() => {
+        commandService.getCommandById.mockResolvedValue(
+          commandFactory({
+            id: recipeId,
+            userId,
+            spaceId: createSpaceId(uuidv4()),
+          }),
+        );
+      });
+
+      it('throws CommandNotFoundError', async () => {
+        await expect(
+          deleteCommandUseCase.execute(command),
+        ).rejects.toBeInstanceOf(CommandNotFoundError);
+      });
+
+      it('does not delete the recipe', async () => {
+        await deleteCommandUseCase.execute(command).catch(() => undefined);
+
+        expect(commandService.deleteCommand).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when space belongs to another organization', () => {
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(
+          spaceFactory({
+            id: spaceId,
+            organizationId: createOrganizationId(uuidv4()),
+          }),
+        );
+      });
+
+      it('throws CommandSpaceNotAccessibleError', async () => {
+        await expect(
+          deleteCommandUseCase.execute(command),
+        ).rejects.toBeInstanceOf(CommandSpaceNotAccessibleError);
       });
     });
 

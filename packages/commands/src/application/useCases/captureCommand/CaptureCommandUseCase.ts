@@ -15,9 +15,12 @@ import {
   IAccountsPort,
   ICaptureCommandUseCase,
   ISpacesPort,
-  CommandSlugAlreadyExistsError,
   CommandStep,
 } from '@packmind/types';
+import {
+  CommandSlugAlreadyExistsError,
+  CommandSpaceNotAccessibleError,
+} from '../../../domain/errors';
 import slug from 'slug';
 import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
@@ -62,23 +65,11 @@ export class CaptureCommandUseCase
     const userId = createUserId(userIdString);
     const spaceId = createSpaceId(spaceIdString);
 
-    // Verify the space belongs to the organization
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      this.logger.warn('Space not found', { spaceId });
-      throw new Error(`Space with id ${spaceId} not found`);
+    if (!space || space.organizationId !== organizationId) {
+      throw new CommandSpaceNotAccessibleError(spaceId, organizationId);
     }
 
-    if (space.organizationId !== organizationId) {
-      this.logger.warn('Space does not belong to organization', {
-        spaceId,
-        spaceOrganizationId: space.organizationId,
-        requestOrganizationId: organizationId,
-      });
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
-    }
     this.logger.info('Starting captureRecipe process', {
       name,
       organizationId,
@@ -86,94 +77,83 @@ export class CaptureCommandUseCase
       spaceId,
     });
 
-    try {
-      const existingCommands =
-        await this.commandService.listCommandsBySpace(spaceId);
-      const existingSlugs = new Set(existingCommands.map((r) => r.slug));
+    const existingCommands =
+      await this.commandService.listCommandsBySpace(spaceId);
+    const existingSlugs = new Set(existingCommands.map((r) => r.slug));
 
-      const commandSlug = this.resolveSlug(
-        command.slug,
-        name,
-        existingSlugs,
+    const commandSlug = this.resolveSlug(
+      command.slug,
+      name,
+      existingSlugs,
+      spaceId,
+    );
+    this.logger.info('Resolved slug', { slug: commandSlug });
+
+    const content =
+      providedSummary !== undefined
+        ? this.assembleCommandContent(
+            providedSummary,
+            whenToUse || [],
+            contextValidationCheckpoints || [],
+            steps || [],
+          )
+        : legacyContent || '';
+
+    const initialVersion = 1;
+    const recipe = await this.commandService.addCommand({
+      name,
+      content,
+      slug: commandSlug,
+      version: initialVersion,
+      gitCommit: undefined,
+      userId,
+      spaceId,
+    });
+    this.logger.info('Recipe entity created successfully', {
+      recipeId: recipe.id,
+      name,
+      organizationId,
+      userId,
+      spaceId,
+    });
+
+    const recipeVersion = await this.commandVersionService.addCommandVersion({
+      recipeId: recipe.id,
+      name,
+      slug: commandSlug,
+      content,
+      version: initialVersion,
+      gitCommit: undefined,
+      userId,
+    });
+    this.logger.info('Initial recipe version created successfully', {
+      versionId: recipeVersion.id,
+      recipeId: recipe.id,
+      version: initialVersion,
+    });
+
+    this.logger.info('CaptureRecipe process completed successfully', {
+      recipeId: recipe.id,
+      versionId: recipeVersion.id,
+      name,
+      organizationId,
+      userId,
+      spaceId,
+    });
+
+    this.eventEmitterService.emit(
+      new CommandCreatedEvent({
+        id: createCommandId(recipe.id),
         spaceId,
-      );
-      this.logger.info('Resolved slug', { slug: commandSlug });
-
-      const content =
-        providedSummary !== undefined
-          ? this.assembleCommandContent(
-              providedSummary,
-              whenToUse || [],
-              contextValidationCheckpoints || [],
-              steps || [],
-            )
-          : legacyContent || '';
-
-      const initialVersion = 1;
-      const recipe = await this.commandService.addCommand({
-        name,
-        content,
-        slug: commandSlug,
-        version: initialVersion,
-        gitCommit: undefined,
-        userId,
-        spaceId,
-      });
-      this.logger.info('Recipe entity created successfully', {
-        recipeId: recipe.id,
-        name,
         organizationId,
         userId,
-        spaceId,
-      });
+        source,
+        originSkill,
+        directUpdate: command.directUpdate,
+      }),
+    );
 
-      const recipeVersion = await this.commandVersionService.addCommandVersion({
-        recipeId: recipe.id,
-        name,
-        slug: commandSlug,
-        content,
-        version: initialVersion,
-        gitCommit: undefined,
-        userId,
-      });
-      this.logger.info('Initial recipe version created successfully', {
-        versionId: recipeVersion.id,
-        recipeId: recipe.id,
-        version: initialVersion,
-      });
-
-      this.logger.info('CaptureRecipe process completed successfully', {
-        recipeId: recipe.id,
-        versionId: recipeVersion.id,
-        name,
-        organizationId,
-        userId,
-        spaceId,
-      });
-
-      this.eventEmitterService.emit(
-        new CommandCreatedEvent({
-          id: createCommandId(recipe.id),
-          spaceId,
-          organizationId,
-          userId,
-          source,
-          originSkill,
-          directUpdate: command.directUpdate,
-        }),
-      );
-
-      return recipe;
-    } catch (error) {
-      this.logger.error('Failed to capture recipe', {
-        name,
-        organizationId,
-        userId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return recipe;
   }
 
   private resolveSlug(

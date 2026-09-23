@@ -1,4 +1,5 @@
 import { GetCommandByIdUseCase } from './GetCommandByIdUseCase';
+import { CommandSpaceNotAccessibleError } from '../../../domain/errors';
 import { CommandService } from '../../services/CommandService';
 import { commandFactory } from '../../../../test/commandFactory';
 import {
@@ -241,7 +242,7 @@ describe('GetRecipeByIdUseCase', () => {
     });
 
     describe('when space is not found', () => {
-      it('throws error', async () => {
+      it('throws CommandSpaceNotAccessibleError', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
@@ -278,12 +279,12 @@ describe('GetRecipeByIdUseCase', () => {
             spaceId,
             recipeId,
           }),
-        ).rejects.toThrow(`Space with id ${spaceId} not found`);
+        ).rejects.toBeInstanceOf(CommandSpaceNotAccessibleError);
       });
     });
 
     describe('when space does not belong to organization', () => {
-      it('throws error', async () => {
+      it('throws CommandSpaceNotAccessibleError', async () => {
         const organizationId = createOrganizationId('org-1');
         const differentOrgId = createOrganizationId('org-2');
         const spaceId = createSpaceId('space-1');
@@ -325,14 +326,12 @@ describe('GetRecipeByIdUseCase', () => {
             spaceId,
             recipeId,
           }),
-        ).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
-        );
+        ).rejects.toBeInstanceOf(CommandSpaceNotAccessibleError);
       });
     });
 
     describe('when recipe does not belong to organization', () => {
-      it('throws error', async () => {
+      it('answers as if the recipe did not exist', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
@@ -376,9 +375,7 @@ describe('GetRecipeByIdUseCase', () => {
             spaceId,
             recipeId,
           }),
-        ).rejects.toThrow(
-          `Recipe ${recipeId} does not belong to space ${spaceId}`,
-        );
+        ).resolves.toEqual({ recipe: null });
       });
     });
 
@@ -430,7 +427,7 @@ describe('GetRecipeByIdUseCase', () => {
     });
 
     describe('when recipe does not belong to space', () => {
-      it('throws error for recipe with different spaceId', async () => {
+      it('answers as if the recipe did not exist', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const differentSpaceId = createSpaceId('space-2');
@@ -474,9 +471,7 @@ describe('GetRecipeByIdUseCase', () => {
             spaceId,
             recipeId,
           }),
-        ).rejects.toThrow(
-          `Recipe ${recipeId} does not belong to space ${spaceId}`,
-        );
+        ).resolves.toEqual({ recipe: null });
       });
     });
 

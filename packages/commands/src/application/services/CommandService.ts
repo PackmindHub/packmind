@@ -4,6 +4,7 @@ import { ICommandVersionRepository } from '../../domain/repositories/ICommandVer
 import { ICommandRepository } from '../../domain/repositories/ICommandRepository';
 import { CommandRepository } from '../../infra/repositories/CommandRepository';
 import { PackmindLogger } from '@packmind/logger';
+import { CommandNotFoundError } from '../../domain/errors';
 import {
   createCommandId,
   createCommandVersionId,
@@ -55,29 +56,21 @@ export class CommandService {
       userId: commandData.userId,
     });
 
-    try {
-      const recipeId = createCommandId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
 
-      const recipe: Command = {
-        id: recipeId,
-        ...commandData,
-        movedTo: null,
-      };
+    const recipe: Command = {
+      id: recipeId,
+      ...commandData,
+      movedTo: null,
+    };
 
-      const savedCommand = await this.commandRepository.add(recipe);
-      this.logger.info('Recipe added to repository successfully', {
-        recipeId,
-        name: commandData.name,
-      });
+    const savedCommand = await this.commandRepository.add(recipe);
+    this.logger.info('Recipe added to repository successfully', {
+      recipeId,
+      name: commandData.name,
+    });
 
-      return savedCommand;
-    } catch (error) {
-      this.logger.error('Failed to add recipe', {
-        name: commandData.name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return savedCommand;
   }
 
   async listCommandsBySpace(
@@ -89,20 +82,12 @@ export class CommandService {
       includeDeleted: opts?.includeDeleted ?? false,
     });
 
-    try {
-      const recipes = await this.commandRepository.findBySpaceId(spaceId, opts);
-      this.logger.info('Recipes retrieved by space successfully', {
-        spaceId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to list recipes by space', {
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const recipes = await this.commandRepository.findBySpaceId(spaceId, opts);
+    this.logger.info('Recipes retrieved by space successfully', {
+      spaceId,
+      count: recipes.length,
+    });
+    return recipes;
   }
 
   async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
@@ -112,24 +97,16 @@ export class CommandService {
   async getCommandById(id: CommandId): Promise<Command | null> {
     this.logger.info('Getting recipe by ID', { id });
 
-    try {
-      const recipe = await this.commandRepository.findById(id);
-      if (recipe) {
-        this.logger.info('Recipe found successfully', {
-          id,
-          name: recipe.name,
-        });
-      } else {
-        this.logger.warn('Recipe not found', { id });
-      }
-      return recipe;
-    } catch (error) {
-      this.logger.error('Failed to get recipe by ID', {
+    const recipe = await this.commandRepository.findById(id);
+    if (recipe) {
+      this.logger.info('Recipe found successfully', {
         id,
-        error: error instanceof Error ? error.message : String(error),
+        name: recipe.name,
       });
-      throw error;
+    } else {
+      this.logger.warn('Recipe not found', { id });
     }
+    return recipe;
   }
 
   async findCommandBySlug(
@@ -142,33 +119,24 @@ export class CommandService {
       organizationId,
     });
 
-    try {
-      const recipe = await this.commandRepository.findBySlug(
+    const recipe = await this.commandRepository.findBySlug(
+      slug,
+      organizationId,
+      opts,
+    );
+    if (recipe) {
+      this.logger.info('Recipe found by slug and organization successfully', {
         slug,
         organizationId,
-        opts,
-      );
-      if (recipe) {
-        this.logger.info('Recipe found by slug and organization successfully', {
-          slug,
-          organizationId,
-          recipeId: recipe.id,
-        });
-      } else {
-        this.logger.warn('Recipe not found by slug and organization', {
-          slug,
-          organizationId,
-        });
-      }
-      return recipe;
-    } catch (error) {
-      this.logger.error('Failed to find recipe by slug and organization', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
+        recipeId: recipe.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Recipe not found by slug and organization', {
+        slug,
+        organizationId,
+      });
     }
+    return recipe;
   }
 
   async updateCommand(
@@ -181,58 +149,40 @@ export class CommandService {
       userId: commandData.userId,
     });
 
-    try {
-      const existingCommand = await this.commandRepository.findById(recipeId);
-      if (!existingCommand) {
-        this.logger.error('Recipe not found for update', { recipeId });
-        throw new Error(`Recipe with id ${recipeId} not found`);
-      }
-
-      const updatedCommand: Command = {
-        id: recipeId,
-        ...commandData,
-        spaceId: existingCommand.spaceId,
-        movedTo: existingCommand.movedTo,
-      };
-
-      const savedCommand = await this.commandRepository.add(updatedCommand);
-      this.logger.info('Recipe updated in repository successfully', {
-        recipeId,
-        version: commandData.version,
-      });
-
-      return savedCommand;
-    } catch (error) {
-      this.logger.error('Failed to update recipe', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const existingCommand = await this.commandRepository.findById(recipeId);
+    if (!existingCommand) {
+      throw new CommandNotFoundError(recipeId);
     }
+
+    const updatedCommand: Command = {
+      id: recipeId,
+      ...commandData,
+      spaceId: existingCommand.spaceId,
+      movedTo: existingCommand.movedTo,
+    };
+
+    const savedCommand = await this.commandRepository.add(updatedCommand);
+    this.logger.info('Recipe updated in repository successfully', {
+      recipeId,
+      version: commandData.version,
+    });
+
+    return savedCommand;
   }
 
   async deleteCommand(recipeId: CommandId, userId: UserId): Promise<void> {
     this.logger.info('Deleting recipe and all its versions', { recipeId });
 
-    try {
-      const recipe = await this.commandRepository.findById(recipeId);
-      if (!recipe) {
-        this.logger.error('Recipe not found for deletion', { recipeId });
-        throw new Error(`Recipe with id ${recipeId} not found`);
-      }
-
-      await this.commandRepository.deleteById(recipeId, userId);
-
-      this.logger.info('Recipe deleted successfully', {
-        recipeId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete recipe', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const recipe = await this.commandRepository.findById(recipeId);
+    if (!recipe) {
+      throw new CommandNotFoundError(recipeId);
     }
+
+    await this.commandRepository.deleteById(recipeId, userId);
+
+    this.logger.info('Recipe deleted successfully', {
+      recipeId,
+    });
   }
 
   async hardDeleteCommand(recipeId: CommandId): Promise<void> {
@@ -255,59 +205,50 @@ export class CommandService {
       destinationSpaceId,
     });
 
-    try {
-      const original = await this.commandRepository.findById(recipeId);
-      if (!original) {
-        throw new Error(`Recipe with id ${recipeId} not found`);
-      }
-
-      const newCommandId = createCommandId(uuidv4());
-      const newCommand: Command = {
-        id: newCommandId,
-        name: original.name,
-        slug: original.slug,
-        content: original.content,
-        version: original.version,
-        gitCommit: original.gitCommit,
-        userId: newUserId,
-        spaceId: destinationSpaceId,
-        movedTo: null,
-      };
-      const savedCommand = await this.commandRepository.add(newCommand);
-
-      const versions =
-        await this.commandVersionRepository.findByCommandId(recipeId);
-
-      if (versions.length > 0) {
-        const newVersions = versions.map((version) => ({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: newCommandId,
-          name: version.name,
-          slug: version.slug,
-          content: version.content,
-          version: version.version,
-          gitCommit: version.gitCommit,
-          userId: version.userId,
-        }));
-        await this.commandVersionRepository.addMany(newVersions);
-      }
-
-      this.logger.info('Recipe duplicated to space successfully', {
-        originalRecipeId: recipeId,
-        newCommandId,
-        destinationSpaceId,
-        versionsCount: versions.length,
-      });
-
-      return savedCommand;
-    } catch (error) {
-      this.logger.error('Failed to duplicate recipe to space', {
-        recipeId,
-        destinationSpaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const original = await this.commandRepository.findById(recipeId);
+    if (!original) {
+      throw new CommandNotFoundError(recipeId);
     }
+
+    const newCommandId = createCommandId(uuidv4());
+    const newCommand: Command = {
+      id: newCommandId,
+      name: original.name,
+      slug: original.slug,
+      content: original.content,
+      version: original.version,
+      gitCommit: original.gitCommit,
+      userId: newUserId,
+      spaceId: destinationSpaceId,
+      movedTo: null,
+    };
+    const savedCommand = await this.commandRepository.add(newCommand);
+
+    const versions =
+      await this.commandVersionRepository.findByCommandId(recipeId);
+
+    if (versions.length > 0) {
+      const newVersions = versions.map((version) => ({
+        id: createCommandVersionId(uuidv4()),
+        recipeId: newCommandId,
+        name: version.name,
+        slug: version.slug,
+        content: version.content,
+        version: version.version,
+        gitCommit: version.gitCommit,
+        userId: version.userId,
+      }));
+      await this.commandVersionRepository.addMany(newVersions);
+    }
+
+    this.logger.info('Recipe duplicated to space successfully', {
+      originalRecipeId: recipeId,
+      newCommandId,
+      destinationSpaceId,
+      versionsCount: versions.length,
+    });
+
+    return savedCommand;
   }
 
   async markCommandAsMoved(
@@ -319,24 +260,16 @@ export class CommandService {
       destinationSpaceId,
     });
 
-    try {
-      const recipe = await this.commandRepository.findById(recipeId);
-      if (!recipe) {
-        throw new Error(`Recipe with id ${recipeId} not found`);
-      }
-
-      await this.commandRepository.markAsMoved(recipeId, destinationSpaceId);
-
-      this.logger.info('Recipe marked as moved successfully', {
-        recipeId,
-        destinationSpaceId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to mark recipe as moved', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const recipe = await this.commandRepository.findById(recipeId);
+    if (!recipe) {
+      throw new CommandNotFoundError(recipeId);
     }
+
+    await this.commandRepository.markAsMoved(recipeId, destinationSpaceId);
+
+    this.logger.info('Recipe marked as moved successfully', {
+      recipeId,
+      destinationSpaceId,
+    });
   }
 }
