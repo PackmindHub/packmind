@@ -9,3 +9,5 @@ export * from './SkillNotFoundError';
 export * from './SkillFileNotFoundError';
 export * from './SkillsPortNotAvailableError';
 export * from './SkillVersionMissingError';
+export * from './SkillsAdapterPortsMissingError';
+export * from './SkillsHexaDependencyMissingError';

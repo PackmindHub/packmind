@@ -2,11 +2,15 @@ import { PackmindInternalError } from '@packmind/types';
 
 export type SkillsInternalErrorReason =
   | 'port_not_available'
-  | 'skill_version_missing';
+  | 'skill_version_missing'
+  | 'skills_adapter_ports_missing'
+  | 'hexa_dependency_missing';
 
 export type SkillsInternalErrorContext = {
   skillId?: string;
   port?: string;
+  missingPorts?: string[];
+  dependency?: string;
 };
 
 /**
