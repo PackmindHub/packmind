@@ -16,7 +16,7 @@ import { LuPencilLine } from 'react-icons/lu';
 import { Command } from '@packmind/types';
 import slug from 'slug';
 import { RECIPE_MESSAGES } from '../constants/messages';
-import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { useArtifactNameValidator } from '../../../shared/hooks/useArtifactNameValidator';
 
 export interface CommandFormData {
@@ -184,7 +184,7 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
 
         {isEditMode ? (
           <PMBox width={'full'}>
-            <MarkdownEditor
+            <MarkdownEditorWithMode
               defaultValue={content}
               onMarkdownChange={(value) => setContent(value)}
             />
@@ -237,7 +237,7 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
                   <PMField.RequiredIndicator />
                 </PMField.Label>
                 <PMBox width={'100%'}>
-                  <MarkdownEditor
+                  <MarkdownEditorWithMode
                     defaultValue={content}
                     onMarkdownChange={(value) => setContent(value)}
                   />

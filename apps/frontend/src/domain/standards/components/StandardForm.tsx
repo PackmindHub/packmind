@@ -33,7 +33,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
-import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
@@ -350,7 +350,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
         {mode === 'edit' ? (
           <PMBox width={'full'}>
-            <MarkdownEditor
+            <MarkdownEditorWithMode
               defaultValue={description}
               onMarkdownChange={(value: string): void => {
                 setDescription(value);
@@ -388,7 +388,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
                   <PMField.RequiredIndicator />
                 </PMField.Label>
                 <PMBox width={'100%'}>
-                  <MarkdownEditor
+                  <MarkdownEditorWithMode
                     defaultValue={description}
                     onMarkdownChange={(value: string): void => {
                       setDescription(value);
