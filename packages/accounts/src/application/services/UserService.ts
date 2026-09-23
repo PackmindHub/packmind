@@ -57,7 +57,7 @@ export class UserService {
 
       const existingUser = await this.getUserByEmailCaseInsensitive(email);
       if (existingUser) {
-        throw new EmailAlreadyExistsError();
+        throw new EmailAlreadyExistsError(email);
       }
 
       const saltRounds = 10;

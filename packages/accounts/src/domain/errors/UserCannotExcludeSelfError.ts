@@ -1,6 +1,13 @@
-export class UserCannotExcludeSelfError extends Error {
+import { AccountsError } from './AccountsError';
+
+export class UserCannotExcludeSelfError extends AccountsError {
   constructor() {
-    super('Users cannot exclude themselves from an organization');
+    super(
+      'invalid_input',
+      'user_cannot_exclude_self',
+      {},
+      'Users cannot exclude themselves from an organization',
+    );
     this.name = 'UserCannotExcludeSelfError';
   }
 }
