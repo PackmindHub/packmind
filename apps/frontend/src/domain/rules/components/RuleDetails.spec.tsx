@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
@@ -119,7 +119,7 @@ describe('RuleDetails - language selector and states', () => {
     });
   });
 
-  describe('when opening the language selector with configured examples', () => {
+  describe('when the rule has examples in several languages', () => {
     beforeEach(async () => {
       const examples: RuleExample[] = [
         createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
@@ -131,43 +131,42 @@ describe('RuleDetails - language selector and states', () => {
         isLoading: false,
       } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
 
-      const user = userEvent.setup({ pointerEventsCheck: 0 });
-
       renderWithProviders(
         <RuleDetails
           standardId={'standard-1' as StandardId}
           rule={createRule()}
         />,
       );
-
-      const languageLabel = screen.getByText('Language');
-      const languageContainer = languageLabel.closest('div') as HTMLElement;
-      const triggerCombobox = within(languageContainer).getByRole('combobox');
-      await user.click(triggerCombobox);
-
-      await waitFor(() => {
-        expect(screen.getByText('Configured Languages')).toBeInTheDocument();
-      });
     });
 
-    it('displays the configured languages group', async () => {
-      expect(screen.getByText('Configured Languages')).toBeInTheDocument();
+    /*
+      How many languages a rule speaks is the first fact about it, since each
+      one gets its own detection program. A closed select spent that fact on a
+      click.
+    */
+    it('names every language it speaks without being opened', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Python/ }),
+      ).toBeInTheDocument();
     });
 
-    it('displays the add language group', async () => {
-      expect(screen.getByText('Add a language')).toBeInTheDocument();
+    it('marks the one being read', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript/ }),
+      ).toHaveAttribute('aria-pressed', 'true');
     });
 
-    it('displays JavaScript in the configured languages', async () => {
-      expect(screen.getAllByText('JavaScript')[0]).toBeInTheDocument();
-    });
-
-    it('displays Python in the configured languages', async () => {
-      expect(screen.getByText('Python')).toBeInTheDocument();
+    it('says how many examples each language carries', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript, 1 saved/ }),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('when selecting a language from the "Add a language" group', () => {
+  describe('when a language the rule does not speak yet is picked', () => {
     beforeEach(async () => {
       const examples: RuleExample[] = [
         createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
@@ -187,28 +186,16 @@ describe('RuleDetails - language selector and states', () => {
         />,
       );
 
-      const languageLabel = screen.getByText('Language');
-      const languageContainer = languageLabel.closest('div') as HTMLElement;
-      const triggerCombobox = within(languageContainer).getByRole('combobox');
-      await user.click(triggerCombobox);
+      await user.click(screen.getByRole('button', { name: 'Add a language' }));
+      await user.click(await screen.findByText('Python'));
+    });
 
-      const addLanguageGroupLabel = screen.getByText('Add a language');
-      await user.click(addLanguageGroupLabel);
-
-      const pythonOption = await screen.findByText('Python');
-      await user.click(pythonOption);
-
+    it('opens the examples body on it', async () => {
       await waitFor(() => {
         expect(screen.getByTestId('selected-language')).toHaveTextContent(
           'PYTHON',
         );
       });
-    });
-
-    it('sets the selected language to PYTHON', async () => {
-      expect(screen.getByTestId('selected-language')).toHaveTextContent(
-        'PYTHON',
-      );
     });
   });
 });

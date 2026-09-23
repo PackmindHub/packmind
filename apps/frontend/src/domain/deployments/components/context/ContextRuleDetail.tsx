@@ -20,7 +20,7 @@ import {
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
 import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import { RuleExamplesManager } from '../../../rules/components/RuleExamplesManager';
-import { RuleLanguageSelect } from '../../../rules/components/RuleLanguageSelect';
+import { RuleLanguageRail } from '../../../rules/components/RuleLanguageRail';
 import { useGetRuleExamplesQuery } from '../../../rules/api/queries';
 import {
   RuleExampleDraftsProvider,
@@ -80,11 +80,11 @@ export function ContextRuleDetail({
   const draftsStore = useRuleExampleDraftsStore();
 
   /*
-   * The examples, for two things this frame decides and the bodies below it do
-   * not: which languages the select calls configured, and which one to open on.
-   * The same query `RuleExamplesManager` runs, by the same key, so the two read
-   * one answer rather than two that can disagree about whether a language has
-   * examples.
+   * The examples, for three things this frame decides and the bodies below it do
+   * not: which languages the rail carries, how many each has, and which one to
+   * open on. The same query `RuleExamplesManager` runs, by the same key, so the
+   * two read one answer rather than two that can disagree about whether a
+   * language has examples.
    */
   const { data: examples } = useGetRuleExamplesQuery(
     organization?.id as OrganizationId,
@@ -110,21 +110,27 @@ export function ContextRuleDetail({
     [detectionStatuses, rule.id],
   );
 
-  const configuredLanguages = useMemo(() => {
-    const languages = new Set(
-      (examples ?? [])
-        .map((example) => example.lang)
-        .filter((language): language is ProgrammingLanguage => !!language),
-    );
+  const exampleCounts = useMemo(() => {
+    const counts = new Map<ProgrammingLanguage, number>();
 
+    (examples ?? []).forEach((example) => {
+      if (example.lang) {
+        counts.set(example.lang, (counts.get(example.lang) ?? 0) + 1);
+      }
+    });
+
+    return counts;
+  }, [examples]);
+
+  const configuredLanguages = useMemo(() => {
     /*
      * In display order rather than in the order the examples came back, so the
-     * language this opens on is the same one the select shows first.
+     * language this opens on is the one the rail shows first.
      */
     return getAllLanguagesSortedByDisplayName()
       .map(({ language }) => language)
-      .filter((language) => languages.has(language));
-  }, [examples]);
+      .filter((language) => exampleCounts.has(language));
+  }, [exampleCounts]);
 
   /*
    * Not in the address, unlike the tab.
@@ -141,6 +147,26 @@ export function ContextRuleDetail({
   const [picked, setPicked] = useState<ProgrammingLanguage | undefined>();
   const language =
     picked ?? configuredLanguages[0] ?? ProgrammingLanguage.JAVASCRIPT;
+
+  /*
+   * What the rail carries, which is more than what is saved.
+   *
+   * A language holding a parked draft belongs on it, or leaving that language
+   * would hide the work rather than keep it. So does the one being read, even
+   * with nothing in it yet: the pair of editors below has to say which language
+   * it is a pair of editors for.
+   */
+  const railLanguages = useMemo(() => {
+    const carried = new Set<ProgrammingLanguage>([
+      ...exampleCounts.keys(),
+      ...draftsStore.dirtyLanguages,
+      language,
+    ]);
+
+    return getAllLanguagesSortedByDisplayName()
+      .map((entry) => entry.language)
+      .filter((entry) => carried.has(entry));
+  }, [exampleCounts, draftsStore.dirtyLanguages, language]);
 
   /*
    * A program is generated from examples, so a language with none has nothing
@@ -221,28 +247,24 @@ export function ContextRuleDetail({
               >
                 Linter
               </PMTabsCompound.Trigger>
-              {/*
-              In the strip rather than above it, because it scopes both bodies
-              and not one: the examples of a language and the program built from
-              them are the same choice read twice.
-            */}
-              <PMHStack
-                marginLeft="auto"
-                gap={2}
-                alignItems="center"
-                flexShrink={0}
-              >
-                <PMText fontSize="xs" color="faded">
-                  Language
-                </PMText>
-                <RuleLanguageSelect
-                  configuredLanguages={configuredLanguages}
-                  value={language}
-                  onChange={setPicked}
-                  width="180px"
-                />
-              </PMHStack>
             </PMTabsCompound.List>
+
+            {/*
+              Under the strip rather than in it, because it scopes both bodies
+              and not one: the examples of a language and the program built from
+              them are the same choice read twice. The strip is left to the two
+              halves of a rule, which is all it can hold once a rule speaks more
+              than one language.
+            */}
+            <PMBox paddingTop={4}>
+              <RuleLanguageRail
+                languages={railLanguages}
+                value={language}
+                counts={exampleCounts}
+                unsaved={draftsStore.dirtyLanguages}
+                onChange={setPicked}
+              />
+            </PMBox>
 
             <PMTabsCompound.Content value={EXAMPLES_TAB}>
               {/*

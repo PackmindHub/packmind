@@ -234,8 +234,16 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
 
   return (
     <PMBox
+      /*
+        A border that can be seen. `border.primary` is `beige-1000`, which is
+        also what this pane is painted with, so the card had no edge at all: the
+        `shadow="sm"` that used to sit here was hiding that, and taking the
+        shadow off (nothing is elevated at rest) left two stacked examples
+        running into each other. One step up the ramp is the flat way to say
+        where one example ends.
+      */
       border="1px solid"
-      borderColor="{colors.border.primary}"
+      borderColor="{colors.border.tertiary}"
       borderRadius="md"
       width="100%"
       p={4}

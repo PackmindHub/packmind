@@ -154,6 +154,44 @@ describe('ContextRuleDetail', () => {
     ).toContain('component=standard-1');
   });
 
+  describe('the languages the rule has examples in', () => {
+    beforeEach(() => {
+      withExamples(ProgrammingLanguage.JAVA, ProgrammingLanguage.TYPESCRIPT);
+    });
+
+    /*
+      Each language gets its own detection program, so how many a rule speaks is
+      the first fact about it. The select this replaced spent that fact on a
+      click.
+    */
+    it('names all of them at once', async () => {
+      await renderRule();
+
+      expect(
+        screen.getByRole('button', { name: 'Java, 1 saved' }),
+      ).toBeVisible();
+      expect(
+        screen.getByRole('button', { name: 'TypeScript, 1 saved' }),
+      ).toBeVisible();
+    });
+
+    it('marks the one being read', async () => {
+      await renderRule();
+
+      expect(
+        screen.getByRole('button', { name: 'Java, 1 saved' }),
+      ).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('offers a language the rule does not speak yet', async () => {
+      await renderRule();
+
+      expect(
+        screen.getByRole('button', { name: 'Add a language' }),
+      ).toBeVisible();
+    });
+  });
+
   it('offers the examples and the linter as the two halves of a rule', async () => {
     await renderRule();
 

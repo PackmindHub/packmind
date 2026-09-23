@@ -1,11 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import {
+  PMBox,
   PMPageSection,
   PMTabsCompound,
   PMVStack,
-  PMHStack,
-  PMField,
   PMAlert,
 } from '@packmind/ui';
 import {
@@ -17,7 +16,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { RuleExamplesManager } from './RuleExamplesManager';
-import { RuleLanguageSelect } from './RuleLanguageSelect';
+import { RuleLanguageRail } from './RuleLanguageRail';
 import {
   RuleExampleDraftsProvider,
   useRuleExampleDraftsStore,
@@ -83,20 +82,22 @@ export const RuleDetails = ({
       rule.id,
     );
 
-  const detectionLanguages = useMemo<ProgrammingLanguage[]>(() => {
-    if (!examples) {
-      return [];
-    }
+  const exampleCounts = useMemo(() => {
+    const counts = new Map<ProgrammingLanguage, number>();
 
-    const uniqueLanguages = new Set<ProgrammingLanguage>();
-    examples.forEach((example) => {
+    (examples ?? []).forEach((example) => {
       if (example.lang) {
-        uniqueLanguages.add(example.lang);
+        counts.set(example.lang, (counts.get(example.lang) ?? 0) + 1);
       }
     });
 
-    return Array.from(uniqueLanguages);
+    return counts;
   }, [examples]);
+
+  const detectionLanguages = useMemo<ProgrammingLanguage[]>(
+    () => Array.from(exampleCounts.keys()),
+    [exampleCounts],
+  );
 
   const selectedLanguageHasExamples = useMemo(() => {
     return detectionLanguages.includes(selectedLanguage);
@@ -159,6 +160,22 @@ export const RuleDetails = ({
     setSelectedLanguage(defaultLang);
   }, [detectionLanguages, searchParams]);
 
+  /*
+   * More than what is saved: a language holding a parked draft, and the one
+   * being read even when it is empty, both belong on the rail.
+   */
+  const railLanguages = useMemo(() => {
+    const carried = new Set<ProgrammingLanguage>([
+      ...exampleCounts.keys(),
+      ...draftsStore.dirtyLanguages,
+      selectedLanguage,
+    ]);
+
+    return getAllLanguagesSortedByDisplayName()
+      .map((entry) => entry.language)
+      .filter((entry) => carried.has(entry));
+  }, [exampleCounts, draftsStore.dirtyLanguages, selectedLanguage]);
+
   const handleNavigateToExamples = () => {
     updateTabWithUrl('examples');
   };
@@ -193,19 +210,21 @@ export const RuleDetails = ({
             >
               Linter
             </PMTabsCompound.Trigger>
-            <PMHStack ml="auto" gap={3} alignItems="center">
-              <PMField.Root>
-                <PMHStack gap={2} alignItems="center">
-                  <PMField.Label mb={0}>Language</PMField.Label>
-                  <RuleLanguageSelect
-                    configuredLanguages={detectionLanguages}
-                    value={selectedLanguage}
-                    onChange={updateLanguageWithUrl}
-                  />
-                </PMHStack>
-              </PMField.Root>
-            </PMHStack>
           </PMTabsCompound.List>
+
+          {/*
+            Under the strip rather than in it: the language scopes both bodies,
+            and the strip is left to the two halves of a rule.
+          */}
+          <PMBox paddingTop={4}>
+            <RuleLanguageRail
+              languages={railLanguages}
+              value={selectedLanguage}
+              counts={exampleCounts}
+              unsaved={draftsStore.dirtyLanguages}
+              onChange={updateLanguageWithUrl}
+            />
+          </PMBox>
 
           <PMTabsCompound.Content value="examples">
             <PMVStack
