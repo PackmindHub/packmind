@@ -7,6 +7,10 @@ export interface AIPromptResult<T = string> {
   success: boolean;
   data: T | null;
   error?: string;
+  /** Classification of the provider failure, set when `success` is false after a provider call. */
+  errorType?: AIServiceErrorType;
+  /** HTTP status the provider answered with, when the failure carried one. */
+  statusCode?: number;
   attempts: number;
   model: string;
   tokensUsed?: {

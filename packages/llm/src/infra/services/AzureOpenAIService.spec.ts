@@ -457,7 +457,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('retries on rate limit errors immediately', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -470,7 +473,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('returns correct data after retrying', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -483,7 +489,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('tracks correct number of attempts after retries', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -496,7 +505,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('calls create multiple times during retries', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -511,7 +523,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('stops retrying on authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         authError,
       );
@@ -522,7 +536,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('returns null data on authentication failure', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         authError,
       );
@@ -533,7 +549,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('provides the error message', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         authError,
       );
@@ -544,7 +562,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('calls create only once for authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         authError,
       );
@@ -557,7 +577,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('fails after maximum retry attempts', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         networkError,
       );
@@ -570,7 +592,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('returns null data after exceeding max retries', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         networkError,
       );
@@ -583,7 +607,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('provides the error message', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         networkError,
       );
@@ -596,7 +622,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('tracks correct attempts after exceeding max retries', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         networkError,
       );
@@ -609,7 +637,9 @@ describe('AzureOpenAIService', () => {
     });
 
     it('calls create exact number of retry attempts', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockAzureOpenAIInstance.chat.completions.create.mockRejectedValue(
         networkError,
       );
@@ -757,7 +787,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('retries on rate limit errors with history', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -769,7 +802,10 @@ describe('AzureOpenAIService', () => {
     });
 
     it('tracks attempts correctly after retries with history', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockAzureOpenAIInstance.chat.completions.create
         .mockRejectedValueOnce(rateLimitError)
@@ -818,42 +854,6 @@ describe('AzureOpenAIService', () => {
       expect(result.error).toContain(
         'Invalid response from AzureOpenAIService',
       );
-    });
-  });
-
-  describe('error classification', () => {
-    let service: AzureOpenAIService;
-
-    beforeEach(() => {
-      service = new AzureOpenAIService({
-        provider: LLMProvider.AZURE_OPENAI,
-        model: 'gpt-4-deployment',
-        fastestModel: 'gpt-35-turbo-deployment',
-      });
-    });
-
-    it('classifies rate limit errors correctly', () => {
-      const rateLimitError = new Error('Rate limit exceeded');
-      const errorType = getPrivateAccess(service).classifyError(rateLimitError);
-      expect(errorType).toBe(AIServiceErrorTypes.RATE_LIMIT);
-    });
-
-    it('classifies authentication errors correctly', () => {
-      const authError = new Error('Unauthorized access');
-      const errorType = getPrivateAccess(service).classifyError(authError);
-      expect(errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
-    });
-
-    it('classifies network errors correctly', () => {
-      const networkError = new Error('Network timeout occurred');
-      const errorType = getPrivateAccess(service).classifyError(networkError);
-      expect(errorType).toBe(AIServiceErrorTypes.NETWORK_ERROR);
-    });
-
-    it('defaults to API_ERROR for unknown errors', () => {
-      const unknownError = new Error('Unknown error');
-      const errorType = getPrivateAccess(service).classifyError(unknownError);
-      expect(errorType).toBe(AIServiceErrorTypes.API_ERROR);
     });
   });
 
