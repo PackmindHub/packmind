@@ -1,9 +1,11 @@
 import { AzureOpenAI } from 'openai';
 import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { LLMProvider } from '@packmind/types';
 import { BaseOpenAIService } from './BaseOpenAIService';
 import { AzureOpenAIServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_AZURE_OPENAI_API_VERSION } from '../../constants/defaultModels';
+import { ModelListingUnsupportedError } from '../../domain/errors';
 
 const origin = 'AzureOpenAIService';
 
@@ -52,39 +54,32 @@ export class AzureOpenAIService extends BaseOpenAIService {
 
     this.logger.info('Initializing Azure OpenAI client');
 
-    try {
-      const apiKey =
-        this.configApiKey ||
-        (await Configuration.getConfig('AZURE_OPENAI_API_KEY'));
-      const endpoint =
-        this.configEndpoint ||
-        (await Configuration.getConfig('AZURE_OPENAI_ENDPOINT'));
+    const apiKey =
+      this.configApiKey ||
+      (await Configuration.getConfig('AZURE_OPENAI_API_KEY'));
+    const endpoint =
+      this.configEndpoint ||
+      (await Configuration.getConfig('AZURE_OPENAI_ENDPOINT'));
 
-      if (!apiKey || !endpoint) {
-        this.logger.warn(
-          'Azure OpenAI API key or endpoint not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new AzureOpenAI({
-        apiKey,
-        endpoint,
-        apiVersion: this.apiVersion,
-      }) as unknown as import('openai').default;
-
-      this.initialized = true;
-      this.logger.info('Azure OpenAI client initialized successfully', {
-        endpoint,
-        apiVersion: this.apiVersion,
-      });
-    } catch (error) {
-      this.logger.error('Failed to initialize Azure OpenAI client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!apiKey || !endpoint) {
+      this.logger.warn(
+        'Azure OpenAI API key or endpoint not found in configuration - AI features will be disabled',
+      );
+      this.initialized = true; // Mark as initialized but without client
+      return;
     }
+
+    this.client = new AzureOpenAI({
+      apiKey,
+      endpoint,
+      apiVersion: this.apiVersion,
+    }) as unknown as import('openai').default;
+
+    this.initialized = true;
+    this.logger.info('Azure OpenAI client initialized successfully', {
+      endpoint,
+      apiVersion: this.apiVersion,
+    });
   }
 
   /**
@@ -93,11 +88,9 @@ export class AzureOpenAIService extends BaseOpenAIService {
    * through the data plane API; deployment names must be configured by hand.
    */
   async getModels(): Promise<string[]> {
-    this.logger.warn(
-      'getModels called on AzureOpenAIService - method not implemented',
-    );
-    throw new Error(
-      'Method not implemented for this Provider. Azure OpenAI deployment names must be configured manually from Azure Portal.',
+    throw new ModelListingUnsupportedError(
+      LLMProvider.AZURE_OPENAI,
+      'Azure OpenAI cannot list its deployments. Configure the deployment names manually from the Azure Portal.',
     );
   }
 }

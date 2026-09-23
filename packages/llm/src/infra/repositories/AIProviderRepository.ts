@@ -112,69 +112,53 @@ export class AIProviderRepository
       provider: config.provider,
     });
 
-    try {
-      const encryptedConfig = await this.encryptSecrets(config);
+    const encryptedConfig = await this.encryptSecrets(config);
 
-      const existing = await this.findByOrganizationId(organizationId);
+    const existing = await this.findByOrganizationId(organizationId);
 
-      if (existing) {
-        await this.repository.save({
-          ...existing,
-          config: encryptedConfig,
-        });
-
-        this.logger.info('AI provider configuration updated', {
-          organizationId,
-          provider: config.provider,
-        });
-      } else {
-        const newConfiguration: AIProvider = {
-          id: createAIProviderId(uuidv4()),
-          organizationId,
-          config: encryptedConfig,
-        };
-
-        await this.repository.save(newConfiguration);
-
-        this.logger.info('AI provider configuration created', {
-          organizationId,
-          provider: config.provider,
-        });
-      }
-    } catch (error) {
-      this.logger.error('Failed to save AI provider configuration', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
+    if (existing) {
+      await this.repository.save({
+        ...existing,
+        config: encryptedConfig,
       });
-      throw error;
+
+      this.logger.info('AI provider configuration updated', {
+        organizationId,
+        provider: config.provider,
+      });
+    } else {
+      const newConfiguration: AIProvider = {
+        id: createAIProviderId(uuidv4()),
+        organizationId,
+        config: encryptedConfig,
+      };
+
+      await this.repository.save(newConfiguration);
+
+      this.logger.info('AI provider configuration created', {
+        organizationId,
+        provider: config.provider,
+      });
     }
   }
 
   async get(organizationId: OrganizationId): Promise<StoredAIProvider | null> {
     this.logger.info('Getting AI provider configuration', { organizationId });
 
-    try {
-      const configuration = await this.findByOrganizationId(organizationId);
+    const configuration = await this.findByOrganizationId(organizationId);
 
-      if (!configuration) {
-        this.logger.info('No AI provider configuration found', {
-          organizationId,
-        });
-        return null;
-      }
-
-      const decryptedConfig = await this.decryptSecrets(configuration.config);
-
-      return {
-        config: decryptedConfig,
-      };
-    } catch (error) {
-      this.logger.error('Failed to get AI provider configuration', {
+    if (!configuration) {
+      this.logger.info('No AI provider configuration found', {
         organizationId,
-        error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return null;
     }
+
+    const decryptedConfig = await this.decryptSecrets(configuration.config);
+
+    return {
+      config: decryptedConfig,
+    };
   }
 
   async exists(organizationId: OrganizationId): Promise<boolean> {
@@ -182,36 +166,17 @@ export class AIProviderRepository
       organizationId,
     });
 
-    try {
-      const configuration = await this.findByOrganizationId(organizationId);
-      return configuration !== null;
-    } catch (error) {
-      this.logger.error('Failed to check AI provider configuration existence', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const configuration = await this.findByOrganizationId(organizationId);
+    return configuration !== null;
   }
 
   private async findByOrganizationId(
     organizationId: OrganizationId,
   ): Promise<AIProvider | null> {
-    try {
-      const configuration = await this.repository.findOne({
-        where: { organizationId },
-      });
+    const configuration = await this.repository.findOne({
+      where: { organizationId },
+    });
 
-      return configuration;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find AI provider configuration by organization ID',
-        {
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
+    return configuration;
   }
 }

@@ -1,4 +1,5 @@
 import {
+  AIServiceErrorTypes,
   createOrganizationId,
   createUserId,
   IAccountsPort,
@@ -278,6 +279,8 @@ describe('TestSavedLLMConfigurationUseCase', () => {
             model: 'gpt-4',
             data: null,
             error: 'Unauthorized (401)',
+            errorType: AIServiceErrorTypes.AUTHENTICATION_ERROR,
+            statusCode: 401,
             attempts: 1,
           });
         });
@@ -308,6 +311,12 @@ describe('TestSavedLLMConfigurationUseCase', () => {
           );
         });
 
+        it('returns the provider status code', async () => {
+          const result = await useCase.execute({ userId, organizationId });
+
+          expect(result.standardModel.error?.statusCode).toBe(401);
+        });
+
         it('returns authentication error type', async () => {
           const result = await useCase.execute({ userId, organizationId });
 
@@ -318,7 +327,9 @@ describe('TestSavedLLMConfigurationUseCase', () => {
       describe('when connection test throws exception', () => {
         beforeEach(() => {
           mockExecutePrompt.mockRejectedValueOnce(
-            new Error('Network timeout occurred'),
+            Object.assign(new Error('Network timeout occurred'), {
+              code: 'ETIMEDOUT',
+            }),
           );
         });
 

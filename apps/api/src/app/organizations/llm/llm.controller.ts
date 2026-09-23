@@ -54,32 +54,18 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.testConnection(req, body);
+    const result = await this.llmService.testConnection(req, body);
 
-      this.logger.info(
-        'POST /organizations/:orgId/llm/test-connection - Connection test completed',
-        {
-          organizationId,
-          provider: body.config.provider,
-          overallSuccess: result.overallSuccess,
-        },
-      );
+    this.logger.info(
+      'POST /organizations/:orgId/llm/test-connection - Connection test completed',
+      {
+        organizationId,
+        provider: body.config.provider,
+        overallSuccess: result.overallSuccess,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/llm/test-connection - Failed to test connection',
-        {
-          organizationId,
-          provider: body.config.provider,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Post('get-models')
@@ -96,33 +82,19 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.getModels(req, body);
+    const result = await this.llmService.getModels(req, body);
 
-      this.logger.info(
-        'POST /organizations/:orgId/llm/get-models - Successfully retrieved models',
-        {
-          organizationId,
-          provider: body.config.provider,
-          modelCount: result.models.length,
-          success: result.success,
-        },
-      );
+    this.logger.info(
+      'POST /organizations/:orgId/llm/get-models - Successfully retrieved models',
+      {
+        organizationId,
+        provider: body.config.provider,
+        modelCount: result.models.length,
+        success: result.success,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/llm/get-models - Failed to get models',
-        {
-          organizationId,
-          provider: body.config.provider,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Post('configuration')
@@ -139,32 +111,18 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.saveConfiguration(req, body);
+    const result = await this.llmService.saveConfiguration(req, body);
 
-      this.logger.info(
-        'POST /organizations/:orgId/llm/configuration - Configuration saved',
-        {
-          organizationId,
-          provider: body.config.provider,
-          success: result.success,
-        },
-      );
+    this.logger.info(
+      'POST /organizations/:orgId/llm/configuration - Configuration saved',
+      {
+        organizationId,
+        provider: body.config.provider,
+        success: result.success,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/llm/configuration - Failed to save configuration',
-        {
-          organizationId,
-          provider: body.config.provider,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Get('configuration')
@@ -179,30 +137,17 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.getConfiguration(req);
+    const result = await this.llmService.getConfiguration(req);
 
-      this.logger.info(
-        'GET /organizations/:orgId/llm/configuration - Configuration retrieved',
-        {
-          organizationId,
-          hasConfiguration: result.hasConfiguration,
-        },
-      );
+    this.logger.info(
+      'GET /organizations/:orgId/llm/configuration - Configuration retrieved',
+      {
+        organizationId,
+        hasConfiguration: result.hasConfiguration,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/llm/configuration - Failed to get configuration',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Post('configuration/test')
@@ -217,31 +162,18 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.testSavedConfiguration(req);
+    const result = await this.llmService.testSavedConfiguration(req);
 
-      this.logger.info(
-        'POST /organizations/:orgId/llm/configuration/test - Saved configuration test completed',
-        {
-          organizationId,
-          hasConfiguration: result.hasConfiguration,
-          overallSuccess: result.overallSuccess,
-        },
-      );
+    this.logger.info(
+      'POST /organizations/:orgId/llm/configuration/test - Saved configuration test completed',
+      {
+        organizationId,
+        hasConfiguration: result.hasConfiguration,
+        overallSuccess: result.overallSuccess,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/llm/configuration/test - Failed to test saved configuration',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Get('providers')
@@ -256,29 +188,16 @@ export class LlmController {
       },
     );
 
-    try {
-      const result = await this.llmService.getAvailableProviders(req);
+    const result = await this.llmService.getAvailableProviders(req);
 
-      this.logger.info(
-        'GET /organizations/:orgId/llm/providers - Available providers retrieved',
-        {
-          organizationId,
-          providerCount: result.providers.length,
-        },
-      );
+    this.logger.info(
+      'GET /organizations/:orgId/llm/providers - Available providers retrieved',
+      {
+        organizationId,
+        providerCount: result.providers.length,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/llm/providers - Failed to get available providers',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 }

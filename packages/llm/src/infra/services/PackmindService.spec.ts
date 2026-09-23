@@ -613,6 +613,71 @@ describe('PackmindService', () => {
     });
   });
 
+  describe('when the underlying provider is missing its API key', () => {
+    beforeEach(() => {
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === 'PACKMIND_DEFAULT_PROVIDER')
+          return Promise.resolve('openai');
+        if (key === 'OPENAI_API_KEY') return Promise.resolve(null);
+        return Promise.resolve(null);
+      });
+    });
+
+    describe('executePrompt', () => {
+      it('returns a generic caller-facing error', async () => {
+        const service = new PackmindService(
+          { provider: LLMProvider.PACKMIND },
+          mockLogger,
+        );
+
+        const result = await service.executePrompt('test prompt');
+
+        expect(result.error).toBe('Packmind AI is not available right now.');
+      });
+
+      it('does not leak the missing config key name', async () => {
+        const service = new PackmindService(
+          { provider: LLMProvider.PACKMIND },
+          mockLogger,
+        );
+
+        const result = await service.executePrompt('test prompt');
+
+        expect(result.error).not.toContain('OPENAI_API_KEY');
+      });
+    });
+
+    describe('executePromptWithHistory', () => {
+      const conversationHistory: PromptConversation[] = [
+        { role: PromptConversationRole.USER, message: 'Hello' },
+      ];
+
+      it('returns a generic caller-facing error', async () => {
+        const service = new PackmindService(
+          { provider: LLMProvider.PACKMIND },
+          mockLogger,
+        );
+
+        const result =
+          await service.executePromptWithHistory(conversationHistory);
+
+        expect(result.error).toBe('Packmind AI is not available right now.');
+      });
+
+      it('does not leak the missing config key name', async () => {
+        const service = new PackmindService(
+          { provider: LLMProvider.PACKMIND },
+          mockLogger,
+        );
+
+        const result =
+          await service.executePromptWithHistory(conversationHistory);
+
+        expect(result.error).not.toContain('OPENAI_API_KEY');
+      });
+    });
+  });
+
   describe('initialization is lazy', () => {
     it('does not initialize until first method call', async () => {
       mockGetConfig.mockImplementation((key: string) => {

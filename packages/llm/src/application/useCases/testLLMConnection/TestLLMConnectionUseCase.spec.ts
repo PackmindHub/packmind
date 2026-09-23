@@ -1,4 +1,5 @@
 import {
+  AIServiceErrorTypes,
   createOrganizationId,
   createUserId,
   IAccountsPort,
@@ -176,6 +177,8 @@ describe('TestLLMConnectionUseCase', () => {
           model: 'gpt-4',
           data: null,
           error: 'Unauthorized (401)',
+          errorType: AIServiceErrorTypes.AUTHENTICATION_ERROR,
+          statusCode: 401,
           attempts: 1,
         });
       });
@@ -221,6 +224,20 @@ describe('TestLLMConnectionUseCase', () => {
 
         expect(result.standardModel.error?.message).toBe('Unauthorized (401)');
       });
+
+      it('returns the provider status code', async () => {
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
+          config: {
+            provider: LLMProvider.OPENAI,
+            apiKey: 'invalid-key',
+          },
+        });
+
+        expect(result.standardModel.error?.statusCode).toBe(401);
+      });
     });
 
     describe('when rate limit is exceeded', () => {
@@ -230,6 +247,8 @@ describe('TestLLMConnectionUseCase', () => {
           model: 'gpt-4',
           data: null,
           error: 'Rate limit exceeded (429)',
+          errorType: AIServiceErrorTypes.RATE_LIMIT,
+          statusCode: 429,
           attempts: 2,
         });
 
@@ -254,6 +273,7 @@ describe('TestLLMConnectionUseCase', () => {
           model: 'gpt-4',
           data: null,
           error: 'Network timeout occurred',
+          errorType: AIServiceErrorTypes.NETWORK_ERROR,
           attempts: 2,
         });
 

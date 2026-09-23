@@ -228,7 +228,10 @@ describe('GeminiService', () => {
     });
 
     it('retries on rate limit errors immediately', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -241,7 +244,10 @@ describe('GeminiService', () => {
     });
 
     it('returns correct data after retrying', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -254,7 +260,10 @@ describe('GeminiService', () => {
     });
 
     it('tracks correct number of attempts after retries', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -267,7 +276,10 @@ describe('GeminiService', () => {
     });
 
     it('calls generateContent multiple times during retries', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -282,7 +294,9 @@ describe('GeminiService', () => {
     });
 
     it('stops retrying on authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
 
       const result = await service.executePrompt(mockPrompt);
@@ -291,7 +305,9 @@ describe('GeminiService', () => {
     });
 
     it('returns null data on authentication failure', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
 
       const result = await service.executePrompt(mockPrompt);
@@ -300,7 +316,9 @@ describe('GeminiService', () => {
     });
 
     it('provides the error message', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
 
       const result = await service.executePrompt(mockPrompt);
@@ -308,8 +326,45 @@ describe('GeminiService', () => {
       expect(result.error).toBe('Unauthorized (401)');
     });
 
+    it('classifies the failed result as an authentication error', async () => {
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
+      mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
+
+      const result = await service.executePrompt(mockPrompt);
+
+      expect(result.errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
+    });
+
+    it('carries the provider status code on the failed result', async () => {
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
+      mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
+
+      const result = await service.executePrompt(mockPrompt);
+
+      expect(result.statusCode).toBe(401);
+    });
+
+    it('classifies a socket failure result as a network error', async () => {
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
+      mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
+
+      const result = await service.executePrompt(mockPrompt, {
+        retryAttempts: 3,
+      });
+
+      expect(result.errorType).toBe(AIServiceErrorTypes.NETWORK_ERROR);
+    });
+
     it('calls generateContent only once for authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
 
       await service.executePrompt(mockPrompt);
@@ -320,7 +375,9 @@ describe('GeminiService', () => {
     });
 
     it('fails after maximum retry attempts', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
       const result = await service.executePrompt(mockPrompt, {
@@ -331,7 +388,9 @@ describe('GeminiService', () => {
     });
 
     it('returns null data after exceeding max retries', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
       const result = await service.executePrompt(mockPrompt, {
@@ -342,7 +401,9 @@ describe('GeminiService', () => {
     });
 
     it('provides the error message', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
       const result = await service.executePrompt(mockPrompt, {
@@ -353,7 +414,9 @@ describe('GeminiService', () => {
     });
 
     it('tracks correct attempts after exceeding max retries', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
       const result = await service.executePrompt(mockPrompt, {
@@ -364,7 +427,9 @@ describe('GeminiService', () => {
     });
 
     it('calls generateContent exact number of retry attempts', async () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
       await service.executePrompt(mockPrompt, {
@@ -470,7 +535,10 @@ describe('GeminiService', () => {
     });
 
     it('retries on rate limit errors with history', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -482,7 +550,10 @@ describe('GeminiService', () => {
     });
 
     it('tracks attempts correctly after retries with history', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       mockGeminiInstance.models.generateContent
         .mockRejectedValueOnce(rateLimitError)
@@ -519,41 +590,6 @@ describe('GeminiService', () => {
       const result = await service.executePromptWithHistory(mockConversation);
 
       expect(result.error).toContain('Invalid response from Gemini');
-    });
-  });
-
-  describe('error classification', () => {
-    let service: GeminiService;
-
-    beforeEach(() => {
-      service = new GeminiService({
-        provider: LLMProvider.GEMINI,
-        apiKey: 'test-api-key',
-      });
-    });
-
-    it('classifies rate limit errors correctly', () => {
-      const rateLimitError = new Error('Rate limit exceeded');
-      const errorType = getPrivateAccess(service).classifyError(rateLimitError);
-      expect(errorType).toBe(AIServiceErrorTypes.RATE_LIMIT);
-    });
-
-    it('classifies authentication errors correctly', () => {
-      const authError = new Error('Unauthorized access');
-      const errorType = getPrivateAccess(service).classifyError(authError);
-      expect(errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
-    });
-
-    it('classifies network errors correctly', () => {
-      const networkError = new Error('Network timeout occurred');
-      const errorType = getPrivateAccess(service).classifyError(networkError);
-      expect(errorType).toBe(AIServiceErrorTypes.NETWORK_ERROR);
-    });
-
-    it('defaults to API_ERROR for unknown errors', () => {
-      const unknownError = new Error('Unknown error');
-      const errorType = getPrivateAccess(service).classifyError(unknownError);
-      expect(errorType).toBe(AIServiceErrorTypes.API_ERROR);
     });
   });
 

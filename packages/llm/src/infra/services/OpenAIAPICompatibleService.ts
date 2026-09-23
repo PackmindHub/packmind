@@ -51,26 +51,19 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
       baseUrl: this.baseUrl,
     });
 
-    try {
-      if (!this.apiKey || this.apiKey.length === 0) {
-        this.logger.warn('API key not provided - AI features will be disabled');
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new OpenAI({
-        apiKey: this.apiKey,
-        baseURL: this.baseUrl,
-      });
-
-      this.initialized = true;
-      this.logger.info('OpenAI-compatible client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize OpenAI-compatible client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!this.apiKey || this.apiKey.length === 0) {
+      this.logger.warn('API key not provided - AI features will be disabled');
+      this.initialized = true; // Mark as initialized but without client
+      return;
     }
+
+    this.client = new OpenAI({
+      apiKey: this.apiKey,
+      baseURL: this.baseUrl,
+    });
+
+    this.initialized = true;
+    this.logger.info('OpenAI-compatible client initialized successfully');
   }
 
   async executePrompt<T = string>(
