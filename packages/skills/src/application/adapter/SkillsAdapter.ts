@@ -36,6 +36,7 @@ import {
   UploadSkillResponse,
 } from '@packmind/types';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
+import { SkillsAdapterPortsMissingError } from '../../domain/errors';
 import { SkillsServices } from '../services/SkillsServices';
 import { CreateSkillUseCase } from '../useCases/createSkill/CreateSkillUseCase';
 import { DeleteSkillUseCase } from '../useCases/deleteSkill/DeleteSkillUseCase';
@@ -94,9 +95,14 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     this.eventEmitterService = ports.eventEmitterService;
 
     if (!this.accountsPort || !this.spacesPort || !this.eventEmitterService) {
-      throw new Error(
-        'SkillsAdapter: Required ports/services not provided. Ensure eventEmitterService is passed to initialize().',
-      );
+      const missingPorts = Object.entries({
+        [IAccountsPortName]: this.accountsPort,
+        [ISpacesPortName]: this.spacesPort,
+        eventEmitterService: this.eventEmitterService,
+      })
+        .filter(([, port]) => !port)
+        .map(([name]) => name);
+      throw new SkillsAdapterPortsMissingError(missingPorts);
     }
 
     this._createSkill = new CreateSkillUseCase(

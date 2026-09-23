@@ -22,6 +22,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { SKILL_MD_FILENAME } from '../../../domain/SkillProperties';
 import { SkillEditForbiddenError } from '../../../domain/errors/SkillEditForbiddenError';
 import { SkillFileNotEditableError } from '../../../domain/errors/SkillFileNotEditableError';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
+import { SkillVersionMissingError } from '../../../domain/errors/SkillVersionMissingError';
+import { SkillFileNotFoundError } from '../../../domain/errors/SkillFileNotFoundError';
 import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
@@ -72,35 +76,13 @@ export class UpdateSkillFileFromUIUseCase
     });
 
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      this.logger.warn('Space not found', { spaceId });
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== organizationId) {
-      this.logger.warn('Space does not belong to organization', {
-        spaceId,
-        spaceOrganizationId: space.organizationId,
-        requestOrganizationId: organizationId,
-      });
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
+    if (!space || space.organizationId !== organizationId) {
+      throw new SkillSpaceNotAccessibleError(spaceId, organizationId);
     }
 
     const skill = await this.skillService.getSkillById(skillId);
-    if (!skill) {
-      this.logger.warn('Skill not found', { skillId });
-      throw new Error(`Skill with id ${skillId} not found`);
-    }
-
-    if (skill.spaceId !== spaceId) {
-      this.logger.warn('Skill does not belong to space', {
-        skillId,
-        skillSpaceId: skill.spaceId,
-        requestSpaceId: spaceId,
-      });
-      throw new Error(`Skill ${skillId} does not belong to space ${spaceId}`);
+    if (!skill || skill.spaceId !== spaceId) {
+      throw new SkillNotFoundError(skillId, spaceId);
     }
 
     const spaceMembership = await this.spacesPort.findMembership(
@@ -128,7 +110,7 @@ export class UpdateSkillFileFromUIUseCase
     const latestVersion =
       await this.skillVersionService.getLatestSkillVersion(skillId);
     if (!latestVersion) {
-      throw new Error(`No skill version found for skill ${skillId}`);
+      throw new SkillVersionMissingError(skillId);
     }
 
     const existingFiles = await this.skillFileService.findByVersionId(
@@ -139,7 +121,7 @@ export class UpdateSkillFileFromUIUseCase
     if (filePath !== SKILL_MD_FILENAME) {
       targetFile = existingFiles.find((file) => file.path === filePath);
       if (!targetFile) {
-        throw new Error(`File ${filePath} not found in skill ${skillId}`);
+        throw new SkillFileNotFoundError(skillId, filePath);
       }
 
       if (targetFile.isBase64) {

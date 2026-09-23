@@ -1,10 +1,5 @@
 import { skillFactory } from '@packmind/skills/test';
-import {
-  BadRequestException,
-  ForbiddenException,
-  HttpStatus,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -13,6 +8,7 @@ import {
   SkillValidationError,
   SkillEditForbiddenError,
   SkillFileNotEditableError,
+  SkillNotFoundError,
 } from '@packmind/skills';
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import {
@@ -405,7 +401,7 @@ describe('OrganizationsSpacesSkillsController', () => {
     });
 
     describe('when validation fails', () => {
-      it('throws BadRequestException with validation error details', async () => {
+      it('lets the domain error reach the caller', async () => {
         const validationError = new SkillValidationError([
           {
             field: 'name',
@@ -423,31 +419,10 @@ describe('OrganizationsSpacesSkillsController', () => {
             request,
             mockResponse,
           ),
-        ).rejects.toThrow(BadRequestException);
+        ).rejects.toBeInstanceOf(SkillValidationError);
       });
 
-      it('includes validation error message in BadRequestException', async () => {
-        const validationError = new SkillValidationError([
-          {
-            field: 'name',
-            message: 'name must contain only lowercase characters',
-          },
-        ]);
-
-        skillsService.uploadSkill.mockRejectedValue(validationError);
-
-        await expect(
-          controller.uploadSkill(
-            orgId,
-            spaceId,
-            { files: mockFiles },
-            request,
-            mockResponse,
-          ),
-        ).rejects.toThrow(validationError.message);
-      });
-
-      it('handles multiple validation errors in message', async () => {
+      it('preserves the validation error message', async () => {
         const validationError = new SkillValidationError([
           {
             field: 'name',
@@ -476,7 +451,7 @@ describe('OrganizationsSpacesSkillsController', () => {
     });
 
     describe('when parsing fails', () => {
-      it('throws BadRequestException with parse error message', async () => {
+      it('lets the domain error reach the caller', async () => {
         const parseError = new SkillParseError(
           'Invalid YAML in SKILL.md frontmatter',
         );
@@ -491,10 +466,10 @@ describe('OrganizationsSpacesSkillsController', () => {
             request,
             mockResponse,
           ),
-        ).rejects.toThrow(BadRequestException);
+        ).rejects.toBeInstanceOf(SkillParseError);
       });
 
-      it('includes parse error message in exception', async () => {
+      it('preserves the parse error message', async () => {
         const parseError = new SkillParseError(
           'Invalid YAML in SKILL.md frontmatter',
         );
@@ -700,12 +675,12 @@ describe('OrganizationsSpacesSkillsController', () => {
     });
 
     describe('when service returns null', () => {
-      it('throws NotFoundException', async () => {
+      it('throws SkillNotFoundError', async () => {
         skillsService.getLatestVersionNumber.mockResolvedValue(null);
 
         await expect(
           controller.getSkillLatestVersion(orgId, spaceId, skillId, request),
-        ).rejects.toThrow(NotFoundException);
+        ).rejects.toBeInstanceOf(SkillNotFoundError);
       });
     });
   });
@@ -787,7 +762,7 @@ describe('OrganizationsSpacesSkillsController', () => {
     });
 
     describe('when the file content fails validation', () => {
-      it('throws BadRequestException', async () => {
+      it('lets the domain error reach the caller', async () => {
         const error = new SkillValidationError([
           { field: 'content', message: 'content cannot be empty' },
         ]);
@@ -795,29 +770,29 @@ describe('OrganizationsSpacesSkillsController', () => {
 
         await expect(
           controller.updateSkillFile(orgId, spaceId, skillId, body, request),
-        ).rejects.toThrow(BadRequestException);
+        ).rejects.toBeInstanceOf(SkillValidationError);
       });
     });
 
     describe('when the file is not editable from the UI', () => {
-      it('throws BadRequestException', async () => {
+      it('lets the domain error reach the caller', async () => {
         const error = new SkillFileNotEditableError('logo.png');
         skillsService.updateSkillFile.mockRejectedValue(error);
 
         await expect(
           controller.updateSkillFile(orgId, spaceId, skillId, body, request),
-        ).rejects.toThrow(BadRequestException);
+        ).rejects.toBeInstanceOf(SkillFileNotEditableError);
       });
     });
 
     describe('when the user is not allowed to edit the skill', () => {
-      it('throws ForbiddenException', async () => {
+      it('lets the domain error reach the caller', async () => {
         const error = new SkillEditForbiddenError(userId, skillId);
         skillsService.updateSkillFile.mockRejectedValue(error);
 
         await expect(
           controller.updateSkillFile(orgId, spaceId, skillId, body, request),
-        ).rejects.toThrow(ForbiddenException);
+        ).rejects.toBeInstanceOf(SkillEditForbiddenError);
       });
     });
 

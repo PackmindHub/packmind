@@ -1,6 +1,6 @@
 import { parseSkillMdContent } from '@packmind/node-utils';
 
-import { SkillParseError } from '../errors/SkillParseError';
+import { SkillParseError } from '../../domain/errors/SkillParseError';
 import {
   CLAUDE_CODE_ADDITIONAL_FIELDS,
   ParsedSkill,

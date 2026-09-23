@@ -29,6 +29,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { CreateSkillUseCase } from './CreateSkillUseCase';
@@ -353,9 +354,9 @@ describe('CreateSkillUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(null);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+      it('throws SkillSpaceNotAccessibleError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillSpaceNotAccessibleError,
         );
       });
 
@@ -425,9 +426,9 @@ describe('CreateSkillUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(space);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
+      it('throws SkillSpaceNotAccessibleError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillSpaceNotAccessibleError,
         );
       });
 
