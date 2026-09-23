@@ -14,7 +14,7 @@ import { GenerateApiKeyCommand } from '@packmind/types';
 import { userFactory, organizationFactory } from '../../../../test';
 import {
   OrganizationNotFoundError,
-  FailedToGenerateApiKeyError,
+  ApiKeyExpirationMissingError,
 } from '../../../domain/errors';
 
 describe('GenerateApiKeyUseCase', () => {
@@ -250,7 +250,7 @@ describe('GenerateApiKeyUseCase', () => {
 
       await expect(
         generateApiKeyUseCase.execute(command),
-      ).rejects.toBeInstanceOf(FailedToGenerateApiKeyError);
+      ).rejects.toBeInstanceOf(ApiKeyExpirationMissingError);
     });
 
     it('handles service errors gracefully', async () => {

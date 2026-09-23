@@ -8,6 +8,7 @@ import {
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
 import { PackmindLogger } from '@packmind/logger';
+import { TokenEncryptionFailedError } from '../../domain/errors';
 import {
   AbstractRepository,
   Configuration,
@@ -15,8 +16,6 @@ import {
 } from '@packmind/node-utils';
 
 const origin = 'CliLoginCodeRepository';
-const encryptionErrorMessage = 'Failed to encrypt CLI login code';
-const decryptionErrorMessage = 'Failed to decrypt CLI login code';
 
 export class CliLoginCodeRepository
   extends AbstractRepository<CliLoginCode>
@@ -117,10 +116,11 @@ export class CliLoginCodeRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as CliLoginCodeToken;
     } catch (error) {
-      this.logger.error(encryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(encryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'cli_login_code',
+        'encrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -149,10 +149,11 @@ export class CliLoginCodeRepository
 
       return decrypted as CliLoginCodeToken;
     } catch (error) {
-      this.logger.error(decryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(decryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'cli_login_code',
+        'decrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

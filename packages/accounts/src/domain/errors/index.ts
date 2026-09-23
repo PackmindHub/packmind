@@ -31,9 +31,18 @@ export { CliLoginCodeApiKeyError } from './CliLoginCodeApiKeyError';
 export { InvalidPasswordError } from './InvalidPasswordError';
 export { UserCannotChangeOwnRoleError } from './UserCannotChangeOwnRoleError';
 export { CannotDemoteLastAdminError } from './CannotDemoteLastAdminError';
-export { FailedToGenerateApiKeyError } from './FailedToGenerateApiKeyError';
+export { ApiKeyExpirationMissingError } from './ApiKeyExpirationMissingError';
 export { FailedToUpdateUserRoleError } from './FailedToUpdateUserRoleError';
 export { UserIdRequiredError } from './UserIdRequiredError';
 export { PasswordAndHashRequiredError } from './PasswordAndHashRequiredError';
 export { DanglingInvitationError } from './DanglingInvitationError';
 export { InvalidAuthenticationTypeError } from './InvalidAuthenticationTypeError';
+export { ApiKeyGenerationFailedError } from './ApiKeyGenerationFailedError';
+export { ApiKeyEncodingFailedError } from './ApiKeyEncodingFailedError';
+export { AccountsAdapterPortsMissingError } from './AccountsAdapterPortsMissingError';
+export { TokenEncryptionFailedError } from './TokenEncryptionFailedError';
+export type {
+  EncryptedTokenType,
+  TokenEncryptionOperation,
+} from './TokenEncryptionFailedError';
+export { UserCreationFieldsRequiredError } from './UserCreationFieldsRequiredError';

@@ -15,7 +15,7 @@ import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
 import {
   OrganizationNotFoundError,
-  FailedToGenerateApiKeyError,
+  ApiKeyExpirationMissingError,
 } from '../../../domain/errors';
 
 const DEFAULT_APP_WEB_URL = 'http://localhost:8081';
@@ -71,7 +71,7 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
     const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
 
     if (!expiresAt) {
-      throw new FailedToGenerateApiKeyError();
+      throw new ApiKeyExpirationMissingError();
     }
 
     this.logger.info('API key generated successfully', {

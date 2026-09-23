@@ -6,17 +6,26 @@ export type AccountsInternalErrorReason =
   | 'cli_login_code_membership_not_found'
   | 'cli_login_code_organization_not_found'
   | 'cli_login_code_api_key_error'
-  | 'failed_to_generate_api_key'
+  | 'api_key_expiration_missing'
   | 'failed_to_update_user_role'
   | 'user_id_required'
   | 'password_and_hash_required'
-  | 'dangling_invitation';
+  | 'dangling_invitation'
+  | 'api_key_generation_failed'
+  | 'api_key_encoding_failed'
+  | 'accounts_adapter_ports_missing'
+  | 'token_encryption_failed';
 
 export type AccountsInternalErrorContext = {
   organizationId?: string;
   userId?: string;
   membershipId?: string;
   invitationId?: string;
+  cause?: string;
+  capability?: string;
+  missingPorts?: string[];
+  tokenType?: 'cli_login_code' | 'invitation' | 'password_reset';
+  operation?: 'encrypt' | 'decrypt';
 };
 
 /**

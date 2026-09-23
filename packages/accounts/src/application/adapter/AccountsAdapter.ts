@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { AccountsAdapterPortsMissingError } from '../../domain/errors';
 import {
   IBaseAdapter,
   PackmindEventEmitterService,
@@ -191,7 +192,15 @@ export class AccountsAdapter
       !this.standardsPort ||
       !this.deploymentPort
     ) {
-      throw new Error('Required ports are missing');
+      const missingPorts = Object.entries({
+        [ISpacesPortName]: this.spacesPort,
+        [IGitPortName]: this.gitPort,
+        [IStandardsPortName]: this.standardsPort,
+        [IDeploymentPortName]: this.deploymentPort,
+      })
+        .filter(([, port]) => !port)
+        .map(([name]) => name);
+      throw new AccountsAdapterPortsMissingError('initialize', missingPorts);
     }
 
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
@@ -478,18 +487,14 @@ export class AccountsAdapter
   // API key-related use cases
   public async generateApiKey(command: GenerateApiKeyCommand) {
     if (!this._generateApiKey) {
-      throw new Error(
-        'API key generation not available - missing dependencies',
-      );
+      throw new AccountsAdapterPortsMissingError('API key generation');
     }
     return this._generateApiKey.execute(command);
   }
 
   public async getCurrentApiKey(command: GetCurrentApiKeyCommand) {
     if (!this._getCurrentApiKey) {
-      throw new Error(
-        'API key operations not available - missing dependencies',
-      );
+      throw new AccountsAdapterPortsMissingError('API key operations');
     }
     return this._getCurrentApiKey.execute(command);
   }
@@ -518,9 +523,7 @@ export class AccountsAdapter
     command: CreateCliLoginCodeCommand,
   ): Promise<CreateCliLoginCodeResponse> {
     if (!this._createCliLoginCode) {
-      throw new Error(
-        'CLI login code creation not available - missing dependencies',
-      );
+      throw new AccountsAdapterPortsMissingError('CLI login code creation');
     }
     return this._createCliLoginCode.execute(command);
   }
@@ -529,9 +532,7 @@ export class AccountsAdapter
     command: ExchangeCliLoginCodeCommand,
   ): Promise<ExchangeCliLoginCodeResponse> {
     if (!this._exchangeCliLoginCode) {
-      throw new Error(
-        'CLI login code exchange not available - missing dependencies',
-      );
+      throw new AccountsAdapterPortsMissingError('CLI login code exchange');
     }
     return this._exchangeCliLoginCode.execute(command);
   }
