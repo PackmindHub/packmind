@@ -18,11 +18,11 @@ import {
   OrganizationId,
   Command,
   CommandId,
-  CommandSlugAlreadyExistsError,
   CommandVersion,
   SpaceId,
   UserId,
 } from '@packmind/types';
+import { CommandSlugAlreadyExistsError } from '@packmind/commands';
 import { CommandsService } from './commands.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 

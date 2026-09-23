@@ -16,12 +16,12 @@ import {
   Organization,
   OrganizationId,
   Command,
-  CommandSlugAlreadyExistsError,
   Space,
   SpaceId,
   User,
   UserId,
 } from '@packmind/types';
+import { CommandSlugAlreadyExistsError } from '../../../domain/errors';
 import { spaceFactory } from '@packmind/spaces/test';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';

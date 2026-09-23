@@ -15,9 +15,9 @@ import {
   IAccountsPort,
   ICaptureCommandUseCase,
   ISpacesPort,
-  CommandSlugAlreadyExistsError,
   CommandStep,
 } from '@packmind/types';
+import { CommandSlugAlreadyExistsError } from '../../../domain/errors';
 import slug from 'slug';
 import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
