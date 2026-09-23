@@ -11,6 +11,10 @@ import { PackmindServiceConfig } from '../../types/LLMServiceConfig';
 import { OpenAIService } from './OpenAIService';
 import { AnthropicService } from './AnthropicService';
 import { GeminiService } from './GeminiService';
+import {
+  PackmindProviderApiKeyMissingError,
+  PackmindProviderUnsupportedError,
+} from '../../domain/errors';
 
 const origin = 'PackmindService';
 
@@ -37,24 +41,17 @@ export class PackmindService implements AIService {
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    try {
-      const providerName = await this.getConfiguredProvider();
-      this.logger.info('Initializing PackmindService with provider', {
-        provider: providerName,
-      });
+    const providerName = await this.getConfiguredProvider();
+    this.logger.info('Initializing PackmindService with provider', {
+      provider: providerName,
+    });
 
-      this.underlyingService = await this.createUnderlyingService(providerName);
-      this.initialized = true;
+    this.underlyingService = await this.createUnderlyingService(providerName);
+    this.initialized = true;
 
-      this.logger.info('PackmindService initialized successfully', {
-        provider: providerName,
-      });
-    } catch (error) {
-      this.logger.error('Failed to initialize PackmindService', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('PackmindService initialized successfully', {
+      provider: providerName,
+    });
   }
 
   private async getConfiguredProvider(): Promise<LLMProvider> {
@@ -109,14 +106,20 @@ export class PackmindService implements AIService {
       case LLMProvider.OPENAI: {
         const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
         if (!apiKey) {
-          throw new Error('OPENAI_API_KEY not found in configuration');
+          throw new PackmindProviderApiKeyMissingError(
+            provider,
+            'OPENAI_API_KEY',
+          );
         }
         return new OpenAIService({ provider: LLMProvider.OPENAI, apiKey });
       }
       case LLMProvider.ANTHROPIC: {
         const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
         if (!apiKey) {
-          throw new Error('ANTHROPIC_API_KEY not found in configuration');
+          throw new PackmindProviderApiKeyMissingError(
+            provider,
+            'ANTHROPIC_API_KEY',
+          );
         }
         return new AnthropicService({
           provider: LLMProvider.ANTHROPIC,
@@ -126,17 +129,21 @@ export class PackmindService implements AIService {
       case LLMProvider.GEMINI: {
         const apiKey = await Configuration.getConfig('GEMINI_API_KEY');
         if (!apiKey) {
-          throw new Error('GEMINI_API_KEY not found in configuration');
+          throw new PackmindProviderApiKeyMissingError(
+            provider,
+            'GEMINI_API_KEY',
+          );
         }
         return new GeminiService({ provider: LLMProvider.GEMINI, apiKey });
       }
       case LLMProvider.PACKMIND:
-        throw new Error('Cannot use PACKMIND as underlying provider');
-      default:
-        this.logger.error(
-          `${provider} provider is not supported for PACKMIND_DEFAULT_PROVIDER`,
+        throw new PackmindProviderUnsupportedError(
+          provider,
+          'Cannot use PACKMIND as underlying provider',
         );
-        throw new Error(
+      default:
+        throw new PackmindProviderUnsupportedError(
+          provider,
           `${provider} provider is not supported for PACKMIND_DEFAULT_PROVIDER. Only openai, anthropic, and gemini are supported.`,
         );
     }

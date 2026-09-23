@@ -20,6 +20,7 @@ import {
   GetAiServiceForOrganizationResponse,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
+import { LlmAdapterPortsMissingError } from '../../domain/errors';
 import { IAIProviderRepository } from '../../domain/repositories/IAIProviderRepository';
 import { AIProviderRepository } from '../../infra/repositories/AIProviderRepository';
 import { AIProviderSchema } from '../../infra/schemas/AIProviderSchema';
@@ -62,9 +63,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this.accountsPort = ports[IAccountsPortName];
 
     if (!this.accountsPort) {
-      throw new Error(
-        'IAccountsPort is required for LlmAdapter initialization',
-      );
+      throw new LlmAdapterPortsMissingError(['IAccountsPort']);
     }
 
     this.aiProviderRepository = new AIProviderRepository(

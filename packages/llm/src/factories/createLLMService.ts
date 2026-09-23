@@ -6,6 +6,7 @@ import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
 import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 import { PackmindService } from '../infra/services/PackmindService';
+import { UnknownLlmProviderError } from '../domain/errors';
 
 /**
  * The single entry point for obtaining an `AIService`; consumers never
@@ -28,8 +29,8 @@ export function createLLMService(config: LLMServiceConfig): AIService {
     default: {
       // A missing case fails to compile here rather than at runtime.
       const _exhaustive: never = config;
-      throw new Error(
-        `Unknown provider: ${(_exhaustive as LLMServiceConfig).provider}`,
+      throw new UnknownLlmProviderError(
+        (_exhaustive as LLMServiceConfig).provider,
       );
     }
   }
