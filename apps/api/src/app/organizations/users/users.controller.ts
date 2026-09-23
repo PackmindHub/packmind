@@ -53,32 +53,19 @@ export class UsersController {
       },
     );
 
-    try {
-      const command: ListOrganizationUserStatusesCommand = {
-        userId: request.user.userId,
+    const command: ListOrganizationUserStatusesCommand = {
+      userId: request.user.userId,
+      organizationId,
+    };
+    const response = await this.usersService.getUserStatuses(command);
+    this.logger.info(
+      'GET /organizations/:orgId/users/statuses - User statuses fetched successfully',
+      {
+        userCount: response.userStatuses.length,
         organizationId,
-      };
-      const response = await this.usersService.getUserStatuses(command);
-      this.logger.info(
-        'GET /organizations/:orgId/users/statuses - User statuses fetched successfully',
-        {
-          userCount: response.userStatuses.length,
-          organizationId,
-        },
-      );
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/users/statuses - Failed to fetch user statuses',
-        {
-          error: errorMessage,
-          organizationId,
-        },
-      );
-      throw error;
-    }
+      },
+    );
+    return response;
   }
 
   @Get()
@@ -93,34 +80,21 @@ export class UsersController {
       },
     );
 
-    try {
-      const command: ListOrganizationUsersCommand = {
-        userId: request.user.userId,
+    const command: ListOrganizationUsersCommand = {
+      userId: request.user.userId,
+      organizationId,
+    };
+    const response = await this.usersService.getOrganizationUsers(command);
+
+    this.logger.info(
+      'GET /organizations/:orgId/users - Users fetched successfully',
+      {
+        userCount: response.users.length,
         organizationId,
-      };
-      const response = await this.usersService.getOrganizationUsers(command);
+      },
+    );
 
-      this.logger.info(
-        'GET /organizations/:orgId/users - Users fetched successfully',
-        {
-          userCount: response.users.length,
-          organizationId,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/users - Failed to fetch users',
-        {
-          error: errorMessage,
-          organizationId,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Patch(':userId/role')
@@ -140,42 +114,26 @@ export class UsersController {
       },
     );
 
-    try {
-      const command: ChangeUserRoleCommand = {
-        userId: request.user.userId,
-        organizationId,
+    const command: ChangeUserRoleCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetUserId,
+      newRole,
+      source: request.clientSource,
+    };
+    const response = await this.usersService.changeUserRole(command);
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/users/:userId/role - User role changed successfully',
+      {
         targetUserId,
         newRole,
-        source: request.clientSource,
-      };
-      const response = await this.usersService.changeUserRole(command);
+        requesterId: request.user.userId,
+        organizationId,
+      },
+    );
 
-      this.logger.info(
-        'PATCH /organizations/:orgId/users/:userId/role - User role changed successfully',
-        {
-          targetUserId,
-          newRole,
-          requesterId: request.user.userId,
-          organizationId,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PATCH /organizations/:orgId/users/:userId/role - Failed to change user role',
-        {
-          targetUserId,
-          newRole,
-          requesterId: request.user.userId,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Post('invite')
@@ -193,44 +151,30 @@ export class UsersController {
       },
     );
 
-    try {
-      if (!Array.isArray(body?.emails)) {
-        throw new BadRequestException('emails must be an array of strings');
-      }
-
-      const command: CreateInvitationsCommand = {
-        userId: request.user.userId,
-        organizationId,
-        emails: body.emails,
-        role: body.role,
-        source: request.clientSource,
-      };
-      const response = await this.usersService.createInvitations(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/users/invite - Users invited successfully',
-        {
-          organizationId,
-          requesterId: request.user.userId,
-          createdCount: response.created.length,
-          skippedCount: response.skipped.length,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/users/invite - Failed to invite users',
-        {
-          organizationId,
-          requesterId: request.user.userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+    if (!Array.isArray(body?.emails)) {
+      throw new BadRequestException('emails must be an array of strings');
     }
+
+    const command: CreateInvitationsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      emails: body.emails,
+      role: body.role,
+      source: request.clientSource,
+    };
+    const response = await this.usersService.createInvitations(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/users/invite - Users invited successfully',
+      {
+        organizationId,
+        requesterId: request.user.userId,
+        createdCount: response.created.length,
+        skippedCount: response.skipped.length,
+      },
+    );
+
+    return response;
   }
 
   @Delete(':userId')
@@ -248,40 +192,25 @@ export class UsersController {
       },
     );
 
-    try {
-      const command: RemoveUserFromOrganizationCommand = {
-        userId: request.user.userId,
+    const command: RemoveUserFromOrganizationCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetUserId,
+      source: request.clientSource,
+    };
+    const response =
+      await this.usersService.removeUserFromOrganization(command);
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/users/:userId - User removed successfully',
+      {
         organizationId,
         targetUserId,
-        source: request.clientSource,
-      };
-      const response =
-        await this.usersService.removeUserFromOrganization(command);
+        requesterId: request.user.userId,
+        removed: response.removed,
+      },
+    );
 
-      this.logger.info(
-        'DELETE /organizations/:orgId/users/:userId - User removed successfully',
-        {
-          organizationId,
-          targetUserId,
-          requesterId: request.user.userId,
-          removed: response.removed,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/users/:userId - Failed to remove user',
-        {
-          organizationId,
-          targetUserId,
-          requesterId: request.user.userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 }

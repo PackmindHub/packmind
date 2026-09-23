@@ -1,6 +1,8 @@
-export class InvitationExpiredError extends Error {
+import { AccountsError } from './AccountsError';
+
+export class InvitationExpiredError extends AccountsError {
   constructor() {
-    super('Invitation has expired');
+    super('not_found', 'invitation_expired', {}, 'Invitation has expired');
     this.name = 'InvitationExpiredError';
   }
 }

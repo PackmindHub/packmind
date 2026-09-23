@@ -42,9 +42,6 @@ import {
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
   CliLoginCodeExpiredError,
-  CliLoginCodeNotFoundError,
-  EmailAlreadyExistsError,
-  InvalidDisplayNameError,
 } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
@@ -72,32 +69,19 @@ export class AuthController {
       email: maskEmail(signUpRequest.email),
     });
 
-    try {
-      const result = await this.authService.signUp(signUpRequest);
+    const result = await this.authService.signUp(signUpRequest);
 
-      this.logger.log(
-        `POST /auth/signup - User signed up with organization successfully`,
-        {
-          userId: result.user.id,
-          email: maskEmail(result.user.email),
-          organizationId: result.organization.id,
-          organizationName: result.organization.name,
-        },
-      );
+    this.logger.log(
+      `POST /auth/signup - User signed up with organization successfully`,
+      {
+        userId: result.user.id,
+        email: maskEmail(result.user.email),
+        organizationId: result.organization.id,
+        organizationName: result.organization.name,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(`POST /auth/signup - Failed to sign up user`, {
-        email: maskEmail(signUpRequest.email),
-        error: getErrorMessage(error),
-      });
-
-      if (error instanceof EmailAlreadyExistsError) {
-        throw new HttpException(error.message, HttpStatus.CONFLICT);
-      }
-
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -113,28 +97,17 @@ export class AuthController {
       },
     );
 
-    try {
-      const result = await this.authService.checkEmailAvailability(request);
+    const result = await this.authService.checkEmailAvailability(request);
 
-      this.logger.log(
-        `POST /auth/check-email-availability - Email availability checked successfully`,
-        {
-          email: maskEmail(request.email),
-          available: result.available,
-        },
-      );
+    this.logger.log(
+      `POST /auth/check-email-availability - Email availability checked successfully`,
+      {
+        email: maskEmail(request.email),
+        available: result.available,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        `POST /auth/check-email-availability - Failed to check email availability`,
-        {
-          email: maskEmail(request.email),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -182,6 +155,8 @@ export class AuthController {
       // password, rate limit reached) — not application bugs. Log them at
       // warn level without stack trace so Datadog error dashboards stay
       // focused on real incidents.
+      // Kept by hand: no kind yields 401, nor 429 with bannedUntil in the
+      // body, so DomainExceptionFilter cannot produce these answers.
       if (error instanceof ExpectedAuthError) {
         this.logger.warn(`POST /auth/signin - ${error.name}`, {
           email: maskEmail(signInRequest.email),
@@ -202,11 +177,6 @@ export class AuthController {
         throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
       }
 
-      // Unexpected error: keep error-level logging and let NestJS map it to 500.
-      this.logger.error(`POST /auth/signin - Unexpected sign-in failure`, {
-        email: maskEmail(signInRequest.email),
-        error: getErrorMessage(error),
-      });
       throw error;
     }
   }
@@ -238,49 +208,38 @@ export class AuthController {
       organizationId: request.organizationId,
     });
 
-    try {
-      const accessToken = req.cookies?.auth_token;
+    const accessToken = req.cookies?.auth_token;
 
-      if (!accessToken) {
-        throw new Error('No valid access token found');
-      }
-
-      const result = await this.authService.selectOrganization(
-        accessToken,
-        request,
-      );
-
-      // Get cookie security setting from Configuration
-      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
-      const isSecure = cookieSecure === 'true';
-
-      // Update the JWT token cookie with the new token that includes the organization
-      response.cookie('auth_token', result.accessToken, {
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-        path: '/',
-      });
-
-      this.logger.log(
-        'POST /auth/selectOrganization - Organization selected successfully',
-        {
-          organizationId: request.organizationId,
-        },
-      );
-
-      return {};
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/selectOrganization - Failed to select organization',
-        {
-          organizationId: request.organizationId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
+    if (!accessToken) {
+      throw new Error('No valid access token found');
     }
+
+    const result = await this.authService.selectOrganization(
+      accessToken,
+      request,
+    );
+
+    // Get cookie security setting from Configuration
+    const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+    const isSecure = cookieSecure === 'true';
+
+    // Update the JWT token cookie with the new token that includes the organization
+    response.cookie('auth_token', result.accessToken, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      path: '/',
+    });
+
+    this.logger.log(
+      'POST /auth/selectOrganization - Organization selected successfully',
+      {
+        organizationId: request.organizationId,
+      },
+    );
+
+    return {};
   }
 
   @Public()
@@ -336,30 +295,16 @@ export class AuthController {
       userId: request.user.userId,
     });
 
-    try {
-      const result = await this.authService.updateUserDisplayName(
-        request,
-        body.displayName ?? null,
-      );
+    const result = await this.authService.updateUserDisplayName(
+      request,
+      body.displayName ?? null,
+    );
 
-      this.logger.log(
-        'PATCH /auth/profile - User profile updated successfully',
-        {
-          userId: request.user.userId,
-        },
-      );
+    this.logger.log('PATCH /auth/profile - User profile updated successfully', {
+      userId: request.user.userId,
+    });
 
-      return result;
-    } catch (error) {
-      this.logger.error('PATCH /auth/profile - Failed to update user profile', {
-        userId: request.user.userId,
-        error: getErrorMessage(error),
-      });
-      if (error instanceof InvalidDisplayNameError) {
-        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-      }
-      throw error;
-    }
+    return result;
   }
 
   @Post('api-key/generate')
@@ -372,28 +317,17 @@ export class AuthController {
       organizationId: request.organization.id,
     });
 
-    try {
-      const result = await this.authService.generateApiKey(request);
+    const result = await this.authService.generateApiKey(request);
 
-      this.logger.log(
-        'POST /auth/api-key/generate - API key generated successfully',
-        {
-          userId: request.user.userId,
-          expiresAt: result.expiresAt,
-        },
-      );
+    this.logger.log(
+      'POST /auth/api-key/generate - API key generated successfully',
+      {
+        userId: request.user.userId,
+        expiresAt: result.expiresAt,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/api-key/generate - Failed to generate API key',
-        {
-          userId: request.user.userId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Get('api-key/current')
@@ -409,25 +343,14 @@ export class AuthController {
       },
     );
 
-    try {
-      const result = await this.authService.getCurrentApiKey(request);
+    const result = await this.authService.getCurrentApiKey(request);
 
-      this.logger.log('GET /auth/api-key/current - API key info retrieved', {
-        userId: request.user.userId,
-        hasApiKey: result.hasApiKey,
-      });
+    this.logger.log('GET /auth/api-key/current - API key info retrieved', {
+      userId: request.user.userId,
+      hasApiKey: result.hasApiKey,
+    });
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'GET /auth/api-key/current - Failed to get API key info',
-        {
-          userId: request.user.userId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -443,29 +366,18 @@ export class AuthController {
       },
     );
 
-    try {
-      const result = await this.authService.validateInvitationToken({ token });
+    const result = await this.authService.validateInvitationToken({ token });
 
-      this.logger.log(
-        'GET /auth/validate-invitation/:token - Invitation token validated',
-        {
-          token: this.maskToken(token),
-          isValid: result.isValid,
-          hasEmail: !!result.email,
-        },
-      );
+    this.logger.log(
+      'GET /auth/validate-invitation/:token - Invitation token validated',
+      {
+        token: this.maskToken(token),
+        isValid: result.isValid,
+        hasEmail: !!result.email,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'GET /auth/validate-invitation/:token - Failed to validate invitation token',
-        {
-          token: this.maskToken(token),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -487,49 +399,38 @@ export class AuthController {
       token: this.maskToken(token),
     });
 
-    try {
-      const result = await this.authService.activateAccount({
-        token,
-        password: body.password,
+    const result = await this.authService.activateAccount({
+      token,
+      password: body.password,
+    });
+
+    if (result.success && result.authToken) {
+      // Get cookie security setting from Configuration
+      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+      const isSecure = cookieSecure === 'true';
+
+      // Set JWT token as httpOnly cookie for auto-login
+      response.cookie('auth_token', result.authToken, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        path: '/',
       });
-
-      if (result.success && result.authToken) {
-        // Get cookie security setting from Configuration
-        const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
-        const isSecure = cookieSecure === 'true';
-
-        // Set JWT token as httpOnly cookie for auto-login
-        response.cookie('auth_token', result.authToken, {
-          httpOnly: true,
-          secure: isSecure,
-          sameSite: 'strict',
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-          path: '/',
-        });
-      }
-
-      this.logger.log(
-        'POST /auth/activate/:token - Account activated successfully',
-        {
-          userId: result.user.id,
-          email: maskEmail(result.user.email),
-        },
-      );
-
-      return {
-        message: 'Account activated successfully',
-        user: result.user,
-      };
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/activate/:token - Failed to activate account',
-        {
-          token: this.maskToken(token),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
     }
+
+    this.logger.log(
+      'POST /auth/activate/:token - Account activated successfully',
+      {
+        userId: result.user.id,
+        email: maskEmail(result.user.email),
+      },
+    );
+
+    return {
+      message: 'Account activated successfully',
+      user: result.user,
+    };
   }
 
   @Public()
@@ -542,28 +443,17 @@ export class AuthController {
       email: maskEmail(request.email),
     });
 
-    try {
-      const result = await this.authService.requestPasswordReset(request);
+    const result = await this.authService.requestPasswordReset(request);
 
-      this.logger.log(
-        'POST /auth/forgot-password - Password reset request completed',
-        {
-          email: maskEmail(request.email),
-          success: result.success,
-        },
-      );
+    this.logger.log(
+      'POST /auth/forgot-password - Password reset request completed',
+      {
+        email: maskEmail(request.email),
+        success: result.success,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/forgot-password - Failed to request password reset',
-        {
-          email: maskEmail(request.email),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -579,31 +469,20 @@ export class AuthController {
       },
     );
 
-    try {
-      const result = await this.authService.validatePasswordResetToken({
-        token,
-      });
+    const result = await this.authService.validatePasswordResetToken({
+      token,
+    });
 
-      this.logger.log(
-        'GET /auth/validate-password-reset/:token - Password reset token validated',
-        {
-          token: this.maskToken(token),
-          isValid: result.isValid,
-          hasEmail: !!result.email,
-        },
-      );
+    this.logger.log(
+      'GET /auth/validate-password-reset/:token - Password reset token validated',
+      {
+        token: this.maskToken(token),
+        isValid: result.isValid,
+        hasEmail: !!result.email,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'GET /auth/validate-password-reset/:token - Failed to validate password reset token',
-        {
-          token: this.maskToken(token),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -624,49 +503,35 @@ export class AuthController {
       token: this.maskToken(body.token),
     });
 
-    try {
-      const result = await this.authService.resetPassword({
-        token: body.token,
-        password: body.password,
+    const result = await this.authService.resetPassword({
+      token: body.token,
+      password: body.password,
+    });
+
+    if (result.success && result.authToken) {
+      // Get cookie security setting from Configuration
+      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+      const isSecure = cookieSecure === 'true';
+
+      // Set JWT token as httpOnly cookie for auto-login
+      response.cookie('auth_token', result.authToken, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        path: '/',
       });
-
-      if (result.success && result.authToken) {
-        // Get cookie security setting from Configuration
-        const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
-        const isSecure = cookieSecure === 'true';
-
-        // Set JWT token as httpOnly cookie for auto-login
-        response.cookie('auth_token', result.authToken, {
-          httpOnly: true,
-          secure: isSecure,
-          sameSite: 'strict',
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-          path: '/',
-        });
-      }
-
-      this.logger.log(
-        'POST /auth/reset-password - Password reset successfully',
-        {
-          userId: result.user.id,
-          email: maskEmail(result.user.email),
-        },
-      );
-
-      return {
-        message: 'Password reset successfully',
-        user: result.user,
-      };
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/reset-password - Failed to reset password',
-        {
-          token: this.maskToken(body.token),
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
     }
+
+    this.logger.log('POST /auth/reset-password - Password reset successfully', {
+      userId: result.user.id,
+      email: maskEmail(result.user.email),
+    });
+
+    return {
+      message: 'Password reset successfully',
+      user: result.user,
+    };
   }
 
   @Post('cli-login-code')
@@ -679,28 +544,17 @@ export class AuthController {
       organizationId: request.organization.id,
     });
 
-    try {
-      const result = await this.authService.createCliLoginCode(request);
+    const result = await this.authService.createCliLoginCode(request);
 
-      this.logger.log(
-        'POST /auth/cli-login-code - CLI login code created successfully',
-        {
-          userId: request.user.userId,
-          expiresAt: result.expiresAt.toISOString(),
-        },
-      );
+    this.logger.log(
+      'POST /auth/cli-login-code - CLI login code created successfully',
+      {
+        userId: request.user.userId,
+        expiresAt: result.expiresAt.toISOString(),
+      },
+    );
 
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/cli-login-code - Failed to create CLI login code',
-        {
-          userId: request.user.userId,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Public()
@@ -722,18 +576,15 @@ export class AuthController {
 
       return result;
     } catch (error) {
-      this.logger.error(
-        'POST /auth/cli-login-exchange - Failed to exchange CLI login code',
-        {
-          error: getErrorMessage(error),
-        },
-      );
-
-      // Handle specific domain errors with appropriate HTTP status codes
-      if (error instanceof CliLoginCodeNotFoundError) {
-        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-      }
+      // Kept by hand: no kind yields 410, and installed CLIs branch on it
+      // (apps/cli LoginUseCase). The filter would answer this one 404.
       if (error instanceof CliLoginCodeExpiredError) {
+        this.logger.warn(
+          'POST /auth/cli-login-exchange - CLI login code expired',
+          {
+            error: getErrorMessage(error),
+          },
+        );
         throw new HttpException(error.message, HttpStatus.GONE);
       }
 

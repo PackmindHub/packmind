@@ -1,11 +1,14 @@
 import { ApiKeyPayload, DecodedApiKey } from '../entities/ApiKey';
+import { ApiKeyEncodingFailedError } from '../errors/ApiKeyEncodingFailedError';
 
 export function encodeApiKey(payload: ApiKeyPayload): string {
   try {
     const jsonString = JSON.stringify(payload);
     return Buffer.from(jsonString).toString('base64');
   } catch (error) {
-    throw new Error(`Failed to encode API key: ${error}`);
+    throw new ApiKeyEncodingFailedError(
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 

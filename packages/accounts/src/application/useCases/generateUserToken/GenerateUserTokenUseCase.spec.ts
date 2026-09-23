@@ -1,4 +1,8 @@
 import { createMockInstance } from '@packmind/test-utils';
+import {
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { GenerateUserTokenUseCase } from './GenerateUserTokenUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -13,6 +17,7 @@ import {
 } from '@packmind/types';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { userFactory } from '../../../../test';
+import { OrganizationNotFoundError } from '../../../domain/errors';
 
 describe('GenerateUserTokenUseCase', () => {
   let useCase: GenerateUserTokenUseCase;
@@ -100,9 +105,9 @@ describe('GenerateUserTokenUseCase', () => {
       userService.getUserById.mockResolvedValue(null);
     });
 
-    it('throws Error', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('User not found'),
+    it('throws UserNotFoundError', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UserNotFoundError,
       );
     });
 
@@ -116,7 +121,7 @@ describe('GenerateUserTokenUseCase', () => {
   });
 
   describe('when organization membership is missing', () => {
-    it('throws Error', async () => {
+    it('throws UserNotInOrganizationError', async () => {
       const command: GenerateUserTokenCommand = {
         userId,
         organizationId: createOrganizationId('org-456'),
@@ -124,14 +129,14 @@ describe('GenerateUserTokenUseCase', () => {
 
       userService.getUserById.mockResolvedValue(testUser);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('User organization membership not found'),
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UserNotInOrganizationError,
       );
     });
   });
 
   describe('when organization is not found', () => {
-    it('throws Error', async () => {
+    it('throws OrganizationNotFoundError', async () => {
       const command: GenerateUserTokenCommand = {
         userId,
         organizationId,
@@ -140,8 +145,8 @@ describe('GenerateUserTokenUseCase', () => {
       userService.getUserById.mockResolvedValue(testUser);
       organizationService.getOrganizationById.mockResolvedValue(null);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('User organization not found'),
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        OrganizationNotFoundError,
       );
     });
   });

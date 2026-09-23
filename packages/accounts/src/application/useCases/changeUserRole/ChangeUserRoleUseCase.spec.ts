@@ -1,4 +1,5 @@
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
+import { UserNotFoundError } from '@packmind/node-utils';
 import {
   ChangeUserRoleCommand,
   createOrganizationId,
@@ -8,8 +9,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { organizationFactory, userFactory } from '../../../../test';
 import {
-  UserNotFoundError,
-  UserNotInOrganizationError,
+  UserCannotChangeOwnRoleError,
+  CannotDemoteLastAdminError,
 } from '../../../domain/errors';
 import { UserService } from '../../services/UserService';
 import { ChangeUserRoleUseCase } from './ChangeUserRoleUseCase';
@@ -182,10 +183,10 @@ describe('ChangeUserRoleUseCase', () => {
         mockGetUserById.mockResolvedValueOnce(adminUser);
       });
 
-      it('throws error preventing self-role modification', async () => {
-        await expect(useCase.execute(createSelfCommand())).rejects.toThrow(
-          'Cannot change your own role',
-        );
+      it('throws UserCannotChangeOwnRoleError', async () => {
+        await expect(
+          useCase.execute(createSelfCommand()),
+        ).rejects.toBeInstanceOf(UserCannotChangeOwnRoleError);
       });
 
       it('does not call changeUserRole', async () => {
@@ -243,9 +244,9 @@ describe('ChangeUserRoleUseCase', () => {
           .mockResolvedValueOnce(targetUserDifferentOrg);
       });
 
-      it('throws UserNotInOrganizationError', async () => {
+      it('throws UserNotFoundError', async () => {
         await expect(useCase.execute(createCommand())).rejects.toBeInstanceOf(
-          UserNotInOrganizationError,
+          UserNotFoundError,
         );
       });
 
@@ -273,9 +274,9 @@ describe('ChangeUserRoleUseCase', () => {
           .mockResolvedValueOnce(targetUserNoMemberships);
       });
 
-      it('throws UserNotInOrganizationError', async () => {
+      it('throws UserNotFoundError', async () => {
         await expect(useCase.execute(createCommand())).rejects.toBeInstanceOf(
-          UserNotInOrganizationError,
+          UserNotFoundError,
         );
       });
 
@@ -316,12 +317,10 @@ describe('ChangeUserRoleUseCase', () => {
           mockChangeUserRole.mockResolvedValue(false);
         });
 
-        it('throws error preventing organization lockout', async () => {
+        it('throws CannotDemoteLastAdminError', async () => {
           await expect(
             useCase.execute(createCommand('member')),
-          ).rejects.toThrow(
-            'Cannot demote the last administrator of the organization',
-          );
+          ).rejects.toBeInstanceOf(CannotDemoteLastAdminError);
         });
 
         it('does not call changeUserRole', async () => {
@@ -366,12 +365,10 @@ describe('ChangeUserRoleUseCase', () => {
           mockChangeUserRole.mockResolvedValue(false);
         });
 
-        it('throws error preventing organization lockout', async () => {
+        it('throws CannotDemoteLastAdminError', async () => {
           await expect(
             useCase.execute(createCommand('member')),
-          ).rejects.toThrow(
-            'Cannot demote the last administrator of the organization',
-          );
+          ).rejects.toBeInstanceOf(CannotDemoteLastAdminError);
         });
       });
 

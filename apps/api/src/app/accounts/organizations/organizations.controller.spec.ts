@@ -8,6 +8,10 @@ import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '@packmind/accounts/test';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
+import {
+  InvalidOrganizationNameError,
+  OrganizationSlugConflictError,
+} from '@packmind/accounts';
 
 describe('OrganizationsController', () => {
   let app: TestingModule;
@@ -89,6 +93,80 @@ describe('OrganizationsController', () => {
       expect(
         await organizationsController.getUserOrganizations(mockRequest),
       ).toEqual([]);
+    });
+  });
+
+  describe('createOrganization', () => {
+    const mockRequest = {
+      user: { userId: createUserId('user-1') },
+    } as unknown as AuthenticatedRequest;
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('when the slug is already taken', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(organizationsService, 'createOrganization')
+          .mockRejectedValue(new OrganizationSlugConflictError('Acme'));
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          organizationsController.createOrganization(
+            { name: 'Acme' },
+            mockRequest,
+          ),
+        ).rejects.toBeInstanceOf(OrganizationSlugConflictError);
+      });
+    });
+  });
+
+  describe('renameOrganization', () => {
+    const organizationId = createOrganizationId('org-1');
+    const mockRequest = {
+      user: { userId: createUserId('user-1') },
+    } as unknown as AuthenticatedRequest;
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('when the name is invalid', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(organizationsService, 'renameOrganization')
+          .mockRejectedValue(new InvalidOrganizationNameError(''));
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          organizationsController.renameOrganization(
+            organizationId,
+            { name: '' },
+            mockRequest,
+          ),
+        ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
+      });
+    });
+
+    describe('when the slug is already taken', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(organizationsService, 'renameOrganization')
+          .mockRejectedValue(new OrganizationSlugConflictError('Acme'));
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          organizationsController.renameOrganization(
+            organizationId,
+            { name: 'Acme' },
+            mockRequest,
+          ),
+        ).rejects.toBeInstanceOf(OrganizationSlugConflictError);
+      });
     });
   });
 });

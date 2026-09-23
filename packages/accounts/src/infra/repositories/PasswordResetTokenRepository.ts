@@ -9,6 +9,7 @@ import { UserId } from '@packmind/types';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
 import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
 import { PackmindLogger } from '@packmind/logger';
+import { TokenEncryptionFailedError } from '../../domain/errors';
 import {
   localDataSource,
   AbstractRepository,
@@ -18,8 +19,6 @@ import {
 import { QueryOption } from '@packmind/types';
 
 const origin = 'PasswordResetTokenRepository';
-const encryptionErrorMessage = 'Failed to encrypt password reset token';
-const decryptionErrorMessage = 'Failed to decrypt password reset token';
 
 export class PasswordResetTokenRepository
   extends AbstractRepository<PasswordResetTokenEntity>
@@ -226,10 +225,11 @@ export class PasswordResetTokenRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as PasswordResetToken;
     } catch (error) {
-      this.logger.error(encryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(encryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'password_reset',
+        'encrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -258,10 +258,11 @@ export class PasswordResetTokenRepository
 
       return decrypted as PasswordResetToken;
     } catch (error) {
-      this.logger.error(decryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(decryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'password_reset',
+        'decrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

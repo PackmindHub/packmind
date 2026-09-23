@@ -9,6 +9,7 @@ import { UserId } from '@packmind/types';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { InvitationSchema } from '../schemas/InvitationSchema';
 import { PackmindLogger } from '@packmind/logger';
+import { TokenEncryptionFailedError } from '../../domain/errors';
 import {
   localDataSource,
   AbstractRepository,
@@ -18,8 +19,6 @@ import {
 import { QueryOption } from '@packmind/types';
 
 const origin = 'InvitationRepository';
-const encryptionErrorMessage = 'Failed to encrypt invitation token';
-const decryptionErrorMessage = 'Failed to decrypt invitation token';
 
 export class InvitationRepository
   extends AbstractRepository<Invitation>
@@ -248,10 +247,11 @@ export class InvitationRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as InvitationToken;
     } catch (error) {
-      this.logger.error(encryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(encryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'invitation',
+        'encrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -278,10 +278,11 @@ export class InvitationRepository
 
       return decrypted as InvitationToken;
     } catch (error) {
-      this.logger.error(decryptionErrorMessage, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(decryptionErrorMessage);
+      throw new TokenEncryptionFailedError(
+        'invitation',
+        'decrypt',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

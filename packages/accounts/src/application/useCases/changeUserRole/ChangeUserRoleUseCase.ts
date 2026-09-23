@@ -9,9 +9,11 @@ import {
   IChangeUserRoleUseCase,
 } from '@packmind/types';
 import {
-  UserNotFoundError,
-  UserNotInOrganizationError,
+  UserCannotChangeOwnRoleError,
+  CannotDemoteLastAdminError,
+  FailedToUpdateUserRoleError,
 } from '../../../domain/errors';
+import { UserNotFoundError } from '@packmind/node-utils';
 import { UserService } from '../../services/UserService';
 
 const origin = 'ChangeUserRoleUseCase';
@@ -40,31 +42,20 @@ export class ChangeUserRoleUseCase
     });
 
     if (command.targetUserId === command.userId) {
-      this.logger.warn('Admin attempted to change their own role', {
-        userId: command.userId,
-        organizationId: command.organizationId,
-      });
-      throw new Error('Cannot change your own role');
+      throw new UserCannotChangeOwnRoleError();
     }
 
     const targetUserId = createUserId(command.targetUserId);
     const organizationId = createOrganizationId(command.organizationId);
     const targetUser = await this.userService.getUserById(targetUserId);
-    if (!targetUser) {
-      this.logger.error('Target user not found', { targetUserId });
-      throw new UserNotFoundError({ userId: String(targetUserId) });
-    }
-
-    const targetMembership = targetUser.memberships?.find(
+    const targetMembership = targetUser?.memberships?.find(
       (membership) => membership.organizationId === organizationId,
     );
 
-    if (!targetMembership) {
-      this.logger.error('Target user is not a member of the organization', {
-        targetUserId,
-        organizationId,
-      });
-      throw new UserNotInOrganizationError({
+    // A user of another organization is answered exactly like a missing one,
+    // so the status never confirms to an admin that a foreign user id is real.
+    if (!targetUser || !targetMembership) {
+      throw new UserNotFoundError({
         userId: String(targetUserId),
         organizationId: String(organizationId),
       });
@@ -82,14 +73,7 @@ export class ChangeUserRoleUseCase
       );
 
       if (orgAdmins.length <= 1) {
-        this.logger.warn('Attempted to demote the last admin', {
-          targetUserId,
-          organizationId,
-          currentAdminCount: orgAdmins.length,
-        });
-        throw new Error(
-          'Cannot demote the last administrator of the organization',
-        );
+        throw new CannotDemoteLastAdminError();
       }
     }
 
@@ -100,12 +84,7 @@ export class ChangeUserRoleUseCase
     );
 
     if (!success) {
-      this.logger.error('Failed to update user role', {
-        targetUserId,
-        organizationId,
-        newRole: command.newRole,
-      });
-      throw new Error('Failed to update user role');
+      throw new FailedToUpdateUserRoleError();
     }
 
     this.logger.info('User role changed successfully', {

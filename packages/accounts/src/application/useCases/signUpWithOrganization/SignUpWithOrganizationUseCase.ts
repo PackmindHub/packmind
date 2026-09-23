@@ -15,6 +15,10 @@ import {
 } from '@packmind/types';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
+import {
+  InvalidPasswordError,
+  InvalidAuthenticationTypeError,
+} from '../../../domain/errors';
 
 const origin = 'SignUpWithOrganizationUseCase';
 
@@ -31,18 +35,16 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
 
   private validatePassword(password: string): void {
     if (!password) {
-      throw new Error('Password is required');
+      throw InvalidPasswordError.required();
     }
 
     if (password.length < 8) {
-      throw new Error('Password must be at least 8 characters');
+      throw InvalidPasswordError.tooShort();
     }
 
     const nonAlphaNumCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
     if (nonAlphaNumCount < 2) {
-      throw new Error(
-        'Password must contain at least 2 non-alphanumerical characters',
-      );
+      throw InvalidPasswordError.tooWeak();
     }
   }
 
@@ -80,54 +82,45 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
 
     const baseOrganizationName = this.generateBaseOrganizationName(email);
 
-    try {
-      const organizationName =
-        await this.findUniqueOrganizationName(baseOrganizationName);
+    const organizationName =
+      await this.findUniqueOrganizationName(baseOrganizationName);
 
-      const organization =
-        await this.organizationService.createOrganization(organizationName);
+    const organization =
+      await this.organizationService.createOrganization(organizationName);
 
-      await this.tryCreateDefaultSpace(organization.id);
+    await this.tryCreateDefaultSpace(organization.id);
 
-      let user;
-      if (method === 'password') {
-        user = await this.userService.createUser(
-          email,
-          password,
-          organization.id,
-        );
-      } else if (method === 'social') {
-        user = await this.createSocialUser(email, organization.id);
-      } else {
-        throw new Error(`Authentication type not found: ${method}`);
-      }
-
-      await this.addMemberToDefaultSpace(user, organization.id);
-
-      this.logger.info('User signed up with organization successfully', {
-        userId: user.id,
+    let user;
+    if (method === 'password') {
+      user = await this.userService.createUser(
         email,
-        organizationId: organization.id,
-        organizationName: organization.name,
-        method,
-      });
-
-      this.emitSignUpEvents(user, organization, organizationName, command);
-
-      return { user, organization };
-    } catch (error) {
-      this.logger.error('Failed to sign up user with organization', {
-        email,
-        baseOrganizationName,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+        password,
+        organization.id,
+      );
+    } else if (method === 'social') {
+      user = await this.createSocialUser(email, organization.id);
+    } else {
+      throw new InvalidAuthenticationTypeError(method);
     }
+
+    await this.addMemberToDefaultSpace(user, organization.id);
+
+    this.logger.info('User signed up with organization successfully', {
+      userId: user.id,
+      email,
+      organizationId: organization.id,
+      organizationName: organization.name,
+      method,
+    });
+
+    this.emitSignUpEvents(user, organization, organizationName, command);
+
+    return { user, organization };
   }
 
   private validatePasswordForSignup(password: string | undefined): void {
     if (!password) {
-      throw new Error('Password is required');
+      throw InvalidPasswordError.required();
     }
     this.validatePassword(password);
   }

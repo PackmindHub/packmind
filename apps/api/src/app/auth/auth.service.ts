@@ -34,6 +34,9 @@ import {
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
+  OrganizationNotFoundError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
 } from '@packmind/accounts';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
@@ -447,26 +450,18 @@ export class AuthService {
       userId: req.user.userId,
     });
 
-    try {
-      const command: GenerateApiKeyCommand = {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      };
+    const command: GenerateApiKeyCommand = {
+      userId: req.user.userId,
+      organizationId: req.organization.id,
+    };
 
-      const result = await this.accountsAdapter.generateApiKey(command);
+    const result = await this.accountsAdapter.generateApiKey(command);
 
-      this.logger.log('API key generated successfully for user', {
-        userId: req.user.userId,
-      });
+    this.logger.log('API key generated successfully for user', {
+      userId: req.user.userId,
+    });
 
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to generate API key for user', {
-        userId: req.user.userId,
-        error,
-      });
-      throw new Error('Failed to generate API key: ' + getErrorMessage(error));
-    }
+    return result;
   }
 
   /**
@@ -481,23 +476,11 @@ export class AuthService {
       userId: req.user.userId,
     });
 
-    try {
-      const command: GetCurrentApiKeyCommand = {
-        userId: req.user.userId,
-      };
+    const command: GetCurrentApiKeyCommand = {
+      userId: req.user.userId,
+    };
 
-      const result = await this.accountsAdapter.getCurrentApiKey(command);
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to get current API key for user', {
-        userId: req.user.userId,
-        error,
-      });
-      throw new Error(
-        'Failed to get current API key: ' + getErrorMessage(error),
-      );
-    }
+    return this.accountsAdapter.getCurrentApiKey(command);
   }
 
   /**
@@ -630,7 +613,7 @@ export class AuthService {
       });
 
       if (!getUserResponse) {
-        throw new Error('User not found');
+        throw new UserNotFoundError({ userId: payload.user.userId });
       }
 
       const userMembership = getUserResponse.memberships.find(
@@ -638,7 +621,10 @@ export class AuthService {
       );
 
       if (!userMembership) {
-        throw new Error('Organization membership not found');
+        throw new UserNotInOrganizationError({
+          userId: payload.user.userId,
+          organizationId: command.organizationId,
+        });
       }
 
       // Get the organization details
@@ -648,7 +634,7 @@ export class AuthService {
         });
 
       if (!organizationResponse) {
-        throw new Error('Organization not found');
+        throw new OrganizationNotFoundError(command.organizationId);
       }
 
       // Create new JWT payload with the selected organization

@@ -4,6 +4,7 @@ import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
+import { OrganizationSlugConflictError } from '../../domain/errors';
 
 jest.mock('slug', () => ({
   __esModule: true,
@@ -99,9 +100,7 @@ describe('OrganizationService', () => {
 
         await expect(
           organizationService.createOrganization(name),
-        ).rejects.toThrow(
-          'An organization with a similar name already exists. The name "Test Organization" conflicts with an existing organization when converted to URL-friendly format.',
-        );
+        ).rejects.toThrow(OrganizationSlugConflictError);
       });
 
       it('does not add organization to repository', async () => {
@@ -435,9 +434,7 @@ describe('OrganizationService', () => {
             organization,
             'Conflicting Name',
           ),
-        ).rejects.toThrow(
-          'An organization with a similar name already exists. The name "Conflicting Name" conflicts with an existing organization when converted to URL-friendly format.',
-        );
+        ).rejects.toThrow(OrganizationSlugConflictError);
       });
 
       it('does not save organization to repository', async () => {

@@ -1,13 +1,13 @@
 import { createUserId, createOrganizationId } from '@packmind/types';
+import { ExchangeCliLoginCodeUseCase } from './ExchangeCliLoginCodeUseCase';
 import {
-  ExchangeCliLoginCodeUseCase,
   CliLoginCodeNotFoundError,
   CliLoginCodeExpiredError,
   CliLoginCodeUserNotFoundError,
   CliLoginCodeMembershipNotFoundError,
   CliLoginCodeOrganizationNotFoundError,
   CliLoginCodeApiKeyError,
-} from './ExchangeCliLoginCodeUseCase';
+} from '../../../domain/errors';
 import { ICliLoginCodeRepository } from '../../../domain/repositories/ICliLoginCodeRepository';
 import { CliLoginCode } from '../../../domain/entities/CliLoginCode';
 import { UserService } from '../../services/UserService';

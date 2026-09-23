@@ -15,7 +15,7 @@ import {
 import {
   InvitationExpiredError,
   InvitationNotFoundError,
-  UserNotFoundError,
+  DanglingInvitationError,
 } from '../../../domain/errors';
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
@@ -234,11 +234,11 @@ describe('ActivateUserAccountUseCase', () => {
         });
       });
 
-      it('throws UserNotFoundError', async () => {
+      it('throws DanglingInvitationError', async () => {
         mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
         mockUserService.getUserById.mockResolvedValue(null);
-        await expect(useCase.execute(command)).rejects.toThrow(
-          UserNotFoundError,
+        await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+          DanglingInvitationError,
         );
       });
 
