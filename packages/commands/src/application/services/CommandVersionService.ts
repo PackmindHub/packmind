@@ -28,54 +28,37 @@ export class CommandVersionService {
       version: commandVersionData.version,
     });
 
-    try {
-      const versionId = createCommandVersionId(uuidv4());
-      this.logger.debug('Generated recipe version ID', { versionId });
+    const versionId = createCommandVersionId(uuidv4());
+    this.logger.debug('Generated recipe version ID', { versionId });
 
-      const newCommandVersion: CommandVersion = {
-        id: versionId,
-        ...commandVersionData,
-      };
+    const newCommandVersion: CommandVersion = {
+      id: versionId,
+      ...commandVersionData,
+    };
 
-      this.logger.debug('Adding recipe version to repository');
-      const savedVersion =
-        await this.commandVersionRepository.add(newCommandVersion);
+    this.logger.debug('Adding recipe version to repository');
+    const savedVersion =
+      await this.commandVersionRepository.add(newCommandVersion);
 
-      this.logger.info('Recipe version added to repository successfully', {
-        versionId,
-        recipeId: commandVersionData.recipeId,
-        version: commandVersionData.version,
-      });
+    this.logger.info('Recipe version added to repository successfully', {
+      versionId,
+      recipeId: commandVersionData.recipeId,
+      version: commandVersionData.version,
+    });
 
-      return savedVersion;
-    } catch (error) {
-      this.logger.error('Failed to add recipe version', {
-        recipeId: commandVersionData.recipeId,
-        version: commandVersionData.version,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return savedVersion;
   }
 
   async listCommandVersions(recipeId: CommandId): Promise<CommandVersion[]> {
     this.logger.info('Listing recipe versions', { recipeId });
 
-    try {
-      const versions =
-        await this.commandVersionRepository.findByCommandId(recipeId);
-      this.logger.info('Recipe versions retrieved successfully', {
-        recipeId,
-        count: versions.length,
-      });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list recipe versions', {
-        recipeId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const versions =
+      await this.commandVersionRepository.findByCommandId(recipeId);
+    this.logger.info('Recipe versions retrieved successfully', {
+      recipeId,
+      count: versions.length,
+    });
+    return versions;
   }
 
   async getLatestCommandVersions(
@@ -85,23 +68,15 @@ export class CommandVersionService {
       count: recipeIds.length,
     });
 
-    try {
-      const versions =
-        await this.commandVersionRepository.findLatestByCommandIds(recipeIds);
+    const versions =
+      await this.commandVersionRepository.findLatestByCommandIds(recipeIds);
 
-      this.logger.info('Latest recipe versions retrieved successfully', {
-        requestedCount: recipeIds.length,
-        foundCount: versions.length,
-      });
+    this.logger.info('Latest recipe versions retrieved successfully', {
+      requestedCount: recipeIds.length,
+      foundCount: versions.length,
+    });
 
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to get latest recipe versions', {
-        count: recipeIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return versions;
   }
 
   async getCommandVersionsByIds(
@@ -111,23 +86,15 @@ export class CommandVersionService {
       count: commandVersionIds.length,
     });
 
-    try {
-      const versions =
-        await this.commandVersionRepository.findByIds(commandVersionIds);
+    const versions =
+      await this.commandVersionRepository.findByIds(commandVersionIds);
 
-      this.logger.info('Recipe versions retrieved by IDs successfully', {
-        requestedCount: commandVersionIds.length,
-        foundCount: versions.length,
-      });
+    this.logger.info('Recipe versions retrieved by IDs successfully', {
+      requestedCount: commandVersionIds.length,
+      foundCount: versions.length,
+    });
 
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to get recipe versions by IDs', {
-        count: commandVersionIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return versions;
   }
 
   async getCommandVersion(
@@ -137,33 +104,24 @@ export class CommandVersionService {
   ): Promise<CommandVersion | null> {
     this.logger.info('Getting recipe version', { recipeId, version });
 
-    try {
-      const recipeVersion =
-        await this.commandVersionRepository.findByCommandIdAndVersion(
-          recipeId,
-          version,
-          allowedSpaceIds,
-        );
-
-      if (recipeVersion) {
-        this.logger.info('Recipe version found successfully', {
-          recipeId,
-          version,
-          versionId: recipeVersion.id,
-        });
-      } else {
-        this.logger.warn('Recipe version not found', { recipeId, version });
-      }
-
-      return recipeVersion;
-    } catch (error) {
-      this.logger.error('Failed to get recipe version', {
+    const recipeVersion =
+      await this.commandVersionRepository.findByCommandIdAndVersion(
         recipeId,
         version,
-        error: error instanceof Error ? error.message : String(error),
+        allowedSpaceIds,
+      );
+
+    if (recipeVersion) {
+      this.logger.info('Recipe version found successfully', {
+        recipeId,
+        version,
+        versionId: recipeVersion.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Recipe version not found', { recipeId, version });
     }
+
+    return recipeVersion;
   }
 
   async getCommandVersionById(
@@ -171,27 +129,19 @@ export class CommandVersionService {
   ): Promise<CommandVersion | null> {
     this.logger.info('Getting recipe version by ID', { versionId: id });
 
-    try {
-      const recipeVersion = await this.commandVersionRepository.findById(id);
+    const recipeVersion = await this.commandVersionRepository.findById(id);
 
-      if (recipeVersion) {
-        this.logger.info('Recipe version found by ID successfully', {
-          versionId: id,
-          recipeId: recipeVersion.recipeId,
-          version: recipeVersion.version,
-        });
-      } else {
-        this.logger.warn('Recipe version not found by ID', { versionId: id });
-      }
-
-      return recipeVersion;
-    } catch (error) {
-      this.logger.error('Failed to get recipe version by ID', {
+    if (recipeVersion) {
+      this.logger.info('Recipe version found by ID successfully', {
         versionId: id,
-        error: error instanceof Error ? error.message : String(error),
+        recipeId: recipeVersion.recipeId,
+        version: recipeVersion.version,
       });
-      throw error;
+    } else {
+      this.logger.warn('Recipe version not found by ID', { versionId: id });
     }
+
+    return recipeVersion;
   }
 
   async deleteCommandVersionsForCommand(
@@ -203,41 +153,32 @@ export class CommandVersionService {
       deletedBy,
     });
 
-    try {
-      const versions =
-        await this.commandVersionRepository.findByCommandId(recipeId);
+    const versions =
+      await this.commandVersionRepository.findByCommandId(recipeId);
 
-      if (versions.length === 0) {
-        this.logger.info('No recipe versions found to delete', { recipeId });
-        return;
-      }
-
-      this.logger.debug('Deleting recipe versions', {
-        recipeId,
-        versionCount: versions.length,
-      });
-
-      for (const version of versions) {
-        await this.commandVersionRepository.deleteById(version.id, deletedBy);
-        this.logger.debug('Recipe version deleted', {
-          recipeId,
-          versionId: version.id,
-          version: version.version,
-        });
-      }
-
-      this.logger.info('All recipe versions deleted successfully', {
-        recipeId,
-        deletedCount: versions.length,
-        deletedBy,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete recipe versions for recipe', {
-        recipeId,
-        deletedBy,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (versions.length === 0) {
+      this.logger.info('No recipe versions found to delete', { recipeId });
+      return;
     }
+
+    this.logger.debug('Deleting recipe versions', {
+      recipeId,
+      versionCount: versions.length,
+    });
+
+    for (const version of versions) {
+      await this.commandVersionRepository.deleteById(version.id, deletedBy);
+      this.logger.debug('Recipe version deleted', {
+        recipeId,
+        versionId: version.id,
+        version: version.version,
+      });
+    }
+
+    this.logger.info('All recipe versions deleted successfully', {
+      recipeId,
+      deletedCount: versions.length,
+      deletedBy,
+    });
   }
 }

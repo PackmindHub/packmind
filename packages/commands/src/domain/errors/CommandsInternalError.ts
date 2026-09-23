@@ -1,10 +1,12 @@
 import { PackmindInternalError } from '@packmind/types';
 
-export type CommandsInternalErrorReason = 'hexa_dependency_missing';
+export type CommandsInternalErrorReason =
+  | 'commands_adapter_ports_missing'
+  | 'deploy_commands_queue_not_initialized'
+  | 'deploy_commands_delayed_job_not_created';
 
 export type CommandsInternalErrorContext = {
-  commandId?: string;
-  dependency?: string;
+  missingPorts?: string[];
 };
 
 /**

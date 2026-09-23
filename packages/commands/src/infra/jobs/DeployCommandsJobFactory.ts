@@ -3,6 +3,10 @@ import { PackmindLogger } from '@packmind/logger';
 import { IDeploymentPort } from '@packmind/types';
 import { DeployCommandsDelayedJob } from '../../application/jobs/DeployCommandsDelayedJob';
 import { DeployCommandsInput } from '../../domain/jobs/DeployCommands';
+import {
+  DeployCommandsDelayedJobNotCreatedError,
+  DeployCommandsQueueNotInitializedError,
+} from '../../domain/errors';
 
 const origin = 'DeployRecipesJobFactory';
 
@@ -25,14 +29,14 @@ export class DeployCommandsJobFactory implements IJobFactory<DeployCommandsInput
     return {
       addJob: async (input: DeployCommandsInput): Promise<string> => {
         if (!this._delayedJob) {
-          throw new Error('Queue not initialized. Call initialize() first.');
+          throw new DeployCommandsQueueNotInitializedError();
         }
         const jobId = await this._delayedJob.addJob(input);
         return jobId;
       },
       initialize: async (): Promise<void> => {
         if (!this._delayedJob) {
-          throw new Error('DelayedJob not created. Call createQueue() first.');
+          throw new DeployCommandsDelayedJobNotCreatedError();
         }
         await this._delayedJob.initialize();
         this.logger.info('DeployRecipes queue initialized');
@@ -45,9 +49,7 @@ export class DeployCommandsJobFactory implements IJobFactory<DeployCommandsInput
 
   getDelayedJob(): DeployCommandsDelayedJob {
     if (!this._delayedJob) {
-      throw new Error(
-        '[DeployRecipesDelayedJob] Delayed job not initialized. Call createQueue() first.',
-      );
+      throw new DeployCommandsDelayedJobNotCreatedError();
     }
     return this._delayedJob;
   }
