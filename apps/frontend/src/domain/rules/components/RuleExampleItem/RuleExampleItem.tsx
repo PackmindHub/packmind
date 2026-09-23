@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RuleExample, RuleId, StandardId } from '@packmind/types';
 import {
@@ -9,7 +9,10 @@ import {
   useUpdateRuleExampleMutation,
   useDeleteRuleExampleMutation,
 } from '../../api/queries';
-import { NewExample } from '../RuleExamplesManager/RuleExamplesManager';
+import {
+  useRuleExampleDrafts,
+  type RuleExampleDraft,
+} from '../../hooks/useRuleExampleDrafts';
 import {
   PMCodeMirror,
   PMText,
@@ -21,27 +24,74 @@ import {
   PMAlertDialog,
   PMFlex,
   PMButtonGroup,
-  PMBadge,
   PMIcon,
-  PMGrid,
-  PMGridItem,
   PMSelect,
   PMSelectTrigger,
+  PMPortal,
   pmCreateListCollection,
 } from '@packmind/ui';
 import { LuCircleCheckBig, LuCircleX } from 'react-icons/lu';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
+/*
+  A pair of editors that follow their content instead of a number.
+
+  Both used to be exactly 200px tall, which is neither: a ten line "Do" scrolled
+  inside its own box while two hundred pixels of empty pane sat below it, and a
+  three line "Don't" spent the same height on nothing. The floor is about the
+  shortest snippet worth writing, the ceiling is where a card would start
+  pushing the rest of the rule off screen, and between the two the editor is the
+  size of the code in it.
+*/
+const EDITOR_MIN_HEIGHT = '150px';
+const EDITOR_MAX_HEIGHT = '420px';
+
+const MAX_LINES = 500;
+const MAX_TOTAL_CHARS = 30000;
+
+type ValidationErrors = {
+  positive?: string;
+  negative?: string;
+  total?: string;
+};
+
+function validate(positive: string, negative: string): ValidationErrors {
+  const errors: ValidationErrors = {};
+  const positiveLines = positive.split('\n').length;
+  const negativeLines = negative.split('\n').length;
+  const totalChars = positive.length + negative.length;
+
+  if (positiveLines > MAX_LINES) {
+    errors.positive = `${positiveLines} / ${MAX_LINES} lines`;
+  }
+
+  if (negativeLines > MAX_LINES) {
+    errors.negative = `${negativeLines} / ${MAX_LINES} lines`;
+  }
+
+  if (totalChars > MAX_TOTAL_CHARS) {
+    errors.total = `Total character count exceeds ${MAX_TOTAL_CHARS.toLocaleString()} characters (${totalChars.toLocaleString()} characters)`;
+  }
+
+  return errors;
+}
+
 interface RuleExampleItemProps {
-  example: RuleExample | NewExample;
+  example: RuleExample | RuleExampleDraft;
   standardId: StandardId;
   ruleId: RuleId;
   isNew?: boolean;
-  onSaveNew?: (
-    example: NewExample,
-    values: { lang: string; positive: string; negative: string },
-  ) => Promise<void>;
-  onCancelNew?: (exampleId: string) => void;
+  onSaveNew?: (values: {
+    lang: string;
+    positive: string;
+    negative: string;
+  }) => Promise<void>;
+  /**
+   * Whether abandoning this draft leaves anything behind. The first example of
+   * a language has nothing to cancel back to, so it is offered no Cancel:
+   * emptying the fields and leaving the language is what abandoning it means.
+   */
+  canCancel?: boolean;
   allowLanguageSelection?: boolean;
   onLanguageChange?: (lang: ProgrammingLanguage) => void;
 }
@@ -52,191 +102,135 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
   ruleId,
   isNew = false,
   onSaveNew,
-  onCancelNew,
+  canCancel = true,
   allowLanguageSelection = false,
   onLanguageChange,
 }) => {
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(isNew);
-  const [editValues, setEditValues] = useState({
-    lang: example.lang,
-    positive: example.positive,
-    negative: example.negative,
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{
-    positive?: string;
-    negative?: string;
-    total?: string;
-  }>({});
+  const drafts = useRuleExampleDrafts();
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  /*
+    The buffer is the edit mode. A card is being edited exactly when the store
+    holds something for it, so there is no second piece of state that can say
+    otherwise, and the buffer outlives this card: the store sits above the
+    language and above the tabs, both of which unmount it.
+  */
+  const draft = drafts.get(example.id);
+  const isEditing = draft !== undefined;
 
   const updateMutation = useUpdateRuleExampleMutation();
   const deleteMutation = useDeleteRuleExampleMutation();
 
-  // Validation constants
-  const MAX_LINES = 500;
-  const MAX_TOTAL_CHARS = 30000;
-
-  // Validation function
-  const validateExample = (positive: string, negative: string) => {
-    const errors: { positive?: string; negative?: string; total?: string } = {};
-
-    // Count lines and characters efficiently
-    // Note: For future optimization, could leverage CodeMirror's editor state APIs
-    // via refs to get line count from editor.state.doc.lines
-    const positiveLines = positive.split('\n').length;
-    const negativeLines = negative.split('\n').length;
-    const totalChars = positive.length + negative.length;
-
-    if (positiveLines > MAX_LINES) {
-      errors.positive = `${positiveLines} / ${MAX_LINES} lines`;
-    }
-
-    if (negativeLines > MAX_LINES) {
-      errors.negative = `${negativeLines} / ${MAX_LINES} lines`;
-    }
-
-    if (totalChars > MAX_TOTAL_CHARS) {
-      errors.total = `Total character count exceeds ${MAX_TOTAL_CHARS.toLocaleString()} characters (${totalChars.toLocaleString()} characters)`;
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Get sorted languages for display
   const sortedLanguages = getAllLanguagesSortedByDisplayName();
 
-  useEffect(() => {
-    setEditValues((previousValues) => ({
-      positive: '',
-      negative: '',
+  const languageCollection = useMemo(
+    () =>
+      pmCreateListCollection({
+        items: sortedLanguages.map((l) => ({
+          value: l.language,
+          label: l.info.displayName,
+        })),
+      }),
+    [sortedLanguages],
+  );
+
+  /*
+    Derived rather than stored. The counts are a function of what is in the
+    buffer, and keeping them in state was a second copy that had to be refreshed
+    from every handler that touched it.
+  */
+  const validationErrors = useMemo(
+    () => (draft ? validate(draft.positive, draft.negative) : {}),
+    [draft],
+  );
+  const hasValidationError = Object.keys(validationErrors).length > 0;
+
+  const startEditing = () => {
+    drafts.open({
+      id: example.id,
       lang: example.lang,
-    }));
-  }, [example.lang]);
-
-  const languageCollection = useMemo(() => {
-    return pmCreateListCollection({
-      items: sortedLanguages.map((l) => ({
-        value: l.language,
-        label: l.info.displayName,
-      })),
+      positive: example.positive,
+      negative: example.negative,
+      isNew: false,
     });
-  }, [sortedLanguages]);
+  };
 
-  const handleEditToggle = async () => {
-    if (isEditing) {
-      if (
-        editValues.positive.trim() === '' &&
-        editValues.negative.trim() === ''
-      ) {
-        handleCancel();
-        return;
-      }
-
-      // Validate before saving
-      const isValid = validateExample(editValues.positive, editValues.negative);
-      if (!isValid) {
-        return; // Don't save if validation fails
-      }
-
-      if (isNew && onSaveNew) {
-        setIsSaving(true);
-        try {
-          await onSaveNew(example as NewExample, editValues);
-          await queryClient.invalidateQueries({
-            queryKey: [...GET_STANDARD_RULES_DETECTION_STATUS_KEY, standardId],
-          });
-          setIsEditing(false);
-        } catch (error) {
-          console.error('Failed to save new example:', error);
-        } finally {
-          setIsSaving(false);
-        }
-      } else {
-        // Save changes to existing example
-        updateMutation.mutate({
-          standardId,
-          ruleId,
-          exampleId: (example as RuleExample).id,
-          updates: editValues,
-        });
-        setIsEditing(false);
-      }
-    } else {
-      // Reset values when starting to edit
-      setEditValues({
-        lang: example.lang,
-        positive: example.positive,
-        negative: example.negative,
-      });
-      setValidationErrors({}); // Clear validation errors
-      setIsEditing(true);
+  const handleSave = async () => {
+    if (!draft) {
+      return;
     }
+
+    if (draft.positive.trim() === '' && draft.negative.trim() === '') {
+      handleCancel();
+      return;
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
+    const values = {
+      lang: draft.lang,
+      positive: draft.positive,
+      negative: draft.negative,
+    };
+
+    if (isNew && onSaveNew) {
+      setIsSaving(true);
+      try {
+        await onSaveNew(values);
+        await queryClient.invalidateQueries({
+          queryKey: [...GET_STANDARD_RULES_DETECTION_STATUS_KEY, standardId],
+        });
+        drafts.discard(draft.id);
+      } catch (error) {
+        console.error('Failed to save new example:', error);
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
+    updateMutation.mutate({
+      standardId,
+      ruleId,
+      exampleId: (example as RuleExample).id,
+      updates: values,
+    });
+    drafts.discard(draft.id);
   };
 
   const handleCancel = () => {
-    if (isNew && onCancelNew) {
-      // Cancel new example creation
-      onCancelNew(example.id);
-    } else {
-      // Cancel editing existing example
-      setEditValues({
-        lang: example.lang,
-        positive: example.positive,
-        negative: example.negative,
-      });
-      setValidationErrors({}); // Clear validation errors
-      setIsEditing(false);
-    }
-  };
-
-  // Handle input changes with real-time validation
-  const handlePositiveChange = (value: string) => {
-    const newEditValues = { ...editValues, positive: value };
-    setEditValues(newEditValues);
-    // Validate in real-time
-    validateExample(newEditValues.positive, newEditValues.negative);
-  };
-
-  const handleNegativeChange = (value: string) => {
-    const newEditValues = { ...editValues, negative: value };
-    setEditValues(newEditValues);
-    // Validate in real-time
-    validateExample(newEditValues.positive, newEditValues.negative);
+    drafts.discard(example.id);
   };
 
   const handleRemove = () => {
-    if (isNew && onCancelNew) {
-      // Remove new example from local state
-      onCancelNew(example.id);
-    } else {
-      // Delete existing example from database
-      deleteMutation.mutate(
-        {
-          standardId,
-          ruleId,
-          exampleId: (example as RuleExample).id,
-        },
-        {
-          onSuccess: async () => {
-            await queryClient.invalidateQueries({
-              queryKey: [
-                ...GET_STANDARD_RULES_DETECTION_STATUS_KEY,
-                standardId,
-              ],
-            });
-          },
-        },
-      );
+    if (isNew) {
+      drafts.discard(example.id);
+      return;
     }
+
+    deleteMutation.mutate(
+      {
+        standardId,
+        ruleId,
+        exampleId: (example as RuleExample).id,
+      },
+      {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({
+            queryKey: [...GET_STANDARD_RULES_DETECTION_STATUS_KEY, standardId],
+          });
+        },
+      },
+    );
   };
 
-  const handleCancelNew = () => {
-    if (isNew && onCancelNew) {
-      onCancelNew(example.id);
-    }
-  };
+  const language = draft?.lang ?? example.lang;
+  const positive = draft?.positive ?? example.positive;
+  const negative = draft?.negative ?? example.negative;
+  const isBusy = isSaving || updateMutation.isPending;
 
   return (
     <PMBox
@@ -245,67 +239,72 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       borderRadius="md"
       width="100%"
       p={4}
-      shadow="sm"
     >
-      {/* Header */}
-      <PMFlex justify="space-between" align="center" mb={2}>
-        <PMHStack>
-          {allowLanguageSelection && isNew ? (
+      <PMFlex justify="space-between" align="center" mb={3} gap={4}>
+        <PMHStack gap={2} alignItems="center" minWidth={0}>
+          {allowLanguageSelection && isNew && isEditing ? (
+            /*
+              The draft's own language, which is a field of the record and not a
+              second copy of the rail above it. Changing it carries the code
+              across rather than starting the reader over, and the rail follows,
+              so the one-way relation stays readable: the rail goes where the
+              draft goes, never the reverse.
+            */
             <>
-              <PMText>Language:</PMText>
-              <PMBox width="200px">
+              <PMText fontSize="xs" color="faded">
+                Language
+              </PMText>
+              <PMBox width="180px">
                 <PMSelect.Root
                   collection={languageCollection}
-                  value={[editValues.lang]}
+                  value={[language]}
+                  size="sm"
                   onValueChange={(e) => {
                     const newLang = e.value[0] as ProgrammingLanguage;
-                    setEditValues({ ...editValues, lang: newLang });
-                    if (onLanguageChange) {
-                      onLanguageChange(newLang);
-                    }
+                    drafts.move(example.id, newLang);
+                    onLanguageChange?.(newLang);
                   }}
                 >
                   <PMSelectTrigger placeholder="Select a language" />
-                  <PMSelect.Positioner>
-                    <PMSelect.Content zIndex={1500}>
-                      {sortedLanguages.map((l) => (
-                        <PMSelect.Item
-                          item={{
-                            value: l.language,
-                            label: l.info.displayName,
-                          }}
-                          key={l.language}
-                        >
-                          {l.info.displayName}
-                        </PMSelect.Item>
-                      ))}
-                    </PMSelect.Content>
-                  </PMSelect.Positioner>
+                  <PMPortal>
+                    <PMSelect.Positioner>
+                      <PMSelect.Content zIndex={1500}>
+                        {sortedLanguages.map((l) => (
+                          <PMSelect.Item
+                            item={{
+                              value: l.language,
+                              label: l.info.displayName,
+                            }}
+                            key={l.language}
+                          >
+                            {l.info.displayName}
+                          </PMSelect.Item>
+                        ))}
+                      </PMSelect.Content>
+                    </PMSelect.Positioner>
+                  </PMPortal>
                 </PMSelect.Root>
               </PMBox>
             </>
-          ) : (
-            <></>
-          )}
+          ) : null}
         </PMHStack>
+
         {isEditing ? (
           <PMButtonGroup size="sm">
-            <PMButton
-              variant="tertiary"
-              onClick={handleCancel}
-              disabled={isSaving || updateMutation.isPending}
-            >
-              Cancel
-            </PMButton>
+            {(!isNew || canCancel) && (
+              <PMButton
+                variant="tertiary"
+                onClick={handleCancel}
+                disabled={isBusy}
+              >
+                Cancel
+              </PMButton>
+            )}
             <PMButton
               variant="primary"
-              onClick={handleEditToggle}
-              loading={isSaving || updateMutation.isPending}
-              disabled={
-                isSaving ||
-                updateMutation.isPending ||
-                Object.keys(validationErrors).length > 0
-              }
+              onClick={handleSave}
+              loading={isBusy}
+              disabled={isBusy || hasValidationError}
             >
               Save
             </PMButton>
@@ -314,47 +313,35 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
           <PMButtonGroup size="sm">
             <PMButton
               variant="secondary"
-              onClick={handleEditToggle}
+              onClick={startEditing}
               aria-label="Edit example"
             >
               Edit
             </PMButton>
-            {isNew ? (
-              <PMButton
-                variant="tertiary"
-                onClick={handleCancelNew}
-                aria-label="Cancel"
-              >
-                Cancel
-              </PMButton>
-            ) : (
-              <PMAlertDialog
-                trigger={
-                  <PMButton
-                    variant="tertiary"
-                    loading={deleteMutation.isPending}
-                    disabled={deleteMutation.isPending}
-                    aria-label="Delete"
-                  >
-                    Delete
-                  </PMButton>
-                }
-                title="Delete Rule Example"
-                message="Are you sure you want to delete this rule example? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
-                confirmColorScheme="red"
-                onConfirm={handleRemove}
-                isLoading={deleteMutation.isPending}
-              />
-            )}
+            <PMAlertDialog
+              trigger={
+                <PMButton
+                  variant="tertiary"
+                  loading={deleteMutation.isPending}
+                  disabled={deleteMutation.isPending}
+                  aria-label="Delete"
+                >
+                  Delete
+                </PMButton>
+              }
+              title="Delete Rule Example"
+              message="Are you sure you want to delete this rule example? This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              confirmColorScheme="red"
+              onConfirm={handleRemove}
+              isLoading={deleteMutation.isPending}
+            />
           </PMButtonGroup>
         )}
       </PMFlex>
 
-      {/* Code Examples Stacked Vertically */}
       <PMVStack gap={4} align="stretch">
-        {/* Positive Example */}
         <PMVStack flex={1} align="stretch" gap={2}>
           <PMHeading level="h5">
             <PMIcon color="green.500" marginRight={'1'}>
@@ -364,12 +351,15 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
           </PMHeading>
           <PMBox>
             <PMCodeMirror
-              value={isEditing ? editValues.positive : example.positive}
-              onChange={handlePositiveChange}
+              value={positive}
+              onChange={(value) =>
+                drafts.patch(example.id, { positive: value })
+              }
               editable={isEditing}
-              language={isEditing ? editValues.lang : example.lang}
+              language={language}
               placeholder={'Code complying with the rule...'}
-              height="200px"
+              minHeight={EDITOR_MIN_HEIGHT}
+              maxHeight={EDITOR_MAX_HEIGHT}
               basicSetup={{
                 lineNumbers: true,
                 foldGutter: false,
@@ -394,7 +384,6 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
           </PMBox>
         </PMVStack>
 
-        {/* Negative Example */}
         <PMVStack flex={1} align="stretch" gap={2}>
           <PMHeading level="h5">
             <PMIcon color="red.500" marginRight={'1'}>
@@ -404,12 +393,15 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
           </PMHeading>
           <PMBox>
             <PMCodeMirror
-              value={isEditing ? editValues.negative : example.negative}
-              onChange={handleNegativeChange}
+              value={negative}
+              onChange={(value) =>
+                drafts.patch(example.id, { negative: value })
+              }
               editable={isEditing}
-              language={isEditing ? editValues.lang : example.lang}
+              language={language}
               placeholder={'Code violating the rule...'}
-              height="200px"
+              minHeight={EDITOR_MIN_HEIGHT}
+              maxHeight={EDITOR_MAX_HEIGHT}
               basicSetup={{
                 lineNumbers: true,
                 foldGutter: false,
@@ -435,16 +427,8 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
         </PMVStack>
       </PMVStack>
 
-      {/* Total character count error */}
       {validationErrors.total && (
-        <PMBox
-          mt={2}
-          p={2}
-          bg="red.50"
-          border="1px solid"
-          borderColor="red.200"
-          borderRadius="md"
-        >
+        <PMBox mt={2}>
           <PMText color="error" variant="small">
             {validationErrors.total}
           </PMText>

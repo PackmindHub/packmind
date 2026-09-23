@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   PMPageSection,
@@ -6,8 +6,6 @@ import {
   PMVStack,
   PMHStack,
   PMField,
-  PMButton,
-  PMEmptyState,
   PMAlert,
 } from '@packmind/ui';
 import {
@@ -18,13 +16,13 @@ import {
   OrganizationId,
   SpaceId,
 } from '@packmind/types';
-import {
-  RuleExamplesManager,
-  RuleExamplesManagerHandle,
-} from './RuleExamplesManager';
+import { RuleExamplesManager } from './RuleExamplesManager';
 import { RuleLanguageSelect } from './RuleLanguageSelect';
+import {
+  RuleExampleDraftsProvider,
+  useRuleExampleDraftsStore,
+} from '../hooks/useRuleExampleDrafts';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
-import { LuPlus } from 'react-icons/lu';
 import { useGetRuleExamplesQuery } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -45,7 +43,12 @@ export const RuleDetails = ({
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [searchParams, setSearchParams] = useSearchParams();
-  const examplesManagerRef = useRef<RuleExamplesManagerHandle>(null);
+
+  /*
+    Above the tabs, which is the only place unsaved code survives them: the
+    strip below unmounts the body it is not showing.
+  */
+  const draftsStore = useRuleExampleDraftsStore();
 
   // Initialize state from URL parameters
   const getInitialTab = (): RuleDetailsTab => {
@@ -71,7 +74,6 @@ export const RuleDetails = ({
 
   const [selectedLanguage, setSelectedLanguage] =
     useState<ProgrammingLanguage>(getInitialLanguage());
-  const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
   const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(getInitialTab());
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
@@ -80,8 +82,6 @@ export const RuleDetails = ({
       standardId as StandardId,
       rule.id,
     );
-
-  const hasExamples = examples && examples.length > 0;
 
   const detectionLanguages = useMemo<ProgrammingLanguage[]>(() => {
     if (!examples) {
@@ -136,12 +136,6 @@ export const RuleDetails = ({
     setSearchParams(newParams, { replace: false });
   };
 
-  useEffect(() => {
-    if (hasExamples && isCreatingFirstExample) {
-      setIsCreatingFirstExample(false);
-    }
-  }, [hasExamples, isCreatingFirstExample]);
-
   // Only auto-select language if no URL parameter was provided
   useEffect(() => {
     const langParam = searchParams.get('lang');
@@ -173,127 +167,87 @@ export const RuleDetails = ({
     return null; // Or a spinner
   }
 
-  if (!hasExamples && !isCreatingFirstExample) {
-    return (
-      <PMEmptyState
-        backgroundColor={'background.primary'}
-        borderRadius={'md'}
-        width={'2xl'}
-        mx={'auto'}
-        mt={32}
-        title={'No code examples yet'}
-      >
-        Document the rule usage using code examples and detect violations with
-        Packmind linter
-        <PMButton
-          variant="primary"
-          onClick={() => setIsCreatingFirstExample(true)}
-        >
-          Add
-        </PMButton>
-      </PMEmptyState>
-    );
-  }
-
-  if (!hasExamples && isCreatingFirstExample) {
-    return (
-      <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
-        <RuleExamplesManager
-          standardId={standardId}
-          ruleId={rule.id}
-          selectedLanguage={selectedLanguage}
-          forceCreate={true}
-          allowLanguageSelection={true}
-          onLanguageChange={setSelectedLanguage}
-          onCancelCreation={() => setIsCreatingFirstExample(false)}
-        />
-      </PMVStack>
-    );
-  }
-
   return (
-    <PMVStack position="relative" gap={4} width="100%" alignItems="flex-start">
-      <PMTabsCompound.Root
-        defaultValue={defaultTab}
-        value={currentTab}
-        onValueChange={(details: { value: string }) =>
-          updateTabWithUrl(details.value as RuleDetailsTab)
-        }
+    <RuleExampleDraftsProvider store={draftsStore}>
+      <PMVStack
+        position="relative"
+        gap={4}
         width="100%"
+        alignItems="flex-start"
       >
-        <PMTabsCompound.List>
-          <PMTabsCompound.Trigger value="examples">
-            Code examples
-          </PMTabsCompound.Trigger>
-          <PMTabsCompound.Trigger
-            value="detection"
-            disabled={!selectedLanguageHasExamples}
-          >
-            Linter
-          </PMTabsCompound.Trigger>
-          <PMHStack ml="auto" gap={3} alignItems="center">
-            <PMField.Root>
-              <PMHStack gap={2} alignItems="center">
-                <PMField.Label mb={0}>Language</PMField.Label>
-                <RuleLanguageSelect
-                  configuredLanguages={detectionLanguages}
-                  value={selectedLanguage}
-                  onChange={updateLanguageWithUrl}
-                />
-              </PMHStack>
-            </PMField.Root>
-            {currentTab === 'examples' && (
-              <PMButton
-                variant="primary"
-                size="sm"
-                onClick={() => examplesManagerRef.current?.addExample()}
-              >
-                <LuPlus />
-                Add example
-              </PMButton>
-            )}
-          </PMHStack>
-        </PMTabsCompound.List>
+        <PMTabsCompound.Root
+          defaultValue={defaultTab}
+          value={currentTab}
+          onValueChange={(details: { value: string }) =>
+            updateTabWithUrl(details.value as RuleDetailsTab)
+          }
+          width="100%"
+        >
+          <PMTabsCompound.List>
+            <PMTabsCompound.Trigger value="examples">
+              Code examples
+            </PMTabsCompound.Trigger>
+            <PMTabsCompound.Trigger
+              value="detection"
+              disabled={!selectedLanguageHasExamples}
+            >
+              Linter
+            </PMTabsCompound.Trigger>
+            <PMHStack ml="auto" gap={3} alignItems="center">
+              <PMField.Root>
+                <PMHStack gap={2} alignItems="center">
+                  <PMField.Label mb={0}>Language</PMField.Label>
+                  <RuleLanguageSelect
+                    configuredLanguages={detectionLanguages}
+                    value={selectedLanguage}
+                    onChange={updateLanguageWithUrl}
+                  />
+                </PMHStack>
+              </PMField.Root>
+            </PMHStack>
+          </PMTabsCompound.List>
 
-        <PMTabsCompound.Content value="examples">
-          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
-            <PMAlert.Root status="info">
-              <PMAlert.Indicator />
-              <PMAlert.Description>
-                Code examples are used for documentation and linter detection
-                only. They are not included when rendering the standard for AI
-                agents.
-              </PMAlert.Description>
-            </PMAlert.Root>
-            <RuleExamplesManager
-              ref={examplesManagerRef}
-              standardId={standardId}
-              ruleId={rule.id}
-              selectedLanguage={selectedLanguage}
-              forceCreate={!selectedLanguageHasExamples}
-              onLanguageChange={setSelectedLanguage}
-              onCancelCreation={() => undefined}
-              hideAddButton
-            />
-          </PMVStack>
-        </PMTabsCompound.Content>
-
-        <PMTabsCompound.Content value="detection">
-          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
-            <PMPageSection>
-              <ProgramEditor
+          <PMTabsCompound.Content value="examples">
+            <PMVStack
+              alignItems={'stretch'}
+              gap="4"
+              paddingY={'4'}
+              width="100%"
+            >
+              <PMAlert.Root status="info">
+                <PMAlert.Indicator />
+                <PMAlert.Description>
+                  Code examples are used for documentation and linter detection
+                  only. They are not included when rendering the standard for AI
+                  agents.
+                </PMAlert.Description>
+              </PMAlert.Root>
+              <RuleExamplesManager
                 standardId={standardId}
                 ruleId={rule.id}
-                detectionLanguages={detectionLanguages.map((language) =>
-                  language.toString(),
-                )}
                 selectedLanguage={selectedLanguage}
-                onNavigateToExamples={handleNavigateToExamples}
+                onLanguageChange={updateLanguageWithUrl}
               />
-            </PMPageSection>
-          </PMVStack>
-        </PMTabsCompound.Content>
-      </PMTabsCompound.Root>
-    </PMVStack>
+            </PMVStack>
+          </PMTabsCompound.Content>
+
+          <PMTabsCompound.Content value="detection">
+            <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
+              <PMPageSection>
+                <ProgramEditor
+                  standardId={standardId}
+                  ruleId={rule.id}
+                  detectionLanguages={detectionLanguages.map((language) =>
+                    language.toString(),
+                  )}
+                  selectedLanguage={selectedLanguage}
+                  onNavigateToExamples={handleNavigateToExamples}
+                />
+              </PMPageSection>
+            </PMVStack>
+          </PMTabsCompound.Content>
+        </PMTabsCompound.Root>
+      </PMVStack>
+    </RuleExampleDraftsProvider>
   );
 };

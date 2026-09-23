@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useRef,
-  useImperativeHandle,
-} from 'react';
+import React, { useEffect } from 'react';
 import {
   OrganizationId,
   ProgrammingLanguage,
@@ -12,58 +7,33 @@ import {
   StandardId,
 } from '@packmind/types';
 import { PMVStack, PMText, PMSpinner, PMBox, PMButton } from '@packmind/ui';
+import { LuPlus } from 'react-icons/lu';
 import { RuleExampleItem } from '../RuleExampleItem';
 import {
   useGetRuleExamplesQuery,
   useCreateRuleExampleMutation,
 } from '../../api/queries';
+import { useRuleExampleDrafts } from '../../hooks/useRuleExampleDrafts';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 interface RuleExamplesManagerProps {
   standardId: StandardId;
   ruleId: RuleId;
-  selectedLanguage: string;
-  forceCreate?: boolean;
+  selectedLanguage: ProgrammingLanguage;
   onLanguageChange?: (lang: ProgrammingLanguage) => void;
-  onCancelCreation?: () => void;
-  allowLanguageSelection?: boolean;
-  hideAddButton?: boolean;
 }
 
-export interface RuleExamplesManagerHandle {
-  addExample: () => void;
-}
-
-export interface NewExample {
-  id: string;
-  lang: ProgrammingLanguage;
-  positive: string;
-  negative: string;
-  isNew: true;
-}
-
-export const RuleExamplesManager = React.forwardRef<
-  RuleExamplesManagerHandle,
-  RuleExamplesManagerProps
->(function RuleExamplesManager(
-  {
-    standardId,
-    ruleId,
-    selectedLanguage,
-    forceCreate = false,
-    onLanguageChange,
-    onCancelCreation,
-    allowLanguageSelection = false,
-    hideAddButton = false,
-  },
-  ref,
-) {
+export function RuleExamplesManager({
+  standardId,
+  ruleId,
+  selectedLanguage,
+  onLanguageChange,
+}: Readonly<RuleExamplesManagerProps>) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
-  const [newExamples, setNewExamples] = useState<NewExample[]>([]);
+  const drafts = useRuleExampleDrafts();
   const createRuleExampleMutation = useCreateRuleExampleMutation();
-  const previousForceCreateRef = useRef(false);
 
   const {
     data: existingExamples,
@@ -77,87 +47,54 @@ export const RuleExamplesManager = React.forwardRef<
     ruleId,
   );
 
-  const handleCreateNewExample = useCallback(() => {
-    const newExample: NewExample = {
-      id: `new-${Date.now()}-${ruleId}-${selectedLanguage}`,
-      lang: selectedLanguage as ProgrammingLanguage,
-      positive: '',
-      negative: '',
-      isNew: true,
-    };
-
-    setNewExamples((prev) => [...prev, newExample]);
-  }, [ruleId, selectedLanguage]);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      addExample: handleCreateNewExample,
-    }),
-    [handleCreateNewExample],
+  const saved = React.useMemo(
+    () => (existingExamples ?? []).filter((ex) => ex.lang === selectedLanguage),
+    [existingExamples, selectedLanguage],
   );
+  const pending = drafts.newDraftsFor(selectedLanguage);
 
-  // Automatically trigger creation when forceCreate becomes true
-  React.useEffect(() => {
-    if (forceCreate && !previousForceCreateRef.current) {
-      setNewExamples((prev) => {
-        if (prev.length > 0) {
-          return prev.map((example) => ({
-            ...example,
-            lang: selectedLanguage as ProgrammingLanguage,
-          }));
-        }
+  /*
+    A language with nothing in it opens on the form rather than on a sentence
+    saying it is empty.
 
-        const newExample: NewExample = {
-          id: `new-${Date.now()}-${ruleId}-${selectedLanguage}`,
-          lang: selectedLanguage as ProgrammingLanguage,
-          positive: '',
-          negative: '',
-          isNew: true,
-        };
+    There is nothing to read here, so the editor is the content: announcing the
+    absence and then asking for a click to reach the only thing this screen does
+    puts a door in front of an empty room. It covers the first example of a rule
+    and the first example of a language equally, because picking a language the
+    rule does not speak yet is already the intent to write one.
+  */
+  useEffect(() => {
+    if (isLoading || isError) {
+      return;
+    }
 
-        return [...prev, newExample];
+    if (saved.length === 0 && pending.length === 0) {
+      drafts.open({
+        lang: selectedLanguage,
+        positive: '',
+        negative: '',
+        isNew: true,
       });
     }
-    previousForceCreateRef.current = forceCreate;
-  }, [forceCreate, ruleId, selectedLanguage]);
+  }, [
+    isLoading,
+    isError,
+    saved.length,
+    pending.length,
+    selectedLanguage,
+    drafts,
+  ]);
 
-  // Update the language of new examples when selectedLanguage changes in forceCreate mode
-  React.useEffect(() => {
-    if (forceCreate && newExamples.length > 0) {
-      setNewExamples((prev) =>
-        prev.map((example) => ({
-          ...example,
-          lang: selectedLanguage as ProgrammingLanguage,
-        })),
-      );
-    }
-  }, [selectedLanguage, forceCreate, newExamples.length]);
-
-  const handleSaveNewExample = async (
-    newExample: NewExample,
-    values: { lang: string; positive: string; negative: string },
-  ) => {
-    try {
-      await createRuleExampleMutation.mutateAsync({
-        standardId,
-        ruleId,
-        example: values,
-      });
-
-      // Remove the new example from local state since it's now persisted
-      setNewExamples((prev) => prev.filter((ex) => ex.id !== newExample.id));
-    } catch (error) {
-      console.error('Failed to create new example:', error);
-      throw error;
-    }
-  };
-
-  const handleCancelNewExample = (newExampleId: string) => {
-    setNewExamples((prev) => prev.filter((ex) => ex.id !== newExampleId));
-    if (onCancelCreation) {
-      onCancelCreation();
-    }
+  const handleSaveNewExample = async (values: {
+    lang: string;
+    positive: string;
+    negative: string;
+  }) => {
+    await createRuleExampleMutation.mutateAsync({
+      standardId,
+      ruleId,
+      example: values,
+    });
   };
 
   if (isLoading) {
@@ -171,13 +108,7 @@ export const RuleExamplesManager = React.forwardRef<
 
   if (isError) {
     return (
-      <PMBox
-        p={4}
-        bg="red.50"
-        border="1px solid"
-        borderColor="red.200"
-        borderRadius="md"
-      >
+      <PMBox p={4} border="1px solid" borderColor="red.500" borderRadius="md">
         <PMText color="error" variant="body-important">
           Error loading examples
         </PMText>
@@ -190,71 +121,63 @@ export const RuleExamplesManager = React.forwardRef<
     );
   }
 
-  const filteredExistingExamples = existingExamples?.filter(
-    (ex) => ex.lang === selectedLanguage,
-  );
-
-  const filteredNewExamples = newExamples.filter(
-    (ex) => ex.lang === selectedLanguage || forceCreate,
-  );
-
-  const hasExamples =
-    (filteredExistingExamples && filteredExistingExamples.length > 0) ||
-    filteredNewExamples.length > 0;
+  /*
+    The only draft of an empty language is the form the language opened with, so
+    it is offered no way back: there is nothing behind it to go back to.
+  */
+  const firstDraftIsTheWholeLanguage = saved.length === 0;
 
   return (
-    <PMVStack alignItems={'stretch'} gap="4" width={'full'}>
-      {!forceCreate && !hideAddButton && (
-        <PMBox alignSelf="flex-start">
-          <PMButton
-            variant="primary"
-            size="sm"
-            onClick={handleCreateNewExample}
-            loading={createRuleExampleMutation.isPending}
-            disabled={createRuleExampleMutation.isPending}
-          >
-            Add example
-          </PMButton>
-        </PMBox>
-      )}
+    <PMVStack alignItems="stretch" gap="4" width="full">
+      {pending.map((draft, index) => (
+        <RuleExampleItem
+          key={draft.id}
+          example={draft}
+          standardId={standardId}
+          ruleId={ruleId}
+          isNew
+          onSaveNew={handleSaveNewExample}
+          canCancel={!(firstDraftIsTheWholeLanguage && index === 0)}
+          allowLanguageSelection
+          onLanguageChange={onLanguageChange}
+        />
+      ))}
 
-      {!hasExamples && !forceCreate ? (
-        <PMBox textAlign="center" py={8}>
-          <PMText color="secondary">
-            No examples have been added for this rule yet.
-          </PMText>
-        </PMBox>
-      ) : (
-        <PMVStack gap={4} align="stretch" width="100%">
-          {/* Render new examples first (in edit mode) */}
-          {filteredNewExamples.map((example) => (
-            <RuleExampleItem
-              key={example.id}
-              example={example}
-              standardId={standardId}
-              ruleId={ruleId}
-              isNew={true}
-              onSaveNew={handleSaveNewExample}
-              onCancelNew={handleCancelNewExample}
-              allowLanguageSelection={allowLanguageSelection}
-              onLanguageChange={onLanguageChange}
-            />
-          ))}
+      {saved
+        .slice()
+        .reverse()
+        .map((example) => (
+          <RuleExampleItem
+            key={example.id}
+            example={example}
+            standardId={standardId}
+            ruleId={ruleId}
+          />
+        ))}
 
-          {/* Render existing examples (newest first) */}
-          {filteredExistingExamples
-            ?.slice()
-            .reverse()
-            .map((example) => (
-              <RuleExampleItem
-                key={example.id}
-                example={example}
-                standardId={standardId}
-                ruleId={ruleId}
-              />
-            ))}
-        </PMVStack>
-      )}
+      {/*
+        Below the examples rather than above them, because it is what comes
+        after reading them: a rule earns a second example from what the first
+        one failed to say.
+      */}
+      <PMBox alignSelf="flex-start">
+        <PMButton
+          variant="secondary"
+          size="sm"
+          onClick={() =>
+            drafts.open({
+              lang: selectedLanguage,
+              positive: '',
+              negative: '',
+              isNew: true,
+            })
+          }
+          disabled={createRuleExampleMutation.isPending}
+        >
+          <LuPlus />
+          Add example
+        </PMButton>
+      </PMBox>
     </PMVStack>
   );
-});
+}

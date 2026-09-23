@@ -22,6 +22,10 @@ import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/f
 import { RuleExamplesManager } from '../../../rules/components/RuleExamplesManager';
 import { RuleLanguageSelect } from '../../../rules/components/RuleLanguageSelect';
 import { useGetRuleExamplesQuery } from '../../../rules/api/queries';
+import {
+  RuleExampleDraftsProvider,
+  useRuleExampleDraftsStore,
+} from '../../../rules/hooks/useRuleExampleDrafts';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { EXAMPLES_TAB, LINTER_TAB } from './buildComponentDetail';
@@ -66,6 +70,14 @@ export function ContextRuleDetail({
 }>) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
+
+  /*
+    Owned here rather than inside the examples body, because here is the only
+    place it survives what the reader does next: the tab strip below unmounts
+    its panels, and the language above scopes them. Both used to take unsaved
+    code with them.
+  */
+  const draftsStore = useRuleExampleDraftsStore();
 
   /*
    * The examples, for two things this frame decides and the bodies below it do
@@ -139,97 +151,101 @@ export function ContextRuleDetail({
   const hasExamples = configuredLanguages.includes(language);
 
   return (
-    <PMBox padding={6}>
-      <PMBox
-        display="inline-flex"
-        alignItems="center"
-        gap="4px"
-        fontSize="sm"
-        color="text.faded"
-        _hover={{ color: 'text.primary' }}
-        transition="color 150ms ease-out"
-        asChild
-      >
-        <Link to={backHref}>
-          <PMIcon fontSize="sm">
-            <LuChevronLeft />
-          </PMIcon>
-          {standardName}
-        </Link>
-      </PMBox>
+    <RuleExampleDraftsProvider store={draftsStore}>
+      <PMBox padding={6}>
+        <PMBox
+          display="inline-flex"
+          alignItems="center"
+          gap="4px"
+          fontSize="sm"
+          color="text.faded"
+          _hover={{ color: 'text.primary' }}
+          transition="color 150ms ease-out"
+          asChild
+        >
+          <Link to={backHref}>
+            <PMIcon fontSize="sm">
+              <LuChevronLeft />
+            </PMIcon>
+            {standardName}
+          </Link>
+        </PMBox>
 
-      {/*
+        {/*
         The rule at the size prose is set in, not at heading size. It is a
         sentence, and the pane is narrow: capped at the measure every other
         title on this surface is capped at.
       */}
-      <PMBox paddingTop={2} maxWidth="68ch">
-        <PMHeading level="h2" fontSize="lg">
-          {rule.content}
-        </PMHeading>
-      </PMBox>
+        <PMBox paddingTop={2} maxWidth="68ch">
+          <PMHeading level="h2" fontSize="lg">
+            {rule.content}
+          </PMHeading>
+        </PMBox>
 
-      {/*
+        {/*
         Above the tabs rather than inside one, because it is about the rule and
         not about either half of it. Absent when nothing has ever been pointed
         at this rule, which is the same silence the row keeps: a line reading
         that no language detects it would announce the state of a thing the
         reader is on this screen to create.
       */}
-      {detection && (
-        <PMHStack gap={3} align="start" paddingTop={4}>
-          <PMText fontSize="xs" color="faded" flexShrink={0}>
-            Detected in
-          </PMText>
-          <RuleDetectionLanguages
-            standardId={standardId}
-            ruleId={rule.id}
-            detection={detection}
-          />
-        </PMHStack>
-      )}
+        {detection && (
+          <PMHStack gap={3} align="start" paddingTop={4}>
+            <PMText fontSize="xs" color="faded" flexShrink={0}>
+              Detected in
+            </PMText>
+            <RuleDetectionLanguages
+              standardId={standardId}
+              ruleId={rule.id}
+              detection={detection}
+            />
+          </PMHStack>
+        )}
 
-      <PMBox paddingTop={5}>
-        <PMTabsCompound.Root
-          value={tab}
-          onValueChange={(details) => onTabChange(details.value)}
-          variant="line"
-          width="100%"
-          lazyMount
-          unmountOnExit
-        >
-          <PMTabsCompound.List>
-            <PMTabsCompound.Trigger value={EXAMPLES_TAB}>
-              Code examples
-            </PMTabsCompound.Trigger>
-            <PMTabsCompound.Trigger value={LINTER_TAB} disabled={!hasExamples}>
-              Linter
-            </PMTabsCompound.Trigger>
-            {/*
+        <PMBox paddingTop={5}>
+          <PMTabsCompound.Root
+            value={tab}
+            onValueChange={(details) => onTabChange(details.value)}
+            variant="line"
+            width="100%"
+            lazyMount
+            unmountOnExit
+          >
+            <PMTabsCompound.List>
+              <PMTabsCompound.Trigger value={EXAMPLES_TAB}>
+                Code examples
+              </PMTabsCompound.Trigger>
+              <PMTabsCompound.Trigger
+                value={LINTER_TAB}
+                disabled={!hasExamples}
+              >
+                Linter
+              </PMTabsCompound.Trigger>
+              {/*
               In the strip rather than above it, because it scopes both bodies
               and not one: the examples of a language and the program built from
               them are the same choice read twice.
             */}
-            <PMHStack
-              marginLeft="auto"
-              gap={2}
-              alignItems="center"
-              flexShrink={0}
-            >
-              <PMText fontSize="xs" color="faded">
-                Language
-              </PMText>
-              <RuleLanguageSelect
-                configuredLanguages={configuredLanguages}
-                value={language}
-                onChange={setPicked}
-                width="180px"
-              />
-            </PMHStack>
-          </PMTabsCompound.List>
+              <PMHStack
+                marginLeft="auto"
+                gap={2}
+                alignItems="center"
+                flexShrink={0}
+              >
+                <PMText fontSize="xs" color="faded">
+                  Language
+                </PMText>
+                <RuleLanguageSelect
+                  configuredLanguages={configuredLanguages}
+                  value={language}
+                  onChange={setPicked}
+                  width="180px"
+                />
+              </PMHStack>
+            </PMTabsCompound.List>
 
-          <PMTabsCompound.Content value={EXAMPLES_TAB}>
-            {/*
+            <PMTabsCompound.Content value={EXAMPLES_TAB}>
+              {/*
               The one thing about examples a reader would otherwise get wrong,
               and the rule's own page says it too: they document the rule and
               they feed the linter, and they are not part of what an agent
@@ -240,47 +256,42 @@ export function ContextRuleDetail({
               permanent, so it is on screen permanently, and a permanent banner
               is the loudest thing on a surface built to be quiet.
             */}
-            <PMText
-              as="div"
-              fontSize="xs"
-              color="faded"
-              paddingTop={3}
-              maxWidth="72ch"
-            >
-              Examples document the rule and feed the linter. They are not part
-              of what a coding agent reads.
-            </PMText>
-            <PMBox paddingTop={3}>
-              <RuleExamplesManager
-                standardId={standardId}
-                ruleId={rule.id}
-                selectedLanguage={language}
-                /*
-                  The one place a language is added: a rule gains one by gaining
-                  an example in it, so the creation form is where the choice
-                  belongs and the select above is how it is reached.
-                */
-                allowLanguageSelection={!hasExamples}
-                onLanguageChange={setPicked}
-              />
-            </PMBox>
-          </PMTabsCompound.Content>
+              <PMText
+                as="div"
+                fontSize="xs"
+                color="faded"
+                paddingTop={3}
+                maxWidth="72ch"
+              >
+                Examples document the rule and feed the linter. They are not
+                part of what a coding agent reads.
+              </PMText>
+              <PMBox paddingTop={3}>
+                <RuleExamplesManager
+                  standardId={standardId}
+                  ruleId={rule.id}
+                  selectedLanguage={language}
+                  onLanguageChange={setPicked}
+                />
+              </PMBox>
+            </PMTabsCompound.Content>
 
-          <PMTabsCompound.Content value={LINTER_TAB}>
-            <PMBox paddingTop={4}>
-              <ProgramEditor
-                standardId={standardId}
-                ruleId={rule.id}
-                detectionLanguages={configuredLanguages.map((entry) =>
-                  entry.toString(),
-                )}
-                selectedLanguage={language}
-                onNavigateToExamples={() => onTabChange(EXAMPLES_TAB)}
-              />
-            </PMBox>
-          </PMTabsCompound.Content>
-        </PMTabsCompound.Root>
+            <PMTabsCompound.Content value={LINTER_TAB}>
+              <PMBox paddingTop={4}>
+                <ProgramEditor
+                  standardId={standardId}
+                  ruleId={rule.id}
+                  detectionLanguages={configuredLanguages.map((entry) =>
+                    entry.toString(),
+                  )}
+                  selectedLanguage={language}
+                  onNavigateToExamples={() => onTabChange(EXAMPLES_TAB)}
+                />
+              </PMBox>
+            </PMTabsCompound.Content>
+          </PMTabsCompound.Root>
+        </PMBox>
       </PMBox>
-    </PMBox>
+    </RuleExampleDraftsProvider>
   );
 }

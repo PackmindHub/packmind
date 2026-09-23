@@ -47,37 +47,14 @@ vi.mock(
   }),
 );
 
-vi.mock('./RuleExamplesManager', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const React = require('react');
-  const RuleExamplesManagerMock = React.forwardRef(
-    (
-      props: {
-        selectedLanguage: string;
-        forceCreate?: boolean;
-      },
-      ref: React.Ref<unknown>,
-    ) => {
-      React.useImperativeHandle(ref, () => ({
-        addExample: vi.fn(),
-      }));
-      return (
-        <div data-testid="rule-examples-manager">
-          <span data-testid="selected-language">{props.selectedLanguage}</span>
-          <span data-testid="force-create">
-            {props.forceCreate ? 'true' : 'false'}
-          </span>
-        </div>
-      );
-    },
-  );
-
-  return {
-    __esModule: true,
-    RuleExamplesManager: RuleExamplesManagerMock,
-    RuleExamplesManagerHandle: {},
-  };
-});
+vi.mock('./RuleExamplesManager', () => ({
+  __esModule: true,
+  RuleExamplesManager: (props: { selectedLanguage: string }) => (
+    <div data-testid="rule-examples-manager">
+      <span data-testid="selected-language">{props.selectedLanguage}</span>
+    </div>
+  ),
+}));
 
 const mockUseGetRuleExamplesQuery = useGetRuleExamplesQuery as MockedFunction<
   typeof useGetRuleExamplesQuery
@@ -132,14 +109,13 @@ describe('RuleDetails - language selector and states', () => {
       );
     });
 
-    it('displays empty state message', () => {
-      expect(screen.getByText('No code examples yet')).toBeInTheDocument();
-    });
-
-    it('does not render the rule examples manager', () => {
-      expect(
-        screen.queryByTestId('rule-examples-manager'),
-      ).not.toBeInTheDocument();
+    /*
+      A rule with no examples has nothing to read, so the body it opens on is
+      the one that writes them. Announcing the absence and then asking for a
+      click put a door in front of an empty room.
+    */
+    it('opens straight onto the examples body', () => {
+      expect(screen.getByTestId('rule-examples-manager')).toBeInTheDocument();
     });
   });
 
@@ -223,12 +199,10 @@ describe('RuleDetails - language selector and states', () => {
       await user.click(pythonOption);
 
       await waitFor(() => {
-        expect(screen.getByTestId('force-create')).toHaveTextContent('true');
+        expect(screen.getByTestId('selected-language')).toHaveTextContent(
+          'PYTHON',
+        );
       });
-    });
-
-    it('enables creation mode', async () => {
-      expect(screen.getByTestId('force-create')).toHaveTextContent('true');
     });
 
     it('sets the selected language to PYTHON', async () => {
