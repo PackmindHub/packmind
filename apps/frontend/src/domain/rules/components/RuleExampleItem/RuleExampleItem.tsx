@@ -10,6 +10,7 @@ import {
   useDeleteRuleExampleMutation,
 } from '../../api/queries';
 import {
+  hasContent,
   useRuleExampleDrafts,
   type RuleExampleDraft,
 } from '../../hooks/useRuleExampleDrafts';
@@ -145,6 +146,13 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
     [draft],
   );
   const hasValidationError = Object.keys(validationErrors).length > 0;
+
+  /*
+    A language opens on an empty pair, so Save is on screen before there is
+    anything to save. Off until something is written, rather than a button that
+    discards the form and opens the same one again.
+  */
+  const nothingToSave = isNew && (!draft || !hasContent(draft));
 
   const startEditing = () => {
     drafts.open({
@@ -312,7 +320,7 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
               variant="primary"
               onClick={handleSave}
               loading={isBusy}
-              disabled={isBusy || hasValidationError}
+              disabled={isBusy || hasValidationError || nothingToSave}
             >
               Save
             </PMButton>

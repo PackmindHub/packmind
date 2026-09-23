@@ -169,6 +169,20 @@ describe('RuleExamplesManager', () => {
         screen.queryByRole('button', { name: /cancel/i }),
       ).not.toBeInTheDocument();
     });
+
+    /*
+      Saving an empty pair discarded the form and opened the same one again,
+      which is a button that does nothing twice.
+    */
+    it('cannot be saved until something is written', () => {
+      expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+    });
+
+    it('can be saved once something is', async () => {
+      await userEvent.type(screen.getByLabelText(DO_FIELD), 'something');
+
+      expect(screen.getByRole('button', { name: /save/i })).toBeEnabled();
+    });
   });
 
   describe('when a language is left while something is being written', () => {

@@ -285,8 +285,9 @@ export function ContextRuleDetail({
                 paddingTop={3}
                 maxWidth="72ch"
               >
-                Examples document the rule and feed the linter. They are not
-                part of what a coding agent reads.
+                Examples document the rule and feed the linter, one detection
+                program per language. They are not part of what a coding agent
+                reads.
               </PMText>
               <PMBox paddingTop={3}>
                 <RuleExamplesManager
