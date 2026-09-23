@@ -6,6 +6,7 @@ import { MarketplaceDistributionStatus } from './MarketplaceDistributionStatus';
 import { MarketplaceDistributionId } from './MarketplaceDistributionId';
 import { MarketplaceId } from './MarketplaceId';
 import { PackageId } from '../deployments/Package';
+import { PackageReleaseId } from '../deployments/PackageRelease';
 import { PublishFailureReason } from '../deployments/PublishFailureReason';
 import { VersionFingerprint } from './VersionFingerprint';
 
@@ -53,5 +54,6 @@ export type MarketplaceDistribution = WithSoftDelete<
      * state immediately and makes a repeated request idempotent.
      */
     removalRequestedAt?: Date | null;
+    packageReleaseId: PackageReleaseId | null;
   }>
 >;
