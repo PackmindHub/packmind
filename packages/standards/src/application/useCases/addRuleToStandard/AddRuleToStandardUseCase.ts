@@ -28,6 +28,8 @@ import {
   PackmindEventEmitterService,
   SpaceMemberContext,
 } from '@packmind/node-utils';
+import { StandardSlugNotFoundError } from '../../../domain/errors/StandardSlugNotFoundError';
+import { StandardVersionMissingError } from '../../../domain/errors/StandardVersionMissingError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import type { ILinterPort } from '@packmind/types';
 
@@ -72,133 +74,105 @@ export class AddRuleToStandardUseCase
       ruleContent: ruleContent.substring(0, 50) + '...',
     });
 
-    try {
-      const existingStandard = await this.standardService.findStandardBySlug(
-        normalizedSlug,
-        organizationId,
-      );
-      if (!existingStandard) {
-        this.logger.error('Standard not found by slug and organization', {
-          standardSlug,
-          normalizedSlug,
-          organizationId,
-        });
-        throw new Error(
-          'Standard slug not found, please check current standards first',
-        );
-      }
-
-      if (existingStandard.spaceId !== command.spaceId) {
-        throw new Error('Standard does not belong to the requested space');
-      }
-
-      const latestVersion =
-        await this.standardVersionService.getLatestStandardVersion(
-          existingStandard.id,
-        );
-
-      if (!latestVersion) {
-        this.logger.error('No versions found for standard', {
-          standardId: existingStandard.id,
-        });
-        throw new Error(
-          `No versions found for standard ${existingStandard.id}`,
-        );
-      }
-
-      const existingRules = await this.ruleRepository.findByStandardVersionId(
-        latestVersion.id,
-      );
-
-      const nextVersion = existingStandard.version + 1;
-
-      await this.standardService.updateStandard(existingStandard.id, {
-        name: existingStandard.name,
-        description: existingStandard.description,
-        slug: existingStandard.slug,
-        version: nextVersion,
-        gitCommit: undefined,
-        userId,
-        scope: existingStandard.scope,
-      });
-
-      const allRules: Array<{
-        content: string;
-        examples: RuleExample[];
-      }> = [];
-      for (const rule of existingRules) {
-        const ruleExamples = await this.ruleExampleRepository.findByRuleId(
-          rule.id,
-        );
-        allRules.push({ content: rule.content, examples: ruleExamples || [] });
-      }
-
-      const processedExamples = this.processExamples(examples || []);
-      allRules.push({ content: ruleContent, examples: processedExamples });
-
-      const standardVersionData: CreateStandardVersionData = {
-        standardId: existingStandard.id,
-        name: existingStandard.name,
-        slug: existingStandard.slug,
-        description: existingStandard.description,
-        version: nextVersion,
-        rules: allRules,
-        scope: existingStandard.scope,
-        userId,
-      };
-
-      const newStandardVersion =
-        await this.standardVersionService.addStandardVersion(
-          standardVersionData,
-        );
-
-      this.logger.info('Rule added to standard successfully', {
-        standardId: existingStandard.id,
-        standardSlug,
-        newVersion: nextVersion,
-        versionId: newStandardVersion.id,
-        totalRulesCount: allRules.length,
-        addedRuleContent: ruleContent.substring(0, 50) + '...',
-      });
-
-      await this.validateDetectionProgramsForStandardVersion(
-        newStandardVersion.id,
-        organizationId,
-        userId,
-      );
-
-      this.eventEmitterService.emit(
-        new RuleAddedEvent({
-          standardId: createStandardId(existingStandard.id),
-          standardVersionId: createStandardVersionId(newStandardVersion.id),
-          organizationId,
-          userId,
-          newVersion: nextVersion,
-          source,
-        }),
-      );
-
-      this.eventEmitterService.emit(
-        new StandardUpdatedEvent({
-          standardId: createStandardId(existingStandard.id),
-          spaceId: createSpaceId(existingStandard.spaceId),
-          organizationId,
-          userId,
-          newVersion: nextVersion,
-          source,
-        }),
-      );
-
-      return { standardVersion: newStandardVersion };
-    } catch (error) {
-      this.logger.error('Failed to add rule to standard', {
-        standardSlug,
-        organizationId,
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const existingStandard = await this.standardService.findStandardBySlug(
+      normalizedSlug,
+      organizationId,
+    );
+    if (!existingStandard || existingStandard.spaceId !== command.spaceId) {
+      throw new StandardSlugNotFoundError(normalizedSlug, command.spaceId);
     }
+
+    const latestVersion =
+      await this.standardVersionService.getLatestStandardVersion(
+        existingStandard.id,
+      );
+
+    if (!latestVersion) {
+      throw new StandardVersionMissingError(existingStandard.id);
+    }
+
+    const existingRules = await this.ruleRepository.findByStandardVersionId(
+      latestVersion.id,
+    );
+
+    const nextVersion = existingStandard.version + 1;
+
+    await this.standardService.updateStandard(existingStandard.id, {
+      name: existingStandard.name,
+      description: existingStandard.description,
+      slug: existingStandard.slug,
+      version: nextVersion,
+      gitCommit: undefined,
+      userId,
+      scope: existingStandard.scope,
+    });
+
+    const allRules: Array<{
+      content: string;
+      examples: RuleExample[];
+    }> = [];
+    for (const rule of existingRules) {
+      const ruleExamples = await this.ruleExampleRepository.findByRuleId(
+        rule.id,
+      );
+      allRules.push({ content: rule.content, examples: ruleExamples || [] });
+    }
+
+    const processedExamples = this.processExamples(examples || []);
+    allRules.push({ content: ruleContent, examples: processedExamples });
+
+    const standardVersionData: CreateStandardVersionData = {
+      standardId: existingStandard.id,
+      name: existingStandard.name,
+      slug: existingStandard.slug,
+      description: existingStandard.description,
+      version: nextVersion,
+      rules: allRules,
+      scope: existingStandard.scope,
+      userId,
+    };
+
+    const newStandardVersion =
+      await this.standardVersionService.addStandardVersion(standardVersionData);
+
+    this.logger.info('Rule added to standard successfully', {
+      standardId: existingStandard.id,
+      standardSlug,
+      newVersion: nextVersion,
+      versionId: newStandardVersion.id,
+      totalRulesCount: allRules.length,
+      addedRuleContent: ruleContent.substring(0, 50) + '...',
+    });
+
+    await this.validateDetectionProgramsForStandardVersion(
+      newStandardVersion.id,
+      organizationId,
+      userId,
+    );
+
+    this.eventEmitterService.emit(
+      new RuleAddedEvent({
+        standardId: createStandardId(existingStandard.id),
+        standardVersionId: createStandardVersionId(newStandardVersion.id),
+        organizationId,
+        userId,
+        newVersion: nextVersion,
+        source,
+      }),
+    );
+
+    this.eventEmitterService.emit(
+      new StandardUpdatedEvent({
+        standardId: createStandardId(existingStandard.id),
+        spaceId: createSpaceId(existingStandard.spaceId),
+        organizationId,
+        userId,
+        newVersion: nextVersion,
+        source,
+      }),
+    );
+
+    return { standardVersion: newStandardVersion };
   }
 
   private async validateDetectionProgramsForStandardVersion(

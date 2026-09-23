@@ -86,144 +86,132 @@ export class CreateStandardWithExamplesUseCase {
       scope,
     });
 
-    try {
-      this.logger.info('Generating slug from standard name', { name });
-      const baseSlug = slug(name);
-      this.logger.info('Base slug generated', { slug: baseSlug });
+    this.logger.info('Generating slug from standard name', { name });
+    const baseSlug = slug(name);
+    this.logger.info('Base slug generated', { slug: baseSlug });
 
-      this.logger.info('Checking slug uniqueness within space', {
-        baseSlug,
-        spaceId,
-        organizationId,
-      });
-      const existingStandards =
-        await this.standardService.listStandardsBySpace(spaceId);
-      const existingSlugs = new Set(existingStandards.map((s) => s.slug));
+    this.logger.info('Checking slug uniqueness within space', {
+      baseSlug,
+      spaceId,
+      organizationId,
+    });
+    const existingStandards =
+      await this.standardService.listStandardsBySpace(spaceId);
+    const existingSlugs = new Set(existingStandards.map((s) => s.slug));
 
-      let standardSlug = baseSlug;
-      if (existingSlugs.has(standardSlug)) {
-        let counter = 1;
-        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
-          counter++;
-        }
-        standardSlug = `${baseSlug}-${counter}`;
+    let standardSlug = baseSlug;
+    if (existingSlugs.has(standardSlug)) {
+      let counter = 1;
+      while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+        counter++;
       }
-      this.logger.info('Resolved unique slug', { slug: standardSlug });
+      standardSlug = `${baseSlug}-${counter}`;
+    }
+    this.logger.info('Resolved unique slug', { slug: standardSlug });
 
-      const initialVersion = 1;
+    const initialVersion = 1;
 
-      this.logger.info('Creating standard entity');
-      const standard = await this.standardService.addStandard({
-        name,
-        description,
-        slug: standardSlug,
-        version: initialVersion,
-        gitCommit: undefined,
-        userId,
-        scope,
-        spaceId,
-      });
-      this.logger.info('Standard entity created successfully', {
+    this.logger.info('Creating standard entity');
+    const standard = await this.standardService.addStandard({
+      name,
+      description,
+      slug: standardSlug,
+      version: initialVersion,
+      gitCommit: undefined,
+      userId,
+      scope,
+      spaceId,
+    });
+    this.logger.info('Standard entity created successfully', {
+      standardId: standard.id,
+      name,
+      organizationId,
+      userId,
+    });
+
+    const processedRules = await this.processRulesWithExamples(rules);
+
+    this.logger.info(
+      'Creating initial standard version with rules and examples',
+    );
+    const standardVersionData: CreateStandardVersionData = {
+      standardId: standard.id,
+      name,
+      slug: standardSlug,
+      description,
+      version: initialVersion,
+      rules: processedRules,
+      scope,
+      userId,
+    };
+
+    const standardVersion =
+      await this.standardVersionService.addStandardVersion(standardVersionData);
+    this.logger.info(
+      'Initial standard version and rules created successfully',
+      {
+        versionId: standardVersion.id,
         standardId: standard.id,
-        name,
+        version: initialVersion,
+        rulesCount: rules.length,
+        totalExamples: processedRules.reduce(
+          (sum, r) => sum + r.examples.length,
+          0,
+        ),
+      },
+    );
+
+    if (!disableTriggerAssessment) {
+      await this.assessRulesDetections(
+        standardVersion.id,
         organizationId,
         userId,
-      });
-
-      const processedRules = await this.processRulesWithExamples(rules);
-
-      this.logger.info(
-        'Creating initial standard version with rules and examples',
       );
-      const standardVersionData: CreateStandardVersionData = {
-        standardId: standard.id,
-        name,
-        slug: standardSlug,
-        description,
-        version: initialVersion,
-        rules: processedRules,
-        scope,
-        userId,
-      };
-
-      const standardVersion =
-        await this.standardVersionService.addStandardVersion(
-          standardVersionData,
-        );
+    } else {
       this.logger.info(
-        'Initial standard version and rules created successfully',
+        'Detection program assessment disabled, skipping validation',
         {
-          versionId: standardVersion.id,
-          standardId: standard.id,
-          version: initialVersion,
-          rulesCount: rules.length,
-          totalExamples: processedRules.reduce(
-            (sum, r) => sum + r.examples.length,
-            0,
-          ),
+          standardVersionId: standardVersion.id,
         },
       );
+    }
 
-      if (!disableTriggerAssessment) {
-        await this.assessRulesDetections(
-          standardVersion.id,
-          organizationId,
-          userId,
-        );
-      } else {
-        this.logger.info(
-          'Detection program assessment disabled, skipping validation',
-          {
-            standardVersionId: standardVersion.id,
-          },
-        );
-      }
-
-      this.eventEmitterService.emit(
-        new StandardCreatedEvent({
-          standardId: createStandardId(standard.id),
-          spaceId,
-          organizationId,
-          userId,
-          source,
-          method,
-          originSkill,
-          directUpdate,
-        }),
-      );
-
-      await this.emitRuleAddedEventsForRules(
-        createStandardId(standard.id),
-        createStandardVersionId(standardVersion.id),
-        initialVersion,
+    this.eventEmitterService.emit(
+      new StandardCreatedEvent({
+        standardId: createStandardId(standard.id),
+        spaceId,
         organizationId,
         userId,
         source,
+        method,
         originSkill,
-      );
+        directUpdate,
+      }),
+    );
 
-      this.logger.info(
-        'CreateStandardWithExamples process completed successfully',
-        {
-          standardId: standard.id,
-          versionId: standardVersion.id,
-          name,
-          organizationId,
-          userId,
-          rulesCount: rules.length,
-        },
-      );
+    await this.emitRuleAddedEventsForRules(
+      createStandardId(standard.id),
+      createStandardVersionId(standardVersion.id),
+      initialVersion,
+      organizationId,
+      userId,
+      source,
+      originSkill,
+    );
 
-      return standard;
-    } catch (error) {
-      this.logger.error('Failed to create standard with examples', {
+    this.logger.info(
+      'CreateStandardWithExamples process completed successfully',
+      {
+        standardId: standard.id,
+        versionId: standardVersion.id,
         name,
         organizationId,
         userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+        rulesCount: rules.length,
+      },
+    );
+
+    return standard;
   }
 
   private async processRulesWithExamples(

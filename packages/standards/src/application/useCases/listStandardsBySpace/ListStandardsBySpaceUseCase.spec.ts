@@ -22,6 +22,7 @@ import { spaceFactory } from '@packmind/spaces/test';
 import { standardFactory } from '../../../../test/standardFactory';
 import { StandardService } from '../../services/StandardService';
 import { ListStandardsBySpaceUseCase } from './ListStandardsBySpaceUseCase';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
 
 describe('ListStandardsBySpaceUseCase', () => {
   let usecase: ListStandardsBySpaceUseCase;
@@ -174,7 +175,7 @@ describe('ListStandardsBySpaceUseCase', () => {
   });
 
   describe('when space validation fails', () => {
-    it('throws error if space not found', async () => {
+    it('throws StandardSpaceNotAccessibleError if space not found', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const spaceId = createSpaceId(uuidv4());
@@ -203,12 +204,12 @@ describe('ListStandardsBySpaceUseCase', () => {
       accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(null);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space with id ${spaceId} not found`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        StandardSpaceNotAccessibleError,
       );
     });
 
-    it('throws error if space does not belong to organization', async () => {
+    it('throws StandardSpaceNotAccessibleError if space does not belong to organization', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const otherOrganizationId = createOrganizationId(uuidv4());
@@ -242,8 +243,8 @@ describe('ListStandardsBySpaceUseCase', () => {
       accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        StandardSpaceNotAccessibleError,
       );
     });
   });

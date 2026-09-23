@@ -1,3 +1,4 @@
+import { RuleNotFoundError } from '../../../domain/errors/RuleNotFoundError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { RuleExample } from '@packmind/types';
@@ -29,34 +30,23 @@ export class GetRuleExamplesUseCase {
       ruleId,
     });
 
-    try {
-      const rule = await this.ruleRepository.findById(ruleId);
-      if (!rule) {
-        const error = new Error(`Rule with id ${ruleId} not found`);
-        this.logger.error('Rule not found', { ruleId });
-        throw error;
-      }
-
-      this.logger.debug('Rule found, getting rule examples', {
-        ruleId,
-        ruleContent: rule.content.substring(0, 50) + '...',
-      });
-
-      const ruleExamples =
-        await this.ruleExampleRepository.findByRuleId(ruleId);
-
-      this.logger.info('Rule examples retrieved successfully', {
-        ruleId,
-        count: ruleExamples.length,
-      });
-
-      return ruleExamples;
-    } catch (error) {
-      this.logger.error('Failed to get rule examples', {
-        ruleId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const rule = await this.ruleRepository.findById(ruleId);
+    if (!rule) {
+      throw new RuleNotFoundError(ruleId);
     }
+
+    this.logger.debug('Rule found, getting rule examples', {
+      ruleId,
+      ruleContent: rule.content.substring(0, 50) + '...',
+    });
+
+    const ruleExamples = await this.ruleExampleRepository.findByRuleId(ruleId);
+
+    this.logger.info('Rule examples retrieved successfully', {
+      ruleId,
+      count: ruleExamples.length,
+    });
+
+    return ruleExamples;
   }
 }

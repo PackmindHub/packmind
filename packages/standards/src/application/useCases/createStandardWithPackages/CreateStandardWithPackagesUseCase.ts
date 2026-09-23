@@ -14,6 +14,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
 import { CreateStandardWithExamplesUseCase } from '../createStandardWithExamples/CreateStandardWithExamplesUseCase';
 
 const origin = 'CreateStandardWithPackagesUseCase';
@@ -60,14 +61,8 @@ export class CreateStandardWithPackagesUseCase
     });
 
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== organizationId) {
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
+    if (!space || space.organizationId !== organizationId) {
+      throw new StandardSpaceNotAccessibleError(spaceId, organizationId);
     }
 
     this.logger.info('Creating standard with examples', { name });

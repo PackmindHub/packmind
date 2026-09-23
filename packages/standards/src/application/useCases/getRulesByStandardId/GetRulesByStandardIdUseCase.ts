@@ -19,22 +19,12 @@ export class GetRulesByStandardIdUseCase {
   public async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     this.logger.info('Getting rules by standard ID', { standardId });
 
-    try {
-      const rules =
-        await this.standardVersionService.getLatestRulesByStandardId(
-          standardId,
-        );
-      this.logger.debug('Retrieved rules', {
-        standardId,
-        ruleCount: rules.length,
-      });
-      return rules;
-    } catch (error) {
-      this.logger.error('Failed to get rules by standard ID', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const rules =
+      await this.standardVersionService.getLatestRulesByStandardId(standardId);
+    this.logger.debug('Retrieved rules', {
+      standardId,
+      ruleCount: rules.length,
+    });
+    return rules;
   }
 }

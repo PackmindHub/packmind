@@ -31,6 +31,7 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import { UpdateRuleExampleUseCase } from './UpdateRuleExampleUseCase';
+import { RuleExampleInvalidError } from '../../../domain/errors/RuleExampleInvalidError';
 
 describe('UpdateRuleExampleUseCase', () => {
   let usecase: UpdateRuleExampleUseCase;
@@ -308,13 +309,13 @@ describe('UpdateRuleExampleUseCase', () => {
   });
 
   describe('when no fields are provided for update', () => {
-    it('throws an error', async () => {
+    it('throws RuleExampleInvalidError', async () => {
       const command = createCommand({
         ruleExampleId: 'example-id' as RuleExampleId,
       });
 
       await expect(usecase.execute(command)).rejects.toThrow(
-        'At least one field must be provided for update',
+        RuleExampleInvalidError,
       );
     });
   });

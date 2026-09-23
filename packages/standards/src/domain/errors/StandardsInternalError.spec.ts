@@ -1,5 +1,6 @@
 import { isDomainError, isInternalError } from '@packmind/types';
 import { StandardsInternalError } from './StandardsInternalError';
+import { StandardVersionMissingError } from './StandardVersionMissingError';
 
 describe('StandardsInternalError', () => {
   const error = new StandardsInternalError(
@@ -22,5 +23,29 @@ describe('StandardsInternalError', () => {
 
   it('keeps the ids in the context', () => {
     expect(error.context).toEqual({ standardId: 'standard-1' });
+  });
+});
+
+describe('StandardVersionMissingError', () => {
+  const error = new StandardVersionMissingError('standard-1');
+
+  it('is an internal error', () => {
+    expect(isInternalError(error)).toBe(true);
+  });
+
+  it('is not a domain error', () => {
+    expect(isDomainError(error)).toBe(false);
+  });
+
+  it('answers its own reason', () => {
+    expect(error.reason).toBe('standard_version_missing');
+  });
+
+  it('keeps the standard in the context', () => {
+    expect(error.context).toEqual({ standardId: 'standard-1' });
+  });
+
+  it('does not leak the standard id in the message', () => {
+    expect(error.message).not.toContain('standard-1');
   });
 });
