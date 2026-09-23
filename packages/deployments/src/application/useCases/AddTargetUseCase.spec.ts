@@ -15,6 +15,9 @@ import {
 } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
 import { TargetService } from '../services/TargetService';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
+import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
+import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
 
 describe('AddTargetUseCase', () => {
   let useCase: AddTargetUseCase;
@@ -355,8 +358,8 @@ describe('AddTargetUseCase', () => {
         }
       });
 
-      it('throws error with correct message', () => {
-        expect(thrownError.message).toBe('Target name cannot be empty');
+      it('throws InvalidTargetNameError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetNameError);
       });
 
       it('does not call addTarget', () => {
@@ -382,8 +385,8 @@ describe('AddTargetUseCase', () => {
         }
       });
 
-      it('throws error with correct message', () => {
-        expect(thrownError.message).toBe('Target name cannot be empty');
+      it('throws InvalidTargetNameError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetNameError);
       });
 
       it('does not call addTarget', () => {
@@ -409,8 +412,8 @@ describe('AddTargetUseCase', () => {
         }
       });
 
-      it('throws error with correct message', () => {
-        expect(thrownError.message).toBe('Invalid path format');
+      it('throws InvalidTargetPathError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetPathError);
       });
 
       it('does not call addTarget', () => {
@@ -436,8 +439,8 @@ describe('AddTargetUseCase', () => {
         }
       });
 
-      it('throws error with correct message', () => {
-        expect(thrownError.message).toBe('Invalid path format');
+      it('throws InvalidTargetPathError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidTargetPathError);
       });
 
       it('does not call addTarget', () => {
@@ -465,10 +468,8 @@ describe('AddTargetUseCase', () => {
         }
       });
 
-      it('throws error with correct message', () => {
-        expect(thrownError.message).toBe(
-          `Repository with id ${gitRepoId} not found`,
-        );
+      it('throws GitRepositoryNotFoundError', () => {
+        expect(thrownError).toBeInstanceOf(GitRepositoryNotFoundError);
       });
 
       it('does not call addTarget', () => {

@@ -7,6 +7,8 @@ import {
   OrganizationId,
 } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 export class DeleteTargetUseCase implements IDeleteTargetUseCase {
   constructor(
@@ -19,12 +21,12 @@ export class DeleteTargetUseCase implements IDeleteTargetUseCase {
 
     const target = await this.targetService.findById(targetId);
     if (!target) {
-      throw new Error(`Target with id ${targetId} not found`);
+      throw new TargetNotFoundError(targetId);
     }
 
     const repo = await this.gitPort.getRepositoryById(target.gitRepoId);
     if (!repo) {
-      throw new Error(`Repository with id ${target.gitRepoId} not found`);
+      throw new GitRepositoryNotFoundError(target.gitRepoId);
     }
 
     const providersResponse = await this.gitPort.listProviders({

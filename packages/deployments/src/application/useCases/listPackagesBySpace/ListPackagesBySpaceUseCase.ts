@@ -11,6 +11,7 @@ import {
   ListPackagesBySpaceResponse,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 
 const origin = 'ListPackagesBySpaceUseCase';
 
@@ -41,21 +42,10 @@ export class ListPackagesBySpaceUseCase
 
     try {
       const space = await this.spacesPort.getSpaceById(command.spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', {
-          spaceId: command.spaceId,
-        });
-        throw new Error(`Space with id ${command.spaceId} not found`);
-      }
-
-      if (space.organizationId !== command.organizationId) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: command.spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: command.organizationId,
-        });
-        throw new Error(
-          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
+      if (!space || space.organizationId !== command.organizationId) {
+        throw new SpaceNotAccessibleError(
+          command.spaceId,
+          command.organizationId,
         );
       }
 

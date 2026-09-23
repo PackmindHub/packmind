@@ -21,6 +21,7 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
 import { spaceFactory } from '@packmind/spaces/test';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 
 describe('ListPackagesBySpaceUseCase', () => {
   let useCase: ListPackagesBySpaceUseCase;
@@ -196,9 +197,7 @@ describe('ListPackagesBySpaceUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(executionPromise).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
-        );
+        await expect(executionPromise).rejects.toThrow(SpaceNotAccessibleError);
       });
 
       it('retrieves space by id', async () => {
@@ -240,9 +239,7 @@ describe('ListPackagesBySpaceUseCase', () => {
       });
 
       it('throws error', async () => {
-        await expect(executionPromise).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
-        );
+        await expect(executionPromise).rejects.toThrow(SpaceNotAccessibleError);
       });
 
       it('retrieves space by id', async () => {

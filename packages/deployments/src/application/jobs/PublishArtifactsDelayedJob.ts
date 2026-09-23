@@ -14,6 +14,7 @@ import {
   PublishArtifactsJobOutput,
 } from '../../domain/jobs/PublishArtifactsJob';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 const logOrigin = 'PublishArtifactsDelayedJob';
 
@@ -63,7 +64,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
 
     const gitRepo = await this.gitPort.getRepositoryById(input.gitRepoId);
     if (!gitRepo) {
-      throw new Error(`Git repository not found with id: ${input.gitRepoId}`);
+      throw new GitRepositoryNotFoundError(input.gitRepoId);
     }
 
     let gitCommit: GitCommit | undefined;

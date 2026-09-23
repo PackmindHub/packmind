@@ -2,16 +2,22 @@
 
 ## Added
 
-- `packmind packages move --command my-command --to @space/my-package` puts a standard, command or skill in one package and takes it out of every other one it belonged to, in a single step. The whole move either lands or is rolled back, so a failure leaves the packages as they were rather than half-moved. It reports where the artefact landed and each package it was removed from, and does nothing when the artefact was already in the target package alone
-- `packmind packages remove --command my-command --from @space/my-package` takes a standard, command or skill out of one package without adding it anywhere. It says whether anything changed and which packages still hold the artefact — an artefact in no package at all is installed and distributed nowhere, so the command always states that outcome rather than leaving it to be inferred
-
 ## Changed
-
-- An artefact now belongs to a single package. `packmind packages add` refuses an artefact that already belongs to another package instead of adding it to a second one, naming the packages that hold it and printing the `packages move` command that would relocate it. Adding an artefact already in the target package is unchanged — it is still reported as skipped
 
 ## Fixed
 
 ## Removed
+
+# [0.36.0] - 2026-09-23
+
+## Added
+
+- `packmind packages move --<type> <slug> --to @space/package` moves an artefact into one package and out of every other
+- `packmind packages remove --<type> <slug> --from @space/package` takes an artefact out of a package without adding it anywhere
+
+## Changed
+
+- **Breaking:** an artefact now belongs to one package. `packmind packages add` refuses one held elsewhere and points at `packages move`
 
 # [0.35.1] - 2026-09-10
 
@@ -504,7 +510,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...HEAD
+[0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
 [0.35.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...release-cli/0.35.1
 [0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0
 [0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1

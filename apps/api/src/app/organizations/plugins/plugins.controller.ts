@@ -1,20 +1,9 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  NotFoundException,
-  Param,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { PackagesNotFoundError } from '@packmind/deployments';
 import {
   MarketplaceVendor,
   OrganizationId,
-  PackageNotPublishableAsPluginError,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginMode,
   RenderPackageAsPluginResponse,
@@ -65,56 +54,32 @@ export class PluginsController {
       },
     );
 
-    try {
-      const command: RenderPackageAsPluginCommand = {
-        userId: request.user.userId,
+    const command: RenderPackageAsPluginCommand = {
+      userId: request.user.userId,
+      organizationId,
+      source: request.clientSource,
+      packageSlug: body.packageSlug,
+      mode: body.mode,
+      pluginRoot: body.pluginRoot,
+      pluginName: body.pluginName,
+      gitRemoteUrl: body.gitRemoteUrl,
+      gitBranch: body.gitBranch,
+      targetVendor: body.targetVendor,
+    };
+
+    const response = await this.pluginsService.renderPlugin(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/plugins/render - Package rendered successfully',
+      {
         organizationId,
-        source: request.clientSource,
         packageSlug: body.packageSlug,
-        mode: body.mode,
-        pluginRoot: body.pluginRoot,
-        pluginName: body.pluginName,
-        gitRemoteUrl: body.gitRemoteUrl,
-        gitBranch: body.gitBranch,
-        targetVendor: body.targetVendor,
-      };
+        fileCount: response.files.length,
+        skippedStandardsCount: response.skippedStandardsCount,
+      },
+    );
 
-      const response = await this.pluginsService.renderPlugin(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/plugins/render - Package rendered successfully',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          fileCount: response.files.length,
-          skippedStandardsCount: response.skippedStandardsCount,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      // A standards-only package is a caller mistake, not a server fault. The
-      // CLI has no client-side gate (unlike the marketplace publish UI), so
-      // this is where the error surfaces; left unmapped it escapes as a 500
-      // whose opaque body hides the message the error already carries.
-      if (error instanceof PackageNotPublishableAsPluginError) {
-        throw new BadRequestException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/plugins/render - Failed to render package as plugin',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Post('track-deleted')
@@ -131,42 +96,25 @@ export class PluginsController {
       },
     );
 
-    try {
-      const command: TrackPluginDeletedCommand = {
-        userId: request.user.userId,
+    const command: TrackPluginDeletedCommand = {
+      userId: request.user.userId,
+      organizationId,
+      source: request.clientSource,
+      packageSlug: body.packageSlug,
+      gitRemoteUrl: body.gitRemoteUrl,
+    };
+
+    const response = await this.pluginsService.trackPluginDeleted(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/plugins/track-deleted - Plugin deletion tracked successfully',
+      {
         organizationId,
-        source: request.clientSource,
         packageSlug: body.packageSlug,
-        gitRemoteUrl: body.gitRemoteUrl,
-      };
+        tracked: response.tracked,
+      },
+    );
 
-      const response = await this.pluginsService.trackPluginDeleted(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/plugins/track-deleted - Plugin deletion tracked successfully',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          tracked: response.tracked,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/plugins/track-deleted - Failed to track plugin deletion',
-        {
-          organizationId,
-          packageSlug: body.packageSlug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 }

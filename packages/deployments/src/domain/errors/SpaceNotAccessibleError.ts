@@ -1,4 +1,4 @@
-import { DeploymentsError } from './DeploymentsError';
+import { DeploymentsError } from '@packmind/types';
 
 /**
  * The space does not exist, or it belongs to another organization.

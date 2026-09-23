@@ -15,6 +15,8 @@ import {
 } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
 import { TargetService } from '../services/TargetService';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 describe('DeleteTargetUseCase', () => {
   let useCase: DeleteTargetUseCase;
@@ -150,7 +152,7 @@ describe('DeleteTargetUseCase', () => {
 
     it('throws error for target not found', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Target with id ${targetId} not found`,
+        TargetNotFoundError,
       );
     });
 
@@ -179,7 +181,7 @@ describe('DeleteTargetUseCase', () => {
 
     it('throws error for repository not found', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Repository with id ${gitRepoId} not found`,
+        GitRepositoryNotFoundError,
       );
     });
 

@@ -11,6 +11,7 @@ import {
   GetPackageByIdResponse,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 
 const origin = 'GetPackageByIdUseCase';
 
@@ -45,10 +46,7 @@ export class GetPackageByIdUseCase
         .findById(command.packageId);
 
       if (!pkg) {
-        this.logger.warn('Package not found', {
-          packageId: command.packageId,
-        });
-        throw new Error(`Package with id ${command.packageId} not found`);
+        throw new PackageNotFoundError(command.packageId, command.spaceId);
       }
 
       this.logger.info('Package retrieved successfully', {

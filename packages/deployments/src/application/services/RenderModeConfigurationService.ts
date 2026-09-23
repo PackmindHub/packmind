@@ -13,6 +13,8 @@ import {
 } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
+import { UnsupportedRenderModeError } from '../../domain/errors/UnsupportedRenderModeError';
+import { RenderModeConfigurationMissingError } from '../../domain/errors/RenderModeConfigurationMissingError';
 
 const origin = 'RenderModeConfigurationService';
 
@@ -48,8 +50,7 @@ export class RenderModeConfigurationService {
       const codingAgent = RENDER_MODE_TO_CODING_AGENT[mode];
 
       if (!codingAgent) {
-        this.logger.error('Unsupported render mode encountered', { mode });
-        throw new Error(`Unsupported render mode: ${mode}`);
+        throw new UnsupportedRenderModeError(mode);
       }
 
       return codingAgent;
@@ -187,10 +188,7 @@ export class RenderModeConfigurationService {
         await this.repository.findByOrganizationId(organizationId);
 
       if (!existingConfiguration) {
-        this.logger.error('Cannot update missing render mode configuration', {
-          organizationId,
-        });
-        throw new Error('Render mode configuration does not exist');
+        throw new RenderModeConfigurationMissingError(organizationId);
       }
 
       const updatedConfiguration = await this.repository.upsert({

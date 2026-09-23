@@ -1,5 +1,4 @@
-import { ArtifactType } from '@packmind/types';
-import { DeploymentsError } from './DeploymentsError';
+import { ArtifactType, DeploymentsError } from '@packmind/types';
 
 const LABELS: Record<ArtifactType, string> = {
   command: 'Command',

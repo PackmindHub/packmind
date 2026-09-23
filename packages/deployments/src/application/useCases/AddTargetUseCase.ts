@@ -9,6 +9,9 @@ import {
 } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { v4 as uuidv4 } from 'uuid';
+import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
+import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 export class AddTargetUseCase implements IAddTargetUseCase {
   constructor(
@@ -28,23 +31,23 @@ export class AddTargetUseCase implements IAddTargetUseCase {
 
     // Validate target name is not empty
     if (!name || name.trim().length === 0) {
-      throw new Error('Target name cannot be empty');
+      throw new InvalidTargetNameError();
     }
 
     // Validate path format (basic validation for directory paths)
     if (!path || (path !== '/' && !path.match(new RegExp('\\/.+(?=\\/)\\/')))) {
-      throw new Error('Invalid path format');
+      throw new InvalidTargetPathError(path);
     }
 
     // Prevent path traversal attacks
     if (path.includes('..')) {
-      throw new Error('Invalid path format');
+      throw new InvalidTargetPathError(path);
     }
 
     // Check if the git provider has a token
     const repo = await this.gitPort.getRepositoryById(gitRepoId);
     if (!repo) {
-      throw new Error(`Repository with id ${gitRepoId} not found`);
+      throw new GitRepositoryNotFoundError(gitRepoId);
     }
 
     const providersResponse = await this.gitPort.listProviders({
