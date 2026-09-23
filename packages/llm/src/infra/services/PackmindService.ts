@@ -4,6 +4,8 @@ import {
   AIPromptOptions,
   AIPromptResult,
   AIService,
+  AIServiceErrorTypes,
+  isInternalError,
   LLMProvider,
   PromptConversation,
 } from '@packmind/types';
@@ -149,6 +151,40 @@ export class PackmindService implements AIService {
     }
   }
 
+  /**
+   * `initialize()` throws our own configuration errors (e.g. a missing API
+   * key), whose message names the deployment setting at fault. That detail
+   * is ours to fix, not the caller's to read, so it is logged here and
+   * replaced by a generic result.
+   */
+  private handleInitializationFailure<T>(error: unknown): AIPromptResult<T> {
+    const message = error instanceof Error ? error.message : String(error);
+    const stackMeta = error instanceof Error ? { stack: error.stack } : {};
+
+    if (isInternalError(error)) {
+      this.logger.error('PackmindService initialization failed', {
+        error: message,
+        reason: error.reason,
+        context: error.context,
+        ...stackMeta,
+      });
+    } else {
+      this.logger.error('PackmindService initialization failed', {
+        error: message,
+        ...stackMeta,
+      });
+    }
+
+    return {
+      success: false,
+      data: null,
+      error: 'Packmind AI is not available right now.',
+      errorType: AIServiceErrorTypes.API_ERROR,
+      attempts: 1,
+      model: 'unknown',
+    };
+  }
+
   async isConfigured(): Promise<boolean> {
     try {
       await this.initialize();
@@ -187,16 +223,7 @@ export class PackmindService implements AIService {
 
       return await this.underlyingService.executePrompt<T>(prompt, options);
     } catch (error) {
-      return {
-        success: false,
-        data: null,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'PackmindService initialization failed',
-        attempts: 1,
-        model: 'unknown',
-      };
+      return this.handleInitializationFailure<T>(error);
     }
   }
 
@@ -226,16 +253,7 @@ export class PackmindService implements AIService {
         options,
       );
     } catch (error) {
-      return {
-        success: false,
-        data: null,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'PackmindService initialization failed',
-        attempts: 1,
-        model: 'unknown',
-      };
+      return this.handleInitializationFailure<T>(error);
     }
   }
 
