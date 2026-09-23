@@ -29,10 +29,8 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorProvider } from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { PackageEditFormContent } from './PackageEditFormContent';
 
 interface PackageEditFormBodyProps {
@@ -178,7 +176,7 @@ export const PackageEditFormBody = ({
                 <PMField.Root maxW="100%">
                   <PMField.Label>Description</PMField.Label>
                   <PMBox width="100%">
-                    <MarkdownEditor
+                    <MarkdownEditorWithMode
                       defaultValue={editDescription}
                       onMarkdownChange={(value: string): void => {
                         setEditDescription(value);

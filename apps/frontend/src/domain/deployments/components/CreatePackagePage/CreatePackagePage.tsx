@@ -34,10 +34,8 @@ import {
   Standard,
   Skill,
 } from '@packmind/types';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorProvider } from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { routes } from '../../../../shared/utils/routes';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { contextPackageHref } from '../context/buildComponentDetail';
@@ -637,7 +635,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
               <PMField.Root maxW="100%">
                 <PMField.Label>Description</PMField.Label>
                 <PMBox width="100%">
-                  <MarkdownEditor
+                  <MarkdownEditorWithMode
                     defaultValue={description}
                     onMarkdownChange={(value: string): void => {
                       setDescription(value);

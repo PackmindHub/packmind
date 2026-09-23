@@ -12,10 +12,8 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorProvider } from '../../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { useUpdatePackageMutation } from '../../api/queries/DeploymentsQueries';
 
 /**
@@ -151,7 +149,7 @@ export function EditPackageDetailsDrawer({
                       worth giving.
                     */}
                     <PMBox width="100%">
-                      <MarkdownEditor
+                      <MarkdownEditorWithMode
                         defaultValue={description}
                         onMarkdownChange={setDescription}
                       />
