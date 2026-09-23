@@ -4,6 +4,8 @@
 
 ## Changed
 
+- Markdown is now writable as markdown wherever it is written, and not on standards and commands alone. Editing a file of a skill, and writing a package description from the new-package page, the package edit form or either of the Context drawers, all carried the WYSIWYG editor by itself: what it would actually save could only be read back by saving it, and content it lays out differently from how it was pasted had nowhere to be corrected. Those five editors now carry the WYSIWYG and Raw tabs the standard and command forms already had. They open on WYSIWYG as before, switching between the two keeps whatever is unsaved, and Save reads the pane you are in, so a keystroke made the instant before clicking it is included either way
+
 ## Fixed
 
 ## Removed
