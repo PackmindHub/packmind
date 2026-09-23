@@ -1,5 +1,8 @@
 export type PluginManifestInput = {
+  /** The plugin identifier: always the package slug, so installs survive renames. */
   name: string;
+  /** Free-text name of the distributed release; absent for unversioned renders. */
+  displayName?: string;
   description?: string;
   version: string;
   /**
@@ -14,6 +17,9 @@ export type PluginManifestInput = {
 
 export function buildPluginManifest(input: PluginManifestInput): string {
   const manifest: Record<string, string> = { name: input.name };
+  if (input.displayName) {
+    manifest['displayName'] = input.displayName;
+  }
   if (input.description) {
     manifest['description'] = input.description;
   }

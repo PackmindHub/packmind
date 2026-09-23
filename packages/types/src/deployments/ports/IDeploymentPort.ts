@@ -91,6 +91,7 @@ import {
   PackageWithArtefacts,
   PackageWithStandards,
 } from '../Package';
+import { PackageReleaseEntry } from '../PackageRelease';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -265,6 +266,15 @@ export interface IDeploymentPort {
    * `null` when the package does not exist or has been soft-deleted.
    */
   findPackageById(packageId: PackageId): Promise<Package | null>;
+
+  /**
+   * System-level: the release a marketplace may be given — the highest version
+   * number, not the most recently created one. Null when the package was never
+   * released. The caller is obliged to have checked the package's tenant.
+   */
+  findHighestPackageRelease(
+    packageId: PackageId,
+  ): Promise<PackageReleaseEntry | null>;
 
   /**
    * System-level bulk lookup by slug, bypassing membership validation. Intended

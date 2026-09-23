@@ -184,6 +184,54 @@ export class PackageReleaseRepository
     }
   }
 
+  async findContentByPackageIdAndVersion(
+    packageId: PackageId,
+    version: string,
+  ): Promise<PackageRelease | null> {
+    this.logger.info('Finding package release content', { packageId, version });
+
+    try {
+      const release = await this.findEntry(packageId, version);
+      if (!release) {
+        return null;
+      }
+
+      const [recipeVersions, standardVersions, skillVersions] =
+        await Promise.all([
+          this.findPinnedVersions(release.id, 'recipeVersions'),
+          this.findPinnedVersions(release.id, 'standardVersions'),
+          this.findPinnedVersions(release.id, 'skillVersions'),
+        ]);
+
+      return { ...release, recipeVersions, standardVersions, skillVersions };
+    } catch (error) {
+      this.logger.error('Failed to find package release content', {
+        packageId,
+        version,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * One family per statement, like the pin reads. withDeleted reaches the
+   * joined versions: a component deleted since the release was cut must still
+   * be distributed exactly as captured.
+   */
+  private async findPinnedVersions<
+    F extends 'recipeVersions' | 'standardVersions' | 'skillVersions',
+  >(releaseId: PackageReleaseId, family: F): Promise<PackageRelease[F]> {
+    const found = await this.repository
+      .createQueryBuilder('packageRelease')
+      .withDeleted()
+      .innerJoinAndSelect(`packageRelease.${family}`, 'pinned')
+      .where('packageRelease.id = :releaseId', { releaseId })
+      .getOne();
+
+    return found?.[family] ?? ([] as PackageRelease[F]);
+  }
+
   private async findEntry(
     packageId: PackageId,
     version: string,

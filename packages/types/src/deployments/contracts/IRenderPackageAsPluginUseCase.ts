@@ -25,6 +25,12 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
    * when omitted, for backward compatibility with existing callers.
    */
   targetVendor?: MarketplaceVendor;
+  /**
+   * Package release to render. When set, components, name, description and
+   * manifest version come from that release — including components deleted
+   * since — instead of the live package.
+   */
+  packageVersion?: string;
 };
 
 export type RenderedPluginFile = {
@@ -37,6 +43,8 @@ export type RenderPackageAsPluginResponse = {
   skippedStandardsCount: number;
   pluginName: string;
   pluginDescription?: string;
+  /** Human-readable name, set only when rendering a release. */
+  pluginDisplayName?: string;
   pluginVersion: string;
   /** Id of the distribution written by best-effort tracking; absent when no distribution was created. */
   distributionId?: string;
