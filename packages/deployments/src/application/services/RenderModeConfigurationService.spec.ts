@@ -10,6 +10,8 @@ import {
   RenderModeConfiguration,
 } from '@packmind/types';
 import { renderModeConfigurationFactory } from '../../../test';
+import { UnsupportedRenderModeError } from '../../domain/errors/UnsupportedRenderModeError';
+import { RenderModeConfigurationMissingError } from '../../domain/errors/RenderModeConfigurationMissingError';
 
 describe('RenderModeConfigurationService', () => {
   let repository: jest.Mocked<IRenderModeConfigurationRepository>;
@@ -175,10 +177,8 @@ describe('RenderModeConfigurationService', () => {
         }
       });
 
-      it('throws an error', () => {
-        expect(thrownError?.message).toBe(
-          'Render mode configuration does not exist',
-        );
+      it('throws RenderModeConfigurationMissingError', () => {
+        expect(thrownError).toBeInstanceOf(RenderModeConfigurationMissingError);
       });
 
       it('does not upsert configuration', () => {
@@ -231,7 +231,7 @@ describe('RenderModeConfigurationService', () => {
         service.mapRenderModesToCodingAgents([
           'UNKNOWN' as unknown as RenderMode,
         ]),
-      ).toThrow('Unsupported render mode: UNKNOWN');
+      ).toThrow(UnsupportedRenderModeError);
     });
   });
 

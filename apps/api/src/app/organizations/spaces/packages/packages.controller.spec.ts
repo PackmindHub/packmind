@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import {
   PackageNotFoundError,
   PackageReleaseNotFoundError,
@@ -248,7 +248,7 @@ describe('OrganizationsSpacesPackagesController', () => {
     });
 
     describe('when no release carries the requested version', () => {
-      it('turns it into a 404', async () => {
+      it('lets the error through for the filter to answer', async () => {
         deploymentsService.getPackageRelease.mockRejectedValue(
           new PackageReleaseNotFoundError(packageId, '9.9.9'),
         );
@@ -261,7 +261,7 @@ describe('OrganizationsSpacesPackagesController', () => {
             '9.9.9',
             request,
           ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toBeInstanceOf(PackageReleaseNotFoundError);
       });
     });
   });

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { DefaultSkillIdMissingError } from '../../domain/errors/DefaultSkillIdMissingError';
 
 // Default skills are not persisted as DB rows, but their lockfile id must still
 // be a UUID because the content-by-versions endpoint queries a uuid-typed
@@ -35,10 +36,7 @@ let defaultSkillAuthorUserId: string | null = null;
 export function getDefaultSkillId(slug: string): string {
   const id = DEFAULT_SKILL_IDS[slug];
   if (!id) {
-    throw new Error(
-      `No hardcoded UUID for default skill slug "${slug}". Add it to ` +
-        `DEFAULT_SKILL_IDS in defaultSkillIdUtils.ts.`,
-    );
+    throw new DefaultSkillIdMissingError(slug);
   }
   return id;
 }

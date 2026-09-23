@@ -12,6 +12,7 @@ import {
   DeletePackagesBatchResponse,
   IDeletePackagesBatchUseCase,
 } from '@packmind/types';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 
 const origin = 'DeletePackagesBatchUseCase';
 
@@ -47,20 +48,8 @@ export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
             createOrganizationId(organizationId),
           );
 
-        if (!existingPackage) {
-          this.logger.error('Package not found', { packageId });
-          throw new Error(`Package ${packageId} not found`);
-        }
-
-        if (existingPackage.spaceId !== spaceId) {
-          this.logger.error('Package does not belong to specified space', {
-            packageId,
-            packageSpaceId: existingPackage.spaceId,
-            requestedSpaceId: spaceId,
-          });
-          throw new Error(
-            `Package ${packageId} does not belong to space ${spaceId}`,
-          );
+        if (!existingPackage || existingPackage.spaceId !== spaceId) {
+          throw new PackageNotFoundError(packageId, spaceId);
         }
       }
 

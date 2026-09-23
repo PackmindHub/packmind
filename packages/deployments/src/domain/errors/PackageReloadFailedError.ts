@@ -1,4 +1,4 @@
-import { PackmindInternalError } from '@packmind/types';
+import { DeploymentsInternalError } from './DeploymentsInternalError';
 
 /**
  * The package could not be read back after its artefacts were written.
@@ -8,7 +8,7 @@ import { PackmindInternalError } from '@packmind/types';
  * the 500, the stack and the `error` level, and its message stays out of the
  * response.
  */
-export class PackageReloadFailedError extends PackmindInternalError {
+export class PackageReloadFailedError extends DeploymentsInternalError {
   constructor(packageId: string) {
     super(
       'package_reload_failed',

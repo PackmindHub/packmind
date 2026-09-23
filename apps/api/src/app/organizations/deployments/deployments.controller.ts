@@ -2,7 +2,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Post,
   Body,
@@ -55,7 +54,6 @@ import {
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { TargetNotFoundError } from '@packmind/deployments';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 
 const origin = 'OrganizationDeploymentsController';
@@ -84,50 +82,36 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: ListDistributionsByCommandCommand = {
-        userId: request.user.userId,
-        organizationId,
-        recipeId: id,
-      };
+    const command: ListDistributionsByCommandCommand = {
+      userId: request.user.userId,
+      organizationId,
+      recipeId: id,
+    };
 
-      const deployments =
-        await this.deploymentsService.listDistributionsByCommand(command);
+    const deployments =
+      await this.deploymentsService.listDistributionsByCommand(command);
 
-      if (!deployments || deployments.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/recipe/:id - No deployments found',
-          {
-            recipeId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/recipe/:id - Deployments fetched successfully',
+    if (!deployments || deployments.length === 0) {
+      this.logger.warn(
+        'GET /organizations/:orgId/deployments/recipe/:id - No deployments found',
         {
           recipeId: id,
           organizationId,
-          count: deployments.length,
         },
       );
-
-      return deployments;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/recipe/:id - Failed to fetch deployments',
-        {
-          recipeId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+      return [];
     }
+
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/recipe/:id - Deployments fetched successfully',
+      {
+        recipeId: id,
+        organizationId,
+        count: deployments.length,
+      },
+    );
+
+    return deployments;
   }
 
   @Get(['distributions/recipe/:id', 'distributions/command/:id'])
@@ -144,50 +128,36 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: ListDistributionsByCommandCommand = {
-        userId: request.user.userId,
-        organizationId,
-        recipeId: id,
-      };
+    const command: ListDistributionsByCommandCommand = {
+      userId: request.user.userId,
+      organizationId,
+      recipeId: id,
+    };
 
-      const distributions =
-        await this.deploymentsService.listDistributionsByCommand(command);
+    const distributions =
+      await this.deploymentsService.listDistributionsByCommand(command);
 
-      if (!distributions || distributions.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/distributions/recipe/:id - No distributions found',
-          {
-            recipeId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/distributions/recipe/:id - Distributions fetched successfully',
+    if (!distributions || distributions.length === 0) {
+      this.logger.warn(
+        'GET /organizations/:orgId/deployments/distributions/recipe/:id - No distributions found',
         {
           recipeId: id,
           organizationId,
-          count: distributions.length,
         },
       );
-
-      return distributions;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/distributions/recipe/:id - Failed to fetch distributions',
-        {
-          recipeId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+      return [];
     }
+
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/recipe/:id - Distributions fetched successfully',
+      {
+        recipeId: id,
+        organizationId,
+        count: distributions.length,
+      },
+    );
+
+    return distributions;
   }
 
   @Get('distributions/standard/:id')
@@ -204,50 +174,36 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: ListDistributionsByStandardCommand = {
-        userId: request.user.userId,
-        organizationId,
-        standardId: id,
-      };
+    const command: ListDistributionsByStandardCommand = {
+      userId: request.user.userId,
+      organizationId,
+      standardId: id,
+    };
 
-      const distributions =
-        await this.deploymentsService.listDistributionsByStandard(command);
+    const distributions =
+      await this.deploymentsService.listDistributionsByStandard(command);
 
-      if (!distributions || distributions.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/distributions/standard/:id - No distributions found',
-          {
-            standardId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/distributions/standard/:id - Distributions fetched successfully',
+    if (!distributions || distributions.length === 0) {
+      this.logger.warn(
+        'GET /organizations/:orgId/deployments/distributions/standard/:id - No distributions found',
         {
           standardId: id,
           organizationId,
-          count: distributions.length,
         },
       );
-
-      return distributions;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/distributions/standard/:id - Failed to fetch distributions',
-        {
-          standardId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+      return [];
     }
+
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/standard/:id - Distributions fetched successfully',
+      {
+        standardId: id,
+        organizationId,
+        count: distributions.length,
+      },
+    );
+
+    return distributions;
   }
 
   @Get('distributions/skill/:id')
@@ -264,50 +220,36 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: ListDistributionsBySkillCommand = {
-        userId: request.user.userId,
-        organizationId,
-        skillId: id,
-      };
+    const command: ListDistributionsBySkillCommand = {
+      userId: request.user.userId,
+      organizationId,
+      skillId: id,
+    };
 
-      const distributions =
-        await this.deploymentsService.listDistributionsBySkill(command);
+    const distributions =
+      await this.deploymentsService.listDistributionsBySkill(command);
 
-      if (!distributions || distributions.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/distributions/skill/:id - No distributions found',
-          {
-            skillId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/distributions/skill/:id - Distributions fetched successfully',
+    if (!distributions || distributions.length === 0) {
+      this.logger.warn(
+        'GET /organizations/:orgId/deployments/distributions/skill/:id - No distributions found',
         {
           skillId: id,
           organizationId,
-          count: distributions.length,
         },
       );
-
-      return distributions;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/distributions/skill/:id - Failed to fetch distributions',
-        {
-          skillId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+      return [];
     }
+
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/skill/:id - Distributions fetched successfully',
+      {
+        skillId: id,
+        organizationId,
+        count: distributions.length,
+      },
+    );
+
+    return distributions;
   }
 
   @Post(['recipes/publish', 'commands/publish'])
@@ -334,41 +276,24 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: PublishCommandsCommand = {
-        userId: request.user.userId,
+    const command: PublishCommandsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetIds: body.targetIds,
+      commandVersionIds: commandVersionIds ?? [],
+    };
+
+    const deployments = await this.deploymentsService.publishCommands(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/recipes/publish - Recipes published successfully',
+      {
         organizationId,
-        targetIds: body.targetIds,
-        commandVersionIds: commandVersionIds ?? [],
-      };
+        deploymentsCount: deployments.length,
+      },
+    );
 
-      const deployments =
-        await this.deploymentsService.publishCommands(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/recipes/publish - Recipes published successfully',
-        {
-          organizationId,
-          deploymentsCount: deployments.length,
-        },
-      );
-
-      return deployments;
-    } catch (error) {
-      if (error instanceof TargetNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/recipes/publish - Failed to publish recipes',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return deployments;
   }
 
   @Post('standards/publish')
@@ -387,48 +312,31 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: PublishStandardsCommand = {
-        userId: request.user.userId,
+    const command: PublishStandardsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetIds: body.targetIds,
+      standardVersionIds: body.standardVersionIds,
+    };
+
+    const deployments = await this.deploymentsService.publishStandards(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/standards/publish - Standards published successfully',
+      {
         organizationId,
-        targetIds: body.targetIds,
-        standardVersionIds: body.standardVersionIds,
-      };
+        deploymentsCount: deployments.length,
+        deploymentIds: deployments.map((d) => d.id),
+        successfulDeployments: deployments.filter(
+          (d) => d.status === DistributionStatus.success,
+        ).length,
+        failedDeployments: deployments.filter(
+          (d) => d.status === DistributionStatus.failure,
+        ).length,
+      },
+    );
 
-      const deployments =
-        await this.deploymentsService.publishStandards(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/standards/publish - Standards published successfully',
-        {
-          organizationId,
-          deploymentsCount: deployments.length,
-          deploymentIds: deployments.map((d) => d.id),
-          successfulDeployments: deployments.filter(
-            (d) => d.status === DistributionStatus.success,
-          ).length,
-          failedDeployments: deployments.filter(
-            (d) => d.status === DistributionStatus.failure,
-          ).length,
-        },
-      );
-
-      return deployments;
-    } catch (error) {
-      if (error instanceof TargetNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/standards/publish - Failed to publish standards',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return deployments;
   }
 
   @Post('packages/publish')
@@ -447,48 +355,31 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: PublishPackagesCommand = {
-        userId: request.user.userId,
+    const command: PublishPackagesCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetIds: body.targetIds,
+      packageIds: body.packageIds,
+    };
+
+    const deployments = await this.deploymentsService.publishPackages(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/packages/publish - Packages published successfully',
+      {
         organizationId,
-        targetIds: body.targetIds,
-        packageIds: body.packageIds,
-      };
+        deploymentsCount: deployments.length,
+        deploymentIds: deployments.map((d) => d.id),
+        successfulDeployments: deployments.filter(
+          (d) => d.status === DistributionStatus.success,
+        ).length,
+        failedDeployments: deployments.filter(
+          (d) => d.status === DistributionStatus.failure,
+        ).length,
+      },
+    );
 
-      const deployments =
-        await this.deploymentsService.publishPackages(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/packages/publish - Packages published successfully',
-        {
-          organizationId,
-          deploymentsCount: deployments.length,
-          deploymentIds: deployments.map((d) => d.id),
-          successfulDeployments: deployments.filter(
-            (d) => d.status === DistributionStatus.success,
-          ).length,
-          failedDeployments: deployments.filter(
-            (d) => d.status === DistributionStatus.failure,
-          ).length,
-        },
-      );
-
-      return deployments;
-    } catch (error) {
-      if (error instanceof TargetNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/packages/publish - Failed to publish packages',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return deployments;
   }
 
   @Get('renderModeConfiguration')
@@ -503,37 +394,24 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: GetRenderModeConfigurationCommand = {
-        userId: request.user.userId,
+    const command: GetRenderModeConfigurationCommand = {
+      userId: request.user.userId,
+      organizationId,
+    };
+
+    const result =
+      await this.deploymentsService.getRenderModeConfiguration(command);
+
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/renderModeConfiguration - Render mode configuration fetched successfully',
+      {
         organizationId,
-      };
+        hasConfiguration: result.configuration !== null,
+        activeRenderModes: result.configuration?.activeRenderModes,
+      },
+    );
 
-      const result =
-        await this.deploymentsService.getRenderModeConfiguration(command);
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/renderModeConfiguration - Render mode configuration fetched successfully',
-        {
-          organizationId,
-          hasConfiguration: result.configuration !== null,
-          activeRenderModes: result.configuration?.activeRenderModes,
-        },
-      );
-
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/renderModeConfiguration - Failed to fetch render mode configuration',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return result;
   }
 
   @Post('renderModeConfiguration')
@@ -550,37 +428,24 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: UpdateRenderModeConfigurationCommand = {
-        userId: request.user.userId,
+    const command: UpdateRenderModeConfigurationCommand = {
+      userId: request.user.userId,
+      organizationId,
+      activeRenderModes: body.activeRenderModes,
+    };
+
+    const configuration =
+      await this.deploymentsService.updateRenderModeConfiguration(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/renderModeConfiguration - Render mode configuration updated successfully',
+      {
         organizationId,
-        activeRenderModes: body.activeRenderModes,
-      };
+        activeRenderModes: configuration.activeRenderModes,
+      },
+    );
 
-      const configuration =
-        await this.deploymentsService.updateRenderModeConfiguration(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/renderModeConfiguration - Render mode configuration updated successfully',
-        {
-          organizationId,
-          activeRenderModes: configuration.activeRenderModes,
-        },
-      );
-
-      return configuration;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/renderModeConfiguration - Failed to update render mode configuration',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return configuration;
   }
 
   @Post()
@@ -608,41 +473,27 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: NotifyDistributionCommand = {
-        userId: request.user.userId,
+    const command: NotifyDistributionCommand = {
+      userId: request.user.userId,
+      organizationId,
+      distributedPackages: body.distributedPackages,
+      gitRemoteUrl: body.gitRemoteUrl,
+      gitBranch: body.gitBranch,
+      relativePath: body.relativePath,
+      agents: body.agents,
+    };
+
+    const response = await this.deploymentsService.notifyDistribution(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/ - Distribution notified successfully',
+      {
         organizationId,
-        distributedPackages: body.distributedPackages,
-        gitRemoteUrl: body.gitRemoteUrl,
-        gitBranch: body.gitBranch,
-        relativePath: body.relativePath,
-        agents: body.agents,
-      };
+        deploymentId: response.deploymentId,
+      },
+    );
 
-      const response =
-        await this.deploymentsService.notifyDistribution(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/ - Distribution notified successfully',
-        {
-          organizationId,
-          deploymentId: response.deploymentId,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/ - Failed to notify distribution',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Post('notify-artifacts-distribution')
@@ -667,40 +518,27 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: NotifyArtefactsDistributionCommand = {
-        userId: request.user.userId,
+    const command: NotifyArtefactsDistributionCommand = {
+      userId: request.user.userId,
+      organizationId,
+      gitRemoteUrl: body.gitRemoteUrl,
+      gitBranch: body.gitBranch,
+      relativePath: body.relativePath,
+      packmindLockFile: body.packmindLockFile,
+    };
+
+    const response =
+      await this.deploymentsService.notifyArtefactsDistribution(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Artefacts distribution notified successfully',
+      {
         organizationId,
-        gitRemoteUrl: body.gitRemoteUrl,
-        gitBranch: body.gitBranch,
-        relativePath: body.relativePath,
-        packmindLockFile: body.packmindLockFile,
-      };
+        deploymentId: response.deploymentId,
+      },
+    );
 
-      const response =
-        await this.deploymentsService.notifyArtefactsDistribution(command);
-
-      this.logger.info(
-        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Artefacts distribution notified successfully',
-        {
-          organizationId,
-          deploymentId: response.deploymentId,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Failed to notify artefacts distribution',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 
   @Get('dashboard/kpi')
@@ -713,24 +551,13 @@ export class DeploymentsController {
       organizationId,
     });
 
-    try {
-      const command: GetDashboardKpiCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
+    const command: GetDashboardKpiCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+    };
 
-      return await this.deploymentsService.getDashboardKpi(command);
-    } catch (error) {
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/dashboard/kpi - Failed',
-        {
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentsService.getDashboardKpi(command);
   }
 
   @Get('dashboard/non-live')
@@ -744,24 +571,13 @@ export class DeploymentsController {
       { organizationId },
     );
 
-    try {
-      const command: GetDashboardNonLiveCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
+    const command: GetDashboardNonLiveCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+    };
 
-      return await this.deploymentsService.getDashboardNonLive(command);
-    } catch (error) {
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/dashboard/non-live - Failed',
-        {
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentsService.getDashboardNonLive(command);
   }
 
   @Get('spaces/:spaceId/overview')
@@ -775,33 +591,23 @@ export class DeploymentsController {
       { organizationId, spaceId },
     );
 
-    try {
-      const command: ListActiveDistributedPackagesBySpaceCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
+    const command: ListActiveDistributedPackagesBySpaceCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+    };
 
-      const result =
-        await this.deploymentsService.listActiveDistributedPackagesBySpace(
-          command,
-        );
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Space overview fetched successfully',
-        { organizationId, spaceId, targetCount: result.length },
+    const result =
+      await this.deploymentsService.listActiveDistributedPackagesBySpace(
+        command,
       );
 
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Failed to fetch space overview',
-        { organizationId, spaceId, error: errorMessage },
-      );
-      throw error;
-    }
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Space overview fetched successfully',
+      { organizationId, spaceId, targetCount: result.length },
+    );
+
+    return result;
   }
 
   @Delete('packages/:packageId/distributions')
@@ -820,44 +626,27 @@ export class DeploymentsController {
       },
     );
 
-    try {
-      const command: RemovePackageFromTargetsCommand = {
-        userId: request.user.userId,
+    const command: RemovePackageFromTargetsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      packageId,
+      targetIds: body.targetIds,
+    };
+
+    const response =
+      await this.deploymentsService.removePackageFromTargets(command);
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Package removed from targets successfully',
+      {
         organizationId,
         packageId,
-        targetIds: body.targetIds,
-      };
+        resultsCount: response.results.length,
+        successCount: response.results.filter((r) => r.success).length,
+        failureCount: response.results.filter((r) => !r.success).length,
+      },
+    );
 
-      const response =
-        await this.deploymentsService.removePackageFromTargets(command);
-
-      this.logger.info(
-        'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Package removed from targets successfully',
-        {
-          organizationId,
-          packageId,
-          resultsCount: response.results.length,
-          successCount: response.results.filter((r) => r.success).length,
-          failureCount: response.results.filter((r) => !r.success).length,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      if (error instanceof TargetNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Failed to remove package from targets',
-        {
-          organizationId,
-          packageId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return response;
   }
 }

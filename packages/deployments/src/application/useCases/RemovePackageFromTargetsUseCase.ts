@@ -46,6 +46,10 @@ import {
   getTargetPrefixedPath,
 } from '../utils/GitFileUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { TargetResolutionMissingError } from '../../domain/errors/TargetResolutionMissingError';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { NoFileUpdatesResolvedError } from '../../domain/errors/NoFileUpdatesResolvedError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
 const origin = 'RemovePackageFromTargetsUseCase';
 
@@ -130,7 +134,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         try {
           const firstTargetData = removalDataPerTarget.values().next().value;
           if (!firstTargetData) {
-            throw new Error('No file updates found for any target');
+            throw new NoFileUpdatesResolvedError(pkg.id);
           }
 
           gitCommit = await this.gitPort.commitToGit(
@@ -158,7 +162,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         for (const target of targets) {
           const targetData = removalDataPerTarget.get(target.id);
           if (!targetData) {
-            throw new Error(`No removal data found for target ${target.id}`);
+            throw new TargetResolutionMissingError('removal_data', target.id);
           }
 
           await this.createDistribution(
@@ -271,7 +275,10 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         (r) => r.targetId === target.id,
       );
       if (!resolution) {
-        throw new Error(`No artifact resolution found for target ${target.id}`);
+        throw new TargetResolutionMissingError(
+          'artifact_resolution',
+          target.id,
+        );
       }
 
       const existingPackmindJson = await this.fetchExistingPackmindJson(
@@ -401,12 +408,12 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     for (const targetId of targetIds) {
       const target = await this.targetService.findById(targetId);
       if (!target) {
-        throw new Error(`Target with id ${targetId} not found`);
+        throw new TargetNotFoundError(targetId);
       }
 
       const repository = await this.gitPort.getRepositoryById(target.gitRepoId);
       if (!repository) {
-        throw new Error(`Repository with id ${target.gitRepoId} not found`);
+        throw new GitRepositoryNotFoundError(target.gitRepoId);
       }
 
       if (!map.has(repository.id)) {

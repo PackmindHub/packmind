@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -39,10 +38,7 @@ import {
   CreatePackageReleaseResponse,
   GetPackageReleaseResponse,
 } from '@packmind/types';
-import {
-  PackageReleaseNotFoundError,
-  PackageReleaseRefusedError,
-} from '@packmind/deployments';
+import { PackageReleaseRefusedError } from '@packmind/deployments';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
@@ -169,26 +165,13 @@ export class OrganizationsSpacesPackagesController {
       { organizationId, spaceId, slug },
     );
 
-    try {
-      return await this.deploymentsService.getPackageSummary({
-        userId,
-        organizationId,
-        spaceId,
-        slug,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug - Failed to fetch package summary',
-        { organizationId, spaceId, slug, error: errorMessage },
-      );
-      if (error instanceof Error && error.message.includes('does not exist')) {
-        throw new NotFoundException(error.message);
-      }
-      throw error;
-    }
+    return await this.deploymentsService.getPackageSummary({
+      userId,
+      organizationId,
+      spaceId,
+      slug,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -282,19 +265,25 @@ export class OrganizationsSpacesPackagesController {
         version: body.version,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Failed to create release',
-        {
-          organizationId,
-          spaceId,
-          packageId,
-          version: body.version,
-          error: errorMessage,
-        },
-      );
       if (error instanceof PackageReleaseRefusedError) {
+        /*
+         * Logged here, and only here: converting the refusal into a
+         * BadRequestException is what keeps `code` and `currentVersion` in the
+         * body, and it also means DomainExceptionFilter never sees the domain
+         * error and never records it. Every other failure falls through to the
+         * filter, which logs it once with its own level and context.
+         */
+        this.logger.warn(
+          'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Release refused',
+          {
+            organizationId,
+            spaceId,
+            packageId,
+            version: body.version,
+            code: error.code,
+            currentVersion: error.currentVersion,
+          },
+        );
         throw new BadRequestException({
           /*
            * Developer-facing, and there only so the body satisfies the shared
@@ -329,26 +318,13 @@ export class OrganizationsSpacesPackagesController {
       { organizationId, spaceId, packageId, version },
     );
 
-    try {
-      return await this.deploymentsService.getPackageRelease({
-        userId,
-        organizationId,
-        spaceId,
-        packageId,
-        version,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version - Failed to fetch release',
-        { organizationId, spaceId, packageId, version, error: errorMessage },
-      );
-      if (error instanceof PackageReleaseNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      throw error;
-    }
+    return await this.deploymentsService.getPackageRelease({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+      version,
+    });
   }
 
   /**

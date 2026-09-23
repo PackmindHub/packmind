@@ -1,4 +1,4 @@
-import { PackmindInternalError } from '@packmind/types';
+import { DeploymentsInternalError } from './DeploymentsInternalError';
 
 /**
  * A move could not be carried out end to end.
@@ -10,7 +10,7 @@ import { PackmindInternalError } from '@packmind/types';
  * says whether that rollback itself succeeded, since a failed rollback is the
  * one case where the caller is looking at a half-applied move.
  */
-export class ArtefactsMoveFailedError extends PackmindInternalError {
+export class ArtefactsMoveFailedError extends DeploymentsInternalError {
   constructor(
     public readonly packageId: string,
     public readonly reverted: boolean,
