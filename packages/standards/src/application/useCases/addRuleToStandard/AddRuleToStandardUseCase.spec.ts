@@ -38,6 +38,8 @@ import {
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { StandardSlugNotFoundError } from '../../../domain/errors/StandardSlugNotFoundError';
+import { StandardVersionMissingError } from '../../../domain/errors/StandardVersionMissingError';
 
 describe('AddRuleToStandardUseCase', () => {
   let addRuleToStandardUseCase: AddRuleToStandardUseCase;
@@ -360,10 +362,8 @@ describe('AddRuleToStandardUseCase', () => {
           }
         });
 
-        it('throws error with appropriate message', () => {
-          expect(thrownError?.message).toBe(
-            'Standard slug not found, please check current standards first',
-          );
+        it('throws StandardSlugNotFoundError', () => {
+          expect(thrownError).toBeInstanceOf(StandardSlugNotFoundError);
         });
 
         it('does not proceed to get latest version', () => {
@@ -374,7 +374,7 @@ describe('AddRuleToStandardUseCase', () => {
       });
 
       describe('when no versions exist for the standard', () => {
-        it('throws error', async () => {
+        it('throws StandardVersionMissingError', async () => {
           const inputData: AddRuleToStandardCommand = {
             standardSlug: 'test-standard',
             ruleContent: 'Test rule content',
@@ -397,9 +397,7 @@ describe('AddRuleToStandardUseCase', () => {
 
           await expect(
             addRuleToStandardUseCase.execute(inputData),
-          ).rejects.toThrow(
-            `No versions found for standard ${existingStandard.id}`,
-          );
+          ).rejects.toBeInstanceOf(StandardVersionMissingError);
         });
       });
 
@@ -873,7 +871,7 @@ describe('AddRuleToStandardUseCase', () => {
     });
 
     describe('when standard does not belong to the space', () => {
-      it('throws an error', async () => {
+      it('throws StandardSlugNotFoundError', async () => {
         const otherSpaceId = createSpaceId(uuidv4());
         const existingStandard = standardFactory({
           slug: 'test-standard',
@@ -892,7 +890,7 @@ describe('AddRuleToStandardUseCase', () => {
 
         await expect(
           addRuleToStandardUseCase.execute(inputData),
-        ).rejects.toThrow('Standard does not belong to the requested space');
+        ).rejects.toBeInstanceOf(StandardSlugNotFoundError);
       });
     });
 

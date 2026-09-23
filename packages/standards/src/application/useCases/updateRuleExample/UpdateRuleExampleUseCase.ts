@@ -20,6 +20,7 @@ import {
   createStandardVersionId,
   createUserId,
 } from '@packmind/types';
+import { RuleExampleInvalidError } from '../../../domain/errors/RuleExampleInvalidError';
 import { RuleExampleNotFoundInSpaceError } from '../../../domain/errors/RuleExampleNotFoundInSpaceError';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 
@@ -49,7 +50,10 @@ export class UpdateRuleExampleUseCase
     const { source = 'ui' } = command;
 
     if (!command.lang && !command.positive && !command.negative) {
-      throw new Error('At least one field must be provided for update');
+      throw new RuleExampleInvalidError(
+        'At least one field must be provided for update',
+        { ruleExampleId: command.ruleExampleId },
+      );
     }
 
     const ruleExampleRepository = this._repositories.getRuleExampleRepository();
@@ -69,7 +73,9 @@ export class UpdateRuleExampleUseCase
 
     if (command.lang !== undefined) {
       if (!command.lang) {
-        throw new Error('Language cannot be empty');
+        throw new RuleExampleInvalidError('Language cannot be empty', {
+          ruleExampleId: command.ruleExampleId,
+        });
       }
       updateData.lang = command.lang;
     }

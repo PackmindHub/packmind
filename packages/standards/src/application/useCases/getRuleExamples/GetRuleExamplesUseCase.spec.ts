@@ -11,6 +11,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { ProgrammingLanguage } from '@packmind/types';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import { createRuleId } from '@packmind/types';
+import { RuleNotFoundError } from '../../../domain/errors/RuleNotFoundError';
 
 describe('GetRuleExamplesUseCase', () => {
   let getRuleExamplesUseCase: GetRuleExamplesUseCase;
@@ -113,12 +114,12 @@ describe('GetRuleExamplesUseCase', () => {
         ruleRepository.findById.mockResolvedValue(null);
       });
 
-      it('throws an error', async () => {
+      it('throws RuleNotFoundError', async () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         await expect(
           getRuleExamplesUseCase.getRuleExamples(request),
-        ).rejects.toThrow(`Rule with id ${ruleId} not found`);
+        ).rejects.toBeInstanceOf(RuleNotFoundError);
       });
 
       it('calls ruleRepository.findById with the ruleId', async () => {

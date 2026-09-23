@@ -1,5 +1,5 @@
 import { standardFactory } from '@packmind/standards/test';
-import { NotFoundException } from '@nestjs/common';
+import { StandardNotFoundError } from '@packmind/standards';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
@@ -142,18 +142,10 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         });
       });
 
-      it('throws NotFoundException', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(NotFoundException);
-      });
-
-      it('includes descriptive error message', async () => {
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(
-          `Standard ${standardId} not found in space ${spaceId}`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
 
       it('does not call getRulesByStandardId', async () => {
@@ -203,18 +195,10 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         });
       });
 
-      it('throws NotFoundException', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(NotFoundException);
-      });
-
-      it('includes descriptive error message', async () => {
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
 
       it('does not call getRulesByStandardId', async () => {
@@ -479,7 +463,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         });
       });
 
-      it('throws NotFoundException', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -488,21 +472,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
             ruleId,
             request,
           ),
-        ).rejects.toThrow(NotFoundException);
-      });
-
-      it('includes descriptive error message', async () => {
-        await expect(
-          controller.getRuleExamples(
-            orgId,
-            spaceId,
-            standardId,
-            ruleId,
-            request,
-          ),
-        ).rejects.toThrow(
-          `Standard with ID ${standardId} not found in organization ${orgId} and space ${spaceId}`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
 
       it('does not call getRuleExamples', async () => {
@@ -553,7 +523,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         });
       });
 
-      it('throws NotFoundException', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -562,21 +532,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
             ruleId,
             request,
           ),
-        ).rejects.toThrow(NotFoundException);
-      });
-
-      it('includes descriptive error message', async () => {
-        await expect(
-          controller.getRuleExamples(
-            orgId,
-            spaceId,
-            standardId,
-            ruleId,
-            request,
-          ),
-        ).rejects.toThrow(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
 
       it('does not call getRuleExamples', async () => {

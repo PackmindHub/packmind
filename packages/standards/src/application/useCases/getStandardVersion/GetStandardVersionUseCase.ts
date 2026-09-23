@@ -23,26 +23,17 @@ export class GetStandardVersionUseCase {
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting standard version', { standardId, version });
 
-    try {
-      const standardVersion =
-        await this.standardVersionService.getStandardVersion(
-          standardId,
-          version,
-          allowedSpaceIds,
-        );
-      this.logger.info('Standard version retrieved successfully', {
+    const standardVersion =
+      await this.standardVersionService.getStandardVersion(
         standardId,
         version,
-        found: !!standardVersion,
-      });
-      return standardVersion;
-    } catch (error) {
-      this.logger.error('Failed to get standard version', {
-        standardId,
-        version,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+        allowedSpaceIds,
+      );
+    this.logger.info('Standard version retrieved successfully', {
+      standardId,
+      version,
+      found: !!standardVersion,
+    });
+    return standardVersion;
   }
 }

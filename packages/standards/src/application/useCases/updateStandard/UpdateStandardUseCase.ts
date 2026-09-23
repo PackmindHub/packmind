@@ -21,6 +21,9 @@ import {
   createStandardVersionId,
   createUserId,
 } from '@packmind/types';
+import { StandardNotFoundError } from '../../../domain/errors/StandardNotFoundError';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
+import { StandardVersionMissingError } from '../../../domain/errors/StandardVersionMissingError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardService } from '../../services/StandardService';
@@ -77,233 +80,196 @@ export class UpdateStandardUseCase
       scope,
     });
 
-    try {
-      const space = await this.spacesPort.getSpaceById(spaceId);
-      if (!space) {
-        this.logger.error('Space not found', { spaceId });
-        throw new Error(`Space with id ${spaceId} not found`);
-      }
-      if (space.organizationId !== organizationId) {
-        this.logger.error('Space does not belong to organization', {
-          spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: organizationId,
-        });
-        throw new Error(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
-        );
-      }
-
-      const existingStandard =
-        await this.standardService.getStandardById(standardId);
-      if (!existingStandard) {
-        this.logger.error('Standard not found for update', { standardId });
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      if (existingStandard.spaceId !== spaceId) {
-        this.logger.error('Standard does not belong to space', {
-          standardId,
-          standardSpaceId: existingStandard.spaceId,
-          requestSpaceId: spaceId,
-        });
-        throw new Error(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
-      }
-
-      this.logger.debug('Found existing standard', {
-        standardId,
-        currentVersion: existingStandard.version,
-        existingName: existingStandard.name,
-      });
-
-      const latestVersion =
-        await this.standardVersionService.getLatestStandardVersion(standardId);
-
-      if (!latestVersion) {
-        this.logger.error('No versions found for standard', { standardId });
-        throw new Error(`No versions found for standard ${standardId}`);
-      }
-
-      const existingRules = await this.ruleRepository.findByStandardVersionId(
-        latestVersion.id,
-      );
-
-      const contentHasChanged = this.hasContentChanged(
-        {
-          name: latestVersion.name,
-          description: latestVersion.description,
-          scope: latestVersion.scope,
-          rules: existingRules.map((rule) => ({ content: rule.content })),
-        },
-        { name, description, scope, rules },
-      );
-
-      if (!contentHasChanged) {
-        this.logger.info('Content is identical, no update needed', {
-          standardId,
-          name,
-        });
-        return { standard: existingStandard };
-      }
-
-      this.logger.info('Content has changed, creating new version', {
-        standardId,
-        currentVersion: existingStandard.version,
-      });
-
-      // Always preserve the original slug when updating a standard
-      const standardSlug = existingStandard.slug;
-      this.logger.debug('Preserving original slug for updated standard', {
-        slug: standardSlug,
-        preservedOriginalSlug: true,
-      });
-
-      const nextVersion = existingStandard.version + 1;
-      this.logger.debug('Incrementing version number', {
-        currentVersion: existingStandard.version,
-        nextVersion,
-      });
-
-      const brandedUserId = createUserId(userId);
-      const brandedOrganizationId = createOrganizationId(organizationId);
-
-      const updatedStandard = await this.standardService.updateStandard(
-        standardId,
-        {
-          name,
-          description,
-          slug: standardSlug,
-          version: nextVersion,
-          gitCommit: undefined,
-          userId: brandedUserId,
-          scope,
-        },
-      );
-
-      const existingRulesById = new Map(existingRules.map((r) => [r.id, r]));
-      const rulesWithExamples: Array<{
-        content: string;
-        examples: RuleExample[];
-        oldRuleId?: RuleId;
-      }> = [];
-      for (const r of rules) {
-        const persisted = existingRulesById.get(r.id);
-        if (persisted) {
-          const examples = await this.ruleExampleRepository.findByRuleId(
-            persisted.id,
-          );
-          rulesWithExamples.push({
-            content: r.content,
-            examples,
-            oldRuleId: persisted.id,
-          });
-        } else {
-          rulesWithExamples.push({ content: r.content, examples: [] });
-        }
-      }
-
-      const standardVersionData: CreateStandardVersionData = {
-        standardId,
-        name,
-        slug: standardSlug,
-        description,
-        version: nextVersion,
-        rules: rulesWithExamples,
-        scope,
-        userId: brandedUserId,
-        organizationId: brandedOrganizationId,
-      };
-
-      const newStandardVersion =
-        await this.standardVersionService.addStandardVersion(
-          standardVersionData,
-        );
-
-      this.logger.info('Standard updated successfully', {
-        standardId,
-        newVersion: nextVersion,
-        versionId: newStandardVersion.id,
-        rulesCount: rules.length,
-      });
-
-      this.logger.info('UpdateStandard process completed successfully', {
-        standardId,
-        versionId: newStandardVersion.id,
-        name,
-        organizationId,
-        userId,
-        rulesCount: rules.length,
-      });
-
-      const event = new StandardUpdatedEvent({
-        standardId: createStandardId(standardId),
-        spaceId: createSpaceId(spaceId),
-        organizationId: brandedOrganizationId,
-        userId: brandedUserId,
-        newVersion: nextVersion,
-        source,
-      });
-      const hasListeners = this.eventEmitterService.emit(event);
-      this.logger.info('StandardUpdatedEvent emitted', {
-        eventName: event.name,
-        hasListeners,
-        standardId,
-        newVersion: nextVersion,
-      });
-
-      const ruleChanges = this.detectRuleChanges(existingRules, rules);
-      const brandedStandardId = createStandardId(standardId);
-      const brandedStandardVersionId = createStandardVersionId(
-        newStandardVersion.id,
-      );
-
-      for (let i = 0; i < ruleChanges.deleted.length; i++) {
-        this.eventEmitterService.emit(
-          new RuleDeletedEvent({
-            standardId: brandedStandardId,
-            standardVersionId: brandedStandardVersionId,
-            organizationId: brandedOrganizationId,
-            userId: brandedUserId,
-            newVersion: nextVersion,
-            source,
-          }),
-        );
-      }
-
-      for (let i = 0; i < ruleChanges.added.length; i++) {
-        this.eventEmitterService.emit(
-          new RuleAddedEvent({
-            standardId: brandedStandardId,
-            standardVersionId: brandedStandardVersionId,
-            organizationId: brandedOrganizationId,
-            userId: brandedUserId,
-            newVersion: nextVersion,
-            source,
-          }),
-        );
-      }
-
-      if (ruleChanges.deleted.length > 0 || ruleChanges.added.length > 0) {
-        this.logger.info('Rule change events emitted', {
-          standardId,
-          deletedCount: ruleChanges.deleted.length,
-          addedCount: ruleChanges.added.length,
-        });
-      }
-
-      return { standard: updatedStandard };
-    } catch (error) {
-      this.logger.error('Failed to update standard', {
-        standardId,
-        name,
-        organizationId,
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space || space.organizationId !== organizationId) {
+      throw new StandardSpaceNotAccessibleError(spaceId, organizationId);
     }
+
+    const existingStandard =
+      await this.standardService.getStandardById(standardId);
+    if (!existingStandard || existingStandard.spaceId !== spaceId) {
+      throw new StandardNotFoundError(standardId, spaceId);
+    }
+
+    this.logger.debug('Found existing standard', {
+      standardId,
+      currentVersion: existingStandard.version,
+      existingName: existingStandard.name,
+    });
+
+    const latestVersion =
+      await this.standardVersionService.getLatestStandardVersion(standardId);
+
+    if (!latestVersion) {
+      throw new StandardVersionMissingError(standardId);
+    }
+
+    const existingRules = await this.ruleRepository.findByStandardVersionId(
+      latestVersion.id,
+    );
+
+    const contentHasChanged = this.hasContentChanged(
+      {
+        name: latestVersion.name,
+        description: latestVersion.description,
+        scope: latestVersion.scope,
+        rules: existingRules.map((rule) => ({ content: rule.content })),
+      },
+      { name, description, scope, rules },
+    );
+
+    if (!contentHasChanged) {
+      this.logger.info('Content is identical, no update needed', {
+        standardId,
+        name,
+      });
+      return { standard: existingStandard };
+    }
+
+    this.logger.info('Content has changed, creating new version', {
+      standardId,
+      currentVersion: existingStandard.version,
+    });
+
+    // Always preserve the original slug when updating a standard
+    const standardSlug = existingStandard.slug;
+    this.logger.debug('Preserving original slug for updated standard', {
+      slug: standardSlug,
+      preservedOriginalSlug: true,
+    });
+
+    const nextVersion = existingStandard.version + 1;
+    this.logger.debug('Incrementing version number', {
+      currentVersion: existingStandard.version,
+      nextVersion,
+    });
+
+    const brandedUserId = createUserId(userId);
+    const brandedOrganizationId = createOrganizationId(organizationId);
+
+    const updatedStandard = await this.standardService.updateStandard(
+      standardId,
+      {
+        name,
+        description,
+        slug: standardSlug,
+        version: nextVersion,
+        gitCommit: undefined,
+        userId: brandedUserId,
+        scope,
+      },
+    );
+
+    const existingRulesById = new Map(existingRules.map((r) => [r.id, r]));
+    const rulesWithExamples: Array<{
+      content: string;
+      examples: RuleExample[];
+      oldRuleId?: RuleId;
+    }> = [];
+    for (const r of rules) {
+      const persisted = existingRulesById.get(r.id);
+      if (persisted) {
+        const examples = await this.ruleExampleRepository.findByRuleId(
+          persisted.id,
+        );
+        rulesWithExamples.push({
+          content: r.content,
+          examples,
+          oldRuleId: persisted.id,
+        });
+      } else {
+        rulesWithExamples.push({ content: r.content, examples: [] });
+      }
+    }
+
+    const standardVersionData: CreateStandardVersionData = {
+      standardId,
+      name,
+      slug: standardSlug,
+      description,
+      version: nextVersion,
+      rules: rulesWithExamples,
+      scope,
+      userId: brandedUserId,
+      organizationId: brandedOrganizationId,
+    };
+
+    const newStandardVersion =
+      await this.standardVersionService.addStandardVersion(standardVersionData);
+
+    this.logger.info('Standard updated successfully', {
+      standardId,
+      newVersion: nextVersion,
+      versionId: newStandardVersion.id,
+      rulesCount: rules.length,
+    });
+
+    this.logger.info('UpdateStandard process completed successfully', {
+      standardId,
+      versionId: newStandardVersion.id,
+      name,
+      organizationId,
+      userId,
+      rulesCount: rules.length,
+    });
+
+    const event = new StandardUpdatedEvent({
+      standardId: createStandardId(standardId),
+      spaceId: createSpaceId(spaceId),
+      organizationId: brandedOrganizationId,
+      userId: brandedUserId,
+      newVersion: nextVersion,
+      source,
+    });
+    const hasListeners = this.eventEmitterService.emit(event);
+    this.logger.info('StandardUpdatedEvent emitted', {
+      eventName: event.name,
+      hasListeners,
+      standardId,
+      newVersion: nextVersion,
+    });
+
+    const ruleChanges = this.detectRuleChanges(existingRules, rules);
+    const brandedStandardId = createStandardId(standardId);
+    const brandedStandardVersionId = createStandardVersionId(
+      newStandardVersion.id,
+    );
+
+    for (let i = 0; i < ruleChanges.deleted.length; i++) {
+      this.eventEmitterService.emit(
+        new RuleDeletedEvent({
+          standardId: brandedStandardId,
+          standardVersionId: brandedStandardVersionId,
+          organizationId: brandedOrganizationId,
+          userId: brandedUserId,
+          newVersion: nextVersion,
+          source,
+        }),
+      );
+    }
+
+    for (let i = 0; i < ruleChanges.added.length; i++) {
+      this.eventEmitterService.emit(
+        new RuleAddedEvent({
+          standardId: brandedStandardId,
+          standardVersionId: brandedStandardVersionId,
+          organizationId: brandedOrganizationId,
+          userId: brandedUserId,
+          newVersion: nextVersion,
+          source,
+        }),
+      );
+    }
+
+    if (ruleChanges.deleted.length > 0 || ruleChanges.added.length > 0) {
+      this.logger.info('Rule change events emitted', {
+        standardId,
+        deletedCount: ruleChanges.deleted.length,
+        addedCount: ruleChanges.added.length,
+      });
+    }
+
+    return { standard: updatedStandard };
   }
 
   private hasContentChanged(

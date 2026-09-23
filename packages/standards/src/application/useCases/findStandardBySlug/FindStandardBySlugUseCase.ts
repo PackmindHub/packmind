@@ -25,24 +25,15 @@ export class FindStandardBySlugUseCase {
       organizationId,
     });
 
-    try {
-      const standard = await this.standardService.findStandardBySlug(
-        slug,
-        organizationId,
-      );
-      this.logger.info('Standard search by slug and organization completed', {
-        slug,
-        organizationId,
-        found: !!standard,
-      });
-      return standard;
-    } catch (error) {
-      this.logger.error('Failed to find standard by slug and organization', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const standard = await this.standardService.findStandardBySlug(
+      slug,
+      organizationId,
+    );
+    this.logger.info('Standard search by slug and organization completed', {
+      slug,
+      organizationId,
+      found: !!standard,
+    });
+    return standard;
   }
 }

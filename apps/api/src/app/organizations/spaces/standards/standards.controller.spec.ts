@@ -1,5 +1,6 @@
 import { standardFactory } from '@packmind/standards/test';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+import { StandardNotFoundError } from '@packmind/standards';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
@@ -695,7 +696,7 @@ describe('OrganizationsSpacesStandardsController', () => {
     });
 
     describe('when service returns null', () => {
-      it('throws NotFoundException', async () => {
+      it('throws StandardNotFoundError', async () => {
         standardsService.getLatestVersionNumber.mockResolvedValue(null);
 
         await expect(
@@ -705,7 +706,51 @@ describe('OrganizationsSpacesStandardsController', () => {
             standardId,
             request,
           ),
-        ).rejects.toThrow(NotFoundException);
+        ).rejects.toThrow(StandardNotFoundError);
+      });
+    });
+  });
+
+  describe('deleteStandard', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const standardId = createStandardId('standard-1');
+    const userId = createUserId('user-1');
+
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    describe('when the standard is not found in the space', () => {
+      beforeEach(() => {
+        standardsService.getStandardById.mockResolvedValue({
+          standard: null,
+        });
+      });
+
+      it('throws StandardNotFoundError', async () => {
+        await expect(
+          controller.deleteStandard(orgId, spaceId, standardId, request),
+        ).rejects.toThrow(StandardNotFoundError);
+      });
+
+      it('does not delete the standard', async () => {
+        await controller
+          .deleteStandard(orgId, spaceId, standardId, request)
+          .catch(() => {
+            /* expected */
+          });
+
+        expect(standardsService.deleteStandard).not.toHaveBeenCalled();
       });
     });
   });

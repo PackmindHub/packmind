@@ -31,6 +31,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 import { CreateRuleExampleUseCase } from './CreateRuleExampleUseCase';
+import { RuleExampleInvalidError } from '../../../domain/errors/RuleExampleInvalidError';
 
 describe('CreateRuleExampleUseCase', () => {
   let createRuleExampleUseCase: CreateRuleExampleUseCase;
@@ -194,7 +195,7 @@ describe('CreateRuleExampleUseCase', () => {
     });
 
     describe('when language is empty', () => {
-      it('throws an error', async () => {
+      it('throws RuleExampleInvalidError', async () => {
         const ruleId = createRuleId(uuidv4());
         const command: CreateRuleExampleCommand = {
           userId,
@@ -207,7 +208,7 @@ describe('CreateRuleExampleUseCase', () => {
         };
 
         await expect(createRuleExampleUseCase.execute(command)).rejects.toThrow(
-          'Language is required and cannot be empty',
+          RuleExampleInvalidError,
         );
       });
     });
