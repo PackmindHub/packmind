@@ -3,6 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { createOrganizationId, createUserId, User } from '@packmind/types';
 import { AuthService, GetMeResponse } from './auth.service';
 import { JwtPayload } from './JwtPayload';
+import {
+  OrganizationNotFoundError,
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/accounts';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
@@ -660,6 +666,123 @@ describe('AuthService - signInSocial method', () => {
           },
         }),
       );
+    });
+  });
+});
+
+describe('AuthService - API key methods', () => {
+  const req = {
+    user: { userId: createUserId('1') },
+    organization: { id: createOrganizationId('org-1') },
+  } as unknown as AuthenticatedRequest;
+  const domainError = new UserNotFoundError({ userId: createUserId('1') });
+
+  let accountsAdapter: {
+    generateApiKey: jest.Mock;
+    getCurrentApiKey: jest.Mock;
+  };
+  let service: {
+    generateApiKey: AuthService['generateApiKey'];
+    getCurrentApiKey: AuthService['getCurrentApiKey'];
+  };
+
+  beforeEach(() => {
+    accountsAdapter = {
+      generateApiKey: jest.fn().mockRejectedValue(domainError),
+      getCurrentApiKey: jest.fn().mockRejectedValue(domainError),
+    };
+    const base = {
+      logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
+      accountsAdapter,
+    };
+    service = {
+      generateApiKey: AuthService.prototype.generateApiKey.bind(base),
+      getCurrentApiKey: AuthService.prototype.getCurrentApiKey.bind(base),
+    };
+  });
+
+  describe('generateApiKey', () => {
+    it('lets the domain error reach the caller unwrapped', async () => {
+      await expect(service.generateApiKey(req)).rejects.toBe(domainError);
+    });
+  });
+
+  describe('getCurrentApiKey', () => {
+    it('lets the domain error reach the caller unwrapped', async () => {
+      await expect(service.getCurrentApiKey(req)).rejects.toBe(domainError);
+    });
+  });
+});
+
+describe('AuthService - selectOrganization method', () => {
+  const organizationId = createOrganizationId('org-1');
+  const userId = createUserId('1');
+
+  let accountsAdapter: {
+    getUserById: jest.Mock;
+    getOrganizationById: jest.Mock;
+  };
+  let selectOrganization: AuthService['selectOrganization'];
+
+  beforeEach(() => {
+    accountsAdapter = {
+      getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
+    };
+    const base = {
+      logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
+      jwtService: {
+        verify: jest.fn().mockReturnValue({
+          user: { name: 'testuser@packmind.com', userId },
+        }),
+        sign: jest.fn().mockReturnValue('new-token'),
+      },
+      accountsAdapter,
+    };
+    selectOrganization = AuthService.prototype.selectOrganization.bind(base);
+  });
+
+  describe('when the user does not exist', () => {
+    beforeEach(() => {
+      accountsAdapter.getUserById.mockResolvedValue(null);
+    });
+
+    it('throws UserNotFoundError', async () => {
+      await expect(
+        selectOrganization('token', { organizationId }),
+      ).rejects.toBeInstanceOf(UserNotFoundError);
+    });
+  });
+
+  describe('when the user is not a member of the organization', () => {
+    beforeEach(() => {
+      accountsAdapter.getUserById.mockResolvedValue(
+        userFactory({ id: userId, memberships: [] }),
+      );
+    });
+
+    it('throws UserNotInOrganizationError', async () => {
+      await expect(
+        selectOrganization('token', { organizationId }),
+      ).rejects.toBeInstanceOf(UserNotInOrganizationError);
+    });
+  });
+
+  describe('when the organization behind the membership is missing', () => {
+    beforeEach(() => {
+      accountsAdapter.getUserById.mockResolvedValue(
+        userFactory({
+          id: userId,
+          memberships: [{ userId, organizationId, role: 'admin' }],
+        }),
+      );
+      accountsAdapter.getOrganizationById.mockResolvedValue(null);
+    });
+
+    it('throws OrganizationNotFoundError', async () => {
+      await expect(
+        selectOrganization('token', { organizationId }),
+      ).rejects.toBeInstanceOf(OrganizationNotFoundError);
     });
   });
 });
