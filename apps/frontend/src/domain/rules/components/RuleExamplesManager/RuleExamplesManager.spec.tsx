@@ -95,10 +95,10 @@ function withExamples(...examples: Partial<RuleExample>[]) {
  * The manager under the store it reads from, plus the way a language is changed
  * from outside it, which is what the rail does on the real surface.
  */
-function Harness({ initialLanguage }: Readonly<{ initialLanguage: string }>) {
+function Harness({ initialLanguage }: Readonly<{ initialLanguage?: string }>) {
   const store = useRuleExampleDraftsStore();
   const [language, setLanguage] = React.useState(
-    initialLanguage as ProgrammingLanguage,
+    initialLanguage as ProgrammingLanguage | undefined,
   );
 
   return (
@@ -125,7 +125,7 @@ function Harness({ initialLanguage }: Readonly<{ initialLanguage: string }>) {
   );
 }
 
-async function renderManager(language = ProgrammingLanguage.JAVA) {
+async function renderManager(language?: ProgrammingLanguage) {
   await act(async () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
@@ -137,15 +137,43 @@ async function renderManager(language = ProgrammingLanguage.JAVA) {
   });
 }
 
+/** The default everywhere except the case that is about having no language. */
+const inJava = () => renderManager(ProgrammingLanguage.JAVA);
+
 describe('RuleExamplesManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('when the language has nothing in it', () => {
+  describe('when nothing says which language the rule is in', () => {
     beforeEach(async () => {
       withExamples();
       await renderManager();
+    });
+
+    /*
+      An example is code, and code is in a language. Opening the editors first
+      chose for the reader, and the choice was JavaScript for every team.
+    */
+    it('asks instead of opening a pair of editors', () => {
+      expect(screen.queryByLabelText(DO_FIELD)).not.toBeInTheDocument();
+      expect(
+        screen.getByText(/which language should this rule be checked in/i),
+      ).toBeVisible();
+    });
+
+    it('opens the pair once a language is chosen', async () => {
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.click(await screen.findByText('Kotlin'));
+
+      expect(screen.getByLabelText(DO_FIELD)).toBeVisible();
+    });
+  });
+
+  describe('when the language has nothing in it', () => {
+    beforeEach(async () => {
+      withExamples();
+      await inJava();
     });
 
     /*
@@ -188,7 +216,7 @@ describe('RuleExamplesManager', () => {
   describe('when a language is left while something is being written', () => {
     beforeEach(async () => {
       withExamples();
-      await renderManager();
+      await inJava();
 
       await userEvent.type(screen.getByLabelText(DO_FIELD), 'kept');
       await userEvent.click(
@@ -210,7 +238,7 @@ describe('RuleExamplesManager', () => {
   describe("when a draft's own language is corrected", () => {
     beforeEach(async () => {
       withExamples();
-      await renderManager();
+      await inJava();
       await userEvent.type(screen.getByLabelText(DO_FIELD), 'carried');
     });
 
@@ -237,7 +265,7 @@ describe('RuleExamplesManager', () => {
         positive: 'saved do',
         negative: 'saved dont',
       });
-      await renderManager();
+      await inJava();
     });
 
     it('shows it rather than an empty form', () => {

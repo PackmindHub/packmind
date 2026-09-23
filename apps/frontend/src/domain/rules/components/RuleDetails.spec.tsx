@@ -14,7 +14,8 @@ import {
 } from '@packmind/types';
 import { RuleDetails } from './RuleDetails';
 import { useGetRuleExamplesQuery } from '../api/queries';
-import type { MockedFunction } from 'vitest';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import type { Mock, MockedFunction } from 'vitest';
 
 vi.mock('../api/queries', () => ({
   useGetRuleExamplesQuery: vi.fn(),
@@ -44,6 +45,13 @@ vi.mock(
   '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor',
   () => ({
     ProgramEditor: () => <div data-testid="program-editor" />,
+  }),
+);
+
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
+  () => ({
+    useGetStandardRulesDetectionStatusQuery: vi.fn(() => ({ data: [] })),
   }),
 );
 
@@ -88,6 +96,9 @@ const createRuleExample = (
 describe('RuleDetails - language selector and states', () => {
   beforeEach(() => {
     mockUseGetRuleExamplesQuery.mockReset();
+    (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+      data: [],
+    });
   });
 
   afterEach(() => {
@@ -116,6 +127,51 @@ describe('RuleDetails - language selector and states', () => {
     */
     it('opens straight onto the examples body', () => {
       expect(screen.getByTestId('rule-examples-manager')).toBeInTheDocument();
+    });
+
+    /*
+      JavaScript for everybody was a guess with nothing behind it, and it is
+      wrong for most of the teams using Packmind.
+    */
+    it('names no language when nothing says which one', () => {
+      expect(screen.getByTestId('selected-language')).toHaveTextContent('');
+    });
+  });
+
+  describe('when the rest of the standard is written in one language', () => {
+    beforeEach(() => {
+      mockUseGetRuleExamplesQuery.mockReturnValue({
+        data: [],
+        isLoading: false,
+      } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
+
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: 'other-rule',
+            languages: [{ language: ProgrammingLanguage.KOTLIN, status: 'OK' }],
+          },
+        ],
+      });
+
+      renderWithProviders(
+        <RuleDetails
+          standardId={'standard-1' as StandardId}
+          rule={createRule()}
+        />,
+      );
+    });
+
+    /*
+      Standards are language-scoped in practice, so what the neighbours are
+      written in is evidence where a global default is only a habit.
+    */
+    it('opens the rule on what its neighbours use', async () => {
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-language')).toHaveTextContent(
+          'KOTLIN',
+        );
+      });
     });
   });
 

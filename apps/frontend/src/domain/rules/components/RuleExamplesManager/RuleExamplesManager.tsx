@@ -9,6 +9,7 @@ import {
 import { PMVStack, PMText, PMSpinner, PMBox, PMButton } from '@packmind/ui';
 import { LuPlus } from 'react-icons/lu';
 import { RuleExampleItem } from '../RuleExampleItem';
+import { RuleLanguagePicker } from '../RuleLanguagePicker';
 import {
   useGetRuleExamplesQuery,
   useCreateRuleExampleMutation,
@@ -20,7 +21,11 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 interface RuleExamplesManagerProps {
   standardId: StandardId;
   ruleId: RuleId;
-  selectedLanguage: ProgrammingLanguage;
+  /**
+   * Absent when nothing on this standard says which one it would be. The body
+   * then asks rather than opening a pair of editors in a language nobody chose.
+   */
+  selectedLanguage?: ProgrammingLanguage;
   onLanguageChange?: (lang: ProgrammingLanguage) => void;
 }
 
@@ -48,10 +53,13 @@ export function RuleExamplesManager({
   );
 
   const saved = React.useMemo(
-    () => (existingExamples ?? []).filter((ex) => ex.lang === selectedLanguage),
+    () =>
+      selectedLanguage
+        ? (existingExamples ?? []).filter((ex) => ex.lang === selectedLanguage)
+        : [],
     [existingExamples, selectedLanguage],
   );
-  const pending = drafts.newDraftsFor(selectedLanguage);
+  const pending = selectedLanguage ? drafts.newDraftsFor(selectedLanguage) : [];
 
   /*
     A language with nothing in it opens on the form rather than on a sentence
@@ -64,7 +72,7 @@ export function RuleExamplesManager({
     rule does not speak yet is already the intent to write one.
   */
   useEffect(() => {
-    if (isLoading || isError) {
+    if (isLoading || isError || !selectedLanguage) {
       return;
     }
 
@@ -119,6 +127,10 @@ export function RuleExamplesManager({
         </PMText>
       </PMBox>
     );
+  }
+
+  if (!selectedLanguage) {
+    return <RuleLanguagePicker onPick={(lang) => onLanguageChange?.(lang)} />;
   }
 
   /*

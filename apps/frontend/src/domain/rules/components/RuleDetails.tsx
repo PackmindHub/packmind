@@ -22,6 +22,8 @@ import {
   useRuleExampleDraftsStore,
 } from '../hooks/useRuleExampleDrafts';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import { standardExampleLanguages } from '../standardExampleLanguages';
 import { useGetRuleExamplesQuery } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -58,7 +60,7 @@ export const RuleDetails = ({
     return defaultTab;
   };
 
-  const getInitialLanguage = (): ProgrammingLanguage => {
+  const getInitialLanguage = (): ProgrammingLanguage | undefined => {
     const langParam = searchParams.get('lang');
     if (
       langParam &&
@@ -68,11 +70,17 @@ export const RuleDetails = ({
     ) {
       return langParam as ProgrammingLanguage;
     }
-    return ProgrammingLanguage.JAVASCRIPT;
+    /*
+      Nothing rather than JavaScript. What the rule and its standard are
+      written in decides below, and where neither says anything the body asks
+      instead of opening an editor in a language nobody chose.
+    */
+    return undefined;
   };
 
-  const [selectedLanguage, setSelectedLanguage] =
-    useState<ProgrammingLanguage>(getInitialLanguage());
+  const [selectedLanguage, setSelectedLanguage] = useState<
+    ProgrammingLanguage | undefined
+  >(getInitialLanguage());
   const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(getInitialTab());
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
@@ -99,8 +107,16 @@ export const RuleDetails = ({
     [exampleCounts],
   );
 
+  const { data: detectionStatuses } =
+    useGetStandardRulesDetectionStatusQuery(standardId);
+
+  const siblingLanguages = useMemo(
+    () => standardExampleLanguages(detectionStatuses, rule.id),
+    [detectionStatuses, rule.id],
+  );
+
   const selectedLanguageHasExamples = useMemo(() => {
-    return detectionLanguages.includes(selectedLanguage);
+    return !!selectedLanguage && detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
 
   useEffect(() => {
@@ -137,28 +153,21 @@ export const RuleDetails = ({
     setSearchParams(newParams, { replace: false });
   };
 
-  // Only auto-select language if no URL parameter was provided
+  /*
+    What the rule is written in, then what the rest of the standard is written
+    in, then nothing. Only when the address has not already answered.
+  */
   useEffect(() => {
-    const langParam = searchParams.get('lang');
-
-    // Skip auto-selection if there's a URL parameter
-    if (langParam) {
+    if (searchParams.get('lang')) {
       return;
     }
 
-    if (detectionLanguages.length === 0) {
-      setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
-      return;
-    }
-
-    const allLanguages = getAllLanguagesSortedByDisplayName();
-    const firstConfigured = allLanguages.find((l) =>
+    const firstConfigured = getAllLanguagesSortedByDisplayName().find((l) =>
       detectionLanguages.includes(l.language),
-    );
-    const defaultLang =
-      firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
-    setSelectedLanguage(defaultLang);
-  }, [detectionLanguages, searchParams]);
+    )?.language;
+
+    setSelectedLanguage(firstConfigured ?? siblingLanguages[0]);
+  }, [detectionLanguages, siblingLanguages, searchParams]);
 
   /*
    * More than what is saved: a language holding a parked draft, and the one
@@ -168,7 +177,7 @@ export const RuleDetails = ({
     const carried = new Set<ProgrammingLanguage>([
       ...exampleCounts.keys(),
       ...draftsStore.dirtyLanguages,
-      selectedLanguage,
+      ...(selectedLanguage ? [selectedLanguage] : []),
     ]);
 
     return getAllLanguagesSortedByDisplayName()
@@ -216,15 +225,17 @@ export const RuleDetails = ({
             Under the strip rather than in it: the language scopes both bodies,
             and the strip is left to the two halves of a rule.
           */}
-          <PMBox paddingTop={4}>
-            <RuleLanguageRail
-              languages={railLanguages}
-              value={selectedLanguage}
-              counts={exampleCounts}
-              unsaved={draftsStore.dirtyLanguages}
-              onChange={updateLanguageWithUrl}
-            />
-          </PMBox>
+          {selectedLanguage && (
+            <PMBox paddingTop={4}>
+              <RuleLanguageRail
+                languages={railLanguages}
+                value={selectedLanguage}
+                counts={exampleCounts}
+                unsaved={draftsStore.dirtyLanguages}
+                onChange={updateLanguageWithUrl}
+              />
+            </PMBox>
+          )}
 
           <PMTabsCompound.Content value="examples">
             <PMVStack
@@ -253,15 +264,17 @@ export const RuleDetails = ({
           <PMTabsCompound.Content value="detection">
             <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
               <PMPageSection>
-                <ProgramEditor
-                  standardId={standardId}
-                  ruleId={rule.id}
-                  detectionLanguages={detectionLanguages.map((language) =>
-                    language.toString(),
-                  )}
-                  selectedLanguage={selectedLanguage}
-                  onNavigateToExamples={handleNavigateToExamples}
-                />
+                {selectedLanguage && (
+                  <ProgramEditor
+                    standardId={standardId}
+                    ruleId={rule.id}
+                    detectionLanguages={detectionLanguages.map((language) =>
+                      language.toString(),
+                    )}
+                    selectedLanguage={selectedLanguage}
+                    onNavigateToExamples={handleNavigateToExamples}
+                  />
+                )}
               </PMPageSection>
             </PMVStack>
           </PMTabsCompound.Content>

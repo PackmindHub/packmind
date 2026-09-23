@@ -29,6 +29,7 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { EXAMPLES_TAB, LINTER_TAB } from './buildComponentDetail';
+import { standardExampleLanguages } from '../../../rules/standardExampleLanguages';
 import { ruleDetectionsById } from './ruleDetection';
 import { RuleDetectionLanguages } from './RuleDetectionLanguages';
 
@@ -136,17 +137,24 @@ export function ContextRuleDetail({
    * Not in the address, unlike the tab.
    *
    * The tab is where the reader is; the language is which slice of it they are
-   * reading, and it has a defensible answer without being asked: the first one
-   * the rule has examples in. A rule with no examples at all opens on
-   * JavaScript with nothing under it, which is the state the select's second
-   * group is for.
+   * reading, and it is answered from evidence in three steps rather than from a
+   * default: what this rule is already written in, then what the rest of the
+   * standard is written in, then nothing.
+   *
+   * Nothing is a real answer and the last one it falls to. It used to be
+   * JavaScript, which is a guess made for every team that does not write
+   * JavaScript, and it arrived with syntax highlighting and an open editor that
+   * made it look decided. Where there is no evidence the body asks instead.
    *
    * `undefined` until the examples answer, so the first render does not pick a
    * language the rule turns out to have none of and then move.
    */
   const [picked, setPicked] = useState<ProgrammingLanguage | undefined>();
-  const language =
-    picked ?? configuredLanguages[0] ?? ProgrammingLanguage.JAVASCRIPT;
+  const siblingLanguages = useMemo(
+    () => standardExampleLanguages(detectionStatuses, rule.id),
+    [detectionStatuses, rule.id],
+  );
+  const language = picked ?? configuredLanguages[0] ?? siblingLanguages[0];
 
   /*
    * What the rail carries, which is more than what is saved.
@@ -160,7 +168,7 @@ export function ContextRuleDetail({
     const carried = new Set<ProgrammingLanguage>([
       ...exampleCounts.keys(),
       ...draftsStore.dirtyLanguages,
-      language,
+      ...(language ? [language] : []),
     ]);
 
     return getAllLanguagesSortedByDisplayName()
@@ -174,7 +182,7 @@ export function ContextRuleDetail({
    * a rule can be checked automatically at all, and a strip that gains a tab
    * when an example is saved reads as a different screen.
    */
-  const hasExamples = configuredLanguages.includes(language);
+  const hasExamples = !!language && configuredLanguages.includes(language);
 
   return (
     <RuleExampleDraftsProvider store={draftsStore}>
@@ -256,15 +264,22 @@ export function ContextRuleDetail({
               halves of a rule, which is all it can hold once a rule speaks more
               than one language.
             */}
-            <PMBox paddingTop={4}>
-              <RuleLanguageRail
-                languages={railLanguages}
-                value={language}
-                counts={exampleCounts}
-                unsaved={draftsStore.dirtyLanguages}
-                onChange={setPicked}
-              />
-            </PMBox>
+            {/*
+              Absent while there is no language at all, because there is nothing
+              to move between and the body below is already asking. Two controls
+              for one unanswered question is one too many.
+            */}
+            {language && (
+              <PMBox paddingTop={4}>
+                <RuleLanguageRail
+                  languages={railLanguages}
+                  value={language}
+                  counts={exampleCounts}
+                  unsaved={draftsStore.dirtyLanguages}
+                  onChange={setPicked}
+                />
+              </PMBox>
+            )}
 
             <PMTabsCompound.Content value={EXAMPLES_TAB}>
               {/*
@@ -301,15 +316,17 @@ export function ContextRuleDetail({
 
             <PMTabsCompound.Content value={LINTER_TAB}>
               <PMBox paddingTop={4}>
-                <ProgramEditor
-                  standardId={standardId}
-                  ruleId={rule.id}
-                  detectionLanguages={configuredLanguages.map((entry) =>
-                    entry.toString(),
-                  )}
-                  selectedLanguage={language}
-                  onNavigateToExamples={() => onTabChange(EXAMPLES_TAB)}
-                />
+                {language && (
+                  <ProgramEditor
+                    standardId={standardId}
+                    ruleId={rule.id}
+                    detectionLanguages={configuredLanguages.map((entry) =>
+                      entry.toString(),
+                    )}
+                    selectedLanguage={language}
+                    onNavigateToExamples={() => onTabChange(EXAMPLES_TAB)}
+                  />
+                )}
               </PMBox>
             </PMTabsCompound.Content>
           </PMTabsCompound.Root>
