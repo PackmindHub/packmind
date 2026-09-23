@@ -9,6 +9,9 @@ import {
   createSkillId,
   createSpaceId,
 } from '@packmind/types';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
+import { SkillsPortNotAvailableError } from '../../../domain/errors/SkillsPortNotAvailableError';
 import { IGetSkillVersion } from '../../../domain/useCases/IGetSkillVersion';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillService } from '../../services/SkillService';
@@ -41,84 +44,50 @@ export class GetSkillVersionUseCase
       organizationId: command.organizationId,
     });
 
-    try {
-      if (!this.spacesPort) {
-        this.logger.error('SpacesPort not available for space validation');
-        throw new Error('SpacesPort not available');
-      }
+    if (!this.spacesPort) {
+      throw new SkillsPortNotAvailableError('SpacesPort');
+    }
 
-      const spaceId = createSpaceId(command.spaceId);
-      const space = await this.spacesPort.getSpaceById(spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', { spaceId: command.spaceId });
-        throw new Error(`Space with id ${command.spaceId} not found`);
-      }
-
-      if (space.organizationId !== command.organizationId) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: command.spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: command.organizationId,
-        });
-        throw new Error(
-          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
-        );
-      }
-
-      const skillId = createSkillId(command.skillId);
-
-      const skill = await this.skillService.getSkillById(skillId);
-      if (!skill) {
-        this.logger.warn('Skill not found', { skillId: command.skillId });
-        throw new Error(`Skill with id ${command.skillId} not found`);
-      }
-
-      if (skill.spaceId !== command.spaceId) {
-        this.logger.warn('Skill does not belong to space', {
-          skillId: command.skillId,
-          skillSpaceId: skill.spaceId,
-          requestSpaceId: command.spaceId,
-        });
-        throw new Error(
-          `Skill ${command.skillId} does not belong to space ${command.spaceId}`,
-        );
-      }
-
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        createOrganizationId(command.organizationId),
+    const spaceId = createSpaceId(command.spaceId);
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new SkillSpaceNotAccessibleError(
+        command.spaceId,
+        command.organizationId,
       );
-      const allowedSpaceIds = spaces.map((s) => s.id);
+    }
 
-      const skillVersion = await this.skillVersionService.getSkillVersion(
-        skillId,
-        command.version,
-        allowedSpaceIds,
-      );
+    const skillId = createSkillId(command.skillId);
 
-      if (skillVersion) {
-        this.logger.info('Skill version retrieved successfully', {
-          skillId: command.skillId,
-          version: command.version,
-          versionId: skillVersion.id,
-        });
-      } else {
-        this.logger.warn('Skill version not found', {
-          skillId: command.skillId,
-          version: command.version,
-        });
-      }
+    const skill = await this.skillService.getSkillById(skillId);
+    if (!skill || skill.spaceId !== command.spaceId) {
+      throw new SkillNotFoundError(command.skillId, command.spaceId);
+    }
 
-      return { skillVersion };
-    } catch (error) {
-      this.logger.error('Failed to get skill version', {
+    const spaces = await this.spacesPort.listSpacesByOrganization(
+      createOrganizationId(command.organizationId),
+    );
+    const allowedSpaceIds = spaces.map((s) => s.id);
+
+    const skillVersion = await this.skillVersionService.getSkillVersion(
+      skillId,
+      command.version,
+      allowedSpaceIds,
+    );
+
+    if (skillVersion) {
+      this.logger.info('Skill version retrieved successfully', {
         skillId: command.skillId,
         version: command.version,
-        spaceId: command.spaceId,
-        userId: command.userId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
+        versionId: skillVersion.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Skill version not found', {
+        skillId: command.skillId,
+        version: command.version,
+      });
     }
+
+    return { skillVersion };
   }
 }

@@ -7,6 +7,7 @@ import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRep
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SkillParseError } from '../../../domain/errors/SkillParseError';
 import { SkillValidationError } from '../../../domain/errors/SkillValidationError';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
 import {
   createMockInstance,
   mockInterface,
@@ -2179,8 +2180,8 @@ Content`,
         spaceId,
       };
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space with id ${spaceId} not found`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        SkillSpaceNotAccessibleError,
       );
     });
 
@@ -2213,8 +2214,8 @@ Content`,
         spaceId,
       };
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        SkillSpaceNotAccessibleError,
       );
     });
   });

@@ -24,6 +24,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
 import { skillVersionFactory } from '../../../../test/skillVersionFactory';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillFileService } from '../../services/SkillFileService';
@@ -353,9 +355,9 @@ describe('SaveSkillVersionUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(null);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+      it('throws SkillSpaceNotAccessibleError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillSpaceNotAccessibleError,
         );
       });
     });
@@ -400,9 +402,9 @@ describe('SaveSkillVersionUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(space);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
+      it('throws SkillSpaceNotAccessibleError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillSpaceNotAccessibleError,
         );
       });
     });
@@ -449,9 +451,9 @@ describe('SaveSkillVersionUseCase', () => {
         skillService.getSkillById.mockResolvedValue(null);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Skill with id ${skillId} not found`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
     });
@@ -501,9 +503,9 @@ describe('SaveSkillVersionUseCase', () => {
         skillService.getSkillById.mockResolvedValue(skill);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Skill ${skillId} does not belong to space ${spaceId}`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
     });

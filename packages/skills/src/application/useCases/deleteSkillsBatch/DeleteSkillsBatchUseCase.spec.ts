@@ -31,6 +31,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
 import { SkillService } from '../../services/SkillService';
 import { DeleteSkillsBatchUseCase } from './DeleteSkillsBatchUseCase';
 
@@ -276,9 +277,9 @@ describe('DeleteSkillsBatchUseCase', () => {
         skillService.getSkillById.mockResolvedValue(null);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Skill with id ${skillId} not found`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
 
@@ -333,9 +334,9 @@ describe('DeleteSkillsBatchUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(null);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
 
@@ -397,9 +398,9 @@ describe('DeleteSkillsBatchUseCase', () => {
         spacesPort.getSpaceById.mockResolvedValue(space);
       });
 
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
 

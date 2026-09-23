@@ -5,13 +5,18 @@ export type SkillsErrorReason =
   | 'skill_parse_failed'
   | 'skill_validation_failed'
   | 'skill_edit_forbidden'
-  | 'skill_file_not_editable';
+  | 'skill_file_not_editable'
+  | 'space_not_accessible'
+  | 'skill_not_found'
+  | 'skill_file_not_found';
 
 export type SkillsErrorContext = {
   skillId?: string;
   userId?: string;
   skillFilePath?: string;
   validationErrors?: SkillValidationErrorDetail[];
+  spaceId?: string;
+  organizationId?: string;
 };
 
 /**

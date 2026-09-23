@@ -11,6 +11,8 @@ import {
   createSkillFileId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillFileService } from '../../services/SkillFileService';
@@ -54,117 +56,84 @@ export class SaveSkillVersionUseCase
     });
 
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      this.logger.warn('Space not found', { spaceId });
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== organizationId) {
-      this.logger.warn('Space does not belong to organization', {
-        spaceId,
-        spaceOrganizationId: space.organizationId,
-        requestOrganizationId: organizationId,
-      });
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
+    if (!space || space.organizationId !== organizationId) {
+      throw new SkillSpaceNotAccessibleError(spaceId, organizationId);
     }
 
     const skill = await this.skillService.getSkillById(skillVersion.skillId);
-    if (!skill) {
-      this.logger.warn('Skill not found', { skillId: skillVersion.skillId });
-      throw new Error(`Skill with id ${skillVersion.skillId} not found`);
+    if (!skill || skill.spaceId !== spaceId) {
+      throw new SkillNotFoundError(skillVersion.skillId, spaceId);
     }
 
-    if (skill.spaceId !== spaceId) {
-      this.logger.warn('Skill does not belong to space', {
-        skillId: skillVersion.skillId,
-        skillSpaceId: skill.spaceId,
-        requestSpaceId: spaceId,
-      });
-      throw new Error(
-        `Skill ${skillVersion.skillId} does not belong to space ${spaceId}`,
-      );
-    }
+    const latestVersion = await this.skillVersionService.getLatestSkillVersion(
+      skillVersion.skillId,
+    );
+    const newVersionNumber = latestVersion ? latestVersion.version + 1 : 1;
 
-    try {
-      const latestVersion =
-        await this.skillVersionService.getLatestSkillVersion(
-          skillVersion.skillId,
-        );
-      const newVersionNumber = latestVersion ? latestVersion.version + 1 : 1;
+    this.logger.info('Calculated new version number', {
+      skillId: skillVersion.skillId,
+      latestVersion: latestVersion?.version,
+      newVersion: newVersionNumber,
+    });
 
-      this.logger.info('Calculated new version number', {
-        skillId: skillVersion.skillId,
-        latestVersion: latestVersion?.version,
-        newVersion: newVersionNumber,
-      });
+    const savedVersion = await this.skillVersionService.addSkillVersion({
+      skillId: skillVersion.skillId,
+      userId: skillVersion.userId,
+      name: skillVersion.name,
+      slug: skillVersion.slug,
+      description: skillVersion.description,
+      prompt: skillVersion.prompt,
+      allowedTools: skillVersion.allowedTools,
+      license: skillVersion.license,
+      compatibility: skillVersion.compatibility,
+      metadata: skillVersion.metadata,
+      additionalProperties: skillVersion.additionalProperties,
+      version: newVersionNumber,
+    });
 
-      const savedVersion = await this.skillVersionService.addSkillVersion({
-        skillId: skillVersion.skillId,
-        userId: skillVersion.userId,
-        name: skillVersion.name,
-        slug: skillVersion.slug,
-        description: skillVersion.description,
-        prompt: skillVersion.prompt,
-        allowedTools: skillVersion.allowedTools,
-        license: skillVersion.license,
-        compatibility: skillVersion.compatibility,
-        metadata: skillVersion.metadata,
-        additionalProperties: skillVersion.additionalProperties,
-        version: newVersionNumber,
-      });
-
-      if (skillVersion.files && skillVersion.files.length > 0) {
-        this.logger.info('Creating skill files', {
-          count: skillVersion.files.length,
-          versionId: savedVersion.id,
-        });
-
-        const skillFiles = skillVersion.files.map((file) => ({
-          id: createSkillFileId(uuidv4()),
-          skillVersionId: savedVersion.id,
-          path: file.path,
-          content: file.content,
-          permissions: file.permissions,
-          isBase64: file.isBase64,
-        }));
-
-        await this.skillFileService.addMany(skillFiles);
-
-        this.logger.info('Skill files created successfully', {
-          count: skillFiles.length,
-          versionId: savedVersion.id,
-        });
-      }
-
-      await this.skillService.updateSkill(skillVersion.skillId, {
-        name: skillVersion.name,
-        slug: skillVersion.slug,
-        description: skillVersion.description,
-        prompt: skillVersion.prompt,
-        allowedTools: skillVersion.allowedTools,
-        license: skillVersion.license,
-        compatibility: skillVersion.compatibility,
-        metadata: skillVersion.metadata,
-        additionalProperties: skillVersion.additionalProperties,
-        version: newVersionNumber,
-        userId: skillVersion.userId,
-      });
-
-      this.logger.info('SaveSkillVersion process completed successfully', {
+    if (skillVersion.files && skillVersion.files.length > 0) {
+      this.logger.info('Creating skill files', {
+        count: skillVersion.files.length,
         versionId: savedVersion.id,
-        skillId: skillVersion.skillId,
-        version: newVersionNumber,
       });
 
-      return savedVersion;
-    } catch (error) {
-      this.logger.error('Failed to save skill version', {
-        skillId: skillVersion.skillId,
-        error: error instanceof Error ? error.message : String(error),
+      const skillFiles = skillVersion.files.map((file) => ({
+        id: createSkillFileId(uuidv4()),
+        skillVersionId: savedVersion.id,
+        path: file.path,
+        content: file.content,
+        permissions: file.permissions,
+        isBase64: file.isBase64,
+      }));
+
+      await this.skillFileService.addMany(skillFiles);
+
+      this.logger.info('Skill files created successfully', {
+        count: skillFiles.length,
+        versionId: savedVersion.id,
       });
-      throw error;
     }
+
+    await this.skillService.updateSkill(skillVersion.skillId, {
+      name: skillVersion.name,
+      slug: skillVersion.slug,
+      description: skillVersion.description,
+      prompt: skillVersion.prompt,
+      allowedTools: skillVersion.allowedTools,
+      license: skillVersion.license,
+      compatibility: skillVersion.compatibility,
+      metadata: skillVersion.metadata,
+      additionalProperties: skillVersion.additionalProperties,
+      version: newVersionNumber,
+      userId: skillVersion.userId,
+    });
+
+    this.logger.info('SaveSkillVersion process completed successfully', {
+      versionId: savedVersion.id,
+      skillId: skillVersion.skillId,
+      version: newVersionNumber,
+    });
+
+    return savedVersion;
   }
 }
