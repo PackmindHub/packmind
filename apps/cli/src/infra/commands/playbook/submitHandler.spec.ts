@@ -87,6 +87,13 @@ describe('playbookSubmitHandler', () => {
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   beforeEach(() => {
     mockGateway = createMockPackmindGateway();
+    // The submit path reads a standard's rule ids back before proposing a
+    // removal or an edit, so the fixtures' deployed rules need ids here.
+    mockGateway.standards.getRules.mockResolvedValue([
+      { id: 'rule-do-not-use-var', content: 'Do not use var' },
+      { id: 'rule-use-semicolons', content: 'Use semicolons' },
+      { id: 'rule-old', content: 'Old rule' },
+    ]);
     mockGateway.changeProposals.batchCreate.mockResolvedValue({
       created: 1,
       skipped: 0,

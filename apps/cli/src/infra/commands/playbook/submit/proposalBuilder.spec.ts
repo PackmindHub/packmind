@@ -1229,7 +1229,20 @@ describe('buildProposals rule id resolution', () => {
   });
 
   describe('when the rule lookup fails', () => {
-    it('still builds the proposals', async () => {
+    it('skips the entry rather than submitting an unresolved removal', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+      const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
+
+      const { skipped } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(skipped).toHaveLength(1);
+    });
+
+    it('submits no proposal for the skipped standard', async () => {
       const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
       const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
 
@@ -1239,7 +1252,57 @@ describe('buildProposals rule id resolution', () => {
         fetchRuleIds,
       );
 
-      expect(proposals.length).toBeGreaterThan(0);
+      expect(proposals).toEqual([]);
+    });
+
+    describe('when the standard only gained rules', () => {
+      it('submits it anyway, since an addition names no existing rule', async () => {
+        const deployedSubset = [
+          '# My Standard',
+          '',
+          'A description of the standard.',
+          '',
+          '## Rules',
+          '',
+          '* Do not use var',
+        ].join('\n');
+        const getCtx = jest.fn().mockResolvedValue(
+          makeTargetContext({
+            lockFile: makeStandardLockFile([
+              { path: PACKMIND_FILE, agent: 'packmind' },
+            ]),
+            deployedFiles: [{ path: PACKMIND_FILE, content: deployedSubset }],
+          }),
+        );
+        const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
+
+        const { proposals } = await buildProposals(
+          [makeEntry({ changeType: 'updated' })],
+          getCtx,
+          fetchRuleIds,
+        );
+
+        expect(proposals).toContainEqual(
+          expect.objectContaining({ type: ChangeProposalType.addRule }),
+        );
+      });
+    });
+  });
+
+  describe('when a changed rule is missing from the fetched ids', () => {
+    it('skips the entry', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+      const fetchRuleIds = jest
+        .fn()
+        .mockResolvedValue(new Map([['Some other rule', 'rule-other']]));
+
+      const { skipped } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(skipped).toHaveLength(1);
     });
   });
 

@@ -45,6 +45,13 @@ export type SkillDefinitionInput = {
  */
 export type RuleIdsByContent = ReadonlyMap<string, string>;
 
+/**
+ * Stands in for a rule id that could not be resolved. It matches no rule, so a
+ * proposal carrying it is applied to nothing; callers that asked for ids treat
+ * its presence as a failure rather than shipping it.
+ */
+export const UNRESOLVED_RULE_ID = 'unresolved';
+
 export function compareStandardFields(
   localContent: string,
   deployedContent: string,
@@ -139,7 +146,7 @@ export function compareStandardFields(
         `Could not resolve the rule "${truncateRule(content)}" in ${filePath} to a known rule; its ${changeLabel} may not be applied.`,
       );
     }
-    return createRuleId('unresolved');
+    return createRuleId(UNRESOLVED_RULE_ID);
   };
 
   for (const update of updates) {

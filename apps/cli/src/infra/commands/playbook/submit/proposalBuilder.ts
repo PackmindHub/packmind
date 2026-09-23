@@ -13,6 +13,7 @@ import {
   compareCommandFields,
   compareSkillDefinitionFields,
   RuleIdsByContent,
+  UNRESOLVED_RULE_ID,
 } from '../../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../../application/utils/pathUtils';
 import { logWarningConsole } from '../../../utils/consoleLogger';
@@ -449,9 +450,24 @@ function toSkippedEntry(
 }
 
 /**
+ * True when a rule removal or edit ended up with the placeholder id. The server
+ * matches these by id, so such a proposal is applied to nothing while the batch
+ * still reports success and the staged change is cleared. Additions are exempt:
+ * they name no existing rule.
+ */
+function hasUnresolvedRuleTarget(proposals: ProposalItem[]): boolean {
+  return proposals.some(
+    (proposal) =>
+      (proposal.type === ChangeProposalType.deleteRule ||
+        proposal.type === ChangeProposalType.updateRule) &&
+      (proposal.payload as { targetId?: string } | undefined)?.targetId ===
+        UNRESOLVED_RULE_ID,
+  );
+}
+
+/**
  * Fetches a standard's rule ids once and remembers the answer, including the
- * failure. A lookup that fails must not stop the submit: the proposals still
- * carry the rule content, so the worst case is the behaviour we had before.
+ * failure, so one unreachable standard costs one request.
  */
 async function resolveRuleIds(
   fetchRuleIds: RuleIdsFetcher,
@@ -604,14 +620,28 @@ export async function buildProposals(
               ruleIdCache,
             );
           }
-          proposals.push(
-            ...buildUpdatedStandardProposals(
-              entry,
-              artifactId,
-              deployedContent,
-              ruleIdsByContent,
-            ),
+          const standardProposals = buildUpdatedStandardProposals(
+            entry,
+            artifactId,
+            deployedContent,
+            ruleIdsByContent,
           );
+          // Shipping a placeholder would lose the change in silence, which is
+          // what this resolution exists to prevent. Keep the staged change so
+          // the operator can retry instead.
+          if (fetchRuleIds && hasUnresolvedRuleTarget(standardProposals)) {
+            logWarningConsole(
+              `Skipping "${entry.artifactName}" — its rules could not be matched to the deployed standard, so a rule removal or edit would not be applied.`,
+            );
+            skipped.push(
+              toSkippedEntry(
+                entry,
+                'rule removals and edits could not be matched to the deployed standard',
+              ),
+            );
+            continue;
+          }
+          proposals.push(...standardProposals);
           break;
         }
         case 'command':
