@@ -29,8 +29,8 @@ import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillParser } from '../../parser/SkillParser';
 import { SkillValidator } from '../../validator/SkillValidator';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
-import { SkillParseError } from '../../errors/SkillParseError';
-import { SkillValidationError } from '../../errors/SkillValidationError';
+import { SkillParseError } from '../../../domain/errors/SkillParseError';
+import { SkillValidationError } from '../../../domain/errors/SkillValidationError';
 
 const origin = 'UploadSkillUseCase';
 

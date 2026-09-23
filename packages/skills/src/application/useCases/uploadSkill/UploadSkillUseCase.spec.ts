@@ -5,8 +5,8 @@ import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { SkillParseError } from '../../errors/SkillParseError';
-import { SkillValidationError } from '../../errors/SkillValidationError';
+import { SkillParseError } from '../../../domain/errors/SkillParseError';
+import { SkillValidationError } from '../../../domain/errors/SkillValidationError';
 import {
   createMockInstance,
   mockInterface,

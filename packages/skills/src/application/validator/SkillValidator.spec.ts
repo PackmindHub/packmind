@@ -1,4 +1,4 @@
-import { SkillValidationError } from '../errors/SkillValidationError';
+import { SkillValidationError } from '../../domain/errors/SkillValidationError';
 import { SkillParser } from '../parser/SkillParser';
 import {
   SkillValidator,
