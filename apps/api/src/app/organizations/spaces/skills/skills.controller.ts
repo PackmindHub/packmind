@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpStatus,
   NotFoundException,
@@ -17,12 +16,7 @@ import {
 import { Response } from 'express';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  SkillValidationError,
-  SkillParseError,
-  SkillEditForbiddenError,
-  SkillFileNotEditableError,
-} from '@packmind/skills';
+import { SkillNotFoundError } from '@packmind/skills';
 import {
   CodingAgent,
   CodingAgents,
@@ -40,7 +34,6 @@ import {
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { getErrorMessage } from '../../../shared/utils/error.utils';
 
 const origin = 'OrganizationsSpacesSkillsController';
 
@@ -86,21 +79,7 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId },
     );
 
-    try {
-      return await this.skillsService.getSkillsBySpace(
-        spaceId,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/skills - Failed to fetch skills',
-        { organizationId, spaceId, error: errorMessage },
-      );
-      throw error;
-    }
+    return this.skillsService.getSkillsBySpace(spaceId, organizationId, userId);
   }
 
   /**
@@ -121,30 +100,18 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, slug },
     );
 
-    try {
-      const skillWithFiles = await this.skillsService.getSkillWithFiles(
-        slug,
-        spaceId,
-        organizationId,
-        userId,
-      );
+    const skillWithFiles = await this.skillsService.getSkillWithFiles(
+      slug,
+      spaceId,
+      organizationId,
+      userId,
+    );
 
-      if (!skillWithFiles) {
-        throw new NotFoundException(`Skill with slug "${slug}" not found`);
-      }
-
-      return skillWithFiles;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/skills/:slug - Failed to fetch skill with files',
-        { organizationId, spaceId, slug, error: errorMessage },
-      );
-      throw error;
+    if (!skillWithFiles) {
+      throw new NotFoundException(`Skill with slug "${slug}" not found`);
     }
+
+    return skillWithFiles;
   }
 
   /**
@@ -165,30 +132,18 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillId },
     );
 
-    try {
-      const skillWithFiles = await this.skillsService.getSkillWithFilesById(
-        skillId,
-        spaceId,
-        organizationId,
-        userId,
-      );
+    const skillWithFiles = await this.skillsService.getSkillWithFilesById(
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    );
 
-      if (!skillWithFiles) {
-        throw new NotFoundException(`Skill with id "${skillId}" not found`);
-      }
-
-      return skillWithFiles;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/detail - Failed to fetch skill with files',
-        { organizationId, spaceId, skillId, error: errorMessage },
-      );
-      throw error;
+    if (!skillWithFiles) {
+      throw new SkillNotFoundError(skillId, spaceId);
     }
+
+    return skillWithFiles;
   }
 
   /**
@@ -217,7 +172,7 @@ export class OrganizationsSpacesSkillsController {
     });
 
     if (version === null) {
-      throw new NotFoundException(`Skill ${skillId} not found`);
+      throw new SkillNotFoundError(skillId, spaceId);
     }
 
     return { version };
@@ -241,21 +196,12 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillId },
     );
 
-    try {
-      return await this.skillsService.listSkillVersions(
-        skillId,
-        spaceId,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions - Failed to fetch skill versions',
-        { organizationId, spaceId, skillId, error: errorMessage },
-      );
-      throw error;
-    }
+    return this.skillsService.listSkillVersions(
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    );
   }
 
   /**
@@ -287,46 +233,23 @@ export class OrganizationsSpacesSkillsController {
       },
     );
 
-    try {
-      const result = await this.skillsService.uploadSkill(
-        body.files,
-        organizationId,
-        spaceId,
-        userId,
-        request.clientSource,
-        body.originSkill,
-      );
+    const result = await this.skillsService.uploadSkill(
+      body.files,
+      organizationId,
+      spaceId,
+      userId,
+      request.clientSource,
+      body.originSkill,
+    );
 
-      let statusCode: HttpStatus;
-      if (result.skill.version === 1 && result.versionCreated) {
-        statusCode = HttpStatus.CREATED;
-      } else {
-        statusCode = HttpStatus.OK;
-      }
-
-      return response.status(statusCode).json(result);
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Failed to upload skill',
-        {
-          organizationId,
-          spaceId,
-          error: errorMessage,
-        },
-      );
-
-      // Convert domain errors to HTTP exceptions
-      if (error instanceof SkillValidationError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof SkillParseError) {
-        throw new BadRequestException(error.message);
-      }
-
-      throw error;
+    let statusCode: HttpStatus;
+    if (result.skill.version === 1 && result.versionCreated) {
+      statusCode = HttpStatus.CREATED;
+    } else {
+      statusCode = HttpStatus.OK;
     }
+
+    return response.status(statusCode).json(result);
   }
 
   /**
@@ -348,36 +271,15 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillId, filePath: body.filePath },
     );
 
-    try {
-      return await this.skillsService.updateSkillFile({
-        skillId,
-        spaceId,
-        organizationId,
-        userId,
-        filePath: body.filePath,
-        content: body.content,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'PATCH /organizations/:orgId/spaces/:spaceId/skills/:skillId/file - Failed to update skill file',
-        { organizationId, spaceId, skillId, error: errorMessage },
-      );
-
-      if (error instanceof SkillEditForbiddenError) {
-        throw new ForbiddenException(error.message);
-      }
-
-      if (
-        error instanceof SkillFileNotEditableError ||
-        error instanceof SkillValidationError
-      ) {
-        throw new BadRequestException(error.message);
-      }
-
-      throw error;
-    }
+    return this.skillsService.updateSkillFile({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+      filePath: body.filePath,
+      content: body.content,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -398,22 +300,13 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillId },
     );
 
-    try {
-      await this.skillsService.deleteSkill(
-        skillId,
-        spaceId,
-        organizationId,
-        userId,
-        request.clientSource,
-      );
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId - Failed to delete skill',
-        { organizationId, spaceId, skillId, error: errorMessage },
-      );
-      throw error;
-    }
+    await this.skillsService.deleteSkill(
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+      request.clientSource,
+    );
   }
 
   /**
@@ -440,40 +333,25 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillId, agent },
     );
 
-    try {
-      const result = await this.skillsService.downloadSkillZipForAgent(
-        skillId,
-        spaceId,
-        organizationId,
-        userId,
-        agent as CodingAgent,
-      );
+    const result = await this.skillsService.downloadSkillZipForAgent(
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+      agent as CodingAgent,
+    );
 
-      if (!result.fileContent) {
-        throw new NotFoundException(`Skill with id "${skillId}" not found`);
-      }
-
-      response
-        .setHeader('Content-Type', 'application/zip')
-        .setHeader(
-          'Content-Disposition',
-          `attachment; filename="${result.fileName}"`,
-        )
-        .send(Buffer.from(result.fileContent, 'base64'));
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/download/:agent - Failed to download skill zip',
-        { organizationId, spaceId, skillId, agent, error: errorMessage },
-      );
-      throw error;
+    if (!result.fileContent) {
+      throw new SkillNotFoundError(skillId, spaceId);
     }
+
+    response
+      .setHeader('Content-Type', 'application/zip')
+      .setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.fileName}"`,
+      )
+      .send(Buffer.from(result.fileContent, 'base64'));
   }
 
   /**
@@ -500,26 +378,12 @@ export class OrganizationsSpacesSkillsController {
       { organizationId, spaceId, skillCount: body.skillIds.length },
     );
 
-    try {
-      return await this.skillsService.deleteSkillsBatch(
-        body.skillIds,
-        spaceId,
-        organizationId,
-        userId,
-        request.clientSource,
-      );
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/skills/delete - Failed to delete skills batch',
-        {
-          organizationId,
-          spaceId,
-          skillCount: body.skillIds.length,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.skillsService.deleteSkillsBatch(
+      body.skillIds,
+      spaceId,
+      organizationId,
+      userId,
+      request.clientSource,
+    );
   }
 }
