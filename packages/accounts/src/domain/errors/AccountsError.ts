@@ -13,7 +13,11 @@ export type AccountsErrorReason =
   | 'invalid_display_name'
   | 'missing_email'
   | 'cli_login_code_not_found'
-  | 'cli_login_code_expired';
+  | 'cli_login_code_expired'
+  | 'invalid_password'
+  | 'user_cannot_change_own_role'
+  | 'cannot_demote_last_admin'
+  | 'invalid_authentication_type';
 
 export type AccountsErrorContext = {
   organizationId?: string;

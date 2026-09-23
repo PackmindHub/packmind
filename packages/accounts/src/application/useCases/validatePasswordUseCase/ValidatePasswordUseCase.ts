@@ -5,6 +5,7 @@ import {
   ValidatePasswordCommand,
   ValidatePasswordResponse,
 } from '@packmind/types';
+import { PasswordAndHashRequiredError } from '../../../domain/errors';
 
 const origin = 'ValidatePasswordUseCase';
 
@@ -24,25 +25,14 @@ export class ValidatePasswordUseCase implements IValidatePasswordUseCase {
     this.logger.info('Executing validate password use case');
 
     if (!password || !hash) {
-      const error = new Error('Password and hash are required for validation');
-      this.logger.error('Failed to execute validate password use case', {
-        error: error.message,
-      });
-      throw error;
+      throw new PasswordAndHashRequiredError();
     }
 
-    try {
-      const isValid = await this.userService.validatePassword(password, hash);
+    const isValid = await this.userService.validatePassword(password, hash);
 
-      this.logger.info('Validate password use case executed successfully', {
-        isValid,
-      });
-      return { isValid };
-    } catch (error) {
-      this.logger.error('Failed to execute validate password use case', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('Validate password use case executed successfully', {
+      isValid,
+    });
+    return { isValid };
   }
 }

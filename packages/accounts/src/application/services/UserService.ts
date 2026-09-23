@@ -16,7 +16,7 @@ import { UserContextChangeType } from '@packmind/types';
 import {
   EmailAlreadyExistsError,
   InvalidInvitationEmailError,
-  UserNotInOrganizationError,
+  UserNotFoundError,
   UserCannotExcludeSelfError,
 } from '../../domain/errors';
 
@@ -262,8 +262,10 @@ export class UserService {
         organizationId,
       );
 
+    // The target is not a member here: answered like a missing user, not a
+    // 403, which would confirm the user exists in another organization.
     if (!removed) {
-      throw new UserNotInOrganizationError({
+      throw new UserNotFoundError({
         userId: String(targetUser.id),
         organizationId: String(organizationId),
       });

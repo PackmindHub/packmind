@@ -14,7 +14,7 @@ import { userFactory } from '../../../test';
 import {
   EmailAlreadyExistsError,
   InvalidInvitationEmailError,
-  UserNotInOrganizationError,
+  UserNotFoundError,
   UserCannotExcludeSelfError,
 } from '../../domain/errors';
 import * as bcrypt from 'bcrypt';
@@ -355,8 +355,8 @@ describe('UserService', () => {
         }
       });
 
-      it('throws UserNotInOrganizationError', () => {
-        expect(thrownError).toBeInstanceOf(UserNotInOrganizationError);
+      it('throws UserNotFoundError', () => {
+        expect(thrownError).toBeInstanceOf(UserNotFoundError);
       });
 
       it('attempts to remove membership', () => {

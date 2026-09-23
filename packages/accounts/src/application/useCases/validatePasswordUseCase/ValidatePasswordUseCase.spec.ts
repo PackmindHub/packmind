@@ -2,6 +2,7 @@ import { ValidatePasswordUseCase } from './ValidatePasswordUseCase';
 import { UserService } from '../../services/UserService';
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { PasswordAndHashRequiredError } from '../../../domain/errors';
 
 describe('ValidatePasswordUseCase', () => {
   let validatePasswordUseCase: ValidatePasswordUseCase;
@@ -77,10 +78,10 @@ describe('ValidatePasswordUseCase', () => {
         hash: '$2b$10$abcdefghijklmnopqrstuvwxyz',
       };
 
-      it('throws validation error', async () => {
+      it('throws PasswordAndHashRequiredError', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Password and hash are required for validation');
+        ).rejects.toBeInstanceOf(PasswordAndHashRequiredError);
       });
 
       it('does not call validatePassword', async () => {
@@ -100,10 +101,10 @@ describe('ValidatePasswordUseCase', () => {
         hash: '',
       };
 
-      it('throws validation error', async () => {
+      it('throws PasswordAndHashRequiredError', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Password and hash are required for validation');
+        ).rejects.toBeInstanceOf(PasswordAndHashRequiredError);
       });
 
       it('does not call validatePassword', async () => {
@@ -123,10 +124,10 @@ describe('ValidatePasswordUseCase', () => {
         hash: '',
       };
 
-      it('throws validation error', async () => {
+      it('throws PasswordAndHashRequiredError', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Password and hash are required for validation');
+        ).rejects.toBeInstanceOf(PasswordAndHashRequiredError);
       });
 
       it('does not call validatePassword', async () => {

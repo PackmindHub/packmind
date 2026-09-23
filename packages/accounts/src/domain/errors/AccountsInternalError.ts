@@ -5,12 +5,18 @@ export type AccountsInternalErrorReason =
   | 'cli_login_code_user_not_found'
   | 'cli_login_code_membership_not_found'
   | 'cli_login_code_organization_not_found'
-  | 'cli_login_code_api_key_error';
+  | 'cli_login_code_api_key_error'
+  | 'failed_to_generate_api_key'
+  | 'failed_to_update_user_role'
+  | 'user_id_required'
+  | 'password_and_hash_required'
+  | 'dangling_invitation';
 
 export type AccountsInternalErrorContext = {
   organizationId?: string;
   userId?: string;
   membershipId?: string;
+  invitationId?: string;
 };
 
 /**

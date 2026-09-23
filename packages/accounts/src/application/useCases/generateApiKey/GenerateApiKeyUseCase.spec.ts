@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import {
+  UserNotFoundError,
+  UserNotInOrganizationError,
+} from '@packmind/node-utils';
 import { GenerateApiKeyUseCase } from './GenerateApiKeyUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -8,6 +12,10 @@ import { createUserId } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import { GenerateApiKeyCommand } from '@packmind/types';
 import { userFactory, organizationFactory } from '../../../../test';
+import {
+  OrganizationNotFoundError,
+  FailedToGenerateApiKeyError,
+} from '../../../domain/errors';
 
 describe('GenerateApiKeyUseCase', () => {
   let generateApiKeyUseCase: GenerateApiKeyUseCase;
@@ -138,9 +146,9 @@ describe('GenerateApiKeyUseCase', () => {
           organizationId,
         };
 
-        await expect(generateApiKeyUseCase.execute(command)).rejects.toThrow(
-          'User not found',
-        );
+        await expect(
+          generateApiKeyUseCase.execute(command),
+        ).rejects.toBeInstanceOf(UserNotFoundError);
       });
     });
 
@@ -172,9 +180,9 @@ describe('GenerateApiKeyUseCase', () => {
           organizationId,
         };
 
-        await expect(generateApiKeyUseCase.execute(command)).rejects.toThrow(
-          'Organization not found',
-        );
+        await expect(
+          generateApiKeyUseCase.execute(command),
+        ).rejects.toBeInstanceOf(OrganizationNotFoundError);
       });
     });
 
@@ -201,9 +209,9 @@ describe('GenerateApiKeyUseCase', () => {
 
       mockUserService.getUserById.mockResolvedValue(testUser);
 
-      await expect(generateApiKeyUseCase.execute(command)).rejects.toThrow(
-        'User organization membership not found',
-      );
+      await expect(
+        generateApiKeyUseCase.execute(command),
+      ).rejects.toBeInstanceOf(UserNotInOrganizationError);
     });
 
     it('throws error if API key expiration fails', async () => {
@@ -240,9 +248,9 @@ describe('GenerateApiKeyUseCase', () => {
       mockApiKeyService.generateApiKey.mockReturnValue('test.api.key');
       mockApiKeyService.getApiKeyExpiration.mockReturnValue(null);
 
-      await expect(generateApiKeyUseCase.execute(command)).rejects.toThrow(
-        'Failed to get API key expiration',
-      );
+      await expect(
+        generateApiKeyUseCase.execute(command),
+      ).rejects.toBeInstanceOf(FailedToGenerateApiKeyError);
     });
 
     it('handles service errors gracefully', async () => {

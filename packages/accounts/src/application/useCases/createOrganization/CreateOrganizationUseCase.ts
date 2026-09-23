@@ -13,6 +13,11 @@ import {
   CreateOrganizationCommand,
   CreateOrganizationResponse,
 } from '@packmind/types';
+import { UserNotFoundError } from '@packmind/node-utils';
+import {
+  InvalidOrganizationNameError,
+  UserIdRequiredError,
+} from '../../../domain/errors';
 
 const origin = 'CreateOrganizationUseCase';
 
@@ -38,34 +43,19 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     });
 
     if (!name || name.trim().length === 0) {
-      const error = new Error('Organization name is required');
-      this.logger.error('Failed to execute create organization use case', {
-        name,
-        error: error.message,
-      });
-      throw error;
+      throw new InvalidOrganizationNameError(name ?? '');
     }
 
     if (!userId) {
-      const error = new Error('User ID is required');
-      this.logger.error('Failed to execute create organization use case', {
-        userId,
-        error: error.message,
-      });
-      throw error;
+      throw new UserIdRequiredError();
+    }
+
+    const user = await this.userService.getUserById(userId);
+    if (!user) {
+      throw new UserNotFoundError({ userId });
     }
 
     try {
-      const user = await this.userService.getUserById(userId);
-      if (!user) {
-        const error = new Error('User not found');
-        this.logger.error('Failed to execute create organization use case', {
-          userId,
-          error: error.message,
-        });
-        throw error;
-      }
-
       const organization = await this.organizationService.createOrganization(
         name.trim(),
       );
