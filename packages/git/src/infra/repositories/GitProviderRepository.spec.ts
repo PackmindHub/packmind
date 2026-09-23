@@ -14,6 +14,7 @@ import {
   createOrganizationGitHubAppId,
   createUserId,
   GitProvider,
+  GitProviderNotFoundError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
@@ -392,7 +393,7 @@ describe('GitProviderRepository', () => {
 
     await expect(
       gitProviderRepository.update(nonExistentId, { url: 'new-url' }),
-    ).rejects.toThrow(`Git provider with id ${nonExistentId} not found`);
+    ).rejects.toBeInstanceOf(GitProviderNotFoundError);
   });
 
   it('returns null for non-existent provider ID', async () => {

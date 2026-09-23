@@ -518,11 +518,15 @@ function DestinationRow({
             is not a landing that should be indented differently.
           */
           <PMBox
-            width="16px"
+            /*
+              28px and pulled back over the row's left padding: the gutter is
+              part of the target, and the box still lands where it was drawn.
+            */
+            width="28px"
+            marginLeft="-12px"
+            alignSelf="stretch"
             flexShrink={0}
-            display="inline-flex"
-            alignItems="center"
-            justifyContent="center"
+            display="flex"
           >
             {canPush(destination) && (
               <ContextPickBox shown={isPicked || selection.isSelecting}>

@@ -14,6 +14,14 @@ import {
 } from '@packmind/types';
 import { mockInterface } from '@packmind/test-utils';
 import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
+import {
+  GithubAppIdNotConfiguredError,
+  GithubAppInstallationIdMissingError,
+  GithubAppOrganizationAppIdMissingError,
+  GithubAppPrivateKeyNotConfiguredError,
+  GithubAppRepositoryNotProvidedError,
+  GithubProviderTokenEmptyError,
+} from '../../../../domain/errors';
 
 const makeProvider = (overrides: Partial<GitProvider> = {}): GitProvider =>
   ({
@@ -96,8 +104,8 @@ describe('GithubTokenResolverFactory', () => {
         );
         const provider = makeProvider({ authMethod: 'token', token: null });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /provider\.token is empty/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubProviderTokenEmptyError,
         );
       });
     });
@@ -132,8 +140,8 @@ describe('GithubTokenResolverFactory', () => {
           appInstallationId: 987654,
         });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /GITHUB_APP_ID is not configured/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubAppIdNotConfiguredError,
         );
       });
     });
@@ -149,8 +157,8 @@ describe('GithubTokenResolverFactory', () => {
           appInstallationId: 987654,
         });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /GITHUB_APP_PRIVATE_KEY is not configured/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubAppPrivateKeyNotConfiguredError,
         );
       });
     });
@@ -167,8 +175,8 @@ describe('GithubTokenResolverFactory', () => {
           appInstallationId: undefined,
         });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /appInstallationId is missing/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubAppInstallationIdMissingError,
         );
       });
     });
@@ -256,8 +264,8 @@ describe('GithubTokenResolverFactory', () => {
           organizationGitHubAppId: undefined,
         });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /no organizationGitHubAppId/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubAppOrganizationAppIdMissingError,
         );
       });
     });
@@ -276,8 +284,8 @@ describe('GithubTokenResolverFactory', () => {
           organizationGitHubAppId: createOrganizationGitHubAppId('app-1'),
         });
 
-        await expect(factory.build(provider)).rejects.toThrow(
-          /orgGitHubAppRepository is required for on-prem mode/,
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GithubAppRepositoryNotProvidedError,
         );
       });
     });

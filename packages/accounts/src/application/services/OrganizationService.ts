@@ -22,37 +22,29 @@ export class OrganizationService {
   async createOrganization(name: string): Promise<Organization> {
     this.logger.info('Creating organization', { name });
 
-    try {
-      this.logger.debug('Generating slug from organization name', { name });
-      const baseSlug = slug(name);
-      const existingOrganization =
-        await this.organizationRepository.findBySlug(baseSlug);
+    this.logger.debug('Generating slug from organization name', { name });
+    const baseSlug = slug(name);
+    const existingOrganization =
+      await this.organizationRepository.findBySlug(baseSlug);
 
-      if (existingOrganization) {
-        throw new OrganizationSlugConflictError(name);
-      }
-
-      const organization: Organization = {
-        id: createOrganizationId(uuidv4()),
-        name,
-        slug: baseSlug,
-      };
-
-      const createdOrganization =
-        await this.organizationRepository.add(organization);
-      this.logger.info('Organization created successfully', {
-        organizationId: createdOrganization.id,
-        name,
-        slug: baseSlug,
-      });
-      return createdOrganization;
-    } catch (error) {
-      this.logger.error('Failed to create organization', {
-        name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (existingOrganization) {
+      throw new OrganizationSlugConflictError(name);
     }
+
+    const organization: Organization = {
+      id: createOrganizationId(uuidv4()),
+      name,
+      slug: baseSlug,
+    };
+
+    const createdOrganization =
+      await this.organizationRepository.add(organization);
+    this.logger.info('Organization created successfully', {
+      organizationId: createdOrganization.id,
+      name,
+      slug: baseSlug,
+    });
+    return createdOrganization;
   }
 
   async getOrganizationById(id: OrganizationId): Promise<Organization | null> {

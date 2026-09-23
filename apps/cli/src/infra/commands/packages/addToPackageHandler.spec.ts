@@ -4,7 +4,9 @@ import {
   AddToPackageHandlerDeps,
 } from './addToPackageHandler';
 import { ItemNotFoundError } from '../../../domain/errors/ItemNotFoundError';
+import { ArtefactAlreadyInPackageError } from '../../../domain/errors/ArtefactAlreadyInPackageError';
 import {
+  logConsole,
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
@@ -13,6 +15,7 @@ import { parsePackageSlug } from '../../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../../utils/execName';
 
 jest.mock('../../utils/consoleLogger', () => ({
+  logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
@@ -26,6 +29,7 @@ jest.mock('../../../application/useCases/AddToPackageUseCase', () => ({
   })),
 }));
 
+const mockLogConsole = logConsole as jest.Mock;
 const mockLogErrorConsole = logErrorConsole as jest.Mock;
 const mockLogInfoConsole = logInfoConsole as jest.Mock;
 const mockLogSuccessConsole = logSuccessConsole as jest.Mock;
@@ -314,6 +318,93 @@ describe('addToPackageHandler', () => {
 
       it('calls exit(1)', () => {
         expect(deps.mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  // ─── Artefacts already owned by another package ─────────────────────────────
+
+  describe('when the command already belongs to another package', () => {
+    let deps: ReturnType<typeof makeDeps>;
+
+    function givenConflict(packageSlugs: string[]) {
+      const { AddToPackageUseCase } = jest.requireMock(
+        '../../../application/useCases/AddToPackageUseCase',
+      );
+      AddToPackageUseCase.mockImplementationOnce(() => ({
+        execute: jest
+          .fn()
+          .mockRejectedValue(
+            new ArtefactAlreadyInPackageError(
+              'command',
+              [{ slug: 'my-command', name: 'My command', packageSlugs }],
+              '@global/my-pkg',
+            ),
+          ),
+      }));
+    }
+
+    describe('and it belongs to a single one', () => {
+      beforeEach(async () => {
+        givenConflict(['@global/my-source-package']);
+        deps = makeDeps();
+        await addToPackageHandler(
+          makeArgs({
+            to: parsePackageSlug('@global/my-pkg'),
+            itemType: 'command',
+            itemSlugs: ['my-command'],
+          }),
+          deps,
+        );
+      });
+
+      it('names the owning package', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          'Command "My command" already belongs to package "@global/my-source-package"',
+        );
+      });
+
+      it('hands over the move command', () => {
+        expect(mockLogInfoConsole).toHaveBeenCalledWith(
+          `Run \`${EXEC_NAME} packages move --command my-command --to @global/my-pkg\` to move the command.`,
+        );
+      });
+
+      it('adds nothing and calls exit(1)', () => {
+        expect(deps.mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and it belongs to several', () => {
+      beforeEach(async () => {
+        givenConflict(['@global/my-source-package', '@global/another-package']);
+        deps = makeDeps();
+        await addToPackageHandler(
+          makeArgs({
+            to: parsePackageSlug('@global/my-pkg'),
+            itemType: 'command',
+            itemSlugs: ['my-command'],
+          }),
+          deps,
+        );
+      });
+
+      it('introduces the list', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          'Command "My command" already belongs to the following packages:',
+        );
+      });
+
+      it('lists the first package', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          ' - @global/my-source-package',
+        );
+      });
+
+      it('lists the second package', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          ' - @global/another-package',
+        );
       });
     });
   });

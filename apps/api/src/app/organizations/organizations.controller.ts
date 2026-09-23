@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -14,7 +13,6 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   IPullContentResponse,
   InstallPackagesResponse,
-  InvalidArtifactIdError,
   ListPackagesResponse,
   GetPackageSummaryResponse,
   IAccountsPort,
@@ -28,10 +26,7 @@ import {
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  NoPackageSlugsProvidedError,
-  PackagesNotFoundError,
-} from '@packmind/deployments';
+import {} from '@packmind/deployments';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
@@ -149,40 +144,17 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.pullAllContent({
-        userId,
-        organizationId,
-        packagesSlugs,
-        previousPackagesSlugs,
-        gitRemoteUrl,
-        gitBranch,
-        relativePath,
-        agents,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/pull - Failed to pull all content',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-
-      throw error;
-    }
+    return await this.deploymentAdapter.pullAllContent({
+      userId,
+      organizationId,
+      packagesSlugs,
+      previousPackagesSlugs,
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
+      agents,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -242,39 +214,16 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.getDeployedContent({
-        userId,
-        organizationId,
-        packagesSlugs,
-        gitRemoteUrl: body.gitRemoteUrl,
-        gitBranch: body.gitBranch,
-        relativePath: body.relativePath,
-        agents,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/deployed-content - Failed to get deployed content',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-
-      throw error;
-    }
+    return await this.deploymentAdapter.getDeployedContent({
+      userId,
+      organizationId,
+      packagesSlugs,
+      gitRemoteUrl: body.gitRemoteUrl,
+      gitBranch: body.gitBranch,
+      relativePath: body.relativePath,
+      agents,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -324,32 +273,13 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.getContentByVersions({
-        userId,
-        organizationId,
-        artifacts: body.artifacts,
-        agents,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/content-by-versions - Failed to get content by versions',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof InvalidArtifactIdError) {
-        throw new BadRequestException(error.message);
-      }
-
-      throw error;
-    }
+    return await this.deploymentAdapter.getContentByVersions({
+      userId,
+      organizationId,
+      artifacts: body.artifacts,
+      agents,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -371,25 +301,11 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.listPackages({
-        userId,
-        organizationId,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/packages - Failed to list packages',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentAdapter.listPackages({
+      userId,
+      organizationId,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -464,38 +380,15 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.installPackages({
-        userId,
-        organizationId,
-        packagesSlugs: body.packagesSlugs,
-        packmindLockFile: body.packmindLockFile,
-        relativePath: body.relativePath,
-        agents,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/install - Failed to install packages',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof NoPackageSlugsProvidedError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof PackagesNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-
-      throw error;
-    }
+    return await this.deploymentAdapter.installPackages({
+      userId,
+      organizationId,
+      packagesSlugs: body.packagesSlugs,
+      packmindLockFile: body.packmindLockFile,
+      relativePath: body.relativePath,
+      agents,
+      source: request.clientSource,
+    });
   }
 
   /**
@@ -519,26 +412,11 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.deploymentAdapter.getPackageSummary({
-        userId,
-        organizationId,
-        slug,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/packages/:slug - Failed to get package summary',
-        {
-          organizationId,
-          userId,
-          slug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentAdapter.getPackageSummary({
+      userId,
+      organizationId,
+      slug,
+      source: request.clientSource,
+    });
   }
 }

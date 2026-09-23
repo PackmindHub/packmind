@@ -7,6 +7,7 @@ import { IGitProvider } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
   GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
@@ -823,7 +824,7 @@ describe('GitProviderService', () => {
             marketplaceRepo,
             'packmind/sync',
           ),
-        ).rejects.toThrow('Git provider token not configured');
+        ).rejects.toBeInstanceOf(GitProviderTokenNotConfiguredError);
       });
     });
 

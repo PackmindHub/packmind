@@ -16,6 +16,7 @@ import { packageFactory } from '../../../../test';
 import { GetPackageSummaryUseCase } from './GetPackageSummaryUseCase';
 import { PackageService } from '../../services/PackageService';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 
 afterEach(() => jest.clearAllMocks());
 
@@ -201,7 +202,7 @@ describe('GetPackageSummaryUseCase', () => {
       it('throws a package-not-found error', async () => {
         await expect(
           useCase.execute({ ...baseCommand, slug: 'nonexistent' }),
-        ).rejects.toThrow("Package 'nonexistent' does not exist");
+        ).rejects.toThrow(PackagesNotFoundError);
       });
     });
 
@@ -219,7 +220,7 @@ describe('GetPackageSummaryUseCase', () => {
             slug: 'nonexistent',
             spaceId: SPACE_ID,
           }),
-        ).rejects.toThrow("Package 'nonexistent' does not exist");
+        ).rejects.toThrow(PackagesNotFoundError);
       });
     });
   });

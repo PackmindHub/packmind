@@ -35,6 +35,8 @@ The Packmind CLI provides the following commands:
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
+- **`packages move`** - Move standards, commands, or skills into a package, removing them from every other one
+- **`packages remove`** - Remove standards, commands, or skills from a package
 - **`packages list`** - List all packages in your organization
 - **`plugins render`** - Render a Packmind package as a Claude Code or GitHub Copilot plugin
 - **`plugins delete`** - Delete a rendered Claude plugin from this workspace
@@ -1182,6 +1184,92 @@ packmind packages add --to backend --skill debugging-workflow
   skills via CLI to organize them into packages. This is particularly useful
   when automating package management in scripts or CI/CD pipelines.
 </Tip>
+
+<Note>
+  **One item, one package** — An item belongs to a single package. If the item
+  already belongs to another one, `packages add` changes nothing and prints the
+  `packages move` command that would relocate it:
+
+```
+$ packmind packages add --to backend --command create-api-endpoint
+
+Command "Create API endpoint" already belongs to package "@my-space/api"
+
+Run `packmind packages move --command create-api-endpoint --to @my-space/backend` to move the command.
+```
+
+</Note>
+
+### Move Items Between Packages
+
+```bash
+packmind packages move --to <package-slug> --standard <standard-slug>
+packmind packages move --to <package-slug> --command <command-slug>
+packmind packages move --to <package-slug> --skill <skill-slug>
+```
+
+Adds the item to the target package and removes it from **every** other package it belonged to. An item already in the target package and nowhere else is left untouched.
+
+**Options:**
+
+| Flag         | Description                                   |
+| ------------ | --------------------------------------------- |
+| `--to`       | Target package slug (required)                |
+| `--standard` | Slug of the standard to move into the package |
+| `--command`  | Slug of the command to move into the package  |
+| `--skill`    | Slug of the skill to move into the package    |
+
+**Example:**
+
+```
+$ packmind packages move --command create-api-endpoint --to @my-space/backend
+
+Command "Create API endpoint" has been added to package "@my-space/backend"
+It has been removed from "@my-space/api"
+```
+
+When the item came from several packages, they are listed:
+
+```
+$ packmind packages move --command create-api-endpoint --to @my-space/backend
+
+Command "Create API endpoint" has been added to package "@my-space/backend"
+It has been removed from the following packages:
+ - @my-space/api
+ - @my-space/legacy
+```
+
+### Remove Items From a Package
+
+```bash
+packmind packages remove --from <package-slug> --standard <standard-slug>
+packmind packages remove --from <package-slug> --command <command-slug>
+packmind packages remove --from <package-slug> --skill <skill-slug>
+```
+
+**Options:**
+
+| Flag         | Description                                     |
+| ------------ | ----------------------------------------------- |
+| `--from`     | Slug of the package to remove from (required)   |
+| `--standard` | Slug of the standard to remove from the package |
+| `--command`  | Slug of the command to remove from the package  |
+| `--skill`    | Slug of the skill to remove from the package    |
+
+**Example:**
+
+```
+$ packmind packages remove --command create-api-endpoint --from @my-space/backend
+
+Command "Create API endpoint" has been removed from package "@my-space/backend"
+It does not belong to any package anymore
+```
+
+<Warning>
+  An item that belongs to no package is no longer installed or distributed
+  anywhere. The command always states what the item still belongs to, so you can
+  tell the two outcomes apart.
+</Warning>
 
 ## Plugins Command
 

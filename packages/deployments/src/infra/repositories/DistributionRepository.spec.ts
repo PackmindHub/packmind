@@ -217,13 +217,31 @@ describe('DistributionRepository', () => {
         expect.anything(),
       );
 
+    /*
+     * The three artifact-version collections hang off the same distributed
+     * package, so joining a second one makes SQL take their product. Every join
+     * method is checked, not just the one the query used to call, because a
+     * sibling brought back as an inner join costs exactly as much.
+     */
+    const expectNotJoined = (relation: string) => {
+      for (const join of [
+        mockQueryBuilder.innerJoin,
+        mockQueryBuilder.innerJoinAndSelect,
+        mockQueryBuilder.leftJoinAndSelect,
+      ]) {
+        expect(join).not.toHaveBeenCalledWith(relation, expect.anything());
+      }
+    };
+
     beforeEach(() => {
       mockQueryBuilder.getMany.mockResolvedValue([]);
     });
 
     describe('when listing distributions by package', () => {
+      const spaceId = createSpaceId('space-1');
+
       beforeEach(async () => {
-        await repository.listByPackageId(packageId1, organizationId);
+        await repository.listByPackageId(packageId1, organizationId, spaceId);
       });
 
       it('scopes the history to the tracked branch', () => {
@@ -249,6 +267,24 @@ describe('DistributionRepository', () => {
           expect.anything(),
         );
       });
+
+      it('joins the distributed package to its owning package', () => {
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
+
+      // Regression test for the vulnerability where a caller who is a member
+      // of `spaceId` could pass a `packageId` belonging to a different space
+      // in the same organization and still read its distribution history.
+      // Fails if the `package.spaceId` scoping is removed from the query.
+      it('excludes a package that belongs to a different space in the same organization', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'package.spaceId = :spaceId',
+          { spaceId },
+        );
+      });
     });
 
     describe('when listing distributions by command', () => {
@@ -265,6 +301,28 @@ describe('DistributionRepository', () => {
 
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
+      });
+
+      it('loads the command versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.recipeVersions',
+          'commandVersion',
+        );
+      });
+
+      it('loads no standard versions', () => {
+        expectNotJoined('distributedPackage.standardVersions');
+      });
+
+      it('loads no skill versions', () => {
+        expectNotJoined('distributedPackage.skillVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
       });
     });
 
@@ -283,6 +341,28 @@ describe('DistributionRepository', () => {
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
       });
+
+      it('loads the standard versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        );
+      });
+
+      it('loads no command versions', () => {
+        expectNotJoined('distributedPackage.recipeVersions');
+      });
+
+      it('loads no skill versions', () => {
+        expectNotJoined('distributedPackage.skillVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
     });
 
     describe('when listing distributions by skill', () => {
@@ -299,6 +379,28 @@ describe('DistributionRepository', () => {
 
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
+      });
+
+      it('loads the skill versions the history is filtered on', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.skillVersions',
+          'skillVersion',
+        );
+      });
+
+      it('loads no standard versions', () => {
+        expectNotJoined('distributedPackage.standardVersions');
+      });
+
+      it('loads no command versions', () => {
+        expectNotJoined('distributedPackage.recipeVersions');
+      });
+
+      it('keeps the owning package the Package column names', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
       });
     });
 
@@ -991,7 +1093,7 @@ describe('DistributionRepository', () => {
         ]);
       });
 
-      // The recency reduce runs per target. Run over every target's rows at
+      // The reduce runs per target. Run over every target's rows at
       // once, target B's newer distribution would hide target A's version.
       it('keeps the version the older target actually holds', () => {
         expect(result.get(targetA)?.all.standardVersions).toEqual([olderOnA]);
@@ -1018,8 +1120,8 @@ describe('DistributionRepository', () => {
       >;
 
       beforeEach(async () => {
-        // Distinct timestamps so the recency order of the unrestricted view
-        // is the seeded order rather than an id tie-break.
+        // Distinct timestamps so the unrestricted view keeps the seeded order
+        // rather than falling back to an id tie-break.
         seedActiveRows([
           {
             targetId: targetA,
@@ -1529,25 +1631,11 @@ describe('DistributionRepository', () => {
       targetId: ReturnType<typeof createTargetId>;
       targetName: string;
       gitRepoId: string;
-      deploymentDate: string;
+      distributedAt: string;
     };
-    type StandardVersionRowRaw = {
+    type DeployedVersionRowRaw = {
       distributedPackageId: string;
-      standardId: StandardId;
-      name: string;
-      slug: string;
-      version: number;
-    };
-    type CommandVersionRowRaw = {
-      distributedPackageId: string;
-      commandId: CommandId;
-      name: string;
-      slug: string;
-      version: number;
-    };
-    type SkillVersionRowRaw = {
-      distributedPackageId: string;
-      skillId: SkillId;
+      artifactId: StandardId | CommandId | SkillId;
       name: string;
       slug: string;
       version: number;
@@ -1555,9 +1643,9 @@ describe('DistributionRepository', () => {
 
     const seedRawMany = (
       latestRows: LatestRowRaw[],
-      standardRows: StandardVersionRowRaw[] = [],
-      commandRows: CommandVersionRowRaw[] = [],
-      skillRows: SkillVersionRowRaw[] = [],
+      standardRows: DeployedVersionRowRaw[] = [],
+      commandRows: DeployedVersionRowRaw[] = [],
+      skillRows: DeployedVersionRowRaw[] = [],
     ) => {
       (mockQueryBuilder.getRawMany as jest.Mock)
         .mockResolvedValueOnce(latestRows)
@@ -1581,27 +1669,27 @@ describe('DistributionRepository', () => {
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-02T00:00:00Z',
+              distributedAt: '2024-01-02T00:00:00Z',
             },
             {
               distributedPackageId: 'dp-2',
               targetId: targetId2,
               targetName: 'Target Two',
               gitRepoId: gitRepoId2,
-              deploymentDate: '2024-01-03T00:00:00Z',
+              distributedAt: '2024-01-03T00:00:00Z',
             },
           ],
           [
             {
               distributedPackageId: 'dp-1',
-              standardId: standardId1,
+              artifactId: standardId1,
               name: 'Standard One',
               slug: 'standard-one',
               version: 2,
             },
             {
               distributedPackageId: 'dp-2',
-              standardId: standardId2,
+              artifactId: standardId2,
               name: 'Standard Two',
               slug: 'standard-two',
               version: 1,
@@ -1610,7 +1698,7 @@ describe('DistributionRepository', () => {
           [
             {
               distributedPackageId: 'dp-1',
-              commandId: commandId1,
+              artifactId: commandId1,
               name: 'Command One',
               slug: 'command-one',
               version: 3,
@@ -1726,7 +1814,7 @@ describe('DistributionRepository', () => {
       });
     });
 
-    describe('with duplicate standard versions across distributedPackages', () => {
+    describe('when the same standard ships in two packages on one target', () => {
       const standardId1 = createStandardId('std-1');
 
       let result: OutdatedDeploymentsByTarget[];
@@ -1735,34 +1823,34 @@ describe('DistributionRepository', () => {
         seedRawMany(
           [
             {
-              distributedPackageId: 'dp-1',
+              distributedPackageId: 'dp-older',
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-01T00:00:00Z',
+              distributedAt: '2024-01-01T00:00:00Z',
             },
             {
-              distributedPackageId: 'dp-2',
+              distributedPackageId: 'dp-newer',
               targetId: targetId1,
               targetName: 'Target One',
               gitRepoId: gitRepoId1,
-              deploymentDate: '2024-01-02T00:00:00Z',
+              distributedAt: '2024-01-02T00:00:00Z',
             },
           ],
           [
             {
-              distributedPackageId: 'dp-2',
-              standardId: standardId1,
-              name: 'Standard One v2',
-              slug: 'standard-one-v2',
-              version: 2,
-            },
-            {
-              distributedPackageId: 'dp-1',
-              standardId: standardId1,
+              distributedPackageId: 'dp-older',
+              artifactId: standardId1,
               name: 'Standard One v1',
               slug: 'standard-one-v1',
               version: 1,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: standardId1,
+              name: 'Standard One v2',
+              slug: 'standard-one-v2',
+              version: 2,
             },
           ],
         );
@@ -1778,9 +1866,250 @@ describe('DistributionRepository', () => {
         expect(target1!.standards).toHaveLength(1);
       });
 
-      it('keeps the first-seen version after deduplication', () => {
+      it('keeps the version from the most recently distributed package', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+
+      it('reports the deployment date of the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deploymentDate).toBe(
+          '2024-01-02T00:00:00Z',
+        );
+      });
+    });
+
+    describe('when the same command ships in two packages on one target', () => {
+      const commandId1 = createCommandId('command-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-test-package',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2026-02-26T13:32:00Z',
+            },
+            {
+              distributedPackageId: 'dp-frontend',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2026-09-16T12:37:00Z',
+            },
+          ],
+          [],
+          [
+            {
+              distributedPackageId: 'dp-test-package',
+              artifactId: commandId1,
+              name: 'Implement NestJS Controller',
+              slug: 'implement-nestjs-controller',
+              version: 4,
+            },
+            {
+              distributedPackageId: 'dp-frontend',
+              artifactId: commandId1,
+              name: 'Implement NestJS Controller',
+              slug: 'implement-nestjs-controller',
+              version: 8,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('keeps only one command after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes).toHaveLength(1);
+      });
+
+      it('keeps the version from the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes[0].deployedVersion).toBe(8);
+      });
+    });
+
+    describe('when the same skill ships in two packages on one target', () => {
+      const skillId1 = createSkillId('skill-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-older',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-02T00:00:00Z',
+            },
+          ],
+          [],
+          [],
+          [
+            {
+              distributedPackageId: 'dp-older',
+              artifactId: skillId1,
+              name: 'Skill One',
+              slug: 'skill-one',
+              version: 1,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: skillId1,
+              name: 'Skill One',
+              slug: 'skill-one',
+              version: 3,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('keeps only one skill after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.skills).toHaveLength(1);
+      });
+
+      it('keeps the version from the most recently distributed package', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.skills[0].deployedVersion).toBe(3);
+      });
+    });
+
+    describe('when two packages sharing a standard were distributed to one target at the same time', () => {
+      const standardId1 = createStandardId('std-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        // The greater distributed package id carries the lower version, so the
+        // reported version can only come from the artifact version tie-break.
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-a',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-b',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-a',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 2,
+            },
+            {
+              distributedPackageId: 'dp-b',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 1,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('breaks the tie on the greatest artifact version', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+    });
+
+    describe('when the most recent distribution rolls a standard back', () => {
+      const standardId1 = createStandardId('std-1');
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        seedRawMany(
+          [
+            {
+              distributedPackageId: 'dp-older',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              distributedAt: '2024-01-02T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-older',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 2,
+            },
+            {
+              distributedPackageId: 'dp-newer',
+              artifactId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 1,
+            },
+          ],
+        );
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('reports the rolled-back version the target actually holds', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(1);
+      });
+
+      it('reports the date of the distribution that rolled it back', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deploymentDate).toBe(
+          '2024-01-02T00:00:00Z',
+        );
       });
     });
   });

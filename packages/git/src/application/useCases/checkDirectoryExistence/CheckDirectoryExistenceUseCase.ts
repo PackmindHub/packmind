@@ -1,11 +1,17 @@
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  GitRepoNotFoundError,
   ICheckDirectoryExistenceUseCase,
+  isDomainError,
+  isInternalError,
+  isUpstreamError,
+  MissingGitInputError,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { ResolvedGitRepoService } from '../../services/ResolvedGitRepoService';
 import { PackmindLogger } from '@packmind/logger';
+import { DirectoryExistenceCheckFailedError } from '../../../domain/errors/DirectoryExistenceCheckFailedError';
 
 const origin = 'CheckDirectoryExistenceUseCase';
 
@@ -28,18 +34,18 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
     });
 
     if (!gitRepoId) {
-      throw new Error('Git repository ID is required');
+      throw new MissingGitInputError('Git repository ID');
     }
     if (!directoryPath) {
-      throw new Error('Directory path is required');
+      throw new MissingGitInputError('Directory path');
     }
     if (!branch) {
-      throw new Error('Branch is required');
+      throw new MissingGitInputError('Branch');
     }
 
     const gitRepo = await this.gitRepoService.findGitRepoById(gitRepoId);
     if (!gitRepo) {
-      throw new Error(`Git repository with ID ${gitRepoId} not found`);
+      throw new GitRepoNotFoundError(gitRepoId);
     }
 
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
@@ -68,14 +74,31 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
-      this.logger.error('Failed to check directory existence', {
+      this.logger.warn('Failed to check directory existence', {
         gitRepoId,
         directoryPath,
         branch,
         error: errorMessage,
       });
 
-      throw new Error(`Failed to check directory existence: ${errorMessage}`);
+      // Wrapping everything alike cost the answer: a provider that is not
+      // there (404) and a provider that is down (502) both came back as a
+      // 500. A failure that already says whose fault it is passes through
+      // untouched; only what nothing has classified gets wrapped.
+      if (
+        isDomainError(error) ||
+        isUpstreamError(error) ||
+        isInternalError(error)
+      ) {
+        throw error;
+      }
+
+      throw new DirectoryExistenceCheckFailedError(
+        gitRepoId,
+        directoryPath,
+        branch,
+        error,
+      );
     }
   }
 }

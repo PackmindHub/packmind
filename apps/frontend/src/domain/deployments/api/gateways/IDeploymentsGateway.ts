@@ -14,6 +14,7 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IAddArtefactsToPackageUseCase,
+  IMoveArtefactsToPackageUseCase,
   IRemoveArtefactsFromPackageUseCase,
   IPublishCommands,
   IPublishStandards,
@@ -28,6 +29,9 @@ import {
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
   IGetDashboardNonLive,
+  IListPackageReleasesUseCase,
+  ICreatePackageReleaseUseCase,
+  IGetPackageReleaseUseCase,
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
@@ -44,6 +48,7 @@ export interface IDeploymentsGateway {
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   addArtefactsToPackage: NewGateway<IAddArtefactsToPackageUseCase>;
+  moveArtefactsToPackage: NewGateway<IMoveArtefactsToPackageUseCase>;
   removeArtefactsFromPackage: NewGateway<IRemoveArtefactsFromPackageUseCase>;
   // Return type widened to the PackageResponse wire DTO (superset of Package)
   // so the command-named `commands` twin is readable alongside `recipes`.
@@ -64,4 +69,7 @@ export interface IDeploymentsGateway {
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
+  listPackageReleases: NewGateway<IListPackageReleasesUseCase>;
+  createPackageRelease: NewGateway<ICreatePackageReleaseUseCase>;
+  getPackageRelease: NewGateway<IGetPackageReleaseUseCase>;
 }

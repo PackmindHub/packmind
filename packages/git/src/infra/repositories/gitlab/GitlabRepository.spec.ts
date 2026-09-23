@@ -9,8 +9,15 @@ import {
 } from '../http/providerHttpAgent';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
+import {
+  GitRemoteAccessForbiddenError,
+  GitRemoteRepositoryNotFoundError,
+  NoFilesToCommitError,
+} from '@packmind/types';
+import { GitlabRateLimitedError } from '../../../domain/errors';
 
 jest.mock('axios');
+const actualAxios = jest.requireActual<typeof axios>('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 // An AxiosInstance is callable and mostly data, so it is mocked by hand rather
 // than with mockInterface: only the verbs this suite drives are stubbed.
@@ -33,6 +40,7 @@ describe('GitlabRepository', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
+    mockedAxios.isAxiosError.mockImplementation(actualAxios.isAxiosError);
     gitlabRepository = new GitlabRepository(
       'test-token',
       repositoryOptions,
@@ -301,7 +309,7 @@ describe('GitlabRepository', () => {
       it('throws error', async () => {
         await expect(
           gitlabRepository.commitFiles([], 'Test commit'),
-        ).rejects.toThrow('No files to commit');
+        ).rejects.toBeInstanceOf(NoFilesToCommitError);
       });
     });
 
@@ -323,26 +331,66 @@ describe('GitlabRepository', () => {
       });
     });
 
-    it('throws specific error for insufficient permissions (403)', async () => {
+    describe('when GitLab refuses the commit (403)', () => {
       const files = [{ path: 'file1.txt', content: 'content1' }];
 
-      mockAxiosInstance.get.mockImplementation((url: string) => {
-        if (url.includes('/repository/tree')) {
-          return Promise.resolve({ data: [], headers: {} });
-        }
-        return Promise.reject({ response: { status: 404 } });
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+        mockAxiosInstance.post.mockRejectedValue({
+          response: { status: 403 },
+          message: 'Forbidden',
+        });
       });
-      const permissionError = {
-        response: { status: 403 },
-        message: 'Forbidden',
-      };
-      mockAxiosInstance.post.mockRejectedValue(permissionError);
 
-      await expect(
-        gitlabRepository.commitFiles(files, 'Test commit'),
-      ).rejects.toThrow(
-        'Insufficient permissions to commit to GitLab repository. Please ensure your token has write access to testowner/testrepo',
-      );
+      it('throws a forbidden domain error', async () => {
+        await expect(
+          gitlabRepository.commitFiles(files, 'Test commit'),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+
+      it('names the write access the token is missing', async () => {
+        await expect(
+          gitlabRepository.commitFiles(files, 'Test commit'),
+        ).rejects.toThrow(
+          "Access to the GitLab repository testowner/testrepo was refused. Check that the connection's token has write access.",
+        );
+      });
+    });
+
+    describe('when GitLab cannot find the repository to commit to (404)', () => {
+      const files = [{ path: 'file1.txt', content: 'content1' }];
+
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+        mockAxiosInstance.post.mockRejectedValue({
+          response: { status: 404 },
+          message: 'Not Found',
+        });
+      });
+
+      it('throws a not found domain error', async () => {
+        await expect(
+          gitlabRepository.commitFiles(files, 'Test commit'),
+        ).rejects.toBeInstanceOf(GitRemoteRepositoryNotFoundError);
+      });
+
+      it('keeps both readings of a 404 in the message', async () => {
+        await expect(
+          gitlabRepository.commitFiles(files, 'Test commit'),
+        ).rejects.toThrow(
+          "The GitLab repository testowner/testrepo was not found. Check that the path is correct and that the connection's token has access to it.",
+        );
+      });
     });
 
     describe('when path normalization handles leading/trailing slashes', () => {
@@ -1629,6 +1677,24 @@ describe('GitlabRepository', () => {
         );
       });
     });
+
+    describe('when GitLab is throttling us', () => {
+      it('raises the throttle rather than a generic upstream failure', async () => {
+        const throttle = new Error(
+          'Request failed with status code 429',
+        ) as Error & {
+          isAxiosError: true;
+          response: { status: number; headers: Record<string, string> };
+        };
+        throttle.isAxiosError = true;
+        throttle.response = { status: 429, headers: {} };
+        mockAxiosInstance.get.mockRejectedValue(throttle);
+
+        await expect(
+          gitlabRepository.compareBranches('main', 'packmind/sync'),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
+      });
+    });
   });
 
   describe('openOrUpdatePullRequest', () => {
@@ -2003,6 +2069,64 @@ describe('GitlabRepository', () => {
         );
 
         expect(files).toEqual([{ path: 'packmind/a/one.md' }]);
+      });
+    });
+  });
+
+  describe('listDirectoriesOnRepo', () => {
+    describe('when GitLab refuses the listing (403)', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 403 } });
+      });
+
+      it('throws a forbidden domain error', async () => {
+        await expect(
+          gitlabRepository.listDirectoriesOnRepo(
+            'testrepo',
+            'testowner',
+            'main',
+          ),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+
+      it('names the read access the token is missing', async () => {
+        await expect(
+          gitlabRepository.listDirectoriesOnRepo(
+            'testrepo',
+            'testowner',
+            'main',
+          ),
+        ).rejects.toThrow(
+          "Access to the GitLab repository testowner/testrepo was refused. Check that the connection's token has read access.",
+        );
+      });
+    });
+
+    describe('when GitLab cannot find the repository or the branch (404)', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 404 } });
+      });
+
+      it('throws a not found domain error', async () => {
+        await expect(
+          gitlabRepository.listDirectoriesOnRepo(
+            'testrepo',
+            'testowner',
+            'main',
+          ),
+        ).rejects.toBeInstanceOf(GitRemoteRepositoryNotFoundError);
+      });
+
+      it('names the branch the listing asked for', async () => {
+        await expect(
+          gitlabRepository.listDirectoriesOnRepo(
+            'testrepo',
+            'testowner',
+            'main',
+          ),
+        ).rejects.toThrow(
+          "The GitLab repository testowner/testrepo or its branch 'main' was not found. Check that the path is correct and that the connection's token has access to it.",
+        );
       });
     });
   });

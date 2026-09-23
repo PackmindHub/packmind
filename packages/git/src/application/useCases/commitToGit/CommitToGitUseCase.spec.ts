@@ -10,6 +10,7 @@ import {
   GitProviderNotFoundError,
   GitProviderVendor,
   GitProviderVendors,
+  NoFilesToCommitError,
 } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
@@ -196,7 +197,7 @@ describe('CommitToGitUseCase', () => {
 
       await expect(
         commitToGit.commitToGit(mockGitRepo, [], ''),
-      ).rejects.toThrow('No files to commit');
+      ).rejects.toBeInstanceOf(NoFilesToCommitError);
     });
 
     describe('when deleteFiles parameter is provided', () => {
@@ -320,7 +321,7 @@ Some content
 
           await expect(
             commitToGit.commitToGit(mockGitRepo, files, 'Remove content'),
-          ).rejects.toThrow('No files to commit');
+          ).rejects.toBeInstanceOf(NoFilesToCommitError);
         });
       });
 

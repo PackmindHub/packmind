@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-022",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/e2e-tests/src/domain/pages/index.ts",
+    "apps/e2e-tests/src/infra/pages/SpaceContextPage.ts",
+    "apps/e2e-tests/src/features/packages/PackageRelease.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx run e2e-tests:typecheck --tuiAutoExit && bash -c 'set -o pipefail; cd apps/e2e-tests && npx playwright test src/features/packages/PackageRelease.spec.ts --grep \"states why the action is disabled\" --reporter=list 2>&1 | awk \"{print} /^[[:space:]]*[0-9]+ passed/ {n=\\$1} END {if (n>0) print \\\"Tests: \\\" n \\\" passed\\\"}\"'",
+    "kind": "behavioural",
+    "describes": "AC-24"
+  }
+}

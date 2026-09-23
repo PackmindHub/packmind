@@ -7,57 +7,20 @@ import {
 } from '@packmind/types';
 import { ICliLoginCodeRepository } from '../../../domain/repositories/ICliLoginCodeRepository';
 import { createCliLoginCodeToken } from '../../../domain/entities/CliLoginCode';
+import {
+  CliLoginCodeNotFoundError,
+  CliLoginCodeExpiredError,
+  CliLoginCodeUserNotFoundError,
+  CliLoginCodeMembershipNotFoundError,
+  CliLoginCodeOrganizationNotFoundError,
+  CliLoginCodeApiKeyError,
+} from '../../../domain/errors';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
 
 const origin = 'ExchangeCliLoginCodeUseCase';
 const DEFAULT_APP_WEB_URL = 'http://localhost:8081';
-
-export class CliLoginCodeNotFoundError extends Error {
-  constructor() {
-    super('CLI login code not found or invalid');
-    this.name = 'CliLoginCodeNotFoundError';
-  }
-}
-
-export class CliLoginCodeExpiredError extends Error {
-  constructor() {
-    super('CLI login code has expired');
-    this.name = 'CliLoginCodeExpiredError';
-  }
-}
-
-export class CliLoginCodeUserNotFoundError extends Error {
-  constructor(public readonly userId: string) {
-    super(`User not found for CLI login code: ${userId}`);
-    this.name = 'CliLoginCodeUserNotFoundError';
-  }
-}
-
-export class CliLoginCodeMembershipNotFoundError extends Error {
-  constructor(
-    public readonly userId: string,
-    public readonly organizationId: string,
-  ) {
-    super(`User ${userId} is not a member of organization ${organizationId}`);
-    this.name = 'CliLoginCodeMembershipNotFoundError';
-  }
-}
-
-export class CliLoginCodeOrganizationNotFoundError extends Error {
-  constructor(public readonly organizationId: string) {
-    super(`Organization not found for CLI login code: ${organizationId}`);
-    this.name = 'CliLoginCodeOrganizationNotFoundError';
-  }
-}
-
-export class CliLoginCodeApiKeyError extends Error {
-  constructor() {
-    super('Failed to generate API key or get expiration');
-    this.name = 'CliLoginCodeApiKeyError';
-  }
-}
 
 export class ExchangeCliLoginCodeUseCase implements IExchangeCliLoginCodeUseCase {
   constructor(

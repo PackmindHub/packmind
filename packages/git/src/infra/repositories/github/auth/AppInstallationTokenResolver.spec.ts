@@ -7,6 +7,7 @@ import {
   base64Url,
   mintAppJwt,
 } from './AppInstallationTokenResolver';
+import { GithubAppTokenExchangeFailedError } from '../../../../domain/errors';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -267,7 +268,9 @@ describe('AppInstallationTokenResolver', () => {
       });
 
       it('throws a provider-friendly error', async () => {
-        await expect(firstCall).rejects.toThrow(/Failed to exchange App JWT/);
+        await expect(firstCall).rejects.toBeInstanceOf(
+          GithubAppTokenExchangeFailedError,
+        );
       });
 
       it('does not cache the failure so the next call triggers a new exchange', async () => {

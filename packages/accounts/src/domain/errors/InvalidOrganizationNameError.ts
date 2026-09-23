@@ -1,11 +1,13 @@
-type InvalidOrganizationNameContext = {
-  name: string;
-};
+import { AccountsError } from './AccountsError';
 
-export class InvalidOrganizationNameError extends Error {
-  constructor(context: InvalidOrganizationNameContext) {
-    super(`Invalid organization name: "${context.name}"`);
+export class InvalidOrganizationNameError extends AccountsError {
+  constructor(name: string) {
+    super(
+      'invalid_input',
+      'invalid_organization_name',
+      { organizationName: name },
+      `Invalid organization name: "${name}"`,
+    );
     this.name = 'InvalidOrganizationNameError';
-    Object.setPrototypeOf(this, InvalidOrganizationNameError.prototype);
   }
 }

@@ -1,4 +1,3 @@
-import { Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { AddToPackageUseCase } from '../../../application/useCases/AddToPackageUseCase';
 import {
@@ -6,19 +5,21 @@ import {
   logErrorConsole,
   logSuccessConsole,
   logInfoConsole,
+  logConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
-import {
-  IAddToPackageUseCase,
-  ItemType,
-} from '../../../domain/useCases/IAddToPackageUseCase';
+import { IAddToPackageUseCase } from '../../../domain/useCases/IAddToPackageUseCase';
+import { ItemType, formatItemType } from '../../../domain/entities/ItemType';
 import { ItemNotFoundError } from '../../../domain/errors/ItemNotFoundError';
-import {
-  FullParsedPackageSlug,
-  isFullParsedPackageSlug,
-  ParsedPackageSlug,
-} from '../../../domain/entities/PackageSlug';
+import { ArtefactAlreadyInPackageError } from '../../../domain/errors/ArtefactAlreadyInPackageError';
+import { ParsedPackageSlug } from '../../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../../utils/execName';
+import { resolvePackageRef } from './resolvePackageRef';
+import {
+  artefactSubject,
+  logItemNotFoundHint,
+  logPackageList,
+} from './packageMembershipOutput';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,45 +51,37 @@ function pluralize(singular: string, count: number) {
   return count === 1 ? singular : `${singular}s`;
 }
 
-function formatItemType(itemType: ItemType, count: number): string {
-  return pluralize(itemType.charAt(0).toUpperCase() + itemType.slice(1), count);
-}
-
 function formatItemList(items: string[]): string {
   return items.map((item) => `"${item}"`).join(', ');
 }
 
-function resolvePackageRef(
-  to: ParsedPackageSlug,
-  allSpaces: Space[],
-  exit: (code: number) => void,
-): FullParsedPackageSlug {
-  if (isFullParsedPackageSlug(to)) {
-    const spaceExists = allSpaces.find((s) => s.slug === to.spaceSlug);
-    if (!spaceExists) {
-      logErrorConsole(`Space '${to.spaceSlug}' not found.`);
-      const availableSpaceSlugs = allSpaces.map((s) => `@${s.slug}`).join(', ');
-      logInfoConsole(`Available spaces: ${availableSpaceSlugs}`);
-      exit(1);
-    }
-    return to;
-  }
-
-  if (allSpaces.length > 1) {
-    logErrorConsole(
-      `Your organization has multiple spaces. Please specify the space using the @space/package format.`,
+/**
+ * Reports the artefacts that already live elsewhere and hands over the `move`
+ * command that would relocate them, since `add` deliberately refuses to.
+ */
+function logAlreadyInPackage(error: ArtefactAlreadyInPackageError): void {
+  error.conflicts.forEach((conflict) => {
+    const subject = artefactSubject(error.itemType, conflict.name);
+    logPackageList(
+      {
+        one: `${subject} already belongs to package`,
+        many: `${subject} already belongs to the following packages`,
+      },
+      conflict.packageSlugs,
     );
-    logInfoConsole(`For example:`);
-    allSpaces.forEach((s) => {
-      logInfoConsole(`  --to @${s.slug}/${to.packageSlug}`);
-    });
-    logInfoConsole(
-      `Run \`${EXEC_NAME} packages list\` to see available packages per space.`,
-    );
-    exit(1);
-  }
+  });
 
-  return { ...to, spaceSlug: allSpaces[0].slug };
+  logConsole('');
+
+  const slugFlags = error.conflicts
+    .map((conflict) => `--${error.itemType} ${conflict.slug}`)
+    .join(' ');
+  const moveCommand = formatCommand(
+    `${EXEC_NAME} packages move ${slugFlags} --to ${error.targetPackageSlug}`,
+  );
+  logInfoConsole(
+    `Run \`${moveCommand}\` to move the ${pluralize(error.itemType, error.conflicts.length)}.`,
+  );
 }
 
 // ─── Use-case invocation ──────────────────────────────────────────────────────
@@ -132,17 +125,15 @@ async function executeAddToPackage(
 
     return { success: true, added: result.added, skipped: result.skipped };
   } catch (error) {
+    if (error instanceof ArtefactAlreadyInPackageError) {
+      logAlreadyInPackage(error);
+      return { success: false, error: error.message };
+    }
+
     const message = error instanceof Error ? error.message : String(error);
     logErrorConsole(message);
     if (error instanceof ItemNotFoundError) {
-      const spaceFlag = error.spaceSlug ? ` --space ${error.spaceSlug}` : '';
-      const command = formatCommand(
-        `${EXEC_NAME} ${error.itemType}s list${spaceFlag}`,
-      );
-
-      logInfoConsole(
-        `Run \`${command}\` to display available ${error.itemType}s`,
-      );
+      logItemNotFoundHint(error);
     }
     return { success: false, error: message };
   }
@@ -161,6 +152,7 @@ export async function addToPackageHandler(
     args.to,
     allSpaces,
     exit,
+    '--to',
   );
 
   const gateway = hexa.getPackmindGateway();

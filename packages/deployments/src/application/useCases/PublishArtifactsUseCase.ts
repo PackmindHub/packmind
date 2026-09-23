@@ -46,18 +46,13 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { v4 as uuidv4 } from 'uuid';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
+import { NoTargetsProvidedError } from '../../domain/errors/NoTargetsProvidedError';
+import { NoFileUpdatesResolvedError } from '../../domain/errors/NoFileUpdatesResolvedError';
+import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
+import { ArtifactVersionNotFoundError } from '../../domain/errors/ArtifactVersionNotFoundError';
 
 const origin = 'PublishArtifactsUseCase';
-
-export class ArtifactVersionNotFoundError extends Error {
-  constructor(
-    public readonly artifactLabel: 'Command' | 'Standard' | 'Skill',
-    public readonly versionId: string,
-  ) {
-    super(`${artifactLabel} version with ID ${versionId} not found`);
-    this.name = 'ArtifactVersionNotFoundError';
-  }
-}
 
 type ArtifactVersions = ActiveArtifactVersions;
 
@@ -130,7 +125,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     );
 
     if (command.targetIds.length === 0) {
-      throw new Error('At least one target must be provided');
+      throw new NoTargetsProvidedError();
     }
 
     await this.targetService.findByIdsInOrganization(
@@ -281,7 +276,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
       if (!firstTargetUpdates) {
-        throw new Error('No file updates found for any target');
+        throw new NoFileUpdatesResolvedError();
       }
 
       await this.createInProgressDistributions(
@@ -662,12 +657,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     for (const targetId of targetIds) {
       const target = await this.targetService.findById(targetId);
       if (!target) {
-        throw new Error(`Target with id ${targetId} not found`);
+        throw new TargetNotFoundError(targetId);
       }
 
       const repository = await this.gitPort.getRepositoryById(target.gitRepoId);
       if (!repository) {
-        throw new Error(`Repository with id ${target.gitRepoId} not found`);
+        throw new GitRepositoryNotFoundError(target.gitRepoId);
       }
 
       if (!map.has(repository.id)) {

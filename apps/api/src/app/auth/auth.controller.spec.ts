@@ -17,7 +17,12 @@ import {
   SignUpWithOrganizationCommand,
   InvalidEmailOrPasswordError,
   TooManyLoginAttemptsError,
+  EmailAlreadyExistsError,
+  InvalidDisplayNameError,
+  CliLoginCodeNotFoundError,
+  CliLoginCodeExpiredError,
 } from '@packmind/accounts';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   ConflictException,
   BadRequestException,
@@ -102,6 +107,8 @@ describe('AuthController', () => {
     checkEmailAvailability: jest.fn(),
     activateAccount: jest.fn(),
     validateInvitationToken: jest.fn(),
+    updateUserDisplayName: jest.fn(),
+    exchangeCliLoginCode: jest.fn(),
   };
 
   const mockWorkOsService = {
@@ -182,13 +189,13 @@ describe('AuthController', () => {
     describe('when email already exists', () => {
       beforeEach(() => {
         mockAuthService.signUp.mockRejectedValue(
-          new ConflictException('Email already exists'),
+          new EmailAlreadyExistsError(signUpRequest.email),
         );
       });
 
-      it('throws ConflictException', async () => {
-        await expect(controller.signUp(signUpRequest)).rejects.toThrow(
-          ConflictException,
+      it('lets the domain error reach the filter', async () => {
+        await expect(controller.signUp(signUpRequest)).rejects.toBeInstanceOf(
+          EmailAlreadyExistsError,
         );
       });
 
@@ -1009,6 +1016,62 @@ describe('AuthController', () => {
         expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
           token,
         });
+      });
+    });
+  });
+
+  describe('updateProfile', () => {
+    const authenticatedRequest = {
+      user: { userId: createUserId('1') },
+    } as unknown as AuthenticatedRequest;
+
+    describe('when the display name is invalid', () => {
+      beforeEach(() => {
+        mockAuthService.updateUserDisplayName.mockRejectedValue(
+          new InvalidDisplayNameError('too long'),
+        );
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          controller.updateProfile(authenticatedRequest, {
+            displayName: 'x',
+          }),
+        ).rejects.toBeInstanceOf(InvalidDisplayNameError);
+      });
+    });
+  });
+
+  describe('exchangeCliLoginCode', () => {
+    const body = { code: 'some-code' };
+
+    describe('when the code does not exist', () => {
+      beforeEach(() => {
+        mockAuthService.exchangeCliLoginCode.mockRejectedValue(
+          new CliLoginCodeNotFoundError(),
+        );
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          controller.exchangeCliLoginCode(body),
+        ).rejects.toBeInstanceOf(CliLoginCodeNotFoundError);
+      });
+    });
+
+    describe('when the code has expired', () => {
+      beforeEach(() => {
+        mockAuthService.exchangeCliLoginCode.mockRejectedValue(
+          new CliLoginCodeExpiredError(),
+        );
+      });
+
+      it('maps the error to HTTP 410', async () => {
+        const error = await controller
+          .exchangeCliLoginCode(body)
+          .catch((e: unknown) => e);
+
+        expect((error as HttpException).getStatus()).toBe(HttpStatus.GONE);
       });
     });
   });

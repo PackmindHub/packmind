@@ -1,4 +1,4 @@
-import { MARKETPLACE_DESCRIPTOR_FILENAME } from '../MarketplaceDescriptorFilename';
+import { MARKETPLACE_DESCRIPTOR_PATHS } from '../MarketplaceDescriptorFilename';
 
 export class MarketplaceDescriptorNotFoundError extends Error {
   constructor(
@@ -6,7 +6,7 @@ export class MarketplaceDescriptorNotFoundError extends Error {
     public readonly repo: string,
   ) {
     super(
-      `Marketplace descriptor "${MARKETPLACE_DESCRIPTOR_FILENAME}" not found in repository ${owner}/${repo}`,
+      `No marketplace descriptor found in repository ${owner}/${repo}. Looked for: ${MARKETPLACE_DESCRIPTOR_PATHS.join(', ')}`,
     );
     this.name = 'MarketplaceDescriptorNotFoundError';
   }

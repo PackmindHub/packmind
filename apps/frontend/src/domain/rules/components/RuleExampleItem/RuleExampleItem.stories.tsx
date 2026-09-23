@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { RuleExampleItem } from './RuleExampleItem';
+import {
+  RuleExampleDraftsProvider,
+  useRuleExampleDraftsStore,
+} from '../../hooks/useRuleExampleDrafts';
 import { ProgrammingLanguage } from '@packmind/types';
 import { RuleExample } from '@packmind/types';
 import { createRuleExampleId, createRuleId } from '@packmind/types';
@@ -11,6 +15,21 @@ const meta: Meta<typeof RuleExampleItem> = {
     layout: 'padded',
   },
   tags: ['autodocs'],
+  decorators: [
+    /*
+      What an example is being edited with lives above the card, so a card on
+      its own needs the store put back around it.
+    */
+    (Story) => {
+      const store = useRuleExampleDraftsStore();
+
+      return (
+        <RuleExampleDraftsProvider store={store}>
+          <Story />
+        </RuleExampleDraftsProvider>
+      );
+    },
+  ],
 };
 
 export default meta;

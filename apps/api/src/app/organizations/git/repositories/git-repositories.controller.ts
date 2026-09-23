@@ -8,8 +8,6 @@ import {
   Body,
   Request,
   Query,
-  ConflictException,
-  ForbiddenException,
   UseGuards,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
@@ -19,19 +17,12 @@ import {
   GetTrackedRepositoryResponse,
   GitProviderId,
   GitRepo,
-  GitRepoAlreadyExistsError,
   GitRepoId,
   CheckTrackedBranchExistsResponse,
-  NoTrackedRepositoryError,
   OrganizationId,
   RemoveTrackedRepositoryResponse,
-  RepositoryAlreadyTrackedError,
-  RepositoryNotTrackableError,
 } from '@packmind/types';
-import {
-  AuthenticatedRequest,
-  OrganizationAdminRequiredError,
-} from '@packmind/node-utils';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
 interface AddGitRepoDto {
@@ -93,23 +84,15 @@ export class GitRepositoriesController {
       },
     );
 
-    try {
-      return await this.gitRepositoriesService.addRepositoryToProvider(
-        req.user.userId,
-        organizationId,
-        addGitRepoDto.gitProviderId,
-        addGitRepoDto.owner,
-        addGitRepoDto.repo,
-        addGitRepoDto.branch,
-        req.clientSource,
-      );
-    } catch (error) {
-      if (error instanceof GitRepoAlreadyExistsError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
-    }
+    return this.gitRepositoriesService.addRepositoryToProvider(
+      req.user.userId,
+      organizationId,
+      addGitRepoDto.gitProviderId,
+      addGitRepoDto.owner,
+      addGitRepoDto.repo,
+      addGitRepoDto.branch,
+      req.clientSource,
+    );
   }
 
   @Get('tracked-repository')
@@ -126,16 +109,12 @@ export class GitRepositoriesController {
       { organizationId, owner, repo },
     );
 
-    try {
-      return await this.gitRepositoriesService.getTrackedRepository(
-        userId,
-        organizationId,
-        owner,
-        repo,
-      );
-    } catch (error) {
-      throw this.mapTrackingError(error);
-    }
+    return this.gitRepositoriesService.getTrackedRepository(
+      userId,
+      organizationId,
+      owner,
+      repo,
+    );
   }
 
   @Post('tracked-repository')
@@ -151,20 +130,16 @@ export class GitRepositoriesController {
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
 
-    try {
-      return await this.gitRepositoriesService.setTrackedRepository(
-        userId,
-        organizationId,
-        dto.owner,
-        dto.repo,
-        dto.branch,
-        dto.origin,
-        dto.providerVendor,
-        dto.gitRemoteUrl,
-      );
-    } catch (error) {
-      throw this.mapTrackingError(error);
-    }
+    return this.gitRepositoriesService.setTrackedRepository(
+      userId,
+      organizationId,
+      dto.owner,
+      dto.repo,
+      dto.branch,
+      dto.origin,
+      dto.providerVendor,
+      dto.gitRemoteUrl,
+    );
   }
 
   @Put('tracked-repository')
@@ -180,17 +155,13 @@ export class GitRepositoriesController {
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
 
-    try {
-      return await this.gitRepositoriesService.updateTrackedBranch(
-        userId,
-        organizationId,
-        dto.owner,
-        dto.repo,
-        dto.branch,
-      );
-    } catch (error) {
-      throw this.mapTrackingError(error);
-    }
+    return this.gitRepositoriesService.updateTrackedBranch(
+      userId,
+      organizationId,
+      dto.owner,
+      dto.repo,
+      dto.branch,
+    );
   }
 
   @Delete('tracked-repository')
@@ -207,32 +178,12 @@ export class GitRepositoriesController {
       { organizationId, owner, repo },
     );
 
-    try {
-      return await this.gitRepositoriesService.removeTrackedRepository(
-        userId,
-        organizationId,
-        owner,
-        repo,
-      );
-    } catch (error) {
-      throw this.mapTrackingError(error);
-    }
-  }
-
-  private mapTrackingError(error: unknown): unknown {
-    if (
-      error instanceof RepositoryAlreadyTrackedError ||
-      error instanceof NoTrackedRepositoryError ||
-      error instanceof RepositoryNotTrackableError
-    ) {
-      return new ConflictException(error.message);
-    }
-
-    if (error instanceof OrganizationAdminRequiredError) {
-      return new ForbiddenException(error.message);
-    }
-
-    return error;
+    return this.gitRepositoriesService.removeTrackedRepository(
+      userId,
+      organizationId,
+      owner,
+      repo,
+    );
   }
 
   @Get()

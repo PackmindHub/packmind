@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-024",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/feature-flags/src/registry.ts",
+    "apps/frontend/src/domain/deployments/components/context/ContextPackagePane.tsx",
+    "apps/frontend/src/domain/deployments/components/context/ContextPackagePane.spec.tsx"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='ContextPackagePane'",
+    "kind": "behavioural",
+    "describes": "D-057"
+  }
+}

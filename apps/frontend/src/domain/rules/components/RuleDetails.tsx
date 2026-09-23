@@ -1,13 +1,10 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import {
+  PMBox,
   PMPageSection,
   PMTabsCompound,
   PMVStack,
-  PMHStack,
-  PMField,
-  PMButton,
-  PMEmptyState,
   PMAlert,
 } from '@packmind/ui';
 import {
@@ -18,13 +15,15 @@ import {
   OrganizationId,
   SpaceId,
 } from '@packmind/types';
+import { RuleExamplesManager } from './RuleExamplesManager';
+import { RuleLanguageRail } from './RuleLanguageRail';
 import {
-  RuleExamplesManager,
-  RuleExamplesManagerHandle,
-} from './RuleExamplesManager';
-import { RuleLanguageSelect } from './RuleLanguageSelect';
+  RuleExampleDraftsProvider,
+  useRuleExampleDraftsStore,
+} from '../hooks/useRuleExampleDrafts';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
-import { LuPlus } from 'react-icons/lu';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import { standardExampleLanguages } from '../standardExampleLanguages';
 import { useGetRuleExamplesQuery } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -45,7 +44,12 @@ export const RuleDetails = ({
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [searchParams, setSearchParams] = useSearchParams();
-  const examplesManagerRef = useRef<RuleExamplesManagerHandle>(null);
+
+  /*
+    Above the tabs, which is the only place unsaved code survives them: the
+    strip below unmounts the body it is not showing.
+  */
+  const draftsStore = useRuleExampleDraftsStore();
 
   // Initialize state from URL parameters
   const getInitialTab = (): RuleDetailsTab => {
@@ -56,7 +60,7 @@ export const RuleDetails = ({
     return defaultTab;
   };
 
-  const getInitialLanguage = (): ProgrammingLanguage => {
+  const getInitialLanguage = (): ProgrammingLanguage | undefined => {
     const langParam = searchParams.get('lang');
     if (
       langParam &&
@@ -66,12 +70,17 @@ export const RuleDetails = ({
     ) {
       return langParam as ProgrammingLanguage;
     }
-    return ProgrammingLanguage.JAVASCRIPT;
+    /*
+      Nothing rather than JavaScript. What the rule and its standard are
+      written in decides below, and where neither says anything the body asks
+      instead of opening an editor in a language nobody chose.
+    */
+    return undefined;
   };
 
-  const [selectedLanguage, setSelectedLanguage] =
-    useState<ProgrammingLanguage>(getInitialLanguage());
-  const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<
+    ProgrammingLanguage | undefined
+  >(getInitialLanguage());
   const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(getInitialTab());
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
@@ -81,25 +90,33 @@ export const RuleDetails = ({
       rule.id,
     );
 
-  const hasExamples = examples && examples.length > 0;
+  const exampleCounts = useMemo(() => {
+    const counts = new Map<ProgrammingLanguage, number>();
 
-  const detectionLanguages = useMemo<ProgrammingLanguage[]>(() => {
-    if (!examples) {
-      return [];
-    }
-
-    const uniqueLanguages = new Set<ProgrammingLanguage>();
-    examples.forEach((example) => {
+    (examples ?? []).forEach((example) => {
       if (example.lang) {
-        uniqueLanguages.add(example.lang);
+        counts.set(example.lang, (counts.get(example.lang) ?? 0) + 1);
       }
     });
 
-    return Array.from(uniqueLanguages);
+    return counts;
   }, [examples]);
 
+  const detectionLanguages = useMemo<ProgrammingLanguage[]>(
+    () => Array.from(exampleCounts.keys()),
+    [exampleCounts],
+  );
+
+  const { data: detectionStatuses } =
+    useGetStandardRulesDetectionStatusQuery(standardId);
+
+  const siblingLanguages = useMemo(
+    () => standardExampleLanguages(detectionStatuses, rule.id),
+    [detectionStatuses, rule.id],
+  );
+
   const selectedLanguageHasExamples = useMemo(() => {
-    return detectionLanguages.includes(selectedLanguage);
+    return !!selectedLanguage && detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
 
   useEffect(() => {
@@ -136,34 +153,37 @@ export const RuleDetails = ({
     setSearchParams(newParams, { replace: false });
   };
 
+  /*
+    What the rule is written in, then what the rest of the standard is written
+    in, then nothing. Only when the address has not already answered.
+  */
   useEffect(() => {
-    if (hasExamples && isCreatingFirstExample) {
-      setIsCreatingFirstExample(false);
-    }
-  }, [hasExamples, isCreatingFirstExample]);
-
-  // Only auto-select language if no URL parameter was provided
-  useEffect(() => {
-    const langParam = searchParams.get('lang');
-
-    // Skip auto-selection if there's a URL parameter
-    if (langParam) {
+    if (searchParams.get('lang')) {
       return;
     }
 
-    if (detectionLanguages.length === 0) {
-      setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
-      return;
-    }
-
-    const allLanguages = getAllLanguagesSortedByDisplayName();
-    const firstConfigured = allLanguages.find((l) =>
+    const firstConfigured = getAllLanguagesSortedByDisplayName().find((l) =>
       detectionLanguages.includes(l.language),
-    );
-    const defaultLang =
-      firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
-    setSelectedLanguage(defaultLang);
-  }, [detectionLanguages, searchParams]);
+    )?.language;
+
+    setSelectedLanguage(firstConfigured ?? siblingLanguages[0]);
+  }, [detectionLanguages, siblingLanguages, searchParams]);
+
+  /*
+   * More than what is saved: a language holding a parked draft, and the one
+   * being read even when it is empty, both belong on the rail.
+   */
+  const railLanguages = useMemo(() => {
+    const carried = new Set<ProgrammingLanguage>([
+      ...exampleCounts.keys(),
+      ...draftsStore.dirtyLanguages,
+      ...(selectedLanguage ? [selectedLanguage] : []),
+    ]);
+
+    return getAllLanguagesSortedByDisplayName()
+      .map((entry) => entry.language)
+      .filter((entry) => carried.has(entry));
+  }, [exampleCounts, draftsStore.dirtyLanguages, selectedLanguage]);
 
   const handleNavigateToExamples = () => {
     updateTabWithUrl('examples');
@@ -173,127 +193,93 @@ export const RuleDetails = ({
     return null; // Or a spinner
   }
 
-  if (!hasExamples && !isCreatingFirstExample) {
-    return (
-      <PMEmptyState
-        backgroundColor={'background.primary'}
-        borderRadius={'md'}
-        width={'2xl'}
-        mx={'auto'}
-        mt={32}
-        title={'No code examples yet'}
-      >
-        Document the rule usage using code examples and detect violations with
-        Packmind linter
-        <PMButton
-          variant="primary"
-          onClick={() => setIsCreatingFirstExample(true)}
-        >
-          Add
-        </PMButton>
-      </PMEmptyState>
-    );
-  }
-
-  if (!hasExamples && isCreatingFirstExample) {
-    return (
-      <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
-        <RuleExamplesManager
-          standardId={standardId}
-          ruleId={rule.id}
-          selectedLanguage={selectedLanguage}
-          forceCreate={true}
-          allowLanguageSelection={true}
-          onLanguageChange={setSelectedLanguage}
-          onCancelCreation={() => setIsCreatingFirstExample(false)}
-        />
-      </PMVStack>
-    );
-  }
-
   return (
-    <PMVStack position="relative" gap={4} width="100%" alignItems="flex-start">
-      <PMTabsCompound.Root
-        defaultValue={defaultTab}
-        value={currentTab}
-        onValueChange={(details: { value: string }) =>
-          updateTabWithUrl(details.value as RuleDetailsTab)
-        }
+    <RuleExampleDraftsProvider store={draftsStore}>
+      <PMVStack
+        position="relative"
+        gap={4}
         width="100%"
+        alignItems="flex-start"
       >
-        <PMTabsCompound.List>
-          <PMTabsCompound.Trigger value="examples">
-            Code examples
-          </PMTabsCompound.Trigger>
-          <PMTabsCompound.Trigger
-            value="detection"
-            disabled={!selectedLanguageHasExamples}
-          >
-            Linter
-          </PMTabsCompound.Trigger>
-          <PMHStack ml="auto" gap={3} alignItems="center">
-            <PMField.Root>
-              <PMHStack gap={2} alignItems="center">
-                <PMField.Label mb={0}>Language</PMField.Label>
-                <RuleLanguageSelect
-                  configuredLanguages={detectionLanguages}
-                  value={selectedLanguage}
-                  onChange={updateLanguageWithUrl}
-                />
-              </PMHStack>
-            </PMField.Root>
-            {currentTab === 'examples' && (
-              <PMButton
-                variant="primary"
-                size="sm"
-                onClick={() => examplesManagerRef.current?.addExample()}
-              >
-                <LuPlus />
-                Add example
-              </PMButton>
-            )}
-          </PMHStack>
-        </PMTabsCompound.List>
+        <PMTabsCompound.Root
+          defaultValue={defaultTab}
+          value={currentTab}
+          onValueChange={(details: { value: string }) =>
+            updateTabWithUrl(details.value as RuleDetailsTab)
+          }
+          width="100%"
+        >
+          <PMTabsCompound.List>
+            <PMTabsCompound.Trigger value="examples">
+              Code examples
+            </PMTabsCompound.Trigger>
+            <PMTabsCompound.Trigger
+              value="detection"
+              disabled={!selectedLanguageHasExamples}
+            >
+              Linter
+            </PMTabsCompound.Trigger>
+          </PMTabsCompound.List>
 
-        <PMTabsCompound.Content value="examples">
-          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
-            <PMAlert.Root status="info">
-              <PMAlert.Indicator />
-              <PMAlert.Description>
-                Code examples are used for documentation and linter detection
-                only. They are not included when rendering the standard for AI
-                agents.
-              </PMAlert.Description>
-            </PMAlert.Root>
-            <RuleExamplesManager
-              ref={examplesManagerRef}
-              standardId={standardId}
-              ruleId={rule.id}
-              selectedLanguage={selectedLanguage}
-              forceCreate={!selectedLanguageHasExamples}
-              onLanguageChange={setSelectedLanguage}
-              onCancelCreation={() => undefined}
-              hideAddButton
-            />
-          </PMVStack>
-        </PMTabsCompound.Content>
+          {/*
+            Under the strip rather than in it: the language scopes both bodies,
+            and the strip is left to the two halves of a rule.
+          */}
+          {selectedLanguage && (
+            <PMBox paddingTop={4}>
+              <RuleLanguageRail
+                languages={railLanguages}
+                value={selectedLanguage}
+                counts={exampleCounts}
+                unsaved={draftsStore.dirtyLanguages}
+                onChange={updateLanguageWithUrl}
+              />
+            </PMBox>
+          )}
 
-        <PMTabsCompound.Content value="detection">
-          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
-            <PMPageSection>
-              <ProgramEditor
+          <PMTabsCompound.Content value="examples">
+            <PMVStack
+              alignItems={'stretch'}
+              gap="4"
+              paddingY={'4'}
+              width="100%"
+            >
+              <PMAlert.Root status="info">
+                <PMAlert.Indicator />
+                <PMAlert.Description>
+                  Code examples are used for documentation and linter detection
+                  only. They are not included when rendering the standard for AI
+                  agents.
+                </PMAlert.Description>
+              </PMAlert.Root>
+              <RuleExamplesManager
                 standardId={standardId}
                 ruleId={rule.id}
-                detectionLanguages={detectionLanguages.map((language) =>
-                  language.toString(),
-                )}
                 selectedLanguage={selectedLanguage}
-                onNavigateToExamples={handleNavigateToExamples}
+                onLanguageChange={updateLanguageWithUrl}
               />
-            </PMPageSection>
-          </PMVStack>
-        </PMTabsCompound.Content>
-      </PMTabsCompound.Root>
-    </PMVStack>
+            </PMVStack>
+          </PMTabsCompound.Content>
+
+          <PMTabsCompound.Content value="detection">
+            <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
+              <PMPageSection>
+                {selectedLanguage && (
+                  <ProgramEditor
+                    standardId={standardId}
+                    ruleId={rule.id}
+                    detectionLanguages={detectionLanguages.map((language) =>
+                      language.toString(),
+                    )}
+                    selectedLanguage={selectedLanguage}
+                    onNavigateToExamples={handleNavigateToExamples}
+                  />
+                )}
+              </PMPageSection>
+            </PMVStack>
+          </PMTabsCompound.Content>
+        </PMTabsCompound.Root>
+      </PMVStack>
+    </RuleExampleDraftsProvider>
   );
 };

@@ -1,5 +1,9 @@
 import {
   Distribution,
+  CommandDistributionHistoryEntry,
+  DistributionHistoryEntry,
+  SkillDistributionHistoryEntry,
+  StandardDistributionHistoryEntry,
   DistributionId,
   DistributionStatus,
   GitCommit,
@@ -38,22 +42,23 @@ export interface IDistributionRepository {
   listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+    spaceId: SpaceId,
+  ): Promise<DistributionHistoryEntry[]>;
 
   listByCommandId(
     commandId: CommandId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<CommandDistributionHistoryEntry[]>;
 
   listByStandardId(
     standardId: StandardId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<StandardDistributionHistoryEntry[]>;
 
   listBySkillId(
     skillId: SkillId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]>;
+  ): Promise<SkillDistributionHistoryEntry[]>;
 
   listByTargetIds(
     organizationId: OrganizationId,
@@ -145,8 +150,13 @@ export interface IDistributionRepository {
   }>;
 
   /**
-   * Per target in the space, only the artifacts whose deployed version differs
-   * from the latest one or that have since been deleted.
+   * For each target within a space, every artifact currently deployed there as
+   * a lightweight DTO, carrying the version written by the most recent
+   * successful 'add' distribution that contained it. An artifact shipped by
+   * several packages reports the last write, whichever package it came from.
+   *
+   * Despite the name, nothing is filtered here: callers compare against the
+   * latest versions to decide what is actually outdated.
    */
   findOutdatedDeploymentsBySpace(
     organizationId: OrganizationId,
@@ -181,8 +191,8 @@ export type ActivePackageOperationRow = {
   lastDistributedAt: string;
 };
 
-type OutdatedDeploymentBase = {
-  artifactId: string;
+export type OutdatedDeployment<TArtifactId extends string> = {
+  artifactId: TArtifactId;
   artifactName: string;
   artifactSlug: string;
   deployedVersion: number;
@@ -190,17 +200,11 @@ type OutdatedDeploymentBase = {
   isDeleted: boolean;
 };
 
-export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
-  artifactId: StandardId;
-};
+export type OutdatedStandardDeployment = OutdatedDeployment<StandardId>;
 
-export type OutdatedCommandDeployment = OutdatedDeploymentBase & {
-  artifactId: CommandId;
-};
+export type OutdatedCommandDeployment = OutdatedDeployment<CommandId>;
 
-export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
-  artifactId: SkillId;
-};
+export type OutdatedSkillDeployment = OutdatedDeployment<SkillId>;
 
 export type OutdatedDeploymentsByTarget = {
   targetId: TargetId;

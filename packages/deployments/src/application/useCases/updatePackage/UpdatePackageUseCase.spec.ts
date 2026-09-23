@@ -43,6 +43,8 @@ import { spaceFactory } from '@packmind/spaces/test';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillFactory } from '@packmind/skills/test';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 
 describe('UpdatePackageUseCase', () => {
   let useCase: UpdatePackageUseCase;
@@ -311,7 +313,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Package with id ${packageId} not found`,
+          PackageNotFoundError,
         );
       });
     });
@@ -335,7 +337,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+          PackageNotFoundError,
         );
       });
     });
@@ -367,7 +369,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Package ${packageId} does not belong to organization ${organizationId}`,
+          PackageNotFoundError,
         );
       });
     });
@@ -394,7 +396,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Skill with id ${skillId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
     });
@@ -423,7 +425,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Skill ${skillId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
     });
@@ -450,7 +452,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe with id ${commandId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
     });
@@ -479,7 +481,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe ${commandId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
     });
@@ -506,7 +508,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Standard with id ${standardId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
     });
@@ -535,7 +537,7 @@ describe('UpdatePackageUseCase', () => {
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Standard ${standardId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
     });

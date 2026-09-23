@@ -3,10 +3,10 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProvider,
   GitProviderDisplayNameNotEditableError,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   IAccountsPort,
   IUpdateGitProviderUseCase,
+  MissingGitInputError,
   UpdateGitProviderCommand,
   UpdateGitProviderResponse,
 } from '@packmind/types';
@@ -47,21 +47,22 @@ export class UpdateGitProviderUseCase
     const { id, gitProvider, organization } = command;
 
     if (!id) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
 
     if (!gitProvider || Object.keys(gitProvider).length === 0) {
-      throw new Error('Git provider update data is required');
+      throw new MissingGitInputError('Git provider update data');
     }
 
     const existingProvider =
       await this.gitProviderService.findGitProviderById(id);
 
-    if (!existingProvider) {
-      throw new GitProviderNotFoundError(id);
-    }
-
-    if (existingProvider.organizationId !== organization.id) {
+    // A provider that does not exist and one owned by another organization are
+    // the same answer by design, so they are the same branch.
+    if (
+      !existingProvider ||
+      existingProvider.organizationId !== organization.id
+    ) {
       throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
 

@@ -4,7 +4,11 @@ import {
   IGitProvider,
   ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
-import { ExternalRepository } from '@packmind/types';
+import {
+  ExternalRepository,
+  GitRemoteAccessForbiddenError,
+  InvalidGitProviderCredentialsError,
+} from '@packmind/types';
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
@@ -15,6 +19,11 @@ import {
 } from '../http/withTransientRetry';
 import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
+import { gitlabRateLimitedError } from '../http/gitlabRateLimit';
+import {
+  GitlabAvailableRepositoriesFailedError,
+  GitlabBranchExistenceCheckFailedError,
+} from '../../../domain/errors';
 
 const origin = 'GitlabProvider';
 
@@ -79,11 +88,16 @@ export class GitlabProvider implements IGitProvider {
 
       return result;
     } catch (error) {
+      const throttled = gitlabRateLimitedError(error, {
+        operation: 'list available repositories',
+      });
+      if (throttled) throw throttled;
+
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
         baseUrl: this.baseUrl,
       });
-      throw new Error('Failed to fetch repositories from GitLab');
+      throw new GitlabAvailableRepositoriesFailedError(error);
     }
   }
 
@@ -260,54 +274,57 @@ export class GitlabProvider implements IGitProvider {
       this.logger.debug('Branch exists on GitLab', { owner, repo, branch });
       return true;
     } catch (error) {
-      if (isNativeError(error)) {
-        // Check for specific GitLab API errors
-        if (error.message.includes('404')) {
-          this.logger.debug('Branch not found on GitLab', {
-            owner,
-            repo,
-            branch,
-          });
-          return false;
-        }
-        if (error.message.includes('403')) {
-          this.logger.error(
-            'GitLab API rate limit exceeded or forbidden access',
-            { owner, repo, branch, error },
-          );
-          throw new Error(
-            'GitLab API rate limit exceeded or access forbidden. Please try again later.',
-          );
-        }
-        if (error.message.includes('401')) {
-          this.logger.error('GitLab API authentication failed', {
-            owner,
-            repo,
-            branch,
-            error,
-          });
-          throw new Error(
-            'GitLab API authentication failed. Please check your token.',
-          );
-        }
+      // The status, not the message: `error.message.includes('403')` matched
+      // axios's own "Request failed with status code 403" and would have
+      // matched a branch name containing those digits just as happily.
+      // Unlike GitHub, GitLab does not overload 403 — it throttles with a
+      // 429 — so a 403 here is a refusal and nothing else, and there is no
+      // header reading to do before believing it.
+      const throttled = gitlabRateLimitedError(error, { owner, repo, branch });
+      if (throttled) throw throttled;
 
-        this.logger.error('Failed to check if branch exists on GitLab', {
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      if (status === 404) {
+        this.logger.debug('Branch not found on GitLab', {
           owner,
           repo,
           branch,
-          error,
         });
-        throw new Error(
-          `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${error.message}`,
+        return false;
+      }
+
+      if (status === 403) {
+        this.logger.warn('GitLab refused access to the repository', {
+          owner,
+          repo,
+          branch,
+        });
+        throw new GitRemoteAccessForbiddenError('GitLab', owner, repo, 'read');
+      }
+
+      if (status === 401) {
+        this.logger.warn('GitLab rejected the stored credentials', {
+          owner,
+          repo,
+          branch,
+        });
+        throw new InvalidGitProviderCredentialsError(
+          'GitLab API authentication failed. Please check your token.',
         );
       }
 
-      this.logger.error(
-        'Failed to check if branch exists with unknown error type',
-        { owner, repo, branch, error },
-      );
-      throw new Error(
-        `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: ${error}`,
+      this.logger.warn('Failed to check if branch exists on GitLab', {
+        owner,
+        repo,
+        branch,
+        error: isNativeError(error) ? error.message : String(error),
+      });
+      throw new GitlabBranchExistenceCheckFailedError(
+        owner,
+        repo,
+        branch,
+        error,
       );
     }
   }

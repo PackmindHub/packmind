@@ -1,4 +1,4 @@
-import { GitRepo, GitRepoId } from '@packmind/types';
+import { GitRepo, GitRepoId, MissingGitInputError } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
 export interface GetRepositoryByIdUseCaseInput {
@@ -12,7 +12,7 @@ export class GetRepositoryByIdUseCase {
     const { repositoryId } = input;
 
     if (!repositoryId) {
-      throw new Error('Repository ID is required');
+      throw new MissingGitInputError('Repository ID');
     }
 
     return this.gitRepoService.findGitRepoById(repositoryId);

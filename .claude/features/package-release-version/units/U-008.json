@@ -1,0 +1,13 @@
+{
+  "unit_id": "U-008",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/infra/repositories/PackageReleaseRepository.spec.ts",
+    "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='PackageReleaseRepository'",
+    "kind": "behavioural",
+    "describes": "AC-18"
+  }
+}

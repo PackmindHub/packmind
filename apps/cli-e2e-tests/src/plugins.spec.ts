@@ -7,7 +7,7 @@ import {
   fileExists,
   UserSignedUpContext,
 } from './helpers';
-import { Distribution, Package, RenderMode } from '@packmind/types';
+import { DistributionHistoryEntry, Package, RenderMode } from '@packmind/types';
 import fs from 'fs';
 import path from 'path';
 
@@ -110,7 +110,9 @@ async function seedPackage(
   return packageResponse.package;
 }
 
-function hasClaudePluginDistribution(distributions: Distribution[]): boolean {
+function hasClaudePluginDistribution(
+  distributions: DistributionHistoryEntry[],
+): boolean {
   return distributions.some((distribution) =>
     distribution.renderModes.includes(RenderMode.CLAUDE_PLUGIN),
   );
@@ -473,13 +475,16 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
 
       describe('when rendering in marketplace mode inside a git repo', () => {
         let result: RunCliResult;
-        let distributions: Distribution[];
+        let distributions: DistributionHistoryEntry[];
 
         beforeEach(async () => {
           writeMarketplace(context.testDir, { plugins: [] });
           result = await context.runCli(`plugins render ${scopedSlug}`);
           distributions =
-            await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+            await context.gateway.deployments.listDeploymentsByPackage(
+              context.space.id,
+              pkg.id,
+            );
         });
 
         it('exits successfully', () => {
@@ -493,7 +498,7 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
 
       describe('when rendering in standalone mode inside a git repo', () => {
         let result: RunCliResult;
-        let distributions: Distribution[];
+        let distributions: DistributionHistoryEntry[];
 
         beforeEach(async () => {
           writeStandaloneManifest(context.testDir, pkg.slug);
@@ -501,7 +506,10 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
             stdin: 'y\n',
           });
           distributions =
-            await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+            await context.gateway.deployments.listDeploymentsByPackage(
+              context.space.id,
+              pkg.id,
+            );
         });
 
         it('exits successfully', () => {
@@ -577,7 +585,10 @@ describeForVersion('> 0.29.1', 'plugins render outside a git repo', () => {
 
       it('does not record a CLAUDE_PLUGIN distribution for the package', async () => {
         const distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
         expect(hasClaudePluginDistribution(distributions)).toBe(false);
       });
     },

@@ -21,6 +21,7 @@ Documentation is automatically deployed to Mintlify Cloud when changes are pushe
 - `docs.json` - Navigation and configuration
 - `getting-started/` - Getting started guides
 - `concepts/` - Core concepts documentation
+- `playbook-maintenance/` - Playbook maintenance documentation
 - `tools/` - Tools and integrations
 - `governance/` - Governance documentation
 - `linter/` - Linter documentation

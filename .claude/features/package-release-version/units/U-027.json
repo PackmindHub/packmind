@@ -1,0 +1,15 @@
+{
+  "unit_id": "U-027",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+    "packages/deployments/src/application/services/packageReleaseGateHelpers.spec.ts",
+    "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+    "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.spec.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test deployments --testNamePattern='packageReleaseGate|ListPackageReleasesUseCase'",
+    "kind": "behavioural",
+    "describes": "AC-2, AC-3, AC-9 (D-059)"
+  }
+}

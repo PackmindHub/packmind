@@ -7,22 +7,69 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { PackmindLogger } from '@packmind/logger';
-import { DomainErrorKind, isDomainError } from '@packmind/types';
+import {
+  DomainErrorKind,
+  isDomainError,
+  isInternalError,
+  isUpstreamError,
+  UpstreamErrorKind,
+} from '@packmind/types';
 
 const origin = 'DomainExceptionFilter';
 
+type KindPolicy = {
+  readonly status: number;
+  readonly logLevel: 'warn';
+};
+
 /**
+ * What each kind is answered with, and how loudly it is recorded — the policy
+ * table the domain errors are named after.
+ *
  * Total by construction: a `Record` keyed by the union means a new
- * `DomainErrorKind` fails to compile until its status is stated here. No index
+ * `DomainErrorKind` fails to compile until its row is stated here. No index
  * signature, no optional value and no default branch, on purpose.
+ *
+ * Every row logs at `warn`: a domain error is an expected answer, so it is not
+ * worth an `error`, and it is worth more than nothing. `logLevel` is typed as
+ * the single literal rather than the logger's full range, so widening it is a
+ * deliberate edit here and not a value a row can quietly pick.
  */
-const KIND_TO_STATUS: Record<DomainErrorKind, number> = {
-  forbidden: HttpStatus.FORBIDDEN,
-  not_found: HttpStatus.NOT_FOUND,
+const KIND_POLICY: Record<DomainErrorKind, KindPolicy> = {
+  forbidden: { status: HttpStatus.FORBIDDEN, logLevel: 'warn' },
+  not_found: { status: HttpStatus.NOT_FOUND, logLevel: 'warn' },
+  invalid_input: { status: HttpStatus.BAD_REQUEST, logLevel: 'warn' },
+  conflict: { status: HttpStatus.CONFLICT, logLevel: 'warn' },
+};
+
+/**
+ * What each upstream kind is answered with — the same construction as
+ * `KIND_POLICY`, and total for the same reason: a new `UpstreamErrorKind`
+ * fails to compile until its row is stated here.
+ *
+ * Both rows log at `warn`, not `error`: a third party being down or throttling
+ * us is not our invariant breaking, and an `error` here would drown the ones
+ * that are. The statuses are the point of the type — `upstream_unavailable`
+ * answers 502 rather than 503 because it is the thing behind us that failed,
+ * and `upstream_rate_limited` answers 429 even though a 4xx normally means the
+ * caller erred: they did not, our shared credential hit someone else's quota.
+ */
+const UPSTREAM_KIND_POLICY: Record<UpstreamErrorKind, KindPolicy> = {
+  upstream_unavailable: { status: HttpStatus.BAD_GATEWAY, logLevel: 'warn' },
+  upstream_rate_limited: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    logLevel: 'warn',
+  },
 };
 
 type HttpResponse = {
   status: (code: number) => { json: (body: unknown) => void };
+  /**
+   * Optional, and called defensively below: this is a minimal structural type
+   * standing in for whatever the adapter hands us, and a response object
+   * without `setHeader` must still get its body.
+   */
+  setHeader?: (name: string, value: string) => void;
 };
 
 type ErrorResponseBody = {
@@ -36,7 +83,8 @@ function hasContext(value: unknown): value is { context: unknown } {
 }
 
 /**
- * Answers a domain error with the HTTP status its `kind` implies, and hands
+ * Answers a domain or upstream error with the HTTP status its `kind` implies,
+ * logs an internal error with its structured context, and hands
  * every other exception to Nest's own `BaseExceptionFilter` rather than
  * reproducing it — so `http-errors` statuses (a 413 from body-parser's size
  * limit, say), the already-sent-headers guard a streamed response needs, and
@@ -64,7 +112,7 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
 
   override catch(exception: unknown, host: ArgumentsHost): void {
     if (isDomainError(exception)) {
-      const statusCode = KIND_TO_STATUS[exception.kind];
+      const { status: statusCode, logLevel } = KIND_POLICY[exception.kind];
       const body: ErrorResponseBody = {
         statusCode,
         message:
@@ -72,7 +120,7 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         reason: exception.reason,
       };
 
-      this.logger.warn('Domain error mapped to HTTP response', {
+      this.logger[logLevel]('Domain error mapped to HTTP response', {
         statusCode,
         kind: exception.kind,
         reason: exception.reason,
@@ -85,6 +133,54 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         .status(statusCode)
         .json(body);
       return;
+    }
+
+    if (isUpstreamError(exception)) {
+      const { status: statusCode, logLevel } =
+        UPSTREAM_KIND_POLICY[exception.kind];
+      const body: ErrorResponseBody = {
+        statusCode,
+        message: exception.message,
+        reason: exception.reason,
+      };
+
+      this.logger[logLevel]('Upstream error mapped to HTTP response', {
+        statusCode,
+        kind: exception.kind,
+        reason: exception.reason,
+        ...(hasContext(exception) ? { context: exception.context } : {}),
+        ...(exception.retryAfterSeconds !== undefined
+          ? { retryAfterSeconds: exception.retryAfterSeconds }
+          : {}),
+      });
+
+      const response = host.switchToHttp().getResponse<HttpResponse>();
+
+      // The message is shown here, unlike an internal error: "GitHub is rate
+      // limiting us, try again shortly" is what the caller needs, and it
+      // discloses nothing.
+      if (exception.retryAfterSeconds !== undefined) {
+        response.setHeader?.(
+          'Retry-After',
+          String(exception.retryAfterSeconds),
+        );
+      }
+
+      response.status(statusCode).json(body);
+      return;
+    }
+
+    if (isInternalError(exception)) {
+      // Logged here and answered by `BaseExceptionFilter` below: the structured
+      // `context` only reaches the log if something reads it off the error,
+      // while the 500 body stays Nest's generic one, so nothing in `message`
+      // or `context` is shown to the caller.
+      this.logger.error('Internal error', {
+        reason: exception.reason,
+        message: exception.message,
+        stack: exception.stack,
+        ...(exception.context ? { context: exception.context } : {}),
+      });
     }
 
     super.catch(exception, host);

@@ -3,6 +3,8 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   GitProviderNotFoundError,
+  GitRepoNotFoundError,
+  MissingGitInputError,
   createGitRepoId,
   createGitProviderId,
   createOrganizationId,
@@ -16,6 +18,8 @@ import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { stubLogger, mockInterface } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
+import { DirectoryExistenceCheckFailedError } from '../../../domain/errors/DirectoryExistenceCheckFailedError';
+import { GitlabApiOperationFailedError } from '../../../domain/errors/GitlabApiOperationFailedError';
 
 describe('CheckDirectoryExistenceUseCase', () => {
   let useCase: CheckDirectoryExistenceUseCase;
@@ -157,8 +161,8 @@ describe('CheckDirectoryExistenceUseCase', () => {
           gitRepoId: '',
         } as CheckDirectoryExistenceCommand;
 
-        await expect(useCase.execute(invalidCommand)).rejects.toThrow(
-          'Git repository ID is required',
+        await expect(useCase.execute(invalidCommand)).rejects.toBeInstanceOf(
+          MissingGitInputError,
         );
       });
 
@@ -168,8 +172,8 @@ describe('CheckDirectoryExistenceUseCase', () => {
           directoryPath: '',
         };
 
-        await expect(useCase.execute(invalidCommand)).rejects.toThrow(
-          'Directory path is required',
+        await expect(useCase.execute(invalidCommand)).rejects.toBeInstanceOf(
+          MissingGitInputError,
         );
       });
 
@@ -179,8 +183,8 @@ describe('CheckDirectoryExistenceUseCase', () => {
           branch: '',
         };
 
-        await expect(useCase.execute(invalidCommand)).rejects.toThrow(
-          'Branch is required',
+        await expect(useCase.execute(invalidCommand)).rejects.toBeInstanceOf(
+          MissingGitInputError,
         );
       });
     });
@@ -189,8 +193,8 @@ describe('CheckDirectoryExistenceUseCase', () => {
       it('throws error for non-existent repository', async () => {
         mockGitRepoService.findGitRepoById.mockResolvedValue(null);
 
-        await expect(useCase.execute(validCommand)).rejects.toThrow(
-          `Git repository with ID ${gitRepoId} not found`,
+        await expect(useCase.execute(validCommand)).rejects.toBeInstanceOf(
+          GitRepoNotFoundError,
         );
       });
     });
@@ -249,7 +253,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
     });
 
     describe('when git repository instance throws error', () => {
-      it('propagates repository instance errors with proper error message', async () => {
+      it('wraps repository instance errors', async () => {
         const repositoryError = new Error('Git API rate limit exceeded');
         mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
@@ -257,9 +261,32 @@ describe('CheckDirectoryExistenceUseCase', () => {
           repositoryError,
         );
 
-        await expect(useCase.execute(validCommand)).rejects.toThrow(
-          'Failed to check directory existence: Git API rate limit exceeded',
+        await expect(useCase.execute(validCommand)).rejects.toBeInstanceOf(
+          DirectoryExistenceCheckFailedError,
         );
+      });
+
+      describe('when the failure already says whose fault it is', () => {
+        it('lets a domain failure through untouched', async () => {
+          const notFound = new GitRepoNotFoundError(gitRepoId);
+          mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+          mockGitRepoInstance.checkDirectoryExists.mockRejectedValue(notFound);
+
+          await expect(useCase.execute(validCommand)).rejects.toBe(notFound);
+        });
+
+        it('lets an upstream failure through untouched', async () => {
+          const upstream = new GitlabApiOperationFailedError(
+            'list directories from GitLab',
+            new Error('gateway timeout'),
+          );
+          mockGitRepoService.findGitRepoById.mockResolvedValue(mockGitRepo);
+          mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+          mockGitRepoInstance.checkDirectoryExists.mockRejectedValue(upstream);
+
+          await expect(useCase.execute(validCommand)).rejects.toBe(upstream);
+        });
       });
     });
   });

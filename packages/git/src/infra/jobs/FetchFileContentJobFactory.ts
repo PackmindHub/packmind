@@ -10,6 +10,10 @@ import { ResolvedGitRepoService } from '../../application/services/ResolvedGitRe
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
 import { GetFileFromRepoUseCase } from '../../application/useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
+import {
+  FetchFileContentDelayedJobNotCreatedError,
+  FetchFileContentQueueNotInitializedError,
+} from '../../domain/errors';
 
 const origin = 'FetchFileContentJobFactory';
 
@@ -40,14 +44,14 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
     return {
       addJob: async (input: FetchFileContentInput): Promise<string> => {
         if (!this._delayedJob) {
-          throw new Error('Queue not initialized. Call initialize() first.');
+          throw new FetchFileContentQueueNotInitializedError();
         }
         const jobId = await this._delayedJob.addJob(input);
         return jobId;
       },
       initialize: async (): Promise<void> => {
         if (!this._delayedJob) {
-          throw new Error('DelayedJob not created. Call createQueue() first.');
+          throw new FetchFileContentDelayedJobNotCreatedError();
         }
         await this._delayedJob.initialize();
         this.logger.info('FetchFileContent queue initialized');

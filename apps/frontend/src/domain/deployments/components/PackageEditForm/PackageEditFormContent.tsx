@@ -22,11 +22,14 @@ import {
   SkillId,
 } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
+import { HeldByPackage, toArtefactOption } from '../packageForm';
 
 interface PackageEditFormContentProps {
   allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
+  /** Component id -> name of the other package holding it. */
+  ownerByArtefactId: Record<string, string>;
   selectedCommandIds: CommandId[];
   selectedStandardIds: StandardId[];
   selectedSkillIds: SkillId[];
@@ -45,6 +48,7 @@ export const PackageEditFormContent = ({
   allCommands,
   allStandards,
   allSkills,
+  ownerByArtefactId,
   selectedCommandIds,
   selectedStandardIds,
   selectedSkillIds,
@@ -60,20 +64,17 @@ export const PackageEditFormContent = ({
 }: PackageEditFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  const commandItems = allCommands.map((recipe: Command) => ({
-    label: recipe.name,
-    value: recipe.id,
-  }));
+  const commandItems = allCommands.map((recipe: Command) =>
+    toArtefactOption(recipe, selectedCommandIds, ownerByArtefactId),
+  );
 
-  const standardItems = allStandards.map((standard: Standard) => ({
-    label: standard.name,
-    value: standard.id,
-  }));
+  const standardItems = allStandards.map((standard: Standard) =>
+    toArtefactOption(standard, selectedStandardIds, ownerByArtefactId),
+  );
 
-  const skillItems = allSkills.map((skill: Skill) => ({
-    label: skill.name,
-    value: skill.id,
-  }));
+  const skillItems = allSkills.map((skill: Skill) =>
+    toArtefactOption(skill, selectedSkillIds, ownerByArtefactId),
+  );
 
   const { collection: commandCollection, filter: filterCommands } =
     pmUseListCollection({
@@ -154,6 +155,7 @@ export const PackageEditFormContent = ({
                     {standardCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -270,6 +272,7 @@ export const PackageEditFormContent = ({
                     {commandCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -382,6 +385,7 @@ export const PackageEditFormContent = ({
                     {skillCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}

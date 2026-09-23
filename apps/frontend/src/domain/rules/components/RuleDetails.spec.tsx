@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
@@ -14,7 +14,8 @@ import {
 } from '@packmind/types';
 import { RuleDetails } from './RuleDetails';
 import { useGetRuleExamplesQuery } from '../api/queries';
-import type { MockedFunction } from 'vitest';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import type { Mock, MockedFunction } from 'vitest';
 
 vi.mock('../api/queries', () => ({
   useGetRuleExamplesQuery: vi.fn(),
@@ -47,37 +48,21 @@ vi.mock(
   }),
 );
 
-vi.mock('./RuleExamplesManager', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const React = require('react');
-  const RuleExamplesManagerMock = React.forwardRef(
-    (
-      props: {
-        selectedLanguage: string;
-        forceCreate?: boolean;
-      },
-      ref: React.Ref<unknown>,
-    ) => {
-      React.useImperativeHandle(ref, () => ({
-        addExample: vi.fn(),
-      }));
-      return (
-        <div data-testid="rule-examples-manager">
-          <span data-testid="selected-language">{props.selectedLanguage}</span>
-          <span data-testid="force-create">
-            {props.forceCreate ? 'true' : 'false'}
-          </span>
-        </div>
-      );
-    },
-  );
+vi.mock(
+  '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures',
+  () => ({
+    useGetStandardRulesDetectionStatusQuery: vi.fn(() => ({ data: [] })),
+  }),
+);
 
-  return {
-    __esModule: true,
-    RuleExamplesManager: RuleExamplesManagerMock,
-    RuleExamplesManagerHandle: {},
-  };
-});
+vi.mock('./RuleExamplesManager', () => ({
+  __esModule: true,
+  RuleExamplesManager: (props: { selectedLanguage: string }) => (
+    <div data-testid="rule-examples-manager">
+      <span data-testid="selected-language">{props.selectedLanguage}</span>
+    </div>
+  ),
+}));
 
 const mockUseGetRuleExamplesQuery = useGetRuleExamplesQuery as MockedFunction<
   typeof useGetRuleExamplesQuery
@@ -111,6 +96,9 @@ const createRuleExample = (
 describe('RuleDetails - language selector and states', () => {
   beforeEach(() => {
     mockUseGetRuleExamplesQuery.mockReset();
+    (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+      data: [],
+    });
   });
 
   afterEach(() => {
@@ -132,18 +120,62 @@ describe('RuleDetails - language selector and states', () => {
       );
     });
 
-    it('displays empty state message', () => {
-      expect(screen.getByText('No code examples yet')).toBeInTheDocument();
+    /*
+      A rule with no examples has nothing to read, so the body it opens on is
+      the one that writes them. Announcing the absence and then asking for a
+      click put a door in front of an empty room.
+    */
+    it('opens straight onto the examples body', () => {
+      expect(screen.getByTestId('rule-examples-manager')).toBeInTheDocument();
     });
 
-    it('does not render the rule examples manager', () => {
-      expect(
-        screen.queryByTestId('rule-examples-manager'),
-      ).not.toBeInTheDocument();
+    /*
+      JavaScript for everybody was a guess with nothing behind it, and it is
+      wrong for most of the teams using Packmind.
+    */
+    it('names no language when nothing says which one', () => {
+      expect(screen.getByTestId('selected-language')).toHaveTextContent('');
     });
   });
 
-  describe('when opening the language selector with configured examples', () => {
+  describe('when the rest of the standard is written in one language', () => {
+    beforeEach(() => {
+      mockUseGetRuleExamplesQuery.mockReturnValue({
+        data: [],
+        isLoading: false,
+      } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
+
+      (useGetStandardRulesDetectionStatusQuery as Mock).mockReturnValue({
+        data: [
+          {
+            ruleId: 'other-rule',
+            languages: [{ language: ProgrammingLanguage.KOTLIN, status: 'OK' }],
+          },
+        ],
+      });
+
+      renderWithProviders(
+        <RuleDetails
+          standardId={'standard-1' as StandardId}
+          rule={createRule()}
+        />,
+      );
+    });
+
+    /*
+      Standards are language-scoped in practice, so what the neighbours are
+      written in is evidence where a global default is only a habit.
+    */
+    it('opens the rule on what its neighbours use', async () => {
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-language')).toHaveTextContent(
+          'KOTLIN',
+        );
+      });
+    });
+  });
+
+  describe('when the rule has examples in several languages', () => {
     beforeEach(async () => {
       const examples: RuleExample[] = [
         createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
@@ -155,43 +187,42 @@ describe('RuleDetails - language selector and states', () => {
         isLoading: false,
       } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
 
-      const user = userEvent.setup({ pointerEventsCheck: 0 });
-
       renderWithProviders(
         <RuleDetails
           standardId={'standard-1' as StandardId}
           rule={createRule()}
         />,
       );
-
-      const languageLabel = screen.getByText('Language');
-      const languageContainer = languageLabel.closest('div') as HTMLElement;
-      const triggerCombobox = within(languageContainer).getByRole('combobox');
-      await user.click(triggerCombobox);
-
-      await waitFor(() => {
-        expect(screen.getByText('Configured Languages')).toBeInTheDocument();
-      });
     });
 
-    it('displays the configured languages group', async () => {
-      expect(screen.getByText('Configured Languages')).toBeInTheDocument();
+    /*
+      How many languages a rule speaks is the first fact about it, since each
+      one gets its own detection program. A closed select spent that fact on a
+      click.
+    */
+    it('names every language it speaks without being opened', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Python/ }),
+      ).toBeInTheDocument();
     });
 
-    it('displays the add language group', async () => {
-      expect(screen.getByText('Add a language')).toBeInTheDocument();
+    it('marks the one being read', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript/ }),
+      ).toHaveAttribute('aria-pressed', 'true');
     });
 
-    it('displays JavaScript in the configured languages', async () => {
-      expect(screen.getAllByText('JavaScript')[0]).toBeInTheDocument();
-    });
-
-    it('displays Python in the configured languages', async () => {
-      expect(screen.getByText('Python')).toBeInTheDocument();
+    it('says how many examples each language carries', () => {
+      expect(
+        screen.getByRole('button', { name: /^JavaScript, 1 saved/ }),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('when selecting a language from the "Add a language" group', () => {
+  describe('when a language the rule does not speak yet is picked', () => {
     beforeEach(async () => {
       const examples: RuleExample[] = [
         createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
@@ -211,30 +242,16 @@ describe('RuleDetails - language selector and states', () => {
         />,
       );
 
-      const languageLabel = screen.getByText('Language');
-      const languageContainer = languageLabel.closest('div') as HTMLElement;
-      const triggerCombobox = within(languageContainer).getByRole('combobox');
-      await user.click(triggerCombobox);
+      await user.click(screen.getByRole('button', { name: 'Add a language' }));
+      await user.click(await screen.findByText('Python'));
+    });
 
-      const addLanguageGroupLabel = screen.getByText('Add a language');
-      await user.click(addLanguageGroupLabel);
-
-      const pythonOption = await screen.findByText('Python');
-      await user.click(pythonOption);
-
+    it('opens the examples body on it', async () => {
       await waitFor(() => {
-        expect(screen.getByTestId('force-create')).toHaveTextContent('true');
+        expect(screen.getByTestId('selected-language')).toHaveTextContent(
+          'PYTHON',
+        );
       });
-    });
-
-    it('enables creation mode', async () => {
-      expect(screen.getByTestId('force-create')).toHaveTextContent('true');
-    });
-
-    it('sets the selected language to PYTHON', async () => {
-      expect(screen.getByTestId('selected-language')).toHaveTextContent(
-        'PYTHON',
-      );
     });
   });
 });

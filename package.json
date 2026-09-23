@@ -1,6 +1,6 @@
 {
   "name": "packmind",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "private": true,
   "engines": {
     "node": ">=24.13.0",
@@ -19,7 +19,6 @@
     "prepare": "node scripts/prepare.mjs",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
-    "quality-gate": "pnpm typecheck:frontend && pnpm test:staged && pnpm lint:staged && pnpm build",
     "withEnv": "bash -c 'set -a; [ -f .env ] && source .env; set +a; eval \"$@\"' --",
     "test": "PACKMIND_LOG_LEVEL=silent pnpm withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:staged": "PACKMIND_LOG_LEVEL=silent pnpm withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",

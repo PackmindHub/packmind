@@ -2,7 +2,17 @@
 
 ## Added
 
-- The new navigation can now be turned on by anyone. A space's sidebar becomes three entries instead of one per kind of object: Context, where everything a coding agent reads is curated package by package; Distribution, the same graph read by destination rather than by package; and Review changes. The switch is on your profile page, under Navigation, and it starts off, so nobody is moved and turning it back off restores exactly what was there. The choice is held by the browser you make it in and applies to every space at once. Adding `?nav=plugin-first` to any address opens that address in the new navigation without touching the switch, which is enough to try it, or to hand someone a link that lands them straight in it.
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.18.0] - 2026-09-22
+
+## Added
+
+- The new navigation is now what a space opens on. Its sidebar carries three entries instead of one per kind of object: Context, where everything a coding agent reads is curated package by package; Distribution, the same graph read by destination rather than by package; and Review changes. The switch is on your profile page, under Navigation, and it now starts on. Turning it off restores exactly what was there, on every space at once, and the choice is held by the browser you make it in. Adding `?nav=today` to any address opens that address in the previous navigation without touching the switch, and `?nav=plugin-first` does the same the other way, which is enough to hand someone a link that lands them in either one.
 - The Distribution page of a space is now indexed by destination rather than by three tabs. A rail lists every repository this space's packages land in, each row carrying the branch, the packages that land there and a mark when something is behind or when the last distribution failed; selecting one opens it beside the rail. The search reaches a destination by its name, its branch or the name of a package that lands there, and under the field a pill per state counts what is not aligned and shows only those when clicked. Selecting several destinations turns them into one distribution rather than one per row, and the receipt that follows now names auto-update, which makes the same commit on a schedule. The page runs full width, as Context does: the surface is a rail beside a pane, and the heading it used to carry named what the sidebar already has highlighted
 
 ## Changed
@@ -15,16 +25,25 @@
 - Filling a package in the Context navigation is now one control instead of two. `Add components` and `Create` sat side by side and asked you to know, before clicking, whether what you wanted already existed in the space, which is only answerable by opening the picker. They are now one split button: the wide half opens the picker, the chevron beside it holds the four ways of creating something new, under a heading that names them. When the space has nothing left to offer this package, the wide half has nothing to open and the control becomes `Create a component` on its own. The control also stays quiet on an empty package, where the panel below already invites you to fill it and now carries the only loud button on the screen. And an empty package in a space that owns nothing yet says so and offers creation, instead of telling you to pick from a space with nothing in it and sending you to a picker that pointed back at the same screen
 - "Add components" on a Context package now opens on the components no package carries yet, rather than on everything the space owns. Those are the ones being distributed for the first time, and the ones the picker is usually opened for: a component created a moment ago and not yet placed. They are listed newest first, the order the space component list uses under the same filter. A component that already ships from another package is a different proposition, since adding it means the same content ships from two packages that will drift apart, and it was one mis-tick away in a flat list that said nothing about where anything already was. The rest is one chip away, "In no package", the same chip the space component list filters by, and with it off every row names the packages already carrying it or says "No package", so shipping a component from two packages stays possible and stops being accidental. The search field now appears once the list on screen is long enough to need it rather than counting rows a filter is hiding
 - The Create menu on a Context package is now organised by who writes the artifact rather than by which kind it is. Seven entries under three headings become five: your agent, samples, a blank standard form, a blank command form, and an import from your machine. Three of the old entries were the same instruction sheet repeated once per type, since "install the CLI and run a slash command" does not vary by type; they are now one entry whose dialog lists the command for each. The menu no longer asks which kind of artifact you want before asking how you want to write it, which is the one part a reader arriving without a decision cannot answer. It also stops growing as Packmind gains artifact types: what each entry covers is read from a single registry, so a new type lengthens a description instead of adding a heading and two rows, and the manual entry folds its types behind one row once there are more than two of them
+- Packmind can now verify the SMTP server's TLS certificate, which it previously skipped on every connection: set `SMTP_TLS_REJECT_UNAUTHORIZED=true` to turn it on, off being the default so nothing breaks on upgrade. Rotate `SMTP_PASSWORD` either way, since it was being written to the logs in clear text on every send
 
 ## Fixed
+
+- A git operation that fails for a reason you can do something about now says so, instead of answering "Internal server error". A connection or repository that is not there, a display name already taken, a connection with no token configured, a repository already tracked on another branch: every one of these reached the browser as a blank 500, with a stack written to our logs as though Packmind had broken, because the failure carried nothing saying what kind of failure it was. They now answer with the status they always meant — not found, refused, already exists — and carry their own sentence, so the page can tell you what happened rather than showing a generic error
+
+- GitHub's rate limit and GitHub's refusals are no longer reported as the same thing. Both arrive as a 403, and Packmind told them apart by looking for "403" inside the text of the error, which cannot separate them — so the message hedged, "rate limit exceeded or access forbidden", and both were answered as a fault of ours. Packmind now reads the headers GitHub sends with the refusal: being throttled says how long to wait and asks your browser to wait that long, and being refused names the repository and says the connection's token does not have access to it. A rejected credential is now reported as a rejected credential, which is something you can fix, rather than as a server failure, which is not
+
+- GitLab asking us to slow down is no longer reported as GitLab being broken. A throttled request was answered as a bad gateway, which sent your browser to try the same call again, and threw away the wait GitLab had just told us to observe. It now says how long to wait and asks your browser to wait rather than retry, the same answer GitHub's throttle already gave
+
+- An outage at GitHub or GitLab is no longer reported as an outage at Packmind. A provider timing out, refusing a commit, or answering with something we cannot read used to be recorded as our own bug, stack and all, and shown to you as a generic server error. It is now attributed to the provider that caused it: the message names which one and what it was doing, the page retries once by itself since that is the failure where waiting helps, and our own alerting stops counting someone else's downtime against us
+
+- Listing the repositories available on a connection no longer reports every failure as the provider being unreachable. A connection that does not exist, a parameter left out and a connection with no token were all answered as a bad gateway, and the response even carried the internal error text when the failure was ours. Each now says what it actually is, and only a genuine provider failure is reported as one
 
 - The CLI no longer claims a feature is missing from your edition when the server merely answered 404. On Packmind Enterprise, `playbook submit` and `playbook diff` reported "not available in Packmind Community Edition" whenever a space, an organization or a resource had gone — a status that means something quite different there. You now get the real error. On Community Edition the message still appears, and is now backed by the server rather than guessed at. `packmind git track` and `git untrack` also stop blaming your account when the server is simply older than repository tracking: the message says so and names who can update it (#773)
 
 - Spinners on the Git connections page spin again. The refresh control on a connection row declared its own rotation keyframes, and the style serializer emitted them as a second, malformed global `@keyframes spin` with two empty frames. Defined after the theme's, it won for the whole document, so every spinner on the page ran against empty keyframes and sat still: the refresh icon that asked for the animation, the arc in the connection drawer's "Load more repositories" button, and the "Apply changes" button. The control now uses the spinner the rest of the app uses, which leaves the theme as the only definition of those keyframes
 
 - The "how to create with your agent" dialog no longer teaches commands that no longer exist. It named `/packmind-create-standard`, `/packmind-create-command` and `/packmind-create-skill`, one per artifact kind, and all three were retired: a repository that syncs its skills now has them deleted, so the dialog was giving instructions that fail. It names `/packmind-update-playbook`, the one skill that covers every kind of artifact. The setup step above it also offered `packmind init` alone and called it first-time-only, which left a reader whose repository was already set up with nothing to run; it now offers `packmind skills init` too, which is the command that replaces the retired skills in an existing repository
-
-## Removed
 
 # [1.17.0] - 2026-09-02
 
@@ -404,7 +423,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...HEAD
+[1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
 [1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
 [1.16.1]: https://github.com/PackmindHub/packmind/compare/release/1.16.0...release/1.16.1

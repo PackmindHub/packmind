@@ -1,7 +1,18 @@
 import { DistributionSchema } from '@packmind/deployments';
 import { GitCommitSchema, GitRepoSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import { Distribution, GitCommit, GitRepo, Package } from '@packmind/types';
+import {
+  Command,
+  CommandDistributionHistoryEntry,
+  DistributionHistoryEntry,
+  GitCommit,
+  GitRepo,
+  Package,
+  Skill,
+  SkillDistributionHistoryEntry,
+  Standard,
+  StandardDistributionHistoryEntry,
+} from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -22,6 +33,9 @@ describe('Tracked branch distribution history integration', () => {
   let testApp: TestApp;
   let admin: DataFactory;
   let distributedPackage: Package;
+  let command: Command;
+  let standard: Standard;
+  let skill: Skill;
   let commit: GitCommit;
 
   beforeAll(async () => {
@@ -33,7 +47,16 @@ describe('Tracked branch distribution history integration', () => {
     admin = new DataFactory(testApp);
     await admin.withUserAndOrganization({ email: 'admin@example.com' });
 
-    const command = await admin.withCommand({ name: 'Governed Recipe' });
+    command = await admin.withCommand({ name: 'Governed Recipe' });
+    standard = await admin.withStandard({ name: 'Governed Standard' });
+    skill = await testApp.skillsHexa.getAdapter().createSkill({
+      ...admin.packmindCommand(),
+      spaceId: admin.space.id,
+      name: 'Governed Skill',
+      description: 'Distributed across tracked branches',
+      prompt: 'Do the governed thing',
+    });
+
     const { package: created } = await testApp.deploymentsHexa
       .getAdapter()
       .createPackage({
@@ -42,7 +65,8 @@ describe('Tracked branch distribution history integration', () => {
         name: 'Governed Package',
         description: 'Distributed across tracked branches',
         recipeIds: [command.id],
-        standardIds: [],
+        standardIds: [standard.id],
+        skillIds: [skill.id],
       });
     distributedPackage = created;
 
@@ -128,11 +152,44 @@ describe('Tracked branch distribution history integration', () => {
     });
   }
 
-  function displayedHistory(): Promise<Distribution[]> {
+  function displayedHistory(): Promise<DistributionHistoryEntry[]> {
     return testApp.deploymentsHexa.getAdapter().listDeploymentsByPackage({
       ...admin.packmindCommand(),
+      organizationId: admin.organization.id,
+      spaceId: admin.space.id,
       packageId: distributedPackage.id,
     });
+  }
+
+  function displayedCommandHistory(): Promise<
+    CommandDistributionHistoryEntry[]
+  > {
+    return testApp.deploymentsHexa.getAdapter().listDistributionsByCommand({
+      ...admin.packmindCommand(),
+      recipeId: command.id,
+    });
+  }
+
+  function displayedStandardHistory(): Promise<
+    StandardDistributionHistoryEntry[]
+  > {
+    return testApp.deploymentsHexa.getAdapter().listDistributionsByStandard({
+      ...admin.packmindCommand(),
+      standardId: standard.id,
+    });
+  }
+
+  function displayedSkillHistory(): Promise<SkillDistributionHistoryEntry[]> {
+    return testApp.deploymentsHexa.getAdapter().listDistributionsBySkill({
+      ...admin.packmindCommand(),
+      skillId: skill.id,
+    });
+  }
+
+  function branchesOf(
+    history: { target: { gitRepo?: { branch: string } } }[],
+  ): (string | undefined)[] {
+    return history.map((distribution) => distribution.target.gitRepo?.branch);
   }
 
   async function displayedBranches(): Promise<(string | undefined)[]> {
@@ -215,6 +272,110 @@ describe('Tracked branch distribution history integration', () => {
 
     it('shows only the tracked branch in the overview', async () => {
       await expect(overviewBranches()).resolves.toEqual(['main']);
+    });
+
+    /*
+     * The other three histories read the same rows through their own query. Each
+     * one loads the versions of its own artifact and leaves the other two
+     * behind: they hang off the same distributed package, so joining them makes
+     * SQL return standards x commands x skills rows per distribution.
+     */
+    describe('the command history over those same distributions', () => {
+      it('displays only the tracked branch', async () => {
+        expect(branchesOf(await displayedCommandHistory())).toEqual([
+          'main',
+          'main',
+        ]);
+      });
+
+      it('carries the version of that command', async () => {
+        const [distributedPackage] = (await displayedCommandHistory())[0]
+          .distributedPackages;
+
+        expect(
+          distributedPackage.recipeVersions.map((version) => version.recipeId),
+        ).toEqual([command.id]);
+      });
+
+      it('loads no standard versions', async () => {
+        const [distributedPackage] = (await displayedCommandHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('standardVersions');
+      });
+
+      it('loads no skill versions', async () => {
+        const [distributedPackage] = (await displayedCommandHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('skillVersions');
+      });
+    });
+
+    describe('the standard history over those same distributions', () => {
+      it('displays only the tracked branch', async () => {
+        expect(branchesOf(await displayedStandardHistory())).toEqual([
+          'main',
+          'main',
+        ]);
+      });
+
+      it('carries the version of that standard', async () => {
+        const [distributedPackage] = (await displayedStandardHistory())[0]
+          .distributedPackages;
+
+        expect(
+          distributedPackage.standardVersions.map(
+            (version) => version.standardId,
+          ),
+        ).toEqual([standard.id]);
+      });
+
+      it('loads no command versions', async () => {
+        const [distributedPackage] = (await displayedStandardHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('recipeVersions');
+      });
+
+      it('loads no skill versions', async () => {
+        const [distributedPackage] = (await displayedStandardHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('skillVersions');
+      });
+    });
+
+    describe('the skill history over those same distributions', () => {
+      it('displays only the tracked branch', async () => {
+        expect(branchesOf(await displayedSkillHistory())).toEqual([
+          'main',
+          'main',
+        ]);
+      });
+
+      it('carries the version of that skill', async () => {
+        const [distributedPackage] = (await displayedSkillHistory())[0]
+          .distributedPackages;
+
+        expect(
+          distributedPackage.skillVersions.map((version) => version.skillId),
+        ).toEqual([skill.id]);
+      });
+
+      it('loads no standard versions', async () => {
+        const [distributedPackage] = (await displayedSkillHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('standardVersions');
+      });
+
+      it('loads no command versions', async () => {
+        const [distributedPackage] = (await displayedSkillHistory())[0]
+          .distributedPackages;
+
+        expect(distributedPackage).not.toHaveProperty('recipeVersions');
+      });
     });
   });
 
@@ -476,6 +637,8 @@ describe('Tracked branch distribution history integration', () => {
         .getAdapter()
         .listDeploymentsByPackage({
           ...otherAdmin.packmindCommand(),
+          organizationId: otherAdmin.organization.id,
+          spaceId: otherAdmin.space.id,
           packageId: otherPackage.id,
         })
         .then((history) =>

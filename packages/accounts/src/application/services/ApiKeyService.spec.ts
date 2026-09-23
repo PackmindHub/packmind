@@ -1,4 +1,5 @@
 import { ApiKeyService, IJwtService } from './ApiKeyService';
+import { ApiKeyGenerationFailedError } from '../../domain/errors';
 import { User, createUserId } from '@packmind/types';
 import { Organization, createOrganizationId } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -268,7 +269,7 @@ describe('ApiKeyService', () => {
           'admin',
           'http://localhost:3000',
         );
-      }).toThrow('Failed to generate API key');
+      }).toThrow(ApiKeyGenerationFailedError);
     });
   });
 

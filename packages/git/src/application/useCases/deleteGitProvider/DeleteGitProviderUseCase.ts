@@ -4,10 +4,10 @@ import {
   DeleteGitProviderCommand,
   DeleteGitProviderResponse,
   GitProviderHasRepositoriesError,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   IAccountsPort,
   IDeleteGitProviderUseCase,
+  MissingGitInputError,
   createUserId,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
@@ -37,23 +37,17 @@ export class DeleteGitProviderUseCase
     const { id, userId, force = false, organization } = command;
 
     if (!id) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
 
     const gitProvider = await this.gitProviderService.findGitProviderById(id);
-    if (!gitProvider) {
-      this.logger.error('Git provider not found', {
-        gitProviderId: id,
-        userId,
-        organizationId: organization.id,
-      });
-      throw new GitProviderNotFoundError(id);
-    }
 
-    if (gitProvider.organizationId !== organization.id) {
-      this.logger.error('Git provider does not belong to organization', {
+    // A provider that does not exist and one owned by another organization are
+    // the same answer by design, so they are the same branch.
+    if (!gitProvider || gitProvider.organizationId !== organization.id) {
+      this.logger.error('Git provider not found in organization', {
         gitProviderId: id,
-        providerOrganizationId: gitProvider.organizationId,
+        providerOrganizationId: gitProvider?.organizationId,
         requestedOrganizationId: organization.id,
         userId,
       });

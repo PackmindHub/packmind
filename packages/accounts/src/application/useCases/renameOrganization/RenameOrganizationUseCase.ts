@@ -40,7 +40,7 @@ export class RenameOrganizationUseCase
       this.logger.error('Invalid organization name provided', {
         organizationId: command.organizationId,
       });
-      throw new InvalidOrganizationNameError({ name: command.name });
+      throw new InvalidOrganizationNameError(command.name);
     }
 
     const updatedOrganization =

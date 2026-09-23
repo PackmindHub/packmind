@@ -16,3 +16,4 @@ This standard defines the recommended data flow pattern for frontend routes in t
 * Enable query options conditionally using the enabled property to prevent execution when required parameters are missing or invalid
 * Use Gateway<IUseCase> type helper for authenticated operations or PublicGateway<IPublicUseCase> for public operations in frontend gateway interfaces to ensure proper command/response typing
 * Prefer `queryClient.ensureQueryData()` over `queryClient.fetchQuery()` in clientLoaders to return cached data when available instead of always fetching
+* Leave `retry` to the shared `shouldRetryTransient` policy; never retry a 4xx, as only network failures and 5xx are retried, once

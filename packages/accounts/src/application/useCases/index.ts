@@ -4,11 +4,7 @@ export { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEma
 export { CreateCliLoginCodeUseCase } from './createCliLoginCode/CreateCliLoginCodeUseCase';
 export { CreateInvitationsUseCase } from './createInvitations/CreateInvitationsUseCase';
 export { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
-export {
-  ExchangeCliLoginCodeUseCase,
-  CliLoginCodeNotFoundError,
-  CliLoginCodeExpiredError,
-} from './exchangeCliLoginCode/ExchangeCliLoginCodeUseCase';
+export { ExchangeCliLoginCodeUseCase } from './exchangeCliLoginCode/ExchangeCliLoginCodeUseCase';
 export { GenerateApiKeyUseCase } from './generateApiKey/GenerateApiKeyUseCase';
 export { GenerateUserTokenUseCase } from './generateUserToken/GenerateUserTokenUseCase';
 export { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseCase';

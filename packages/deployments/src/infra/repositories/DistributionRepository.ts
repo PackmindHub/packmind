@@ -3,6 +3,8 @@ import { localDataSource, getErrorMessage } from '@packmind/node-utils';
 import {
   Distribution,
   DistributedPackage,
+  CommandDistributionHistoryEntry,
+  DistributionHistoryEntry,
   DistributionId,
   DistributionOperation,
   DistributionStatus,
@@ -13,9 +15,11 @@ import {
   CommandId,
   CommandVersion,
   RenderMode,
+  SkillDistributionHistoryEntry,
   SkillId,
   SkillVersion,
   SpaceId,
+  StandardDistributionHistoryEntry,
   StandardId,
   StandardVersion,
   TargetId,
@@ -26,10 +30,8 @@ import {
   ActiveArtifactVersionsByScope,
   ActivePackageOperationRow,
   IDistributionRepository,
+  OutdatedDeployment,
   OutdatedDeploymentsByTarget,
-  OutdatedCommandDeployment,
-  OutdatedSkillDeployment,
-  OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
 import {
@@ -46,13 +48,52 @@ function toIsoString(value: unknown): string {
   return value == null ? '' : String(value);
 }
 
-type LatestDistributedPackageRow = {
-  targetId: TargetId;
+function groupBy<T, K>(
+  items: readonly T[],
+  keyOf: (item: T) => K,
+): Map<K, T[]> {
+  const grouped = new Map<K, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.push(item);
+    } else {
+      grouped.set(key, [item]);
+    }
+  }
+  return grouped;
+}
+
+/**
+ * A distributed package paired with the date it was distributed on: the two
+ * fields every "latest version per artifact" reduction reads.
+ */
+type DatedDistributedPackage = {
   distributedPackageId: string;
+  distributedAt: Date | string;
+};
+
+type LatestDistributedPackageRow = DatedDistributedPackage & {
+  targetId: TargetId;
   packageId: PackageId;
   operation: DistributionOperation | null;
   renderModes: RenderMode[] | string | null;
-  distributedAt: Date | string;
+};
+
+type LatestAddedPackageRow = DatedDistributedPackage & {
+  targetId: TargetId;
+  targetName: string;
+  gitRepoId: string;
+};
+
+/** Slim artifact-version metadata, without the heavy content columns. */
+type DeployedVersionRow = {
+  distributedPackageId: string;
+  artifactId: string;
+  name: string;
+  slug: string;
+  version: number;
 };
 
 const emptyActiveVersions = (): ActiveArtifactVersions => ({
@@ -65,6 +106,12 @@ type VersionRelationName = keyof Pick<
   DistributedPackage,
   'standardVersions' | 'recipeVersions' | 'skillVersions'
 >;
+
+const ARTIFACT_ID_COLUMN: Record<VersionRelationName, string> = {
+  standardVersions: 'standard_id',
+  recipeVersions: 'command_id',
+  skillVersions: 'skill_id',
+};
 
 export class DistributionRepository implements IDistributionRepository {
   constructor(
@@ -184,12 +231,14 @@ export class DistributionRepository implements IDistributionRepository {
   async listByPackageId(
     packageId: PackageId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+    spaceId: SpaceId,
+  ): Promise<DistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by package ID and organization ID',
       {
         packageId,
         organizationId,
+        spaceId,
       },
     );
 
@@ -200,15 +249,7 @@ export class DistributionRepository implements IDistributionRepository {
           'distribution.distributedPackages',
           'distributedPackage',
         )
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .innerJoin('distributedPackage.package', 'package')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -218,6 +259,7 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere('package.spaceId = :spaceId', { spaceId })
         .andWhere(
           TRACKED_BRANCH_SCOPE,
           trackedBranchScopeParams(organizationId),
@@ -230,6 +272,7 @@ export class DistributionRepository implements IDistributionRepository {
         {
           packageId,
           organizationId,
+          spaceId,
           count: distributions.length,
         },
       );
@@ -246,7 +289,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listByCommandId(
     commandId: CommandId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<CommandDistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by command ID and organization ID',
       {
@@ -263,10 +306,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
         .innerJoinAndSelect(
           'distributedPackage.recipeVersions',
           'commandVersion',
@@ -308,7 +347,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listByStandardId(
     standardId: StandardId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<StandardDistributionHistoryEntry[]> {
     this.logger.info(
       'Listing distributions by standard ID and organization ID',
       {
@@ -329,11 +368,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage.standardVersions',
           'standardVersion',
         )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -642,28 +676,27 @@ export class DistributionRepository implements IDistributionRepository {
     return versionsByDistributedPackageId;
   }
 
-  private latestVersionPerArtifact<R extends VersionRelationName>(
-    activePackages: LatestDistributedPackageRow[],
-    versionsByDistributedPackageId: Map<
-      string,
-      DistributedPackage[R][number][]
-    >,
-    artifactIdOf: (version: DistributedPackage[R][number]) => string,
-  ): DistributedPackage[R] {
-    type V = DistributedPackage[R][number];
+  private latestVersionPerArtifact<
+    Row extends DatedDistributedPackage,
+    V extends { version: number },
+  >(
+    activePackages: Row[],
+    versionsByDistributedPackageId: Map<string, V[]>,
+    artifactIdOf: (version: V) => string,
+  ): Array<{ version: V; row: Row }> {
+    const distributedTime = (row: DatedDistributedPackage) =>
+      new Date(row.distributedAt).getTime();
 
-    const packagesByRecency = [...activePackages].sort((a, b) => {
-      const delta =
-        new Date(b.distributedAt).getTime() -
-        new Date(a.distributedAt).getTime();
+    const packagesNewestFirst = [...activePackages].sort((a, b) => {
+      const delta = distributedTime(b) - distributedTime(a);
       return delta !== 0
         ? delta
         : b.distributedPackageId.localeCompare(a.distributedPackageId);
     });
 
-    const versionByArtifactId = new Map<string, V>();
+    const latestByArtifactId = new Map<string, { version: V; row: Row }>();
 
-    for (const row of packagesByRecency) {
+    for (const row of packagesNewestFirst) {
       const versions = versionsByDistributedPackageId.get(
         row.distributedPackageId,
       );
@@ -673,13 +706,19 @@ export class DistributionRepository implements IDistributionRepository {
 
       for (const version of versions) {
         const artifactId = artifactIdOf(version);
-        if (!versionByArtifactId.has(artifactId)) {
-          versionByArtifactId.set(artifactId, version);
+        const current = latestByArtifactId.get(artifactId);
+        const outranksCurrent =
+          !current ||
+          (distributedTime(current.row) === distributedTime(row) &&
+            version.version > current.version.version);
+
+        if (outranksCurrent) {
+          latestByArtifactId.set(artifactId, { version, row });
         }
       }
     }
 
-    return Array.from(versionByArtifactId.values()) as DistributedPackage[R];
+    return Array.from(latestByArtifactId.values());
   }
 
   private async findActiveVersionsForDistributedPackages<
@@ -699,11 +738,11 @@ export class DistributionRepository implements IDistributionRepository {
         relation,
       );
 
-    return this.latestVersionPerArtifact<R>(
+    return this.latestVersionPerArtifact(
       activePackages,
       versionsByDistributedPackageId,
       artifactIdOf,
-    );
+    ).map(({ version }) => version) as DistributedPackage[R];
   }
 
   async findActiveStandardVersionsByTarget(
@@ -823,34 +862,29 @@ export class DistributionRepository implements IDistributionRepository {
         ),
       ]);
 
-      const activePackagesByTargetId = new Map<
-        TargetId,
-        LatestDistributedPackageRow[]
-      >();
-      for (const row of activePackages) {
-        const rows = activePackagesByTargetId.get(row.targetId) ?? [];
-        rows.push(row);
-        activePackagesByTargetId.set(row.targetId, rows);
-      }
+      const activePackagesByTargetId = groupBy(
+        activePackages,
+        (row) => row.targetId,
+      );
 
       const reduce = (
         rows: LatestDistributedPackageRow[],
       ): ActiveArtifactVersions => ({
-        standardVersions: this.latestVersionPerArtifact<'standardVersions'>(
+        standardVersions: this.latestVersionPerArtifact(
           rows,
           standardVersionsByPackage,
           (standardVersion) => standardVersion.standardId,
-        ),
-        commandVersions: this.latestVersionPerArtifact<'recipeVersions'>(
+        ).map(({ version }) => version),
+        commandVersions: this.latestVersionPerArtifact(
           rows,
           commandVersionsByPackage,
           (commandVersion) => commandVersion.recipeId,
-        ),
-        skillVersions: this.latestVersionPerArtifact<'skillVersions'>(
+        ).map(({ version }) => version),
+        skillVersions: this.latestVersionPerArtifact(
           rows,
           skillVersionsByPackage,
           (skillVersion) => skillVersion.skillId,
-        ),
+        ).map(({ version }) => version),
       });
 
       const requestedPackageIds = packageIds
@@ -892,7 +926,7 @@ export class DistributionRepository implements IDistributionRepository {
   async listBySkillId(
     skillId: SkillId,
     organizationId: OrganizationId,
-  ): Promise<Distribution[]> {
+  ): Promise<SkillDistributionHistoryEntry[]> {
     this.logger.info('Listing distributions by skill ID and organization ID', {
       skillId,
       organizationId,
@@ -906,14 +940,6 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.recipeVersions',
-          'commandVersion',
-        )
         .innerJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
@@ -1229,6 +1255,89 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
+  /**
+   * Latest successful 'add' distribution per (target, package) within the space.
+   * DISTINCT ON collapses history to one row per pair at the SQL layer, so we
+   * never hydrate the heavy version content for older distributions.
+   * Correctness relies on DISTINCT ON, which TypeORM only emits for a
+   * Postgres-family driver and silently drops otherwise, degrading this to
+   * "every historical row". This repository is Postgres-only.
+   */
+  private async findLatestAddedPackagesBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<LatestAddedPackageRow[]> {
+    return this.repository
+      .createQueryBuilder('distribution')
+      .innerJoin('distribution.distributedPackages', 'distributedPackage')
+      .innerJoin('distributedPackage.package', 'package')
+      .innerJoin('distribution.target', 'target')
+      .where('distribution.organizationId = :organizationId', {
+        organizationId,
+      })
+      .andWhere('distribution.status = :status', {
+        status: DistributionStatus.success,
+      })
+      .andWhere('package.spaceId = :spaceId', { spaceId })
+      .andWhere('distributedPackage.operation = :operation', {
+        operation: 'add',
+      })
+      .distinctOn(['distribution.target_id', 'distributedPackage.package_id'])
+      .orderBy('distribution.target_id')
+      .addOrderBy('distributedPackage.package_id')
+      .addOrderBy('distribution.createdAt', 'DESC')
+      .addOrderBy('distribution.id', 'DESC')
+      .select('distributedPackage.id', 'distributedPackageId')
+      .addSelect('distribution.target_id', 'targetId')
+      .addSelect('target.name', 'targetName')
+      .addSelect('target.git_repo_id', 'gitRepoId')
+      .addSelect('distribution.createdAt', 'distributedAt')
+      .getRawMany<LatestAddedPackageRow>();
+  }
+
+  private async fetchDeployedVersionRows(
+    distributedPackageIds: string[],
+    relation: VersionRelationName,
+  ): Promise<Map<string, DeployedVersionRow[]>> {
+    if (distributedPackageIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.repository
+      .createQueryBuilder('distribution')
+      .innerJoin('distribution.distributedPackages', 'distributedPackage')
+      .innerJoin(`distributedPackage.${relation}`, 'version')
+      .where('distributedPackage.id IN (:...distributedPackageIds)', {
+        distributedPackageIds,
+      })
+      .select('distributedPackage.id', 'distributedPackageId')
+      .addSelect(`version.${ARTIFACT_ID_COLUMN[relation]}`, 'artifactId')
+      .addSelect('version.name', 'name')
+      .addSelect('version.slug', 'slug')
+      .addSelect('version.version', 'version')
+      .getRawMany<DeployedVersionRow>();
+
+    return groupBy(rows, (row) => row.distributedPackageId);
+  }
+
+  private latestDeploymentsPerArtifact<TArtifactId extends string>(
+    rows: LatestAddedPackageRow[],
+    versionsByDistributedPackageId: Map<string, DeployedVersionRow[]>,
+  ): OutdatedDeployment<TArtifactId>[] {
+    return this.latestVersionPerArtifact(
+      rows,
+      versionsByDistributedPackageId,
+      (version) => version.artifactId,
+    ).map(({ version, row }) => ({
+      artifactId: version.artifactId as TArtifactId,
+      artifactName: version.name,
+      artifactSlug: version.slug,
+      deployedVersion: version.version,
+      deploymentDate: toIsoString(row.distributedAt),
+      isDeleted: false,
+    }));
+  }
+
   async findOutdatedDeploymentsBySpace(
     organizationId: OrganizationId,
     spaceId: SpaceId,
@@ -1239,222 +1348,62 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      type LatestRow = {
-        distributedPackageId: string;
-        targetId: TargetId;
-        targetName: string;
-        gitRepoId: string;
-        deploymentDate: string;
-      };
-
-      // Latest successful 'add' distribution per (target, package) within the space.
-      // DISTINCT ON collapses history to one row per pair at the SQL layer, so we
-      // never hydrate the heavy version content for older distributions.
-      // Correctness relies on DISTINCT ON, which TypeORM only emits for a
-      // Postgres-family driver and silently drops otherwise, degrading this to
-      // "every historical row". This repository is Postgres-only.
-      const latestRows = await this.repository
-        .createQueryBuilder('distribution')
-        .innerJoin('distribution.distributedPackages', 'distributedPackage')
-        .innerJoin('distributedPackage.package', 'package')
-        .innerJoin('distribution.target', 'target')
-        .where('distribution.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('distribution.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .andWhere('package.spaceId = :spaceId', { spaceId })
-        .andWhere('distributedPackage.operation = :operation', {
-          operation: 'add',
-        })
-        .distinctOn(['distribution.target_id', 'distributedPackage.package_id'])
-        .orderBy('distribution.target_id')
-        .addOrderBy('distributedPackage.package_id')
-        .addOrderBy('distribution.createdAt', 'DESC')
-        .addOrderBy('distribution.id', 'DESC')
-        .select('distributedPackage.id', 'distributedPackageId')
-        .addSelect('distribution.target_id', 'targetId')
-        .addSelect('target.name', 'targetName')
-        .addSelect('target.git_repo_id', 'gitRepoId')
-        .addSelect('distribution.createdAt', 'deploymentDate')
-        .getRawMany<LatestRow>();
-
-      if (latestRows.length === 0) {
-        this.logger.info('Outdated deployments found by space', {
-          organizationId,
-          spaceId,
-          targetCount: 0,
-        });
-        return [];
-      }
+      const latestRows = await this.findLatestAddedPackagesBySpace(
+        organizationId,
+        spaceId,
+      );
 
       const distributedPackageIds = latestRows.map(
         (row) => row.distributedPackageId,
       );
-      const dpById = new Map(
-        latestRows.map((row) => [row.distributedPackageId, row]),
-      );
 
-      type StandardVersionRow = {
-        distributedPackageId: string;
-        standardId: StandardId;
-        name: string;
-        slug: string;
-        version: number;
-      };
-      type CommandVersionRow = {
-        distributedPackageId: string;
-        commandId: CommandId;
-        name: string;
-        slug: string;
-        version: number;
-      };
-      type SkillVersionRow = {
-        distributedPackageId: string;
-        skillId: SkillId;
-        name: string;
-        slug: string;
-        version: number;
-      };
-
-      // Slim version metadata pulled from the pivot tables. Three focused
-      // queries keep each join flat (no Cartesian product across the three
-      // version types) and reuse the same Distribution-bound QueryBuilder.
-      const [standardRows, commandRows, skillRows] = await Promise.all([
-        this.repository
-          .createQueryBuilder('distribution')
-          .innerJoin('distribution.distributedPackages', 'distributedPackage')
-          .innerJoin('distributedPackage.standardVersions', 'standardVersion')
-          .where('distributedPackage.id IN (:...ids)', {
-            ids: distributedPackageIds,
-          })
-          .select('distributedPackage.id', 'distributedPackageId')
-          .addSelect('standardVersion.standard_id', 'standardId')
-          .addSelect('standardVersion.name', 'name')
-          .addSelect('standardVersion.slug', 'slug')
-          .addSelect('standardVersion.version', 'version')
-          .getRawMany<StandardVersionRow>(),
-        this.repository
-          .createQueryBuilder('distribution')
-          .innerJoin('distribution.distributedPackages', 'distributedPackage')
-          .innerJoin('distributedPackage.recipeVersions', 'commandVersion')
-          .where('distributedPackage.id IN (:...ids)', {
-            ids: distributedPackageIds,
-          })
-          .select('distributedPackage.id', 'distributedPackageId')
-          .addSelect('commandVersion.command_id', 'commandId')
-          .addSelect('commandVersion.name', 'name')
-          .addSelect('commandVersion.slug', 'slug')
-          .addSelect('commandVersion.version', 'version')
-          .getRawMany<CommandVersionRow>(),
-        this.repository
-          .createQueryBuilder('distribution')
-          .innerJoin('distribution.distributedPackages', 'distributedPackage')
-          .innerJoin('distributedPackage.skillVersions', 'skillVersion')
-          .where('distributedPackage.id IN (:...ids)', {
-            ids: distributedPackageIds,
-          })
-          .select('distributedPackage.id', 'distributedPackageId')
-          .addSelect('skillVersion.skill_id', 'skillId')
-          .addSelect('skillVersion.name', 'name')
-          .addSelect('skillVersion.slug', 'slug')
-          .addSelect('skillVersion.version', 'version')
-          .getRawMany<SkillVersionRow>(),
-      ]);
-
-      type TargetBucket = {
-        targetName: string;
-        gitRepoId: string;
-        standards: Map<string, OutdatedStandardDeployment>;
-        commands: Map<string, OutdatedCommandDeployment>;
-        skills: Map<string, OutdatedSkillDeployment>;
-      };
-
-      const targets = new Map<string, TargetBucket>();
-
-      const bucketFor = (row: LatestRow): TargetBucket => {
-        const tId = row.targetId as string;
-        const existing = targets.get(tId);
-        if (existing) return existing;
-        const created: TargetBucket = {
-          targetName: row.targetName,
-          gitRepoId: row.gitRepoId,
-          standards: new Map(),
-          commands: new Map(),
-          skills: new Map(),
-        };
-        targets.set(tId, created);
-        return created;
-      };
-
-      // Seed buckets so targets with active packages but no artifacts still
-      // appear (the use case relies on per-target indexing).
-      for (const row of latestRows) {
-        bucketFor(row);
-      }
-
-      for (const sv of standardRows) {
-        const dp = dpById.get(sv.distributedPackageId);
-        if (!dp) continue;
-        const bucket = bucketFor(dp);
-        if (bucket.standards.has(sv.standardId)) continue;
-        bucket.standards.set(sv.standardId, {
-          artifactId: sv.standardId,
-          artifactName: sv.name,
-          artifactSlug: sv.slug,
-          deployedVersion: sv.version,
-          deploymentDate: toIsoString(dp.deploymentDate),
-          isDeleted: false,
-        });
-      }
-
-      for (const cv of commandRows) {
-        const dp = dpById.get(cv.distributedPackageId);
-        if (!dp) continue;
-        const bucket = bucketFor(dp);
-        if (bucket.commands.has(cv.commandId)) continue;
-        bucket.commands.set(cv.commandId, {
-          artifactId: cv.commandId,
-          artifactName: cv.name,
-          artifactSlug: cv.slug,
-          deployedVersion: cv.version,
-          deploymentDate: toIsoString(dp.deploymentDate),
-          isDeleted: false,
-        });
-      }
-
-      for (const sv of skillRows) {
-        const dp = dpById.get(sv.distributedPackageId);
-        if (!dp) continue;
-        const bucket = bucketFor(dp);
-        if (bucket.skills.has(sv.skillId)) continue;
-        bucket.skills.set(sv.skillId, {
-          artifactId: sv.skillId,
-          artifactName: sv.name,
-          artifactSlug: sv.slug,
-          deployedVersion: sv.version,
-          deploymentDate: toIsoString(dp.deploymentDate),
-          isDeleted: false,
-        });
-      }
+      const [standardsByPackage, commandsByPackage, skillsByPackage] =
+        await Promise.all([
+          this.fetchDeployedVersionRows(
+            distributedPackageIds,
+            'standardVersions',
+          ),
+          this.fetchDeployedVersionRows(
+            distributedPackageIds,
+            'recipeVersions',
+          ),
+          this.fetchDeployedVersionRows(distributedPackageIds, 'skillVersions'),
+        ]);
 
       const result: OutdatedDeploymentsByTarget[] = [];
-      for (const [tId, bucket] of targets) {
+
+      for (const [targetId, rows] of groupBy(
+        latestRows,
+        (row) => row.targetId,
+      )) {
+        const standards = this.latestDeploymentsPerArtifact<StandardId>(
+          rows,
+          standardsByPackage,
+        );
+        const recipes = this.latestDeploymentsPerArtifact<CommandId>(
+          rows,
+          commandsByPackage,
+        );
+        const skills = this.latestDeploymentsPerArtifact<SkillId>(
+          rows,
+          skillsByPackage,
+        );
+
         if (
-          bucket.standards.size === 0 &&
-          bucket.commands.size === 0 &&
-          bucket.skills.size === 0
+          standards.length === 0 &&
+          recipes.length === 0 &&
+          skills.length === 0
         ) {
           continue;
         }
+
         result.push({
-          targetId: tId as TargetId,
-          targetName: bucket.targetName,
-          gitRepoId: bucket.gitRepoId,
-          standards: Array.from(bucket.standards.values()),
-          recipes: Array.from(bucket.commands.values()),
-          skills: Array.from(bucket.skills.values()),
+          targetId,
+          targetName: rows[0].targetName,
+          gitRepoId: rows[0].gitRepoId,
+          standards,
+          recipes,
+          skills,
         });
       }
 

@@ -1,3 +1,5 @@
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { RemoveArtefactsFromPackageUseCase } from './RemoveArtefactsFromPackageUseCase';
 import {
   RemoveArtefactsFromPackageCommand,
@@ -339,7 +341,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
 
     it('throws error with package id', async () => {
       await expect(executePromise).rejects.toThrow(
-        `Package with id ${packageId} not found`,
+        new PackageNotFoundError(packageId, spaceId),
       );
     });
 
@@ -364,7 +366,7 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space with id ${spaceId} not found`,
+        new SpaceNotAccessibleError(spaceId, organizationId),
       );
     });
   });

@@ -1,0 +1,10 @@
+{
+  "unit_id": "U-033",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/doc/concepts/packages-management.mdx"
+  ],
+  "gated_by": "sweep",
+  "$comment_no_exit_criterion": "Same shape and same reason as U-019 and U-026, recorded as D-047: apps/doc declares only a `dev` target — no test, lint or build — so there is no assertion to name. Gated with `agent-gate.mjs sweep`. A criterion borrowed from the feature's suite would pass green while judging this unit by tests it did not write. Running `agent-gate.mjs unit` against this spec will halt, correctly.",
+  "$comment_what_it_fixes": "One false sentence at line 112, `Any member of your organization can create a release.` U-032 made it false when it put the three release use cases on AbstractSpaceMemberUseCase; D-065 amended the charter's scope bullet without touching the user-facing page. Named in S6 and on PR #489, unfixed until here."
+}

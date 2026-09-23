@@ -38,7 +38,7 @@ export const CommandDistributionsList: React.FC<
   return (
     <DeploymentsHistory
       deployments={distributions || []}
-      type="recipe"
+      type="command"
       entityId={recipeId}
       usersMap={buildUserMap(users)}
       loading={isLoadingDistributions || isLoadingUsers}

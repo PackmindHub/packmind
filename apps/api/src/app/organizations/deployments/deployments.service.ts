@@ -2,9 +2,13 @@ import { Injectable } from '@nestjs/common';
 import {
   ActiveDistributedPackagesByTarget,
   Distribution,
+  DistributionHistoryEntry,
   ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
+  ListDistributionsByStandardResponse,
+  ListDistributionsBySkillResponse,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   PublishArtifactsCommand,
@@ -37,12 +41,20 @@ import {
   RemovePackageFromTargetsResponse,
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   GetDashboardKpiCommand,
   DashboardKpiResponse,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
   IDeploymentPort,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
@@ -56,25 +68,25 @@ export class DeploymentsService {
 
   async listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     return this.deploymentAdapter.listDeploymentsByPackage(command);
   }
 
   async listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     return this.deploymentAdapter.listDistributionsByCommand(command);
   }
 
   async listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     return this.deploymentAdapter.listDistributionsByStandard(command);
   }
 
   async listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     return this.deploymentAdapter.listDistributionsBySkill(command);
   }
 
@@ -178,6 +190,12 @@ export class DeploymentsService {
     return this.deploymentAdapter.addArtefactsToPackage(command);
   }
 
+  async moveArtefactsToPackage(
+    command: MoveArtefactsToPackageCommand,
+  ): Promise<MoveArtefactsToPackageResponse> {
+    return this.deploymentAdapter.moveArtefactsToPackage(command);
+  }
+
   async removeArtefactsFromPackage(
     command: RemoveArtefactsFromPackageCommand,
   ): Promise<RemoveArtefactsFromPackageResponse> {
@@ -200,6 +218,24 @@ export class DeploymentsService {
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this.deploymentAdapter.getDashboardNonLive(command);
+  }
+
+  async listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse> {
+    return this.deploymentAdapter.listPackageReleases(command);
+  }
+
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this.deploymentAdapter.createPackageRelease(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this.deploymentAdapter.getPackageRelease(command);
   }
 
   async listActiveDistributedPackagesBySpace(

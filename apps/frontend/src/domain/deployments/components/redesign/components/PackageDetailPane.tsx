@@ -676,19 +676,37 @@ function InstallRow({
         row comes down to 43.
       */}
       <PMHStack gap={3} align="center" paddingX={6} paddingY={2}>
-        <PMBox flexShrink={0} display="flex" alignItems="center" width="20px">
+        {/*
+          The column is the checkbox, the row's left padding included: a 16px
+          box in a 43px row is a target the pointer misses, and the miss lands
+          on padding that does nothing with it. The label is what turns a
+          click into a tick, so it takes the column, and the 2px inset keeps
+          the box where it was drawn.
+        */}
+        <PMBox
+          flexShrink={0}
+          display="flex"
+          alignSelf="stretch"
+          width="44px"
+          marginLeft="-24px"
+          /* And the row's own padding, so the rows tile the column exactly. */
+          marginY="-8px"
+        >
           {hasDrift ? (
             <PMTooltip
               label={lockReason ? LOCK_CHECKBOX_TOOLTIP[lockReason] : null}
               placement="top"
             >
-              <PMBox display="inline-flex" alignItems="center">
+              <PMBox display="flex" width="full">
                 <PMCheckbox
                   size="sm"
                   checked={selected}
                   disabled={checkboxDisabled}
                   onCheckedChange={() => onToggle()}
                   aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${showTarget ? ` (${targetLabel(entry.target)})` : ''}`}
+                  width="full"
+                  justifyContent="flex-end"
+                  paddingRight="2px"
                 />
               </PMBox>
             </PMTooltip>

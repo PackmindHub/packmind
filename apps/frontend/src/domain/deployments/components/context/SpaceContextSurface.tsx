@@ -37,6 +37,7 @@ import {
   COMPONENT_PARAM,
   FILE_PARAM,
   INVENTORY_VALUE,
+  RELEASE_PARAM,
   RULE_PARAM,
   findSpaceComponent,
   inventoryHref,
@@ -347,6 +348,10 @@ export function SpaceContextSurface() {
           previous.delete(COMPONENT_PARAM);
           previous.delete(FILE_PARAM);
           previous.delete(RULE_PARAM);
+          // And the version being read, for the same reason one step up: a
+          // release belongs to the package it was cut from, so 1.1.0 carried
+          // into the next package would name one of its releases or none.
+          previous.delete(RELEASE_PARAM);
           // A rail click asks for the whole of what it names unless it names
           // the filtered part itself, so a filter left over from the previous
           // selection would answer a question the click did not ask. Clicking

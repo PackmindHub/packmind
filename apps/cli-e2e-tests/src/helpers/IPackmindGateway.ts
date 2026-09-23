@@ -1,5 +1,5 @@
 import {
-  Distribution,
+  DistributionHistoryEntry,
   Gateway,
   IActivateUserAccountUseCase,
   ICaptureCommandUseCase,
@@ -65,7 +65,10 @@ export interface IChangeProposalGateway {
 export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
   updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase>;
-  listDeploymentsByPackage(packageId: string): Promise<Distribution[]>;
+  listDeploymentsByPackage(
+    spaceId: string,
+    packageId: string,
+  ): Promise<DistributionHistoryEntry[]>;
 }
 
 export interface ISkillsGateway {

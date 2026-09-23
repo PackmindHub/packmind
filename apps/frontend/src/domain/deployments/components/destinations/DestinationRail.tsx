@@ -838,34 +838,36 @@ function DestinationRow({
         />
       )}
 
-      <PMHStack gap={0} align="stretch" paddingLeft={3}>
+      <PMHStack gap={0} align="stretch">
         {/*
           The column is there whether or not this row has a checkbox, so the
           names of a section stay on one left edge. A row that cannot be picked
           is not a row that should be indented differently.
+
+          It carries the row's left gutter instead of the stack, because the
+          whole column is the checkbox: the 16px box used to float in the
+          middle of a 56px row, and a click a few pixels off it landed on the
+          column, which swallowed it and did nothing. The checkbox read as
+          broken and the name was the only way to pick a row.
+
+          The label is what takes the click — a click anywhere on it is a click
+          on the box it is for — so the label claims the column rather than a
+          second handler being hung beside it, which would fight the one the
+          label already sends.
         */}
-        <PMBox
-          width="16px"
-          flexShrink={0}
-          display="inline-flex"
-          alignItems="center"
-          justifyContent="center"
-          onClick={(event) => event.stopPropagation()}
-        >
+        <PMBox width="28px" flexShrink={0} display="flex">
           {pickable && (
-            <PMBox
+            <PMCheckbox
+              size="sm"
+              checked={isPicked}
+              onCheckedChange={() => onToggleBulk()}
+              aria-label={`Select ${destination.name} for batch distribution`}
               opacity={showCheckbox ? 1 : 0}
               transition="opacity 100ms ease-out"
-              display="inline-flex"
-              alignItems="center"
-            >
-              <PMCheckbox
-                size="sm"
-                checked={isPicked}
-                onCheckedChange={() => onToggleBulk()}
-                aria-label={`Select ${destination.name} for batch distribution`}
-              />
-            </PMBox>
+              width="full"
+              /* The 16px box keeps the place the 12px gutter gave it. */
+              justifyContent="flex-end"
+            />
           )}
         </PMBox>
 
@@ -1291,6 +1293,15 @@ function RailActionBar({
             }}
             disabled={actionableCount === 0}
             aria-label="Select every drifted destination in this list"
+            /*
+              A 16px box on a bar this size is a target the pointer misses,
+              and the count beside it is a readout rather than a label, so a
+              miss has nothing to land on. The padding grows the target to
+              32px and the negative margin gives back the room it took, so
+              nothing on the bar moves.
+            */
+            padding={2}
+            margin={-2}
           />
           <PMText
             fontSize="xs"

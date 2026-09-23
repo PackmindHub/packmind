@@ -7,14 +7,14 @@ import {
   PMPortal,
   pmToaster,
 } from '@packmind/ui';
-import { Distribution, Package } from '@packmind/types';
+import { DistributionHistoryEntry, Package } from '@packmind/types';
 import { RemovePackageFromTargets } from './RemovePackageFromTargets';
 import { createPackageRemovalNotifications } from '../../utils/deploymentNotificationUtils';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 export interface RemovePackageFromTargetsDialogProps {
   selectedPackage: Package;
-  distributions: Distribution[];
+  distributions: DistributionHistoryEntry[];
   /**
    * Held by the caller when given, which is what a menu item needs: clicking one
    * closes the menu, and a dialog mounted inside that menu would go with it.

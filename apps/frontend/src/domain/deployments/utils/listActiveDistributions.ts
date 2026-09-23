@@ -1,5 +1,5 @@
 import {
-  Distribution,
+  DistributionHistoryEntry,
   DistributionStatus,
   PackageId,
   TargetId,
@@ -20,10 +20,10 @@ import {
  * @param packageId - The ID of the package to check
  * @returns Only distributions for targets where the package is actively deployed
  */
-export function listActiveDistributions(
-  distributions: Distribution[],
+export function listActiveDistributions<D extends DistributionHistoryEntry>(
+  distributions: D[],
   packageId: PackageId,
-): Distribution[] {
+): D[] {
   if (distributions.length === 0) {
     return [];
   }
@@ -38,7 +38,7 @@ export function listActiveDistributions(
   }
 
   // Group distributions by target ID
-  const distributionsByTarget = new Map<TargetId, Distribution[]>();
+  const distributionsByTarget = new Map<TargetId, D[]>();
 
   for (const distribution of distributionsWithPackage) {
     const targetId = distribution.target.id;
@@ -47,7 +47,7 @@ export function listActiveDistributions(
     distributionsByTarget.set(targetId, existing);
   }
 
-  const activeDistributions: Distribution[] = [];
+  const activeDistributions: D[] = [];
 
   // For each target, find the latest distribution and check its operation and status
   for (const targetDistributions of distributionsByTarget.values()) {

@@ -1,9 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -16,6 +16,7 @@ import {
   AddArtefactsToPackageResponse,
   CreatePackageResponse,
   DeletePackagesBatchResponse,
+  DistributionHistoryEntry,
   GetPackageByIdResponse,
   GetPackageSummaryResponse,
   ListPackagesBySpaceResponse,
@@ -29,9 +30,15 @@ import {
   SpaceId,
   StandardId,
   AddArtefactsToPackageCommand,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
+  ListPackageReleasesResponse,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseResponse,
 } from '@packmind/types';
+import { PackageReleaseRefusedError } from '@packmind/deployments';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
@@ -67,6 +74,12 @@ type AddArtefactsToPackageApiResponse = Omit<
 };
 type RemoveArtefactsFromPackageApiResponse = Omit<
   RemoveArtefactsFromPackageResponse,
+  'package'
+> & {
+  package: PackageResponse;
+};
+type MoveArtefactsToPackageApiResponse = Omit<
+  MoveArtefactsToPackageResponse,
   'package'
 > & {
   package: PackageResponse;
@@ -123,29 +136,15 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      const response = await this.deploymentsService.listPackagesBySpace({
-        userId,
-        organizationId,
-        spaceId,
-      });
-      return {
-        ...response,
-        packages: response.packages.map(toPackageResponse),
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/packages - Failed to fetch packages',
-        {
-          organizationId,
-          spaceId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    const response = await this.deploymentsService.listPackagesBySpace({
+      userId,
+      organizationId,
+      spaceId,
+    });
+    return {
+      ...response,
+      packages: response.packages.map(toPackageResponse),
+    };
   }
 
   /**
@@ -166,26 +165,166 @@ export class OrganizationsSpacesPackagesController {
       { organizationId, spaceId, slug },
     );
 
+    return await this.deploymentsService.getPackageSummary({
+      userId,
+      organizationId,
+      spaceId,
+      slug,
+      source: request.clientSource,
+    });
+  }
+
+  /**
+   * List the distribution history of a package
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments
+   *
+   * Space scoped rather than organization scoped: the history names the
+   * repositories, branches and commits a package was distributed to, which is
+   * the space's to see, not the whole organization's.
+   */
+  @Get(':packageId/deployments')
+  async listPackageDeployments(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DistributionHistoryEntry[]> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments - Fetching deployments',
+      { organizationId, spaceId, packageId },
+    );
+
+    const deployments = await this.deploymentsService.listDeploymentsByPackage({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+    });
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/deployments - Deployments fetched successfully',
+      { organizationId, spaceId, packageId, count: deployments.length },
+    );
+
+    return deployments;
+  }
+
+  /**
+   * List a package's releases together with the release panel's readiness
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases
+   */
+  @Get(':packageId/releases')
+  async listPackageReleases(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListPackageReleasesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Listing releases',
+      { organizationId, spaceId, packageId },
+    );
+
+    return await this.deploymentsService.listPackageReleases({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+    });
+  }
+
+  /**
+   * Cut a release of a package
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases
+   */
+  @Post(':packageId/releases')
+  async createPackageRelease(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { version: string },
+  ): Promise<CreatePackageReleaseResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Creating release',
+      { organizationId, spaceId, packageId, version: body.version },
+    );
+
     try {
-      return await this.deploymentsService.getPackageSummary({
+      return await this.deploymentsService.createPackageRelease({
         userId,
         organizationId,
         spaceId,
-        slug,
-        source: request.clientSource,
+        packageId,
+        version: body.version,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug - Failed to fetch package summary',
-        { organizationId, spaceId, slug, error: errorMessage },
-      );
-      if (error instanceof Error && error.message.includes('does not exist')) {
-        throw new NotFoundException(error.message);
+      if (error instanceof PackageReleaseRefusedError) {
+        /*
+         * Logged here, and only here: converting the refusal into a
+         * BadRequestException is what keeps `code` and `currentVersion` in the
+         * body, and it also means DomainExceptionFilter never sees the domain
+         * error and never records it. Every other failure falls through to the
+         * filter, which logs it once with its own level and context.
+         */
+        this.logger.warn(
+          'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases - Release refused',
+          {
+            organizationId,
+            spaceId,
+            packageId,
+            version: body.version,
+            code: error.code,
+            currentVersion: error.currentVersion,
+          },
+        );
+        throw new BadRequestException({
+          /*
+           * Developer-facing, and there only so the body satisfies the shared
+           * client's error predicate: the sentence the user reads is built in
+           * the frontend from `code` and `currentVersion`.
+           */
+          message: error.message,
+          code: error.code,
+          currentVersion: error.currentVersion,
+        });
       }
       throw error;
     }
+  }
+
+  /**
+   * Get one release of a package by version, with everything it pinned
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version
+   */
+  @Get(':packageId/releases/:version')
+  async getPackageRelease(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Param('version') version: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetPackageReleaseResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId/releases/:version - Fetching release',
+      { organizationId, spaceId, packageId, version },
+    );
+
+    return await this.deploymentsService.getPackageRelease({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+      version,
+    });
   }
 
   /**
@@ -210,28 +349,13 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      const response = await this.deploymentsService.getPackageById({
-        userId,
-        organizationId,
-        spaceId,
-        packageId,
-      });
-      return { ...response, package: toPackageResponse(response.package) };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to fetch package',
-        {
-          organizationId,
-          spaceId,
-          packageId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    const response = await this.deploymentsService.getPackageById({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+    });
+    return { ...response, package: toPackageResponse(response.package) };
   }
 
   /**
@@ -268,33 +392,18 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      const response = await this.deploymentsService.createPackage({
-        userId,
-        organizationId,
-        spaceId,
-        name: body.name,
-        description: body.description,
-        recipeIds,
-        standardIds: body.standardIds,
-        skillIds: body.skillIds,
-        originSkill: body.originSkill,
-      });
-      return { ...response, package: toPackageResponse(response.package) };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/packages - Failed to create package',
-        {
-          organizationId,
-          spaceId,
-          name: body.name,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    const response = await this.deploymentsService.createPackage({
+      userId,
+      organizationId,
+      spaceId,
+      name: body.name,
+      description: body.description,
+      recipeIds,
+      standardIds: body.standardIds,
+      skillIds: body.skillIds,
+      originSkill: body.originSkill,
+    });
+    return { ...response, package: toPackageResponse(response.package) };
   }
 
   /**
@@ -332,34 +441,18 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      const response = await this.deploymentsService.updatePackage({
-        userId,
-        organizationId,
-        spaceId,
-        packageId,
-        name: body.name,
-        description: body.description,
-        recipeIds,
-        standardIds: body.standardIds,
-        skillsIds: body.skillsIds ?? [],
-      });
-      return { ...response, package: toPackageResponse(response.package) };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to update package',
-        {
-          organizationId,
-          spaceId,
-          packageId,
-          name: body.name,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    const response = await this.deploymentsService.updatePackage({
+      userId,
+      organizationId,
+      spaceId,
+      packageId,
+      name: body.name,
+      description: body.description,
+      recipeIds,
+      standardIds: body.standardIds,
+      skillsIds: body.skillsIds ?? [],
+    });
+    return { ...response, package: toPackageResponse(response.package) };
   }
 
   /**
@@ -386,6 +479,43 @@ export class OrganizationsSpacesPackagesController {
     );
 
     const response = await this.deploymentsService.addArtefactsToPackage({
+      userId,
+      spaceId,
+      organizationId,
+      packageId: packageId,
+      standardIds: body.standardIds,
+      recipeIds,
+      skillIds: body.skillIds,
+      originSkill: body.originSkill,
+    });
+    return { ...response, package: toPackageResponse(response.package) };
+  }
+
+  /**
+   * Move artifacts into an existing package, taking them out of every other
+   * package in the space
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/move-artifacts
+   */
+  @Post(':packageId/move-artifacts')
+  async moveArtefactsToPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: MoveArtefactsToPackageCommand & { commandIds?: CommandId[] },
+  ): Promise<MoveArtefactsToPackageApiResponse> {
+    const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/move-artifacts',
+      { organizationId, spaceId, packageId },
+    );
+
+    const response = await this.deploymentsService.moveArtefactsToPackage({
       userId,
       spaceId,
       organizationId,
@@ -455,27 +585,12 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      return await this.deploymentsService.deletePackagesBatch({
-        userId,
-        organizationId,
-        spaceId,
-        packageIds: [packageId],
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to delete package',
-        {
-          organizationId,
-          spaceId,
-          packageId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentsService.deletePackagesBatch({
+      userId,
+      organizationId,
+      spaceId,
+      packageIds: [packageId],
+    });
   }
 
   /**
@@ -501,27 +616,11 @@ export class OrganizationsSpacesPackagesController {
       },
     );
 
-    try {
-      return await this.deploymentsService.deletePackagesBatch({
-        userId,
-        organizationId,
-        spaceId,
-        packageIds: body.packageIds,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/spaces/:spaceId/packages - Failed to delete packages batch',
-        {
-          organizationId,
-          spaceId,
-          packageIds: body.packageIds,
-          count: body.packageIds.length,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return await this.deploymentsService.deletePackagesBatch({
+      userId,
+      organizationId,
+      spaceId,
+      packageIds: body.packageIds,
+    });
   }
 }

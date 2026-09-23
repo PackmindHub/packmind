@@ -11,6 +11,7 @@ import {
 } from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
+import { GitProviderNotFoundError } from '@packmind/types';
 
 const origin = 'GitProviderRepository';
 
@@ -215,7 +216,7 @@ export class GitProviderRepository
         id: id as GitProviderId,
       });
       if (!existingProvider) {
-        throw new Error(`Git provider with id ${id} not found`);
+        throw new GitProviderNotFoundError(id);
       }
 
       const updatedProvider: GitProvider = {

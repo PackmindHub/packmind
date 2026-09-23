@@ -1,6 +1,13 @@
-export class MissingEmailError extends Error {
+import { AccountsError } from './AccountsError';
+
+export class MissingEmailError extends AccountsError {
   constructor() {
-    super(`Missing email input for sign-in`);
+    super(
+      'invalid_input',
+      'missing_email',
+      {},
+      'Missing email input for sign-in',
+    );
     this.name = 'MissingEmailError';
   }
 }

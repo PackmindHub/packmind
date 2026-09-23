@@ -1,0 +1,14 @@
+{
+  "unit_id": "U-034",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+    "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.spec.tsx"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='refetches the readiness the cache still considers fresh'",
+    "kind": "behavioural",
+    "describes": "AC-4"
+  },
+  "$comment_why_behavioural": "D-068: asserting that the options object contains `refetchOnMount: 'always'` would be configuration asserting itself and would pass without the defect ever having been real. The criterion drives two mounts against a QueryClient carrying the app's real ten-minute staleTime and asserts the gateway was called twice — which fails on today's code."
+}

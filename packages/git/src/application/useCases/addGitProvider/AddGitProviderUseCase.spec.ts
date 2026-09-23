@@ -5,6 +5,7 @@ import {
   GitProviderVendor,
   GitProviderVendors,
   InvalidGitProviderCredentialsError,
+  MissingGitInputError,
   createGitProviderId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
@@ -165,8 +166,8 @@ describe('AddGitProviderUseCase', () => {
       }
     });
 
-    it('throws error', () => {
-      expect(thrownError?.message).toBe('Git provider source is required');
+    it('throws MissingGitInputError', () => {
+      expect(thrownError).toBeInstanceOf(MissingGitInputError);
     });
 
     it('does not call addGitProvider', () => {

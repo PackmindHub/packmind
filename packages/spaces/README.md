@@ -6,8 +6,8 @@ A TypeScript package for space management in the Packmind monorepo. This package
 
 The package follows **hexagonal architecture** with clear separation of concerns:
 
-- **Domain Layer** (`domain/`): Core business entities and repository interfaces
-- **Application Layer** (`application/`): Services orchestrating domain logic
+- **Domain Layer** (`domain/`): Repository interfaces, domain errors and the `SpaceName` value object (entity types live in `@packmind/types`)
+- **Application Layer** (`application/`): Use cases, services orchestrating domain logic, and the `SpacesAdapter` implementing `ISpacesPort`
 - **Infrastructure Layer** (`infra/`): TypeORM implementations and database schemas
 - **Hexagon** (`SpacesHexa.ts`): Main entry point with dependency injection
 
@@ -21,10 +21,22 @@ The package follows **hexagonal architecture** with clear separation of concerns
 - ✅ Soft delete support
 - ✅ Organization scoping
 
+### Space Membership
+
+- ✅ Space members with roles (`UserSpaceMembership`)
+- ✅ Adding, removing and role updates for space members
+- ✅ Listing the spaces a user belongs to
+
 ## Installation
 
-```bash
-pnpm add @packmind/spaces
+This package is private to the monorepo; consumers declare it with the workspace protocol:
+
+```json
+{
+  "dependencies": {
+    "@packmind/spaces": "workspace:*"
+  }
+}
 ```
 
 ## Usage
@@ -32,7 +44,7 @@ pnpm add @packmind/spaces
 ### Basic Setup
 
 ```typescript
-import { SpacesHexa } from '@packmind/spaces';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { DataSource } from 'typeorm';
 
 const dataSource = new DataSource({
@@ -41,35 +53,50 @@ const dataSource = new DataSource({
   entities: [...spacesSchemas],
 });
 
-const spacesHexa = new SpacesHexa({ dataSource });
+const spacesHexa = new SpacesHexa(dataSource);
 ```
+
+In the API the hexa is not constructed by hand: it is registered in a `HexaRegistry`, which constructs it and calls `initialize()` so its adapter can resolve the accounts port.
 
 ### Space Management
 
+Domain operations are exposed through the `ISpacesPort` adapter:
+
 ```typescript
+const spacesPort = spacesHexa.getAdapter();
+
 // Create a new space
-const space = await spacesHexa.createSpace('My Space', organizationId);
+const space = await spacesPort.createSpace({
+  userId,
+  organizationId,
+  name: 'My Space',
+});
 
 // Get space by ID
-const space = await spacesHexa.getSpaceById(spaceId);
+const space = await spacesPort.getSpaceById(spaceId);
 
 // Get space by slug within organization
-const space = await spacesHexa.getSpaceBySlug('my-space', organizationId);
+const space = await spacesPort.getSpaceBySlug('my-space', organizationId);
 
 // List spaces for an organization
-const spaces = await spacesHexa.listSpacesByOrganization(organizationId);
+const spaces = await spacesPort.listSpacesByOrganization(organizationId);
 ```
 
 ## Data Models
 
 ### Space Entity
 
+Defined in `@packmind/types`:
+
 ```typescript
 type Space = {
   id: SpaceId;
   name: string;
   slug: string;
+  type: SpaceType;
   organizationId: OrganizationId;
+  isDefaultSpace: boolean;
+  color: SpaceColor;
 };
 ```
 
@@ -88,7 +115,8 @@ const dataSource = new DataSource({
 
 ### Tables Created
 
-- `spaces`: Space records with unique (slug, organization_id) constraint
+- `spaces`: Space records with a unique (slug, organization_id) index on non-deleted rows
+- `user_space_memberships`: Space membership records keyed by (user_id, space_id)
 
 ## Testing
 
@@ -108,7 +136,10 @@ nx lint spaces
 - `uuid`: UUID generation
 - `slug`: Slug generation
 - `typeorm`: Database ORM
-- `@packmind/shared`: Shared utilities and schemas
+- `@packmind/node-utils`: `BaseHexa`, `HexaRegistry`, schema helpers
+- `@packmind/types`: Entity types and use case contracts
+- `@packmind/logger`: Logging
+- `@packmind/accounts`, `@packmind/test-utils`: Test factories and helpers used by the specs (at runtime, accounts is reached through `IAccountsPort`)
 
 ## License
 

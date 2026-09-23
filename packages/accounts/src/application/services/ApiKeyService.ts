@@ -2,6 +2,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Organization, User, UserOrganizationRole } from '@packmind/types';
 import { ApiKeyPayload, DecodedApiKey } from '../../domain/entities/ApiKey';
 import { decodeApiKey, encodeApiKey } from '../../domain/utils/api-key.utils';
+import { ApiKeyGenerationFailedError } from '../../domain/errors';
 
 const origin = 'ApiKeyService';
 
@@ -126,10 +127,11 @@ export class ApiKeyService {
 
       return apiKey;
     } catch (error) {
-      this.logger.error('Failed to generate API key', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error(`Failed to generate API key: ${error}`);
+      throw new ApiKeyGenerationFailedError(
+        user.id,
+        organization.id,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

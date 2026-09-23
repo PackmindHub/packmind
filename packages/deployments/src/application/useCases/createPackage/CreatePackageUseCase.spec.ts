@@ -38,6 +38,8 @@ import { spaceFactory } from '@packmind/spaces/test';
 import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillFactory } from '@packmind/skills/test';
+import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 
 describe('CreatePackageUseCase', () => {
   let useCase: CreatePackageUseCase;
@@ -554,7 +556,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Space with id ${spaceId} not found`,
+          SpaceNotAccessibleError,
         );
       });
 
@@ -607,7 +609,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Space ${spaceId} does not belong to organization ${organizationId}`,
+          SpaceNotAccessibleError,
         );
       });
 
@@ -655,7 +657,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe with id ${commandId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
 
@@ -717,7 +719,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe ${commandId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
 
@@ -777,7 +779,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Standard with id ${standardId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
 
@@ -837,7 +839,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Standard ${standardId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
 
@@ -894,7 +896,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Skill with id ${skillId1} not found`,
+          ArtefactNotInSpaceError,
         );
       });
 
@@ -934,7 +936,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Skill ${skillId1} does not belong to space ${spaceId}`,
+          ArtefactNotInSpaceError,
         );
       });
 

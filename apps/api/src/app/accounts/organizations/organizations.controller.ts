@@ -8,17 +8,12 @@ import {
   Req,
   NotFoundException,
   BadRequestException,
-  ConflictException,
 } from '@nestjs/common';
 import {
   Organization,
   OrganizationId,
   RenameOrganizationResponse,
 } from '@packmind/types';
-import {
-  OrganizationSlugConflictError,
-  InvalidOrganizationNameError,
-} from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -44,20 +39,7 @@ export class OrganizationsController {
       userId,
     });
 
-    try {
-      return await this.organizationsService.getUserOrganizations(userId);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations - Failed to fetch user organizations',
-        {
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.organizationsService.getUserOrganizations(userId);
   }
 
   @Public()
@@ -72,27 +54,12 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      const organization =
-        await this.organizationsService.getOrganizationByName(name);
-      if (!organization) {
-        throw new NotFoundException(
-          `Organization with name '${name}' not found`,
-        );
-      }
-      return organization;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/by-name/:name - Failed to fetch organization',
-        {
-          organizationName: name,
-          error: errorMessage,
-        },
-      );
-      throw error;
+    const organization =
+      await this.organizationsService.getOrganizationByName(name);
+    if (!organization) {
+      throw new NotFoundException(`Organization with name '${name}' not found`);
     }
+    return organization;
   }
 
   @Post()
@@ -104,29 +71,14 @@ export class OrganizationsController {
       organizationName: body.name,
     });
 
-    try {
-      if (!body.name || body.name.trim() === '') {
-        throw new BadRequestException('Organization name is required');
-      }
-
-      return await this.organizationsService.createOrganization(
-        request.user.userId,
-        body.name.trim(),
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('POST /organizations - Failed to create organization', {
-        organizationName: body.name,
-        error: errorMessage,
-      });
-
-      if (error instanceof OrganizationSlugConflictError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
+    if (!body.name || body.name.trim() === '') {
+      throw new BadRequestException('Organization name is required');
     }
+
+    return this.organizationsService.createOrganization(
+      request.user.userId,
+      body.name.trim(),
+    );
   }
 
   @Patch(':orgId/name')
@@ -142,32 +94,10 @@ export class OrganizationsController {
       },
     );
 
-    try {
-      return await this.organizationsService.renameOrganization({
-        organizationId,
-        userId: request.user.userId,
-        name: body.name,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PATCH /organizations/:orgId/name - Failed to rename organization',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof InvalidOrganizationNameError) {
-        throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof OrganizationSlugConflictError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
-    }
+    return this.organizationsService.renameOrganization({
+      organizationId,
+      userId: request.user.userId,
+      name: body.name,
+    });
   }
 }

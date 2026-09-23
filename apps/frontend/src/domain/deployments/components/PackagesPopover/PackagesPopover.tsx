@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import {
+  LuArrowRight,
   LuChevronDown,
   LuPackagePlus,
-  LuPlus,
   LuSearch,
   LuX,
 } from 'react-icons/lu';
@@ -29,12 +29,12 @@ import {
 } from '@packmind/types';
 import {
   useListPackagesBySpaceQuery,
-  useAddArtefactsToPackagesMutation,
+  useMoveArtefactsToPackageMutation,
   useRemoveArtefactsFromPackageMutation,
-  AddArtefactsToPackagesEntry,
 } from '../../api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../hooks/usePackagesForArtifact';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { MoveArtifactsToPackageConfirm } from './MoveArtifactsToPackageConfirm';
 import { RemoveArtifactFromPackageConfirm } from './RemoveArtifactFromPackageConfirm';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
@@ -55,9 +55,12 @@ const byName = (a: PackageResponse, b: PackageResponse) =>
 
 /**
  * Interactive breadcrumb widget for managing an artifact's package membership
- * in place. Adding is instant; removing from a deployed package asks for
- * confirmation first, removing from an undeployed one is instant. Replaces the
- * read-only PackageCountHeaderInfo.
+ * in place.
+ *
+ * An artifact belongs to a single package, so picking one *moves* it there and
+ * out of wherever it was. Both directions are instant unless a package that
+ * loses the artifact is deployed somewhere — that asks first, since it stops
+ * shipping there. Replaces the read-only PackageCountHeaderInfo.
  */
 export const PackagesPopover = ({
   artifactId,
@@ -72,6 +75,7 @@ export const PackagesPopover = ({
   const [removeTarget, setRemoveTarget] = useState<PackageResponse | null>(
     null,
   );
+  const [moveTarget, setMoveTarget] = useState<PackageResponse | null>(null);
 
   const {
     data: packagesResponse,
@@ -80,8 +84,8 @@ export const PackagesPopover = ({
   } = useListPackagesBySpaceQuery(spaceId, organizationId);
   const { getDeployedTargets, getDeployedMarketplaces, isDeployed } =
     usePackageDeploymentStatus(spaceId, organizationId);
-  const { mutateAsync: addArtefacts, isPending: isAdding } =
-    useAddArtefactsToPackagesMutation();
+  const { mutateAsync: moveArtefacts, isPending: isMoving } =
+    useMoveArtefactsToPackageMutation();
   const { mutateAsync: removeArtefacts, isPending: isRemoving } =
     useRemoveArtefactsFromPackageMutation();
 
@@ -113,12 +117,13 @@ export const PackagesPopover = ({
   if (!artifactId || !spaceId || !organizationId) return null;
 
   const noPackages = !isLoading && !isError && allPackages.length === 0;
-  const isBusy = isAdding || isRemoving;
+  const isBusy = isMoving || isRemoving;
 
-  const artifactIdsPayload = (): Pick<
-    AddArtefactsToPackagesEntry,
-    'standardIds' | 'commandIds' | 'skillIds'
-  > => {
+  const artifactIdsPayload = (): {
+    standardIds?: StandardId[];
+    commandIds?: CommandId[];
+    skillIds?: SkillId[];
+  } => {
     switch (artifactType) {
       case 'standard':
         return { standardIds: [artifactId as StandardId] };
@@ -129,24 +134,34 @@ export const PackagesPopover = ({
     }
   };
 
-  const handleAdd = async (pkg: PackageResponse) => {
+  const moveToPackage = async (pkg: PackageResponse) => {
     try {
-      const outcomes = await addArtefacts({
+      await moveArtefacts({
         spaceId,
-        entries: [{ packageId: pkg.id, ...artifactIdsPayload() }],
+        packageId: pkg.id,
+        ...artifactIdsPayload(),
       });
-      if (outcomes.some((o) => !o.ok)) {
-        pmToaster.create({
-          type: 'error',
-          title: `Couldn't add to ${pkg.name}`,
-          description: 'Try again, or check your space access.',
-        });
-      }
-    } catch {
+    } catch (error) {
       pmToaster.create({
         type: 'error',
-        title: `Couldn't add to ${pkg.name}`,
-        description: 'Try again, or check your space access.',
+        title: `Couldn't move to ${pkg.name}`,
+        description: 'Nothing changed. Try again, or check your space access.',
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * Only a package that is live somewhere earns a prompt: moving into a
+   * distributed package adds to what it ships and needs no warning, while
+   * moving out of one takes something away at the next sync.
+   */
+  const requestMove = (pkg: PackageResponse) => {
+    if (members.some((source) => isDeployed(source.id))) {
+      setMoveTarget(pkg);
+    } else {
+      void moveToPackage(pkg).catch(() => {
+        /* error surfaced via toast */
       });
     }
   };
@@ -267,7 +282,7 @@ export const PackagesPopover = ({
                     ) : (
                       <PMBox padding={3}>
                         <PMText variant="small" color="faded">
-                          Not in any package yet. Pick one below to add it.
+                          Not in any package yet. Pick one below.
                         </PMText>
                       </PMBox>
                     )}
@@ -275,7 +290,7 @@ export const PackagesPopover = ({
                     <PMSeparator />
 
                     <PMVStack gap={2} alignItems="stretch" padding={3}>
-                      <SectionLabel>Add to a package</SectionLabel>
+                      <SectionLabel>Move to a package</SectionLabel>
                       {addable.length === 0 ? (
                         <PMText variant="small" color="faded">
                           Already in every package in this space.
@@ -321,11 +336,11 @@ export const PackagesPopover = ({
                               </PMText>
                             ) : (
                               filteredAddable.map((pkg) => (
-                                <AddRow
+                                <MoveRow
                                   key={pkg.id}
                                   pkg={pkg}
                                   disabled={isBusy}
-                                  onAdd={() => handleAdd(pkg)}
+                                  onMove={() => requestMove(pkg)}
                                 />
                               ))
                             )}
@@ -340,6 +355,32 @@ export const PackagesPopover = ({
           </PMPopover.Positioner>
         </PMPortal>
       </PMPopover.Root>
+
+      <MoveArtifactsToPackageConfirm
+        open={moveTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setMoveTarget(null);
+        }}
+        targetPackageName={moveTarget?.name ?? ''}
+        artifactCount={1}
+        kindSingular={artifactKindLabel}
+        kindPlural={`${artifactKindLabel}s`}
+        emptiedPackages={members.map((source) => ({
+          packageName: source.name,
+          deployedTargets: getDeployedTargets(source.id),
+          deployedMarketplaces: getDeployedMarketplaces(source.id),
+        }))}
+        onConfirm={async () => {
+          if (!moveTarget) return;
+          await moveToPackage(moveTarget);
+          pmToaster.create({
+            type: 'success',
+            title: 'Moved to package',
+            description: `Now bundled in ${moveTarget.name} only.`,
+          });
+          setMoveTarget(null);
+        }}
+      />
 
       <RemoveArtifactFromPackageConfirm
         open={removeTarget !== null}
@@ -430,14 +471,14 @@ function MemberRow({
   );
 }
 
-function AddRow({
+function MoveRow({
   pkg,
   disabled,
-  onAdd,
+  onMove,
 }: {
   pkg: PackageResponse;
   disabled: boolean;
-  onAdd: () => void;
+  onMove: () => void;
 }) {
   return (
     <PMHStack
@@ -454,8 +495,9 @@ function AddRow({
       opacity={disabled ? 0.5 : 1}
       pointerEvents={disabled ? 'none' : undefined}
       _hover={{ backgroundColor: 'background.tertiary' }}
+      aria-label={`Move to ${pkg.name}`}
       aria-disabled={disabled}
-      onClick={disabled ? undefined : onAdd}
+      onClick={disabled ? undefined : onMove}
     >
       <PMVStack gap={0} alignItems="stretch" flex={1} minWidth={0}>
         <PMText variant="small" truncate title={pkg.name}>
@@ -469,7 +511,7 @@ function AddRow({
       </PMVStack>
       <PMBox flexShrink={0} color="text.faded">
         <PMIcon fontSize="sm">
-          <LuPlus />
+          <LuArrowRight />
         </PMIcon>
       </PMBox>
     </PMHStack>

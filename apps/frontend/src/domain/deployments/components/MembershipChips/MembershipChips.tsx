@@ -17,10 +17,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
-import {
-  useRemoveArtefactsFromPackageMutation,
-  AddArtefactsToPackagesEntry,
-} from '../../api/queries/DeploymentsQueries';
+import { useRemoveArtefactsFromPackageMutation } from '../../api/queries/DeploymentsQueries';
 import { usePackagesForArtifact } from '../../hooks/usePackagesForArtifact';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
@@ -74,10 +71,11 @@ export const MembershipChips = ({
     return <PMText data-testid="package-count-empty">{'—'}</PMText>;
   }
 
-  const artifactIdsPayload = (): Pick<
-    AddArtefactsToPackagesEntry,
-    'standardIds' | 'commandIds' | 'skillIds'
-  > => {
+  const artifactIdsPayload = (): {
+    standardIds?: StandardId[];
+    commandIds?: CommandId[];
+    skillIds?: SkillId[];
+  } => {
     switch (artifactType) {
       case 'standard':
         return { standardIds: [artifactId as StandardId] };

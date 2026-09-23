@@ -14,6 +14,7 @@ import {
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
+import { PackageReloadFailedError } from '../../domain/errors/PackageReloadFailedError';
 
 const origin = 'PackageService';
 
@@ -291,7 +292,7 @@ export class PackageService {
 
       const savedPackage = await this.packageRepository.findById(pkg.id);
       if (!savedPackage) {
-        throw new Error('Failed to retrieve saved package');
+        throw new PackageReloadFailedError(pkg.id);
       }
 
       this.logger.info('Package created successfully', {
@@ -373,7 +374,7 @@ export class PackageService {
 
       const updatedPackage = await this.packageRepository.findById(packageId);
       if (!updatedPackage) {
-        throw new Error('Failed to retrieve updated package');
+        throw new PackageReloadFailedError(packageId);
       }
 
       this.logger.info('Package updated successfully', {

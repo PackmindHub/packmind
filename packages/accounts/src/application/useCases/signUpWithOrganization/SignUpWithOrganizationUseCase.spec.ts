@@ -17,6 +17,7 @@ import { organizationFactory, userFactory } from '../../../../test';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
 import { SignUpWithOrganizationUseCase } from './SignUpWithOrganizationUseCase';
+import { InvalidPasswordError } from '../../../domain/errors';
 
 describe('SignUpWithOrganizationUseCase', () => {
   let signUpWithOrganizationUseCase: SignUpWithOrganizationUseCase;
@@ -253,10 +254,10 @@ describe('SignUpWithOrganizationUseCase', () => {
           method: 'password',
         };
 
-        it('throws password required error', async () => {
+        it('throws InvalidPasswordError', async () => {
           await expect(
             signUpWithOrganizationUseCase.execute(command),
-          ).rejects.toThrow('Password is required');
+          ).rejects.toBeInstanceOf(InvalidPasswordError);
         });
 
         it('does not call organization service', async () => {
@@ -289,10 +290,10 @@ describe('SignUpWithOrganizationUseCase', () => {
           method: 'password',
         };
 
-        it('throws password minimum length error', async () => {
+        it('throws InvalidPasswordError', async () => {
           await expect(
             signUpWithOrganizationUseCase.execute(command),
-          ).rejects.toThrow('Password must be at least 8 characters');
+          ).rejects.toBeInstanceOf(InvalidPasswordError);
         });
 
         it('does not call organization service', async () => {
@@ -325,12 +326,10 @@ describe('SignUpWithOrganizationUseCase', () => {
           method: 'password',
         };
 
-        it('throws non-alphanumerical characters error', async () => {
+        it('throws InvalidPasswordError', async () => {
           await expect(
             signUpWithOrganizationUseCase.execute(command),
-          ).rejects.toThrow(
-            'Password must contain at least 2 non-alphanumerical characters',
-          );
+          ).rejects.toBeInstanceOf(InvalidPasswordError);
         });
 
         it('does not call organization service', async () => {

@@ -1,10 +1,13 @@
 import { GitProviderService } from '../../GitProviderService';
 import {
   GitProviderNotFoundError,
+  GitProviderTokenNotConfiguredError,
   IListAvailableReposUseCase,
   ListAvailableReposCommand,
   ListAvailableReposResponse,
+  MissingGitInputError,
 } from '@packmind/types';
+import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
 
 export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
   constructor(private readonly gitProviderService: GitProviderService) {}
@@ -15,7 +18,7 @@ export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
     const { gitProviderId, page } = command;
 
     if (!gitProviderId) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
 
     const gitProvider =
@@ -27,11 +30,11 @@ export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
     // App-auth providers carry no token on the row: the installation token is
     // minted on demand by GithubTokenResolverFactory downstream.
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
-      throw new Error('Git provider token not configured');
+      throw new GitProviderTokenNotConfiguredError(gitProviderId);
     }
 
     if (!gitProvider.source) {
-      throw new Error('Git provider source not configured');
+      throw new GitProviderSourceNotConfiguredError(gitProviderId);
     }
 
     return this.gitProviderService.getAvailableRepos(gitProviderId, page ?? 1);

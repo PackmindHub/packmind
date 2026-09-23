@@ -18,6 +18,11 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  PACKAGE_RELEASES_FEATURE_KEY,
+  isFeatureFlagEnabled,
+} from '@packmind/feature-flags';
+import {
   LuEllipsisVertical,
   LuPackageMinus,
   LuPencil,
@@ -52,6 +57,7 @@ import { componentIdsPayload } from './buildMoveTargets';
 import {
   COMPONENTS_TAB,
   DISTRIBUTION_TAB,
+  RELEASE_PARAM,
   TAB_PARAM,
   componentEditHref,
   componentEntryHref,
@@ -66,6 +72,12 @@ import {
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
+import { PackageVersionBar } from './PackageVersionBar';
+import {
+  PackageReleaseContents,
+  pinnedComponentCount,
+} from './PackageReleaseContents';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { RelativeDate } from '../RelativeDate';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
@@ -93,6 +105,7 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import {
   useDeletePackagesBatchMutation,
+  useGetPackageReleaseQuery,
   useListPackageDeploymentsQuery,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
@@ -181,6 +194,7 @@ export function ContextPackagePane({
   onDeleted: () => void;
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuthContext();
   /*
    * What is being moved, held here rather than in the row: the drawer has to
    * outlive the list it was opened from, because the move rebuilds that list
@@ -228,7 +242,10 @@ export function ContextPackagePane({
    * in any target before offering to take it out of them. The Distribution tab
    * asks the same query, and React Query answers both from one request.
    */
-  const { data: deployments = [] } = useListPackageDeploymentsQuery(pkg.id);
+  const { data: deployments = [] } = useListPackageDeploymentsQuery(
+    pkg.id,
+    pkg.spaceId,
+  );
   const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
@@ -537,6 +554,61 @@ export function ContextPackagePane({
   };
 
   /*
+   * Whether this reader is offered versions at all. Evaluated here rather than
+   * wrapped around the bar, because the address can name a release and a reader
+   * without the flag has to be handed the working copy instead of a read-only
+   * pane with no control on it to leave.
+   */
+  const canReadReleases = isFeatureFlagEnabled({
+    featureKeys: [PACKAGE_RELEASES_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
+
+  /*
+   * Which version of the package is being read, or null for the working copy.
+   *
+   * In the URL for the reason the package, the component and the tab are: "this
+   * is what 1.1.0 shipped" is a thing people send each other, and it has to
+   * survive being pasted. Absence means the working copy, so the editable
+   * package keeps one address.
+   */
+  const readingVersion = canReadReleases
+    ? searchParams.get(RELEASE_PARAM)
+    : null;
+
+  const readVersion = (version: string | null) => {
+    setSearchParams(
+      (previous) => {
+        /*
+         * Through the builder the back link already uses, so "no component
+         * open" means one thing on this surface. Whatever was open belongs to
+         * the reading being left: the pane shows a component as it stands now
+         * and a release pins it as it was, so one key means two things either
+         * side of this.
+         */
+        const next = packageDetailParams(previous, pkg.id);
+        if (version === null) next.delete(RELEASE_PARAM);
+        else next.set(RELEASE_PARAM, version);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  /*
+   * What the release on screen pins, for the count on the tab above the list.
+   * Read here as well as by the body below it, and answered from one request:
+   * React Query keys this read by version, and both ask for the same one.
+   */
+  const { data: readRelease } = useGetPackageReleaseQuery(
+    organizationId,
+    spaceId,
+    pkg.id,
+    readingVersion ?? undefined,
+  );
+
+  /*
    * Renamed on the way in: `packages` is now the space's package list, and the
    * drift hook returns the landings of this one package.
    */
@@ -831,7 +903,13 @@ export function ContextPackagePane({
               So the invitation stays where the explanation is, and up here
               Distribute owns the one primary the header has.
             */}
-            {tab === COMPONENTS_TAB && (
+            {/*
+              And it leaves with the working copy too. Adding writes the
+              editable package, so offered under a bar that says 1.1.0 it would
+              read as adding to that release, which is not a thing a release
+              does.
+            */}
+            {tab === COMPONENTS_TAB && readingVersion === null && (
               <PMButton
                 variant="secondary"
                 size="sm"
@@ -972,6 +1050,35 @@ export function ContextPackagePane({
           </PMHStack>
         </PMHStack>
 
+        {/*
+          Which version of the package is on screen, across the whole pane
+          rather than inside the block that names it.
+
+          It used to sit under the package name, beside the dates, where it read
+          as one more property of the package and put a verb in the one corner
+          of the header that holds none: every other thing that acts on this
+          package is in the cluster on the right, and a lone action on the left
+          made two action zones out of one row. Its explanations went there too,
+          a readiness sentence and a column of components that had moved, in a
+          header that cannot grow without pushing the component list off the
+          pane.
+
+          Here it frames what is under it instead. The tab strip is the next
+          thing down, and both tabs are read at the version this names.
+        */}
+        {canReadReleases && (
+          <PMBox paddingTop={4}>
+            <PackageVersionBar
+              packageId={pkg.id}
+              spaceId={spaceId}
+              organizationId={organizationId}
+              componentsCount={total}
+              readingVersion={readingVersion}
+              onReadVersion={readVersion}
+            />
+          </PMBox>
+        )}
+
         <PMBox paddingTop={5}>
           <PMTabsCompound.List>
             <PMTabsCompound.Trigger value={COMPONENTS_TAB}>
@@ -979,13 +1086,20 @@ export function ContextPackagePane({
               {/*
                 The count travels on the tab rather than under the package name:
                 it is what tells the size of the half you are not looking at.
+
+                Of the release while one is on screen, not of the package: the
+                list under it is what that version pins, and a count of today's
+                package over a list of eleven months ago would be read as the
+                list being wrong.
               */}
               <PMText
                 fontSize="xs"
                 color="faded"
                 fontVariantNumeric="tabular-nums"
               >
-                {total}
+                {readingVersion && readRelease
+                  ? pinnedComponentCount(readRelease.release)
+                  : total}
               </PMText>
             </PMTabsCompound.Trigger>
             <PMTabsCompound.Trigger value={DISTRIBUTION_TAB}>
@@ -1013,7 +1127,22 @@ export function ContextPackagePane({
         paddingX={6}
         paddingY={5}
       >
-        {groups.length === 0 ? (
+        {readingVersion ? (
+          /*
+            What that version pins, in place of what the package holds now. The
+            filter row, the selection bar and the reach strip all leave with the
+            working copy: each of them acts on or describes the editable
+            package, and none of them has anything to say about a cut that was
+            made eleven months ago.
+          */
+          <PackageReleaseContents
+            packageId={pkg.id}
+            spaceId={spaceId}
+            organizationId={organizationId}
+            version={readingVersion}
+            onReadUnreleased={() => readVersion(null)}
+          />
+        ) : groups.length === 0 ? (
           <EmptyPackageBody
             canAdd={addableCount > 0}
             onAdd={() => setAddingComponents(true)}

@@ -1,8 +1,15 @@
+import { AccountsError } from './AccountsError';
+
 export const MAX_DISPLAY_NAME_LENGTH = 255;
 
-export class InvalidDisplayNameError extends Error {
-  constructor(reason: string) {
-    super(`Invalid display name: ${reason}`);
+export class InvalidDisplayNameError extends AccountsError {
+  constructor(detail: string) {
+    super(
+      'invalid_input',
+      'invalid_display_name',
+      { displayNameDetail: detail },
+      `Invalid display name: ${detail}`,
+    );
     this.name = 'InvalidDisplayNameError';
   }
 

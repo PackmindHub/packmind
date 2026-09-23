@@ -2,6 +2,8 @@ import { Cache } from '@packmind/node-utils';
 import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   GetAvailableRemoteDirectoriesCommand,
+  GitProviderNotFoundError,
+  MissingGitInputError,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -11,6 +13,8 @@ import { GitRepo, createGitRepoId } from '@packmind/types';
 import { gitRepoFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
 import { GetAvailableRemoteDirectoriesUseCase } from './GetAvailableRemoteDirectoriesUseCase';
+import { AvailableRemoteDirectoriesFailedError } from '../../../domain/errors/AvailableRemoteDirectoriesFailedError';
+import { GitlabAvailableRepositoriesFailedError } from '../../../domain/errors/GitlabAvailableRepositoriesFailedError';
 
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
@@ -191,7 +195,7 @@ describe('GetAvailableTargetsUseCase', () => {
 
         await expect(
           getAvailableTargetsUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Organization ID is required');
+        ).rejects.toBeInstanceOf(MissingGitInputError);
       });
     });
 
@@ -200,7 +204,7 @@ describe('GetAvailableTargetsUseCase', () => {
         mockCacheInstance.get.mockResolvedValue(null); // Ensure cache miss to trigger git provider call
       });
 
-      it('propagates service errors with context', async () => {
+      it('wraps service errors', async () => {
         const originalError = new Error('Git provider not found');
         mockGitProviderService.listAvailableTargets.mockRejectedValue(
           originalError,
@@ -208,9 +212,7 @@ describe('GetAvailableTargetsUseCase', () => {
 
         await expect(
           getAvailableTargetsUseCase.execute(validCommand),
-        ).rejects.toThrow(
-          'Failed to get available targets: Git provider not found',
-        );
+        ).rejects.toBeInstanceOf(AvailableRemoteDirectoriesFailedError);
       });
 
       it('handles non-Error objects', async () => {
@@ -221,7 +223,33 @@ describe('GetAvailableTargetsUseCase', () => {
 
         await expect(
           getAvailableTargetsUseCase.execute(validCommand),
-        ).rejects.toThrow('Failed to get available targets: String error');
+        ).rejects.toBeInstanceOf(AvailableRemoteDirectoriesFailedError);
+      });
+
+      describe('when the failure already says whose fault it is', () => {
+        it('lets a domain failure through untouched', async () => {
+          const notFound = new GitProviderNotFoundError(mockGitRepo.providerId);
+          mockGitProviderService.listAvailableTargets.mockRejectedValue(
+            notFound,
+          );
+
+          await expect(
+            getAvailableTargetsUseCase.execute(validCommand),
+          ).rejects.toBe(notFound);
+        });
+
+        it('lets an upstream failure through untouched', async () => {
+          const upstream = new GitlabAvailableRepositoriesFailedError(
+            new Error('gateway timeout'),
+          );
+          mockGitProviderService.listAvailableTargets.mockRejectedValue(
+            upstream,
+          );
+
+          await expect(
+            getAvailableTargetsUseCase.execute(validCommand),
+          ).rejects.toBe(upstream);
+        });
       });
 
       describe('when git provider service fails', () => {

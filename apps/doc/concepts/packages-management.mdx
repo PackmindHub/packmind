@@ -24,7 +24,9 @@ These are alternative distribution methods—you can choose the approach that fi
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
 3. Provide a name and description
-4. Select commands, standards, and skills to include
+4. Select commands, standards, and skills to include — only items that belong
+   to no package can be picked here, see
+   [Choosing Items](#choosing-items-when-you-create-or-edit-a-package)
 5. Save the package
 
 ### Via CLI
@@ -39,15 +41,65 @@ See the [CLI documentation](/tools/cli#packages-command) for details.
 
 ### Adding Items to Packages
 
-There are two ways to add items to packages:
+<Note>
+  An item belongs to a single package. Putting an item in a package takes it out
+  of the one it was in.
+</Note>
 
-- **Via CLI** — Use `packmind packages add` to add existing standards, commands, or skills to a package:
+**Via Web Interface** — from the list of standards, commands, or skills:
+
+1. Select one or more items
+2. Click **Manage packages**
+3. Under **Move to a package**, pick the destination
+
+Each package in that list says what picking it would do. **Moves 2, Adds 1**
+means two of the selected items come from another package and one is in no
+package yet; hover the count to see which items those are.
+
+You can do the same for a single item from its own page, using the package
+control at the top: it reads **In 1 package**, or **Add to a package** when the
+item belongs to none.
+
+**Via CLI** — use `packmind packages add` for an item that is in no package,
+and `packmind packages move` to take one from another package:
+
+```bash
+packmind packages add --to backend --standard error-handling
+packmind packages move --to backend --command create-api-endpoint
+```
+
+`packmind packages add` refuses an item that already belongs to another package
+and prints the `move` command to run instead.
+
+<Warning>
+  Moving an item out of a package that is distributed to repositories or
+  marketplaces removes it from them. Packmind asks you to confirm first and
+  names the places affected: anyone working there loses the item at their next
+  sync.
+</Warning>
+
+### Choosing Items When You Create or Edit a Package
+
+The **Standards**, **Commands**, and **Skills** dropdowns of a package form only
+offer items that belong to no package. An item another package holds is greyed
+out and labelled with the package holding it — move it from the item's own page,
+or from the list of items, to bring it here.
+
+Items already in the package you are editing stay selectable, so you can always
+take one out.
+
+### Removing Items from a Package
+
+An item that belongs to no package is not installed or distributed anywhere, so
+Packmind always tells you where the item still lives after a removal.
+
+- **Via Web Interface** — click the **×** next to a package name, either on the
+  item's row in a list or in the **In these packages** section of the
+  **Manage packages** panel
+- **Via CLI** — use `packmind packages remove`:
   ```bash
-  packmind packages add --to backend --standard error-handling
-  packmind packages add --to backend --command create-api-endpoint
-  packmind packages add --to backend --skill debugging-workflow
+  packmind packages remove --from backend --command create-api-endpoint
   ```
-- **Via Web Interface** — Add items to packages through the Packmind UI
 
 ## Using Packages
 
@@ -86,6 +138,43 @@ Learn more in the [Distribution documentation](/governance/distribution).
 
 ## Package Versions
 
-Packages are dynamic collections without their own versions. When you distribute a package, it always includes the latest version of each command, standard, and skill it contains.
+A package can be released under a version. A **release** is an immutable snapshot of the package: it records the package's name and description, and pins the exact version of every command, standard, and skill the package contains at the moment you create it. Nothing changes a release afterwards—publishing a newer version of a component, renaming the package, or removing a component leaves it untouched.
 
-To see which repositories have outdated versions, check the [distribution overview](/governance/distribution).
+Open a package and a bar under its name says which version you are reading. It reads **Unreleased**—the package as it stands, the only reading with no version number—or **Not released yet** when the package has never been released.
+
+<Note>
+  **Distribution always sends current content** — A release names a state, it
+  doesn't change what gets distributed. When you distribute a package or install
+  it with the CLI, it always includes the latest version of each command,
+  standard, and skill it contains. To see which repositories have outdated
+  versions, check the [distribution overview](/governance/distribution).
+</Note>
+
+### Creating a Release
+
+1. Navigate to **Packages** and select your package
+2. Click **Create a release**, beside **Unreleased** in the bar under the package name
+3. Enter a version number as `X.Y.Z`, or click one of the three suggested increments
+4. Submit the form
+
+The field is pre-filled with the next patch version, and only the three suggested increments are accepted. After `0.1.0`, those are `0.1.1`, `0.2.0`, and `1.0.0`. A package's first release is pre-filled with `0.1.0`.
+
+A version that isn't accepted stays in the field so you can correct it. A version that isn't written as `X.Y.Z` is refused with `Version must follow X.Y.Z`, and a version lower than or equal to the current one with `Version must be greater than 1.2.0`, naming the current version. Suffixes such as `1.2.0-beta-2` aren't accepted.
+
+Any member of the **space** can create a release.
+
+### When You Can Create a Release
+
+**Create a release** appears once the package has changed since its last release. Any one of these counts as a change:
+
+- A command, standard, or skill in the package has a newer version than the release pinned
+- The package's name or description was edited
+- A component was added to or removed from the package
+
+When there is nothing to release, the action isn't there: the package is identical to its last release, or it holds no component at all. Nothing else in the bar changes.
+
+### Reading an Earlier Version
+
+Open the menu on **Unreleased** to see every release of the package, newest first, each with the day it was cut. Select one and the package is shown as that version left it: the components it pinned, at the versions it pinned them, including components deleted since. The reading is read-only—a release never changes—so the controls that write the package leave while you are on it.
+
+The version you are reading is part of the address, so a link to `1.1.0` opens on `1.1.0` for whoever you send it to. Select **Unreleased** in the same menu, or the link beside the list, to come back to the package as it stands.

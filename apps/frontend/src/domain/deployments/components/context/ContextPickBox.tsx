@@ -17,9 +17,10 @@ import { PMBox } from '@packmind/ui';
  * and the eye is running down that name.
  *
  * Its own file the day the second list picked this way, for the reason
- * `ContextSearchField` has one: the behaviour is three style props that have to
- * agree with a `className="group"` several levels up, and two copies of that
- * agreement drift apart quietly, one list revealing on hover and the other not.
+ * `ContextSearchField` has one: the behaviour is a handful of style props that
+ * have to agree with a `className="group"` several levels up, and two copies
+ * of that agreement drift apart quietly, one list revealing on hover and the
+ * other not.
  */
 export function ContextPickBox({
   shown,
@@ -30,13 +31,27 @@ export function ContextPickBox({
   children: ReactNode;
 }>) {
   return (
+    /*
+      It takes the column it stands in, not the 16px box drawn in the middle of
+      it. A checkbox that size in a 44px row is a target the pointer misses,
+      and the miss lands on a column that does nothing with it: the box reads
+      as broken and the name beside it becomes the only way to pick the row.
+
+      The label is what turns a click into a tick — a click anywhere on it is a
+      click on the box it is for — so the label claims the column rather than a
+      second handler being hung beside it, which would fight the one the label
+      already sends. The box keeps the place the gutter gave it, at the end of
+      the column.
+    */
     <PMBox
-      display="inline-flex"
-      alignItems="center"
+      display="flex"
+      alignSelf="stretch"
+      width="full"
       opacity={shown ? 1 : 0}
       transition="opacity 100ms ease-out"
       _groupHover={{ opacity: 1 }}
       _focusWithin={{ opacity: 1 }}
+      css={{ '& > label': { width: '100%', justifyContent: 'flex-end' } }}
     >
       {children}
     </PMBox>

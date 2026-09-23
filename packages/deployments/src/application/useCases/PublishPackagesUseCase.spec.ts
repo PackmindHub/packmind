@@ -41,6 +41,9 @@ import {
 } from '@packmind/test-utils';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
+import { PackageSpaceMissingError } from '../../domain/errors/PackageSpaceMissingError';
+import { NoTargetsProvidedError } from '../../domain/errors/NoTargetsProvidedError';
+import { NoPackagesProvidedError } from '../../domain/errors/NoPackagesProvidedError';
 
 describe('PublishPackagesUseCase', () => {
   let useCase: PublishPackagesUseCase;
@@ -277,7 +280,7 @@ describe('PublishPackagesUseCase', () => {
       mockSpacesPort.getSpaceById.mockResolvedValueOnce(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${pkg.spaceId} not found for package ${pkg.slug}`,
+        PackageSpaceMissingError,
       );
     });
 
@@ -458,7 +461,7 @@ describe('PublishPackagesUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'targetIds must be provided',
+        NoTargetsProvidedError,
       );
     });
   });
@@ -473,7 +476,7 @@ describe('PublishPackagesUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'packageIds must be provided',
+        NoPackagesProvidedError,
       );
     });
   });

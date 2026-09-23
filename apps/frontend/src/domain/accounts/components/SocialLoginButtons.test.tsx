@@ -6,6 +6,10 @@ import { UIProvider } from '@packmind/ui';
 import SocialLoginButtons from './SocialLoginButtons';
 import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
 import type { MockedFunction } from 'vitest';
+import {
+  createPendingQueryResult,
+  createSuccessQueryResult,
+} from '../../../test/queryResultMocks';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSocialProvidersQuery: vi.fn(),
@@ -44,12 +48,11 @@ describe('SocialLoginButtons', () => {
 
   describe('when providers are available', () => {
     beforeEach(() => {
-      mockUseSocialProvidersQuery.mockReturnValue({
-        data: {
+      mockUseSocialProvidersQuery.mockReturnValue(
+        createSuccessQueryResult({
           providers: ['GoogleOAuth', 'GitHubOAuth', 'MicrosoftOAuth'],
-        },
-        isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+        }),
+      );
     });
 
     it('renders Google button', () => {
@@ -70,10 +73,9 @@ describe('SocialLoginButtons', () => {
 
   describe('when providers list is empty', () => {
     beforeEach(() => {
-      mockUseSocialProvidersQuery.mockReturnValue({
-        data: { providers: [] },
-        isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      mockUseSocialProvidersQuery.mockReturnValue(
+        createSuccessQueryResult({ providers: [] }),
+      );
     });
 
     it('renders nothing', () => {
@@ -84,10 +86,9 @@ describe('SocialLoginButtons', () => {
 
   describe('when loading', () => {
     beforeEach(() => {
-      mockUseSocialProvidersQuery.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      mockUseSocialProvidersQuery.mockReturnValue(
+        createPendingQueryResult<{ providers: string[] }>(),
+      );
     });
 
     it('renders nothing', () => {

@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
+import {
+  Configuration,
+  removeTrailingSlash,
+  UserNotInOrganizationError,
+  UserNotFoundError,
+} from '@packmind/node-utils';
 import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,
@@ -8,6 +13,10 @@ import {
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
+import {
+  OrganizationNotFoundError,
+  ApiKeyExpirationMissingError,
+} from '../../../domain/errors';
 
 const DEFAULT_APP_WEB_URL = 'http://localhost:8081';
 
@@ -29,56 +38,51 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
       organizationId: command.organizationId,
     });
 
-    try {
-      const user = await this.userService.getUserById(command.userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const membership = user.memberships.find(
-        (item) => item.organizationId === command.organizationId,
-      );
-      if (!membership) {
-        throw new Error('User organization membership not found');
-      }
-
-      const organization = await this.organizationService.getOrganizationById(
-        command.organizationId,
-      );
-      if (!organization) {
-        throw new Error('Organization not found');
-      }
-
-      const host = await this.getApplicationUrl();
-
-      const apiKey = this.apiKeyService.generateApiKey(
-        user,
-        organization,
-        membership.role,
-        host,
-      );
-      const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
-
-      if (!expiresAt) {
-        throw new Error('Failed to get API key expiration');
-      }
-
-      this.logger.info('API key generated successfully', {
-        userId: command.userId,
-        expiresAt,
-      });
-
-      return {
-        apiKey,
-        expiresAt,
-      };
-    } catch (error) {
-      this.logger.error('Failed to generate API key', {
-        userId: command.userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const user = await this.userService.getUserById(command.userId);
+    if (!user) {
+      throw new UserNotFoundError({ userId: command.userId });
     }
+
+    const membership = user.memberships.find(
+      (item) => item.organizationId === command.organizationId,
+    );
+    if (!membership) {
+      throw new UserNotInOrganizationError({
+        userId: command.userId,
+        organizationId: command.organizationId,
+      });
+    }
+
+    const organization = await this.organizationService.getOrganizationById(
+      command.organizationId,
+    );
+    if (!organization) {
+      throw new OrganizationNotFoundError(command.organizationId);
+    }
+
+    const host = await this.getApplicationUrl();
+
+    const apiKey = this.apiKeyService.generateApiKey(
+      user,
+      organization,
+      membership.role,
+      host,
+    );
+    const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
+
+    if (!expiresAt) {
+      throw new ApiKeyExpirationMissingError();
+    }
+
+    this.logger.info('API key generated successfully', {
+      userId: command.userId,
+      expiresAt,
+    });
+
+    return {
+      apiKey,
+      expiresAt,
+    };
   }
 
   private async getApplicationUrl(): Promise<string> {

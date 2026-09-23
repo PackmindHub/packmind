@@ -12,6 +12,7 @@ import { OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
+import { GitRepoNotFoundError } from '@packmind/types';
 
 const origin = 'GitRepoRepository';
 
@@ -220,7 +221,7 @@ export class GitRepoRepository
       });
 
       if (!gitRepo) {
-        throw new Error(`Git repo with ID '${gitRepoId}' not found`);
+        throw new GitRepoNotFoundError(gitRepoId);
       }
 
       const updated = await this.repository.save({
@@ -256,7 +257,7 @@ export class GitRepoRepository
       });
 
       if (!gitRepo) {
-        throw new Error(`Git repo with ID '${gitRepoId}' not found`);
+        throw new GitRepoNotFoundError(gitRepoId);
       }
 
       const updated = await this.repository.save({

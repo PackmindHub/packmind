@@ -30,7 +30,6 @@ jest.mock('@packmind/node-utils', () => {
   };
 });
 
-import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -237,26 +236,26 @@ describe('GitRepositoriesController tracked repository routes', () => {
     });
 
     describe('when the repository is already tracked on another branch', () => {
-      it('maps RepositoryAlreadyTrackedError to a ConflictException', async () => {
+      it('propagates RepositoryAlreadyTrackedError for the filter to map', async () => {
         mockService.setTrackedRepository.mockRejectedValue(
           new RepositoryAlreadyTrackedError('my-orga', 'my-repo', 'main'),
         );
 
         await expect(
           controller.setTrackedRepository(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(RepositoryAlreadyTrackedError);
       });
     });
 
     describe('when the caller is not an organization admin', () => {
-      it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
+      it('propagates OrganizationAdminRequiredError for the filter to map', async () => {
         mockService.setTrackedRepository.mockRejectedValue(
           new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
 
         await expect(
           controller.setTrackedRepository(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toBeInstanceOf(OrganizationAdminRequiredError);
       });
     });
   });
@@ -293,38 +292,38 @@ describe('GitRepositoriesController tracked repository routes', () => {
     });
 
     describe('when nothing is tracked yet', () => {
-      it('maps NoTrackedRepositoryError to a ConflictException', async () => {
+      it('propagates NoTrackedRepositoryError for the filter to map', async () => {
         mockService.updateTrackedBranch.mockRejectedValue(
           new NoTrackedRepositoryError('my-orga', 'my-repo'),
         );
 
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(NoTrackedRepositoryError);
       });
     });
 
     describe('when the repository is already tracked on that branch', () => {
-      it('maps RepositoryAlreadyTrackedError to a ConflictException', async () => {
+      it('propagates RepositoryAlreadyTrackedError for the filter to map', async () => {
         mockService.updateTrackedBranch.mockRejectedValue(
           new RepositoryAlreadyTrackedError('my-orga', 'my-repo', 'dev'),
         );
 
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(RepositoryAlreadyTrackedError);
       });
     });
 
     describe('when the caller is not an organization admin', () => {
-      it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
+      it('propagates OrganizationAdminRequiredError for the filter to map', async () => {
         mockService.updateTrackedBranch.mockRejectedValue(
           new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
 
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toBeInstanceOf(OrganizationAdminRequiredError);
       });
     });
   });
@@ -385,7 +384,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
     });
 
     describe('when Packmind has never seen the repository', () => {
-      it('maps RepositoryNotTrackableError to a ConflictException', async () => {
+      it('propagates RepositoryNotTrackableError for the filter to map', async () => {
         mockService.removeTrackedRepository.mockRejectedValue(
           new RepositoryNotTrackableError('my-orga', 'my-repo'),
         );
@@ -397,13 +396,14 @@ describe('GitRepositoriesController tracked repository routes', () => {
             'my-orga',
             'my-repo',
           ),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(RepositoryNotTrackableError);
       });
 
       // Load-bearing: the CLI reads any 404 on the tracking routes as "the
       // feature is unavailable for your account" and would print that instead
-      // of naming the repository. 409 keeps the real message.
-      it('reports a 409 rather than a 404', async () => {
+      // of naming the repository. `conflict` — which `DomainExceptionFilter`
+      // answers with a 409 — keeps the real message.
+      it('carries the conflict kind rather than not_found', async () => {
         mockService.removeTrackedRepository.mockRejectedValue(
           new RepositoryNotTrackableError('my-orga', 'my-repo'),
         );
@@ -415,12 +415,12 @@ describe('GitRepositoriesController tracked repository routes', () => {
             'my-orga',
             'my-repo',
           ),
-        ).rejects.toMatchObject({ status: 409 });
+        ).rejects.toMatchObject({ kind: 'conflict' });
       });
     });
 
     describe('when the caller is not an organization admin', () => {
-      it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
+      it('propagates OrganizationAdminRequiredError for the filter to map', async () => {
         mockService.removeTrackedRepository.mockRejectedValue(
           new OrganizationAdminRequiredError({ userId, organizationId: orgId }),
         );
@@ -432,7 +432,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
             'my-orga',
             'my-repo',
           ),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toBeInstanceOf(OrganizationAdminRequiredError);
       });
     });
   });

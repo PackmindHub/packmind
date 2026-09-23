@@ -1,0 +1,16 @@
+{
+  "unit_id": "U-013",
+  "feature": "package-release-version",
+  "files_in_scope": [
+    "apps/frontend/src/domain/deployments/api/gateways/IDeploymentsGateway.ts",
+    "apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+    "apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.spec.ts",
+    "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+    "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts"
+  ],
+  "exit_criterion": {
+    "command": "./node_modules/.bin/nx test frontend --testNamePattern='DeploymentsGatewayApi'",
+    "kind": "behavioural",
+    "describes": "AC-1"
+  }
+}

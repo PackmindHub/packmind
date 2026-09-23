@@ -17,6 +17,8 @@ import {
   createUserId,
   createOrganizationId,
 } from '@packmind/types';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
 const origin = 'UpdatePackageUseCase';
@@ -60,18 +62,17 @@ export class UpdatePackageUseCase
       .getPackageService()
       .findById(packageId);
     if (!existingPackage) {
-      throw new Error(`Package with id ${packageId} not found`);
+      throw new PackageNotFoundError(packageId);
     }
 
+    /*
+     * A package whose space is gone, and one whose space belongs to another
+     * organization, answer the same thing as a package that was never there:
+     * otherwise a distinct message tells an outsider the id is real.
+     */
     const space = await this.spacesPort.getSpaceById(existingPackage.spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${existingPackage.spaceId} not found`);
-    }
-
-    if (space.organizationId !== command.organizationId) {
-      throw new Error(
-        `Package ${packageId} does not belong to organization ${command.organizationId}`,
-      );
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new PackageNotFoundError(packageId, existingPackage.spaceId);
     }
 
     if (recipeIds.length > 0) {
@@ -83,12 +84,11 @@ export class UpdatePackageUseCase
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
-        if (!recipe) {
-          throw new Error(`Recipe with id ${recipeIds[i]} not found`);
-        }
-        if (recipe.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Recipe ${recipeIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!recipe || recipe.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'command',
+            recipeIds[i],
+            existingPackage.spaceId,
           );
         }
       }
@@ -103,12 +103,11 @@ export class UpdatePackageUseCase
 
       for (let i = 0; i < standards.length; i++) {
         const standard = standards[i];
-        if (!standard) {
-          throw new Error(`Standard with id ${standardIds[i]} not found`);
-        }
-        if (standard.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Standard ${standardIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!standard || standard.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'standard',
+            standardIds[i],
+            existingPackage.spaceId,
           );
         }
       }
@@ -121,12 +120,11 @@ export class UpdatePackageUseCase
 
       for (let i = 0; i < skills.length; i++) {
         const skill = skills[i];
-        if (!skill) {
-          throw new Error(`Skill with id ${skillsIds[i]} not found`);
-        }
-        if (skill.spaceId !== existingPackage.spaceId) {
-          throw new Error(
-            `Skill ${skillsIds[i]} does not belong to space ${existingPackage.spaceId}`,
+        if (!skill || skill.spaceId !== existingPackage.spaceId) {
+          throw new ArtefactNotInSpaceError(
+            'skill',
+            skillsIds[i],
+            existingPackage.spaceId,
           );
         }
       }

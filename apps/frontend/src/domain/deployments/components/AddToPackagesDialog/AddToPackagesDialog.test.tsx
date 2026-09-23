@@ -22,8 +22,7 @@ import {
 
 import { AddToPackagesDialog } from './AddToPackagesDialog';
 import {
-  AddArtefactsToPackagesOutcome,
-  useAddArtefactsToPackagesMutation,
+  useMoveArtefactsToPackageMutation,
   useRemoveArtefactsFromPackageMutation,
   useListActiveDistributedPackagesBySpaceQuery,
   useListPackagesBySpaceQuery,
@@ -33,7 +32,7 @@ import type { MockedFunction } from 'vitest';
 
 vi.mock('../../api/queries/DeploymentsQueries', async () => ({
   ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
-  useAddArtefactsToPackagesMutation: vi.fn(),
+  useMoveArtefactsToPackageMutation: vi.fn(),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackagesBySpaceQuery: vi.fn(),
   useListActiveDistributedPackagesBySpaceQuery: vi.fn(),
@@ -49,9 +48,9 @@ const mockUseListPackagesBySpaceQuery =
   useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
-const mockUseAddArtefactsToPackagesMutation =
-  useAddArtefactsToPackagesMutation as MockedFunction<
-    typeof useAddArtefactsToPackagesMutation
+const mockUseMoveArtefactsToPackageMutation =
+  useMoveArtefactsToPackageMutation as MockedFunction<
+    typeof useMoveArtefactsToPackageMutation
   >;
 const mockUseRemoveArtefactsFromPackageMutation =
   useRemoveArtefactsFromPackageMutation as MockedFunction<
@@ -105,20 +104,18 @@ const packageContainingArtifact: Package = {
   skills: [],
 };
 
-const createMockAddMutation = (
-  overrides: Partial<ReturnType<typeof useAddArtefactsToPackagesMutation>> = {},
+const createMockMoveMutation = (
+  overrides: Partial<ReturnType<typeof useMoveArtefactsToPackageMutation>> = {},
 ) =>
   ({
     mutate: vi.fn(),
-    mutateAsync: vi
-      .fn()
-      .mockResolvedValue([] as AddArtefactsToPackagesOutcome[]),
+    mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
     isSuccess: false,
     isError: false,
     reset: vi.fn(),
     ...overrides,
-  }) as unknown as ReturnType<typeof useAddArtefactsToPackagesMutation>;
+  }) as unknown as ReturnType<typeof useMoveArtefactsToPackageMutation>;
 
 const createMockRemoveMutation = (
   overrides: Partial<
@@ -204,8 +201,8 @@ const renderDialog = (
 
 describe('AddToPackagesDialog', () => {
   beforeEach(() => {
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockAddMutation(),
+    mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+      createMockMoveMutation(),
     );
     mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
       createMockRemoveMutation(),
@@ -230,12 +227,12 @@ describe('AddToPackagesDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('lists packages missing the artifact in the add section', () => {
+  it('lists packages missing the artifact in the move section', () => {
     renderDialog();
 
-    expect(screen.getByLabelText('Add to frontend-rules')).toBeInTheDocument();
+    expect(screen.getByLabelText('Move to frontend-rules')).toBeInTheDocument();
     expect(
-      screen.getByLabelText('Add to security-baseline'),
+      screen.getByLabelText('Move to security-baseline'),
     ).toBeInTheDocument();
   });
 
@@ -247,7 +244,7 @@ describe('AddToPackagesDialog', () => {
       screen.getByLabelText('Remove from already-here'),
     ).toBeInTheDocument();
     expect(
-      screen.queryByLabelText('Add to already-here'),
+      screen.queryByLabelText('Move to already-here'),
     ).not.toBeInTheDocument();
   });
 
@@ -255,7 +252,7 @@ describe('AddToPackagesDialog', () => {
     renderDialog();
 
     expect(
-      screen.getByText('Not in any package yet. Pick one below to add it.'),
+      screen.getByText('Not in any package yet. Pick one below.'),
     ).toBeInTheDocument();
   });
 
@@ -286,7 +283,7 @@ describe('AddToPackagesDialog', () => {
     );
   });
 
-  it('filters the add section when the user types in the search field', async () => {
+  it('filters the move section when the user types in the search field', async () => {
     renderDialog();
 
     const search = screen.getByPlaceholderText('Search packages...');
@@ -294,11 +291,11 @@ describe('AddToPackagesDialog', () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByLabelText('Add to frontend-rules'),
+        screen.queryByLabelText('Move to frontend-rules'),
       ).not.toBeInTheDocument();
     });
     expect(
-      screen.getByLabelText('Add to security-baseline'),
+      screen.getByLabelText('Move to security-baseline'),
     ).toBeInTheDocument();
   });
 
@@ -317,52 +314,178 @@ describe('AddToPackagesDialog', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText('Add to frontend-rules'),
+        screen.getByLabelText('Move to frontend-rules'),
       ).toBeInTheDocument();
     });
   });
 
-  describe('instant add', () => {
-    it('submits a single-package entry when an add row is clicked', async () => {
-      const mutateAsync = vi
-        .fn()
-        .mockResolvedValue([
-          { packageId: packageA.id, ok: true, response: { package: packageA } },
-        ] as AddArtefactsToPackagesOutcome[]);
-      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockAddMutation({ mutateAsync }),
+  describe('instant move', () => {
+    it('moves the selection into the package whose row was clicked', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
       );
 
       renderDialog();
 
-      fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
 
       await waitFor(() => {
         expect(mutateAsync).toHaveBeenCalledWith({
           spaceId,
-          entries: [{ packageId: packageA.id, standardIds: [artifactId] }],
+          packageId: packageA.id,
+          standardIds: [artifactId],
         });
       });
     });
 
-    it('keeps the drawer open after a successful add', async () => {
-      const mutateAsync = vi
-        .fn()
-        .mockResolvedValue([
-          { packageId: packageA.id, ok: true, response: { package: packageA } },
-        ] as AddArtefactsToPackagesOutcome[]);
-      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockAddMutation({ mutateAsync }),
+    it('keeps the drawer open after a successful move', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
       );
 
       const { props } = renderDialog();
 
-      fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
 
       await waitFor(() => {
         expect(mutateAsync).toHaveBeenCalled();
       });
       expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('move out of a deployed package', () => {
+    it('moves instantly when the package losing the artifact is not deployed', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalled();
+      });
+    });
+
+    it('moves instantly when only the destination is deployed', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageA.id]);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalled();
+      });
+    });
+
+    it('asks for confirmation when the package losing the artifact is deployed', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id]);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      expect(
+        await screen.findByText('Move this standard to frontend-rules?'),
+      ).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('names the package that loses the artifact and where it ships', async () => {
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id], 2);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Move this standard to frontend-rules?',
+      });
+      expect(within(dialog).getByText('already-here')).toBeInTheDocument();
+      expect(
+        within(dialog).getByText('Distributed to 2 repositories'),
+      ).toBeInTheDocument();
+    });
+
+    it('spells out what the repositories lose at their next sync', async () => {
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id], 2);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Move this standard to frontend-rules?',
+      });
+      expect(
+        within(dialog).getByText(
+          'Anyone working in these repositories loses this standard at their next sync.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('moves once the confirmation is accepted', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id]);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+      fireEvent.click(await screen.findByText('Move', { selector: 'button' }));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageA.id,
+          standardIds: [artifactId],
+        });
+      });
+    });
+
+    it('moves nothing when the confirmation is cancelled', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id]);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
+      fireEvent.click(
+        await screen.findByText('Cancel', { selector: 'button' }),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Move this standard to frontend-rules?'),
+        ).not.toBeInTheDocument();
+      });
+      expect(mutateAsync).not.toHaveBeenCalled();
     });
   });
 
@@ -487,22 +610,18 @@ describe('AddToPackagesDialog', () => {
 
   describe('close behavior', () => {
     it('invokes onSuccess on close after a successful change', async () => {
-      const mutateAsync = vi
-        .fn()
-        .mockResolvedValue([
-          { packageId: packageA.id, ok: true, response: { package: packageA } },
-        ] as AddArtefactsToPackagesOutcome[]);
-      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockAddMutation({ mutateAsync }),
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
       );
       const onSuccess = vi.fn();
 
       renderDialog({ onSuccess });
 
-      // act flushes the whole add flow, including the state commit that
+      // act flushes the whole move flow, including the state commit that
       // marks the drawer as changed, before Done is clicked.
       await act(async () => {
-        fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+        fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
       });
       expect(mutateAsync).toHaveBeenCalled();
 
@@ -526,22 +645,17 @@ describe('AddToPackagesDialog', () => {
       expect(onSuccess).not.toHaveBeenCalled();
     });
 
-    it('does not invoke onSuccess when the only add attempt failed', async () => {
-      const failure = new Error('boom');
-      const mutateAsync = vi
-        .fn()
-        .mockResolvedValue([
-          { packageId: packageA.id, ok: false, error: failure },
-        ] as AddArtefactsToPackagesOutcome[]);
-      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockAddMutation({ mutateAsync }),
+    it('does not invoke onSuccess when the only move attempt failed', async () => {
+      const mutateAsync = vi.fn().mockRejectedValue(new Error('boom'));
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
       );
       const onSuccess = vi.fn();
 
       renderDialog({ onSuccess });
 
       await act(async () => {
-        fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+        fireEvent.click(screen.getByLabelText('Move to frontend-rules'));
       });
       expect(mutateAsync).toHaveBeenCalled();
 
@@ -614,7 +728,7 @@ describe('AddToPackagesDialog', () => {
       expect(
         screen.getByLabelText('Remove from fully-covered'),
       ).toBeInTheDocument();
-      expect(screen.getByLabelText('Add to fresh-target')).toBeInTheDocument();
+      expect(screen.getByLabelText('Move to fresh-target')).toBeInTheDocument();
     });
 
     it('shows the plural members-empty hint when no package holds any of them', () => {
@@ -623,7 +737,7 @@ describe('AddToPackagesDialog', () => {
 
       expect(
         screen.getByText(
-          'None of these 3 standards are in a package yet. Pick one below to add them.',
+          'None of these 3 standards are in a package yet. Pick one below.',
         ),
       ).toBeInTheDocument();
     });
@@ -640,7 +754,7 @@ describe('AddToPackagesDialog', () => {
         within(memberRow as HTMLElement).getByText('contains 1 of 3'),
       ).toBeInTheDocument();
       expect(
-        screen.getByLabelText('Add to partial-overlap'),
+        screen.getByLabelText('Move to partial-overlap'),
       ).toBeInTheDocument();
 
       expect(
@@ -648,11 +762,11 @@ describe('AddToPackagesDialog', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('names the missing artifacts in a tooltip on the adds hint', async () => {
+    it('names the artifacts it would add in a tooltip on the hint', async () => {
       setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
       renderDialog({ artifacts: multiArtifacts });
 
-      const hint = screen.getByText('adds 2 of 3');
+      const hint = screen.getByText('Adds 2');
       fireEvent.pointerMove(hint, { pointerType: 'mouse' });
 
       expect(
@@ -728,45 +842,91 @@ describe('AddToPackagesDialog', () => {
       });
     });
 
-    it('renders an "adds N of M" hint on packages with partial overlap', () => {
-      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
-      renderDialog({ artifacts: multiArtifacts });
+    describe('row hints', () => {
+      it('counts the artifacts a partial overlap would add', () => {
+        setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+        renderDialog({ artifacts: multiArtifacts });
 
-      const partialRow = screen.getByLabelText('Add to partial-overlap');
-      expect(within(partialRow).getByText('adds 2 of 3')).toBeInTheDocument();
+        const partialRow = screen.getByLabelText('Move to partial-overlap');
+        expect(within(partialRow).getByText('Adds 2')).toBeInTheDocument();
+      });
 
-      const freshRow = screen.getByLabelText('Add to fresh-target');
-      expect(
-        within(freshRow).queryByText(/adds \d+ of/),
-      ).not.toBeInTheDocument();
+      it('stays quiet when no package holds any of the selection', () => {
+        // Nothing to relocate and nothing already here: the row's arrow says
+        // everything the hint would.
+        setPackagesResponse([packageWithNoOverlap, packageB]);
+        renderDialog({ artifacts: multiArtifacts });
+
+        const freshRow = screen.getByLabelText('Move to fresh-target');
+        expect(
+          within(freshRow).queryByText(/Adds \d+|Moves \d+/),
+        ).not.toBeInTheDocument();
+      });
+
+      it('counts artifacts held by another package as moves', () => {
+        setPackagesResponse([packageWithAllArtifacts, packageWithNoOverlap]);
+        renderDialog({ artifacts: multiArtifacts });
+
+        const freshRow = screen.getByLabelText('Move to fresh-target');
+        expect(within(freshRow).getByText('Moves 3')).toBeInTheDocument();
+      });
+
+      it('splits moves from additions when the selection is mixed', () => {
+        // partial-overlap holds the first standard, so moving the selection to
+        // fresh-target relocates that one and adds the two nobody holds.
+        setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+        renderDialog({ artifacts: multiArtifacts });
+
+        const freshRow = screen.getByLabelText('Move to fresh-target');
+        expect(
+          within(freshRow).getByText('Moves 1, Adds 2'),
+        ).toBeInTheDocument();
+      });
+
+      it('names both sides of a mixed hint in its tooltip', async () => {
+        setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+        renderDialog({ artifacts: multiArtifacts });
+
+        fireEvent.pointerMove(screen.getByText('Moves 1, Adds 2'), {
+          pointerType: 'mouse',
+        });
+
+        expect(
+          await screen.findByText(
+            'Moves: First Standard · Adds: Second Standard, Third Standard',
+            {},
+            { timeout: 2000 },
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('announces a move even for a single artifact', () => {
+        setPackagesResponse([packageA, packageContainingArtifact]);
+        renderDialog();
+
+        const row = screen.getByLabelText('Move to frontend-rules');
+        expect(within(row).getByText('Moves 1')).toBeInTheDocument();
+      });
     });
 
-    it('omits already-present artifact IDs from the entry when adding', async () => {
+    // Already-present artifacts are sent too: the server skips them in the
+    // target and still takes them out of any other package holding them.
+    it('sends the whole selection, already-present artifacts included', async () => {
       setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
-      const mutateAsync = vi.fn().mockResolvedValue([
-        {
-          packageId: packageWithPartialOverlap.id,
-          ok: true,
-          response: { package: packageWithPartialOverlap },
-        },
-      ] as AddArtefactsToPackagesOutcome[]);
-      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockAddMutation({ mutateAsync }),
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockUseMoveArtefactsToPackageMutation.mockReturnValue(
+        createMockMoveMutation({ mutateAsync }),
       );
 
       renderDialog({ artifacts: multiArtifacts });
 
-      fireEvent.click(screen.getByLabelText('Add to partial-overlap'));
+      fireEvent.click(screen.getByLabelText('Move to partial-overlap'));
 
       await waitFor(() => {
         expect(mutateAsync).toHaveBeenCalledWith({
           spaceId,
-          entries: [
-            {
-              packageId: packageWithPartialOverlap.id,
-              standardIds: [secondId, thirdId],
-            },
-          ],
+          packageId: packageWithPartialOverlap.id,
+          standardIds: [firstId, secondId, thirdId],
         });
       });
     });

@@ -60,7 +60,9 @@ export class StandardService {
     const slug = slugify(data.name);
     const existing = await this.standardRepository.findBySlug(slug, data.organizationId);
     if (existing) {
-      throw new StandardAlreadyExistsError(slug);
+      // A domain error, not a bare Error: `kind: 'conflict'` is what makes this
+      // answer 409 instead of 500. Ids go in `context`, never in the message.
+      throw new StandardAlreadyExistsError(slug, data.organizationId);
     }
     return this.standardRepository.save({ ...data, slug });
   }

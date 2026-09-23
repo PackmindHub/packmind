@@ -8,6 +8,7 @@ import {
   UpdateRenderModeConfigurationResponse,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { InvalidRenderModeError } from '../../domain/errors/InvalidRenderModeError';
 
 const origin = 'UpdateRenderModeConfigurationUseCase';
 
@@ -78,7 +79,7 @@ export class UpdateRenderModeConfigurationUseCase
 
     for (const mode of renderModes) {
       if (!allowedRenderModes.has(mode)) {
-        throw new Error(`Invalid render mode provided: ${mode}`);
+        throw new InvalidRenderModeError(mode);
       }
     }
   }

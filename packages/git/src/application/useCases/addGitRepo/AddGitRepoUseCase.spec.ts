@@ -17,8 +17,8 @@ import {
   createTargetId,
   GitRepoAlreadyExistsError,
   GitProviderMissingTokenError,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  MissingGitInputError,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -371,8 +371,8 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Git provider ID is required',
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        MissingGitInputError,
       );
     });
 
@@ -386,8 +386,8 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Owner, repository name, and branch are all required',
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        MissingGitInputError,
       );
     });
 
@@ -401,8 +401,8 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Owner, repository name, and branch are all required',
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        MissingGitInputError,
       );
     });
 
@@ -416,12 +416,12 @@ describe('AddGitRepoUseCase', () => {
         branch: '',
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Owner, repository name, and branch are all required',
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        MissingGitInputError,
       );
     });
 
-    it('throws error for git provider not found', async () => {
+    it('throws GitProviderOrganizationMismatchError for git provider not found', async () => {
       const command: AddGitRepoCommand = {
         userId,
         organizationId,
@@ -433,8 +433,8 @@ describe('AddGitRepoUseCase', () => {
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(null);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        GitProviderNotFoundError,
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        GitProviderOrganizationMismatchError,
       );
     });
 
@@ -461,7 +461,7 @@ describe('AddGitRepoUseCase', () => {
         mockProvider,
       );
 
-      await expect(useCase.execute(command)).rejects.toThrow(
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         GitProviderOrganizationMismatchError,
       );
     });

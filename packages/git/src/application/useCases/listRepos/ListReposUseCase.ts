@@ -1,5 +1,9 @@
 import { GitRepo } from '@packmind/types';
-import { GitProviderId, GitProviderNotFoundError } from '@packmind/types';
+import {
+  GitProviderId,
+  GitProviderNotFoundError,
+  MissingGitInputError,
+} from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 
@@ -17,7 +21,7 @@ export class ListReposUseCase {
     const { gitProviderId } = input;
 
     if (!gitProviderId) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
 
     const gitProvider =

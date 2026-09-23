@@ -3,6 +3,14 @@ import { GithubProvider } from './GithubProvider';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import {
+  GithubAvailableRepositoriesFailedError,
+  GithubRateLimitedError,
+} from '../../../domain/errors';
+import {
+  GitRemoteAccessForbiddenError,
+  InvalidGitProviderCredentialsError,
+} from '@packmind/types';
 
 jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
@@ -15,6 +23,21 @@ const stubResolver = (
   onUnauthorized: jest.fn().mockResolvedValue(undefined),
   getKind: jest.fn().mockReturnValue(kind),
 });
+
+const buildAxiosError = (
+  status: number,
+  headers: Record<string, string | number> = {},
+) => {
+  const err = new Error(
+    `Request failed with status code ${status}`,
+  ) as Error & {
+    isAxiosError: true;
+    response: { status: number; headers: Record<string, string | number> };
+  };
+  err.isAxiosError = true;
+  err.response = { status, headers };
+  return err;
+};
 
 describe('GithubProvider', () => {
   let githubProvider: GithubProvider;
@@ -308,7 +331,7 @@ describe('GithubProvider', () => {
 
         await expect(
           githubProvider.listAvailableRepositories(),
-        ).rejects.toThrow('Failed to fetch repositories from GitHub');
+        ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
       });
     });
     describe('when a later provider page fails', () => {
@@ -359,9 +382,9 @@ describe('GithubProvider', () => {
       const mockError = 'String error';
       mockAxiosInstance.get.mockRejectedValue(mockError);
 
-      await expect(githubProvider.listAvailableRepositories()).rejects.toThrow(
-        'Failed to fetch repositories from GitHub',
-      );
+      await expect(
+        githubProvider.listAvailableRepositories(),
+      ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
     });
 
     describe('with default filtering', () => {
@@ -623,28 +646,13 @@ describe('GithubProvider', () => {
 
           await expect(
             installationProvider.listAvailableRepositories(),
-          ).rejects.toThrow('Failed to fetch repositories from GitHub');
+          ).rejects.toBeInstanceOf(GithubAvailableRepositoriesFailedError);
         });
       });
     });
   });
 
   describe('checkAuth', () => {
-    const buildAxiosError = (
-      status: number,
-      headers: Record<string, string | number> = {},
-    ) => {
-      const err = new Error(
-        `Request failed with status code ${status}`,
-      ) as Error & {
-        isAxiosError: true;
-        response: { status: number; headers: Record<string, string | number> };
-      };
-      err.isAxiosError = true;
-      err.response = { status, headers };
-      return err;
-    };
-
     describe('with PAT resolver', () => {
       it('probes /user', async () => {
         mockAxiosInstance.get.mockResolvedValue({ data: { login: 'me' } });
@@ -793,8 +801,7 @@ describe('GithubProvider', () => {
 
     describe('when branch does not exist (404)', () => {
       it('returns false', async () => {
-        const mockError = new Error('Request failed with status code 404');
-        mockAxiosInstance.get.mockRejectedValue(mockError);
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(404));
 
         const result = await githubProvider.checkBranchExists(
           owner,
@@ -806,26 +813,76 @@ describe('GithubProvider', () => {
       });
     });
 
-    it('throws specific error for 403 (rate limit or forbidden)', async () => {
-      const mockError = new Error('Request failed with status code 403');
-      mockAxiosInstance.get.mockRejectedValue(mockError);
+    describe('when GitHub is rate limiting us', () => {
+      it('throws a rate limit error on a 403 with the quota spent', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(403, { 'x-ratelimit-remaining': '0' }),
+        );
 
-      await expect(
-        githubProvider.checkBranchExists(owner, repo, branch),
-      ).rejects.toThrow(
-        'GitHub API rate limit exceeded or access forbidden. Please try again later.',
-      );
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toBeInstanceOf(GithubRateLimitedError);
+      });
+
+      it('throws a rate limit error on a 429', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toBeInstanceOf(GithubRateLimitedError);
+      });
+
+      it('carries the wait GitHub asked for', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(403, { 'retry-after': '42' }),
+        );
+
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toHaveProperty('retryAfterSeconds', 42);
+      });
+
+      it('states the wait rather than hedging about permissions', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(403, { 'retry-after': '42' }),
+        );
+
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toThrow(
+          'GitHub is rate limiting us. Try again in 42 seconds.',
+        );
+      });
     });
 
-    it('throws specific error for 401 (unauthorized)', async () => {
-      const mockError = new Error('Request failed with status code 401');
-      mockAxiosInstance.get.mockRejectedValue(mockError);
+    describe('when GitHub refuses access (plain 403)', () => {
+      it('throws a forbidden domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
 
-      await expect(
-        githubProvider.checkBranchExists(owner, repo, branch),
-      ).rejects.toThrow(
-        'GitHub API authentication failed. Please check your token.',
-      );
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+
+      it('names the repository it was refused', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toThrow(
+          `Access to the GitHub repository ${owner}/${repo} was refused. Check that the connection's token has read access.`,
+        );
+      });
+    });
+
+    describe('when GitHub rejects the credentials (401)', () => {
+      it('throws an invalid credentials domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
+
+        await expect(
+          githubProvider.checkBranchExists(owner, repo, branch),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
     });
 
     it('throws generic error for other failures', async () => {

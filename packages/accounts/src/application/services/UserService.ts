@@ -16,8 +16,9 @@ import { UserContextChangeType } from '@packmind/types';
 import {
   EmailAlreadyExistsError,
   InvalidInvitationEmailError,
-  UserNotInOrganizationError,
+  UserNotFoundError,
   UserCannotExcludeSelfError,
+  UserCreationFieldsRequiredError,
 } from '../../domain/errors';
 
 const origin = 'UserService';
@@ -50,49 +51,41 @@ export class UserService {
       organizationId,
     });
 
-    try {
-      if (!email || !password || !organizationId) {
-        throw new Error('Email, password, and organizationId are required');
-      }
-
-      const existingUser = await this.getUserByEmailCaseInsensitive(email);
-      if (existingUser) {
-        throw new EmailAlreadyExistsError();
-      }
-
-      const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
-
-      const id = createUserId(uuidv4());
-      const membership: UserOrganizationMembership = {
-        userId: id,
-        organizationId,
-        role: 'admin',
-      };
-
-      const user: User = {
-        id,
-        email,
-        displayName: null,
-        passwordHash,
-        active: true,
-        memberships: [membership],
-      };
-
-      const createdUser = await this.userRepository.add(user);
-      this.logger.info('User created successfully', {
-        userId: createdUser.id,
-        email: maskEmail(email),
-        organizationId,
-      });
-      return createdUser;
-    } catch (error) {
-      this.logger.error('Failed to create user', {
-        email: maskEmail(email),
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!email || !password || !organizationId) {
+      throw new UserCreationFieldsRequiredError(organizationId);
     }
+
+    const existingUser = await this.getUserByEmailCaseInsensitive(email);
+    if (existingUser) {
+      throw new EmailAlreadyExistsError(email);
+    }
+
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const id = createUserId(uuidv4());
+    const membership: UserOrganizationMembership = {
+      userId: id,
+      organizationId,
+      role: 'admin',
+    };
+
+    const user: User = {
+      id,
+      email,
+      displayName: null,
+      passwordHash,
+      active: true,
+      memberships: [membership],
+    };
+
+    const createdUser = await this.userRepository.add(user);
+    this.logger.info('User created successfully', {
+      userId: createdUser.id,
+      email: maskEmail(email),
+      organizationId,
+    });
+    return createdUser;
   }
 
   async createInactiveUser(email: string): Promise<User> {
@@ -262,8 +255,10 @@ export class UserService {
         organizationId,
       );
 
+    // The target is not a member here: answered like a missing user, not a
+    // 403, which would confirm the user exists in another organization.
     if (!removed) {
-      throw new UserNotInOrganizationError({
+      throw new UserNotFoundError({
         userId: String(targetUser.id),
         organizationId: String(organizationId),
       });

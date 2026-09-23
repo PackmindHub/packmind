@@ -6,6 +6,20 @@ import { GitProviderCredentials } from '../../../../domain/repositories/IGitProv
 import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
+import {
+  GithubAppIdInvalidError,
+  GithubAppIdNotConfiguredError,
+  GithubAppInstallationIdInvalidError,
+  GithubAppInstallationIdMissingError,
+  GithubAppOrganizationAppIdMissingError,
+  GithubAppPrivateKeyMissingError,
+  GithubAppPrivateKeyNotConfiguredError,
+  GithubAppProviderNotSavedError,
+  GithubAppRepositoryNotProvidedError,
+  GithubOrganizationAppNotFoundError,
+  GithubProviderTokenEmptyError,
+  GithubUnsupportedAuthMethodError,
+} from '../../../../domain/errors';
 
 const origin = 'GithubTokenResolverFactory';
 
@@ -84,9 +98,7 @@ export class GithubTokenResolverFactory {
   async build(provider: GitProviderCredentials): Promise<IGithubTokenResolver> {
     if (provider.authMethod === 'token') {
       if (!provider.token) {
-        throw new Error(
-          'GithubTokenResolverFactory: provider.authMethod is "token" but provider.token is empty',
-        );
+        throw new GithubProviderTokenEmptyError();
       }
       return new PatTokenResolver(provider.token);
     }
@@ -97,21 +109,18 @@ export class GithubTokenResolverFactory {
       // persisted yet.
       const providerId = provider.id;
       if (!providerId) {
-        throw new Error(
-          'GithubTokenResolverFactory: provider.authMethod is "app" but the provider has not been saved yet',
-        );
+        throw new GithubAppProviderNotSavedError();
       }
 
       const installationIdRaw = provider.appInstallationId;
       if (installationIdRaw === undefined || installationIdRaw === null) {
-        throw new Error(
-          'GithubTokenResolverFactory: provider.authMethod is "app" but provider.appInstallationId is missing',
-        );
+        throw new GithubAppInstallationIdMissingError(providerId);
       }
       const installationId = Number(installationIdRaw);
       if (!Number.isInteger(installationId) || installationId <= 0) {
-        throw new Error(
-          'GithubTokenResolverFactory: provider.appInstallationId must be a positive integer',
+        throw new GithubAppInstallationIdInvalidError(
+          providerId,
+          installationIdRaw,
         );
       }
 
@@ -138,14 +147,10 @@ export class GithubTokenResolverFactory {
         privateKeyPem = await this.config.getConfig('GITHUB_APP_PRIVATE_KEY');
 
         if (!appIdRaw) {
-          throw new Error(
-            'GithubTokenResolverFactory: GITHUB_APP_ID is not configured (shared mode)',
-          );
+          throw new GithubAppIdNotConfiguredError(providerId);
         }
         if (!privateKeyPem) {
-          throw new Error(
-            'GithubTokenResolverFactory: GITHUB_APP_PRIVATE_KEY is not configured (shared mode)',
-          );
+          throw new GithubAppPrivateKeyNotConfiguredError(providerId);
         }
       } else {
         // Keyed on the GitProvider's FK rather than "the active App for this
@@ -153,15 +158,11 @@ export class GithubTokenResolverFactory {
         // against: re-running the manifest would otherwise rebind old
         // installations to a new App and 404 at JWT exchange.
         if (!this.orgGitHubAppRepository) {
-          throw new Error(
-            'GithubTokenResolverFactory: orgGitHubAppRepository is required for on-prem mode with app auth',
-          );
+          throw new GithubAppRepositoryNotProvidedError(providerId);
         }
 
         if (!provider.organizationGitHubAppId) {
-          throw new Error(
-            `GithubTokenResolverFactory: provider ${providerId} has authMethod 'app' but no organizationGitHubAppId (on-prem mode)`,
-          );
+          throw new GithubAppOrganizationAppIdMissingError(providerId);
         }
 
         const app = await this.orgGitHubAppRepository.findById(
@@ -169,8 +170,9 @@ export class GithubTokenResolverFactory {
         );
 
         if (!app) {
-          throw new Error(
-            `GithubTokenResolverFactory: OrganizationGitHubApp ${provider.organizationGitHubAppId} not found (on-prem mode)`,
+          throw new GithubOrganizationAppNotFoundError(
+            providerId,
+            provider.organizationGitHubAppId,
           );
         }
 
@@ -184,13 +186,11 @@ export class GithubTokenResolverFactory {
 
       const appId = Number(appIdRaw);
       if (!Number.isInteger(appId) || appId <= 0) {
-        throw new Error(
-          'GithubTokenResolverFactory: appId must be a positive integer',
-        );
+        throw new GithubAppIdInvalidError(providerId, String(appIdRaw));
       }
 
       if (!privateKeyPem) {
-        throw new Error('GithubTokenResolverFactory: appPrivateKey is missing');
+        throw new GithubAppPrivateKeyMissingError(providerId);
       }
 
       this.logger.info('Building AppInstallationTokenResolver', {
@@ -214,9 +214,7 @@ export class GithubTokenResolverFactory {
       return resolver;
     }
 
-    throw new Error(
-      `GithubTokenResolverFactory: unsupported authMethod "${String(provider.authMethod)}"`,
-    );
+    throw new GithubUnsupportedAuthMethodError(String(provider.authMethod));
   }
 
   private async resolveMode(): Promise<GithubAppMode> {

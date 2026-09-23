@@ -5,12 +5,12 @@ import {
   AddGitRepoResponse,
   createUserId,
   GitProviderMissingTokenError,
-  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   GitRepoAlreadyExistsError,
   IAccountsPort,
   IAddGitRepoUseCase,
   IDeploymentPort,
+  MissingGitInputError,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
@@ -45,28 +45,30 @@ export class AddGitRepoUseCase
     } = command;
 
     if (!gitProviderId) {
-      throw new Error('Git provider ID is required');
+      throw new MissingGitInputError('Git provider ID');
     }
 
-    if (!owner || !repo || !branch) {
-      throw new Error('Owner, repository name, and branch are all required');
+    if (!owner) {
+      throw new MissingGitInputError('Repository owner');
+    }
+
+    if (!repo) {
+      throw new MissingGitInputError('Repository name');
+    }
+
+    if (!branch) {
+      throw new MissingGitInputError('Branch name');
     }
 
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
-    if (!gitProvider) {
-      this.logger.error('Git provider not found', {
-        gitProviderId,
-        organizationId: organization.id,
-        userId,
-      });
-      throw new GitProviderNotFoundError(gitProviderId);
-    }
 
-    if (gitProvider.organizationId !== organization.id) {
-      this.logger.error('Git provider does not belong to organization', {
+    // A provider that does not exist and one owned by another organization are
+    // the same answer by design, so they are the same branch.
+    if (!gitProvider || gitProvider.organizationId !== organization.id) {
+      this.logger.error('Git provider not found in organization', {
         gitProviderId,
-        providerOrganizationId: gitProvider.organizationId,
+        providerOrganizationId: gitProvider?.organizationId ?? null,
         requestedOrganizationId: organization.id,
         userId,
       });

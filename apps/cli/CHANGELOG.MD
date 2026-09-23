@@ -8,6 +8,17 @@
 
 ## Removed
 
+# [0.36.0] - 2026-09-23
+
+## Added
+
+- `packmind packages move --<type> <slug> --to @space/package` moves an artefact into one package and out of every other
+- `packmind packages remove --<type> <slug> --from @space/package` takes an artefact out of a package without adding it anywhere
+
+## Changed
+
+- **Breaking:** an artefact now belongs to one package. `packmind packages add` refuses one held elsewhere and points at `packages move`
+
 # [0.35.1] - 2026-09-10
 
 ## Fixed
@@ -499,7 +510,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...HEAD
+[0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
 [0.35.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...release-cli/0.35.1
 [0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0
 [0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1

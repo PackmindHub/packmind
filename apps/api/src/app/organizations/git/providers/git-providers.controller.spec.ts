@@ -47,12 +47,7 @@ jest.mock('@packmind/node-utils', () => ({
   AuthenticatedRequest: {},
 }));
 
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  NotImplementedException,
-} from '@nestjs/common';
+import { BadRequestException, NotImplementedException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -704,14 +699,14 @@ describe('GitProvidersController', () => {
     };
 
     describe('when the display name collides with an existing provider', () => {
-      it('translates the domain error into a 409 Conflict', async () => {
+      it('propagates the domain error for the filter to map', async () => {
         mockService.addGitProvider.mockRejectedValue(
           new GitProviderDisplayNameAlreadyUsedError('Production', orgId),
         );
 
         await expect(
           controller.addGitProvider(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameAlreadyUsedError);
       });
     });
   });
@@ -721,26 +716,26 @@ describe('GitProvidersController', () => {
     const body = { displayName: 'Marketplace' };
 
     describe('when the display name collides with another provider', () => {
-      it('translates the domain error into a 409 Conflict', async () => {
+      it('propagates the domain error for the filter to map', async () => {
         mockService.updateGitProvider.mockRejectedValue(
           new GitProviderDisplayNameAlreadyUsedError('Marketplace', orgId),
         );
 
         await expect(
           controller.updateGitProvider(orgId, mockRequest, providerId, body),
-        ).rejects.toBeInstanceOf(ConflictException);
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameAlreadyUsedError);
       });
     });
 
     describe('when editing a CLI-managed provider', () => {
-      it('translates the domain error into a 403 Forbidden', async () => {
+      it('propagates the domain error for the filter to map', async () => {
         mockService.updateGitProvider.mockRejectedValue(
           new GitProviderDisplayNameNotEditableError(providerId),
         );
 
         await expect(
           controller.updateGitProvider(orgId, mockRequest, providerId, body),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameNotEditableError);
       });
     });
   });

@@ -182,26 +182,44 @@ export function filterAddableComponents(
 }
 
 /**
+ * Whether the picker may tick this candidate.
+ *
+ * A component belongs to a single package, so one another package already
+ * carries cannot be added to this one — it has to be moved, from the package
+ * holding it. The candidates are already the ones this package does not hold,
+ * so carried-by-nobody is the whole question, and `isOrphan` is that question
+ * asked of an entry.
+ */
+export function isPickable(entry: InventoryEntry): boolean {
+  return isOrphan(entry);
+}
+
+/**
  * How much of one group the picker is already holding, as the three readings a
  * heading checkbox needs: none of it, part of it, all of it.
  *
  * Resolved against the entries the group is showing, not against every
  * candidate of that type. The group a filter left is the group the reader can
- * see and the only one a control above it can honestly speak for.
+ * see and the only one a control above it can honestly speak for. And among
+ * those, only the ones it can tick: a group whose every free candidate is
+ * picked reads as `all` even while it lists components held elsewhere, which
+ * the heading cannot pick and the reader is not waiting for.
  *
- * An empty group reads as `none`, so a heading over no row offers to select
- * nothing rather than claiming to have selected everything.
+ * A group with nothing pickable reads as `none`, so a heading over rows it
+ * cannot touch offers to select nothing rather than claiming to have selected
+ * everything.
  */
 export function groupPickState(
   pickedKeys: ReadonlySet<string>,
   group: InventoryGroup,
 ): 'none' | 'some' | 'all' {
-  const picked = group.entries.filter(({ component }) =>
+  const pickable = group.entries.filter(isPickable);
+  const picked = pickable.filter(({ component }) =>
     pickedKeys.has(componentSelectionKey(component)),
   ).length;
 
   if (picked === 0) return 'none';
-  return picked === group.entries.length ? 'all' : 'some';
+  return picked === pickable.length ? 'all' : 'some';
 }
 
 /**
@@ -210,6 +228,10 @@ export function groupPickState(
  * Adds or removes only the keys of that group, leaving every other pick where
  * it was: the control speaks for the rows under it and a reader who ticked two
  * standards by hand does not expect selecting all the skills to drop them.
+ *
+ * Selecting reaches only the rows a reader could have ticked one by one.
+ * Deselecting reaches all of them, so a key left over from before a package
+ * claimed its component is cleared rather than stranded.
  */
 export function withGroupPicked(
   pickedKeys: ReadonlySet<string>,
@@ -217,10 +239,13 @@ export function withGroupPicked(
   select: boolean,
 ): ReadonlySet<string> {
   const next = new Set(pickedKeys);
-  for (const { component } of group.entries) {
-    const key = componentSelectionKey(component);
-    if (select) next.add(key);
-    else next.delete(key);
+  for (const entry of group.entries) {
+    const key = componentSelectionKey(entry.component);
+    if (!select) {
+      next.delete(key);
+      continue;
+    }
+    if (isPickable(entry)) next.add(key);
   }
   return next;
 }

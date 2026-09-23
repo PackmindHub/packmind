@@ -1,5 +1,6 @@
 import {
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
@@ -18,6 +19,9 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
   createSpaceId,
+  CreatePackageReleaseCommand,
+  ListPackageReleasesCommand,
+  GetPackageReleaseCommand,
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -48,6 +52,9 @@ import {
   UPDATE_PACKAGE_MUTATION_KEY,
   getDashboardKpiKey,
   getDashboardNonLiveKey,
+  LIST_PACKAGE_RELEASES_KEY,
+  getListPackageReleasesKey,
+  getGetPackageReleaseKey,
 } from '../queryKeys';
 
 export const useListCommandDeploymentsQuery = (recipeId: CommandId) => {
@@ -70,23 +77,27 @@ export const useListCommandDeploymentsQuery = (recipeId: CommandId) => {
   });
 };
 
-export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
+export const useListPackageDeploymentsQuery = (
+  packageId: PackageId,
+  spaceId: SpaceId | undefined,
+) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, packageId],
+    queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, spaceId, packageId],
     queryFn: () => {
-      if (!organization?.id) {
+      if (!organization?.id || !spaceId) {
         throw new Error(
-          'Organization ID is required to fetch package deployments',
+          'Organization ID and space ID are required to fetch package deployments',
         );
       }
       return deploymentsGateways.listDeploymentsByPackageId({
         organizationId: organization.id,
+        spaceId,
         packageId,
       });
     },
-    enabled: !!organization?.id,
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
@@ -263,6 +274,92 @@ export const useGetPackageByIdQuery = (
       isOrgMatch &&
       isSpaceMatch,
   });
+};
+
+export const getPackageReleasesQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+) => ({
+  queryKey: getListPackageReleasesKey(
+    spaceId || '',
+    organizationId || '',
+    packageId || '',
+  ),
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch package releases');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch package releases');
+    }
+    if (!packageId) {
+      throw new Error('Package ID is required to fetch package releases');
+    }
+    return deploymentsGateways.listPackageReleases({
+      organizationId,
+      spaceId,
+      packageId,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!packageId,
+  refetchOnMount: 'always' as const,
+});
+
+export const useListPackageReleasesQuery = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+) => {
+  return useQuery(
+    getPackageReleasesQueryOptions(organizationId, spaceId, packageId),
+  );
+};
+
+export const getPackageReleaseQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+  version: string | undefined,
+) => ({
+  queryKey: getGetPackageReleaseKey(
+    spaceId || '',
+    organizationId || '',
+    packageId || '',
+    version || '',
+  ),
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch package release');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch package release');
+    }
+    if (!packageId) {
+      throw new Error('Package ID is required to fetch package release');
+    }
+    if (!version) {
+      throw new Error('Version is required to fetch package release');
+    }
+    return deploymentsGateways.getPackageRelease({
+      organizationId,
+      spaceId,
+      packageId,
+      version,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!packageId && !!version,
+});
+
+export const useGetPackageReleaseQuery = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  packageId: PackageId | undefined,
+  version: string | undefined,
+) => {
+  return useQuery(
+    getPackageReleaseQueryOptions(organizationId, spaceId, packageId, version),
+  );
 };
 
 export const useGetDashboardKpiQuery = (spaceId: string) => {
@@ -701,6 +798,53 @@ export const useCreatePackageMutation = () => {
   });
 };
 
+export const CREATE_PACKAGE_RELEASE_MUTATION_KEY = 'createPackageRelease';
+export const useCreatePackageReleaseMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CREATE_PACKAGE_RELEASE_MUTATION_KEY],
+    mutationFn: async (
+      command: Omit<CreatePackageReleaseCommand, 'userId'>,
+    ) => {
+      return deploymentsGateways.createPackageRelease(command);
+    },
+    onSuccess: async (data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: getListPackageReleasesKey(
+          variables.spaceId,
+          variables.organizationId,
+          variables.packageId,
+        ),
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating package release:', error);
+    },
+  });
+};
+
+/**
+ * The release gate reads the package's name, its description and its component
+ * list, so every mutation that moves one of those three makes the readiness
+ * this key holds wrong — "Nothing has changed since 0.1.0" beside a package
+ * that was just renamed. The queries default to a ten-minute `staleTime` and
+ * do not refetch on focus. These invalidations refresh readiness within the mounted
+ * pane without navigation; arriving at or returning to the pane refetches via the
+ * query's `refetchOnMount: 'always'` setting.
+ *
+ * Invalidated by prefix rather than per package: one package pane is mounted
+ * at a time, so this refetches exactly the one on screen and marks the rest
+ * stale without a request.
+ */
+function invalidatePackageReleaseReadiness(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: LIST_PACKAGE_RELEASES_KEY,
+  });
+}
+
 function invalidateChangeProposalQueries(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
@@ -730,6 +874,7 @@ export const useUpdatePackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidatePackageReleaseReadiness(queryClient);
       await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
@@ -797,6 +942,58 @@ export const useAddArtefactsToPackagesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidatePackageReleaseReadiness(queryClient);
+    },
+  });
+};
+
+export const MOVE_ARTEFACTS_TO_PACKAGE_MUTATION_KEY = 'moveArtefactsToPackage';
+/**
+ * Puts artefacts in one package and takes them out of every other package in
+ * the space. The whole move lands or none of it does, so a rejection here
+ * means membership is unchanged and nothing needs undoing client-side.
+ */
+export const useMoveArtefactsToPackageMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [MOVE_ARTEFACTS_TO_PACKAGE_MUTATION_KEY],
+    mutationFn: async ({
+      spaceId,
+      packageId,
+      standardIds,
+      commandIds,
+      skillIds,
+    }: {
+      spaceId: SpaceId;
+      packageId: PackageId;
+      standardIds?: StandardId[];
+      commandIds?: CommandId[];
+      skillIds?: SkillId[];
+    }): Promise<MoveArtefactsToPackageResponse> => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to move artifacts');
+      }
+      return deploymentsGateways.moveArtefactsToPackage({
+        organizationId: organization.id,
+        spaceId,
+        packageId,
+        standardIds,
+        recipeIds: commandIds,
+        skillIds,
+      });
+    },
+    // A move rewrites the target and every package it emptied, so the whole
+    // package-detail key is invalidated rather than the target's alone.
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_PACKAGE_BY_ID_KEY,
+      });
+      await invalidatePackageReleaseReadiness(queryClient);
     },
   });
 };
@@ -843,6 +1040,7 @@ export const useRemoveArtefactsFromPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
       });
+      await invalidatePackageReleaseReadiness(queryClient);
     },
   });
 };

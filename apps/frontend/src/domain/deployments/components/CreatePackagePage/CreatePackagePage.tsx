@@ -24,6 +24,8 @@ import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueri
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 import { useCreatePackageMutation } from '../../api/queries/DeploymentsQueries';
+import { useArtefactPackageOwners } from '../../hooks/useArtefactPackageOwners';
+import { HeldByPackage, toArtefactOption } from '../packageForm';
 import {
   CommandId,
   StandardId,
@@ -49,6 +51,8 @@ interface PackageFormContentProps {
   recipes: Command[];
   standards: Standard[];
   skills: Skill[];
+  /** Component id -> name of the package holding it. */
+  ownerByArtefactId: Record<string, string>;
   selectedCommandIds: CommandId[];
   selectedStandardIds: StandardId[];
   selectedSkillIds: SkillId[];
@@ -61,10 +65,11 @@ interface PackageFormContentProps {
   spaceSlug: string;
 }
 
-const PackageFormContent = ({
+export const PackageFormContent = ({
   recipes,
   standards,
   skills,
+  ownerByArtefactId,
   selectedCommandIds,
   selectedStandardIds,
   selectedSkillIds,
@@ -78,20 +83,17 @@ const PackageFormContent = ({
 }: PackageFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  const commandItems = recipes.map((recipe: Command) => ({
-    label: recipe.name,
-    value: recipe.id,
-  }));
+  const commandItems = recipes.map((recipe: Command) =>
+    toArtefactOption(recipe, selectedCommandIds, ownerByArtefactId),
+  );
 
-  const standardItems = standards.map((standard: Standard) => ({
-    label: standard.name,
-    value: standard.id,
-  }));
+  const standardItems = standards.map((standard: Standard) =>
+    toArtefactOption(standard, selectedStandardIds, ownerByArtefactId),
+  );
 
-  const skillItems = skills.map((skill: Skill) => ({
-    label: skill.name,
-    value: skill.id,
-  }));
+  const skillItems = skills.map((skill: Skill) =>
+    toArtefactOption(skill, selectedSkillIds, ownerByArtefactId),
+  );
 
   const { collection: commandCollection, filter: filterCommands } =
     pmUseListCollection({
@@ -168,6 +170,7 @@ const PackageFormContent = ({
                     {standardCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -282,6 +285,7 @@ const PackageFormContent = ({
                     {commandCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -398,6 +402,7 @@ const PackageFormContent = ({
                     {skillCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <HeldByPackage packageName={item.heldBy} />
                         <PMCombobox.ItemIndicator />
                       </PMCombobox.Item>
                     ))}
@@ -490,6 +495,11 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   const { data: skillsResponse, isLoading: isLoadingSkills } =
     useGetSkillsQuery();
 
+  // A component belongs to a single package, so the form needs to know which
+  // ones a package already holds before it offers them.
+  const { ownerByArtefactId, isLoading: isLoadingOwners } =
+    useArtefactPackageOwners({ spaceId, organizationId });
+
   const createPackageMutation = useCreatePackageMutation();
 
   const [name, setName] = useState('');
@@ -569,7 +579,12 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     }
   };
 
-  if (isLoadingSpace || isLoadingCommands || isLoadingStandards) {
+  if (
+    isLoadingSpace ||
+    isLoadingCommands ||
+    isLoadingStandards ||
+    isLoadingOwners
+  ) {
     return (
       <PMBox display="flex" justifyContent="center" alignItems="center" p={8}>
         <PMSpinner size="lg" />
@@ -650,10 +665,13 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
             >
               {isLoadingCommands || isLoadingStandards ? null : (
                 <PackageFormContent
-                  key={`loaded-${recipes.length}-${standards.length}-${skills.length}`}
+                  key={`loaded-${recipes.length}-${standards.length}-${skills.length}-${
+                    Object.keys(ownerByArtefactId).length
+                  }`}
                   recipes={recipes}
                   standards={standards}
                   skills={skills}
+                  ownerByArtefactId={ownerByArtefactId}
                   selectedCommandIds={selectedCommandIds}
                   selectedStandardIds={selectedStandardIds}
                   selectedSkillIds={selectedSkillIds}

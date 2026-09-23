@@ -13,6 +13,7 @@ import {
 } from '../../domain/jobs/FetchFileContent';
 import { GitRepoService } from '../GitRepoService';
 import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
+import { GitRepoNotFoundError } from '@packmind/types';
 
 const logOrigin = 'FetchFileContentDelayedJob';
 
@@ -84,7 +85,7 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
     const gitRepo = await this.gitRepoService.findGitRepoById(input.gitRepoId);
 
     if (!gitRepo) {
-      throw new Error(`Git repository not found with id: ${input.gitRepoId}`);
+      throw new GitRepoNotFoundError(input.gitRepoId);
     }
 
     const filesWithContent = [];

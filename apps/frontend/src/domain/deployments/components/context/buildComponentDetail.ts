@@ -69,6 +69,21 @@ export const FILE_PARAM = 'file';
 export const RULE_PARAM = 'rule';
 
 /**
+ * Which version of the package the pane is reading, when it is not reading the
+ * editable one.
+ *
+ * Absence means the working copy, so the package as it stands keeps one
+ * address: a reader who never opens the menu never carries a parameter, and a
+ * link to a package is a link to what it is now.
+ *
+ * In the URL for the reason the package and the component are: "this is what
+ * 1.1.0 shipped" is a thing people send each other, and a reading that cannot
+ * be pasted is a reading nobody quotes. Its value is the version string itself,
+ * which is what the release is named by everywhere else.
+ */
+export const RELEASE_PARAM = 'release';
+
+/**
  * Which half of what is on screen is being read.
  *
  * One parameter for both depths, because two things on this surface cannot be

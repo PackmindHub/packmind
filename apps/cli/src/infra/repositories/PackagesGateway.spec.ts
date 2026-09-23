@@ -168,4 +168,120 @@ describe('PackagesGateway', () => {
       });
     });
   });
+
+  describe('moveArtefacts', () => {
+    let gateway: PackagesGateway;
+    let mockHttpClient: jest.Mocked<PackmindHttpClient>;
+    const mockOrganizationId = 'org-123';
+    const packageId = createPackageId('pkg-123');
+    const spaceId = createSpaceId('space-123');
+
+    beforeEach(() => {
+      mockHttpClient = mockInterface<PackmindHttpClient>();
+      mockHttpClient.getAuthContext.mockReturnValue({
+        organizationId: mockOrganizationId,
+        host: 'https://api.packmind.com',
+        jwt: 'mock-jwt',
+        role: null,
+      });
+      mockHttpClient.request.mockResolvedValue({
+        added: { standards: [], commands: ['cmd-1'], skills: [] },
+        skipped: { standards: [], commands: [], skills: [] },
+        removedFrom: [
+          {
+            packageId: createPackageId('pkg-source'),
+            standards: [],
+            commands: ['cmd-1'],
+            skills: [],
+          },
+        ],
+      });
+
+      gateway = new PackagesGateway('mock-api-key', mockHttpClient);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('calls POST on move-artifacts with commandIds in payload', async () => {
+      await gateway.moveArtefacts({
+        packageId,
+        spaceId,
+        recipeIds: [createCommandId('cmd-1')],
+      });
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/move-artifacts`,
+        {
+          method: 'POST',
+          body: { packageId, spaceId, commandIds: ['cmd-1'] },
+        },
+      );
+    });
+
+    it('returns the packages the artefacts left', async () => {
+      const result = await gateway.moveArtefacts({
+        packageId,
+        spaceId,
+        recipeIds: [createCommandId('cmd-1')],
+      });
+
+      expect(result.removedFrom[0].commands).toEqual(['cmd-1']);
+    });
+  });
+
+  describe('removeArtefacts', () => {
+    let gateway: PackagesGateway;
+    let mockHttpClient: jest.Mocked<PackmindHttpClient>;
+    const mockOrganizationId = 'org-123';
+    const packageId = createPackageId('pkg-123');
+    const spaceId = createSpaceId('space-123');
+
+    beforeEach(() => {
+      mockHttpClient = mockInterface<PackmindHttpClient>();
+      mockHttpClient.getAuthContext.mockReturnValue({
+        organizationId: mockOrganizationId,
+        host: 'https://api.packmind.com',
+        jwt: 'mock-jwt',
+        role: null,
+      });
+      mockHttpClient.request.mockResolvedValue({
+        removed: { standards: [], commands: ['cmd-1'], skills: [] },
+        skipped: { standards: [], commands: [], skills: [] },
+      });
+
+      gateway = new PackagesGateway('mock-api-key', mockHttpClient);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('calls POST on remove-artifacts with commandIds in payload', async () => {
+      await gateway.removeArtefacts({
+        packageId,
+        spaceId,
+        recipeIds: [createCommandId('cmd-1')],
+      });
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/remove-artifacts`,
+        {
+          method: 'POST',
+          body: { packageId, spaceId, commandIds: ['cmd-1'] },
+        },
+      );
+    });
+
+    it('returns removed items from response', async () => {
+      const result = await gateway.removeArtefacts({
+        packageId,
+        spaceId,
+        recipeIds: [createCommandId('cmd-1')],
+      });
+
+      expect(result.removed.commands).toEqual(['cmd-1']);
+    });
+  });
 });

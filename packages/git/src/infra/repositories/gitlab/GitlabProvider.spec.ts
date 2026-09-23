@@ -8,6 +8,15 @@ import { PackmindLogger } from '@packmind/logger';
 import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
+import {
+  GitlabAvailableRepositoriesFailedError,
+  GitlabBranchExistenceCheckFailedError,
+  GitlabRateLimitedError,
+} from '../../../domain/errors';
+import {
+  GitRemoteAccessForbiddenError,
+  InvalidGitProviderCredentialsError,
+} from '@packmind/types';
 
 jest.mock('axios');
 const actualAxios = jest.requireActual<typeof axios>('axios');
@@ -20,6 +29,21 @@ const mockAxiosInstance = {
   put: jest.fn(),
   delete: jest.fn(),
 } as Partial<jest.Mocked<AxiosInstance>> as jest.Mocked<AxiosInstance>;
+
+const buildAxiosError = (
+  status: number,
+  headers: Record<string, string> = {},
+) => {
+  const err = new Error(
+    `Request failed with status code ${status}`,
+  ) as Error & {
+    isAxiosError: true;
+    response: { status: number; headers: Record<string, string> };
+  };
+  err.isAxiosError = true;
+  err.response = { status, headers };
+  return err;
+};
 
 describe('GitlabProvider', () => {
   let gitlabProvider: GitlabProvider;
@@ -406,7 +430,17 @@ describe('GitlabProvider', () => {
 
         await expect(
           gitlabProvider.listAvailableRepositories(),
-        ).rejects.toThrow('Failed to fetch repositories from GitLab');
+        ).rejects.toBeInstanceOf(GitlabAvailableRepositoriesFailedError);
+      });
+    });
+
+    describe('when GitLab is throttling us', () => {
+      it('throws a rate limit error rather than an unavailable one', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          gitlabProvider.listAvailableRepositories(),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
       });
     });
 
@@ -481,9 +515,7 @@ describe('GitlabProvider', () => {
 
     describe('when branch does not exist (404)', () => {
       it('returns false', async () => {
-        const error = new Error('Not found');
-        error.message = '404';
-        mockAxiosInstance.get.mockRejectedValue(error);
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(404));
 
         const result = await gitlabProvider.checkBranchExists(
           'owner',
@@ -495,28 +527,66 @@ describe('GitlabProvider', () => {
       });
     });
 
-    it('throws error for authentication failure (401)', async () => {
-      const error = new Error('Unauthorized');
-      error.message = '401';
-      mockAxiosInstance.get.mockRejectedValue(error);
+    describe('when GitLab is throttling us (429)', () => {
+      it('throws a rate limit error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
 
-      await expect(
-        gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
-      ).rejects.toThrow(
-        'GitLab API authentication failed. Please check your token.',
-      );
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
+      });
+
+      it('carries the wait GitLab asked for', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(429, { 'retry-after': '42' }),
+        );
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toThrow(
+          'GitLab is rate limiting us. Try again in 42 seconds.',
+        );
+      });
     });
 
-    it('throws error for rate limit (403)', async () => {
-      const error = new Error('Forbidden');
-      error.message = '403';
-      mockAxiosInstance.get.mockRejectedValue(error);
+    describe('when GitLab rejects the stored credentials (401)', () => {
+      it('throws an invalid credentials domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
 
-      await expect(
-        gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
-      ).rejects.toThrow(
-        'GitLab API rate limit exceeded or access forbidden. Please try again later.',
-      );
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
+    });
+
+    describe('when GitLab refuses access (403)', () => {
+      it('throws a forbidden domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+
+      it('names the repository it was refused rather than hedging about quotas', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toThrow(
+          "Access to the GitLab repository owner/repo was refused. Check that the connection's token has read access.",
+        );
+      });
+    });
+
+    describe('when the failure only mentions a status in its message', () => {
+      it('does not read it as a 404', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('boom on line 404'));
+
+        await expect(
+          gitlabProvider.checkBranchExists('owner', 'repo', 'main'),
+        ).rejects.toBeInstanceOf(GitlabBranchExistenceCheckFailedError);
+      });
     });
 
     it('throws error for other API failures', async () => {
@@ -533,18 +603,6 @@ describe('GitlabProvider', () => {
   });
 
   describe('checkAuth', () => {
-    const buildAxiosError = (status: number) => {
-      const err = new Error(
-        `Request failed with status code ${status}`,
-      ) as Error & {
-        isAxiosError: true;
-        response: { status: number; headers: Record<string, string> };
-      };
-      err.isAxiosError = true;
-      err.response = { status, headers: {} };
-      return err;
-    };
-
     it('probes /user', async () => {
       mockAxiosInstance.get.mockResolvedValue({ data: { id: 1 } });
 

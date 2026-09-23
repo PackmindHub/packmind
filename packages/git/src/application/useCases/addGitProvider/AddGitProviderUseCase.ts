@@ -5,6 +5,7 @@ import {
   AddGitProviderResponse,
   IAccountsPort,
   IAddGitProviderUseCase,
+  MissingGitInputError,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
@@ -62,7 +63,7 @@ export class AddGitProviderUseCase
     );
 
     if (!gitProvider.source) {
-      throw new Error('Git provider source is required');
+      throw new MissingGitInputError('Git provider source');
     }
 
     const normalizedDisplayName = normalizeDisplayName(gitProvider.displayName);

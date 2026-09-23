@@ -138,3 +138,29 @@ See [contract.md](contract.md) for the pattern.
 - **Use cases call services, not repositories** — use cases orchestrate via services; never access repositories directly
 - **Emit events** when the operation has side effects other domains care about
 - **Test file colocated** — `{name}.usecase.spec.ts` in the same folder
+
+## Errors
+
+- **Never `throw new Error(...)`** — a bare `Error` answers 500 with a stack logged at
+  `error` level, whatever the failure actually was
+- **Throw a class extending the package's `DomainError` base** — see
+  [domain-layer.md](../layers/domain-layer.md); `packages/deployments/src/domain/errors/`
+  is the current model for the domain family, and `git` is the model for a package raising
+  all three — `packages/git/src/domain/errors/` holds its internal and upstream bases, on
+  top of the domain base it shares through `packages/types/src/git/errors/GitError.ts`
+- **Missing and wrong-tenant are one branch** — `if (!pkg || pkg.spaceId !== spaceId) throw
+  new PackageNotFoundError(packageId, spaceId)`, one error, one message, `kind: 'not_found'`
+  and never `forbidden`
+- **Ids belong in `context`, not in the message** — `context` is logged, the message is
+  returned to the caller
+- **Broken invariants extend `PackmindInternalError`** — e.g. a record that cannot be read
+  back after it was written
+- **Third-party failures extend the package's `PackmindUpstreamError` subclass** — a
+  provider outage, a timeout, an unreadable response or a rate limit is neither the caller's
+  fault nor a broken invariant of ours; answers 502, or 429 when throttled, logged at `warn`
+- **Choose the family by fault, not by status class** — the caller's fault, ours, or a
+  third party's decides which base you extend; the status then follows from the table
+
+The authorization errors the abstract base classes raise above (`UserNotFoundError`,
+`UserNotInOrganizationError`, `SpaceMembershipRequiredError`) are `UserAccessError`
+subclasses: carrying a `kind` is what makes them answer 404/403 rather than 500.

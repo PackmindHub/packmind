@@ -7,7 +7,7 @@ import {
   setupGitRepo,
   UserSignedUpContext,
 } from './helpers';
-import { Distribution, Package } from '@packmind/types';
+import { DistributionHistoryEntry, Package } from '@packmind/types';
 import { matchesVersionConstraint } from './helpers/cliVersion';
 
 const packmindEmail = (): string =>
@@ -46,7 +46,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -58,7 +58,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -78,7 +81,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -88,7 +91,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -112,7 +118,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
       let context: UserSignedUpContext;
       let pkg: Package;
       let result: RunCliResult;
-      let distributions: Distribution[];
+      let distributions: DistributionHistoryEntry[];
 
       beforeEach(async () => {
         context = await getContext();
@@ -124,7 +130,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           `install @${context.space.slug}/${pkg.slug}`,
         );
         distributions =
-          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+          await context.gateway.deployments.listDeploymentsByPackage(
+            context.space.id,
+            pkg.id,
+          );
       });
 
       it('exits successfully', () => {
@@ -163,7 +172,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
           let context: UserSignedUpContext;
           let pkg: Package;
           let result: RunCliResult;
-          let distributions: Distribution[];
+          let distributions: DistributionHistoryEntry[];
 
           beforeEach(async () => {
             context = await getContext();
@@ -177,6 +186,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
             );
             distributions =
               await context.gateway.deployments.listDeploymentsByPackage(
+                context.space.id,
                 pkg.id,
               );
           });

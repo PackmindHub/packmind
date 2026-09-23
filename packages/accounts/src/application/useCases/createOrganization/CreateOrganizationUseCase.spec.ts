@@ -7,7 +7,10 @@ import {
   createMockInstance,
 } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  UserNotFoundError,
+} from '@packmind/node-utils';
 import {
   createUserId,
   UserId,
@@ -19,6 +22,10 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { userFactory } from '../../../../test';
+import {
+  InvalidOrganizationNameError,
+  UserIdRequiredError,
+} from '../../../domain/errors';
 
 describe('CreateOrganizationUseCase', () => {
   let createOrganizationUseCase: CreateOrganizationUseCase;
@@ -200,12 +207,12 @@ describe('CreateOrganizationUseCase', () => {
           }
         });
 
-        it('throws user not found error', async () => {
+        it('throws UserNotFoundError', async () => {
           mockUserService.getUserById.mockResolvedValue(null);
 
           await expect(
             createOrganizationUseCase.execute(validCommand),
-          ).rejects.toThrow('User not found');
+          ).rejects.toBeInstanceOf(UserNotFoundError);
         });
 
         it('fetches user by id', () => {
@@ -297,10 +304,10 @@ describe('CreateOrganizationUseCase', () => {
         }
       });
 
-      it('throws validation error', async () => {
+      it('throws UserIdRequiredError', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
-        ).rejects.toThrow('User ID is required');
+        ).rejects.toBeInstanceOf(UserIdRequiredError);
       });
 
       it('does not fetch user', () => {
@@ -328,10 +335,10 @@ describe('CreateOrganizationUseCase', () => {
         }
       });
 
-      it('throws validation error', async () => {
+      it('throws InvalidOrganizationNameError', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Organization name is required');
+        ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
       });
 
       it('does not create organization', () => {
@@ -355,10 +362,10 @@ describe('CreateOrganizationUseCase', () => {
         }
       });
 
-      it('throws validation error', async () => {
+      it('throws InvalidOrganizationNameError', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Organization name is required');
+        ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
       });
 
       it('does not create organization', () => {
@@ -382,10 +389,10 @@ describe('CreateOrganizationUseCase', () => {
         }
       });
 
-      it('throws validation error', async () => {
+      it('throws InvalidOrganizationNameError', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Organization name is required');
+        ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
       });
 
       it('does not create organization', () => {
@@ -409,10 +416,10 @@ describe('CreateOrganizationUseCase', () => {
         }
       });
 
-      it('throws validation error', async () => {
+      it('throws InvalidOrganizationNameError', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Organization name is required');
+        ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
       });
 
       it('does not create organization', () => {

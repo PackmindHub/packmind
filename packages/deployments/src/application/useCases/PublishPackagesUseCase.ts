@@ -24,6 +24,9 @@ import { PackmindLogger } from '@packmind/logger';
 import { PackageService } from '../services/PackageService';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
+import { PackageSpaceMissingError } from '../../domain/errors/PackageSpaceMissingError';
+import { NoTargetsProvidedError } from '../../domain/errors/NoTargetsProvidedError';
+import { NoPackagesProvidedError } from '../../domain/errors/NoPackagesProvidedError';
 
 const origin = 'PublishPackagesUseCase';
 
@@ -52,11 +55,11 @@ export class PublishPackagesUseCase implements IPublishPackages {
     command: PublishPackagesCommand,
   ): Promise<PackagesDeployment[]> {
     if (!command.targetIds || command.targetIds.length === 0) {
-      throw new Error('targetIds must be provided');
+      throw new NoTargetsProvidedError();
     }
 
     if (!command.packageIds || command.packageIds.length === 0) {
-      throw new Error('packageIds must be provided');
+      throw new NoPackagesProvidedError();
     }
 
     this.logger.info('Publishing packages', {
@@ -142,7 +145,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       if (spaceSlug === undefined) {
         const space = await this.spacesPort.getSpaceById(spaceId);
         if (!space) {
-          throw new Error(`Space ${spaceId} not found for package ${pkg.slug}`);
+          throw new PackageSpaceMissingError(pkg.id, spaceId);
         }
         spaceSlug = space.slug;
         spaceSlugCache.set(spaceId, spaceSlug);

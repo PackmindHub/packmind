@@ -11,6 +11,7 @@ Listeners react to domain events emitted by other domains. They provide asynchro
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindListener } from '@packmind/node-utils';
 import {
+  isInternalError,
   StandardDeletedEvent,
   SkillDeletedEvent,
 } from '@packmind/types';
@@ -42,10 +43,23 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
         standardId,
       });
     } catch (error) {
-      this.logger.error('Failed to remove standard from packages', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      // A listener runs outside the HTTP request scope, so DomainExceptionFilter
+      // never sees this — the listener is the only thing that will record it, and
+      // it has to make the call the filter would have made. An expected failure
+      // goes to `warn`; only a broken invariant of ours earns `error` and a stack.
+      if (isInternalError(error)) {
+        this.logger.error('Failed to remove standard from packages', {
+          standardId,
+          reason: error.reason,
+          context: error.context,
+          stack: error.stack,
+        });
+      } else {
+        this.logger.warn('Failed to remove standard from packages', {
+          standardId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
       throw error;
     }
   };

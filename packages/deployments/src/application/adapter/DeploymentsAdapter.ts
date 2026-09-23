@@ -8,11 +8,19 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  MoveArtefactsToPackageCommand,
+  MoveArtefactsToPackageResponse,
   RemoveArtefactsFromPackageCommand,
   RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  CreatePackageReleaseCommand,
+  CreatePackageReleaseResponse,
+  GetPackageReleaseCommand,
+  GetPackageReleaseResponse,
+  ListPackageReleasesCommand,
+  ListPackageReleasesResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
@@ -24,7 +32,7 @@ import {
   DeleteTargetResponse,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  Distribution,
+  DistributionHistoryEntry,
   DownloadSkillZipForAgentCommand,
   DownloadSkillZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
@@ -77,6 +85,9 @@ import {
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDistributionsByCommandCommand,
+  ListDistributionsByCommandResponse,
+  ListDistributionsByStandardResponse,
+  ListDistributionsBySkillResponse,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   ListPackagesCommand,
@@ -111,9 +122,13 @@ import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJob
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
+import { MoveArtefactsToPackageUseCase } from '../useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase';
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
+import { CreatePackageReleaseUseCase } from '../useCases/createPackageRelease/CreatePackageReleaseUseCase';
+import { GetPackageReleaseUseCase } from '../useCases/getPackageRelease/GetPackageReleaseUseCase';
+import { ListPackageReleasesUseCase } from '../useCases/listPackageReleases/ListPackageReleasesUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeletePackagesBatchUseCase } from '../useCases/deletePackage/DeletePackagesBatchUseCase';
@@ -151,6 +166,10 @@ import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/
 import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
+import {
+  AdapterPortsMissingError,
+  DelayedJobNotCreatedError,
+} from '../../domain/errors/DeploymentsAdapterErrors';
 
 const origin = 'DeploymentsAdapter';
 
@@ -189,10 +208,14 @@ export class DeploymentsAdapter
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUseCase;
   private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
   private _createPackageUseCase!: CreatePackageUseCase;
+  private _createPackageReleaseUseCase!: CreatePackageReleaseUseCase;
+  private _getPackageReleaseUseCase!: GetPackageReleaseUseCase;
+  private _listPackageReleasesUseCase!: ListPackageReleasesUseCase;
   private _updatePackageUseCase!: UpdatePackageUseCase;
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUseCase;
+  private _moveArtefactsToPackageUseCase!: MoveArtefactsToPackageUseCase;
   private _removeArtefactsFromPackageUseCase!: RemoveArtefactsFromPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
@@ -249,7 +272,7 @@ export class DeploymentsAdapter
       !this.accountsPort &&
       !this.deploymentsServices
     ) {
-      throw new Error('DeploymentsAdapter: Required ports not provided');
+      throw new AdapterPortsMissingError();
     }
 
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
@@ -294,6 +317,8 @@ export class DeploymentsAdapter
       );
 
     this._listDeploymentsByPackageUseCase = new ListDeploymentsByPackageUseCase(
+      this.spacesPort,
+      this.accountsPort,
       this.distributionRepository,
     );
 
@@ -483,6 +508,30 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
+    this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
+    this._listPackageReleasesUseCase = new ListPackageReleasesUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+    );
+
     this._updatePackageUseCase = new UpdatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -511,6 +560,16 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+    );
+
+    this._moveArtefactsToPackageUseCase = new MoveArtefactsToPackageUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.deploymentsServices,
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+      ports.eventEmitterService,
     );
 
     this._removeArtefactsFromPackageUseCase =
@@ -586,9 +645,7 @@ export class DeploymentsAdapter
     await jobFactory.createQueue();
 
     if (!jobFactory.delayedJob) {
-      throw new Error(
-        'DeploymentsAdapter: Failed to create delayed job for publish artifacts',
-      );
+      throw new DelayedJobNotCreatedError();
     }
 
     this.logger.debug('Deployments delayed jobs built successfully');
@@ -634,25 +691,25 @@ export class DeploymentsAdapter
 
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<DistributionHistoryEntry[]> {
     return this._listDeploymentsByPackageUseCase.execute(command);
   }
 
   listDistributionsByCommand(
     command: ListDistributionsByCommandCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByCommandResponse> {
     return this._listDistributionsByCommandUseCase.execute(command);
   }
 
   listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsByStandardResponse> {
     return this._listDistributionsByStandardUseCase.execute(command);
   }
 
   listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
-  ): Promise<Distribution[]> {
+  ): Promise<ListDistributionsBySkillResponse> {
     return this._listDistributionsBySkillUseCase.execute(command);
   }
 
@@ -760,6 +817,24 @@ export class DeploymentsAdapter
     return this._createPackageUseCase.execute(command);
   }
 
+  async createPackageRelease(
+    command: CreatePackageReleaseCommand,
+  ): Promise<CreatePackageReleaseResponse> {
+    return this._createPackageReleaseUseCase.execute(command);
+  }
+
+  async getPackageRelease(
+    command: GetPackageReleaseCommand,
+  ): Promise<GetPackageReleaseResponse> {
+    return this._getPackageReleaseUseCase.execute(command);
+  }
+
+  async listPackageReleases(
+    command: ListPackageReleasesCommand,
+  ): Promise<ListPackageReleasesResponse> {
+    return this._listPackageReleasesUseCase.execute(command);
+  }
+
   async updatePackage(
     command: UpdatePackageCommand,
   ): Promise<UpdatePackageResponse> {
@@ -803,6 +878,12 @@ export class DeploymentsAdapter
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this._addArtefactsToPackageUseCase.execute(command);
+  }
+
+  async moveArtefactsToPackage(
+    command: MoveArtefactsToPackageCommand,
+  ): Promise<MoveArtefactsToPackageResponse> {
+    return this._moveArtefactsToPackageUseCase.execute(command);
   }
 
   async removeArtefactsFromPackage(
