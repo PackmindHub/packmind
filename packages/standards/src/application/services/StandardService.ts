@@ -5,6 +5,7 @@ import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
 import { PackmindLogger } from '@packmind/logger';
+import { StandardNotFoundError } from '../../domain/errors';
 import {
   createRuleExampleId,
   createRuleId,
@@ -64,31 +65,23 @@ export class StandardService {
       userId: standardData.userId,
     });
 
-    try {
-      const standardId = createStandardId(uuidv4());
-      this.logger.debug('Generated standard ID', { standardId });
+    const standardId = createStandardId(uuidv4());
+    this.logger.debug('Generated standard ID', { standardId });
 
-      const standard: Standard = {
-        id: standardId,
-        ...standardData,
-        movedTo: null,
-      };
+    const standard: Standard = {
+      id: standardId,
+      ...standardData,
+      movedTo: null,
+    };
 
-      this.logger.debug('Adding standard to repository');
-      const savedStandard = await this.standardRepository.add(standard);
-      this.logger.info('Standard added to repository successfully', {
-        standardId,
-        name: standardData.name,
-      });
+    this.logger.debug('Adding standard to repository');
+    const savedStandard = await this.standardRepository.add(standard);
+    this.logger.info('Standard added to repository successfully', {
+      standardId,
+      name: standardData.name,
+    });
 
-      return savedStandard;
-    } catch (error) {
-      this.logger.error('Failed to add standard', {
-        name: standardData.name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return savedStandard;
   }
 
   async listStandardsBySpace(
@@ -100,23 +93,15 @@ export class StandardService {
       includeDeleted: opts?.includeDeleted ?? false,
     });
 
-    try {
-      const standards = await this.standardRepository.findBySpaceId(
-        spaceId,
-        opts,
-      );
-      this.logger.info('Standards with scope retrieved by space successfully', {
-        spaceId,
-        count: standards.length,
-      });
-      return standards;
-    } catch (error) {
-      this.logger.error('Failed to list standards with scope by space', {
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const standards = await this.standardRepository.findBySpaceId(
+      spaceId,
+      opts,
+    );
+    this.logger.info('Standards with scope retrieved by space successfully', {
+      spaceId,
+      count: standards.length,
+    });
+    return standards;
   }
 
   async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
@@ -126,24 +111,16 @@ export class StandardService {
   async getStandardById(id: StandardId): Promise<Standard | null> {
     this.logger.info('Getting standard by ID', { id });
 
-    try {
-      const standard = await this.standardRepository.findById(id);
-      if (standard) {
-        this.logger.info('Standard found successfully', {
-          id,
-          name: standard.name,
-        });
-      } else {
-        this.logger.warn('Standard not found', { id });
-      }
-      return standard;
-    } catch (error) {
-      this.logger.error('Failed to get standard by ID', {
+    const standard = await this.standardRepository.findById(id);
+    if (standard) {
+      this.logger.info('Standard found successfully', {
         id,
-        error: error instanceof Error ? error.message : String(error),
+        name: standard.name,
       });
-      throw error;
+    } else {
+      this.logger.warn('Standard not found', { id });
     }
+    return standard;
   }
 
   async findStandardBySlug(
@@ -155,35 +132,23 @@ export class StandardService {
       organizationId,
     });
 
-    try {
-      const standard = await this.standardRepository.findBySlug(
+    const standard = await this.standardRepository.findBySlug(
+      slug,
+      organizationId,
+    );
+    if (standard) {
+      this.logger.info('Standard found by slug and organization successfully', {
         slug,
         organizationId,
-      );
-      if (standard) {
-        this.logger.info(
-          'Standard found by slug and organization successfully',
-          {
-            slug,
-            organizationId,
-            standardId: standard.id,
-          },
-        );
-      } else {
-        this.logger.warn('Standard not found by slug and organization', {
-          slug,
-          organizationId,
-        });
-      }
-      return standard;
-    } catch (error) {
-      this.logger.error('Failed to find standard by slug and organization', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
+        standardId: standard.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Standard not found by slug and organization', {
+        slug,
+        organizationId,
+      });
     }
+    return standard;
   }
 
   async updateStandard(
@@ -196,65 +161,46 @@ export class StandardService {
       userId: standardData.userId,
     });
 
-    try {
-      this.logger.debug('Checking if standard exists', { standardId });
-      const existingStandard =
-        await this.standardRepository.findById(standardId);
-      if (!existingStandard) {
-        this.logger.error('Standard not found for update', { standardId });
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      const updatedStandard: Standard = {
-        id: standardId,
-        ...standardData,
-        spaceId: existingStandard.spaceId,
-        movedTo: existingStandard.movedTo,
-      };
-
-      this.logger.debug('Updating standard in repository');
-      const savedStandard = await this.standardRepository.add(updatedStandard);
-      this.logger.info('Standard updated in repository successfully', {
-        standardId,
-        version: standardData.version,
-      });
-
-      return savedStandard;
-    } catch (error) {
-      this.logger.error('Failed to update standard', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    this.logger.debug('Checking if standard exists', { standardId });
+    const existingStandard = await this.standardRepository.findById(standardId);
+    if (!existingStandard) {
+      throw new StandardNotFoundError(standardId);
     }
+
+    const updatedStandard: Standard = {
+      id: standardId,
+      ...standardData,
+      spaceId: existingStandard.spaceId,
+      movedTo: existingStandard.movedTo,
+    };
+
+    this.logger.debug('Updating standard in repository');
+    const savedStandard = await this.standardRepository.add(updatedStandard);
+    this.logger.info('Standard updated in repository successfully', {
+      standardId,
+      version: standardData.version,
+    });
+
+    return savedStandard;
   }
 
   async deleteStandard(standardId: StandardId, userId: UserId): Promise<void> {
     this.logger.info('Deleting standard and all its versions', { standardId });
 
-    try {
-      this.logger.debug('Checking if standard exists for deletion', {
-        standardId,
-      });
-      const standard = await this.standardRepository.findById(standardId);
-      if (!standard) {
-        this.logger.error('Standard not found for deletion', { standardId });
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      this.logger.debug('Deleting standard', { standardId });
-      await this.standardRepository.deleteById(standardId, userId);
-
-      this.logger.info('Standard and all its versions deleted successfully', {
-        standardId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete standard', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    this.logger.debug('Checking if standard exists for deletion', {
+      standardId,
+    });
+    const standard = await this.standardRepository.findById(standardId);
+    if (!standard) {
+      throw new StandardNotFoundError(standardId);
     }
+
+    this.logger.debug('Deleting standard', { standardId });
+    await this.standardRepository.deleteById(standardId, userId);
+
+    this.logger.info('Standard and all its versions deleted successfully', {
+      standardId,
+    });
   }
 
   async duplicateStandardToSpace(
@@ -267,116 +213,105 @@ export class StandardService {
       destinationSpaceId,
     });
 
-    try {
-      const original = await this.standardRepository.findById(standardId);
-      if (!original) {
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
+    const original = await this.standardRepository.findById(standardId);
+    if (!original) {
+      throw new StandardNotFoundError(standardId);
+    }
 
-      const newStandardId = createStandardId(uuidv4());
-      const newStandard: Standard = {
-        id: newStandardId,
-        name: original.name,
-        slug: original.slug,
-        description: original.description,
-        version: original.version,
-        gitCommit: original.gitCommit,
-        userId: newUserId,
-        scope: original.scope,
-        spaceId: destinationSpaceId,
-        movedTo: null,
-      };
-      const savedStandard = await this.standardRepository.add(newStandard);
+    const newStandardId = createStandardId(uuidv4());
+    const newStandard: Standard = {
+      id: newStandardId,
+      name: original.name,
+      slug: original.slug,
+      description: original.description,
+      version: original.version,
+      gitCommit: original.gitCommit,
+      userId: newUserId,
+      scope: original.scope,
+      spaceId: destinationSpaceId,
+      movedTo: null,
+    };
+    const savedStandard = await this.standardRepository.add(newStandard);
 
-      const versions =
-        await this.standardVersionRepository.findByStandardId(standardId);
+    const versions =
+      await this.standardVersionRepository.findByStandardId(standardId);
 
-      if (versions.length === 0) {
-        this.logger.info('Standard duplicated to space successfully', {
-          originalStandardId: standardId,
-          newStandardId,
-          destinationSpaceId,
-          versionsCount: 0,
-          ruleMappingsCount: 0,
-        });
-        return { standard: savedStandard, ruleMappings: [] };
-      }
-
-      const newVersions = versions.map((version) => ({
-        id: createStandardVersionId(uuidv4()),
-        standardId: newStandardId,
-        name: version.name,
-        slug: version.slug,
-        description: version.description,
-        version: version.version,
-        gitCommit: version.gitCommit,
-        userId: version.userId,
-        scope: version.scope,
-      }));
-      await this.standardVersionRepository.addMany(newVersions);
-
-      const versionIdMap = new Map(
-        versions.map((v, i) => [v.id, newVersions[i].id]),
-      );
-
-      const allOriginalRules =
-        await this.ruleRepository.findByStandardVersionIds(
-          versions.map((v) => v.id),
-        );
-
-      const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
-      const newRules = allOriginalRules.map((rule) => {
-        const newRuleId = createRuleId(uuidv4());
-        ruleMappings.push({ oldRuleId: rule.id, newRuleId });
-        return {
-          id: newRuleId,
-          content: rule.content,
-          standardVersionId: versionIdMap.get(rule.standardVersionId)!,
-        };
-      });
-
-      if (newRules.length > 0) {
-        await this.ruleRepository.addMany(newRules);
-      }
-
-      const ruleIdMap = new Map(
-        allOriginalRules.map((r, i) => [r.id, newRules[i].id]),
-      );
-
-      const allOriginalExamples =
-        await this.ruleExampleRepository.findByRuleIds(
-          allOriginalRules.map((r) => r.id),
-        );
-
-      const newExamples = allOriginalExamples.map((example) => ({
-        id: createRuleExampleId(uuidv4()),
-        lang: example.lang,
-        positive: example.positive,
-        negative: example.negative,
-        ruleId: ruleIdMap.get(example.ruleId)!,
-      }));
-
-      if (newExamples.length > 0) {
-        await this.ruleExampleRepository.addMany(newExamples);
-      }
-
+    if (versions.length === 0) {
       this.logger.info('Standard duplicated to space successfully', {
         originalStandardId: standardId,
         newStandardId,
         destinationSpaceId,
-        versionsCount: versions.length,
-        ruleMappingsCount: ruleMappings.length,
+        versionsCount: 0,
+        ruleMappingsCount: 0,
       });
-
-      return { standard: savedStandard, ruleMappings };
-    } catch (error) {
-      this.logger.error('Failed to duplicate standard to space', {
-        standardId,
-        destinationSpaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+      return { standard: savedStandard, ruleMappings: [] };
     }
+
+    const newVersions = versions.map((version) => ({
+      id: createStandardVersionId(uuidv4()),
+      standardId: newStandardId,
+      name: version.name,
+      slug: version.slug,
+      description: version.description,
+      version: version.version,
+      gitCommit: version.gitCommit,
+      userId: version.userId,
+      scope: version.scope,
+    }));
+    await this.standardVersionRepository.addMany(newVersions);
+
+    const versionIdMap = new Map(
+      versions.map((v, i) => [v.id, newVersions[i].id]),
+    );
+
+    const allOriginalRules = await this.ruleRepository.findByStandardVersionIds(
+      versions.map((v) => v.id),
+    );
+
+    const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
+    const newRules = allOriginalRules.map((rule) => {
+      const newRuleId = createRuleId(uuidv4());
+      ruleMappings.push({ oldRuleId: rule.id, newRuleId });
+      return {
+        id: newRuleId,
+        content: rule.content,
+        standardVersionId: versionIdMap.get(rule.standardVersionId)!,
+      };
+    });
+
+    if (newRules.length > 0) {
+      await this.ruleRepository.addMany(newRules);
+    }
+
+    const ruleIdMap = new Map(
+      allOriginalRules.map((r, i) => [r.id, newRules[i].id]),
+    );
+
+    const allOriginalExamples = await this.ruleExampleRepository.findByRuleIds(
+      allOriginalRules.map((r) => r.id),
+    );
+
+    const newExamples = allOriginalExamples.map((example) => ({
+      id: createRuleExampleId(uuidv4()),
+      lang: example.lang,
+      positive: example.positive,
+      negative: example.negative,
+      ruleId: ruleIdMap.get(example.ruleId)!,
+    }));
+
+    if (newExamples.length > 0) {
+      await this.ruleExampleRepository.addMany(newExamples);
+    }
+
+    this.logger.info('Standard duplicated to space successfully', {
+      originalStandardId: standardId,
+      newStandardId,
+      destinationSpaceId,
+      versionsCount: versions.length,
+      ruleMappingsCount: ruleMappings.length,
+    });
+
+    return { standard: savedStandard, ruleMappings };
   }
 
   async markStandardAsMoved(
@@ -388,25 +323,17 @@ export class StandardService {
       destinationSpaceId,
     });
 
-    try {
-      const standard = await this.standardRepository.findById(standardId);
-      if (!standard) {
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      await this.standardRepository.markAsMoved(standardId, destinationSpaceId);
-
-      this.logger.info('Standard marked as moved successfully', {
-        standardId,
-        destinationSpaceId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to mark standard as moved', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const standard = await this.standardRepository.findById(standardId);
+    if (!standard) {
+      throw new StandardNotFoundError(standardId);
     }
+
+    await this.standardRepository.markAsMoved(standardId, destinationSpaceId);
+
+    this.logger.info('Standard marked as moved successfully', {
+      standardId,
+      destinationSpaceId,
+    });
   }
 
   async hardDeleteStandard(standardId: StandardId): Promise<void> {

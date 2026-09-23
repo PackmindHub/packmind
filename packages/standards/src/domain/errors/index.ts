@@ -8,3 +8,7 @@ export * from './StandardNotFoundError';
 export * from './StandardSlugNotFoundError';
 export * from './RuleExampleInvalidError';
 export * from './StandardVersionMissingError';
+export * from './RuleExampleNotFoundError';
+export * from './StandardSpaceRequiredError';
+export * from './StandardsAdapterPortsMissingError';
+export * from './StandardsHexaDependencyMissingError';

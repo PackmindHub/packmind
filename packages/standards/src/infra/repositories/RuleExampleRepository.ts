@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { RuleExample, RuleExampleId, RuleId, SpaceId } from '@packmind/types';
+import { RuleExampleNotFoundError } from '../../domain/errors';
 
 const origin = 'RuleExampleRepository';
 
@@ -108,29 +109,21 @@ export class RuleExampleRepository
   ): Promise<RuleExample> {
     this.logger.info('Updating rule example by ID', { id, updates });
 
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const existingExample = await this.repository.findOneBy({ id } as any);
-      if (!existingExample) {
-        throw new Error(`Rule example with id ${id} not found`);
-      }
-
-      const updatedExample: RuleExample = {
-        ...existingExample,
-        ...updates,
-        id: id as RuleExampleId, // Ensure ID is preserved with correct type
-      };
-
-      const result = await this.repository.save(updatedExample);
-
-      this.logger.info('Rule example updated successfully', { id });
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to update rule example', {
-        id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingExample = await this.repository.findOneBy({ id } as any);
+    if (!existingExample) {
+      throw new RuleExampleNotFoundError(id as RuleExampleId);
     }
+
+    const updatedExample: RuleExample = {
+      ...existingExample,
+      ...updates,
+      id: id as RuleExampleId, // Ensure ID is preserved with correct type
+    };
+
+    const result = await this.repository.save(updatedExample);
+
+    this.logger.info('Rule example updated successfully', { id });
+    return result;
   }
 }

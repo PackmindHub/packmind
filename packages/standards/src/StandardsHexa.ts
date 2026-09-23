@@ -20,6 +20,7 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
+import { StandardsHexaDependencyMissingError } from './domain/errors';
 import { StandardsServices } from './application/services/StandardsServices';
 import { StandardsAdapter } from './application/adapter/StandardsAdapter';
 import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
@@ -88,7 +89,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
       const jobsService = registry.getService(JobsService);
       if (!jobsService) {
-        throw new Error('JobsService not found in registry');
+        throw new StandardsHexaDependencyMissingError('JobsService');
       }
 
       const eventEmitterService = registry.getService(

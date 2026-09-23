@@ -5,7 +5,8 @@ export type StandardsErrorReason =
   | 'rule_example_not_found'
   | 'space_not_accessible'
   | 'standard_not_found'
-  | 'rule_example_invalid';
+  | 'rule_example_invalid'
+  | 'space_required';
 
 export type StandardsErrorContext = {
   standardId?: string;

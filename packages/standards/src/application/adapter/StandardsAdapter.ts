@@ -47,6 +47,10 @@ import {
   UserId,
 } from '@packmind/types';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
+import {
+  StandardsAdapterPortsMissingError,
+  StandardSpaceRequiredError,
+} from '../../domain/errors';
 import { GetRuleExamplesCommand } from '../../domain/useCases';
 import { StandardsServices } from '../services/StandardsServices';
 import { AddRuleToStandardUseCase } from '../useCases/addRuleToStandard/AddRuleToStandardUseCase';
@@ -138,9 +142,17 @@ export class StandardsAdapter
       !this.llmPort ||
       !this.eventEmitterService
     ) {
-      throw new Error(
-        'StandardsAdapter: Required ports/services not provided. Ensure JobsService and PackmindEventEmitterService are passed to initialize().',
-      );
+      const missingPorts = Object.entries({
+        [IAccountsPortName]: this.accountsPort,
+        [ISpacesPortName]: this.spacesPort,
+        [ILinterPortName]: this.linterPort,
+        [IDeploymentPortName]: this.deploymentsPort,
+        [ILlmPortName]: this.llmPort,
+        eventEmitterService: this.eventEmitterService,
+      })
+        .filter(([, port]) => !port)
+        .map(([name]) => name);
+      throw new StandardsAdapterPortsMissingError(missingPorts);
     }
 
     this._listStandardVersions = new ListStandardVersionsUseCase(
@@ -427,9 +439,7 @@ export class StandardsAdapter
     directUpdate?: boolean;
   }): Promise<Standard> {
     if (!params.spaceId) {
-      throw new Error(
-        'SpaceId is required for creating standards with examples',
-      );
+      throw new StandardSpaceRequiredError(params.organizationId);
     }
     return this._createStandardWithExamples.createStandardWithExamples({
       ...params,

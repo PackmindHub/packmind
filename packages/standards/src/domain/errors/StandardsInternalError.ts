@@ -1,9 +1,14 @@
 import { PackmindInternalError } from '@packmind/types';
 
-export type StandardsInternalErrorReason = 'standard_version_missing';
+export type StandardsInternalErrorReason =
+  | 'standard_version_missing'
+  | 'standards_adapter_ports_missing'
+  | 'hexa_dependency_missing';
 
 export type StandardsInternalErrorContext = {
   standardId?: string;
+  missingPorts?: string[];
+  dependency?: string;
 };
 
 /**

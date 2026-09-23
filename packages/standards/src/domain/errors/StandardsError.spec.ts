@@ -12,6 +12,8 @@ import { StandardSpaceNotAccessibleError } from './StandardSpaceNotAccessibleErr
 import { StandardNotFoundError } from './StandardNotFoundError';
 import { StandardSlugNotFoundError } from './StandardSlugNotFoundError';
 import { RuleExampleInvalidError } from './RuleExampleInvalidError';
+import { RuleExampleNotFoundError } from './RuleExampleNotFoundError';
+import { StandardSpaceRequiredError } from './StandardSpaceRequiredError';
 
 describe('RuleNotInSpaceError', () => {
   const error = new RuleNotInSpaceError(
@@ -246,5 +248,61 @@ describe('RuleExampleInvalidError', () => {
 
   it('keeps what to fix as its message', () => {
     expect(error.message).toBe('Language cannot be empty');
+  });
+});
+
+describe('RuleExampleNotFoundError', () => {
+  const error = new RuleExampleNotFoundError(createRuleExampleId('example-1'));
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('is not an internal error', () => {
+    expect(isInternalError(error)).toBe(false);
+  });
+
+  it('answers not_found', () => {
+    expect(error.kind).toBe('not_found');
+  });
+
+  it('answers its own reason', () => {
+    expect(error.reason).toBe('rule_example_not_found');
+  });
+
+  it('keeps the rule example in the context', () => {
+    expect(error.context).toEqual({ ruleExampleId: 'example-1' });
+  });
+
+  it('does not leak the rule example id in the message', () => {
+    expect(error.message).not.toContain('example-1');
+  });
+});
+
+describe('StandardSpaceRequiredError', () => {
+  const error = new StandardSpaceRequiredError('org-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('is not an internal error', () => {
+    expect(isInternalError(error)).toBe(false);
+  });
+
+  it('answers invalid_input', () => {
+    expect(error.kind).toBe('invalid_input');
+  });
+
+  it('answers its own reason', () => {
+    expect(error.reason).toBe('space_required');
+  });
+
+  it('keeps the organization in the context', () => {
+    expect(error.context).toEqual({ organizationId: 'org-1' });
+  });
+
+  it('does not leak the organization id in the message', () => {
+    expect(error.message).not.toContain('org-1');
   });
 });

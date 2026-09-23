@@ -19,6 +19,7 @@ import { IStandardRepository } from '../../domain/repositories/IStandardReposito
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
+import { StandardNotFoundError } from '../../domain/errors';
 import {
   CreateStandardData,
   StandardService,
@@ -319,12 +320,10 @@ describe('StandardService', () => {
         standardRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           standardService.updateStandard(nonExistentStandardId, updateData),
-        ).rejects.toThrow(
-          `Standard with id ${nonExistentStandardId} not found`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
     });
   });
@@ -370,12 +369,10 @@ describe('StandardService', () => {
         standardRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           standardService.deleteStandard(nonExistentStandardId, userId),
-        ).rejects.toThrow(
-          `Standard with id ${nonExistentStandardId} not found`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
 
       it('does not call deleteById', async () => {
@@ -455,15 +452,13 @@ describe('StandardService', () => {
         standardRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           standardService.markStandardAsMoved(
             nonExistentStandardId,
             destinationSpaceId,
           ),
-        ).rejects.toThrow(
-          `Standard with id ${nonExistentStandardId} not found`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
     });
   });
@@ -788,16 +783,14 @@ describe('StandardService', () => {
         standardRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws StandardNotFoundError', async () => {
         await expect(
           standardService.duplicateStandardToSpace(
             nonExistentStandardId,
             destinationSpaceId,
             newUserId,
           ),
-        ).rejects.toThrow(
-          `Standard with id ${nonExistentStandardId} not found`,
-        );
+        ).rejects.toThrow(StandardNotFoundError);
       });
     });
 
