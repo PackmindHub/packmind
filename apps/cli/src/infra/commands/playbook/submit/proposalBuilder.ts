@@ -12,6 +12,7 @@ import {
   compareStandardFields,
   compareCommandFields,
   compareSkillDefinitionFields,
+  RuleIdsByContent,
 } from '../../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../../application/utils/pathUtils';
 import { logWarningConsole } from '../../../utils/consoleLogger';
@@ -142,6 +143,7 @@ function buildUpdatedStandardProposals(
   entry: PlaybookChangeEntry,
   artifactId: string | null,
   deployedContent: string | null,
+  ruleIdsByContent?: RuleIdsByContent,
 ): ProposalItem[] {
   if (!artifactId) return [];
 
@@ -156,6 +158,7 @@ function buildUpdatedStandardProposals(
       entry.content,
       deployedContent,
       entry.filePath,
+      ruleIdsByContent,
     );
     return fieldChanges.map((change) => ({
       ...base,
@@ -445,9 +448,51 @@ function toSkippedEntry(
   };
 }
 
+/**
+ * Fetches a standard's rule ids once and remembers the answer, including the
+ * failure. A lookup that fails must not stop the submit: the proposals still
+ * carry the rule content, so the worst case is the behaviour we had before.
+ */
+async function resolveRuleIds(
+  fetchRuleIds: RuleIdsFetcher,
+  spaceId: string,
+  standardId: string,
+  artifactName: string,
+  cache: Map<string, RuleIdsByContent | undefined>,
+): Promise<RuleIdsByContent | undefined> {
+  const cacheKey = `${spaceId}/${standardId}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  let resolved: RuleIdsByContent | undefined;
+  try {
+    resolved = await fetchRuleIds(spaceId, standardId);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    logWarningConsole(
+      `Could not read the rules of "${artifactName}" (${reason}); rule removals and edits may not be applied.`,
+    );
+    resolved = undefined;
+  }
+
+  cache.set(cacheKey, resolved);
+  return resolved;
+}
+
+/**
+ * Looks up the rules a deployed standard currently has, keyed by content.
+ *
+ * Rule removals and edits are applied by id, and the local Markdown carries
+ * none, so without this the proposal names no rule and is dropped in silence.
+ */
+export type RuleIdsFetcher = (
+  spaceId: string,
+  standardId: string,
+) => Promise<RuleIdsByContent>;
+
 export async function buildProposals(
   changes: PlaybookChangeEntry[],
   getTargetContext: (entry: PlaybookChangeEntry) => Promise<TargetContext>,
+  fetchRuleIds?: RuleIdsFetcher,
 ): Promise<{
   proposals: ProposalItem[];
   conflicts: ArtifactConflict[];
@@ -455,6 +500,7 @@ export async function buildProposals(
 }> {
   const proposals: ProposalItem[] = [];
   const skipped: SkippedEntry[] = [];
+  const ruleIdCache = new Map<string, RuleIdsByContent | undefined>();
   const updateSources = new Map<
     string,
     {
@@ -546,15 +592,28 @@ export async function buildProposals(
       }
 
       switch (entry.artifactType) {
-        case 'standard':
+        case 'standard': {
+          // One lookup per standard, reused when several agents render it.
+          let ruleIdsByContent: RuleIdsByContent | undefined;
+          if (fetchRuleIds && deployedContent) {
+            ruleIdsByContent = await resolveRuleIds(
+              fetchRuleIds,
+              entry.spaceId,
+              artifactId,
+              entry.artifactName,
+              ruleIdCache,
+            );
+          }
           proposals.push(
             ...buildUpdatedStandardProposals(
               entry,
               artifactId,
               deployedContent,
+              ruleIdsByContent,
             ),
           );
           break;
+        }
         case 'command':
           proposals.push(
             ...buildUpdatedCommandProposals(entry, artifactId, deployedContent),

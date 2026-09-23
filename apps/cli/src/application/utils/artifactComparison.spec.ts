@@ -7,6 +7,10 @@ import {
   compareStandardFields,
 } from './artifactComparison';
 
+jest.mock('../../infra/utils/consoleLogger', () => ({
+  logWarningConsole: jest.fn(),
+}));
+
 const PACKMIND_PATH = '.packmind/standards/my-standard.md';
 
 function buildStandard(opts: {
@@ -176,6 +180,92 @@ describe('compareStandardFields', () => {
         }),
       }),
     );
+  });
+
+  describe('when rule ids are supplied', () => {
+    const DELETED_RULE = 'Completely unique rule xyz';
+
+    function deletionChanges(ruleIds?: ReadonlyMap<string, string>) {
+      const local = buildStandard({ rules: ['Rule one'] });
+      const deployed = buildStandard({ rules: ['Rule one', DELETED_RULE] });
+      return compareStandardFields(local, deployed, PACKMIND_PATH, ruleIds);
+    }
+
+    it('targets a deleted rule by its server id', () => {
+      const changes = deletionChanges(
+        new Map([
+          ['Rule one', 'rule-1'],
+          [DELETED_RULE, 'rule-2'],
+        ]),
+      );
+      expect(changes).toContainEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({ targetId: 'rule-2' }),
+        }),
+      );
+    });
+
+    it('carries the server id on the deleted rule item', () => {
+      const changes = deletionChanges(new Map([[DELETED_RULE, 'rule-2']]));
+      expect(changes).toContainEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({
+            item: { id: 'rule-2', content: DELETED_RULE },
+          }),
+        }),
+      );
+    });
+
+    it('targets an updated rule by the id of the content it replaces', () => {
+      const local = buildStandard({
+        rules: ['Use camelCase for all variable names'],
+      });
+      const deployed = buildStandard({
+        rules: ['Use camelCase for variable names'],
+      });
+      const changes = compareStandardFields(
+        local,
+        deployed,
+        PACKMIND_PATH,
+        new Map([['Use camelCase for variable names', 'rule-9']]),
+      );
+      expect(changes).toContainEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.updateRule,
+          payload: expect.objectContaining({ targetId: 'rule-9' }),
+        }),
+      );
+    });
+
+    describe('when the deleted rule is absent from the supplied ids', () => {
+      it('falls back to the unresolved placeholder', () => {
+        const changes = deletionChanges(new Map([['Rule one', 'rule-1']]));
+        expect(changes).toContainEqual(
+          expect.objectContaining({
+            type: ChangeProposalType.deleteRule,
+            payload: expect.objectContaining({ targetId: 'unresolved' }),
+          }),
+        );
+      });
+    });
+  });
+
+  describe('when no rule ids are supplied', () => {
+    it('falls back to the unresolved placeholder', () => {
+      const local = buildStandard({ rules: ['Rule one'] });
+      const deployed = buildStandard({
+        rules: ['Rule one', 'Completely unique rule xyz'],
+      });
+      const changes = compareStandardFields(local, deployed, PACKMIND_PATH);
+      expect(changes).toContainEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({ targetId: 'unresolved' }),
+        }),
+      );
+    });
   });
 
   describe('when parsing fails', () => {
