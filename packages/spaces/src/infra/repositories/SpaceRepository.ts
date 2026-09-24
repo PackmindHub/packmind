@@ -50,43 +50,26 @@ export class SpaceRepository
       organizationId,
     });
 
-    try {
-      const space = await this.repository.findOne({
-        where: { slug, organizationId },
-      });
-      this.logger.info('Space found by slug and organizationId', {
-        slug,
-        organizationId,
-        found: !!space,
-      });
-      return space;
-    } catch (error) {
-      this.logger.error('Failed to find space by slug and organizationId', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const space = await this.repository.findOne({
+      where: { slug, organizationId },
+    });
+    this.logger.info('Space found by slug and organizationId', {
+      slug,
+      organizationId,
+      found: !!space,
+    });
+    return space;
   }
 
   async findByOrganizationId(organizationId: OrganizationId): Promise<Space[]> {
     this.logger.info('Finding spaces by organizationId', { organizationId });
 
-    try {
-      const spaces = await this.repository.find({ where: { organizationId } });
-      this.logger.info('Spaces found by organizationId', {
-        organizationId,
-        count: spaces.length,
-      });
-      return spaces;
-    } catch (error) {
-      this.logger.error('Failed to find spaces by organizationId', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const spaces = await this.repository.find({ where: { organizationId } });
+    this.logger.info('Spaces found by organizationId', {
+      organizationId,
+      count: spaces.length,
+    });
+    return spaces;
   }
 
   async updateFields(
@@ -100,27 +83,19 @@ export class SpaceRepository
   ): Promise<Space> {
     this.logger.info('Updating space fields', { id, fields });
 
-    try {
-      const space = await this.repository.findOne({ where: { id } });
-      if (!space) {
-        throw new SpaceNotFoundError(id);
-      }
-
-      if (fields.name !== undefined) space.name = fields.name;
-      if (fields.slug !== undefined) space.slug = fields.slug;
-      if (fields.type !== undefined) space.type = fields.type;
-      if (fields.color !== undefined) space.color = fields.color;
-
-      const updated = await this.repository.save(space);
-      this.logger.info('Space updated successfully', { id });
-      return updated;
-    } catch (error) {
-      this.logger.error('Failed to update space', {
-        id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const space = await this.repository.findOne({ where: { id } });
+    if (!space) {
+      throw new SpaceNotFoundError(id);
     }
+
+    if (fields.name !== undefined) space.name = fields.name;
+    if (fields.slug !== undefined) space.slug = fields.slug;
+    if (fields.type !== undefined) space.type = fields.type;
+    if (fields.color !== undefined) space.color = fields.color;
+
+    const updated = await this.repository.save(space);
+    this.logger.info('Space updated successfully', { id });
+    return updated;
   }
 
   async findOrgPagePaginated(
@@ -134,32 +109,22 @@ export class SpaceRepository
       pageSize,
     });
 
-    try {
-      const skip = (page - 1) * pageSize;
-      const [items, totalCount] = await this.repository
-        .createQueryBuilder('space')
-        .where('space.organization_id = :organizationId', { organizationId })
-        .orderBy('space.is_default_space', 'DESC')
-        .addOrderBy('space.created_at', 'ASC')
-        .skip(skip)
-        .take(pageSize)
-        .getManyAndCount();
-      this.logger.info('Org spaces page found', {
-        organizationId,
-        page,
-        pageSize,
-        returned: items.length,
-        totalCount,
-      });
-      return { items, totalCount };
-    } catch (error) {
-      this.logger.error('Failed to find org spaces page paginated', {
-        organizationId,
-        page,
-        pageSize,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const skip = (page - 1) * pageSize;
+    const [items, totalCount] = await this.repository
+      .createQueryBuilder('space')
+      .where('space.organization_id = :organizationId', { organizationId })
+      .orderBy('space.is_default_space', 'DESC')
+      .addOrderBy('space.created_at', 'ASC')
+      .skip(skip)
+      .take(pageSize)
+      .getManyAndCount();
+    this.logger.info('Org spaces page found', {
+      organizationId,
+      page,
+      pageSize,
+      returned: items.length,
+      totalCount,
+    });
+    return { items, totalCount };
   }
 }

@@ -1,3 +1,5 @@
+export * from './SpacesError';
+export * from './SpacesInternalError';
 export { CannotRemoveFromDefaultSpaceError } from './CannotRemoveFromDefaultSpaceError';
 export { CannotRemoveSelfError } from './CannotRemoveSelfError';
 export { CannotUpdateOwnRoleError } from './CannotUpdateOwnRoleError';
