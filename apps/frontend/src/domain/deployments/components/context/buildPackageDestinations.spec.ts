@@ -513,14 +513,21 @@ describe('the age of a report', () => {
       expect(destinationTone(rows[0])).toBe('beige.500');
     });
 
-    it('marks a published copy the same way, from the same date', () => {
+    /*
+     * The mirror of the rule, and the reason it is bounded: a marketplace is
+     * swept by its own reconciliation job, so nobody has to have been there
+     * lately for its state to be known. Saying "last reported 90 days ago"
+     * there would invent a doubt that the sweep has already settled, which is
+     * the exact inverse of the gap this rule exists to close.
+     */
+    it('leaves a published copy alone, however old its date', () => {
       const rows = buildPackageDestinations({
         installs: [],
         publications: [publication({ lastActivityAt: daysAgo(90) })],
       });
 
-      expect(rows[0].hasStaleReport).toBe(true);
-      expect(destinationTone(rows[0])).toBe('beige.500');
+      expect(rows[0].hasStaleReport).toBe(false);
+      expect(destinationTone(rows[0])).toBe('green.500');
     });
 
     describe('on a state that is not aligned', () => {

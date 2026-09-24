@@ -261,6 +261,15 @@ export type PackageDestination = {
    * and a sentence that each ran their own date arithmetic would eventually
    * disagree on the same destination, and the one thing this rule cannot afford
    * is a faded mark beside copy that claims to be current.
+   *
+   * Always `false` for a marketplace. Staleness answers "has anyone confirmed
+   * this lately", and only a landing leaves that question open: nothing re-reads
+   * a branch until someone runs an install there. A marketplace is swept by its
+   * own reconciliation job, so the question is already answered for it, and
+   * neither date it carries could answer it anyway —
+   * `lastPublishedOnMainAt` is when the publish landed, which ages without
+   * meaning anything, and `lastValidatedAt` is stamped at the start of every
+   * sweep run including the ones that fail to reach the repository.
    */
   hasStaleReport: boolean;
 };
@@ -380,7 +389,12 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
     installKey: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,
-    hasStaleReport: isReportStale(publication.lastActivityAt),
+    /*
+     * Never stale, whatever its date: see `hasStaleReport`. The date is kept
+     * because it is a true fact about the publication; it is only the staleness
+     * reading of it that does not hold here.
+     */
+    hasStaleReport: false,
   };
 }
 
