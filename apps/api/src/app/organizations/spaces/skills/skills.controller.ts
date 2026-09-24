@@ -19,7 +19,6 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillNotFoundError } from '@packmind/skills';
 import {
   CodingAgent,
-  CodingAgents,
   DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
@@ -31,6 +30,7 @@ import {
   UploadSkillFileInput,
   UploadSkillResponse,
   UserId,
+  isValidCodingAgent,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -324,7 +324,7 @@ export class OrganizationsSpacesSkillsController {
   ): Promise<void> {
     const userId = request.user.userId;
 
-    if (!(agent in CodingAgents)) {
+    if (!isValidCodingAgent(agent)) {
       throw new BadRequestException(`Unsupported agent: ${agent}`);
     }
 
