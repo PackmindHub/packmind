@@ -20,6 +20,7 @@ import {
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 
 const origin = 'UpdatePackageUseCase';
 
@@ -38,6 +39,7 @@ export class UpdatePackageUseCase
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly packageChangeNotifier: PackageChangeNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -192,6 +194,11 @@ export class UpdatePackageUseCase
         );
       }
     }
+
+    await this.packageChangeNotifier.packagesChanged(
+      command.organizationId,
+      command.spaceId,
+    );
 
     return { package: updatedPackage };
   }

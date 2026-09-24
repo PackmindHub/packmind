@@ -18,6 +18,7 @@ import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundErro
 import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 
 const origin = 'AddArtefactsToPackageUseCase';
 
@@ -35,6 +36,7 @@ export class AddArtefactsToPackageUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly packageChangeNotifier: PackageChangeNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -177,6 +179,11 @@ export class AddArtefactsToPackageUseCase
     if (!updatedPackage) {
       throw new PackageReloadFailedError(packageId);
     }
+
+    await this.packageChangeNotifier.packagesChanged(
+      command.organizationId,
+      spaceId,
+    );
 
     this.logger.info('Artefacts added to package successfully', {
       packageId: updatedPackage.id,

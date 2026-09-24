@@ -42,8 +42,10 @@ import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
 import { v4 as uuidv4 } from 'uuid';
 import { spaceFactory } from '@packmind/spaces/test';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 
 describe('AddArtefactsToPackageUseCase', () => {
+  let mockPackageChangeNotifier: jest.Mocked<PackageChangeNotifier>;
   let useCase: AddArtefactsToPackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
@@ -173,6 +175,8 @@ describe('AddArtefactsToPackageUseCase', () => {
 
     stubbedLogger = stubLogger();
 
+    mockPackageChangeNotifier = createMockInstance(PackageChangeNotifier);
+
     useCase = new AddArtefactsToPackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
@@ -180,6 +184,7 @@ describe('AddArtefactsToPackageUseCase', () => {
       mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
+      mockPackageChangeNotifier,
       stubbedLogger,
     );
   });
@@ -235,6 +240,13 @@ describe('AddArtefactsToPackageUseCase', () => {
         };
 
         result = await useCase.execute(command);
+      });
+
+      it('tells the space its packages moved on', () => {
+        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
+        );
       });
 
       it('returns updated package with recipes', () => {

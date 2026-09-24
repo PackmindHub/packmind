@@ -123,6 +123,7 @@ import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJob
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
+import { PackageChangeNotifier } from '../services/PackageChangeNotifier';
 import { MoveArtefactsToPackageUseCase } from '../useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase';
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -501,6 +502,11 @@ export class DeploymentsAdapter
       this.deploymentsServices,
     );
 
+    // Every package write announces itself to the readers of the space, so a
+    // package surface left open shows what happened to it rather than what was
+    // true when it was opened.
+    const packageChangeNotifier = new PackageChangeNotifier();
+
     this._createPackageUseCase = new CreatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -508,6 +514,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      packageChangeNotifier,
     );
 
     this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
@@ -542,6 +549,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.skillsPort,
       ports.eventEmitterService,
+      packageChangeNotifier,
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUseCase(
@@ -553,6 +561,7 @@ export class DeploymentsAdapter
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUseCase(
       this.deploymentsServices.getPackageService(),
       ports.eventEmitterService,
+      packageChangeNotifier,
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUseCase(
@@ -562,6 +571,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      packageChangeNotifier,
     );
 
     this._moveArtefactsToPackageUseCase = new MoveArtefactsToPackageUseCase(
@@ -572,6 +582,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.skillsPort,
       ports.eventEmitterService,
+      packageChangeNotifier,
     );
 
     this._removeArtefactsFromPackageUseCase =
@@ -580,6 +591,7 @@ export class DeploymentsAdapter
         this.accountsPort,
         this.deploymentsServices,
         ports.eventEmitterService,
+        packageChangeNotifier,
       );
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(

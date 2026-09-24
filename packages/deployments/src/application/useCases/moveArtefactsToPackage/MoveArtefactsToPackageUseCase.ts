@@ -29,6 +29,7 @@ import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFa
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { IPackageRepository } from '../../../domain/repositories/IPackageRepository';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 import { assertArtefactsInSpace } from '../../utils/assertArtefactsInSpace';
 
 const origin = 'MoveArtefactsToPackageUseCase';
@@ -70,6 +71,7 @@ export class MoveArtefactsToPackageUseCase
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly packageChangeNotifier: PackageChangeNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -161,6 +163,11 @@ export class MoveArtefactsToPackageUseCase
     }
 
     this.emitRemovals(command, sources);
+
+    await this.packageChangeNotifier.packagesChanged(
+      command.organizationId,
+      spaceId,
+    );
 
     this.logger.info('Artefacts moved to package successfully', {
       packageId: updatedPackage.id,
