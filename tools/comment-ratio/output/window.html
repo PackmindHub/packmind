@@ -417,8 +417,9 @@ code {
   <p class="lede">Too early to read. 2 days of authoring
       have landed since the change, and the days before it already range from
       7.6% to 28.4% on their own. Anything inside that range is noise, whichever way
-      it points. Refresh in a week or two.</p>
-  <p class="meta">Collected 23 September 2026 · 1 September to 23 September ·
+      it points. And the calendar can no longer settle it: Opus 5.5 first appears on 23 September, after the change, so a drop here is the rule or the model and the dates cannot tell them
+      apart.</p>
+  <p class="meta">Collected 24 September 2026 · 1 September to 23 September ·
   TypeScript only (<code>.ts</code>, <code>.tsx</code>, <code>.spec.*</code>).</p>
 </header>
 
@@ -426,18 +427,31 @@ code {
   <div class="card-head">
     <h3>Comment ratio of newly written lines, day by day</h3>
     <p>One dot per day. Its height is the share of that day's added TypeScript lines that are comments; its size is
-    how many lines the day added. The dashed vertical line is 22 September, when the instruction landed;
-    the horizontal one is the median day before it.</p>
+    how many lines the day added; its colour is the model that wrote most of them. The dashed vertical line is
+    22 September, when the instruction landed; the horizontal one is the median day before it.</p>
   </div>
   <div class="chart" id="c-window"></div>
   <div class="legend" id="l-window"></div>
   <details><summary>See the data</summary><div id="t-window"></div></details>
 </div>
 
+<div class="card">
+  <div class="card-head">
+    <h3>The one comparison the calendar cannot spoil</h3>
+    <p>On a day that two models share, both wrote the same codebase under the same instructions. Whatever separates
+    them on that day is the model, not the rule.</p>
+  </div>
+  <div id="t-shared"></div>
+</div>
+
+
 <p>Daily figures are noisy: a day is one or two merged pull requests, and a single documentation-heavy file moves it
 several points. Read the level over a week, not the last dot. The two figures to watch are the median day
 (16.8% before the change) and the pooled ratio over all the days
 (15.7% before), which weights each day by how much it wrote.</p>
+
+<p>Pooled over the window, per model: <b>Opus 5</b> 15.3% on 68,149 lines, <b>Opus 5.5</b> 6.3% on 6,462 lines. A model with only a few thousand lines to its name is one or two pull requests; treat it as a
+hint, not a reading.</p>
 
 <p>18 September is off the chart and out
   of both figures: a deliberate pass over existing comments, not a day of ordinary authoring. It reached
@@ -1205,7 +1219,7 @@ several points. Read the level over a week, not the last dot. The two figures to
 </script>
 <script>
 (function () {
-  var D = {"points":[{"t":1788220800000,"ratio":0.0855457227138643,"added":1356,"label":"1 September","model":"Before the change","color":"var(--series-3)"},{"t":1788307200000,"ratio":0.2528793189784677,"added":7988,"label":"2 September","model":"Before the change","color":"var(--series-3)"},{"t":1788393600000,"ratio":0.1789237668161435,"added":2230,"label":"3 September","model":"Before the change","color":"var(--series-3)"},{"t":1788480000000,"ratio":0.28364779874213836,"added":1590,"label":"4 September","model":"Before the change","color":"var(--series-3)"},{"t":1788739200000,"ratio":0.2509892594686263,"added":3538,"label":"7 September","model":"Before the change","color":"var(--series-3)"},{"t":1788825600000,"ratio":0.2114378495399603,"added":5543,"label":"8 September","model":"Before the change","color":"var(--series-3)"},{"t":1788912000000,"ratio":0.16533251231527094,"added":3248,"label":"9 September","model":"Before the change","color":"var(--series-3)"},{"t":1788998400000,"ratio":0.12273383603401251,"added":6233,"label":"10 September","model":"Before the change","color":"var(--series-3)"},{"t":1789084800000,"ratio":0.08846880907372401,"added":5290,"label":"11 September","model":"Before the change","color":"var(--series-3)"},{"t":1789344000000,"ratio":0.2218102508178844,"added":4585,"label":"14 September","model":"Before the change","color":"var(--series-3)"},{"t":1789430400000,"ratio":0.10710093896713616,"added":3408,"label":"15 September","model":"Before the change","color":"var(--series-3)"},{"t":1789516800000,"ratio":0.1682727946627131,"added":2698,"label":"16 September","model":"Before the change","color":"var(--series-3)"},{"t":1789603200000,"ratio":0.07585539057456424,"added":3098,"label":"17 September","model":"Before the change","color":"var(--series-3)"},{"t":1789862400000,"ratio":0.19039451114922812,"added":583,"label":"20 September","model":"Before the change","color":"var(--series-3)"},{"t":1789948800000,"ratio":0.0825525040387722,"added":12380,"label":"21 September","model":"Before the change","color":"var(--series-3)"},{"t":1790035200000,"ratio":0.12990641150998744,"added":7159,"label":"22 September","model":"After the change","color":"var(--series-1)"},{"t":1790121600000,"ratio":0.11892763555734731,"added":4961,"label":"23 September","model":"After the change","color":"var(--series-1)"}],"legend":[{"model":"Before the change","color":"var(--series-3)"},{"model":"After the change","color":"var(--series-1)"}],"tMin":1788177600000,"tMax":1790164800000,"mark":1790035200000,"markLabel":"Instructions updated","baseline":0.1682727946627131,"baselineLabel":"Median before: 16.8%","table":[["1 September","6","1,356","8.6%","before"],["2 September","31","7,988","25.3%","before"],["3 September","8","2,230","17.9%","before"],["4 September","12","1,590","28.4%","before"],["7 September","25","3,538","25.1%","before"],["8 September","19","5,543","21.1%","before"],["9 September","12","3,248","16.5%","before"],["10 September","14","6,233","12.3%","before"],["11 September","27","5,290","8.8%","before"],["14 September","21","4,585","22.2%","before"],["15 September","15","3,408","10.7%","before"],["16 September","15","2,698","16.8%","before"],["17 September","12","3,098","7.6%","before"],["18 September","7","3,692","47.3%","bulk rewrite"],["20 September","3","583","19.0%","before"],["21 September","18","12,380","8.3%","before"],["22 September","16","7,159","13.0%","after"],["23 September","7","4,961","11.9%","after"]]};
+  var D = {"points":[{"t":1788220800000,"ratio":0.0855457227138643,"added":1356,"label":"1 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788307200000,"ratio":0.2528793189784677,"added":7988,"label":"2 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788393600000,"ratio":0.1789237668161435,"added":2230,"label":"3 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788480000000,"ratio":0.28364779874213836,"added":1590,"label":"4 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788739200000,"ratio":0.2509892594686263,"added":3538,"label":"7 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788825600000,"ratio":0.2114378495399603,"added":5543,"label":"8 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788912000000,"ratio":0.16533251231527094,"added":3248,"label":"9 September","model":"Opus 5","color":"var(--series-1)"},{"t":1788998400000,"ratio":0.12273383603401251,"added":6233,"label":"10 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789084800000,"ratio":0.08846880907372401,"added":5290,"label":"11 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789344000000,"ratio":0.2218102508178844,"added":4585,"label":"14 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789430400000,"ratio":0.10710093896713616,"added":3408,"label":"15 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789516800000,"ratio":0.1682727946627131,"added":2698,"label":"16 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789603200000,"ratio":0.07585539057456424,"added":3098,"label":"17 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789862400000,"ratio":0.19039451114922812,"added":583,"label":"20 September","model":"Opus 5","color":"var(--series-1)"},{"t":1789948800000,"ratio":0.0825525040387722,"added":12380,"label":"21 September","model":"Opus 5","color":"var(--series-1)"},{"t":1790035200000,"ratio":0.12990641150998744,"added":7159,"label":"22 September","model":"Opus 5","color":"var(--series-1)"},{"t":1790121600000,"ratio":0.08710862340388316,"added":11434,"label":"23 September","model":"Opus 5.5","color":"var(--series-2)"}],"legend":[{"model":"Opus 5","color":"var(--series-1)"},{"model":"Opus 5.5","color":"var(--series-2)"}],"tMin":1788177600000,"tMax":1790164800000,"mark":1790035200000,"markLabel":"Instructions updated","baseline":0.1682727946627131,"baselineLabel":"Median before: 16.8%","table":[["1 September","6","1,356","8.6%","Opus 5","before"],["2 September","31","7,988","25.3%","Opus 5","before"],["3 September","8","2,230","17.9%","Opus 5","before"],["4 September","12","1,590","28.4%","Opus 5","before"],["7 September","25","3,538","25.1%","Opus 5","before"],["8 September","19","5,543","21.1%","Opus 5","before"],["9 September","12","3,248","16.5%","Opus 5","before"],["10 September","14","6,233","12.3%","Opus 5","before"],["11 September","27","5,290","8.8%","Opus 5","before"],["14 September","21","4,585","22.2%","Opus 5","before"],["15 September","15","3,408","10.7%","Opus 5","before"],["16 September","15","2,698","16.8%","Opus 5","before"],["17 September","12","3,098","7.6%","Opus 5","before"],["18 September","7","3,692","47.3%","Opus 5","bulk rewrite"],["20 September","3","583","19.0%","Opus 5","before"],["21 September","18","12,380","8.3%","Opus 5","before"],["22 September","16","7,159","13.0%","Opus 5","after"],["23 September","17","11,434","8.7%","Opus 5.5","after"]],"sharedRows":[["23 September","Opus 5.5","6,462","6.3%"],["23 September","Opus 5","3,241","15.9%"],["23 September","several models named","1,731","4.3%"]]};
   var V = window.VIZ;
 
   V.dotChart(document.getElementById('c-window'), {
@@ -1221,7 +1235,12 @@ several points. Read the level over a week, not the last dot. The two figures to
       ';width:10px;height:10px;border-radius:50%"></i>' + e.model + '</span>';
   }).join('');
   V.table(document.getElementById('t-window'),
-    ['Day', 'Commits', 'Lines added', 'Comment ratio', 'Side'], D.table);
+    ['Day', 'Commits', 'Lines added', 'Comment ratio', 'Model', 'Side'], D.table);
+
+  if (D.sharedRows.length > 0) {
+    V.table(document.getElementById('t-shared'),
+      ['Day', 'Model', 'Lines added', 'Comment ratio'], D.sharedRows);
+  }
 })();
 </script>
 </body>

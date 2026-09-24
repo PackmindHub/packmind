@@ -11,7 +11,12 @@
  * Usage:
  *   node tools/comment-ratio/daily.mjs [--repo <path>] [--ref <ref>]
  *                                      [--around <YYYY-MM-DD>] [--days <n>]
+ *                                      [--from <YYYY-MM-DD>] [--to <YYYY-MM-DD>]
  *                                      [--out <dir>] [--name <file>]
+ *
+ * `--around`/`--days` centre a window on a date; `--from`/`--to` name it
+ * outright, both ends included, which is what a window that grows by a day at
+ * a time wants.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,8 +43,15 @@ options.out ??= path.join(options.repo, 'tools/comment-ratio/output');
 const DAY = 24 * 3600 * 1000;
 const centre = Date.parse(options.around + 'T00:00:00Z');
 const span = Number(options.days);
-const from = new Date(centre - span * DAY).toISOString().slice(0, 10);
-const to = new Date(centre + (span + 1) * DAY).toISOString().slice(0, 10);
+// `to` is exclusive inside the walk; an explicit --to names the last day the
+// caller wants to see, so it gains a day here.
+const from =
+  options.from ?? new Date(centre - span * DAY).toISOString().slice(0, 10);
+const to = options.to
+  ? new Date(Date.parse(options.to + 'T00:00:00Z') + DAY)
+      .toISOString()
+      .slice(0, 10)
+  : new Date(centre + (span + 1) * DAY).toISOString().slice(0, 10);
 
 const days = new Map();
 const dayFor = (date) => {
@@ -97,13 +109,16 @@ for (let i = 0; i < blobs.length; i += 1000) {
     const classes = classifyLines(items[0].path, contents.get(blob) ?? '');
     for (const item of items) {
       const bucket = dayFor(item.date);
-      bucket.byModel[item.model] ??= 0;
+      // Per model, not just per day: a model can ship mid-window, and then the
+      // day it lands is two populations rather than one.
+      bucket.byModel[item.model] ??= { added: 0, comment: 0 };
       for (const lineNumber of item.lines) {
         const cls = classes[lineNumber - 1];
         if (cls === COMMENT) bucket.addedComment++;
         else if (cls === CODE) bucket.addedCode++;
         else continue;
-        bucket.byModel[item.model]++;
+        bucket.byModel[item.model].added++;
+        if (cls === COMMENT) bucket.byModel[item.model].comment++;
       }
     }
   }
@@ -115,7 +130,9 @@ const rows = [...days.values()]
     const added = d.addedCode + d.addedComment;
     // The day is labelled with whichever model wrote most of its lines.
     const model =
-      Object.entries(d.byModel).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      Object.entries(d.byModel).sort(
+        (a, b) => b[1].added - a[1].added,
+      )[0]?.[0] ?? null;
     return {
       ...d,
       added,

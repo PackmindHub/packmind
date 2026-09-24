@@ -71,6 +71,17 @@ const spread = [
   Math.max(...before.map((d) => d.commentRatio)),
 ];
 
+// Before/after is already carried by the vertical mark, which frees colour for
+// the model. That matters as soon as a model ships inside the window: without
+// it, a drop after the mark reads as the rule working when it may be the model.
+const SLOTS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
+const short = (model) => (model ?? 'unattributed').replace('Claude ', '');
+const byVolume = (a, b) =>
+  rows.reduce((s, d) => s + (d.byModel[b]?.added ?? 0), 0) -
+  rows.reduce((s, d) => s + (d.byModel[a]?.added ?? 0), 0);
+const models = [...new Set(rows.map((d) => d.model))].sort(byVolume);
+const colourOf = new Map(models.map((m, i) => [m, SLOTS[i] ?? 'var(--text-muted)']));
+
 const points = rows
   .filter((d) => !excluded.has(d.date))
   .map((d) => ({
@@ -78,14 +89,57 @@ const points = rows
     ratio: d.commentRatio,
     added: d.added,
     label: dayEn(d.date),
-    model: d.date >= options.mark ? 'After the change' : 'Before the change',
-    color: d.date >= options.mark ? 'var(--series-1)' : 'var(--series-3)',
+    model: short(d.model),
+    color: colourOf.get(d.model),
   }));
 
 const legend = [...new Set(points.map((p) => p.model))].map((model) => ({
   model,
   color: points.find((p) => p.model === model).color,
 }));
+
+// Per model over the whole window, so a model that only ever shared a day with
+// another still gets a figure of its own.
+const perModel = models
+  .map((model) => {
+    let added = 0;
+    let comment = 0;
+    let firstDay = null;
+    for (const d of rows) {
+      if (excluded.has(d.date)) continue;
+      const cell = d.byModel[model];
+      if (!cell) continue;
+      added += cell.added;
+      comment += cell.comment;
+      firstDay ??= d.date;
+    }
+    return { model, added, comment, ratio: added ? comment / added : null, firstDay };
+  })
+  .filter((m) => m.added > 0);
+
+// A model that first appears after the mark is a second change inside the
+// window, and the two cannot be told apart by the calendar alone.
+const newcomers = perModel.filter((m) => m.firstDay >= options.mark);
+
+// The days a newcomer shares with an older model are the one clean comparison
+// available: same day, same instructions, same codebase, two models.
+const sharedDays = rows.filter(
+  (d) =>
+    !excluded.has(d.date) &&
+    d.date >= options.mark &&
+    newcomers.some((m) => d.byModel[m.model]) &&
+    Object.keys(d.byModel).length > 1,
+);
+const sharedRows = sharedDays.flatMap((d) =>
+  Object.entries(d.byModel)
+    .sort((a, b) => b[1].added - a[1].added)
+    .map(([model, cell]) => [
+      dayEn(d.date),
+      short(model),
+      fmtInt(cell.added),
+      fmtPct(cell.comment / cell.added),
+    ]),
+);
 
 const payload = {
   points,
@@ -101,12 +155,14 @@ const payload = {
     fmtInt(d.commits),
     fmtInt(d.added),
     fmtPct(d.commentRatio),
+    short(d.model),
     excluded.has(d.date)
       ? 'bulk rewrite'
       : d.date >= options.mark
         ? 'after'
         : 'before',
   ]),
+  sharedRows,
 };
 
 const css = fs.readFileSync(path.join(here, 'page/styles.css'), 'utf8');
@@ -118,15 +174,27 @@ const generated = new Date(daily.generatedAt).toLocaleDateString('en-GB', {
   year: 'numeric',
 });
 
-const verdict =
+const level =
   after.length < 4
     ? `Too early to read. ${after.length === 1 ? 'One day' : `${fmtInt(after.length)} days`} of authoring
       ${after.length === 1 ? 'has' : 'have'} landed since the change, and the days before it already range from
       ${fmtPct(spread[0])} to ${fmtPct(spread[1])} on their own. Anything inside that range is noise, whichever way
-      it points. Refresh in a week or two.`
+      it points.`
     : `Over the ${fmtInt(after.length)} days since the change the median day sits at ${fmtPct(median(after))},
       against ${fmtPct(baseline)} before it. The days before the change range from ${fmtPct(spread[0])} to
       ${fmtPct(spread[1])} on their own, so read the level, not any single dot.`;
+
+// Naming the second change in the lede, not in a footnote: a reader who takes
+// the chart at face value will credit the rule with whatever the model did.
+const confound =
+  newcomers.length > 0
+    ? ` And the calendar can no longer settle it: ${newcomers
+        .map((m) => `${short(m.model)} first appears on ${dayEn(m.firstDay)}`)
+        .join(', ')}, after the change, so a drop here is the rule or the model and the dates cannot tell them
+      apart.`
+    : '';
+
+const verdict = level + confound;
 
 const body = `<main>
 
@@ -141,18 +209,37 @@ const body = `<main>
   <div class="card-head">
     <h3>Comment ratio of newly written lines, day by day</h3>
     <p>One dot per day. Its height is the share of that day's added TypeScript lines that are comments; its size is
-    how many lines the day added. The dashed vertical line is ${dayEn(options.mark)}, when the instruction landed;
-    the horizontal one is the median day before it.</p>
+    how many lines the day added; its colour is the model that wrote most of them. The dashed vertical line is
+    ${dayEn(options.mark)}, when the instruction landed; the horizontal one is the median day before it.</p>
   </div>
   <div class="chart" id="c-window"></div>
   <div class="legend" id="l-window"></div>
   <details><summary>See the data</summary><div id="t-window"></div></details>
 </div>
 
+${
+  sharedRows.length > 0
+    ? `<div class="card">
+  <div class="card-head">
+    <h3>The one comparison the calendar cannot spoil</h3>
+    <p>On a day that two models share, both wrote the same codebase under the same instructions. Whatever separates
+    them on that day is the model, not the rule.</p>
+  </div>
+  <div id="t-shared"></div>
+</div>
+`
+    : ''
+}
+
 <p>Daily figures are noisy: a day is one or two merged pull requests, and a single documentation-heavy file moves it
 several points. Read the level over a week, not the last dot. The two figures to watch are the median day
 (${fmtPct(baseline)} before the change) and the pooled ratio over all the days
 (${fmtPct(pooled(before))} before), which weights each day by how much it wrote.</p>
+
+<p>Pooled over the window, per model: ${perModel
+      .map((m) => `<b>${short(m.model)}</b> ${fmtPct(m.ratio)} on ${fmtInt(m.added)} lines`)
+      .join(', ')}. A model with only a few thousand lines to its name is one or two pull requests; treat it as a
+hint, not a reading.</p>
 
 ${
   excluded.size > 0
@@ -184,7 +271,12 @@ ${
       ';width:10px;height:10px;border-radius:50%"></i>' + e.model + '</span>';
   }).join('');
   V.table(document.getElementById('t-window'),
-    ['Day', 'Commits', 'Lines added', 'Comment ratio', 'Side'], D.table);
+    ['Day', 'Commits', 'Lines added', 'Comment ratio', 'Model', 'Side'], D.table);
+
+  if (D.sharedRows.length > 0) {
+    V.table(document.getElementById('t-shared'),
+      ['Day', 'Model', 'Lines added', 'Comment ratio'], D.sharedRows);
+  }
 })();
 </script>`;
 
