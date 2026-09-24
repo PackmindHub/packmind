@@ -5,4 +5,3 @@ export * from './CommandNotFoundError';
 export * from './CommandSlugAlreadyExistsError';
 export * from './CommandSpaceNotAccessibleError';
 export * from './DeployCommandsQueueErrors';
-export * from './MultiplePackagesRequestedError';
