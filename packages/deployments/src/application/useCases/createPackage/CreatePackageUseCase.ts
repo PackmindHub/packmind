@@ -18,6 +18,7 @@ import {
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 
@@ -37,6 +38,7 @@ export class CreatePackageUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly packageChangeNotifier: PackageChangeNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -152,6 +154,11 @@ export class CreatePackageUseCase
       recipeIds,
       standardIds,
       skillIds,
+    );
+
+    await this.packageChangeNotifier.packagesChanged(
+      command.organizationId,
+      spaceId,
     );
 
     this.logger.info('Package created successfully', {

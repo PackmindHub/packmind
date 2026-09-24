@@ -79,6 +79,27 @@ export interface ChangeProposalUpdateEvent extends SSEEvent<{
   type: 'CHANGE_PROPOSAL_UPDATE';
 }
 
+/**
+ * Something in the space's packages is different: one was created, renamed or
+ * deleted, or an artefact joined or left one.
+ *
+ * Drives client cache invalidation, and carries no more than the two ids needed
+ * to route it. A subscriber is not checked for membership of the space it names,
+ * so what the event says has to be worth nothing on its own — the reader learns
+ * what changed by refetching through an endpoint that does check.
+ *
+ * One event for every kind of package change rather than one per kind. Every
+ * surface that reads packages reads the whole list, so a finer event would be
+ * answered by the same refetch and would only give the publisher more ways to
+ * forget one.
+ */
+export interface PackagesChangedEvent extends SSEEvent<{
+  organizationId: string;
+  spaceId: string;
+}> {
+  type: 'PACKAGES_CHANGED';
+}
+
 export type MarketplacePublishCompletedStatus =
   | 'success'
   | 'no_changes'
@@ -109,6 +130,7 @@ export type AnySSEEvent =
   | UserContextChangeEvent
   | DistributionStatusChangeEvent
   | ChangeProposalUpdateEvent
+  | PackagesChangedEvent
   | MarketplacePublishCompletedEvent;
 
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
@@ -200,6 +222,20 @@ export function createChangeProposalUpdateEvent(
 ): ChangeProposalUpdateEvent {
   return {
     type: 'CHANGE_PROPOSAL_UPDATE',
+    data: {
+      organizationId,
+      spaceId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createPackagesChangedEvent(
+  organizationId: string,
+  spaceId: string,
+): PackagesChangedEvent {
+  return {
+    type: 'PACKAGES_CHANGED',
     data: {
       organizationId,
       spaceId,

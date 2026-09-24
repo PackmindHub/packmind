@@ -45,8 +45,10 @@ import { standardFactory } from '@packmind/standards/test';
 import { skillFactory } from '@packmind/skills/test';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
+import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
 
 describe('UpdatePackageUseCase', () => {
+  let mockPackageChangeNotifier: jest.Mocked<PackageChangeNotifier>;
   let useCase: UpdatePackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
@@ -174,6 +176,8 @@ describe('UpdatePackageUseCase', () => {
 
     stubbedLogger = stubLogger();
 
+    mockPackageChangeNotifier = createMockInstance(PackageChangeNotifier);
+
     useCase = new UpdatePackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
@@ -182,6 +186,7 @@ describe('UpdatePackageUseCase', () => {
       mockStandardsPort,
       mockSkillsPort,
       mockEventEmitterService,
+      mockPackageChangeNotifier,
       stubbedLogger,
     );
   });
@@ -232,6 +237,13 @@ describe('UpdatePackageUseCase', () => {
         };
 
         result = await useCase.execute(command);
+      });
+
+      it('tells the space its packages moved on', () => {
+        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
+        );
       });
 
       it('returns the updated package', () => {

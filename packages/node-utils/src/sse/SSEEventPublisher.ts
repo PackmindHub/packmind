@@ -13,6 +13,7 @@ import {
   createUserContextChangeEvent,
   createDistributionStatusChangeEvent,
   createChangeProposalUpdateEvent,
+  createPackagesChangedEvent,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -326,6 +327,53 @@ export class SSEEventPublisher {
     } catch (error) {
       SSEEventPublisher.getInstance().logger.error(
         'Failed to publish change proposal update event',
+        {
+          organizationId,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Makes the frontend's React Query cache refetch the space's packages. Scoped
+   * to the space rather than one user, so a reader looking at a package list
+   * sees what someone else just did to it rather than a snapshot from whenever
+   * they opened the page.
+   */
+  static async publishPackagesChangedEvent(
+    organizationId: string,
+    spaceId: string,
+  ): Promise<void> {
+    SSEEventPublisher.getInstance().logger.info(
+      'Publishing packages changed event',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      const event = createPackagesChangedEvent(organizationId, spaceId);
+
+      await SSEEventPublisher.publishEvent(
+        'PACKAGES_CHANGED',
+        [spaceId],
+        event,
+      );
+
+      SSEEventPublisher.getInstance().logger.debug(
+        'Successfully published packages changed event',
+        {
+          organizationId,
+          spaceId,
+        },
+      );
+    } catch (error) {
+      SSEEventPublisher.getInstance().logger.error(
+        'Failed to publish packages changed event',
         {
           organizationId,
           spaceId,
