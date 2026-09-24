@@ -2,6 +2,7 @@ import { CodingAgentDeployerRegistry } from './CodingAgentDeployerRegistry';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { CodingAgent, FileUpdates } from '@packmind/types';
 import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
+import { UnknownCodingAgentError } from '../../domain/errors';
 
 class MockDeployer implements ICodingAgentDeployer {
   async deployCommands(): Promise<FileUpdates> {
@@ -99,10 +100,10 @@ describe('CodingAgentDeployerRegistry', () => {
     });
 
     describe('when getting unknown agent', () => {
-      it('throws an error', () => {
+      it('throws an UnknownCodingAgentError', () => {
         expect(() => {
           registry.getDeployer('unknown' as CodingAgent);
-        }).toThrow('Unknown coding agent: unknown');
+        }).toThrow(UnknownCodingAgentError);
       });
     });
   });
