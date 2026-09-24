@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
-import { mockInterface, stubLogger } from '@packmind/test-utils';
+import {
+  createMockInstance,
+  mockInterface,
+  stubLogger,
+} from '@packmind/test-utils';
 import {
   CommandVersion,
   CreatePackageReleaseCommand,
@@ -37,6 +41,7 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReleaseRefusedError } from '../../../domain/errors/PackageReleaseRefusedError';
 import { PackageComponentHasNoVersionError } from '../../../domain/errors/PackageComponentHasNoVersionError';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 describe('CreatePackageReleaseUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
@@ -123,6 +128,7 @@ describe('CreatePackageReleaseUseCase', () => {
   });
 
   let pkg: Package;
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let useCase: CreatePackageReleaseUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
@@ -202,6 +208,8 @@ describe('CreatePackageReleaseUseCase', () => {
 
     stubbedLogger = stubLogger();
 
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
+
     useCase = new CreatePackageReleaseUseCase(
       spacesPort,
       accountsPort,
@@ -209,12 +217,29 @@ describe('CreatePackageReleaseUseCase', () => {
       commandsPort,
       standardsPort,
       skillsPort,
+      mockSpaceContentNotifier,
       stubbedLogger,
     );
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  /*
+   * Whether a package is behind what it holds is the question every package
+   * surface asks of it, and a release is the answer changing. A reader
+   * elsewhere was still being told to cut one that had just been cut.
+   */
+  it('tells the space it moved on', async () => {
+    const command = buildCommand('0.1.0');
+
+    await useCase.execute(command);
+
+    expect(mockSpaceContentNotifier.spaceContentChanged).toHaveBeenCalledWith(
+      command.organizationId,
+      command.spaceId,
+    );
   });
 
   it('pins the latest version of every component it holds', async () => {

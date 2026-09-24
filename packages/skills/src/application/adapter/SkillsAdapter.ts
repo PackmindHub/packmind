@@ -174,6 +174,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.services.getSkillFileService(),
+      this.eventEmitterService,
     );
 
     this._updateSkillFileFromUI = new UpdateSkillFileFromUIUseCase(

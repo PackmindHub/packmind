@@ -6,7 +6,9 @@ import { SPACES_SCOPE } from '../../spaces/api/queryKeys';
 import { GET_RULES_BY_STANDARD_ID_KEY } from '../../standards/api/queryKeys';
 import {
   GET_PACKAGE_BY_ID_KEY,
+  GET_PACKAGE_RELEASE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
+  LIST_PACKAGE_RELEASES_KEY,
 } from '../api/queryKeys';
 
 const SPACE_ID = createSpaceId('space-1');
@@ -115,6 +117,23 @@ describe('SpaceContentSubscription', () => {
         queryKey: GET_RULES_BY_STANDARD_ID_KEY,
       });
     });
+
+    /*
+     * Whether a package is behind what it holds is a comparison, and both sides
+     * of it move: a component gains a version, or someone cuts the release that
+     * catches up.
+     */
+    it('drops the cached releases a package is judged against', () => {
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: LIST_PACKAGE_RELEASES_KEY,
+      });
+    });
+
+    it('drops the cached release a pane is reading', () => {
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: GET_PACKAGE_RELEASE_KEY,
+      });
+    });
   });
 
   // Importing a folder of skills announces one event per skill.
@@ -128,7 +147,7 @@ describe('SpaceContentSubscription', () => {
     });
 
     it('refreshes once for the whole burst', () => {
-      expect(invalidateQueries).toHaveBeenCalledTimes(4);
+      expect(invalidateQueries).toHaveBeenCalledTimes(6);
     });
   });
 
