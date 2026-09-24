@@ -39,6 +39,7 @@ import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillFactory } from '@packmind/skills/test';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
+import { ArtefactAlreadyInAnotherPackageError } from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
@@ -1081,6 +1082,64 @@ describe('CreatePackageUseCase', () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           'Standards service unavailable',
         );
+      });
+    });
+
+    /*
+     * The package form greys out what another package holds, against a list it
+     * fetched once — so two forms opened before a component was placed both
+     * offer it, which is the add drawer's bug wearing a different hat.
+     */
+    describe('when a component already belongs to another package', () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
+        mockSpacesPort.getSpaceById.mockResolvedValue(buildSpace());
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          packageFactory({
+            name: 'Frontend playbook',
+            slug: 'frontend-playbook',
+            spaceId,
+            createdBy: userId,
+            recipes: [],
+            standards: [standardId1],
+            skills: [],
+          }),
+        ]);
+        mockStandardsPort.getStandard.mockResolvedValue({
+          ...buildStandard(standardId1, spaceId),
+          name: 'Naming rules',
+        });
+
+        executePromise = useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          name: 'Backend playbook',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [standardId1],
+          skillIds: [],
+        });
+        executePromise.catch(() => undefined);
+      });
+
+      it('refuses to create the package', async () => {
+        await expect(executePromise).rejects.toBeInstanceOf(
+          ArtefactAlreadyInAnotherPackageError,
+        );
+      });
+
+      it('names the package being created as the destination', async () => {
+        await expect(executePromise).rejects.toThrow(
+          'The standard "Naming rules" is in "Frontend playbook", and an artefact belongs to a single package. Move it to "Backend playbook" instead of adding it.',
+        );
+      });
+
+      it('creates nothing', async () => {
+        await executePromise.catch(() => undefined);
+
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
