@@ -858,7 +858,7 @@ describe('OrganizationsSpacesSkillsController', () => {
     describe('when skill is not found', () => {
       it('throws SkillNotFoundError', async () => {
         skillsService.downloadSkillZipForAgent.mockResolvedValue({
-          fileContent: null,
+          fileContent: '',
           fileName: 'skill.zip',
         });
 
