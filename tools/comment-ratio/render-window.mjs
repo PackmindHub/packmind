@@ -121,6 +121,32 @@ const perModel = models
 // window, and the two cannot be told apart by the calendar alone.
 const newcomers = perModel.filter((m) => m.firstDay >= options.mark);
 
+// The mirror of the shared-day test: hold the model fixed and let the date
+// vary. A model that wrote on both sides of the mark answers "did the rule do
+// anything" without a model change muddying it.
+const heldFixed = perModel
+  .map(({ model }) => {
+    const side = (keep) => {
+      let added = 0;
+      let comment = 0;
+      for (const d of rows) {
+        if (excluded.has(d.date) || !keep(d.date)) continue;
+        const cell = d.byModel[model];
+        if (!cell) continue;
+        added += cell.added;
+        comment += cell.comment;
+      }
+      return { added, ratio: added ? comment / added : null };
+    };
+    return {
+      model,
+      before: side((date) => date < options.mark),
+      after: side((date) => date >= options.mark),
+    };
+  })
+  .filter((m) => m.before.added >= 1000 && m.after.added >= 1000)
+  .sort((a, b) => b.after.added - a.after.added);
+
 // The days a newcomer shares with an older model are the one clean comparison
 // available: same day, same instructions, same codebase, two models.
 const sharedDays = rows.filter(
@@ -221,11 +247,23 @@ ${
   sharedRows.length > 0
     ? `<div class="card">
   <div class="card-head">
-    <h3>The one comparison the calendar cannot spoil</h3>
+    <h3>The comparisons the calendar cannot spoil</h3>
     <p>On a day that two models share, both wrote the same codebase under the same instructions. Whatever separates
     them on that day is the model, not the rule.</p>
   </div>
   <div id="t-shared"></div>
+  ${
+    heldFixed.length > 0
+      ? `<p style="margin-top:14px">And the mirror of it &mdash; hold the model fixed and let the date vary, which asks
+  whether the rule did anything at all: ${heldFixed
+    .map(
+      (m) =>
+        `<b>${short(m.model)}</b> wrote ${fmtPct(m.before.ratio)} on ${fmtInt(m.before.added)} lines before
+        ${dayEn(options.mark)} and ${fmtPct(m.after.ratio)} on ${fmtInt(m.after.added)} lines after it`,
+    )
+    .join('; ')}.</p>`
+      : ''
+  }
 </div>
 `
     : ''
