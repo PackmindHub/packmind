@@ -1,15 +1,21 @@
 import { GitProvider } from '@packmind/types';
 
 /**
- * Whether a git provider has usable credentials (PAT or active GitHub App
- * installation). Providers without auth are CLI-managed: they are created as a
- * side-effect of `packmind` pull sessions and are not configurable from
+ * Whether a git provider has configured credentials (PAT or active GitHub App
+ * installation). A PAT that is stored but unreadable still counts: the
+ * connection was configured from the settings UI and must stay there to be
+ * re-authenticated. Providers without auth are CLI-managed: they are created
+ * as a side-effect of `packmind` pull sessions and are not configurable from
  * the settings UI.
  */
 export function providerHasAuth(
   provider: Pick<
     GitProvider,
-    'token' | 'authMethod' | 'appInstallationId' | 'revokedAt'
+    | 'token'
+    | 'tokenUnreadable'
+    | 'authMethod'
+    | 'appInstallationId'
+    | 'revokedAt'
   >,
 ): boolean {
   const hasPatToken =
@@ -24,5 +30,7 @@ export function providerHasAuth(
     provider.appInstallationId !== null &&
     !provider.revokedAt;
 
-  return hasPatToken || hasActiveAppInstallation;
+  return (
+    hasPatToken || provider.tokenUnreadable === true || hasActiveAppInstallation
+  );
 }

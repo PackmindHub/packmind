@@ -113,6 +113,12 @@ export class GitProviderService {
       throw new GitProviderNotFoundError(gitProviderId);
     }
 
+    // Probing with no token would report `unauthorized`, which blames the
+    // provider for what is a storage problem on our side.
+    if (gitProvider.tokenUnreadable) {
+      return { ok: false, reason: 'token_unreadable' };
+    }
+
     return this.checkAuthForProviderConfig(gitProvider);
   }
 

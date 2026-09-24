@@ -35,6 +35,8 @@ const FAILURE_MESSAGE: Record<CheckAuthFailureReason, string> = {
     'The provider is rate-limiting Packmind, so this token could not be verified. Try again in a few minutes.',
   network:
     'Packmind could not reach the provider to verify this token. Check the instance URL and try again.',
+  token_unreadable:
+    'Packmind could not read the stored token. Enter a new token to restore access.',
 };
 
 /**

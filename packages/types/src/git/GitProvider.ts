@@ -32,6 +32,10 @@ export type GitProvider = {
   // against, so re-registering the manifest never silently rebinds it.
   organizationGitHubAppId?: OrganizationGitHubAppId | null;
   revokedAt?: Date | null;
+  // Never persisted: set on read when the stored token exists but cannot be
+  // decrypted (corrupt ciphertext or a rotated key). `token` is then null, and
+  // the connection needs re-authentication.
+  tokenUnreadable?: boolean;
   organization?: Organization;
   repos?: GitRepo[];
 };

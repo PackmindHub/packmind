@@ -8,6 +8,7 @@ import {
   ListProvidersResponse,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
+import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'ListProvidersUseCase';
 
@@ -38,22 +39,14 @@ export class ListProvidersUseCase
 
     const providerListItems: GitProviderListItem[] = providers.map(
       (provider) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { token, ...rest } = provider;
-        const hasPatToken =
-          token !== null && token !== undefined && token.length > 0;
-        // TypeORM returns the `bigint` app_installation_id column as a string,
-        // so check presence instead of `typeof === 'number'`.
-        const hasActiveAppInstallation =
-          rest.authMethod === 'app' &&
-          rest.appInstallationId !== undefined &&
-          rest.appInstallationId !== null &&
-          !rest.revokedAt;
         return {
           ...rest,
           // Marketplaces are surfaced by their own API, so they must not
           // inflate the standard repository count.
           repos: (rest.repos ?? []).filter((repo) => repo.type === 'standard'),
-          hasAuth: hasPatToken || hasActiveAppInstallation,
+          hasAuth: providerHasAuth(provider),
           authMethod: rest.authMethod,
           // Filled in by the API service layer, which can reach the
           // Deployments port; this use case stays within the Git domain.

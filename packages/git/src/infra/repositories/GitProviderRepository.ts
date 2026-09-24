@@ -71,7 +71,9 @@ export class GitProviderRepository
 
   /**
    * A plaintext token passes through unchanged, so rows written before
-   * encryption existed are still readable.
+   * encryption existed are still readable. A token that cannot be decrypted
+   * is dropped and flagged instead of thrown, so one corrupt row does not hide
+   * every other connection of the organization and can still be re-authenticated.
    */
   private async decryptGitProvider(
     gitProvider: GitProvider,
@@ -82,13 +84,19 @@ export class GitProviderRepository
 
     const encryptionService = await this.getEncryptionService();
 
-    const next: GitProvider = { ...gitProvider };
-
-    if (next.token) {
-      next.token = encryptionService.decrypt(next.token);
+    try {
+      return {
+        ...gitProvider,
+        token: encryptionService.decrypt(gitProvider.token),
+      };
+    } catch (error) {
+      this.logger.warn('Git provider token could not be decrypted', {
+        id: gitProvider.id,
+        organizationId: gitProvider.organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return { ...gitProvider, token: null, tokenUnreadable: true };
     }
-
-    return next;
   }
 
   override async add(gitProvider: GitProvider): Promise<GitProvider> {

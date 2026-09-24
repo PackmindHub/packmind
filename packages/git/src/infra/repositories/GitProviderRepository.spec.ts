@@ -215,6 +215,86 @@ describe('GitProviderRepository', () => {
     });
   });
 
+  describe('when a stored token cannot be decrypted', () => {
+    let readableProvider: ReturnType<typeof gitProviderFactory>;
+    let corruptProvider: ReturnType<typeof gitProviderFactory>;
+
+    beforeEach(async () => {
+      readableProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+      });
+      corruptProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+      });
+      await gitProviderRepository.add(readableProvider);
+      await gitProviderRepository.add(corruptProvider);
+      // iv:ciphertext: with an empty auth tag, as observed in production.
+      await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .update({ id: corruptProvider.id }, { token: 'aXY=:Y2lwaGVy:' });
+    });
+
+    describe('when finding by organization ID', () => {
+      let found: GitProvider[];
+
+      beforeEach(async () => {
+        found = await gitProviderRepository.findByOrganizationId(
+          testOrganization.id,
+        );
+      });
+
+      it('still returns every provider', () => {
+        expect(found.map((p) => p.id).sort()).toEqual(
+          [readableProvider.id, corruptProvider.id].sort(),
+        );
+      });
+
+      it('decrypts the readable provider token', () => {
+        expect(found.find((p) => p.id === readableProvider.id)?.token).toBe(
+          readableProvider.token,
+        );
+      });
+
+      it('drops the unreadable token and flags it', () => {
+        expect(found.find((p) => p.id === corruptProvider.id)).toEqual(
+          expect.objectContaining({ token: null, tokenUnreadable: true }),
+        );
+      });
+    });
+
+    describe('when finding by ID', () => {
+      it('drops the unreadable token and flags it', async () => {
+        expect(
+          await gitProviderRepository.findById(corruptProvider.id),
+        ).toEqual(
+          expect.objectContaining({ token: null, tokenUnreadable: true }),
+        );
+      });
+    });
+
+    describe('when re-authenticating with a new token', () => {
+      it('returns the new token without the unreadable flag', async () => {
+        const updated = await gitProviderRepository.update(corruptProvider.id, {
+          token: 'fresh-token',
+        });
+
+        expect(updated).toEqual(
+          expect.not.objectContaining({ tokenUnreadable: true }),
+        );
+      });
+
+      it('stores a readable token', async () => {
+        await gitProviderRepository.update(corruptProvider.id, {
+          token: 'fresh-token',
+        });
+
+        expect(
+          (await gitProviderRepository.findById(corruptProvider.id))?.token,
+        ).toBe('fresh-token');
+      });
+    });
+  });
+
   describe('when finding a git provider by app installation', () => {
     describe('when an app-auth provider exists for the org and installation', () => {
       let appProvider: ReturnType<typeof gitProviderFactory>;

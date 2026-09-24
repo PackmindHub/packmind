@@ -132,6 +132,31 @@ describe('ListProvidersUseCase', () => {
       });
     });
 
+    describe('with a stored token that could not be decrypted', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const provider = gitProviderFactory({
+          organizationId,
+          token: null,
+          tokenUnreadable: true,
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        result = await useCase.execute({ organizationId, userId });
+      });
+
+      it('keeps the provider among configured connections', () => {
+        expect(result.providers[0].hasAuth).toBe(true);
+      });
+
+      it('flags the token as unreadable', () => {
+        expect(result.providers[0].tokenUnreadable).toBe(true);
+      });
+    });
+
     describe('with mixed token states', () => {
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
