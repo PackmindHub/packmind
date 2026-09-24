@@ -16,6 +16,7 @@ const BUCKET_VISUAL: Record<ConnectionStatusBucket, BucketVisual> = {
   connected: { label: 'Connected', dot: 'green.500' },
   checking: { label: 'Checking…', dot: 'gray.400' },
   token_expired: { label: 'Token expired', dot: 'orange.500' },
+  token_unreadable: { label: 'Token unreadable', dot: 'red.500' },
   unreachable: { label: 'Unreachable', dot: 'red.500' },
   unknown: { label: 'Status unknown', dot: 'yellow.500' },
 };

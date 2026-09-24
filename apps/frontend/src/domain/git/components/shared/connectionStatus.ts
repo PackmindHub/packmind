@@ -21,6 +21,8 @@ export const PROBE_FAILURE_DESCRIPTIONS: Record<
     'The provider denied access. Check the token scopes or the App installation.',
   rate_limited: 'Provider rate limit reached. Retry shortly.',
   network: "Couldn't reach the provider. Check your network and retry.",
+  token_unreadable:
+    "Packmind can't read the stored token. Re-authenticate to restore access.",
 };
 
 export const NO_AUTH_DESCRIPTION =
@@ -46,14 +48,16 @@ export function deriveConnectionStatus(
   return { kind: 'unknown' };
 }
 
-// The visual bucket consolidates the 4 failure reasons into 2 buckets that map
-// to colors and labels. `unauthorized` is its own bucket because it's the only
-// reason actionable through Re-authenticate; everything else means the
-// provider is reachable on the network layer but rejected our request.
+// The visual bucket consolidates the 5 failure reasons into 3 buckets that map
+// to colors and labels. `unauthorized` and `token_unreadable` get their own
+// buckets because they are the reasons actionable through Re-authenticate;
+// everything else means the provider is reachable on the network layer but
+// rejected our request.
 export type ConnectionStatusBucket =
   | 'connected'
   | 'checking'
   | 'token_expired'
+  | 'token_unreadable'
   | 'unreachable'
   | 'unknown';
 
@@ -70,7 +74,9 @@ export function toStatusBucket(
     case 'no_auth':
       return 'unreachable';
     case 'failing':
-      return view.reason === 'unauthorized' ? 'token_expired' : 'unreachable';
+      if (view.reason === 'unauthorized') return 'token_expired';
+      if (view.reason === 'token_unreadable') return 'token_unreadable';
+      return 'unreachable';
   }
 }
 
