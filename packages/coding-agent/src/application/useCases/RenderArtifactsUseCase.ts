@@ -27,31 +27,19 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
       userId: command.userId,
     });
 
-    try {
-      const fileUpdates = await this.codingAgentServices.renderArtifacts(
-        command.installed,
-        command.removed,
-        command.codingAgents,
-        command.existingFiles,
-      );
+    const fileUpdates = await this.codingAgentServices.renderArtifacts(
+      command.installed,
+      command.removed,
+      command.codingAgents,
+      command.existingFiles,
+    );
 
-      this.logger.info('Successfully rendered artifacts', {
-        totalFiles:
-          fileUpdates.createOrUpdate.length + fileUpdates.delete.length,
-        createOrUpdateFiles: fileUpdates.createOrUpdate.length,
-        deleteFiles: fileUpdates.delete.length,
-      });
+    this.logger.info('Successfully rendered artifacts', {
+      totalFiles: fileUpdates.createOrUpdate.length + fileUpdates.delete.length,
+      createOrUpdateFiles: fileUpdates.createOrUpdate.length,
+      deleteFiles: fileUpdates.delete.length,
+    });
 
-      return fileUpdates;
-    } catch (error) {
-      this.logger.error('Failed to render artifacts', {
-        error: error instanceof Error ? error.message : String(error),
-        recipesCount: command.installed.recipeVersions.length,
-        standardsCount: command.installed.standardVersions.length,
-        skillsCount: command.installed.skillVersions.length,
-        agentsCount: command.codingAgents.length,
-      });
-      throw error;
-    }
+    return fileUpdates;
   }
 }
