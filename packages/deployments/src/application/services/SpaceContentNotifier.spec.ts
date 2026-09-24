@@ -1,32 +1,32 @@
 import { SSEEventPublisher } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { PackageChangeNotifier } from './PackageChangeNotifier';
+import { SpaceContentNotifier } from './SpaceContentNotifier';
 
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
-  SSEEventPublisher: { publishPackagesChangedEvent: jest.fn() },
+  SSEEventPublisher: { publishSpaceContentChangedEvent: jest.fn() },
 }));
 
-const publish = SSEEventPublisher.publishPackagesChangedEvent as jest.Mock;
+const publish = SSEEventPublisher.publishSpaceContentChangedEvent as jest.Mock;
 
-describe('PackageChangeNotifier', () => {
-  let notifier: PackageChangeNotifier;
+describe('SpaceContentNotifier', () => {
+  let notifier: SpaceContentNotifier;
 
   beforeEach(() => {
-    notifier = new PackageChangeNotifier(stubLogger());
+    notifier = new SpaceContentNotifier(stubLogger());
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('when a package changed', () => {
+  describe('when a space changed', () => {
     beforeEach(async () => {
       publish.mockResolvedValue(undefined);
-      await notifier.packagesChanged('org-1', 'space-1');
+      await notifier.spaceContentChanged('org-1', 'space-1');
     });
 
-    it('tells the space its packages moved on', () => {
+    it('tells the space it moved on', () => {
       expect(publish).toHaveBeenCalledWith('org-1', 'space-1');
     });
   });
@@ -37,7 +37,7 @@ describe('PackageChangeNotifier', () => {
     beforeEach(async () => {
       publish.mockRejectedValue(new Error('redis is down'));
       outcome = await notifier
-        .packagesChanged('org-1', 'space-1')
+        .spaceContentChanged('org-1', 'space-1')
         .then(() => 'resolved')
         .catch(() => 'rejected');
     });

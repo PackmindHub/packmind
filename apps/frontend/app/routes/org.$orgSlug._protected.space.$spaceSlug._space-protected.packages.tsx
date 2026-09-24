@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { PackagesChangedSubscription } from '../../src/domain/deployments/components/PackagesChangedSubscription';
+import { SpaceContentSubscription } from '../../src/domain/deployments/components/SpaceContentSubscription';
 
 /**
  * The layout every package address goes through, which is why the live
@@ -11,7 +11,7 @@ import { PackagesChangedSubscription } from '../../src/domain/deployments/compon
 export default function PackagesRouteModule() {
   return (
     <>
-      <PackagesChangedSubscription />
+      <SpaceContentSubscription />
       <Outlet />
     </>
   );
