@@ -2,8 +2,6 @@ import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import {
   CaptureCommandCommand,
-  CaptureCommandWithPackagesCommand,
-  CaptureCommandWithPackagesResponse,
   DeleteCommandCommand,
   DeleteCommandResponse,
   DeleteCommandsBatchCommand,
@@ -24,11 +22,6 @@ export const ICommandsPortName = 'ICommandsPort' as const;
 
 export interface ICommandsPort {
   captureCommand(command: CaptureCommandCommand): Promise<Command>;
-
-  /** Captures the command and adds it to its packages in one operation. */
-  captureCommandWithPackages(
-    command: CaptureCommandWithPackagesCommand,
-  ): Promise<CaptureCommandWithPackagesResponse>;
 
   /** Takes every version of the command with it. */
   deleteCommand(command: DeleteCommandCommand): Promise<DeleteCommandResponse>;

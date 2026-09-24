@@ -3,15 +3,13 @@ import { DomainError, DomainErrorKind } from '@packmind/types';
 export type CommandsErrorReason =
   | 'command_not_found'
   | 'command_slug_already_exists'
-  | 'space_not_accessible'
-  | 'multiple_packages_requested';
+  | 'space_not_accessible';
 
 export type CommandsErrorContext = {
   commandId?: string;
   commandSlug?: string;
   spaceId?: string;
   organizationId?: string;
-  packageSlugs?: string[];
 };
 
 /**
