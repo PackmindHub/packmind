@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { createMockInstance, mockInterface } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
@@ -14,12 +14,14 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
+import { PackageChangeNotifier } from '../services/PackageChangeNotifier';
 import { DeploymentsListener } from './DeploymentsListener';
 
 describe('DeploymentsListener', () => {
   let eventService: PackmindEventEmitterService;
   let mockPackageRepository: jest.Mocked<IPackageRepository>;
   let listener: DeploymentsListener;
+  let mockPackageChangeNotifier: jest.Mocked<PackageChangeNotifier>;
   let mockDataSource: DataSource;
 
   const spaceId = createSpaceId('space-456');
@@ -45,7 +47,12 @@ describe('DeploymentsListener', () => {
       undefined,
     );
 
-    listener = new DeploymentsListener(mockPackageRepository);
+    mockPackageChangeNotifier = createMockInstance(PackageChangeNotifier);
+
+    listener = new DeploymentsListener(
+      mockPackageRepository,
+      mockPackageChangeNotifier,
+    );
     listener.initialize(eventService);
   });
 
@@ -257,6 +264,76 @@ describe('DeploymentsListener', () => {
         expect(
           mockPackageRepository.removeSkillFromAllPackages,
         ).toHaveBeenCalledWith(skillId2);
+      });
+    });
+  });
+
+  describe('when an artefact is deleted out of every package holding it', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+    describe('when a skill is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new SkillDeletedEvent({
+            skillId: createSkillId('skill-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space its packages moved on', () => {
+        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
+        );
+      });
+    });
+
+    describe('when a command is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new CommandDeletedEvent({
+            id: createCommandId('recipe-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space its packages moved on', () => {
+        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
+        );
+      });
+    });
+
+    describe('when a standard is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new StandardDeletedEvent({
+            standardId: createStandardId('standard-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space its packages moved on', () => {
+        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
+        );
       });
     });
   });
