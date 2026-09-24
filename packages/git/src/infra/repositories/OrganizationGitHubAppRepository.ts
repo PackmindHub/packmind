@@ -87,22 +87,43 @@ export class OrganizationGitHubAppRepository
     return next;
   }
 
+  /**
+   * A secret that cannot be decrypted is emptied and flagged instead of thrown,
+   * so the settings page can still load the App and offer to register it again.
+   */
   private async decryptApp(
     app: OrganizationGitHubApp,
   ): Promise<OrganizationGitHubApp> {
     const encryptionService = await this.getEncryptionService();
     const next: OrganizationGitHubApp = { ...app };
+    const unreadableFields: string[] = [];
 
-    if (next.appClientSecret) {
-      next.appClientSecret = encryptionService.decrypt(next.appClientSecret);
-    }
+    const decryptField = (
+      field: 'appClientSecret' | 'appPrivateKey' | 'appWebhookSecret',
+    ) => {
+      if (!next[field]) return;
+      try {
+        next[field] = encryptionService.decrypt(next[field]);
+      } catch {
+        next[field] = '';
+        unreadableFields.push(field);
+      }
+    };
 
-    if (next.appPrivateKey) {
-      next.appPrivateKey = encryptionService.decrypt(next.appPrivateKey);
-    }
+    decryptField('appClientSecret');
+    decryptField('appPrivateKey');
+    decryptField('appWebhookSecret');
 
-    if (next.appWebhookSecret) {
-      next.appWebhookSecret = encryptionService.decrypt(next.appWebhookSecret);
+    if (unreadableFields.length > 0) {
+      this.logger.warn(
+        'Organization GitHub App secrets could not be decrypted',
+        {
+          id: app.id,
+          organizationId: app.organizationId,
+          fields: unreadableFields,
+        },
+      );
+      next.secretsUnreadable = true;
     }
 
     return next;

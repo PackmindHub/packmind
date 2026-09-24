@@ -103,6 +103,7 @@ type GetGithubAppStatusResponse = {
   appSlug?: string;
   revokedAt?: Date | null;
   linkedProviderCount: number;
+  secretsUnreadable?: boolean;
 };
 
 type RevokeGithubAppCommand = {
@@ -864,6 +865,7 @@ export class GitProvidersService {
       appSlug: record.appSlug,
       revokedAt: record.revokedAt ?? null,
       linkedProviderCount,
+      secretsUnreadable: record.secretsUnreadable === true,
     };
   }
 

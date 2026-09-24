@@ -43,6 +43,7 @@ export interface IGitProviderGateway {
     appSlug?: string;
     revokedAt?: Date | null;
     linkedProviderCount: number;
+    secretsUnreadable?: boolean;
   }>;
   revokeGithubApp(organizationId: OrganizationId): Promise<void>;
   submitGithubAppCallback(
