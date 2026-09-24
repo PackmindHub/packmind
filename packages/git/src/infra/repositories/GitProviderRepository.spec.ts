@@ -17,7 +17,7 @@ import {
   GitProviderNotFoundError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, EncryptionService } from '@packmind/node-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
@@ -228,10 +228,14 @@ describe('GitProviderRepository', () => {
       });
       await gitProviderRepository.add(readableProvider);
       await gitProviderRepository.add(corruptProvider);
-      // iv:ciphertext: with an empty auth tag, as observed in production.
-      await fixture.datasource
-        .getRepository(GitProviderSchema)
-        .update({ id: corruptProvider.id }, { token: 'aXY=:Y2lwaGVy:' });
+      // A well-formed envelope this instance's key cannot open, as after a
+      // key change.
+      await fixture.datasource.getRepository(GitProviderSchema).update(
+        { id: corruptProvider.id },
+        {
+          token: new EncryptionService('another-key').encrypt('lost-token'),
+        },
+      );
     });
 
     describe('when finding by organization ID', () => {

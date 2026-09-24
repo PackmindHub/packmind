@@ -87,11 +87,32 @@ describe('EncryptionService', () => {
       expect(result).toBe(invalidEncrypted);
     });
 
-    it('throws error for corrupted encrypted data', () => {
-      const corruptedEncrypted = 'invalid:data:here';
+    it('throws error for a well-formed envelope encrypted with another key', () => {
+      const encrypted = new EncryptionService('another-key').encrypt(
+        'test-token-12345',
+      );
       expect(() => {
-        encryptionService.decrypt(corruptedEncrypted);
+        encryptionService.decrypt(encrypted);
       }).toThrow('Decryption failed');
+    });
+
+    it('throws error for a well-formed envelope with tampered ciphertext', () => {
+      const [iv, , tag] = encryptionService
+        .encrypt('test-token-12345')
+        .split(':');
+      const tampered = `${iv}:${Buffer.from('tampered').toString('base64')}:${tag}`;
+      expect(() => {
+        encryptionService.decrypt(tampered);
+      }).toThrow('Decryption failed');
+    });
+
+    describe('when a plaintext value contains two colons', () => {
+      it.each(['invalid:data:here', 'glpat-abc:def:', 'aXY=:Y2lwaGVy:'])(
+        'returns %s unchanged',
+        (plaintext) => {
+          expect(encryptionService.decrypt(plaintext)).toBe(plaintext);
+        },
+      );
     });
   });
 
@@ -117,6 +138,29 @@ describe('EncryptionService', () => {
 
     it('returns false for value with more than three colon-separated parts', () => {
       expect(encryptionService.isEncrypted('too:many:colons:here')).toBe(false);
+    });
+
+    describe('when a plaintext value has three colon-separated parts', () => {
+      it.each([
+        ['an empty auth tag', 'glpat-abc:def:'],
+        ['non-base64 parts', 'invalid:data:here'],
+        ['a short IV', 'aXY=:Y2lwaGVy:'],
+        [
+          'an empty ciphertext',
+          'AAAAAAAAAAAAAAAAAAAAAA==::AAAAAAAAAAAAAAAAAAAAAA==',
+        ],
+      ])('returns false for %s', (_label, value) => {
+        expect(encryptionService.isEncrypted(value)).toBe(false);
+      });
+    });
+
+    describe('when encrypting a plaintext value that contains two colons', () => {
+      it('round-trips through encrypt and decrypt', () => {
+        const plaintext = 'glpat-abc:def:';
+        const encrypted = encryptionService.encrypt(plaintext);
+
+        expect(encryptionService.decrypt(encrypted)).toBe(plaintext);
+      });
     });
   });
 
