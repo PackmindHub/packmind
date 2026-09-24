@@ -5,6 +5,7 @@ import {
 } from '@packmind/node-utils';
 import {
   AddArtefactsToPackageCommand,
+  ArtifactType,
   AddArtefactsToPackageResponse,
   IAccountsPort,
   IAddArtefactsToPackageUseCase,
@@ -12,7 +13,13 @@ import {
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  PackageId,
+  SpaceId,
 } from '@packmind/types';
+import {
+  ArtefactAlreadyInAnotherPackageError,
+  ArtefactPlacementConflict,
+} from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
@@ -101,6 +108,8 @@ export class AddArtefactsToPackageUseCase
       currentSkillIds.includes(skillId),
     );
 
+    const namesById = new Map<string, { type: ArtifactType; name: string }>();
+
     if (newCommandIds.length > 0) {
       const recipes = await Promise.all(
         newCommandIds.map((recipeId) =>
@@ -117,6 +126,7 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
+        namesById.set(recipe.id, { type: 'command', name: recipe.name });
       }
     }
 
@@ -136,6 +146,7 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
+        namesById.set(standard.id, { type: 'standard', name: standard.name });
       }
     }
 
@@ -153,7 +164,32 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
+        namesById.set(skill.id, { type: 'skill', name: skill.name });
       }
+    }
+
+    /*
+     * The rule the clients could only ever enforce against a snapshot.
+     *
+     * Every one of them decides what may be added by reading the packages once
+     * — the picker offers what no package carries, the CLI checks the list it
+     * fetched — and two callers who each read "this belongs to nobody", a second
+     * or an afternoon apart, both got a yes. Live updates narrow that window;
+     * they cannot close it, and they are not there at all when the connection
+     * drops. Read here, between the validation and the write, it is the same
+     * question asked of the state actually being written to.
+     *
+     * It reads the packages after the artefacts are known to be in the space, so
+     * a caller naming something they cannot see still hears about that first:
+     * which package holds what is not owed to them.
+     */
+    const conflicts = await this.findConflicts(spaceId, packageId, namesById);
+
+    if (conflicts.length > 0) {
+      throw new ArtefactAlreadyInAnotherPackageError(
+        conflicts,
+        existingPackage.name,
+      );
     }
 
     const packageRepository = this.services
@@ -208,5 +244,51 @@ export class AddArtefactsToPackageUseCase
         skills: skippedSkillIds,
       },
     };
+  }
+
+  /**
+   * Which of the artefacts about to be added are held by some other package in
+   * the space, named as the caller would recognise them.
+   *
+   * Scoped to the space because a package lives in one and an artefact has
+   * already been shown to live in the same one, so no package outside it can
+   * hold either.
+   */
+  private async findConflicts(
+    spaceId: SpaceId,
+    packageId: PackageId,
+    namesById: Map<string, { type: ArtifactType; name: string }>,
+  ): Promise<ArtefactPlacementConflict[]> {
+    if (namesById.size === 0) return [];
+
+    const packages = await this.services
+      .getPackageService()
+      .getPackagesBySpaceId(spaceId);
+
+    const conflicts: ArtefactPlacementConflict[] = [];
+
+    for (const pkg of packages) {
+      if (pkg.id === packageId) continue;
+
+      const held = [
+        ...(pkg.standards ?? []),
+        ...(pkg.recipes ?? []),
+        ...(pkg.skills ?? []),
+      ].map(String);
+
+      for (const artefactId of held) {
+        const artefact = namesById.get(artefactId);
+        if (!artefact) continue;
+
+        conflicts.push({
+          artefactType: artefact.type,
+          artefactId,
+          artefactName: artefact.name,
+          packageName: pkg.name,
+        });
+      }
+    }
+
+    return conflicts;
   }
 }

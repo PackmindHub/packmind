@@ -10,6 +10,7 @@ export type DeploymentsErrorReason =
   | 'invalid_package_version_spec'
   | 'no_package_slugs_provided'
   | 'artefact_not_in_space'
+  | 'artefact_already_in_another_package'
   | 'target_not_found'
   | 'invalid_target_name'
   | 'invalid_target_path'
@@ -28,6 +29,14 @@ export type DeploymentsErrorContext = {
   packageId?: string;
   artefactId?: string;
   artefactType?: ArtifactType;
+  /** The package a caller asked to add to, by the name they would recognise. */
+  targetPackageName?: string;
+  /** One entry per artefact already held elsewhere, for the log. */
+  conflicts?: {
+    artefactType: ArtifactType;
+    artefactId: string;
+    packageName: string;
+  }[];
   targetId?: string;
   version?: string;
   slugs?: string[];
