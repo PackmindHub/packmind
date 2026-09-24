@@ -10,6 +10,7 @@ import {
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 
@@ -186,7 +187,7 @@ export class SpaceService {
     if (fields.name !== undefined) {
       const space = await this.spaceRepository.findById(spaceId);
       if (!space) {
-        throw new Error(`Space ${spaceId} not found`);
+        throw new SpaceNotFoundError(spaceId);
       }
       const candidateSlug = slug(fields.name);
       const existingBySlug = await this.spaceRepository.findBySlug(
