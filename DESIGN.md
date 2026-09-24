@@ -173,7 +173,7 @@ A warm-dark neutral scale anchors the system; one cool brand accent (periwinkle 
 - **`beige-0`** (#ffffff): Text primary. White on warm-dark is the canonical body-text contrast.
 - **`beige-100`** (#e9e3dd): Text secondary. Warm off-white, used for secondary body text and ghost-button label.
 - **`beige-300`** (#b6b1ad): Text tertiary. Quieter labels, metadata, supporting text.
-- **`beige-500`** (#84807d): Text faded. The lowest text contrast that still passes AA against `beige-900`; used for disabled, placeholder, helper text.
+- **`beige-500`** (#84807d): Text faded. The lowest text contrast that still passes AA against `beige-900`; used for disabled, placeholder, helper text. Also the aging-mark tone: it is the exact neutral twin of `green-500`, same relative luminance (0.218) and same 3.67 against the row surface, so a state mark can drop its hue without changing its weight.
 
 ### Semantic
 

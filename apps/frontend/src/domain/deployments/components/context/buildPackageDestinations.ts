@@ -1,3 +1,4 @@
+import { differenceInDays } from 'date-fns';
 import { DistributionStatus } from '@packmind/types';
 import {
   multiLandingRepoIds,
@@ -56,6 +57,114 @@ export const STATE_TONE: Record<PackageDestinationState, string> = {
   behind: 'orange.500',
   aligned: 'green.500',
 };
+
+/**
+ * How long a report stands for the present, in days.
+ *
+ * Nothing in Packmind re-reads a branch. `Up to date` is not an observation,
+ * it is the memory of one, and it holds unchanged until someone pushes again,
+ * however many weeks that takes. Inside a fortnight a landing has plausibly not
+ * moved and the memory still passes for a reading; past it the row is making a
+ * claim about a branch nobody has looked at since.
+ *
+ * One number rather than a scale, because the reader is not being asked to rank
+ * ages against each other. They are being asked whether to trust one sentence,
+ * and that is a yes or a no.
+ */
+export const STALE_REPORT_DAYS = 14;
+
+/**
+ * Whether a date has outlived the claim it backs.
+ *
+ * A missing date is not stale. There is nothing to name, and the rule everywhere
+ * below is that the mark never fades without copy that says how old the reading
+ * is: a faded dot on its own is a worry the row cannot explain.
+ */
+export function isReportStale(lastActivityAt: string | null): boolean {
+  if (!lastActivityAt) return false;
+  const reported = new Date(lastActivityAt);
+  if (Number.isNaN(reported.getTime())) return false;
+  return differenceInDays(new Date(), reported) > STALE_REPORT_DAYS;
+}
+
+/**
+ * The colour a row's mark takes, which is its state and then its age.
+ *
+ * Here rather than in the components, so the dot in the list and any other
+ * mark standing for the same row cannot end up two different greens. Callers
+ * that hold a state and no row still read `STATE_TONE` directly; this is for
+ * the ones that hold the row, because age is a fact about the row.
+ *
+ * Only `aligned` is qualified. The other three name something that happened
+ * (a push failed, a push is running, a copy was overtaken), and an event does
+ * not go out of date; only a claim about the present can. Fading a red `failed`
+ * dot would cost this surface the one mark that has to keep its force at any
+ * age, which is why age never reaches it.
+ *
+ * It loses its colour rather than its light, and `beige.500` is the neutral
+ * twin of `green.500`: the same luminance to the thousandth, so the same 3.67
+ * against the row behind it. The dot keeps every bit of its weight and only its
+ * hue goes, which is the distinction the eye makes without being asked.
+ *
+ * Darkening was tried first and does not survive 6px on a dark row. The two
+ * demands pull against each other: a green far enough from `green.500` to be
+ * told apart is already too close to the background to be seen at all.
+ * `green.600` measured 1.39 between the two greens, `green.700` 1.93 but only
+ * 1.90 against the row, `green.800` vanished outright. There is no value on
+ * that scale to pick, which is why this one leaves the scale.
+ *
+ * It does not hollow either. A ring was the other way to say "this is less
+ * certain", and it says the wrong thing here: an outlined dot reads as empty,
+ * and empty on this list already means nothing has landed there, which is a
+ * different and false claim. At 6px it does not read as a ring at all.
+ */
+export function destinationTone(destination: PackageDestination): string {
+  return destination.state === 'aligned' && destination.hasStaleReport
+    ? 'beige.500'
+    : STATE_TONE[destination.state];
+}
+
+/**
+ * The day a report was made, short and absolute.
+ *
+ * Absolute because these are read down a column and compared across rows: "3
+ * weeks ago" and "a month ago" cannot be put in order by eye, and two rows
+ * reported the same day should look the same.
+ *
+ * The year appears only when it is not this one. A bare "28 Nov" read in
+ * September is spontaneously taken for a date still to come, and it is on the
+ * oldest reports of all that this line most has to be plain. Within the current
+ * year the year is noise, and the sentence it joins is already a sentence.
+ */
+export function reportDay(iso: string): string {
+  const reported = new Date(iso);
+  const day = reported.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  });
+
+  return reported.getFullYear() === new Date().getFullYear()
+    ? day
+    : `${day} ${reported.getFullYear()}`;
+}
+
+/**
+ * The same report in full, for the title the short day hangs under.
+ *
+ * Spelled out here rather than taken from `RelativeDate`, which holds the same
+ * format inside a component: what is needed here is a string to put on a
+ * `title`, not an element, and the two callers of it are a selector's
+ * sentence and a strip's line.
+ */
+export function reportInstant(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 /**
  * The worst state in a set, which is what a single mark standing for many of
@@ -145,6 +254,15 @@ export type PackageDestination = {
   installKey: string | null;
   prUrl: string | null;
   lastActivityAt: string | null;
+  /**
+   * Whether `lastActivityAt` is old enough for the row to say so.
+   *
+   * Computed once, here, rather than left to whatever renders the row: a dot
+   * and a sentence that each ran their own date arithmetic would eventually
+   * disagree on the same destination, and the one thing this rule cannot afford
+   * is a faded mark beside copy that claims to be current.
+   */
+  hasStaleReport: boolean;
 };
 
 export type PackageDestinationSummary = {
@@ -202,6 +320,8 @@ function repositoryRow(
   const details = [entry.branch];
   if (multiLanding.has(entry.repo.id)) details.push(targetLabel(entry.target));
 
+  const lastActivityAt = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
+
   return {
     key: `r:${entry.repo.id}::${entry.target.id}`,
     kind: 'repository',
@@ -213,7 +333,8 @@ function repositoryRow(
     hasWorkToSend: entry.behindArtifacts.length > 0,
     installKey: `${entry.repo.id}::${entry.target.id}`,
     prUrl: null,
-    lastActivityAt: entry.lastDistributedAt ?? entry.mostRecentDeployedAt,
+    lastActivityAt,
+    hasStaleReport: isReportStale(lastActivityAt),
   };
 }
 
@@ -259,6 +380,7 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
     installKey: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,
+    hasStaleReport: isReportStale(publication.lastActivityAt),
   };
 }
 
@@ -353,4 +475,33 @@ export function packageDestinationSummary(
     needsAHand: needing,
     upToDate: destinations.length - needing,
   };
+}
+
+/**
+ * The oldest report among the destinations whose age is worth naming.
+ *
+ * What a one-line roll-up needs, and the counterpart of `worstState`: a
+ * sentence standing for eleven destinations has to stand for the weakest of
+ * them, and for a set that is entirely aligned the weakest is the one nobody
+ * has heard from in longest.
+ *
+ * Null when every report is recent, or when none of them carries a date, which
+ * is the same answer the line wants in both cases: say nothing about age.
+ */
+export function oldestStaleReport(
+  destinations: readonly PackageDestination[],
+): string | null {
+  let oldest: string | null = null;
+  let oldestAt = Number.POSITIVE_INFINITY;
+
+  for (const destination of destinations) {
+    if (!destination.hasStaleReport || !destination.lastActivityAt) continue;
+    const at = new Date(destination.lastActivityAt).getTime();
+    if (at < oldestAt) {
+      oldestAt = at;
+      oldest = destination.lastActivityAt;
+    }
+  }
+
+  return oldest;
 }

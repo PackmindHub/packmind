@@ -1,7 +1,10 @@
 import { PMBox, PMHStack, PMLink, PMText } from '@packmind/ui';
 import {
   STATE_TONE,
+  oldestStaleReport,
   packageDestinationSummary,
+  reportDay,
+  reportInstant,
   worstState,
   type PackageDestination,
 } from './buildPackageDestinations';
@@ -40,6 +43,12 @@ export function PackageReachStrip({
   onOpenDistribution: () => void;
 }>) {
   const summary = packageDestinationSummary(destinations);
+  /*
+   * The oldest of them, not the newest and not an average. The line stands for
+   * the whole set, and a set is only as current as the destination nobody has
+   * heard from in longest.
+   */
+  const oldestReport = oldestStaleReport(destinations);
 
   return (
     <PMHStack
@@ -73,8 +82,25 @@ export function PackageReachStrip({
               Reaches {summary.all} destination{summary.all === 1 ? '' : 's'}
             </PMText>
             {summary.needsAHand === 0 ? (
-              <PMText fontSize="xs" color="faded">
-                · all up to date
+              /*
+                Copy and no mark. The same rule the rows carry, that an aligned
+                claim older than a fortnight has to say how old it is, but this
+                line has no dot to fade: the one below only renders when
+                something needs a hand, and by then the age is the smaller of
+                the two things wrong.
+              */
+              <PMText
+                fontSize="xs"
+                color="faded"
+                title={
+                  oldestReport
+                    ? `Oldest report ${reportInstant(oldestReport)}`
+                    : undefined
+                }
+              >
+                {oldestReport
+                  ? `· all up to date, oldest report ${reportDay(oldestReport)}`
+                  : '· all up to date'}
               </PMText>
             ) : (
               <PMHStack gap={2} align="center">

@@ -23,14 +23,16 @@ import { ContextChip } from './ContextChip';
 import { ContextPickBox } from './ContextPickBox';
 import { ContextSearchField } from './ContextSearchField';
 import {
-  STATE_TONE,
+  destinationTone,
   filterPackageDestinations,
   needsAHand,
+  oldestStaleReport,
   packageDestinationSummary,
+  reportDay,
+  reportInstant,
   searchPackageDestinations,
   type PackageDestination,
   type PackageDestinationFilter,
-  type PackageDestinationState,
 } from './buildPackageDestinations';
 
 /**
@@ -425,6 +427,13 @@ function UpToDateBand({
 }>) {
   const [openedByReader, setOpened] = useState(false);
   const open = forceOpen || openedByReader;
+  /*
+   * This line is the one most readers ever see of what is up to date: the run
+   * below it is shut until someone opens it. Leaving the age to the rows alone
+   * put it behind a click and left the bigger claim, the one made about four
+   * destinations at once, as undated as the rows used to be.
+   */
+  const oldestReport = oldestStaleReport(rows);
 
   if (rows.length === 0) return null;
 
@@ -443,9 +452,25 @@ function UpToDateBand({
         <PMIcon fontSize="xs" color="text.faded">
           <LuCheck />
         </PMIcon>
-        <PMText fontSize="xs" color="faded">
+        {/*
+          The date rides inside the count and ahead of the names, so the names
+          are what runs out of room. A clause added after them would be the
+          first thing truncated away, which is the one part of this line that
+          cannot afford to go missing.
+        */}
+        <PMText
+          fontSize="xs"
+          color="faded"
+          flexShrink={0}
+          title={
+            oldestReport
+              ? `Oldest report ${reportInstant(oldestReport)}`
+              : undefined
+          }
+        >
           {rows.length} destination{rows.length === 1 ? ' is' : 's are'} up to
           date
+          {oldestReport ? `, oldest report ${reportDay(oldestReport)}` : ''}
         </PMText>
         {/*
           The names beside the count while they fit, which is what makes the
@@ -578,7 +603,7 @@ function DestinationRow({
             and the text beside them keeps a single left edge.
           */}
           <PMHStack gap={2} align="center" minW={0}>
-            <StateDot state={destination.state} />
+            <StateDot destination={destination} />
             <GutterIcon>
               {destination.kind === 'repository' ? (
                 <LuFolderGit2 />
@@ -605,7 +630,18 @@ function DestinationRow({
                   </PMText>
                 )}
               </PMHStack>
-              <PMText fontSize="xs" color="faded" truncate>
+              {/*
+                The instant on the title, the day in the sentence. A row that
+                names an age invites the next question, "how old exactly", and
+                that answer is worth a hover and not the width it would cost
+                every row beside it.
+              */}
+              <PMText
+                fontSize="xs"
+                color="faded"
+                truncate
+                title={reportTitle(destination)}
+              >
                 {stateSentence(destination)}
               </PMText>
             </PMBox>
@@ -685,13 +721,22 @@ function textIndentPx(hasSelection: boolean): number {
  * waiting` holds two of them and this is what tells them apart. The day that
  * band splits, the column can go.
  */
-function StateDot({ state }: Readonly<{ state: PackageDestinationState }>) {
+function StateDot({
+  destination,
+}: Readonly<{ destination: PackageDestination }>) {
   return (
     <PMBox
       width={`${STATE_DOT_PX}px`}
       height={`${STATE_DOT_PX}px`}
       borderRadius="full"
-      bg={STATE_TONE[state]}
+      /*
+        The whole row rather than its state alone, because an aligned landing
+        nobody has heard from in a month is a weaker green than one reported
+        yesterday. Which green that is stays in `destinationTone`, beside the
+        table it qualifies: a second opinion about it in this file is how a dot
+        and a summary mark end up disagreeing.
+      */
+      bg={destinationTone(destination)}
       flexShrink={0}
       aria-hidden
     />
@@ -771,7 +816,28 @@ function stateSentence(destination: PackageDestination): string {
     } behind: ${behindNames(destination)}`;
   }
 
-  return destination.kind === 'repository' ? 'Up to date' : 'Published';
+  const claim = destination.kind === 'repository' ? 'Up to date' : 'Published';
+
+  /*
+   * The age in words, since the dot that carries it is `aria-hidden` and a
+   * colour is never the only thing saying something. It qualifies the aligned
+   * states and no others: `Up to date` is a claim about a branch as it stands
+   * now, and nothing in Packmind has looked at that branch since the date this
+   * names, so the date is how far the claim can be trusted. `The last
+   * distribution failed` reports an event instead, and an event that is a month
+   * old is no less true than one from this morning.
+   */
+  return destination.hasStaleReport && destination.lastActivityAt
+    ? `${claim}, last reported ${reportDay(destination.lastActivityAt)}`
+    : claim;
+}
+
+/** The full instant behind the day a stale row names, and nothing otherwise. */
+function reportTitle(destination: PackageDestination): string | undefined {
+  if (destination.state !== 'aligned') return undefined;
+  return destination.hasStaleReport && destination.lastActivityAt
+    ? `Last reported ${reportInstant(destination.lastActivityAt)}`
+    : undefined;
 }
 
 /** Two names and the size of what is left, which is how a row stays a row. */
