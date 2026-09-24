@@ -16,6 +16,8 @@
  *   different vendor than the one the marketplace was linked with. Packmind
  *   refuses to auto-migrate an existing marketplace config, so the publish
  *   fails instead of overwriting it.
+ * - `version_not_distributable`: the package was never released, or the
+ *   version asked for is not its highest one. Refused before any job runs.
  * - `other`: catch-all for unexpected failures (network, Git, etc.).
  */
 export type PublishFailureReason =
@@ -24,4 +26,5 @@ export type PublishFailureReason =
   | 'invalid_token'
   | 'standards_only'
   | 'vendor_mismatch'
+  | 'version_not_distributable'
   | 'other';

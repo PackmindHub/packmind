@@ -50,7 +50,7 @@ import {
   OrganizationId,
   Package,
   PackageId,
-  PackageReleaseEntry,
+  PackageReleaseDetail,
   PackageSlugInSpace,
   PackageWithArtefacts,
   PackageWithStandards,
@@ -855,7 +855,7 @@ export class DeploymentsAdapter
 
   async findHighestPackageRelease(
     packageId: PackageId,
-  ): Promise<PackageReleaseEntry | null> {
+  ): Promise<PackageReleaseDetail | null> {
     return this.deploymentsServices
       .getPackageReleaseService()
       .findHighestRelease(packageId);

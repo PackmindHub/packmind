@@ -3,6 +3,7 @@ import { DistributionSource } from '../../deployments/Distribution';
 import { MarketplaceDistributionId } from '../MarketplaceDistributionId';
 import { MarketplaceId } from '../MarketplaceId';
 import { PackageId } from '../../deployments/Package';
+import { PackageReleaseId } from '../../deployments/PackageRelease';
 
 /**
  * Member-scoped: any member of the organization owning both the marketplace and
@@ -31,6 +32,12 @@ export type PublishPackageOnMarketplaceResponse = {
   marketplaceId: MarketplaceId;
   packageId: PackageId;
   pluginSlug: string;
+  /** The package version being distributed; null when distributing the live package. */
+  packageRelease: {
+    id: PackageReleaseId;
+    version: string;
+    componentsCount: number;
+  } | null;
 };
 
 export type IPublishPackageOnMarketplaceUseCase = IUseCase<
