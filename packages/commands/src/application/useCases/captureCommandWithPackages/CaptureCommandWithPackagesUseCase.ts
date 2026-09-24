@@ -11,7 +11,10 @@ import {
   createOrganizationId,
   createSpaceId,
 } from '@packmind/types';
-import { CommandSpaceNotAccessibleError } from '../../../domain/errors';
+import {
+  CommandSpaceNotAccessibleError,
+  MultiplePackagesRequestedError,
+} from '../../../domain/errors';
 import { CaptureCommandUseCase } from '../captureCommand/CaptureCommandUseCase';
 
 const origin = 'CaptureRecipeWithPackagesUseCase';
@@ -48,6 +51,14 @@ export class CaptureCommandWithPackagesUseCase
       organizationId,
       source = 'ui',
     } = command;
+
+    // Asked before anything is written: the command does not exist yet, so the
+    // only way the placement below can conflict is by being asked for a second
+    // package, and discovering that afterwards left a captured command and a
+    // swallowed error.
+    if (packageSlugs.length > 1) {
+      throw new MultiplePackagesRequestedError(packageSlugs);
+    }
 
     this.logger.info('Creating recipe with packages', {
       name,

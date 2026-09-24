@@ -16,6 +16,7 @@ import {
 } from '@packmind/types';
 import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
 import { CreateStandardWithExamplesUseCase } from '../createStandardWithExamples/CreateStandardWithExamplesUseCase';
+import { MultiplePackagesRequestedError } from '../../../domain/errors/MultiplePackagesRequestedError';
 
 const origin = 'CreateStandardWithPackagesUseCase';
 
@@ -52,6 +53,14 @@ export class CreateStandardWithPackagesUseCase
       source = 'ui',
       method,
     } = command;
+
+    // Asked before anything is written: the standard does not exist yet, so
+    // the only way the placement below can conflict is by being asked for a
+    // second package, and discovering that afterwards left a created standard
+    // and a swallowed error.
+    if (packageSlugs.length > 1) {
+      throw new MultiplePackagesRequestedError(packageSlugs);
+    }
 
     this.logger.info('Creating standard with packages', {
       name,

@@ -12,9 +12,14 @@ import {
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  ArtifactType,
   createPackageId,
   createUserId,
 } from '@packmind/types';
+import {
+  ArtefactAlreadyInAnotherPackageError,
+  ArtefactPlacementConflict,
+} from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
@@ -95,6 +100,8 @@ export class CreatePackageUseCase
     }
     this.logger.info('Resolved unique slug', { slug: packageSlug });
 
+    const namesById = new Map<string, { type: ArtifactType; name: string }>();
+
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
@@ -107,6 +114,7 @@ export class CreatePackageUseCase
         if (!recipe || recipe.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('command', recipeIds[i], spaceId);
         }
+        namesById.set(recipe.id, { type: 'command', name: recipe.name });
       }
     }
 
@@ -126,6 +134,7 @@ export class CreatePackageUseCase
             spaceId,
           );
         }
+        namesById.set(standard.id, { type: 'standard', name: standard.name });
       }
     }
 
@@ -139,7 +148,47 @@ export class CreatePackageUseCase
         if (!skill || skill.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('skill', skillIds[i], spaceId);
         }
+        namesById.set(skill.id, { type: 'skill', name: skill.name });
       }
+    }
+
+    /*
+     * The same rule the add path enforces, on the other way of putting a
+     * component into a package.
+     *
+     * The form already greys out what another package holds, and greys it out
+     * against a list it fetched once — so two forms opened before a component
+     * was placed both offer it, which is the add drawer's bug wearing a
+     * different hat. Read here it is asked of the state being written to.
+     *
+     * `existingPackages` is the list already loaded above to make the slug
+     * unique, so the rule costs nothing to check: no package exists yet to
+     * exclude, which is the only way this differs from the add path.
+     */
+    const conflicts: ArtefactPlacementConflict[] = [];
+
+    for (const pkg of existingPackages) {
+      const held = [
+        ...(pkg.standards ?? []),
+        ...(pkg.recipes ?? []),
+        ...(pkg.skills ?? []),
+      ].map(String);
+
+      for (const artefactId of held) {
+        const artefact = namesById.get(artefactId);
+        if (!artefact) continue;
+
+        conflicts.push({
+          artefactType: artefact.type,
+          artefactId,
+          artefactName: artefact.name,
+          packageName: pkg.name,
+        });
+      }
+    }
+
+    if (conflicts.length > 0) {
+      throw new ArtefactAlreadyInAnotherPackageError(conflicts, name);
     }
 
     const savedPackage = await this.services.getPackageService().createPackage(

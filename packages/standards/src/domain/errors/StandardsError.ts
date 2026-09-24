@@ -6,7 +6,8 @@ export type StandardsErrorReason =
   | 'space_not_accessible'
   | 'standard_not_found'
   | 'rule_example_invalid'
-  | 'space_required';
+  | 'space_required'
+  | 'multiple_packages_requested';
 
 export type StandardsErrorContext = {
   standardId?: string;
@@ -15,6 +16,7 @@ export type StandardsErrorContext = {
   ruleExampleId?: string;
   spaceId?: string;
   organizationId?: string;
+  packageSlugs?: string[];
 };
 
 /**

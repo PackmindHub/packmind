@@ -12,3 +12,4 @@ export * from './RuleExampleNotFoundError';
 export * from './StandardSpaceRequiredError';
 export * from './StandardsAdapterPortsMissingError';
 export * from './StandardsHexaDependencyMissingError';
+export * from './MultiplePackagesRequestedError';
