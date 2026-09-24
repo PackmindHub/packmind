@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { createOrganizationId, OrganizationId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 
 const origin = 'OrganizationAccessGuard';
 
@@ -40,16 +40,7 @@ export class OrganizationAccessGuard implements CanActivate {
     }
 
     // Validate orgId format and create branded OrganizationId
-    let requestedOrgId: OrganizationId;
-    try {
-      requestedOrgId = createOrganizationId(orgIdParam);
-    } catch (error) {
-      this.logger.warn('Invalid organization ID format', {
-        orgId: orgIdParam,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new BadRequestException('Invalid organization ID format');
-    }
+    const requestedOrgId = createOrganizationId(orgIdParam);
 
     // Verify user's organization from JWT matches the requested organization
     const userOrgId = request.organization?.id;

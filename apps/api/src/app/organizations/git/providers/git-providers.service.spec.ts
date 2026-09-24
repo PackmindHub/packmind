@@ -1252,7 +1252,7 @@ describe('GitProvidersService', () => {
     });
 
     describe('when signer.verify throws InvalidInstallStateError', () => {
-      it('throws BadRequestException', async () => {
+      it('propagates InvalidInstallStateError', async () => {
         mockSigner.verify.mockImplementation(() => {
           throw new InvalidInstallStateError();
         });
@@ -1265,9 +1265,7 @@ describe('GitProvidersService', () => {
             state: 'BAD_STATE',
             source: 'ui',
           }),
-        ).rejects.toThrow(
-          new BadRequestException('Invalid or expired state token'),
-        );
+        ).rejects.toThrow(InvalidInstallStateError);
       });
     });
 
@@ -1710,7 +1708,7 @@ describe('GitProvidersService', () => {
     });
 
     describe('when signer.verify throws InvalidInstallStateError', () => {
-      it('throws BadRequestException', async () => {
+      it('propagates InvalidInstallStateError', async () => {
         mockSigner.verify.mockImplementation(() => {
           throw new InvalidInstallStateError();
         });
@@ -1722,7 +1720,7 @@ describe('GitProvidersService', () => {
             code: 'gh-code-123',
             state: 'BAD_STATE',
           }),
-        ).rejects.toThrow(new BadRequestException('Invalid manifest state'));
+        ).rejects.toThrow(InvalidInstallStateError);
       });
     });
 
