@@ -49,6 +49,7 @@ export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   hasServedVersion: boolean;
   servedVersion: string | null;
   distributingVersion: string | null;
+  latestVersion: string | null;
 };
 
 export type ListMarketplaceDistributionsCommand = PackmindCommand & {

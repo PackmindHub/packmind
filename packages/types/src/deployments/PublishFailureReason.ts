@@ -18,6 +18,8 @@
  *   fails instead of overwriting it.
  * - `version_not_distributable`: the package was never released, or the
  *   version asked for is not its highest one. Refused before any job runs.
+ * - `version_already_distributed`: the highest version is already served by,
+ *   or being distributed to, the marketplace. Refused before any job runs.
  * - `other`: catch-all for unexpected failures (network, Git, etc.).
  */
 export type PublishFailureReason =
@@ -27,4 +29,5 @@ export type PublishFailureReason =
   | 'standards_only'
   | 'vendor_mismatch'
   | 'version_not_distributable'
+  | 'version_already_distributed'
   | 'other';
