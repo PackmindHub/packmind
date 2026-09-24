@@ -21,6 +21,9 @@ import {
 } from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import { useAddArtefactsToPackagesMutation } from '../../api/queries/DeploymentsQueries';
+import { LIST_PACKAGES_BY_SPACE_KEY } from '../../api/queryKeys';
+import { queryClient } from '../../../../shared/data/queryClient';
+import { isPackmindConflictError } from '../../../../services/api/errors/PackmindConflictError';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import { deployedPlaceParts } from '../PackagesPopover';
 import {
@@ -335,12 +338,32 @@ export function AddComponentsDrawer({
         spaceId,
         entries: [{ packageId: pkg.id, ...componentIdsPayload(picked) }],
       });
-      if (outcomes.some((outcome) => !outcome.ok)) {
+      const failure = outcomes.find((outcome) => !outcome.ok);
+      if (failure && !failure.ok) {
+        /*
+         * The one failure worth its own words: the server refused because a
+         * component this drawer listed as carried by nobody has since been
+         * placed. It is the reason the refusal exists — this list was fetched
+         * once, and live updates narrow that window rather than closing it —
+         * so the reader is told which component and which package, in the
+         * server's own sentence, rather than being asked to try again at
+         * something that will fail the same way.
+         *
+         * The list is refetched either way, so the row that caused this stops
+         * being tickable and the reader can see where the component went.
+         */
+        const conflict = isPackmindConflictError(failure.error);
+        await queryClient.invalidateQueries({
+          queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+        });
         pmToaster.create({
           type: 'error',
-          title: `Couldn't add to ${pkg.name}`,
-          description:
-            'Nothing was added. Try again, or check your space access.',
+          title: conflict
+            ? `Already in another package`
+            : `Couldn't add to ${pkg.name}`,
+          description: conflict
+            ? failure.error.message
+            : 'Nothing was added. Try again, or check your space access.',
         });
         return;
       }

@@ -1,3 +1,4 @@
+import { ArtefactAlreadyInAnotherPackageError } from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
 import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
@@ -174,6 +175,13 @@ describe('AddArtefactsToPackageUseCase', () => {
     mockSkillsPort = mockInterface<ISkillsPort>();
 
     stubbedLogger = stubLogger();
+
+    /*
+     * No other package in the space unless a `describe` says otherwise, so the
+     * conflict check has nothing to find and the expectations below read as the
+     * plain adds they were written as.
+     */
+    mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
 
     mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
 
@@ -1225,6 +1233,133 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('returns skipped skills', () => {
+        expect(result.skipped.skills).toEqual([skillId1]);
+      });
+    });
+
+    /*
+     * The original report: two readers each saw the skill in no package at all,
+     * and each added it to their own. Neither request was wrong about what it
+     * had read, and the second one is the one that has to notice.
+     */
+    describe('when the skill already belongs to another package', () => {
+      const otherPackageId = createPackageId(uuidv4());
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
+        const targetPackage = packageFactory({
+          id: packageId,
+          name: 'Backend playbook',
+          slug: 'backend-playbook',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+
+        mockPackageService.findById.mockResolvedValue(targetPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          targetPackage,
+          packageFactory({
+            id: otherPackageId,
+            name: 'Frontend playbook',
+            slug: 'frontend-playbook',
+            spaceId,
+            createdBy: userId,
+            recipes: [],
+            standards: [],
+            skills: [skillId1],
+          }),
+        ]);
+        mockSpacesPort.getSpaceById.mockResolvedValue(buildSpace());
+        mockSkillsPort.getSkill.mockResolvedValue({
+          ...buildSkill(skillId1, spaceId),
+          name: 'Deploy runbook',
+        });
+
+        executePromise = useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          skillIds: [skillId1],
+        });
+        executePromise.catch(() => undefined);
+      });
+
+      it('refuses the add', async () => {
+        await expect(executePromise).rejects.toBeInstanceOf(
+          ArtefactAlreadyInAnotherPackageError,
+        );
+      });
+
+      /*
+       * The CLI versions in the field print this message and nothing else —
+       * they have no branch for this reason and cannot add a word to it — so
+       * the sentence has to name what happened and what to do on its own.
+       */
+      it('says what happened and what to do, in one sentence', async () => {
+        await expect(executePromise).rejects.toThrow(
+          'The skill "Deploy runbook" is in "Frontend playbook", and an artefact belongs to a single package. Move it to "Backend playbook" instead of adding it.',
+        );
+      });
+
+      it('answers 409 rather than a server error', async () => {
+        await expect(executePromise).rejects.toMatchObject({
+          kind: 'conflict',
+          reason: 'artefact_already_in_another_package',
+        });
+      });
+
+      it('writes nothing', async () => {
+        await executePromise.catch(() => undefined);
+
+        expect(mockPackageRepository.addSkills).not.toHaveBeenCalled();
+      });
+
+      it('announces nothing, no reader having anything to refetch', async () => {
+        await executePromise.catch(() => undefined);
+
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the artefact is already in the package it is added to', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const targetPackage = packageFactory({
+          id: packageId,
+          name: 'Backend playbook',
+          slug: 'backend-playbook',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [skillId1],
+        });
+
+        mockPackageService.findById.mockResolvedValue(targetPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          targetPackage,
+        ]);
+        mockSpacesPort.getSpaceById.mockResolvedValue(buildSpace());
+
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          skillIds: [skillId1],
+        });
+      });
+
+      // The package holding it is the one being added to, which is not a
+      // conflict but the request already being satisfied.
+      it('skips it rather than refusing', () => {
         expect(result.skipped.skills).toEqual([skillId1]);
       });
     });
