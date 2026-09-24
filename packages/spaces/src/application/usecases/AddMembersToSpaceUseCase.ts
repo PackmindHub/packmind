@@ -59,6 +59,7 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
       } catch (error) {
         this.logger.error('Failed to add member to space', {
           spaceId: command.spaceId,
+          userId: member.userId,
           error: error instanceof Error ? error.message : String(error),
         });
       }
