@@ -34,48 +34,30 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       spaceId: membership.spaceId,
     });
 
-    try {
-      const result = await this.repository.save(membership);
+    const result = await this.repository.save(membership);
 
-      this.logger.info('Membership added', {
-        userId: membership.userId,
-        spaceId: membership.spaceId,
-      });
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to add membership', {
-        userId: membership.userId,
-        spaceId: membership.spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('Membership added', {
+      userId: membership.userId,
+      spaceId: membership.spaceId,
+    });
+    return result;
   }
 
   async removeMembership(userId: UserId, spaceId: SpaceId): Promise<boolean> {
     this.logger.info('Removing membership', { userId, spaceId });
 
-    try {
-      const deleteResult = await this.repository.delete({
-        userId,
-        spaceId,
-      });
+    const deleteResult = await this.repository.delete({
+      userId,
+      spaceId,
+    });
 
-      const removed = (deleteResult.affected ?? 0) > 0;
-      this.logger.info('Membership removal attempted', {
-        userId,
-        spaceId,
-        removed,
-      });
-      return removed;
-    } catch (error) {
-      this.logger.error('Failed to remove membership', {
-        userId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const removed = (deleteResult.affected ?? 0) > 0;
+    this.logger.info('Membership removal attempted', {
+      userId,
+      spaceId,
+      removed,
+    });
+    return removed;
   }
 
   async findMembership(
@@ -84,62 +66,37 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
   ): Promise<UserSpaceMembership | null> {
     this.logger.info('Finding membership', { userId, spaceId });
 
-    try {
-      const membership = await this.repository.findOne({
-        where: { userId, spaceId },
-      });
-      this.logger.info('Membership lookup completed', {
-        userId,
-        spaceId,
-        found: !!membership,
-      });
-      return membership;
-    } catch (error) {
-      this.logger.error('Failed to find membership', {
-        userId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const membership = await this.repository.findOne({
+      where: { userId, spaceId },
+    });
+    this.logger.info('Membership lookup completed', {
+      userId,
+      spaceId,
+      found: !!membership,
+    });
+    return membership;
   }
 
   async findByUserId(userId: UserId): Promise<UserSpaceMembership[]> {
     this.logger.info('Finding memberships by userId', { userId });
 
-    try {
-      const memberships = await this.repository.find({ where: { userId } });
-      this.logger.info('Memberships found by userId', {
-        userId,
-        count: memberships.length,
-      });
-      return memberships;
-    } catch (error) {
-      this.logger.error('Failed to find memberships by userId', {
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const memberships = await this.repository.find({ where: { userId } });
+    this.logger.info('Memberships found by userId', {
+      userId,
+      count: memberships.length,
+    });
+    return memberships;
   }
 
   async findBySpaceId(spaceId: SpaceId): Promise<UserSpaceMembership[]> {
     this.logger.info('Finding memberships by spaceId', { spaceId });
 
-    try {
-      const memberships = await this.repository.find({ where: { spaceId } });
-      this.logger.info('Memberships found by spaceId', {
-        spaceId,
-        count: memberships.length,
-      });
-      return memberships;
-    } catch (error) {
-      this.logger.error('Failed to find memberships by spaceId', {
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const memberships = await this.repository.find({ where: { spaceId } });
+    this.logger.info('Memberships found by spaceId', {
+      spaceId,
+      count: memberships.length,
+    });
+    return memberships;
   }
 
   async updateMembershipRole(
@@ -149,28 +106,19 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
   ): Promise<boolean> {
     this.logger.info('Updating membership role', { userId, spaceId, role });
 
-    try {
-      const updateResult = await this.repository.update(
-        { userId, spaceId },
-        { role },
-      );
+    const updateResult = await this.repository.update(
+      { userId, spaceId },
+      { role },
+    );
 
-      const updated = (updateResult.affected ?? 0) > 0;
-      this.logger.info('Membership role update attempted', {
-        userId,
-        spaceId,
-        role,
-        updated,
-      });
-      return updated;
-    } catch (error) {
-      this.logger.error('Failed to update membership role', {
-        userId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const updated = (updateResult.affected ?? 0) > 0;
+    this.logger.info('Membership role update attempted', {
+      userId,
+      spaceId,
+      role,
+      updated,
+    });
+    return updated;
   }
 
   async updateMembershipPinned(
@@ -184,28 +132,19 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       pinned,
     });
 
-    try {
-      const updateResult = await this.repository.update(
-        { userId, spaceId },
-        { pinned },
-      );
+    const updateResult = await this.repository.update(
+      { userId, spaceId },
+      { pinned },
+    );
 
-      const updated = (updateResult.affected ?? 0) > 0;
-      this.logger.info('Membership pinned status update attempted', {
-        userId,
-        spaceId,
-        pinned,
-        updated,
-      });
-      return updated;
-    } catch (error) {
-      this.logger.error('Failed to update membership pinned status', {
-        userId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const updated = (updateResult.affected ?? 0) > 0;
+    this.logger.info('Membership pinned status update attempted', {
+      userId,
+      spaceId,
+      pinned,
+      updated,
+    });
+    return updated;
   }
 
   async removeByUserAndOrganization(
@@ -217,50 +156,38 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       organizationId,
     });
 
-    try {
-      const memberships = await this.repository
-        .createQueryBuilder('membership')
-        .innerJoin('membership.space', 'space')
-        .where('membership.userId = :userId', { userId })
-        .andWhere('space.organizationId = :organizationId', { organizationId })
-        .andWhere('space.deletedAt IS NULL')
-        .andWhere('membership.deletedAt IS NULL')
-        .getMany();
+    const memberships = await this.repository
+      .createQueryBuilder('membership')
+      .innerJoin('membership.space', 'space')
+      .where('membership.userId = :userId', { userId })
+      .andWhere('space.organizationId = :organizationId', { organizationId })
+      .andWhere('space.deletedAt IS NULL')
+      .andWhere('membership.deletedAt IS NULL')
+      .getMany();
 
-      if (memberships.length === 0) {
-        this.logger.info('No memberships to remove for user in organization', {
-          userId,
-          organizationId,
-        });
-        return 0;
-      }
-
-      const spaceIds = memberships.map((m) => m.spaceId);
-      const deleteResult = await this.repository
-        .createQueryBuilder()
-        .delete()
-        .where('userId = :userId', { userId })
-        .andWhere('spaceId IN (:...spaceIds)', { spaceIds })
-        .execute();
-
-      const removed = deleteResult.affected ?? 0;
-      this.logger.info('Memberships removed by user and organization', {
+    if (memberships.length === 0) {
+      this.logger.info('No memberships to remove for user in organization', {
         userId,
         organizationId,
-        removed,
       });
-      return removed;
-    } catch (error) {
-      this.logger.error(
-        'Failed to remove memberships by user and organization',
-        {
-          userId,
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
+      return 0;
     }
+
+    const spaceIds = memberships.map((m) => m.spaceId);
+    const deleteResult = await this.repository
+      .createQueryBuilder()
+      .delete()
+      .where('userId = :userId', { userId })
+      .andWhere('spaceId IN (:...spaceIds)', { spaceIds })
+      .execute();
+
+    const removed = deleteResult.affected ?? 0;
+    this.logger.info('Memberships removed by user and organization', {
+      userId,
+      organizationId,
+      removed,
+    });
+    return removed;
   }
 
   async findByUserAndOrganization(
@@ -272,30 +199,21 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       organizationId,
     });
 
-    try {
-      const memberships = await this.repository
-        .createQueryBuilder('membership')
-        .innerJoinAndSelect('membership.space', 'space')
-        .where('membership.userId = :userId', { userId })
-        .andWhere('space.organizationId = :organizationId', { organizationId })
-        .andWhere('space.deletedAt IS NULL')
-        .andWhere('membership.deletedAt IS NULL')
-        .getMany();
+    const memberships = await this.repository
+      .createQueryBuilder('membership')
+      .innerJoinAndSelect('membership.space', 'space')
+      .where('membership.userId = :userId', { userId })
+      .andWhere('space.organizationId = :organizationId', { organizationId })
+      .andWhere('space.deletedAt IS NULL')
+      .andWhere('membership.deletedAt IS NULL')
+      .getMany();
 
-      this.logger.info('Memberships found by user and organization', {
-        userId,
-        organizationId,
-        count: memberships.length,
-      });
-      return memberships;
-    } catch (error) {
-      this.logger.error('Failed to find memberships by user and organization', {
-        userId,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    this.logger.info('Memberships found by user and organization', {
+      userId,
+      organizationId,
+      count: memberships.length,
+    });
+    return memberships;
   }
 
   async findAdminsForSpaceIds(
@@ -311,36 +229,29 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       spaceCount: spaceIds.length,
     });
 
-    try {
-      const rows = await this.repository
-        .createQueryBuilder('m')
-        .innerJoin('users', 'u', 'u.id = m.user_id AND u.deleted_at IS NULL')
-        .select('m.space_id', 'spaceId')
-        .addSelect('u.id', 'userId')
-        .addSelect('u.display_name', 'displayName')
-        .addSelect('u.email', 'email')
-        .where('m.space_id IN (:...spaceIds)', { spaceIds })
-        .andWhere('m.role = :role', { role: UserSpaceRole.ADMIN })
-        .getRawMany<{
-          spaceId: SpaceId;
-          userId: UserId;
-          displayName: string | null;
-          email: string;
-        }>();
+    const rows = await this.repository
+      .createQueryBuilder('m')
+      .innerJoin('users', 'u', 'u.id = m.user_id AND u.deleted_at IS NULL')
+      .select('m.space_id', 'spaceId')
+      .addSelect('u.id', 'userId')
+      .addSelect('u.display_name', 'displayName')
+      .addSelect('u.email', 'email')
+      .where('m.space_id IN (:...spaceIds)', { spaceIds })
+      .andWhere('m.role = :role', { role: UserSpaceRole.ADMIN })
+      .getRawMany<{
+        spaceId: SpaceId;
+        userId: UserId;
+        displayName: string | null;
+        email: string;
+      }>();
 
-      return rows.map((row) => ({
-        spaceId: row.spaceId,
-        user: {
-          id: row.userId,
-          displayName: row.displayName ?? row.email.split('@')[0],
-        },
-      }));
-    } catch (error) {
-      this.logger.error('Failed to find admins for space IDs', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return rows.map((row) => ({
+      spaceId: row.spaceId,
+      user: {
+        id: row.userId,
+        displayName: row.displayName ?? row.email.split('@')[0],
+      },
+    }));
   }
 
   async countByRoleForSpaceIds(
@@ -356,24 +267,16 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       role,
     });
 
-    try {
-      const rows = await this.repository
-        .createQueryBuilder('m')
-        .select('m.space_id', 'spaceId')
-        .addSelect('COUNT(*)', 'count')
-        .where('m.space_id IN (:...spaceIds)', { spaceIds })
-        .andWhere('m.role = :role', { role })
-        .groupBy('m.space_id')
-        .getRawMany<{ spaceId: SpaceId; count: string }>();
+    const rows = await this.repository
+      .createQueryBuilder('m')
+      .select('m.space_id', 'spaceId')
+      .addSelect('COUNT(*)', 'count')
+      .where('m.space_id IN (:...spaceIds)', { spaceIds })
+      .andWhere('m.role = :role', { role })
+      .groupBy('m.space_id')
+      .getRawMany<{ spaceId: SpaceId; count: string }>();
 
-      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
-    } catch (error) {
-      this.logger.error('Failed to count memberships by role for space IDs', {
-        role,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
   }
 
   async findMemberIdsForSpaceIds(
@@ -387,28 +290,21 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       spaceCount: spaceIds.length,
     });
 
-    try {
-      const rows = await this.repository
-        .createQueryBuilder('m')
-        .select('m.space_id', 'spaceId')
-        .addSelect('m.user_id', 'userId')
-        .where('m.space_id IN (:...spaceIds)', { spaceIds })
-        .andWhere('m.deletedAt IS NULL')
-        .getRawMany<{ spaceId: SpaceId; userId: UserId }>();
+    const rows = await this.repository
+      .createQueryBuilder('m')
+      .select('m.space_id', 'spaceId')
+      .addSelect('m.user_id', 'userId')
+      .where('m.space_id IN (:...spaceIds)', { spaceIds })
+      .andWhere('m.deletedAt IS NULL')
+      .getRawMany<{ spaceId: SpaceId; userId: UserId }>();
 
-      const result = new Map<SpaceId, UserId[]>();
-      for (const row of rows) {
-        const list = result.get(row.spaceId) ?? [];
-        list.push(row.userId);
-        result.set(row.spaceId, list);
-      }
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to find member IDs for space IDs', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const result = new Map<SpaceId, UserId[]>();
+    for (const row of rows) {
+      const list = result.get(row.spaceId) ?? [];
+      list.push(row.userId);
+      result.set(row.spaceId, list);
     }
+    return result;
   }
 
   async countUsersForSpaceIds(
@@ -422,22 +318,15 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       spaceCount: spaceIds.length,
     });
 
-    try {
-      const rows = await this.repository
-        .createQueryBuilder('m')
-        .select('m.space_id', 'spaceId')
-        .addSelect('COUNT(*)', 'count')
-        .where('m.space_id IN (:...spaceIds)', { spaceIds })
-        .groupBy('m.space_id')
-        .getRawMany<{ spaceId: SpaceId; count: string }>();
+    const rows = await this.repository
+      .createQueryBuilder('m')
+      .select('m.space_id', 'spaceId')
+      .addSelect('COUNT(*)', 'count')
+      .where('m.space_id IN (:...spaceIds)', { spaceIds })
+      .groupBy('m.space_id')
+      .getRawMany<{ spaceId: SpaceId; count: string }>();
 
-      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
-    } catch (error) {
-      this.logger.error('Failed to count users for space IDs', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
   }
 
   async softDeleteBySpaceId(
@@ -446,27 +335,19 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
   ): Promise<number> {
     this.logger.info('Soft-deleting memberships by spaceId', { spaceId });
 
-    try {
-      const result = await this.repository
-        .createQueryBuilder()
-        .update()
-        .set({ deletedAt: new Date(), deletedBy })
-        .where('space_id = :spaceId', { spaceId })
-        .andWhere('deleted_at IS NULL')
-        .execute();
+    const result = await this.repository
+      .createQueryBuilder()
+      .update()
+      .set({ deletedAt: new Date(), deletedBy })
+      .where('space_id = :spaceId', { spaceId })
+      .andWhere('deleted_at IS NULL')
+      .execute();
 
-      const affected = result.affected ?? 0;
-      this.logger.info('Memberships soft-deleted by spaceId', {
-        spaceId,
-        affected,
-      });
-      return affected;
-    } catch (error) {
-      this.logger.error('Failed to soft-delete memberships by spaceId', {
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const affected = result.affected ?? 0;
+    this.logger.info('Memberships soft-deleted by spaceId', {
+      spaceId,
+      affected,
+    });
+    return affected;
   }
 }
