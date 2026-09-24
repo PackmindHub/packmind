@@ -17,9 +17,6 @@ export type MarketplacesUpstreamErrorContext = {
  * cases that raise it are not in this repository.
  */
 export class MarketplacesUpstreamError extends PackmindUpstreamError {
-  declare readonly reason: MarketplacesUpstreamErrorReason;
-  declare readonly context: MarketplacesUpstreamErrorContext;
-
   constructor(
     kind: UpstreamErrorKind,
     reason: MarketplacesUpstreamErrorReason,
