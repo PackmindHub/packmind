@@ -18,7 +18,7 @@ import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundErro
 import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFailedError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
-import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 const origin = 'RemoveArtefactsFromPackageUseCase';
 
@@ -34,7 +34,7 @@ export class RemoveArtefactsFromPackageUseCase
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly packageChangeNotifier: PackageChangeNotifier,
+    private readonly spaceContentNotifier: SpaceContentNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -160,7 +160,7 @@ export class RemoveArtefactsFromPackageUseCase
       }
     }
 
-    await this.packageChangeNotifier.packagesChanged(
+    await this.spaceContentNotifier.spaceContentChanged(
       command.organizationId,
       spaceId,
     );

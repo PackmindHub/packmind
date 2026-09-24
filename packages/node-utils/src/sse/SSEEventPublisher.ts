@@ -13,7 +13,7 @@ import {
   createUserContextChangeEvent,
   createDistributionStatusChangeEvent,
   createChangeProposalUpdateEvent,
-  createPackagesChangedEvent,
+  createSpaceContentChangedEvent,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -338,17 +338,17 @@ export class SSEEventPublisher {
   }
 
   /**
-   * Makes the frontend's React Query cache refetch the space's packages. Scoped
-   * to the space rather than one user, so a reader looking at a package list
-   * sees what someone else just did to it rather than a snapshot from whenever
-   * they opened the page.
+   * Makes the frontend's React Query cache refetch what a space content surface
+   * reads. Scoped to the space rather than one user, so a reader looking at a
+   * package or a component list sees what someone else just did to it rather
+   * than a snapshot from whenever they opened the page.
    */
-  static async publishPackagesChangedEvent(
+  static async publishSpaceContentChangedEvent(
     organizationId: string,
     spaceId: string,
   ): Promise<void> {
     SSEEventPublisher.getInstance().logger.info(
-      'Publishing packages changed event',
+      'Publishing space content changed event',
       {
         organizationId,
         spaceId,
@@ -356,16 +356,16 @@ export class SSEEventPublisher {
     );
 
     try {
-      const event = createPackagesChangedEvent(organizationId, spaceId);
+      const event = createSpaceContentChangedEvent(organizationId, spaceId);
 
       await SSEEventPublisher.publishEvent(
-        'PACKAGES_CHANGED',
+        'SPACE_CONTENT_CHANGED',
         [spaceId],
         event,
       );
 
       SSEEventPublisher.getInstance().logger.debug(
-        'Successfully published packages changed event',
+        'Successfully published space content changed event',
         {
           organizationId,
           spaceId,
@@ -373,7 +373,7 @@ export class SSEEventPublisher {
       );
     } catch (error) {
       SSEEventPublisher.getInstance().logger.error(
-        'Failed to publish packages changed event',
+        'Failed to publish space content changed event',
         {
           organizationId,
           spaceId,

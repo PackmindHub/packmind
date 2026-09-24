@@ -38,10 +38,10 @@ import { PackageRepository } from '../../../infra/repositories/PackageRepository
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { MoveArtefactsToPackageUseCase } from './MoveArtefactsToPackageUseCase';
-import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 describe('MoveArtefactsToPackageUseCase', () => {
-  let mockPackageChangeNotifier: jest.Mocked<PackageChangeNotifier>;
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let useCase: MoveArtefactsToPackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
@@ -127,7 +127,7 @@ describe('MoveArtefactsToPackageUseCase', () => {
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
     stubbedLogger = stubLogger();
 
-    mockPackageChangeNotifier = createMockInstance(PackageChangeNotifier);
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
 
     useCase = new MoveArtefactsToPackageUseCase(
       mockSpacesPort,
@@ -137,7 +137,7 @@ describe('MoveArtefactsToPackageUseCase', () => {
       mockStandardsPort,
       mockSkillsPort,
       mockEventEmitterService,
-      mockPackageChangeNotifier,
+      mockSpaceContentNotifier,
       stubbedLogger,
     );
   });
@@ -174,8 +174,8 @@ describe('MoveArtefactsToPackageUseCase', () => {
       result = await useCase.execute(moveCommand());
     });
 
-    it('tells the space its packages moved on', () => {
-      expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
+    it('tells the space it moved on', () => {
+      expect(mockSpaceContentNotifier.spaceContentChanged).toHaveBeenCalledWith(
         organizationId,
         spaceId,
       );

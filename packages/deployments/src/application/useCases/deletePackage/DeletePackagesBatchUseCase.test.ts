@@ -13,10 +13,10 @@ import {
   DeletePackagesBatchResponse,
 } from '@packmind/types';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
-import { PackageChangeNotifier } from '../../services/PackageChangeNotifier';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 describe('DeletePackagesBatchUseCase', () => {
-  let mockPackageChangeNotifier: jest.Mocked<PackageChangeNotifier>;
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let usecase: DeletePackagesBatchUseCase;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -35,12 +35,12 @@ describe('DeletePackagesBatchUseCase', () => {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    mockPackageChangeNotifier = createMockInstance(PackageChangeNotifier);
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
 
     usecase = new DeletePackagesBatchUseCase(
       mockPackageService,
       mockEventEmitterService,
-      mockPackageChangeNotifier,
+      mockSpaceContentNotifier,
       stubLogger(),
     );
   });
@@ -79,11 +79,10 @@ describe('DeletePackagesBatchUseCase', () => {
         await usecase.execute(command);
       });
 
-      it('tells the space its packages moved on', () => {
-        expect(mockPackageChangeNotifier.packagesChanged).toHaveBeenCalledWith(
-          organizationId,
-          spaceId,
-        );
+      it('tells the space it moved on', () => {
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).toHaveBeenCalledWith(organizationId, spaceId);
       });
 
       it('calls findByIdInOrganization for each package', () => {

@@ -5,7 +5,7 @@ import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getPackagesBySpaceQueryOptions } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
 import { SpaceContextSurface } from '../../src/domain/deployments/components/context';
-import { PackagesChangedSubscription } from '../../src/domain/deployments/components/PackagesChangedSubscription';
+import { SpaceContentSubscription } from '../../src/domain/deployments/components/SpaceContentSubscription';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const me = await ensureOrgContext(params.orgSlug!);
@@ -47,7 +47,7 @@ export default function SpaceContextRouteModule() {
         The surface decides package membership against the list it is showing,
         so it is the one that most needs the list to still be true.
       */}
-      <PackagesChangedSubscription />
+      <SpaceContentSubscription />
       <SpaceContextSurface />
     </PMFullBleedPage>
   );
