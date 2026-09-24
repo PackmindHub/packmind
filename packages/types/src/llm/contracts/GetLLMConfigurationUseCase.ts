@@ -10,6 +10,8 @@ export type LLMConfigurationDTO = {
   fastestModel: string;
   endpoint?: string; // For Azure/OpenAI-compatible
   apiVersion?: string; // For Azure
+  // The stored API key cannot be decrypted and must be entered again.
+  secretsUnreadable?: boolean;
 };
 
 export type GetLLMConfigurationResponse = {

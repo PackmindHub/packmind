@@ -347,6 +347,41 @@ describe('TestSavedLLMConfigurationUseCase', () => {
       });
     });
 
+    describe('when the stored API key cannot be decrypted', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        mockConfigurationRepository.get.mockResolvedValue({
+          config: {
+            provider: LLMProvider.OPENAI,
+            apiKey: '',
+            model: 'gpt-4',
+            fastestModel: 'gpt-4-mini',
+          },
+          secretsUnreadable: true,
+        });
+
+        result = await useCase.execute({
+          userId,
+          organizationId,
+        });
+      });
+
+      it('returns overallSuccess as false', () => {
+        expect(result.overallSuccess).toBe(false);
+      });
+
+      it('asks the admin to enter the key again', () => {
+        expect(result.standardModel.error?.message).toMatch(
+          /enter the key again/,
+        );
+      });
+
+      it('does not call the provider', () => {
+        expect(mockedCreateLLMService).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when same model is used for standard and fast', () => {
       beforeEach(() => {
         mockConfigurationRepository.get.mockResolvedValue({

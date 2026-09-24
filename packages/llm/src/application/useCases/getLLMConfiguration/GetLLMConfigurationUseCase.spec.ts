@@ -85,6 +85,24 @@ describe('GetLLMConfigurationUseCase', () => {
     });
   });
 
+  describe('when the stored API key cannot be decrypted', () => {
+    it('flags the secrets as unreadable', async () => {
+      mockConfigurationRepository.get.mockResolvedValue({
+        config: {
+          provider: LLMProvider.OPENAI,
+          apiKey: '',
+          model: 'gpt-4',
+          fastestModel: 'gpt-4-mini',
+        },
+        secretsUnreadable: true,
+      });
+
+      const result = await useCase.execute({ organizationId });
+
+      expect(result.configuration?.secretsUnreadable).toBe(true);
+    });
+  });
+
   describe('when Azure OpenAI configuration exists', () => {
     beforeEach(() => {
       mockConfigurationRepository.get.mockResolvedValue({

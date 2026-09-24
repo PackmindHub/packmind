@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  PMAlert,
   PMHStack,
   PMVStack,
   PMText,
@@ -142,6 +143,24 @@ export const LLMConfigurationDisplay: React.FC<
               </PMHStack>
             )}
           </PMVStack>
+
+          {configuration.secretsUnreadable && (
+            <PMAlert.Root
+              status="error"
+              data-testid="llm-configuration-secrets-unreadable"
+            >
+              <PMAlert.Indicator />
+              <PMAlert.Content>
+                <PMAlert.Title>
+                  Packmind can't read the stored API key
+                </PMAlert.Title>
+                <PMAlert.Description>
+                  AI features are unavailable until you edit the configuration
+                  and enter the key again.
+                </PMAlert.Description>
+              </PMAlert.Content>
+            </PMAlert.Root>
+          )}
         </PMVStack>
 
         <PMButton variant="secondary" size="sm" onClick={handleButtonClick}>
