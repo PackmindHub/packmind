@@ -11,6 +11,10 @@ import {
   PromptConversation,
 } from '@packmind/types';
 import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
+import {
+  classifyProviderError,
+  extractProviderStatus,
+} from './classifyProviderError';
 
 const origin = 'OpenAIService';
 
@@ -167,7 +171,7 @@ export class OpenAIService extends BaseOpenAIService {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        const errorType = this.classifyError(error);
+        const errorType = classifyProviderError(error);
         const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
 
         this.logger.warn('AI prompt execution failed', {
@@ -201,6 +205,8 @@ export class OpenAIService extends BaseOpenAIService {
       success: false,
       data: null,
       error: extractUserFriendlyErrorMessage(lastError),
+      errorType: classifyProviderError(lastError),
+      statusCode: extractProviderStatus(lastError),
       attempts: maxRetries,
       model,
     };
@@ -310,7 +316,7 @@ export class OpenAIService extends BaseOpenAIService {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        const errorType = this.classifyError(error);
+        const errorType = classifyProviderError(error);
         const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
 
         this.logger.warn('AI prompt with history execution failed', {
@@ -344,6 +350,8 @@ export class OpenAIService extends BaseOpenAIService {
       success: false,
       data: null,
       error: extractUserFriendlyErrorMessage(lastError),
+      errorType: classifyProviderError(lastError),
+      statusCode: extractProviderStatus(lastError),
       attempts: maxRetries,
       model,
     };

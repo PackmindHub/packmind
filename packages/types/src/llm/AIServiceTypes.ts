@@ -1,7 +1,16 @@
+import {
+  LLM_UPSTREAM_ERROR_REASON_BY_TYPE,
+  LlmUpstreamError,
+} from './errors/LlmUpstreamError';
+
 export interface AIPromptResult<T = string> {
   success: boolean;
   data: T | null;
   error?: string;
+  /** Classification of the provider failure, set when `success` is false after a provider call. */
+  errorType?: AIServiceErrorType;
+  /** HTTP status the provider answered with, when the failure carried one. */
+  statusCode?: number;
   attempts: number;
   model: string;
   tokensUsed?: {
@@ -52,14 +61,26 @@ export const AIServiceErrorTypes: Record<
   MAX_RETRIES_EXCEEDED: 'MAX_RETRIES_EXCEEDED',
 };
 
-export class AIServiceError extends Error {
+/**
+ * An LLM provider failure, classified by the adapter that caught it rather
+ * than by this class: `type` is the axis callers already branch on, `kind`
+ * and `reason` are what `LlmUpstreamError` — and so `DomainExceptionFilter`
+ * — need, derived from it below rather than threaded through every call
+ * site.
+ */
+export class AIServiceError extends LlmUpstreamError {
   constructor(
     message: string,
     public readonly type: AIServiceErrorType,
     public readonly attempts: number,
     public readonly originalError?: Error,
   ) {
-    super(message);
+    super(
+      type === 'RATE_LIMIT' ? 'upstream_rate_limited' : 'upstream_unavailable',
+      LLM_UPSTREAM_ERROR_REASON_BY_TYPE[type],
+      { attempts },
+      message,
+    );
     this.name = 'AIServiceError';
   }
 }

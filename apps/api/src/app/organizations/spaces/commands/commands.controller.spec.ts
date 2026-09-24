@@ -1,5 +1,9 @@
 import { commandFactory } from '@packmind/commands/test';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+import {
+  CommandNotFoundError,
+  CommandSlugAlreadyExistsError,
+} from '@packmind/commands';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { stubLogger, createMockInstance } from '@packmind/test-utils';
@@ -197,7 +201,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
     });
 
-    it('throws NotFoundException for non-existent recipe', async () => {
+    it('throws CommandNotFoundError for non-existent recipe', async () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createCommandId('recipe-1');
@@ -219,7 +223,7 @@ describe('OrganizationsSpacesRecipesController', () => {
 
       await expect(
         controller.getCommandById(orgId, spaceId, recipeId, request),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(CommandNotFoundError);
     });
 
     it('propagates errors from service', async () => {
@@ -301,7 +305,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
     });
 
-    it('throws NotFoundException for empty versions list', async () => {
+    it('throws CommandNotFoundError for empty versions list', async () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createCommandId('recipe-1');
@@ -310,7 +314,7 @@ describe('OrganizationsSpacesRecipesController', () => {
 
       await expect(
         controller.getCommandVersionsById(orgId, spaceId, recipeId),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(CommandNotFoundError);
     });
 
     it('propagates errors from service', async () => {
@@ -324,6 +328,35 @@ describe('OrganizationsSpacesRecipesController', () => {
       await expect(
         controller.getCommandVersionsById(orgId, spaceId, recipeId),
       ).rejects.toThrow('Database error');
+    });
+  });
+
+  describe('createRecipe', () => {
+    describe('when the slug already exists in the space', () => {
+      it('propagates CommandSlugAlreadyExistsError', async () => {
+        const orgId = createOrganizationId('org-123');
+        const spaceId = createSpaceId('space-456');
+        const request = {
+          user: { userId: createUserId('user-1') },
+        } as unknown as AuthenticatedRequest;
+
+        commandsService.addCommand.mockRejectedValue(
+          new CommandSlugAlreadyExistsError('my-command', spaceId),
+        );
+
+        await expect(
+          controller.createCommand(
+            orgId,
+            spaceId,
+            {
+              name: 'My command',
+              content: 'content',
+              slug: 'my-command',
+            } as Parameters<typeof controller.createCommand>[2],
+            request,
+          ),
+        ).rejects.toThrow(CommandSlugAlreadyExistsError);
+      });
     });
   });
 
@@ -442,17 +475,13 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
-      const error = new Error(
-        `Recipe ${recipeId} does not belong to space ${spaceId}`,
-      );
+      const error = new CommandNotFoundError(recipeId, spaceId);
 
       commandsService.updateCommandFromUI.mockRejectedValue(error);
 
       await expect(
         controller.updateCommand(orgId, spaceId, recipeId, updateData, request),
-      ).rejects.toThrow(
-        `Recipe ${recipeId} does not belong to space ${spaceId}`,
-      );
+      ).rejects.toThrow(CommandNotFoundError);
     });
   });
 
@@ -533,17 +562,13 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
-      const error = new Error(
-        `Recipe ${recipeId} does not belong to space ${spaceId}`,
-      );
+      const error = new CommandNotFoundError(recipeId, spaceId);
 
       commandsService.deleteCommand.mockRejectedValue(error);
 
       await expect(
         controller.deleteCommand(orgId, spaceId, recipeId, request),
-      ).rejects.toThrow(
-        `Recipe ${recipeId} does not belong to space ${spaceId}`,
-      );
+      ).rejects.toThrow(CommandNotFoundError);
     });
   });
 
@@ -689,12 +714,12 @@ describe('OrganizationsSpacesRecipesController', () => {
     });
 
     describe('when service returns null', () => {
-      it('throws NotFoundException', async () => {
+      it('throws CommandNotFoundError', async () => {
         commandsService.getLatestVersionNumber.mockResolvedValue(null);
 
         await expect(
           controller.getCommandLatestVersion(orgId, spaceId, recipeId, request),
-        ).rejects.toThrow(NotFoundException);
+        ).rejects.toThrow(CommandNotFoundError);
       });
     });
   });

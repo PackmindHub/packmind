@@ -323,6 +323,84 @@ describe('PackageReleaseRepository', () => {
     });
   });
 
+  describe('when reading the content of a release', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('5.0.0'), pinnedVersions());
+    });
+
+    it('returns the full pinned command version', async () => {
+      const found = await repository.findContentByPackageIdAndVersion(
+        pkg.id,
+        '5.0.0',
+      );
+
+      expect(found?.recipeVersions.map((version) => version.content)).toEqual([
+        commandVersion.content,
+      ]);
+    });
+
+    it('returns the full pinned skill version', async () => {
+      const found = await repository.findContentByPackageIdAndVersion(
+        pkg.id,
+        '5.0.0',
+      );
+
+      expect(found?.skillVersions.map((version) => version.prompt)).toEqual([
+        skillVersion.prompt,
+      ]);
+    });
+
+    it('returns the full pinned standard version', async () => {
+      const found = await repository.findContentByPackageIdAndVersion(
+        pkg.id,
+        '5.0.0',
+      );
+
+      expect(found?.standardVersions.map((version) => version.id)).toEqual([
+        standardVersion.id,
+      ]);
+    });
+
+    describe('when a pinned command version has been deleted since', () => {
+      it('still returns it', async () => {
+        await fixture.datasource
+          .getRepository(CommandVersionSchema)
+          .softDelete({ id: commandVersion.id });
+
+        const found = await repository.findContentByPackageIdAndVersion(
+          pkg.id,
+          '5.0.0',
+        );
+
+        expect(found?.recipeVersions.map((version) => version.id)).toEqual([
+          commandVersion.id,
+        ]);
+      });
+    });
+
+    describe('when no release carries the requested version', () => {
+      it('returns null', async () => {
+        const found = await repository.findContentByPackageIdAndVersion(
+          pkg.id,
+          '9.9.9',
+        );
+
+        expect(found).toBeNull();
+      });
+    });
+
+    describe('SQL shape', () => {
+      beforeEach(async () => {
+        fixture.queries.reset();
+        await repository.findContentByPackageIdAndVersion(pkg.id, '5.0.0');
+      });
+
+      it('never reads two artefact families in one statement', () => {
+        expect(statementsReadingTwoFamilies()).toEqual([]);
+      });
+    });
+  });
+
   describe('when a newer version of a pinned component is published', () => {
     beforeEach(async () => {
       await repository.createWithVersions(releaseOf('4.0.0'), pinnedVersions());

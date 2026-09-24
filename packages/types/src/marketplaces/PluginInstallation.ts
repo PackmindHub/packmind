@@ -75,6 +75,7 @@ export type PluginInstallation = WithSoftDelete<
      * this shipped, or whose sidecar carried no revision (→ outdated).
      */
     installedRevision: string | null;
+    installedPackageVersion: string | null;
     scope: PluginInstallScope;
     /** Coding agent that reported the heartbeat. Part of the heartbeat key. */
     agent: PluginInstallAgent;

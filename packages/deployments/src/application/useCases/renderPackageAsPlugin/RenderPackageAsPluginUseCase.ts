@@ -43,10 +43,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { parsePackageSlug } from '../../services/packageSlugHelpers';
 import { PackageService } from '../../services/PackageService';
+import { PackageReleaseService } from '../../services/PackageReleaseService';
 import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
+import { PackageReleaseNotFoundError } from '../../../domain/errors/PackageReleaseNotFoundError';
 
 const origin = 'RenderPackageAsPluginUseCase';
 
@@ -59,6 +61,15 @@ const PLUGIN_HOOKS_PATH = 'hooks/hooks.json';
 
 const DEFAULT_GIT_BRANCH = 'main';
 
+type PluginContent = {
+  displayName?: string;
+  description?: string;
+  version: string;
+  recipeVersions: CommandVersion[];
+  skillVersions: SkillVersion[];
+  standardVersions: StandardVersion[];
+};
+
 /**
  * Renders a single Packmind package as a Claude Code or GitHub Copilot plugin,
  * depending on `command.targetVendor`. Standards are intentionally skipped; the
@@ -70,6 +81,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly packageService: PackageService,
+    private readonly packageReleaseService: PackageReleaseService,
     private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
@@ -102,17 +114,10 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
-    // Standards are not rendered into a plugin, so a package with no skills and
-    // no recipes would yield an empty (manifest-only) plugin. Reject it here so
-    // every render path — marketplace publish job and local CLI render alike —
-    // refuses to produce an empty plugin.
-    if (!isPackagePublishableAsPlugin(pkg)) {
-      throw new PackageNotPublishableAsPluginError(pkg.slug, pkg.name);
-    }
-
-    const recipeVersions = await this.fetchCommandVersions(pkg);
-    const skillVersions = await this.fetchSkillVersions(pkg);
-    const standardVersions = await this.fetchStandardVersions(pkg);
+    const content = command.packageVersion
+      ? await this.resolveReleaseContent(pkg, command.packageVersion)
+      : await this.resolveLiveContent(pkg);
+    const { recipeVersions, skillVersions, standardVersions } = content;
 
     // Claude Code requires a plugin's `name` (in both plugin.json and the
     // marketplace descriptor) to be a slug with no spaces. The requested
@@ -136,8 +141,9 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     let deployer: ClaudePluginDeployer | CopilotPluginDeployer;
     const manifest = {
       name: pluginName,
-      description: pkg.description || undefined,
-      version: PLUGIN_VERSION,
+      displayName: content.displayName,
+      description: content.description,
+      version: content.version,
     };
     if (targetVendor === 'github') {
       const copilotDeployer = new CopilotPluginDeployer();
@@ -190,8 +196,9 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       files,
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
       pluginName,
-      pluginDescription: pkg.description || undefined,
-      pluginVersion: PLUGIN_VERSION,
+      pluginDisplayName: content.displayName,
+      pluginDescription: content.description,
+      pluginVersion: content.version,
       distributionId,
     };
   }
@@ -392,6 +399,73 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       organizationId,
     );
     return space?.id ?? null;
+  }
+
+  private async resolveLiveContent(
+    pkg: PackageWithArtefacts,
+  ): Promise<PluginContent> {
+    // Standards are not rendered into a plugin, so a package with no skills and
+    // no recipes would yield an empty (manifest-only) plugin. Reject it here so
+    // every render path — marketplace publish job and local CLI render alike —
+    // refuses to produce an empty plugin.
+    if (!isPackagePublishableAsPlugin(pkg)) {
+      throw new PackageNotPublishableAsPluginError(pkg.slug, pkg.name);
+    }
+
+    const recipeVersions = await this.fetchCommandVersions(pkg);
+    const skillVersions = await this.fetchSkillVersions(pkg);
+    const standardVersions = await this.fetchStandardVersions(pkg);
+
+    return {
+      description: pkg.description || undefined,
+      version: PLUGIN_VERSION,
+      recipeVersions,
+      skillVersions,
+      standardVersions,
+    };
+  }
+
+  /**
+   * The release is rendered as captured: its own name and description, and
+   * its pinned component versions even when the component has been deleted
+   * from the space since.
+   */
+  private async resolveReleaseContent(
+    pkg: PackageWithArtefacts,
+    version: string,
+  ): Promise<PluginContent> {
+    const release = await this.packageReleaseService.findContentByVersion(
+      pkg.id,
+      version,
+    );
+    if (!release) {
+      throw new PackageReleaseNotFoundError(pkg.id, version);
+    }
+
+    if (
+      !isPackagePublishableAsPlugin({
+        skills: release.skillVersions,
+        recipes: release.recipeVersions,
+      })
+    ) {
+      throw new PackageNotPublishableAsPluginError(pkg.slug, release.name);
+    }
+
+    const skillVersions = await Promise.all(
+      release.skillVersions.map(async (skillVersion) => ({
+        ...skillVersion,
+        files: await this.skillsPort.getSkillFiles(skillVersion.id),
+      })),
+    );
+
+    return {
+      displayName: release.name,
+      description: release.description || undefined,
+      version: release.version,
+      recipeVersions: release.recipeVersions,
+      skillVersions,
+      standardVersions: release.standardVersions,
+    };
   }
 
   private async fetchCommandVersions(

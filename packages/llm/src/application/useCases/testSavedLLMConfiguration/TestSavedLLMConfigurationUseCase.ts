@@ -2,7 +2,6 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   AIService,
-  AIServiceErrorType,
   AIServiceErrorTypes,
   IAccountsPort,
   ITestSavedLLMConfigurationUseCase,
@@ -16,48 +15,13 @@ import {
 } from '@packmind/types';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { createLLMService } from '../../../factories/createLLMService';
+import {
+  classifyProviderError,
+  extractProviderStatus,
+} from '../../../infra/services/classifyProviderError';
 import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'TestSavedLLMConfigurationUseCase';
-
-/**
- * Best-effort: the OpenAI and Anthropic SDKs put the HTTP status on the error
- * object, but not every provider error reaching here does, hence the fallback
- * to digging a `(4xx)` out of the message.
- */
-function extractStatusCode(error: unknown): number | undefined {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return typeof error.status === 'number' ? error.status : undefined;
-  }
-
-  if (error instanceof Error) {
-    const statusMatch = error.message.match(/\((\d{3})\)/);
-    if (statusMatch) {
-      return parseInt(statusMatch[1], 10);
-    }
-  }
-
-  return undefined;
-}
-
-function classifyErrorType(error: unknown): AIServiceErrorType {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const lowerMessage = errorMessage.toLowerCase();
-
-  if (lowerMessage.includes('rate limit') || lowerMessage.includes('429')) {
-    return AIServiceErrorTypes.RATE_LIMIT;
-  }
-
-  if (lowerMessage.includes('unauthorized') || lowerMessage.includes('401')) {
-    return AIServiceErrorTypes.AUTHENTICATION_ERROR;
-  }
-
-  if (lowerMessage.includes('network') || lowerMessage.includes('timeout')) {
-    return AIServiceErrorTypes.NETWORK_ERROR;
-  }
-
-  return AIServiceErrorTypes.API_ERROR;
-}
 
 export class TestSavedLLMConfigurationUseCase
   extends AbstractAdminUseCase<
@@ -212,16 +176,16 @@ export class TestSavedLLMConfigurationUseCase
           success: false,
           error: {
             message: result.error || 'Unknown error',
-            type: classifyErrorType(result.error),
-            statusCode: undefined,
+            type: result.errorType ?? AIServiceErrorTypes.API_ERROR,
+            statusCode: result.statusCode,
           },
         };
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const errorType = classifyErrorType(error);
-      const statusCode = extractStatusCode(error);
+      const errorType = classifyProviderError(error);
+      const statusCode = extractProviderStatus(error);
 
       this.logger.error('Model test threw exception', {
         error: errorMessage,

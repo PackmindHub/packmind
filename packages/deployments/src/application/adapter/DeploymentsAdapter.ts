@@ -50,6 +50,7 @@ import {
   OrganizationId,
   Package,
   PackageId,
+  PackageReleaseEntry,
   PackageSlugInSpace,
   PackageWithArtefacts,
   PackageWithStandards,
@@ -417,6 +418,7 @@ export class DeploymentsAdapter
 
     this._renderPackageAsPluginUseCase = new RenderPackageAsPluginUseCase(
       this.deploymentsServices.getPackageService(),
+      this.deploymentsServices.getPackageReleaseService(),
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
@@ -849,6 +851,14 @@ export class DeploymentsAdapter
 
   async findPackageById(packageId: PackageId): Promise<Package | null> {
     return this.deploymentsServices.getPackageService().findById(packageId);
+  }
+
+  async findHighestPackageRelease(
+    packageId: PackageId,
+  ): Promise<PackageReleaseEntry | null> {
+    return this.deploymentsServices
+      .getPackageReleaseService()
+      .findHighestRelease(packageId);
   }
 
   async getPackagesBySlugsWithArtefacts(

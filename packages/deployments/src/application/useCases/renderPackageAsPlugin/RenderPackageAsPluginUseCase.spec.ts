@@ -15,6 +15,7 @@ import {
   Organization,
   OrganizationId,
   PackageNotPublishableAsPluginError,
+  PackageRelease,
   PackageWithArtefacts,
   PluginRenderedEvent,
   Command,
@@ -33,6 +34,7 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  createPackageReleaseId,
   createCommandId,
   createCommandVersionId,
   createSkillId,
@@ -45,10 +47,12 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../../services/PackageService';
+import { PackageReleaseService } from '../../services/PackageReleaseService';
 import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
+import { PackageReleaseNotFoundError } from '../../../domain/errors/PackageReleaseNotFoundError';
 import { RenderPackageAsPluginUseCase } from './RenderPackageAsPluginUseCase';
 import { userFactory } from '@packmind/accounts/test';
 import { spaceFactory } from '@packmind/spaces/test';
@@ -74,6 +78,7 @@ const createUserWithMembership = (
 
 describe('RenderPackageAsPluginUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
+  let packageReleaseService: jest.Mocked<PackageReleaseService>;
   let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
@@ -210,6 +215,9 @@ describe('RenderPackageAsPluginUseCase', () => {
       [],
     );
 
+    packageReleaseService = createMockInstance(PackageReleaseService);
+    packageReleaseService.findContentByVersion.mockResolvedValue(null);
+
     commandsPort = mockInterface<ICommandsPort>();
     commandsPort.listCommandVersions.mockResolvedValue([]);
 
@@ -254,6 +262,7 @@ describe('RenderPackageAsPluginUseCase', () => {
 
     useCase = new RenderPackageAsPluginUseCase(
       packageService,
+      packageReleaseService,
       commandsPort,
       standardsPort,
       skillsPort,
@@ -416,6 +425,154 @@ describe('RenderPackageAsPluginUseCase', () => {
 
       it('returns pluginVersion as the initial version', () => {
         expect(result.pluginVersion).toBe('0.1.0');
+      });
+    });
+  });
+
+  describe('when a package version is requested', () => {
+    let pkg: PackageWithArtefacts;
+    let release: PackageRelease;
+
+    const readManifest = (
+      result: Awaited<ReturnType<typeof useCase.execute>>,
+    ): Record<string, string> =>
+      JSON.parse(
+        result.files.find((f) => f.path.endsWith('.claude-plugin/plugin.json'))
+          ?.content ?? '{}',
+      );
+
+    beforeEach(() => {
+      // The live package has moved on: other name, other description, and a
+      // skill the release never held.
+      pkg = buildPackage({
+        name: 'Security (next)',
+        description: 'Live description',
+        skills: [buildSkill('sk-live', 'live-only-skill')],
+      });
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        pkg,
+      ]);
+      skillsPort.getLatestSkillVersion.mockImplementation((id) =>
+        Promise.resolve(
+          buildSkillVersion(id as string, 'live-only-skill', '#'),
+        ),
+      );
+
+      release = {
+        id: createPackageReleaseId(uuidv4()),
+        packageId: pkg.id,
+        version: '1.1.0',
+        name: 'sécurité',
+        description: 'Security harness',
+        recipeVersions: [buildCommandVersion('r-deleted', 'commit-hooks', '#')],
+        standardVersions: [buildStandardVersion('s1', 'std-one')],
+        skillVersions: [buildSkillVersion('sk1', 'git-commit-guidelines', '#')],
+      };
+      packageReleaseService.findContentByVersion.mockResolvedValue(release);
+    });
+
+    it('renders the components captured in the release', async () => {
+      const result = await useCase.execute(
+        buildCommand({ packageVersion: '1.1.0' }),
+      );
+
+      expect(result.files.map((f) => f.path).sort()).toEqual([
+        'plugins/security/.claude-plugin/plugin.json',
+        'plugins/security/commands/commit-hooks.md',
+        'plugins/security/skills/git-commit-guidelines/SKILL.md',
+      ]);
+    });
+
+    it('reads the release content for the requested version', async () => {
+      await useCase.execute(buildCommand({ packageVersion: '1.1.0' }));
+
+      expect(packageReleaseService.findContentByVersion).toHaveBeenCalledWith(
+        pkg.id,
+        '1.1.0',
+      );
+    });
+
+    it('loads the files of each pinned skill version', async () => {
+      await useCase.execute(buildCommand({ packageVersion: '1.1.0' }));
+
+      expect(skillsPort.getSkillFiles).toHaveBeenCalledWith(
+        release.skillVersions[0].id,
+      );
+    });
+
+    describe('the plugin manifest', () => {
+      let manifest: Record<string, string>;
+
+      beforeEach(async () => {
+        manifest = readManifest(
+          await useCase.execute(buildCommand({ packageVersion: '1.1.0' })),
+        );
+      });
+
+      it('keeps the package slug as name', () => {
+        expect(manifest['name']).toBe('security');
+      });
+
+      it('sets the display name from the release', () => {
+        expect(manifest['displayName']).toBe('sécurité');
+      });
+
+      it('sets the description from the release', () => {
+        expect(manifest['description']).toBe('Security harness');
+      });
+
+      it('sets the version to the release version', () => {
+        expect(manifest['version']).toBe('1.1.0');
+      });
+    });
+
+    describe('returns plugin metadata', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute(
+          buildCommand({ packageVersion: '1.1.0' }),
+        );
+      });
+
+      it('returns the release version', () => {
+        expect(result.pluginVersion).toBe('1.1.0');
+      });
+
+      it('returns the release name as display name', () => {
+        expect(result.pluginDisplayName).toBe('sécurité');
+      });
+
+      it('returns the release description', () => {
+        expect(result.pluginDescription).toBe('Security harness');
+      });
+    });
+
+    describe('when the package has no such release', () => {
+      beforeEach(() => {
+        packageReleaseService.findContentByVersion.mockResolvedValue(null);
+      });
+
+      it('throws PackageReleaseNotFoundError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ packageVersion: '9.9.9' })),
+        ).rejects.toBeInstanceOf(PackageReleaseNotFoundError);
+      });
+    });
+
+    describe('when the release holds only standards', () => {
+      beforeEach(() => {
+        packageReleaseService.findContentByVersion.mockResolvedValue({
+          ...release,
+          recipeVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('throws PackageNotPublishableAsPluginError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ packageVersion: '1.1.0' })),
+        ).rejects.toBeInstanceOf(PackageNotPublishableAsPluginError);
       });
     });
   });

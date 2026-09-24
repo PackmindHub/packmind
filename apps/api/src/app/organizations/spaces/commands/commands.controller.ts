@@ -1,11 +1,9 @@
 import {
   BadRequestException,
   Body,
-  ConflictException,
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,11 +16,11 @@ import {
   OrganizationId,
   Command,
   CommandId,
-  CommandSlugAlreadyExistsError,
   CommandVersion,
   SpaceId,
   UserId,
 } from '@packmind/types';
+import { CommandNotFoundError } from '@packmind/commands';
 import { CommandsService } from './commands.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
@@ -81,25 +79,11 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      return await this.commandsService.getCommandsBySpace(
-        spaceId,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/recipes - Failed to fetch recipes',
-        {
-          organizationId,
-          spaceId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.commandsService.getCommandsBySpace(
+      spaceId,
+      organizationId,
+      userId,
+    );
   }
 
   /**
@@ -124,39 +108,16 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      const recipe = await this.commandsService.getCommandById(
-        id,
-        organizationId,
-        spaceId,
-        userId,
-      );
-      if (!recipe) {
-        this.logger.warn(
-          'GET /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe not found',
-          {
-            organizationId,
-            spaceId,
-            recipeId: id,
-          },
-        );
-        throw new NotFoundException(`Recipe with id ${id} not found`);
-      }
-      return recipe;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/recipes/:id - Failed to fetch recipe',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          error: errorMessage,
-        },
-      );
-      throw error;
+    const recipe = await this.commandsService.getCommandById(
+      id,
+      organizationId,
+      spaceId,
+      userId,
+    );
+    if (!recipe) {
+      throw new CommandNotFoundError(id, spaceId);
     }
+    return recipe;
   }
 
   /**
@@ -186,42 +147,13 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      return await this.commandsService.addCommand(
-        recipe,
-        organizationId,
-        userId,
-        spaceId,
-        request.clientSource,
-      );
-    } catch (error) {
-      if (error instanceof CommandSlugAlreadyExistsError) {
-        this.logger.warn(
-          'POST /organizations/:orgId/spaces/:spaceId/recipes - Slug already exists',
-          {
-            organizationId,
-            spaceId,
-            slug: error.slug,
-            userId,
-          },
-        );
-        throw new ConflictException(error.message);
-      }
-
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/recipes - Failed to create recipe',
-        {
-          organizationId,
-          spaceId,
-          recipeName: recipe.name,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.commandsService.addCommand(
+      recipe,
+      organizationId,
+      userId,
+      spaceId,
+      request.clientSource,
+    );
   }
 
   /**
@@ -253,45 +185,28 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      const updatedCommand = await this.commandsService.updateCommandFromUI({
-        recipeId: id,
-        spaceId,
+    const updatedCommand = await this.commandsService.updateCommandFromUI({
+      recipeId: id,
+      spaceId,
+      organizationId,
+      name: updateData.name,
+      content: updateData.content,
+      userId,
+      source: request.clientSource,
+    });
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe updated successfully',
+      {
         organizationId,
-        name: updateData.name,
-        content: updateData.content,
+        spaceId,
+        recipeId: id,
+        newVersion: updatedCommand.version,
         userId,
-        source: request.clientSource,
-      });
+      },
+    );
 
-      this.logger.info(
-        'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe updated successfully',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          newVersion: updatedCommand.version,
-          userId,
-        },
-      );
-
-      return updatedCommand;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Failed to update recipe',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          recipeName: updateData.name,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return updatedCommand;
   }
 
   /**
@@ -329,38 +244,23 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      await this.commandsService.deleteCommandsBatch(
-        ids,
-        spaceId,
-        userId,
-        organizationId,
-        request.clientSource,
-      );
+    await this.commandsService.deleteCommandsBatch(
+      ids,
+      spaceId,
+      userId,
+      organizationId,
+      request.clientSource,
+    );
 
-      this.logger.info(
-        'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Recipes deleted successfully in batch',
-        {
-          organizationId,
-          spaceId,
-          count: ids.length,
-          userId,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Failed to delete recipes in batch',
-        {
-          organizationId,
-          spaceId,
-          recipeIds: ids,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Recipes deleted successfully in batch',
+      {
+        organizationId,
+        spaceId,
+        count: ids.length,
+        userId,
+      },
+    );
   }
 
   /**
@@ -386,39 +286,23 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      await this.commandsService.deleteCommand(
-        id,
-        spaceId,
-        organizationId,
-        userId,
-        request.clientSource,
-      );
+    await this.commandsService.deleteCommand(
+      id,
+      spaceId,
+      organizationId,
+      userId,
+      request.clientSource,
+    );
 
-      this.logger.info(
-        'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe deleted successfully',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          userId,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Failed to delete recipe',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe deleted successfully',
+      {
+        organizationId,
+        spaceId,
+        recipeId: id,
+        userId,
+      },
+    );
   }
 
   /**
@@ -447,7 +331,7 @@ export class OrganizationsSpacesCommandsController {
     });
 
     if (version === null) {
-      throw new NotFoundException(`Recipe ${id} not found`);
+      throw new CommandNotFoundError(id, spaceId);
     }
 
     return { version };
@@ -472,39 +356,14 @@ export class OrganizationsSpacesCommandsController {
       },
     );
 
-    try {
-      const versions = await this.commandsService.getCommandVersionsById(id);
-      if (!versions || versions.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/spaces/:spaceId/recipes/:id/versions - No versions found',
-          {
-            organizationId,
-            spaceId,
-            recipeId: id,
-          },
-        );
-        throw new NotFoundException(
-          `No versions found for recipe with id ${id}`,
-        );
-      }
-      // Superset: add command-named twin `commandId` beside `recipeId`.
-      return versions.map((version) => ({
-        ...version,
-        commandId: version.recipeId,
-      }));
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/recipes/:id/versions - Failed to fetch recipe versions',
-        {
-          organizationId,
-          spaceId,
-          recipeId: id,
-          error: errorMessage,
-        },
-      );
-      throw error;
+    const versions = await this.commandsService.getCommandVersionsById(id);
+    if (!versions || versions.length === 0) {
+      throw new CommandNotFoundError(id, spaceId);
     }
+    // Superset: add command-named twin `commandId` beside `recipeId`.
+    return versions.map((version) => ({
+      ...version,
+      commandId: version.recipeId,
+    }));
   }
 }

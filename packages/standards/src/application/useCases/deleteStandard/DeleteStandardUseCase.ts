@@ -14,6 +14,7 @@ import {
   ISpacesPort,
   StandardDeletedEvent,
 } from '@packmind/types';
+import { StandardNotFoundError } from '../../../domain/errors/StandardNotFoundError';
 import { StandardService } from '../../services/StandardService';
 
 const origin = 'DeleteStandardUseCase';
@@ -47,8 +48,8 @@ export class DeleteStandardUseCase
 
     // Get the standard before deleting to retrieve its spaceId
     const standard = await this.standardService.getStandardById(standardId);
-    if (!standard) {
-      throw new Error(`Standard with id ${standardId} not found`);
+    if (!standard || standard.spaceId !== command.spaceId) {
+      throw new StandardNotFoundError(standardId, command.spaceId);
     }
 
     await this.standardService.deleteStandard(standardId, brandedUserId);

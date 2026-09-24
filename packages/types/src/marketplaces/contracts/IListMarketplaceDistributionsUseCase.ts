@@ -46,6 +46,9 @@ export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   lastPublishedOnMainAt: Date | null;
   sourcePackagePublishable: boolean;
   revision: string | null;
+  hasServedVersion: boolean;
+  servedVersion: string | null;
+  distributingVersion: string | null;
 };
 
 export type ListMarketplaceDistributionsCommand = PackmindCommand & {

@@ -14,6 +14,10 @@ import {
 import { AnthropicServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_ANTHROPIC_MODELS } from '../../constants/defaultModels';
 import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
+import {
+  classifyProviderError,
+  extractProviderStatus,
+} from './classifyProviderError';
 
 const origin = 'AnthropicService';
 
@@ -179,7 +183,7 @@ export class AnthropicService implements AIService {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        const errorType = this.classifyError(error);
+        const errorType = classifyProviderError(error);
         const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
 
         this.logger.warn('AI prompt execution failed', {
@@ -213,6 +217,8 @@ export class AnthropicService implements AIService {
       success: false,
       data: null,
       error: extractUserFriendlyErrorMessage(lastError),
+      errorType: classifyProviderError(lastError),
+      statusCode: extractProviderStatus(lastError),
       attempts: maxRetries,
       model,
     };
@@ -324,7 +330,7 @@ export class AnthropicService implements AIService {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        const errorType = this.classifyError(error);
+        const errorType = classifyProviderError(error);
         const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
 
         this.logger.warn('AI prompt with history execution failed', {
@@ -358,6 +364,8 @@ export class AnthropicService implements AIService {
       success: false,
       data: null,
       error: extractUserFriendlyErrorMessage(lastError),
+      errorType: classifyProviderError(lastError),
+      statusCode: extractProviderStatus(lastError),
       attempts: maxRetries,
       model,
     };
@@ -378,29 +386,6 @@ export class AnthropicService implements AIService {
       default:
         return 'user';
     }
-  }
-
-  private classifyError(error: unknown): AIServiceErrorType {
-    if (error instanceof AIServiceError) {
-      return error.type;
-    }
-
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const lowerMessage = errorMessage.toLowerCase();
-
-    if (lowerMessage.includes('rate limit') || lowerMessage.includes('429')) {
-      return AIServiceErrorTypes.RATE_LIMIT;
-    }
-
-    if (lowerMessage.includes('unauthorized') || lowerMessage.includes('401')) {
-      return AIServiceErrorTypes.AUTHENTICATION_ERROR;
-    }
-
-    if (lowerMessage.includes('network') || lowerMessage.includes('timeout')) {
-      return AIServiceErrorTypes.NETWORK_ERROR;
-    }
-
-    return AIServiceErrorTypes.API_ERROR;
   }
 
   private shouldRetry(

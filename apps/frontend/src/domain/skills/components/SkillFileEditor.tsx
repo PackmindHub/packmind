@@ -13,9 +13,9 @@ import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 import {
   IMarkdownEditorApi,
-  MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
+import { MarkdownEditorWithMode } from '@packmind/proprietary/frontend/shared/components/editor/MarkdownEditorWithMode';
 import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import {
   countPendingChangeProposals,
@@ -183,7 +183,7 @@ export const SkillFileEditor = ({
         backgroundColor="background.primary"
       >
         <MarkdownEditorProvider>
-          <MarkdownEditor
+          <MarkdownEditorWithMode
             defaultValue={initialContent}
             onEditorReady={handleEditorReady}
           />

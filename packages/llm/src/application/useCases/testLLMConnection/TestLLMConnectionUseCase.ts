@@ -3,7 +3,6 @@ import {
   TestLLMConnectionResponse,
   ITestLLMConnectionUseCase,
   ModelTestResult,
-  AIServiceErrorType,
   AIServiceErrorTypes,
   LLMModelPerformance,
   AIService,
@@ -13,47 +12,12 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { createLLMService } from '../../../factories/createLLMService';
+import {
+  classifyProviderError,
+  extractProviderStatus,
+} from '../../../infra/services/classifyProviderError';
 
 const origin = 'TestLLMConnectionUseCase';
-
-/**
- * Best-effort: the OpenAI and Anthropic SDKs put the HTTP status on the error
- * object, but not every provider error reaching here does, hence the fallback
- * to digging a `(4xx)` out of the message.
- */
-function extractStatusCode(error: unknown): number | undefined {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return typeof error.status === 'number' ? error.status : undefined;
-  }
-
-  if (error instanceof Error) {
-    const statusMatch = error.message.match(/\((\d{3})\)/);
-    if (statusMatch) {
-      return parseInt(statusMatch[1], 10);
-    }
-  }
-
-  return undefined;
-}
-
-function classifyErrorType(error: unknown): AIServiceErrorType {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const lowerMessage = errorMessage.toLowerCase();
-
-  if (lowerMessage.includes('rate limit') || lowerMessage.includes('429')) {
-    return AIServiceErrorTypes.RATE_LIMIT;
-  }
-
-  if (lowerMessage.includes('unauthorized') || lowerMessage.includes('401')) {
-    return AIServiceErrorTypes.AUTHENTICATION_ERROR;
-  }
-
-  if (lowerMessage.includes('network') || lowerMessage.includes('timeout')) {
-    return AIServiceErrorTypes.NETWORK_ERROR;
-  }
-
-  return AIServiceErrorTypes.API_ERROR;
-}
 
 export class TestLLMConnectionUseCase
   extends AbstractMemberUseCase<
@@ -148,16 +112,16 @@ export class TestLLMConnectionUseCase
           success: false,
           error: {
             message: result.error || 'Unknown error',
-            type: classifyErrorType(result.error),
-            statusCode: undefined, // Graceful failures don't have status codes
+            type: result.errorType ?? AIServiceErrorTypes.API_ERROR,
+            statusCode: result.statusCode,
           },
         };
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const errorType = classifyErrorType(error);
-      const statusCode = extractStatusCode(error);
+      const errorType = classifyProviderError(error);
+      const statusCode = extractProviderStatus(error);
 
       this.logger.error('Model test threw exception', {
         error: errorMessage,

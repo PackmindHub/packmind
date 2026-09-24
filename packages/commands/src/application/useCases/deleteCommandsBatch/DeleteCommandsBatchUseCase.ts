@@ -30,31 +30,20 @@ export class DeleteCommandsBatchUseCase implements IDeleteCommandsBatchUseCase {
       organizationId,
     });
 
-    try {
-      await Promise.all(
-        recipeIds.map((recipeId) =>
-          this.deleteCommandUseCase.execute({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            recipeId: recipeId as any,
-            spaceId,
-            userId,
-            organizationId,
-          }),
-        ),
-      );
-      this.logger.info('Recipes batch deleted successfully', {
-        count: recipeIds.length,
-      });
-      return {};
-    } catch (error) {
-      this.logger.error('Failed to delete recipes batch', {
-        count: recipeIds.length,
-        spaceId,
-        userId,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    await Promise.all(
+      recipeIds.map((recipeId) =>
+        this.deleteCommandUseCase.execute({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          recipeId: recipeId as any,
+          spaceId,
+          userId,
+          organizationId,
+        }),
+      ),
+    );
+    this.logger.info('Recipes batch deleted successfully', {
+      count: recipeIds.length,
+    });
+    return {};
   }
 }

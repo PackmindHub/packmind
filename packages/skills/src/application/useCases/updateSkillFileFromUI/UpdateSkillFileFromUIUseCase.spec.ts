@@ -33,6 +33,8 @@ import { skillFileFactory } from '../../../../test/skillFileFactory';
 import { skillVersionFactory } from '../../../../test/skillVersionFactory';
 import { SkillEditForbiddenError } from '../../../domain/errors/SkillEditForbiddenError';
 import { SkillFileNotEditableError } from '../../../domain/errors/SkillFileNotEditableError';
+import { SkillNotFoundError } from '../../../domain/errors/SkillNotFoundError';
+import { SkillFileNotFoundError } from '../../../domain/errors/SkillFileNotFoundError';
 import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
@@ -294,9 +296,9 @@ describe('UpdateSkillFileFromUIUseCase', () => {
         command = { ...command, filePath: 'missing.md', content: 'content' };
       });
 
-      it('throws an error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `File missing.md not found in skill ${skillId}`,
+      it('throws SkillFileNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillFileNotFoundError,
         );
       });
     });
@@ -508,9 +510,9 @@ describe('UpdateSkillFileFromUIUseCase', () => {
         skillService.getSkillById.mockResolvedValue(skill);
       });
 
-      it('throws an error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Skill ${skillId} does not belong to space ${spaceId}`,
+      it('throws SkillNotFoundError', async () => {
+        await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+          SkillNotFoundError,
         );
       });
     });

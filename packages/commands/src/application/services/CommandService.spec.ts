@@ -15,6 +15,7 @@ import { commandFactory } from '../../../test/commandFactory';
 import { commandVersionFactory } from '../../../test/commandVersionFactory';
 import { ICommandRepository } from '../../domain/repositories/ICommandRepository';
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
+import { CommandNotFoundError } from '../../domain/errors';
 import {
   CreateCommandData,
   CommandService,
@@ -275,10 +276,10 @@ describe('RecipeService', () => {
         commandRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws CommandNotFoundError', async () => {
         await expect(
           commandService.updateCommand(nonExistentCommandId, updateData),
-        ).rejects.toThrow(`Recipe with id ${nonExistentCommandId} not found`);
+        ).rejects.toThrow(CommandNotFoundError);
       });
     });
   });
@@ -324,10 +325,10 @@ describe('RecipeService', () => {
         commandRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws CommandNotFoundError', async () => {
         await expect(
           commandService.deleteCommand(nonExistentCommandId, userId),
-        ).rejects.toThrow(`Recipe with id ${nonExistentCommandId} not found`);
+        ).rejects.toThrow(CommandNotFoundError);
       });
 
       it('does not call deleteById', async () => {
@@ -378,13 +379,13 @@ describe('RecipeService', () => {
         commandRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws CommandNotFoundError', async () => {
         await expect(
           commandService.markCommandAsMoved(
             nonExistentCommandId,
             destinationSpaceId,
           ),
-        ).rejects.toThrow(`Recipe with id ${nonExistentCommandId} not found`);
+        ).rejects.toThrow(CommandNotFoundError);
       });
     });
   });
@@ -552,14 +553,14 @@ describe('RecipeService', () => {
         commandRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws CommandNotFoundError', async () => {
         await expect(
           commandService.duplicateCommandToSpace(
             nonExistentCommandId,
             destinationSpaceId,
             newUserId,
           ),
-        ).rejects.toThrow(`Recipe with id ${nonExistentCommandId} not found`);
+        ).rejects.toThrow(CommandNotFoundError);
       });
     });
 

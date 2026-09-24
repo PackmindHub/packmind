@@ -21,20 +21,12 @@ export class GetLatestStandardVersionUseCase {
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting latest standard version', { standardId });
 
-    try {
-      const standardVersion =
-        await this.standardVersionService.getLatestStandardVersion(standardId);
-      this.logger.info('Latest standard version retrieved successfully', {
-        standardId,
-        found: !!standardVersion,
-      });
-      return standardVersion;
-    } catch (error) {
-      this.logger.error('Failed to get latest standard version', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const standardVersion =
+      await this.standardVersionService.getLatestStandardVersion(standardId);
+    this.logger.info('Latest standard version retrieved successfully', {
+      standardId,
+      found: !!standardVersion,
+    });
+    return standardVersion;
   }
 }

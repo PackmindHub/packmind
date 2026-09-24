@@ -21,20 +21,12 @@ export class ListStandardVersionsUseCase {
   ): Promise<StandardVersion[]> {
     this.logger.info('Listing standard versions', { standardId });
 
-    try {
-      const versions =
-        await this.standardVersionService.listStandardVersions(standardId);
-      this.logger.info('Standard versions listed successfully', {
-        standardId,
-        count: versions.length,
-      });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list standard versions', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const versions =
+      await this.standardVersionService.listStandardVersions(standardId);
+    this.logger.info('Standard versions listed successfully', {
+      standardId,
+      count: versions.length,
+    });
+    return versions;
   }
 }

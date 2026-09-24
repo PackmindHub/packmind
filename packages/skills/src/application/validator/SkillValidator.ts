@@ -1,7 +1,7 @@
 import {
   SkillValidationError,
   SkillValidationErrorDetail,
-} from '../errors/SkillValidationError';
+} from '../../domain/errors/SkillValidationError';
 import {
   ALLOWED_FRONTMATTER_FIELDS,
   SkillProperties,

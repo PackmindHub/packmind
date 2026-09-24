@@ -10,6 +10,7 @@ import {
   ListStandardsBySpaceCommand,
   ListStandardsBySpaceResponse,
 } from '@packmind/types';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
 import { StandardService } from '../../services/StandardService';
 
 const origin = 'ListStandardsBySpaceUseCase';
@@ -39,49 +40,29 @@ export class ListStandardsBySpaceUseCase
       organizationId: command.organizationId,
     });
 
-    try {
-      const space = await this.spacesPort.getSpaceById(command.spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', {
-          spaceId: command.spaceId,
-        });
-        throw new Error(`Space with id ${command.spaceId} not found`);
-      }
-
-      if (space.organizationId !== command.organizationId) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: command.spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: command.organizationId,
-        });
-        throw new Error(
-          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
-        );
-      }
-
-      const standardsInSpace = await this.standardService.listStandardsBySpace(
+    const space = await this.spacesPort.getSpaceById(command.spaceId);
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new StandardSpaceNotAccessibleError(
         command.spaceId,
-        { includeDeleted: command.includeDeleted },
+        command.organizationId,
       );
-
-      const sortedStandards = standardsInSpace.sort((a, b) =>
-        a.name.localeCompare(b.name),
-      );
-
-      this.logger.info('Standards listed by space successfully', {
-        spaceId: command.spaceId,
-        organizationId: command.organizationId,
-        count: sortedStandards.length,
-      });
-
-      return { standards: sortedStandards };
-    } catch (error) {
-      this.logger.error('Failed to list standards by space', {
-        spaceId: command.spaceId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
     }
+
+    const standardsInSpace = await this.standardService.listStandardsBySpace(
+      command.spaceId,
+      { includeDeleted: command.includeDeleted },
+    );
+
+    const sortedStandards = standardsInSpace.sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
+    this.logger.info('Standards listed by space successfully', {
+      spaceId: command.spaceId,
+      organizationId: command.organizationId,
+      count: sortedStandards.length,
+    });
+
+    return { standards: sortedStandards };
   }
 }

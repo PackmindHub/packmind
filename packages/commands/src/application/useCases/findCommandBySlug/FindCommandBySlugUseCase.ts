@@ -25,25 +25,16 @@ export class FindCommandBySlugUseCase {
       organizationId,
     });
 
-    try {
-      const recipe = await this.commandService.findCommandBySlug(
-        slug,
-        organizationId,
-        opts,
-      );
-      this.logger.info('Recipe search by slug and organization completed', {
-        slug,
-        organizationId,
-        found: !!recipe,
-      });
-      return recipe;
-    } catch (error) {
-      this.logger.error('Failed to find recipe by slug and organization', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const recipe = await this.commandService.findCommandBySlug(
+      slug,
+      organizationId,
+      opts,
+    );
+    this.logger.info('Recipe search by slug and organization completed', {
+      slug,
+      organizationId,
+      found: !!recipe,
+    });
+    return recipe;
   }
 }

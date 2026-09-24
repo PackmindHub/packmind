@@ -1,4 +1,4 @@
-import { SkillParseError } from '../errors/SkillParseError';
+import { SkillParseError } from '../../domain/errors/SkillParseError';
 import { SkillParser } from './SkillParser';
 
 describe('SkillParser', () => {

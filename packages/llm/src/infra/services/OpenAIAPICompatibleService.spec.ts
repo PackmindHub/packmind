@@ -480,7 +480,10 @@ Here is the final answer.`,
     });
 
     describe('when rate limit errors occur', () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       beforeEach(() => {
         mockOpenAIInstance.chat.completions.create
@@ -517,7 +520,9 @@ Here is the final answer.`,
     });
 
     describe('when authentication error occurs', () => {
-      const authError = new Error('Unauthorized (401)');
+      const authError = Object.assign(new Error('Unauthorized (401)'), {
+        status: 401,
+      });
 
       beforeEach(() => {
         mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
@@ -551,7 +556,9 @@ Here is the final answer.`,
     });
 
     describe('when maximum retry attempts reached', () => {
-      const networkError = new Error('Network timeout');
+      const networkError = Object.assign(new Error('Network timeout'), {
+        code: 'ETIMEDOUT',
+      });
 
       beforeEach(() => {
         mockOpenAIInstance.chat.completions.create.mockRejectedValue(
@@ -739,7 +746,10 @@ Here is the final answer.`,
     });
 
     describe('when errors occur with retry', () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+      const rateLimitError = Object.assign(
+        new Error('Rate limit exceeded (429)'),
+        { status: 429 },
+      );
 
       beforeEach(() => {
         mockOpenAIInstance.chat.completions.create
@@ -758,33 +768,6 @@ Here is the final answer.`,
 
         expect(result.attempts).toBe(2);
       });
-    });
-  });
-
-  describe('error classification', () => {
-    it('classifies rate limit errors correctly', () => {
-      const rateLimitError = new Error('Rate limit exceeded');
-      const errorType =
-        getProtectedAccess(service).classifyError(rateLimitError);
-      expect(errorType).toBe(AIServiceErrorTypes.RATE_LIMIT);
-    });
-
-    it('classifies authentication errors correctly', () => {
-      const authError = new Error('Unauthorized access');
-      const errorType = getProtectedAccess(service).classifyError(authError);
-      expect(errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
-    });
-
-    it('classifies network errors correctly', () => {
-      const networkError = new Error('Network timeout occurred');
-      const errorType = getProtectedAccess(service).classifyError(networkError);
-      expect(errorType).toBe(AIServiceErrorTypes.NETWORK_ERROR);
-    });
-
-    it('defaults to API_ERROR for unknown errors', () => {
-      const unknownError = new Error('Unknown error');
-      const errorType = getProtectedAccess(service).classifyError(unknownError);
-      expect(errorType).toBe(AIServiceErrorTypes.API_ERROR);
     });
   });
 

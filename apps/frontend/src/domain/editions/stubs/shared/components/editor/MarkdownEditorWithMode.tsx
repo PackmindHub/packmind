@@ -1,5 +1,8 @@
 import React from 'react';
-import { MarkdownEditor } from '../../../../../../shared/components/editor/MarkdownEditor';
+import {
+  IMarkdownEditorApi,
+  MarkdownEditor,
+} from '../../../../../../shared/components/editor/MarkdownEditor';
 
 /**
  * OSS stub for the proprietary `MarkdownEditorWithMode`, reached through the
@@ -18,6 +21,7 @@ export type MarkdownEditorMode = 'wysiwyg' | 'raw';
 interface IMarkdownEditorWithModeProps {
   defaultValue: string;
   onMarkdownChange?: (value: string) => void;
+  onEditorReady?: (api: IMarkdownEditorApi) => void;
   readOnly?: boolean;
   paddingVariant?: 'default' | 'none';
   defaultMode?: MarkdownEditorMode;
@@ -26,12 +30,14 @@ interface IMarkdownEditorWithModeProps {
 export const MarkdownEditorWithMode: React.FC<IMarkdownEditorWithModeProps> = ({
   defaultValue,
   onMarkdownChange,
+  onEditorReady,
   readOnly = false,
   paddingVariant = 'default',
 }) => (
   <MarkdownEditor
     defaultValue={defaultValue}
     onMarkdownChange={onMarkdownChange}
+    onEditorReady={onEditorReady}
     readOnly={readOnly}
     paddingVariant={paddingVariant}
   />

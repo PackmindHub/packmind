@@ -17,6 +17,7 @@ export type PublishPackageOnMarketplaceCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
   packageId: PackageId;
   distributionSource?: DistributionSource;
+  version?: string;
 };
 
 /**

@@ -16,7 +16,8 @@ export const PUBLISH_PLUGIN_TO_MARKETPLACE_QUEUE =
 
 /**
  * Ids only, which the worker re-loads so all the heavy lifting happens off the
- * request thread.
+ * request thread — plus the package version the publish pinned, when package
+ * releases are enabled; without it the live package content is published.
  */
 export interface PublishPluginToMarketplaceJobInput {
   marketplaceDistributionId: MarketplaceDistributionId;
@@ -24,6 +25,7 @@ export interface PublishPluginToMarketplaceJobInput {
   packageId: PackageId;
   organizationId: OrganizationId;
   userId: UserId;
+  packageVersion?: string;
 }
 
 /**

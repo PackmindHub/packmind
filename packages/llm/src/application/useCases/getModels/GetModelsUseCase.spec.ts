@@ -132,7 +132,9 @@ describe('GetModelsUseCase', () => {
     describe('when getModels throws an error', () => {
       beforeEach(() => {
         mockGetModels.mockRejectedValue(
-          new Error('Network error: Failed to fetch'),
+          Object.assign(new Error('Network error: Failed to fetch'), {
+            cause: { code: 'ECONNREFUSED' },
+          }),
         );
       });
 
@@ -164,7 +166,9 @@ describe('GetModelsUseCase', () => {
     describe('when authentication fails', () => {
       beforeEach(() => {
         mockGetModels.mockRejectedValue(
-          new Error('Unauthorized (401): Invalid API key'),
+          Object.assign(new Error('Unauthorized (401): Invalid API key'), {
+            status: 401,
+          }),
         );
       });
 
@@ -182,7 +186,11 @@ describe('GetModelsUseCase', () => {
 
     describe('when rate limited', () => {
       beforeEach(() => {
-        mockGetModels.mockRejectedValue(new Error('Rate limit exceeded (429)'));
+        mockGetModels.mockRejectedValue(
+          Object.assign(new Error('Rate limit exceeded (429)'), {
+            status: 429,
+          }),
+        );
       });
 
       it('classifies error as rate limit', async () => {

@@ -44,3 +44,4 @@ export {
   AIServiceErrorTypes,
   AiNotConfigured,
 } from '@packmind/types';
+export * from './domain/errors';

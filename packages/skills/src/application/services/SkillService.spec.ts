@@ -18,6 +18,7 @@ import { ISkillRepository } from '../../domain/repositories/ISkillRepository';
 import { ISkillVersionRepository } from '../../domain/repositories/ISkillVersionRepository';
 import { ISkillFileRepository } from '../../domain/repositories/ISkillFileRepository';
 import { CreateSkillData, SkillService, UpdateSkillData } from './SkillService';
+import { SkillNotFoundError } from '../../domain/errors';
 
 describe('SkillService', () => {
   let skillService: SkillService;
@@ -277,10 +278,10 @@ describe('SkillService', () => {
         skillRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws SkillNotFoundError', async () => {
         await expect(
           skillService.updateSkill(nonExistentSkillId, updateData),
-        ).rejects.toThrow(`Skill with id ${nonExistentSkillId} not found`);
+        ).rejects.toThrow(SkillNotFoundError);
       });
     });
   });
@@ -326,10 +327,10 @@ describe('SkillService', () => {
         skillRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws SkillNotFoundError', async () => {
         await expect(
           skillService.deleteSkill(nonExistentSkillId, userId),
-        ).rejects.toThrow(`Skill with id ${nonExistentSkillId} not found`);
+        ).rejects.toThrow(SkillNotFoundError);
       });
 
       it('does not call deleteById', async () => {
@@ -406,10 +407,10 @@ describe('SkillService', () => {
         skillRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws SkillNotFoundError', async () => {
         await expect(
           skillService.markSkillAsMoved(nonExistentSkillId, destinationSpaceId),
-        ).rejects.toThrow(`Skill with id ${nonExistentSkillId} not found`);
+        ).rejects.toThrow(SkillNotFoundError);
       });
     });
   });
@@ -678,14 +679,14 @@ describe('SkillService', () => {
         skillRepository.findById = jest.fn().mockResolvedValue(null);
       });
 
-      it('throws an error with the correct message', async () => {
+      it('throws SkillNotFoundError', async () => {
         await expect(
           skillService.duplicateSkillToSpace(
             nonExistentSkillId,
             destinationSpaceId,
             newUserId,
           ),
-        ).rejects.toThrow(`Skill with id ${nonExistentSkillId} not found`);
+        ).rejects.toThrow(SkillNotFoundError);
       });
     });
 

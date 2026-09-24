@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Post,
   Req,
@@ -12,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { StandardNotFoundError } from '@packmind/standards';
 import {
   CreateStandardRuleInput,
   CreateStandardSamplesResponse,
@@ -76,25 +76,11 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      return await this.standardsService.getStandardsBySpace(
-        spaceId,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/standards - Failed to fetch standards',
-        {
-          organizationId,
-          spaceId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.standardsService.getStandardsBySpace(
+      spaceId,
+      organizationId,
+      userId,
+    );
   }
 
   /**
@@ -127,33 +113,17 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      // Determine creation method based on client source
-      const method = request.clientSource === 'cli' ? 'cli' : 'blank';
+    // Determine creation method based on client source
+    const method = request.clientSource === 'cli' ? 'cli' : 'blank';
 
-      return await this.standardsService.createStandard(
-        standard,
-        organizationId,
-        userId,
-        spaceId,
-        request.clientSource,
-        method,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/standards - Failed to create standard',
-        {
-          organizationId,
-          spaceId,
-          standardName: standard.name,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.standardsService.createStandard(
+      standard,
+      organizationId,
+      userId,
+      spaceId,
+      request.clientSource,
+      method,
+    );
   }
 
   /**
@@ -178,27 +148,12 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      return await this.standardsService.getStandardById(
-        standardId,
-        organizationId,
-        spaceId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId - Failed to fetch standard',
-        {
-          organizationId,
-          spaceId,
-          standardId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
+    return this.standardsService.getStandardById(
+      standardId,
+      organizationId,
+      spaceId,
+      userId,
+    );
   }
 
   /**
@@ -227,66 +182,47 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      if (!body.samples || !Array.isArray(body.samples)) {
-        throw new BadRequestException('samples must be an array');
-      }
+    if (!body.samples || !Array.isArray(body.samples)) {
+      throw new BadRequestException('samples must be an array');
+    }
 
-      if (body.samples.length === 0) {
-        throw new BadRequestException('samples array cannot be empty');
-      }
+    if (body.samples.length === 0) {
+      throw new BadRequestException('samples array cannot be empty');
+    }
 
-      for (let i = 0; i < body.samples.length; i++) {
-        const sample = body.samples[i];
-        if (
-          !sample.type ||
-          (sample.type !== 'language' && sample.type !== 'framework')
-        ) {
-          throw new BadRequestException(
-            `Sample ${i} must have a valid type ('language' or 'framework')`,
-          );
-        }
-        if (!sample.id || typeof sample.id !== 'string') {
-          throw new BadRequestException(`Sample ${i} must have a valid id`);
-        }
-      }
-
-      const result = await this.standardsService.createStandardSamples(
-        organizationId,
-        spaceId,
-        userId,
-        body.samples,
-      );
-
-      this.logger.info(
-        'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Standards created from samples',
-        {
-          organizationId,
-          spaceId,
-          createdCount: result.created.length,
-          errorsCount: result.errors.length,
-        },
-      );
-
-      return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (!(error instanceof BadRequestException)) {
-        this.logger.error(
-          'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Failed to create standards from samples',
-          {
-            organizationId,
-            spaceId,
-            userId,
-            error: errorMessage,
-          },
+    for (let i = 0; i < body.samples.length; i++) {
+      const sample = body.samples[i];
+      if (
+        !sample.type ||
+        (sample.type !== 'language' && sample.type !== 'framework')
+      ) {
+        throw new BadRequestException(
+          `Sample ${i} must have a valid type ('language' or 'framework')`,
         );
       }
-
-      throw error;
+      if (!sample.id || typeof sample.id !== 'string') {
+        throw new BadRequestException(`Sample ${i} must have a valid id`);
+      }
     }
+
+    const result = await this.standardsService.createStandardSamples(
+      organizationId,
+      spaceId,
+      userId,
+      body.samples,
+    );
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Standards created from samples',
+      {
+        organizationId,
+        spaceId,
+        createdCount: result.created.length,
+        errorsCount: result.errors.length,
+      },
+    );
+
+    return result;
   }
 
   /**
@@ -320,64 +256,35 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      // Validate request body
-      if (!standard.name || typeof standard.name !== 'string') {
-        this.logger.error(
-          'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId - Standard name is required',
-        );
-        throw new BadRequestException('Standard name is required');
-      }
-
-      if (!standard.description || typeof standard.description !== 'string') {
-        this.logger.error(
-          'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId - Standard description is required',
-        );
-        throw new BadRequestException('Standard description is required');
-      }
-
-      if (!standard.rules || !Array.isArray(standard.rules)) {
-        this.logger.error(
-          'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId - Rules array is required',
-        );
-        throw new BadRequestException('Rules array is required');
-      }
-
-      // Validate each rule
-      for (let i = 0; i < standard.rules.length; i++) {
-        const rule = standard.rules[i];
-        if (!rule.content || typeof rule.content !== 'string') {
-          this.logger.error(
-            `POST /organizations/:orgId/spaces/:spaceId/standards/:standardId - Rule ${i} content is required`,
-          );
-          throw new BadRequestException(`Rule ${i} content is required`);
-        }
-      }
-
-      return await this.standardsService.updateStandard(
-        standardId,
-        standard,
-        organizationId,
-        userId,
-        spaceId,
-        request.clientSource,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId - Failed to update standard',
-        {
-          organizationId,
-          spaceId,
-          standardId,
-          standardName: standard.name,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
+    // Validate request body
+    if (!standard.name || typeof standard.name !== 'string') {
+      throw new BadRequestException('Standard name is required');
     }
+
+    if (!standard.description || typeof standard.description !== 'string') {
+      throw new BadRequestException('Standard description is required');
+    }
+
+    if (!standard.rules || !Array.isArray(standard.rules)) {
+      throw new BadRequestException('Rules array is required');
+    }
+
+    // Validate each rule
+    for (let i = 0; i < standard.rules.length; i++) {
+      const rule = standard.rules[i];
+      if (!rule.content || typeof rule.content !== 'string') {
+        throw new BadRequestException(`Rule ${i} content is required`);
+      }
+    }
+
+    return this.standardsService.updateStandard(
+      standardId,
+      standard,
+      organizationId,
+      userId,
+      spaceId,
+      request.clientSource,
+    );
   }
 
   /**
@@ -403,60 +310,32 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
-        standardId,
+    // Validate that the standard belongs to the specified space
+    const { standard } = await this.standardsService.getStandardById(
+      standardId,
+      organizationId,
+      spaceId,
+      userId,
+    );
+
+    if (!standard || standard.spaceId !== spaceId) {
+      throw new StandardNotFoundError(standardId, spaceId);
+    }
+
+    const versions =
+      await this.standardsService.getStandardVersionsById(standardId);
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/versions - Versions fetched successfully',
+      {
         organizationId,
         spaceId,
-        userId,
-      );
+        standardId,
+        count: versions.length,
+      },
+    );
 
-      if (!standardResponse || !standardResponse.standard) {
-        throw new NotFoundException(
-          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
-        );
-      }
-
-      if (standardResponse.standard.spaceId !== spaceId) {
-        throw new NotFoundException(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
-      }
-
-      const versions =
-        await this.standardsService.getStandardVersionsById(standardId);
-
-      this.logger.info(
-        'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/versions - Versions fetched successfully',
-        {
-          organizationId,
-          spaceId,
-          standardId,
-          count: versions.length,
-        },
-      );
-
-      return versions;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (!(error instanceof NotFoundException)) {
-        this.logger.error(
-          'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/versions - Failed to fetch versions',
-          {
-            organizationId,
-            spaceId,
-            standardId,
-            userId,
-            error: errorMessage,
-          },
-        );
-      }
-
-      throw error;
-    }
+    return versions;
   }
 
   /**
@@ -485,7 +364,7 @@ export class OrganizationsSpacesStandardsController {
     });
 
     if (version === null) {
-      throw new NotFoundException(`Standard ${standardId} not found`);
+      throw new StandardNotFoundError(standardId, spaceId);
     }
 
     return { version };
@@ -514,62 +393,34 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
-        standardId,
-        organizationId,
-        spaceId,
-        userId,
-      );
+    // Validate that the standard belongs to the specified space
+    const { standard } = await this.standardsService.getStandardById(
+      standardId,
+      organizationId,
+      spaceId,
+      userId,
+    );
 
-      if (!standardResponse || !standardResponse.standard) {
-        throw new NotFoundException(
-          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
-        );
-      }
-
-      if (standardResponse.standard.spaceId !== spaceId) {
-        throw new NotFoundException(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
-      }
-
-      await this.standardsService.deleteStandard({
-        standardId,
-        userId,
-        organizationId,
-        spaceId,
-        source: request.clientSource,
-      });
-
-      this.logger.info(
-        'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId - Standard deleted successfully',
-        {
-          organizationId,
-          spaceId,
-          standardId,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (!(error instanceof NotFoundException)) {
-        this.logger.error(
-          'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId - Failed to delete standard',
-          {
-            organizationId,
-            spaceId,
-            standardId,
-            userId,
-            error: errorMessage,
-          },
-        );
-      }
-
-      throw error;
+    if (!standard || standard.spaceId !== spaceId) {
+      throw new StandardNotFoundError(standardId, spaceId);
     }
+
+    await this.standardsService.deleteStandard({
+      standardId,
+      userId,
+      organizationId,
+      spaceId,
+      source: request.clientSource,
+    });
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId - Standard deleted successfully',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+      },
+    );
   }
 
   /**
@@ -596,74 +447,43 @@ export class OrganizationsSpacesStandardsController {
       },
     );
 
-    try {
-      if (!body.standardIds || !Array.isArray(body.standardIds)) {
-        throw new BadRequestException('standardIds must be an array');
-      }
-
-      if (body.standardIds.length === 0) {
-        throw new BadRequestException('standardIds array cannot be empty');
-      }
-
-      // Validate that all standards belong to the specified space
-      for (const standardId of body.standardIds) {
-        const standardResponse = await this.standardsService.getStandardById(
-          standardId,
-          organizationId,
-          spaceId,
-          userId,
-        );
-
-        if (!standardResponse || !standardResponse.standard) {
-          throw new NotFoundException(
-            `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
-          );
-        }
-
-        if (standardResponse.standard.spaceId !== spaceId) {
-          throw new NotFoundException(
-            `Standard ${standardId} does not belong to space ${spaceId}`,
-          );
-        }
-      }
-
-      await this.standardsService.deleteStandardsBatch({
-        standardIds: body.standardIds,
-        userId: userId.toString(),
-        organizationId: organizationId.toString(),
-        spaceId,
-        source: request.clientSource,
-      });
-
-      this.logger.info(
-        'DELETE /organizations/:orgId/spaces/:spaceId/standards - Standards batch deleted successfully',
-        {
-          organizationId,
-          spaceId,
-          count: body.standardIds.length,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (
-        !(error instanceof NotFoundException) &&
-        !(error instanceof BadRequestException)
-      ) {
-        this.logger.error(
-          'DELETE /organizations/:orgId/spaces/:spaceId/standards - Failed to delete standards batch',
-          {
-            organizationId,
-            spaceId,
-            standardIds: body?.standardIds,
-            userId,
-            error: errorMessage,
-          },
-        );
-      }
-
-      throw error;
+    if (!body.standardIds || !Array.isArray(body.standardIds)) {
+      throw new BadRequestException('standardIds must be an array');
     }
+
+    if (body.standardIds.length === 0) {
+      throw new BadRequestException('standardIds array cannot be empty');
+    }
+
+    // Validate that all standards belong to the specified space
+    for (const standardId of body.standardIds) {
+      const { standard } = await this.standardsService.getStandardById(
+        standardId,
+        organizationId,
+        spaceId,
+        userId,
+      );
+
+      if (!standard || standard.spaceId !== spaceId) {
+        throw new StandardNotFoundError(standardId, spaceId);
+      }
+    }
+
+    await this.standardsService.deleteStandardsBatch({
+      standardIds: body.standardIds,
+      userId: userId.toString(),
+      organizationId: organizationId.toString(),
+      spaceId,
+      source: request.clientSource,
+    });
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/standards - Standards batch deleted successfully',
+      {
+        organizationId,
+        spaceId,
+        count: body.standardIds.length,
+      },
+    );
   }
 }

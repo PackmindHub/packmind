@@ -60,81 +60,72 @@ export class StandardVersionService {
       rulesCount: standardVersionData.rules.length,
     });
 
-    try {
-      const versionId = createStandardVersionId(uuidv4());
-      this.logger.debug('Generated standard version ID', { versionId });
+    const versionId = createStandardVersionId(uuidv4());
+    this.logger.debug('Generated standard version ID', { versionId });
 
-      const newStandardVersion: StandardVersion = {
-        id: versionId,
-        standardId: standardVersionData.standardId,
-        name: standardVersionData.name,
-        slug: standardVersionData.slug,
-        description: standardVersionData.description,
-        version: standardVersionData.version,
-        scope: standardVersionData.scope,
-        userId: standardVersionData.userId,
+    const newStandardVersion: StandardVersion = {
+      id: versionId,
+      standardId: standardVersionData.standardId,
+      name: standardVersionData.name,
+      slug: standardVersionData.slug,
+      description: standardVersionData.description,
+      version: standardVersionData.version,
+      scope: standardVersionData.scope,
+      userId: standardVersionData.userId,
+    };
+    const savedVersion =
+      await this.standardVersionRepository.add(newStandardVersion);
+
+    this.logger.info('Adding rules for standard version', {
+      versionId: savedVersion.id,
+      rulesCount: standardVersionData.rules.length,
+    });
+
+    const ruleMapping = new Map<RuleId, RuleId>();
+
+    for (const ruleData of standardVersionData.rules) {
+      const rule: Rule = {
+        id: createRuleId(uuidv4()),
+        content: ruleData.content,
+        standardVersionId: savedVersion.id,
       };
-      const savedVersion =
-        await this.standardVersionRepository.add(newStandardVersion);
+      const newRule = await this.ruleRepository.add(rule);
 
-      this.logger.info('Adding rules for standard version', {
-        versionId: savedVersion.id,
-        rulesCount: standardVersionData.rules.length,
-      });
+      // Mapping consumed by copyLinterArtefacts below
+      if (ruleData.oldRuleId) {
+        ruleMapping.set(ruleData.oldRuleId, newRule.id);
+      }
 
-      const ruleMapping = new Map<RuleId, RuleId>();
-
-      for (const ruleData of standardVersionData.rules) {
-        const rule: Rule = {
-          id: createRuleId(uuidv4()),
-          content: ruleData.content,
-          standardVersionId: savedVersion.id,
+      for (const exampleData of ruleData.examples) {
+        const example: RuleExample = {
+          id: createRuleExampleId(uuidv4()),
+          ruleId: newRule.id,
+          lang: exampleData.lang,
+          positive: exampleData.positive,
+          negative: exampleData.negative,
         };
-        const newRule = await this.ruleRepository.add(rule);
-
-        // Mapping consumed by copyLinterArtefacts below
-        if (ruleData.oldRuleId) {
-          ruleMapping.set(ruleData.oldRuleId, newRule.id);
-        }
-
-        for (const exampleData of ruleData.examples) {
-          const example: RuleExample = {
-            id: createRuleExampleId(uuidv4()),
-            ruleId: newRule.id,
-            lang: exampleData.lang,
-            positive: exampleData.positive,
-            negative: exampleData.negative,
-          };
-          await this.ruleExampleRepository.add(example);
-        }
+        await this.ruleExampleRepository.add(example);
       }
-
-      if (
-        this._linterAdapter &&
-        ruleMapping.size > 0 &&
-        standardVersionData.organizationId &&
-        standardVersionData.userId
-      ) {
-        await this.copyLinterArtefacts(
-          ruleMapping,
-          standardVersionData,
-          savedVersion,
-        );
-      }
-
-      this.logger.info('Standard version and rules added successfully', {
-        versionId: savedVersion.id,
-      });
-
-      return savedVersion;
-    } catch (error) {
-      this.logger.error('Failed to add standard version', {
-        standardId: standardVersionData.standardId,
-        version: standardVersionData.version,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
     }
+
+    if (
+      this._linterAdapter &&
+      ruleMapping.size > 0 &&
+      standardVersionData.organizationId &&
+      standardVersionData.userId
+    ) {
+      await this.copyLinterArtefacts(
+        ruleMapping,
+        standardVersionData,
+        savedVersion,
+      );
+    }
+
+    this.logger.info('Standard version and rules added successfully', {
+      versionId: savedVersion.id,
+    });
+
+    return savedVersion;
   }
 
   private async copyLinterArtefacts(
@@ -209,21 +200,13 @@ export class StandardVersionService {
   ): Promise<StandardVersion[]> {
     this.logger.info('Listing standard versions', { standardId });
 
-    try {
-      const versions =
-        await this.standardVersionRepository.findByStandardId(standardId);
-      this.logger.info('Standard versions retrieved successfully', {
-        standardId,
-        count: versions.length,
-      });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list standard versions', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const versions =
+      await this.standardVersionRepository.findByStandardId(standardId);
+    this.logger.info('Standard versions retrieved successfully', {
+      standardId,
+      count: versions.length,
+    });
+    return versions;
   }
 
   async getStandardVersion(
@@ -233,33 +216,24 @@ export class StandardVersionService {
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting standard version', { standardId, version });
 
-    try {
-      const standardVersion =
-        await this.standardVersionRepository.findByStandardIdAndVersion(
-          standardId,
-          version,
-          allowedSpaceIds,
-        );
-
-      if (standardVersion) {
-        this.logger.info('Standard version found successfully', {
-          standardId,
-          version,
-          versionId: standardVersion.id,
-        });
-      } else {
-        this.logger.warn('Standard version not found', { standardId, version });
-      }
-
-      return standardVersion;
-    } catch (error) {
-      this.logger.error('Failed to get standard version', {
+    const standardVersion =
+      await this.standardVersionRepository.findByStandardIdAndVersion(
         standardId,
         version,
-        error: error instanceof Error ? error.message : String(error),
+        allowedSpaceIds,
+      );
+
+    if (standardVersion) {
+      this.logger.info('Standard version found successfully', {
+        standardId,
+        version,
+        versionId: standardVersion.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('Standard version not found', { standardId, version });
     }
+
+    return standardVersion;
   }
 
   async getStandardVersionById(
@@ -267,34 +241,26 @@ export class StandardVersionService {
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting standard version by ID', { versionId: id });
 
-    try {
-      const standardVersion = await this.standardVersionRepository.findById(id);
+    const standardVersion = await this.standardVersionRepository.findById(id);
 
-      if (standardVersion) {
-        // findById hydrates no relations, so rules are fetched separately -
-        // callers (deployments among them) rely on them being present.
-        const rules = await this.getRulesByVersionId(id);
+    if (standardVersion) {
+      // findById hydrates no relations, so rules are fetched separately -
+      // callers (deployments among them) rely on them being present.
+      const rules = await this.getRulesByVersionId(id);
 
-        this.logger.info('Standard version found by ID successfully', {
-          versionId: id,
-          standardId: standardVersion.standardId,
-          version: standardVersion.version,
-          rulesCount: rules.length,
-        });
-
-        return { ...standardVersion, rules };
-      } else {
-        this.logger.warn('Standard version not found by ID', { versionId: id });
-      }
-
-      return standardVersion;
-    } catch (error) {
-      this.logger.error('Failed to get standard version by ID', {
+      this.logger.info('Standard version found by ID successfully', {
         versionId: id,
-        error: error instanceof Error ? error.message : String(error),
+        standardId: standardVersion.standardId,
+        version: standardVersion.version,
+        rulesCount: rules.length,
       });
-      throw error;
+
+      return { ...standardVersion, rules };
+    } else {
+      this.logger.warn('Standard version not found by ID', { versionId: id });
     }
+
+    return standardVersion;
   }
 
   async getStandardVersionsByIds(
@@ -304,24 +270,16 @@ export class StandardVersionService {
       count: standardVersionIds.length,
     });
 
-    try {
-      const versions = await this.withRules(
-        await this.standardVersionRepository.findByIds(standardVersionIds),
-      );
+    const versions = await this.withRules(
+      await this.standardVersionRepository.findByIds(standardVersionIds),
+    );
 
-      this.logger.info('Standard versions retrieved by IDs successfully', {
-        requestedCount: standardVersionIds.length,
-        foundCount: versions.length,
-      });
+    this.logger.info('Standard versions retrieved by IDs successfully', {
+      requestedCount: standardVersionIds.length,
+      foundCount: versions.length,
+    });
 
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to get standard versions by IDs', {
-        count: standardVersionIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return versions;
   }
 
   async getLatestStandardVersions(
@@ -331,25 +289,15 @@ export class StandardVersionService {
       count: standardIds.length,
     });
 
-    try {
-      const versions =
-        await this.standardVersionRepository.findLatestByStandardIds(
-          standardIds,
-        );
+    const versions =
+      await this.standardVersionRepository.findLatestByStandardIds(standardIds);
 
-      this.logger.info('Latest standard versions retrieved successfully', {
-        requestedCount: standardIds.length,
-        foundCount: versions.length,
-      });
+    this.logger.info('Latest standard versions retrieved successfully', {
+      requestedCount: standardIds.length,
+      foundCount: versions.length,
+    });
 
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to get latest standard versions', {
-        count: standardIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return versions;
   }
 
   async getLatestStandardVersion(
@@ -357,28 +305,20 @@ export class StandardVersionService {
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting latest standard version', { standardId });
 
-    try {
-      const latestVersion =
-        await this.standardVersionRepository.findLatestByStandardId(standardId);
+    const latestVersion =
+      await this.standardVersionRepository.findLatestByStandardId(standardId);
 
-      if (latestVersion) {
-        this.logger.info('Latest standard version found successfully', {
-          standardId,
-          version: latestVersion.version,
-          versionId: latestVersion.id,
-        });
-      } else {
-        this.logger.warn('No standard versions found', { standardId });
-      }
-
-      return latestVersion;
-    } catch (error) {
-      this.logger.error('Failed to get latest standard version', {
+    if (latestVersion) {
+      this.logger.info('Latest standard version found successfully', {
         standardId,
-        error: error instanceof Error ? error.message : String(error),
+        version: latestVersion.version,
+        versionId: latestVersion.id,
       });
-      throw error;
+    } else {
+      this.logger.warn('No standard versions found', { standardId });
     }
+
+    return latestVersion;
   }
 
   async getRulesByVersionId(
@@ -388,21 +328,13 @@ export class StandardVersionService {
       standardVersionId,
     });
 
-    try {
-      const rules =
-        await this.ruleRepository.findByStandardVersionId(standardVersionId);
-      this.logger.info('Rules retrieved by standard version ID successfully', {
-        standardVersionId,
-        count: rules.length,
-      });
-      return rules;
-    } catch (error) {
-      this.logger.error('Failed to get rules by standard version ID', {
-        standardVersionId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const rules =
+      await this.ruleRepository.findByStandardVersionId(standardVersionId);
+    this.logger.info('Rules retrieved by standard version ID successfully', {
+      standardVersionId,
+      count: rules.length,
+    });
+    return rules;
   }
 
   /**
@@ -418,62 +350,41 @@ export class StandardVersionService {
       count: standardIds.length,
     });
 
-    try {
-      const latestVersions = await this.withRules(
-        await this.standardVersionRepository.findLatestByStandardIds(
-          standardIds,
-        ),
-      );
+    const latestVersions = await this.withRules(
+      await this.standardVersionRepository.findLatestByStandardIds(standardIds),
+    );
 
-      this.logger.info(
-        'Latest versions with rules retrieved by standard IDs successfully',
-        {
-          requestedCount: standardIds.length,
-          foundCount: latestVersions.length,
-        },
-      );
+    this.logger.info(
+      'Latest versions with rules retrieved by standard IDs successfully',
+      {
+        requestedCount: standardIds.length,
+        foundCount: latestVersions.length,
+      },
+    );
 
-      return latestVersions;
-    } catch (error) {
-      this.logger.error(
-        'Failed to get latest versions with rules by standard IDs',
-        {
-          count: standardIds.length,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
+    return latestVersions;
   }
 
   async getLatestRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     this.logger.info('Getting latest rules by standard ID', { standardId });
 
-    try {
-      const latestVersion = await this.getLatestStandardVersion(standardId);
+    const latestVersion = await this.getLatestStandardVersion(standardId);
 
-      if (!latestVersion) {
-        this.logger.warn(
-          'No versions found for standard, returning empty rules',
-          { standardId },
-        );
-        return [];
-      }
-
-      const rules = await this.getRulesByVersionId(latestVersion.id);
-      this.logger.info('Rules retrieved by standard ID successfully', {
-        standardId,
-        versionId: latestVersion.id,
-        count: rules.length,
-      });
-      return rules;
-    } catch (error) {
-      this.logger.error('Failed to get latest rules by standard ID', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!latestVersion) {
+      this.logger.warn(
+        'No versions found for standard, returning empty rules',
+        { standardId },
+      );
+      return [];
     }
+
+    const rules = await this.getRulesByVersionId(latestVersion.id);
+    this.logger.info('Rules retrieved by standard ID successfully', {
+      standardId,
+      versionId: latestVersion.id,
+      count: rules.length,
+    });
+    return rules;
   }
 
   /**

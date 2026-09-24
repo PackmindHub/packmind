@@ -49,6 +49,7 @@ export type TrackPluginInstallHeartbeatCommand = PublicPackmindCommand & {
    * outdated. Omitted for plugins published before this shipped (→ outdated).
    */
   installedRevision?: string | null;
+  installedPackageVersion?: string | null;
   /** Raw git remote URL of the active project; omitted when no git remote. */
   repoRemoteUrl?: string | null;
   /** SHA-256 hash of the lowercased identity email; see `identitySource`. */

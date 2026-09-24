@@ -222,7 +222,10 @@ describe('OpenAIService', () => {
       let result: any;
 
       beforeEach(async () => {
-        const rateLimitError = new Error('Rate limit exceeded (429)');
+        const rateLimitError = Object.assign(
+          new Error('Rate limit exceeded (429)'),
+          { status: 429 },
+        );
 
         mockOpenAIInstance.chat.completions.create
           .mockRejectedValueOnce(rateLimitError)
@@ -256,7 +259,9 @@ describe('OpenAIService', () => {
       let result: any;
 
       beforeEach(async () => {
-        const authError = new Error('Unauthorized (401)');
+        const authError = Object.assign(new Error('Unauthorized (401)'), {
+          status: 401,
+        });
         mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
 
         result = await service.executePrompt(mockPrompt);
@@ -274,6 +279,14 @@ describe('OpenAIService', () => {
         expect(result.error).toBe('Unauthorized (401)');
       });
 
+      it('classifies the failed result as an authentication error', () => {
+        expect(result.errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
+      });
+
+      it('carries the provider status code on the failed result', () => {
+        expect(result.statusCode).toBe(401);
+      });
+
       it('calls OpenAI API only once without retrying', () => {
         expect(
           mockOpenAIInstance.chat.completions.create,
@@ -286,7 +299,9 @@ describe('OpenAIService', () => {
       let result: any;
 
       beforeEach(async () => {
-        const networkError = new Error('Network timeout');
+        const networkError = Object.assign(new Error('Network timeout'), {
+          code: 'ETIMEDOUT',
+        });
         mockOpenAIInstance.chat.completions.create.mockRejectedValue(
           networkError,
         );
@@ -317,41 +332,6 @@ describe('OpenAIService', () => {
           mockOpenAIInstance.chat.completions.create,
         ).toHaveBeenCalledTimes(3);
       });
-    });
-  });
-
-  describe('error classification', () => {
-    let service: OpenAIService;
-
-    beforeEach(() => {
-      service = new OpenAIService({
-        provider: LLMProvider.OPENAI,
-        apiKey: 'test-api-key',
-      });
-    });
-
-    it('classifies rate limit errors correctly', () => {
-      const rateLimitError = new Error('Rate limit exceeded');
-      const errorType = getPrivateAccess(service).classifyError(rateLimitError);
-      expect(errorType).toBe(AIServiceErrorTypes.RATE_LIMIT);
-    });
-
-    it('classifies authentication errors correctly', () => {
-      const authError = new Error('Unauthorized access');
-      const errorType = getPrivateAccess(service).classifyError(authError);
-      expect(errorType).toBe(AIServiceErrorTypes.AUTHENTICATION_ERROR);
-    });
-
-    it('classifies network errors correctly', () => {
-      const networkError = new Error('Network timeout occurred');
-      const errorType = getPrivateAccess(service).classifyError(networkError);
-      expect(errorType).toBe(AIServiceErrorTypes.NETWORK_ERROR);
-    });
-
-    it('defaults to API_ERROR for unknown errors', () => {
-      const unknownError = new Error('Unknown error');
-      const errorType = getPrivateAccess(service).classifyError(unknownError);
-      expect(errorType).toBe(AIServiceErrorTypes.API_ERROR);
     });
   });
 

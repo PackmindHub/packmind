@@ -22,6 +22,7 @@ import {
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { RuleExampleInvalidError } from '../../../domain/errors/RuleExampleInvalidError';
 import { RuleNotInSpaceError } from '../../../domain/errors/RuleNotInSpaceError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
@@ -63,7 +64,10 @@ export class CreateRuleExampleUseCase
     } = command;
 
     if (!lang) {
-      throw new Error('Language is required and cannot be empty');
+      throw new RuleExampleInvalidError(
+        'Language is required and cannot be empty',
+        { ruleId },
+      );
     }
 
     const rule = await this._ruleRepository.findByIdInSpace(

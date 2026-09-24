@@ -1,8 +1,5 @@
 import { createMockInstance } from '@packmind/test-utils';
-import {
-  BadRequestException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillValidationError } from '@packmind/skills';
 import { ApplyPlaybookProposalItem } from '@packmind/types';
@@ -41,22 +38,13 @@ describe('PlaybookController', () => {
       service.applyPlaybook.mockRejectedValue(validationError);
     });
 
-    it('throws a BadRequestException', async () => {
+    it('lets the domain error reach the filter', async () => {
       await expect(
         controller.apply(request, orgId, {
           proposals,
           message: 'msg',
         }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('passes the error message through', async () => {
-      await expect(
-        controller.apply(request, orgId, {
-          proposals,
-          message: 'msg',
-        }),
-      ).rejects.toThrow(validationError.message);
+      ).rejects.toBeInstanceOf(SkillValidationError);
     });
   });
 

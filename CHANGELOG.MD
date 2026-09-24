@@ -4,6 +4,8 @@
 
 ## Changed
 
+- Skill files and package descriptions (new-package page, package edit form, Context drawers) now offer the WYSIWYG and Raw tabs that standards and commands already had
+
 ## Fixed
 
 ## Removed

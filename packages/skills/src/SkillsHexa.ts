@@ -13,6 +13,7 @@ import {
   ISpacesPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
+import { SkillsHexaDependencyMissingError } from './domain/errors';
 import { SkillsAdapter } from './application/adapter/SkillsAdapter';
 import { SkillsServices } from './application/services/SkillsServices';
 import { SkillsRepositories } from './infra/repositories/SkillsRepositories';
@@ -77,7 +78,9 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
       );
 
       if (!eventEmitterService) {
-        throw new Error('PackmindEventEmitterService not found in registry');
+        throw new SkillsHexaDependencyMissingError(
+          'PackmindEventEmitterService',
+        );
       }
 
       await this.adapter.initialize({

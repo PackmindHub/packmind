@@ -27,6 +27,7 @@ import { standardFactory } from '../../../../test/standardFactory';
 import { createStandardId } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
 import { GetStandardByIdUseCase } from './GetStandardByIdUseCase';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
 
 describe('GetStandardByIdUseCase', () => {
   let usecase: GetStandardByIdUseCase;
@@ -246,7 +247,7 @@ describe('GetStandardByIdUseCase', () => {
   });
 
   describe('authorization validation', () => {
-    it('throws error if space not found', async () => {
+    it('throws StandardSpaceNotAccessibleError if space not found', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const spaceId = createSpaceId(uuidv4());
@@ -277,12 +278,12 @@ describe('GetStandardByIdUseCase', () => {
       accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(null);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space with id ${spaceId} not found`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        StandardSpaceNotAccessibleError,
       );
     });
 
-    it('throws error if space does not belong to organization', async () => {
+    it('throws StandardSpaceNotAccessibleError if space does not belong to organization', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const otherOrganizationId = createOrganizationId(uuidv4());
@@ -318,12 +319,12 @@ describe('GetStandardByIdUseCase', () => {
       accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        StandardSpaceNotAccessibleError,
       );
     });
 
-    it('throws error if standard does not belong to organization', async () => {
+    it('throws StandardSpaceNotAccessibleError if standard does not belong to organization', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const otherOrganizationId = createOrganizationId(uuidv4());
@@ -366,12 +367,12 @@ describe('GetStandardByIdUseCase', () => {
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      await expect(usecase.execute(command)).rejects.toBeInstanceOf(
+        StandardSpaceNotAccessibleError,
       );
     });
 
-    it('throws error if standard does not belong to space', async () => {
+    it('answers as if the standard did not exist if it belongs to another space', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const spaceId = createSpaceId(uuidv4());
@@ -414,9 +415,9 @@ describe('GetStandardByIdUseCase', () => {
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Standard ${standardId} does not belong to space ${spaceId}`,
-      );
+      await expect(usecase.execute(command)).resolves.toEqual({
+        standard: null,
+      });
     });
 
     it('throws error if user not found', async () => {

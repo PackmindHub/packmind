@@ -44,4 +44,13 @@ export interface IPackageReleaseRepository extends IRepository<PackageRelease> {
     packageId: PackageId,
     version: string,
   ): Promise<PackageReleaseDetail | null>;
+
+  /**
+   * The release with its full component versions, soft-deleted ones
+   * included, as needed to render it.
+   */
+  findContentByPackageIdAndVersion(
+    packageId: PackageId,
+    version: string,
+  ): Promise<PackageRelease | null>;
 }

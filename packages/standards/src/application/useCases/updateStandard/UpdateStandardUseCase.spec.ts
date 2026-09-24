@@ -50,6 +50,9 @@ import {
   UserOrganizationMembership,
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
+import { StandardNotFoundError } from '../../../domain/errors/StandardNotFoundError';
+import { StandardSpaceNotAccessibleError } from '../../../domain/errors/StandardSpaceNotAccessibleError';
+import { StandardVersionMissingError } from '../../../domain/errors/StandardVersionMissingError';
 
 jest.mock('slug');
 
@@ -1013,10 +1016,10 @@ describe('UpdateStandardUseCase', () => {
           spacesPort.getSpaceById.mockResolvedValue(null);
         });
 
-        it('throws error', async () => {
+        it('throws StandardSpaceNotAccessibleError', async () => {
           await expect(
             updateStandardUseCase.execute(inputData),
-          ).rejects.toThrow(`Space with id ${spaceId} not found`);
+          ).rejects.toBeInstanceOf(StandardSpaceNotAccessibleError);
         });
 
         it('does not call getStandardById', async () => {
@@ -1051,12 +1054,10 @@ describe('UpdateStandardUseCase', () => {
           });
         });
 
-        it('throws error', async () => {
+        it('throws StandardSpaceNotAccessibleError', async () => {
           await expect(
             updateStandardUseCase.execute(inputData),
-          ).rejects.toThrow(
-            `Space ${spaceId} does not belong to organization ${organizationId}`,
-          );
+          ).rejects.toBeInstanceOf(StandardSpaceNotAccessibleError);
         });
 
         it('does not call getStandardById', async () => {
@@ -1093,12 +1094,10 @@ describe('UpdateStandardUseCase', () => {
           standardService.getStandardById.mockResolvedValue(existingStandard);
         });
 
-        it('throws error', async () => {
+        it('throws StandardNotFoundError', async () => {
           await expect(
             updateStandardUseCase.execute(inputData),
-          ).rejects.toThrow(
-            `Standard ${standardId} does not belong to space ${spaceId}`,
-          );
+          ).rejects.toBeInstanceOf(StandardNotFoundError);
         });
 
         it('does not call getLatestStandardVersion', async () => {
@@ -1133,10 +1132,10 @@ describe('UpdateStandardUseCase', () => {
           standardService.getStandardById.mockResolvedValue(null);
         });
 
-        it('throws error', async () => {
+        it('throws StandardNotFoundError', async () => {
           await expect(
             updateStandardUseCase.execute(inputData),
-          ).rejects.toThrow(`Standard with id ${standardId} not found`);
+          ).rejects.toBeInstanceOf(StandardNotFoundError);
         });
 
         it('does not call getLatestStandardVersion', async () => {
@@ -1152,7 +1151,7 @@ describe('UpdateStandardUseCase', () => {
       });
 
       describe('when no versions exist', () => {
-        it('throws error', async () => {
+        it('throws StandardVersionMissingError', async () => {
           const inputData: UpdateStandardCommand = {
             standardId: standardId,
             name: 'Test',
@@ -1175,7 +1174,7 @@ describe('UpdateStandardUseCase', () => {
 
           await expect(
             updateStandardUseCase.execute(inputData),
-          ).rejects.toThrow(`No versions found for standard ${standardId}`);
+          ).rejects.toBeInstanceOf(StandardVersionMissingError);
         });
       });
 

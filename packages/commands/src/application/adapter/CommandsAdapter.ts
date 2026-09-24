@@ -35,6 +35,7 @@ import {
   UpdateCommandFromUIResponse,
   UserId,
 } from '@packmind/types';
+import { CommandsAdapterPortsMissingError } from '../../domain/errors';
 import { ICommandsDelayedJobs } from '../../domain/jobs/ICommandsDelayedJobs';
 import { DeployCommandsJobFactory } from '../../infra/jobs/DeployCommandsJobFactory';
 import { CommandsServices } from '../services/CommandsServices';
@@ -101,9 +102,16 @@ export class CommandsAdapter
     );
 
     if (!this.isReady()) {
-      throw new Error(
-        'RecipesAdapter: Required ports/delayed jobs not provided.',
-      );
+      const missingPorts = Object.entries({
+        [IGitPortName]: this.gitPort,
+        [IDeploymentPortName]: this.deploymentPort,
+        [IAccountsPortName]: this.accountsPort,
+        [ISpacesPortName]: this.spacesPort,
+        commandsDelayedJobs: this.commandsDelayedJobs,
+      })
+        .filter(([, port]) => !port)
+        .map(([name]) => name);
+      throw new CommandsAdapterPortsMissingError(missingPorts);
     }
 
     this._captureCommand = new CaptureCommandUseCase(

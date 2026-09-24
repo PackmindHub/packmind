@@ -11,6 +11,7 @@ import {
   ISpacesPort,
   createSpaceId,
 } from '@packmind/types';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
 import { SkillService } from '../../services/SkillService';
 
 const origin = 'ListSkillsBySpaceUseCase';
@@ -41,43 +42,24 @@ export class ListSkillsBySpaceUseCase
       organizationId: command.organizationId,
     });
 
-    try {
-      const spaceId = createSpaceId(command.spaceId);
-      const space = await this.spacesPort.getSpaceById(spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', { spaceId: command.spaceId });
-        throw new Error(`Space with id ${command.spaceId} not found`);
-      }
-
-      if (space.organizationId !== command.organizationId) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: command.spaceId,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: command.organizationId,
-        });
-        throw new Error(
-          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
-        );
-      }
-
-      const skills = await this.skillService.listSkillsBySpace(spaceId, {
-        includeDeleted: command.includeDeleted,
-      });
-
-      this.logger.info('Skills retrieved successfully', {
-        spaceId: command.spaceId,
-        count: skills.length,
-      });
-
-      return skills;
-    } catch (error) {
-      this.logger.error('Failed to list skills by space', {
-        spaceId: command.spaceId,
-        userId: command.userId,
-        organizationId: command.organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const spaceId = createSpaceId(command.spaceId);
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space || space.organizationId !== command.organizationId) {
+      throw new SkillSpaceNotAccessibleError(
+        command.spaceId,
+        command.organizationId,
+      );
     }
+
+    const skills = await this.skillService.listSkillsBySpace(spaceId, {
+      includeDeleted: command.includeDeleted,
+    });
+
+    this.logger.info('Skills retrieved successfully', {
+      spaceId: command.spaceId,
+      count: skills.length,
+    });
+
+    return skills;
   }
 }

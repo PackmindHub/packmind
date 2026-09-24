@@ -1,9 +1,11 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   PackageId,
+  PackageRelease,
   PackageReleaseDetail,
   PackageReleaseEntry,
 } from '@packmind/types';
+import { currentVersionOf } from './packageReleaseResolution';
 import {
   IPackageReleaseRepository,
   PackageReleaseVersionIds,
@@ -111,5 +113,29 @@ export class PackageReleaseService {
       });
       throw error;
     }
+  }
+
+  /** Highest by version number, not by creation date; null when never released. */
+  async findHighestRelease(
+    packageId: PackageId,
+  ): Promise<PackageReleaseEntry | null> {
+    const releases = await this.listReleases(packageId);
+    const highest = currentVersionOf(releases);
+    return releases.find((release) => release.version === highest) ?? null;
+  }
+
+  async findContentByVersion(
+    packageId: PackageId,
+    version: string,
+  ): Promise<PackageRelease | null> {
+    this.logger.info('Finding package release content by version', {
+      packageId,
+      version,
+    });
+
+    return this.packageReleaseRepository.findContentByPackageIdAndVersion(
+      packageId,
+      version,
+    );
   }
 }

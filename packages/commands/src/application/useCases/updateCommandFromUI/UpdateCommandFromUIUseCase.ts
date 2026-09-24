@@ -12,6 +12,10 @@ import {
   UpdateCommandFromUICommand,
   UpdateCommandFromUIResponse,
 } from '@packmind/types';
+import {
+  CommandNotFoundError,
+  CommandSpaceNotAccessibleError,
+} from '../../../domain/errors';
 import { CommandService } from '../../services/CommandService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 
@@ -49,40 +53,16 @@ export class UpdateCommandFromUIUseCase
       userId,
     });
 
-    // Verify the space belongs to the organization
     const space = await this.spacesPort.getSpaceById(spaceId);
-    if (!space) {
-      this.logger.warn('Space not found', { spaceId });
-      throw new Error(`Space with id ${spaceId} not found`);
-    }
-
-    if (space.organizationId !== organizationId) {
-      this.logger.warn('Space does not belong to organization', {
-        spaceId,
-        spaceOrganizationId: space.organizationId,
-        requestOrganizationId: organizationId,
-      });
-      throw new Error(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
-      );
+    if (!space || space.organizationId !== organizationId) {
+      throw new CommandSpaceNotAccessibleError(spaceId, organizationId);
     }
 
     this.logger.info('Fetching existing recipe', { recipeId });
     const existingCommand = await this.commandService.getCommandById(recipeId);
 
-    if (!existingCommand) {
-      this.logger.error('Recipe not found', { recipeId });
-      throw new Error(`Recipe with id ${recipeId} not found`);
-    }
-
-    // Security validation: ensure recipe belongs to the specified space
-    if (existingCommand.spaceId !== spaceId) {
-      this.logger.error('Recipe does not belong to specified space', {
-        recipeId,
-        recipeSpaceId: existingCommand.spaceId,
-        requestedSpaceId: spaceId,
-      });
-      throw new Error(`Recipe ${recipeId} does not belong to space ${spaceId}`);
+    if (!existingCommand || existingCommand.spaceId !== spaceId) {
+      throw new CommandNotFoundError(recipeId, spaceId);
     }
 
     const nextVersion = existingCommand.version + 1;

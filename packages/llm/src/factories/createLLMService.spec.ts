@@ -7,6 +7,7 @@ import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 import { PackmindService } from '../infra/services/PackmindService';
 import { LLMProvider } from '@packmind/types';
 import { LLMServiceConfig } from '../types/LLMServiceConfig';
+import { UnknownLlmProviderError } from '../domain/errors';
 
 describe('createLLMService', () => {
   afterEach(() => {
@@ -126,12 +127,12 @@ describe('createLLMService', () => {
   });
 
   describe('when provider is unknown', () => {
-    it('throws an error', () => {
+    it('throws UnknownLlmProviderError', () => {
       expect(() =>
         createLLMService({
           provider: 'unknown',
         } as unknown as LLMServiceConfig),
-      ).toThrow('Unknown provider: unknown');
+      ).toThrow(UnknownLlmProviderError);
     });
   });
 });

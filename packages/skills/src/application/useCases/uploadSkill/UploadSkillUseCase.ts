@@ -29,8 +29,9 @@ import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillParser } from '../../parser/SkillParser';
 import { SkillValidator } from '../../validator/SkillValidator';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
-import { SkillParseError } from '../../errors/SkillParseError';
-import { SkillValidationError } from '../../errors/SkillValidationError';
+import { SkillParseError } from '../../../domain/errors/SkillParseError';
+import { SkillValidationError } from '../../../domain/errors/SkillValidationError';
+import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
 
 const origin = 'UploadSkillUseCase';
 
@@ -75,149 +76,112 @@ export class UploadSkillUseCase
       spaceId: spaceIdString,
     });
 
-    try {
-      const space = await this.spacesPort.getSpaceById(spaceId);
-      if (!space) {
-        this.logger.warn('Space not found', { spaceId: spaceIdString });
-        throw new Error(`Space with id ${spaceIdString} not found`);
-      }
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space || space.organizationId !== orgIdString) {
+      throw new SkillSpaceNotAccessibleError(spaceIdString, orgIdString);
+    }
 
-      if (space.organizationId !== orgIdString) {
-        this.logger.warn('Space does not belong to organization', {
-          spaceId: spaceIdString,
-          spaceOrganizationId: space.organizationId,
-          requestOrganizationId: orgIdString,
-        });
-        throw new Error(
-          `Space ${spaceIdString} does not belong to organization ${orgIdString}`,
-        );
-      }
+    this.logger.info('Looking for SKILL.md file');
+    const skillMdFile = files.find((f) => f.path === SKILL_MD_FILENAME);
+    if (!skillMdFile) {
+      throw new SkillParseError('SKILL.md not found in uploaded files');
+    }
+    this.logger.info('SKILL.md file found');
 
-      this.logger.info('Looking for SKILL.md file');
-      const skillMdFile = files.find((f) => f.path === SKILL_MD_FILENAME);
-      if (!skillMdFile) {
-        throw new SkillParseError('SKILL.md not found in uploaded files');
-      }
-      this.logger.info('SKILL.md file found');
+    this.logger.info('Parsing SKILL.md content');
+    const parsedSkill = this.skillParser.parse(skillMdFile.content);
+    this.logger.info('SKILL.md parsed successfully', {
+      name: parsedSkill.metadata.name,
+    });
 
-      this.logger.info('Parsing SKILL.md content');
-      const parsedSkill = this.skillParser.parse(skillMdFile.content);
-      this.logger.info('SKILL.md parsed successfully', {
-        name: parsedSkill.metadata.name,
+    this.logger.info('Validating skill metadata');
+    const validationErrors = this.skillValidator.validate(parsedSkill.metadata);
+    if (validationErrors.length > 0) {
+      this.logger.error('Skill metadata validation failed', {
+        errors: validationErrors,
+      });
+      throw new SkillValidationError(validationErrors);
+    }
+    this.logger.info('Skill metadata validation passed');
+
+    const {
+      name,
+      description,
+      license,
+      compatibility,
+      metadata,
+      allowedTools,
+      additionalProperties,
+    } = parsedSkill.metadata;
+    const prompt = parsedSkill.body;
+
+    this.logger.info('Generating slug from skill name', { name });
+    const skillSlug = slug(name);
+    this.logger.info('Base slug generated', { slug: skillSlug });
+
+    this.logger.info('Checking if skill exists in space', {
+      slug: skillSlug,
+      spaceId,
+    });
+    const existingSkills = await this.skillService.listSkillsBySpace(spaceId);
+    const existingSkill = existingSkills.find((s) => s.slug === skillSlug);
+
+    // Save supporting files (excluding SKILL.md which is already extracted into SkillVersion)
+    const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
+
+    if (existingSkill) {
+      this.logger.info('Skill already exists, checking for content changes', {
+        skillId: existingSkill.id,
+        currentVersion: existingSkill.version,
       });
 
-      this.logger.info('Validating skill metadata');
-      const validationErrors = this.skillValidator.validate(
-        parsedSkill.metadata,
-      );
-      if (validationErrors.length > 0) {
-        this.logger.error('Skill metadata validation failed', {
-          errors: validationErrors,
-        });
-        throw new SkillValidationError(validationErrors);
-      }
-      this.logger.info('Skill metadata validation passed');
+      const latestVersion =
+        await this.skillVersionService.getLatestSkillVersion(existingSkill.id);
 
-      const {
-        name,
-        description,
-        license,
-        compatibility,
-        metadata,
-        allowedTools,
-        additionalProperties,
-      } = parsedSkill.metadata;
-      const prompt = parsedSkill.body;
-
-      this.logger.info('Generating slug from skill name', { name });
-      const skillSlug = slug(name);
-      this.logger.info('Base slug generated', { slug: skillSlug });
-
-      this.logger.info('Checking if skill exists in space', {
-        slug: skillSlug,
-        spaceId,
-      });
-      const existingSkills = await this.skillService.listSkillsBySpace(spaceId);
-      const existingSkill = existingSkills.find((s) => s.slug === skillSlug);
-
-      // Save supporting files (excluding SKILL.md which is already extracted into SkillVersion)
-      const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
-
-      if (existingSkill) {
-        this.logger.info('Skill already exists, checking for content changes', {
-          skillId: existingSkill.id,
-          currentVersion: existingSkill.version,
-        });
-
-        const latestVersion =
-          await this.skillVersionService.getLatestSkillVersion(
-            existingSkill.id,
-          );
-
-        if (latestVersion) {
-          const isIdentical = await this.isContentIdentical(
-            latestVersion,
-            {
-              name,
-              description,
-              prompt,
-              license,
-              compatibility,
-              metadata,
-              allowedTools,
-              additionalProperties,
-            },
-            files,
-          );
-
-          if (isIdentical) {
-            this.logger.info(
-              'Content is identical to latest version, skipping version creation',
-              {
-                skillId: existingSkill.id,
-                version: existingSkill.version,
-              },
-            );
-            return { skill: existingSkill, versionCreated: false };
-          }
-        }
-
-        this.logger.info(
-          'Content differs from latest version, creating new version',
-          {
-            skillId: existingSkill.id,
-            currentVersion: existingSkill.version,
-          },
-        );
-
-        const newVersion = existingSkill.version + 1;
-
-        const updatedSkill = await this.skillService.updateSkill(
-          existingSkill.id,
+      if (latestVersion) {
+        const isIdentical = await this.isContentIdentical(
+          latestVersion,
           {
             name,
             description,
-            slug: skillSlug,
-            version: newVersion,
             prompt,
-            userId: command.user.id,
-            allowedTools,
             license,
             compatibility,
             metadata,
+            allowedTools,
             additionalProperties,
           },
+          files,
         );
-        this.logger.info('Skill entity updated successfully', {
-          skillId: updatedSkill.id,
-          version: newVersion,
-        });
 
-        const skillVersion = await this.skillVersionService.addSkillVersion({
+        if (isIdentical) {
+          this.logger.info(
+            'Content is identical to latest version, skipping version creation',
+            {
+              skillId: existingSkill.id,
+              version: existingSkill.version,
+            },
+          );
+          return { skill: existingSkill, versionCreated: false };
+        }
+      }
+
+      this.logger.info(
+        'Content differs from latest version, creating new version',
+        {
           skillId: existingSkill.id,
+          currentVersion: existingSkill.version,
+        },
+      );
+
+      const newVersion = existingSkill.version + 1;
+
+      const updatedSkill = await this.skillService.updateSkill(
+        existingSkill.id,
+        {
           name,
-          slug: skillSlug,
           description,
+          slug: skillSlug,
           version: newVersion,
           prompt,
           userId: command.user.id,
@@ -226,86 +190,19 @@ export class UploadSkillUseCase
           compatibility,
           metadata,
           additionalProperties,
-        });
-        this.logger.info('New skill version created successfully', {
-          skillId: existingSkill.id,
-          skillVersionId: skillVersion.id,
-          version: newVersion,
-        });
-
-        this.logger.info('Saving supporting skill files', {
-          count: supportingFiles.length,
-        });
-        const skillFiles: SkillFile[] = supportingFiles.map((file) => ({
-          id: createSkillFileId(uuidv4()),
-          skillVersionId: createSkillVersionId(skillVersion.id),
-          path: file.path,
-          content: file.content,
-          permissions: file.permissions,
-          isBase64: file.isBase64,
-        }));
-
-        await this.skillFileRepository.addMany(skillFiles);
-        this.logger.info('Supporting skill files saved successfully', {
-          count: skillFiles.length,
-        });
-
-        this.logger.info(
-          'UploadSkill process completed - new version created',
-          {
-            skillId: updatedSkill.id,
-            version: newVersion,
-            supportingFileCount: supportingFiles.length,
-          },
-        );
-
-        this.eventEmitterService.emit(
-          new SkillUpdatedEvent({
-            skillId: createSkillId(updatedSkill.id),
-            spaceId,
-            organizationId: command.organization.id,
-            userId: command.user.id,
-            source,
-            fileCount: supportingFiles.length,
-            originSkill,
-          }),
-        );
-
-        return { skill: updatedSkill, versionCreated: true };
-      }
-
-      this.logger.info('Slug is unique within space, creating new skill', {
-        slug: skillSlug,
-      });
-      const initialVersion = 1;
-
-      this.logger.info('Creating skill entity');
-      const skill = await this.skillService.addSkill({
-        name,
-        description,
-        slug: skillSlug,
-        version: initialVersion,
-        prompt,
-        userId: command.user.id,
-        spaceId,
-        allowedTools,
-        license,
-        compatibility,
-        metadata,
-        additionalProperties,
-      });
-      this.logger.info('Skill entity created successfully', {
-        skillId: skill.id,
-        name,
+        },
+      );
+      this.logger.info('Skill entity updated successfully', {
+        skillId: updatedSkill.id,
+        version: newVersion,
       });
 
-      this.logger.info('Creating initial skill version');
       const skillVersion = await this.skillVersionService.addSkillVersion({
-        skillId: skill.id,
+        skillId: existingSkill.id,
         name,
         slug: skillSlug,
         description,
-        version: initialVersion,
+        version: newVersion,
         prompt,
         userId: command.user.id,
         allowedTools,
@@ -314,10 +211,10 @@ export class UploadSkillUseCase
         metadata,
         additionalProperties,
       });
-      this.logger.info('Initial skill version created successfully', {
-        skillId: skill.id,
+      this.logger.info('New skill version created successfully', {
+        skillId: existingSkill.id,
         skillVersionId: skillVersion.id,
-        version: initialVersion,
+        version: newVersion,
       });
 
       this.logger.info('Saving supporting skill files', {
@@ -337,44 +234,110 @@ export class UploadSkillUseCase
         count: skillFiles.length,
       });
 
-      this.logger.info('UploadSkill process completed successfully', {
-        skillId: skill.id,
-        name,
+      this.logger.info('UploadSkill process completed - new version created', {
+        skillId: updatedSkill.id,
+        version: newVersion,
         supportingFileCount: supportingFiles.length,
       });
 
       this.eventEmitterService.emit(
-        new SkillCreatedEvent({
-          skillId: createSkillId(skill.id),
+        new SkillUpdatedEvent({
+          skillId: createSkillId(updatedSkill.id),
           spaceId,
           organizationId: command.organization.id,
           userId: command.user.id,
           source,
           fileCount: supportingFiles.length,
           originSkill,
-          directUpdate: command.directUpdate,
         }),
       );
 
-      return { skill, versionCreated: true };
-    } catch (error) {
-      if (
-        error instanceof SkillParseError ||
-        error instanceof SkillValidationError
-      ) {
-        this.logger.error('Skill upload failed due to validation', {
-          error: error.message,
-        });
-        throw error;
-      }
+      return { skill: updatedSkill, versionCreated: true };
+    }
 
-      this.logger.error('Failed to upload skill', {
+    this.logger.info('Slug is unique within space, creating new skill', {
+      slug: skillSlug,
+    });
+    const initialVersion = 1;
+
+    this.logger.info('Creating skill entity');
+    const skill = await this.skillService.addSkill({
+      name,
+      description,
+      slug: skillSlug,
+      version: initialVersion,
+      prompt,
+      userId: command.user.id,
+      spaceId,
+      allowedTools,
+      license,
+      compatibility,
+      metadata,
+      additionalProperties,
+    });
+    this.logger.info('Skill entity created successfully', {
+      skillId: skill.id,
+      name,
+    });
+
+    this.logger.info('Creating initial skill version');
+    const skillVersion = await this.skillVersionService.addSkillVersion({
+      skillId: skill.id,
+      name,
+      slug: skillSlug,
+      description,
+      version: initialVersion,
+      prompt,
+      userId: command.user.id,
+      allowedTools,
+      license,
+      compatibility,
+      metadata,
+      additionalProperties,
+    });
+    this.logger.info('Initial skill version created successfully', {
+      skillId: skill.id,
+      skillVersionId: skillVersion.id,
+      version: initialVersion,
+    });
+
+    this.logger.info('Saving supporting skill files', {
+      count: supportingFiles.length,
+    });
+    const skillFiles: SkillFile[] = supportingFiles.map((file) => ({
+      id: createSkillFileId(uuidv4()),
+      skillVersionId: createSkillVersionId(skillVersion.id),
+      path: file.path,
+      content: file.content,
+      permissions: file.permissions,
+      isBase64: file.isBase64,
+    }));
+
+    await this.skillFileRepository.addMany(skillFiles);
+    this.logger.info('Supporting skill files saved successfully', {
+      count: skillFiles.length,
+    });
+
+    this.logger.info('UploadSkill process completed successfully', {
+      skillId: skill.id,
+      name,
+      supportingFileCount: supportingFiles.length,
+    });
+
+    this.eventEmitterService.emit(
+      new SkillCreatedEvent({
+        skillId: createSkillId(skill.id),
+        spaceId,
         organizationId: command.organization.id,
         userId: command.user.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+        source,
+        fileCount: supportingFiles.length,
+        originSkill,
+        directUpdate: command.directUpdate,
+      }),
+    );
+
+    return { skill, versionCreated: true };
   }
 
   private async isContentIdentical(
