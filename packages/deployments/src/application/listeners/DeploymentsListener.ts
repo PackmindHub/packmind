@@ -6,12 +6,21 @@ import {
   StandardDeletedEvent,
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
+import { PackageChangeNotifier } from '../services/PackageChangeNotifier';
 
 const origin = 'DeploymentsListener';
 
+/**
+ * Deleting an artefact takes it out of every package holding it, which is a
+ * membership change like any other and has to reach the readers looking at
+ * those packages. It does not go through the package use cases — the artefact
+ * is gone and there is nothing to validate it against — so the announcement is
+ * made here, next to the write it belongs to.
+ */
 export class DeploymentsListener extends PackmindListener<IPackageRepository> {
   constructor(
     adapter: IPackageRepository,
+    private readonly packageChangeNotifier: PackageChangeNotifier = new PackageChangeNotifier(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(adapter);
@@ -31,6 +40,10 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
 
     try {
       await this.adapter.removeCommandFromAllPackages(id);
+      await this.packageChangeNotifier.packagesChanged(
+        event.payload.organizationId,
+        event.payload.spaceId,
+      );
       this.logger.info('Recipe removed from all packages successfully', {
         recipeId: id,
       });
@@ -51,6 +64,10 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
 
     try {
       await this.adapter.removeSkillFromAllPackages(skillId);
+      await this.packageChangeNotifier.packagesChanged(
+        event.payload.organizationId,
+        event.payload.spaceId,
+      );
       this.logger.info('Skill removed from all packages successfully', {
         skillId,
       });
@@ -71,6 +88,10 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
 
     try {
       await this.adapter.removeStandardFromAllPackages(standardId);
+      await this.packageChangeNotifier.packagesChanged(
+        event.payload.organizationId,
+        event.payload.spaceId,
+      );
       this.logger.info('Standard removed from all packages successfully', {
         standardId,
       });
