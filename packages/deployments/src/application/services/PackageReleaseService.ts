@@ -118,10 +118,10 @@ export class PackageReleaseService {
   /** Highest by version number, not by creation date; null when never released. */
   async findHighestRelease(
     packageId: PackageId,
-  ): Promise<PackageReleaseEntry | null> {
+  ): Promise<PackageReleaseDetail | null> {
     const releases = await this.listReleases(packageId);
-    const highest = currentVersionOf(releases);
-    return releases.find((release) => release.version === highest) ?? null;
+    if (releases.length === 0) return null;
+    return this.findByVersion(packageId, currentVersionOf(releases));
   }
 
   async findContentByVersion(

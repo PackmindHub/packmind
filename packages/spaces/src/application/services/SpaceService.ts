@@ -10,6 +10,7 @@ import {
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 
@@ -41,43 +42,34 @@ export class SpaceService {
   ): Promise<Space> {
     this.logger.info('Creating space', { name, organizationId });
 
-    try {
-      const baseSlug = slug(name);
-      const existingSpace = await this.spaceRepository.findBySlug(
-        baseSlug,
-        organizationId,
-      );
+    const baseSlug = slug(name);
+    const existingSpace = await this.spaceRepository.findBySlug(
+      baseSlug,
+      organizationId,
+    );
 
-      if (existingSpace) {
-        throw new SpaceSlugConflictError(name, organizationId);
-      }
-
-      const space: Space = {
-        id: createSpaceId(uuidv4()),
-        name,
-        slug: baseSlug,
-        type,
-        organizationId,
-        isDefaultSpace,
-        color: deriveColorFromName(name),
-      };
-
-      const createdSpace = await this.spaceRepository.add(space);
-      this.logger.info('Space created successfully', {
-        spaceId: createdSpace.id,
-        name,
-        slug: baseSlug,
-        organizationId,
-      });
-      return createdSpace;
-    } catch (error) {
-      this.logger.error('Failed to create space', {
-        name,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (existingSpace) {
+      throw new SpaceSlugConflictError(name, organizationId);
     }
+
+    const space: Space = {
+      id: createSpaceId(uuidv4()),
+      name,
+      slug: baseSlug,
+      type,
+      organizationId,
+      isDefaultSpace,
+      color: deriveColorFromName(name),
+    };
+
+    const createdSpace = await this.spaceRepository.add(space);
+    this.logger.info('Space created successfully', {
+      spaceId: createdSpace.id,
+      name,
+      slug: baseSlug,
+      organizationId,
+    });
+    return createdSpace;
   }
 
   async createDefaultSpace(organizationId: OrganizationId): Promise<Space> {
@@ -96,21 +88,13 @@ export class SpaceService {
   async getSpaceById(id: SpaceId): Promise<Space | null> {
     this.logger.info('Getting space by ID', { id });
 
-    try {
-      const space = await this.spaceRepository.findById(id);
-      if (space) {
-        this.logger.info('Space found', { id });
-      } else {
-        this.logger.warn('Space not found', { id });
-      }
-      return space;
-    } catch (error) {
-      this.logger.error('Failed to get space by ID', {
-        id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const space = await this.spaceRepository.findById(id);
+    if (space) {
+      this.logger.info('Space found', { id });
+    } else {
+      this.logger.warn('Space not found', { id });
     }
+    return space;
   }
 
   async getSpaceBySlug(
@@ -119,22 +103,13 @@ export class SpaceService {
   ): Promise<Space | null> {
     this.logger.info('Getting space by slug', { slug, organizationId });
 
-    try {
-      const space = await this.spaceRepository.findBySlug(slug, organizationId);
-      if (space) {
-        this.logger.info('Space found by slug', { slug, organizationId });
-      } else {
-        this.logger.warn('Space not found by slug', { slug, organizationId });
-      }
-      return space;
-    } catch (error) {
-      this.logger.error('Failed to get space by slug', {
-        slug,
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    const space = await this.spaceRepository.findBySlug(slug, organizationId);
+    if (space) {
+      this.logger.info('Space found by slug', { slug, organizationId });
+    } else {
+      this.logger.warn('Space not found by slug', { slug, organizationId });
     }
+    return space;
   }
 
   async listSpacesByOrganization(
@@ -142,21 +117,13 @@ export class SpaceService {
   ): Promise<Space[]> {
     this.logger.info('Listing spaces by organization', { organizationId });
 
-    try {
-      const spaces =
-        await this.spaceRepository.findByOrganizationId(organizationId);
-      this.logger.info('Spaces listed successfully', {
-        organizationId,
-        count: spaces.length,
-      });
-      return spaces;
-    } catch (error) {
-      this.logger.error('Failed to list spaces by organization', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    const spaces =
+      await this.spaceRepository.findByOrganizationId(organizationId);
+    this.logger.info('Spaces listed successfully', {
+      organizationId,
+      count: spaces.length,
+    });
+    return spaces;
   }
 
   async findOrgPagePaginated(
@@ -186,7 +153,7 @@ export class SpaceService {
     if (fields.name !== undefined) {
       const space = await this.spaceRepository.findById(spaceId);
       if (!space) {
-        throw new Error(`Space ${spaceId} not found`);
+        throw new SpaceNotFoundError(spaceId);
       }
       const candidateSlug = slug(fields.name);
       const existingBySlug = await this.spaceRepository.findBySlug(

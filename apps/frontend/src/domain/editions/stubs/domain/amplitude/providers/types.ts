@@ -40,6 +40,20 @@ export type AnalyticsEventMap = {
     attemptedVersion: string;
     refusalReason: string;
   };
+  package_version_distributed: {
+    packageId: string;
+    packageVersionId: string;
+    version: string;
+    marketplaceId: string;
+    componentsCount: number;
+    distributionSource: string;
+  };
+  plugin_adoption_viewed: {
+    packageId: string | null;
+    marketplaceId: string;
+    distributedVersion: string | null;
+    installsBehindCount: number;
+  };
   create_standard_from_samples_clicked: Record<string, never>;
   post_signup_onboarding_started: Record<string, never>;
   post_signup_onboarding_skipped: Record<string, never>;

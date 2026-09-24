@@ -13,6 +13,10 @@ import { ContinueDeployer } from './continue/ContinueDeployer';
 import { OpenCodeDeployer } from './opencode/OpenCodeDeployer';
 import { CodexDeployer } from './codex/CodexDeployer';
 import { KiroDeployer } from './kiro/KiroDeployer';
+import {
+  DeployerNotCreatedError,
+  UnknownCodingAgentError,
+} from '../../domain/errors';
 
 export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry {
   private readonly deployers = new Map<CodingAgent, ICodingAgentDeployer>();
@@ -28,7 +32,7 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
     }
     const deployer = this.deployers.get(agent);
     if (!deployer) {
-      throw new Error(`Failed to create deployer for agent: ${agent}`);
+      throw new DeployerNotCreatedError(agent);
     }
     return deployer;
   }
@@ -68,7 +72,7 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
       case 'kiro':
         return new KiroDeployer(this.standardsPort);
       default:
-        throw new Error(`Unknown coding agent: ${agent}`);
+        throw new UnknownCodingAgentError(agent);
     }
   }
 

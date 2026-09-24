@@ -26,6 +26,7 @@ import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgent
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
 import { PreviewArtifactRenderingUseCase } from '../useCases/PreviewArtifactRenderingUseCase';
+import { CodingAgentAdapterPortsMissingError } from '../../domain/errors';
 
 const origin = 'CodingAgentAdapter';
 
@@ -58,9 +59,10 @@ export class CodingAgentAdapter
     this.gitPort = ports[IGitPortName];
 
     if (!this.standardsPort || !this.gitPort) {
-      throw new Error(
-        'CodingAgentAdapter: Required ports/services not provided',
-      );
+      throw new CodingAgentAdapterPortsMissingError([
+        ...(this.standardsPort ? [] : [IStandardsPortName]),
+        ...(this.gitPort ? [] : [IGitPortName]),
+      ]);
     }
 
     this._renderArtifactsUseCase = new RenderArtifactsUseCase(

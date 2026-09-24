@@ -91,7 +91,7 @@ import {
   PackageWithArtefacts,
   PackageWithStandards,
 } from '../Package';
-import { PackageReleaseEntry } from '../PackageRelease';
+import { PackageReleaseDetail } from '../PackageRelease';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -274,7 +274,7 @@ export interface IDeploymentPort {
    */
   findHighestPackageRelease(
     packageId: PackageId,
-  ): Promise<PackageReleaseEntry | null>;
+  ): Promise<PackageReleaseDetail | null>;
 
   /**
    * System-level bulk lookup by slug, bypassing membership validation. Intended

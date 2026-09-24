@@ -21,6 +21,15 @@ function behind(name: string, version: number): DriftArtifactEntry {
   };
 }
 
+/*
+ * Anchored on the current year, because `reportDay` now drops the year only
+ * for this one. A literal year would make these cases swap shapes on 1 January
+ * and the suite would fail for a reason that has nothing to do with the rule.
+ */
+const THIS_YEAR = new Date().getFullYear();
+const STALE_THIS_YEAR = `${THIS_YEAR}-03-12T10:00:00.000Z`;
+const STALE_LAST_YEAR = `${THIS_YEAR - 1}-11-28T10:00:00.000Z`;
+
 function destination(
   overrides: Partial<PackageDestination> = {},
 ): PackageDestination {
@@ -36,6 +45,12 @@ function destination(
     installKey: 'repo-1::target-1',
     prUrl: null,
     lastActivityAt: '2026-09-01T10:00:00.000Z',
+    /*
+     * Stated rather than worked out from the date above, because the selector
+     * is what works it out: these rows are what the list is handed, and a spec
+     * that recomputed the rule would stop testing the component.
+     */
+    hasStaleReport: false,
     ...overrides,
   };
   return {
@@ -524,6 +539,180 @@ describe('ContextDestinationList', () => {
         expect(
           screen.queryByRole('button', { name: /what is behind/ }),
         ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('how old the row says it is', () => {
+    describe('when the report behind an aligned row is recent', () => {
+      it('says nothing about the date, which is every row on a live package', async () => {
+        renderList([destination({ key: 'a', name: 'acme/one' })]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(screen.getByText('Up to date')).toBeInTheDocument();
+      });
+    });
+
+    describe('when the report behind an aligned row has gone stale', () => {
+      const old = () =>
+        destination({
+          key: 'a',
+          name: 'acme/one',
+          hasStaleReport: true,
+          lastActivityAt: STALE_THIS_YEAR,
+        });
+
+      it('names the day, so the claim carries its own age in words', async () => {
+        renderList([old()]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(
+          screen.getByText('Up to date, last reported 12 Mar'),
+        ).toBeInTheDocument();
+      });
+
+      it('puts the instant one hover away, since the day drops the year', async () => {
+        renderList([old()]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(
+          screen.getByText('Up to date, last reported 12 Mar'),
+        ).toHaveAttribute(
+          'title',
+          expect.stringContaining(`Last reported Mar 12, ${THIS_YEAR}`),
+        );
+      });
+
+      it('names it on a published copy too, which makes the same present claim', async () => {
+        renderList([
+          destination({
+            key: 'm:mkt-1',
+            kind: 'marketplace',
+            name: 'acme-marketplace',
+            details: [],
+            installKey: null,
+            hasStaleReport: true,
+            lastActivityAt: STALE_THIS_YEAR,
+          }),
+        ]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(
+          screen.getByText('Published, last reported 12 Mar'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when an aligned row carries no date at all', () => {
+      it('leaves the sentence alone rather than naming an age it does not have', async () => {
+        renderList([
+          destination({ key: 'a', name: 'acme/one', lastActivityAt: null }),
+        ]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show the destinations that are up to date',
+          }),
+        );
+
+        expect(screen.getByText('Up to date')).toBeInTheDocument();
+      });
+    });
+
+    describe('when the stale row is not aligned', () => {
+      it('leaves its sentence untouched, since it reports an event and not a claim', () => {
+        renderList([
+          destination({
+            state: 'behind',
+            behindCount: 1,
+            behindArtifacts: [behind('a', 2)],
+            hasStaleReport: true,
+            lastActivityAt: STALE_THIS_YEAR,
+          }),
+        ]);
+
+        expect(
+          screen.getByText('1 component behind: a v2'),
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/last reported/)).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('the line that stands for what is up to date', () => {
+    const folded = () => [
+      destination({ key: 'a', name: 'acme/one' }),
+      destination({
+        key: 'b',
+        name: 'acme/two',
+        hasStaleReport: true,
+        lastActivityAt: STALE_LAST_YEAR,
+      }),
+    ];
+
+    describe('when one of the reports it folds away has gone stale', () => {
+      it('names the oldest, since the line makes the same claim in bulk', () => {
+        renderList(folded());
+
+        expect(
+          screen.getByText(
+            `2 destinations are up to date, oldest report 28 Nov ${THIS_YEAR - 1}`,
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('puts the instant one hover away, as the rows do', () => {
+        renderList(folded());
+
+        expect(
+          screen.getByText(
+            `2 destinations are up to date, oldest report 28 Nov ${THIS_YEAR - 1}`,
+          ),
+        ).toHaveAttribute(
+          'title',
+          expect.stringContaining(`Oldest report Nov 28, ${THIS_YEAR - 1}`),
+        );
+      });
+
+      it('keeps the names in a run of their own, which is what truncates', () => {
+        renderList(folded());
+
+        expect(
+          screen.getByText('acme/one \u00b7 acme/two'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when every report it folds away is recent', () => {
+      it('says nothing about age, which is the line as it stands today', () => {
+        renderList([
+          destination({ key: 'a', name: 'acme/one' }),
+          destination({ key: 'b', name: 'acme/two' }),
+        ]);
+
+        expect(
+          screen.getByText('2 destinations are up to date'),
+        ).toBeInTheDocument();
       });
     });
   });

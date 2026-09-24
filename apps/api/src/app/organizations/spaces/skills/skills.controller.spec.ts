@@ -1,5 +1,5 @@
 import { skillFactory } from '@packmind/skills/test';
-import { HttpStatus } from '@nestjs/common';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -680,6 +680,197 @@ describe('OrganizationsSpacesSkillsController', () => {
 
         await expect(
           controller.getSkillLatestVersion(orgId, spaceId, skillId, request),
+        ).rejects.toBeInstanceOf(SkillNotFoundError);
+      });
+    });
+  });
+
+  describe('downloadSkillZipForAgent', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const skillId = createSkillId('skill-789');
+    const userId = createUserId('user-1');
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    let mockResponse: jest.Mocked<Response>;
+
+    beforeEach(() => {
+      mockResponse = {
+        setHeader: jest.fn().mockReturnThis(),
+        send: jest.fn().mockReturnThis(),
+      } as unknown as jest.Mocked<Response>;
+    });
+
+    describe('when agent is valid', () => {
+      it('calls service with correct parameters', async () => {
+        skillsService.downloadSkillZipForAgent.mockResolvedValue({
+          fileContent: 'base64encodedcontent',
+          fileName: 'skill.zip',
+        });
+
+        await controller.downloadSkillZipForAgent(
+          orgId,
+          spaceId,
+          skillId,
+          'claude',
+          request,
+          mockResponse,
+        );
+
+        expect(skillsService.downloadSkillZipForAgent).toHaveBeenCalledWith(
+          skillId,
+          spaceId,
+          orgId,
+          userId,
+          'claude',
+        );
+      });
+
+      it('sets the zip content type', async () => {
+        skillsService.downloadSkillZipForAgent.mockResolvedValue({
+          fileContent: 'base64encodedcontent',
+          fileName: 'test-skill.zip',
+        });
+
+        await controller.downloadSkillZipForAgent(
+          orgId,
+          spaceId,
+          skillId,
+          'claude',
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.setHeader).toHaveBeenCalledWith(
+          'Content-Type',
+          'application/zip',
+        );
+      });
+
+      it('sets the attachment file name', async () => {
+        skillsService.downloadSkillZipForAgent.mockResolvedValue({
+          fileContent: 'base64encodedcontent',
+          fileName: 'test-skill.zip',
+        });
+
+        await controller.downloadSkillZipForAgent(
+          orgId,
+          spaceId,
+          skillId,
+          'claude',
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.setHeader).toHaveBeenCalledWith(
+          'Content-Disposition',
+          'attachment; filename="test-skill.zip"',
+        );
+      });
+
+      it('sends file content as buffer', async () => {
+        const fileContent = 'base64encodedcontent';
+        skillsService.downloadSkillZipForAgent.mockResolvedValue({
+          fileContent,
+          fileName: 'test-skill.zip',
+        });
+
+        await controller.downloadSkillZipForAgent(
+          orgId,
+          spaceId,
+          skillId,
+          'claude',
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.send).toHaveBeenCalledWith(
+          Buffer.from(fileContent, 'base64'),
+        );
+      });
+    });
+
+    describe('when agent is invalid', () => {
+      it('rejects unknown agent with BadRequestException', async () => {
+        await expect(
+          controller.downloadSkillZipForAgent(
+            orgId,
+            spaceId,
+            skillId,
+            'unknown-agent',
+            request,
+            mockResponse,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('rejects Object.prototype member constructor with BadRequestException', async () => {
+        await expect(
+          controller.downloadSkillZipForAgent(
+            orgId,
+            spaceId,
+            skillId,
+            'constructor',
+            request,
+            mockResponse,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('rejects Object.prototype member toString with BadRequestException', async () => {
+        await expect(
+          controller.downloadSkillZipForAgent(
+            orgId,
+            spaceId,
+            skillId,
+            'toString',
+            request,
+            mockResponse,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('rejects Object.prototype member hasOwnProperty with BadRequestException', async () => {
+        await expect(
+          controller.downloadSkillZipForAgent(
+            orgId,
+            spaceId,
+            skillId,
+            'hasOwnProperty',
+            request,
+            mockResponse,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+
+    describe('when skill is not found', () => {
+      it('throws SkillNotFoundError', async () => {
+        skillsService.downloadSkillZipForAgent.mockResolvedValue({
+          fileContent: '',
+          fileName: 'skill.zip',
+        });
+
+        await expect(
+          controller.downloadSkillZipForAgent(
+            orgId,
+            spaceId,
+            skillId,
+            'claude',
+            request,
+            mockResponse,
+          ),
         ).rejects.toBeInstanceOf(SkillNotFoundError);
       });
     });

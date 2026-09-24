@@ -1,4 +1,5 @@
 export * from './domain/AgentConfiguration';
+export * from './domain/errors';
 export * from './domain/repository/ICodingAgentDeployer';
 export {
   DefaultSkillMetadata,

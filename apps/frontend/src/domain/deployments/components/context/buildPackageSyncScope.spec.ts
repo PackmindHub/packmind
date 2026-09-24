@@ -19,6 +19,7 @@ function landing(installKey: string): PackageDestination {
     installKey,
     prUrl: null,
     lastActivityAt: null,
+    hasStaleReport: false,
   };
 }
 
@@ -35,6 +36,7 @@ function catalog(id: string): PackageDestination {
     installKey: null,
     prUrl: null,
     lastActivityAt: null,
+    hasStaleReport: false,
   };
 }
 

@@ -1,5 +1,6 @@
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
+  PackageReleaseDetail,
   PackageReleaseEntry,
   createPackageId,
   createPackageReleaseId,
@@ -21,8 +22,18 @@ describe('PackageReleaseService', () => {
     description: 'Security harness',
   });
 
+  const detailOf = (version: string): PackageReleaseDetail => ({
+    ...releaseOf(version),
+    recipeVersions: [],
+    standardVersions: [],
+    skillVersions: [],
+  });
+
   beforeEach(() => {
     repository = mockInterface<IPackageReleaseRepository>();
+    repository.findByPackageIdAndVersion.mockImplementation(
+      async (_packageId, version) => detailOf(version),
+    );
     service = new PackageReleaseService(repository, stubLogger());
   });
 
@@ -58,6 +69,21 @@ describe('PackageReleaseService', () => {
         repository.findByPackageId.mockResolvedValue([]);
 
         expect(await service.findHighestRelease(packageId)).toBeNull();
+      });
+    });
+
+    describe('when the package was released', () => {
+      it('returns the highest release with its pinned components', async () => {
+        repository.findByPackageId.mockResolvedValue(
+          ['1.0.0', '1.1.0'].map(releaseOf),
+        );
+
+        await service.findHighestRelease(packageId);
+
+        expect(repository.findByPackageIdAndVersion).toHaveBeenCalledWith(
+          packageId,
+          '1.1.0',
+        );
       });
     });
   });

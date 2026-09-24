@@ -7,6 +7,7 @@ import {
   UserSpaceMembership,
   UserSpaceRole,
 } from '@packmind/types';
+import { DefaultSpaceNotFoundError } from '../../domain/errors/DefaultSpaceNotFoundError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { IUserSpaceMembershipRepository } from '../../domain/repositories/IUserSpaceMembershipRepository';
 
@@ -38,9 +39,7 @@ export class UserSpaceMembershipService {
     const defaultSpace = spaces.find((space) => space.isDefaultSpace);
 
     if (!defaultSpace) {
-      throw new Error(
-        `Default space not found for organization ${organizationId}`,
-      );
+      throw new DefaultSpaceNotFoundError(organizationId);
     }
 
     const membership = await this.userSpaceMembershipRepository.addMembership({

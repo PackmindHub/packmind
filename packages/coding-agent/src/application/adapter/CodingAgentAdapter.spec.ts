@@ -17,6 +17,7 @@ import { CodingAgentServices } from '../services/CodingAgentServices';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
+import { CodingAgentAdapterPortsMissingError } from '../../domain/errors';
 
 describe('CodingAgentAdapter', () => {
   let adapter: CodingAgentAdapter;
@@ -79,7 +80,7 @@ describe('CodingAgentAdapter', () => {
 
   describe('initialize', () => {
     describe('when required ports not provided', () => {
-      it('throws', async () => {
+      it('throws CodingAgentAdapterPortsMissingError', async () => {
         await expect(
           adapter.initialize({
             [IStandardsPortName]: mockStandardsPort,
@@ -88,9 +89,7 @@ describe('CodingAgentAdapter', () => {
             [IStandardsPortName]: IStandardsPort;
             [IGitPortName]: IGitPort;
           }),
-        ).rejects.toThrow(
-          'CodingAgentAdapter: Required ports/services not provided',
-        );
+        ).rejects.toThrow(CodingAgentAdapterPortsMissingError);
       });
     });
 

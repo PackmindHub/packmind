@@ -17,6 +17,7 @@ import {
   stubLogger,
   createMockInstance,
 } from '@packmind/test-utils';
+import { InvalidSpaceNameError } from '../../domain/errors/InvalidSpaceNameError';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
 import { SpaceService } from '../services/SpaceService';
 import { CreateSpaceUseCase } from './CreateSpaceUseCase';
@@ -209,10 +210,10 @@ describe('CreateSpaceUseCase', () => {
     });
 
     describe('when the name is empty', () => {
-      it('throws InvalidSpaceNameError with empty message', async () => {
+      it('throws InvalidSpaceNameError', async () => {
         await expect(
           useCase.execute(buildCommand({ name: '' })),
-        ).rejects.toThrow('Invalid space name: name cannot be empty');
+        ).rejects.toBeInstanceOf(InvalidSpaceNameError);
       });
     });
 

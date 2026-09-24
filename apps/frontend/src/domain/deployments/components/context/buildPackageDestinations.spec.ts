@@ -9,12 +9,25 @@ import type {
 } from '../redesign/selectors/installDriftEntries';
 import type { ArtifactDrift } from '../redesign/types';
 import {
+  STALE_REPORT_DAYS,
   buildPackageDestinations,
+  destinationTone,
   filterPackageDestinations,
+  oldestStaleReport,
   packageDestinationSummary,
+  reportDay,
   searchPackageDestinations,
   type PackagePublication,
 } from './buildPackageDestinations';
+
+/*
+ * Ages rather than dates, so a suite that passes today still passes in March.
+ * The rule under test is a distance from now, and a literal date fixture turns
+ * into a stale one the moment nobody is looking.
+ */
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
 
 function behindArtifact(name: string): DriftArtifactEntry {
   return {
@@ -51,7 +64,7 @@ function install(
     mostRecentDeployedAt: '2026-09-01T10:00:00.000Z',
     mostRecentDeployedAtDays: 3,
     lastDistributionStatus: DistributionStatus.success,
-    lastDistributedAt: '2026-09-01T10:00:00.000Z',
+    lastDistributedAt: daysAgo(3),
     behindArtifacts: [],
     alignedArtifactCount: 4,
     ...rest,
@@ -67,7 +80,7 @@ function publication(
     isOutdated: false,
     lastAttempt: 'landed',
     prUrl: null,
-    lastActivityAt: '2026-09-01T10:00:00.000Z',
+    lastActivityAt: daysAgo(3),
     ...overrides,
   };
 }
@@ -436,5 +449,217 @@ describe('packageDestinationSummary', () => {
       needsAHand: 0,
       upToDate: 0,
     });
+  });
+});
+
+describe('the age of a report', () => {
+  describe('when the last report is recent', () => {
+    it('leaves the row unqualified, which is every row on a live package', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            lastDistributedAt: daysAgo(STALE_REPORT_DAYS - 2),
+          }),
+        ],
+      });
+
+      expect(rows[0].hasStaleReport).toBe(false);
+      expect(destinationTone(rows[0])).toBe('green.500');
+    });
+
+    it('holds right up to the threshold, which is not itself an age worth naming', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            lastDistributedAt: daysAgo(STALE_REPORT_DAYS),
+          }),
+        ],
+      });
+
+      expect(rows[0].hasStaleReport).toBe(false);
+    });
+  });
+
+  describe('when the last report is older than the threshold', () => {
+    it('marks the row, since nothing has read that branch since', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            lastDistributedAt: daysAgo(STALE_REPORT_DAYS + 30),
+          }),
+        ],
+      });
+
+      expect(rows[0].hasStaleReport).toBe(true);
+    });
+
+    it('drains the colour from the aligned mark rather than darkening it', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            lastDistributedAt: daysAgo(90),
+          }),
+        ],
+      });
+
+      expect(destinationTone(rows[0])).toBe('beige.500');
+    });
+
+    /*
+     * The mirror of the rule, and the reason it is bounded: a marketplace is
+     * swept by its own reconciliation job, so nobody has to have been there
+     * lately for its state to be known. Saying "last reported 90 days ago"
+     * there would invent a doubt that the sweep has already settled, which is
+     * the exact inverse of the gap this rule exists to close.
+     */
+    it('leaves a published copy alone, however old its date', () => {
+      const rows = buildPackageDestinations({
+        installs: [],
+        publications: [publication({ lastActivityAt: daysAgo(90) })],
+      });
+
+      expect(rows[0].hasStaleReport).toBe(false);
+      expect(destinationTone(rows[0])).toBe('green.500');
+    });
+
+    describe('on a state that is not aligned', () => {
+      it('leaves the tone alone, since a failure does not go out of date', () => {
+        const rows = buildPackageDestinations({
+          installs: [
+            install({
+              repoId: 'repo-1',
+              targetId: 't1',
+              lastDistributionStatus: DistributionStatus.failure,
+              behindArtifacts: [behindArtifact('a')],
+              lastDistributedAt: daysAgo(400),
+            }),
+            install({
+              repoId: 'repo-2',
+              targetId: 't2',
+              behindArtifacts: [behindArtifact('a')],
+              lastDistributedAt: daysAgo(400),
+            }),
+          ],
+        });
+
+        expect(rows.map((row) => destinationTone(row))).toEqual([
+          'red.300',
+          'orange.500',
+        ]);
+      });
+
+      it('never moves a row up the order, since age is not an escalation', () => {
+        const rows = buildPackageDestinations({
+          installs: [
+            install({
+              repoId: 'repo-old',
+              targetId: 't1',
+              lastDistributedAt: daysAgo(400),
+            }),
+            install({
+              repoId: 'repo-late',
+              targetId: 't2',
+              behindArtifacts: [behindArtifact('a')],
+            }),
+          ],
+        });
+
+        expect(rows.map((row) => row.state)).toEqual(['behind', 'aligned']);
+      });
+    });
+  });
+
+  describe('when nothing was ever reported', () => {
+    it('leaves the row unmarked, so no mark fades without a date to name', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            lastDistributedAt: null,
+            mostRecentDeployedAt: null,
+          }),
+        ],
+      });
+
+      expect(rows[0].lastActivityAt).toBeNull();
+      expect(rows[0].hasStaleReport).toBe(false);
+      expect(destinationTone(rows[0])).toBe('green.500');
+    });
+  });
+});
+
+describe('reportDay', () => {
+  /*
+   * Built from the current year rather than written out, so the suite does not
+   * start failing on a January morning. Only the number is computed; the shape
+   * each case asserts is spelled out in full.
+   */
+  const thisYear = new Date().getFullYear();
+
+  it('is the day and the short month, which two rows can be compared on', () => {
+    expect(reportDay(`${thisYear}-03-12T10:00:00.000Z`)).toBe('12 Mar');
+  });
+
+  describe('when the report is not from this year', () => {
+    it('carries the year, since a bare day reads as one that has not come yet', () => {
+      expect(reportDay(`${thisYear - 1}-11-28T10:00:00.000Z`)).toBe(
+        `28 Nov ${thisYear - 1}`,
+      );
+    });
+  });
+});
+
+describe('oldestStaleReport', () => {
+  it('is the one nobody has heard from in longest', () => {
+    const longAgo = daysAgo(200);
+    const rows = buildPackageDestinations({
+      installs: [
+        install({
+          repoId: 'repo-1',
+          targetId: 't1',
+          lastDistributedAt: daysAgo(40),
+        }),
+        install({
+          repoId: 'repo-2',
+          targetId: 't2',
+          lastDistributedAt: longAgo,
+        }),
+        install({ repoId: 'repo-3', targetId: 't3' }),
+      ],
+    });
+
+    expect(oldestStaleReport(rows)).toBe(longAgo);
+  });
+
+  it('is nothing when every report is recent', () => {
+    const rows = buildPackageDestinations({
+      installs: [install({ repoId: 'repo-1', targetId: 't1' })],
+    });
+
+    expect(oldestStaleReport(rows)).toBeNull();
+  });
+
+  it('is nothing on a set that carries no dates at all', () => {
+    const rows = buildPackageDestinations({
+      installs: [
+        install({
+          repoId: 'repo-1',
+          targetId: 't1',
+          lastDistributedAt: null,
+          mostRecentDeployedAt: null,
+        }),
+      ],
+    });
+
+    expect(oldestStaleReport(rows)).toBeNull();
   });
 });
