@@ -109,7 +109,16 @@ export class UpdateGitProviderUseCase
             null,
         };
 
-    validateProviderCredentials(credentialView, this.mode);
+    // A stored token that cannot be decrypted reads as null, yet a token is
+    // still configured: a rename must not be refused for lacking one.
+    const keepsUnreadableToken =
+      !isSwitchingMethod &&
+      existingProvider.tokenUnreadable === true &&
+      gitProvider.token === undefined;
+
+    validateProviderCredentials(credentialView, this.mode, {
+      allowTokenless: keepsUnreadableToken,
+    });
 
     const patch: Partial<Omit<GitProvider, 'id'>> = { ...gitProvider };
 

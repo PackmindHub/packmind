@@ -114,6 +114,57 @@ describe('UpdateGitProviderUseCase', () => {
       });
     });
 
+    describe('when the stored token cannot be decrypted', () => {
+      let existingProvider: ReturnType<typeof gitProviderFactory>;
+
+      beforeEach(() => {
+        existingProvider = gitProviderFactory({
+          organizationId,
+          token: null,
+          tokenUnreadable: true,
+          authMethod: 'token',
+          source: GitProviderVendors.github,
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue(
+          existingProvider,
+        );
+      });
+
+      describe('when renaming the connection', () => {
+        beforeEach(async () => {
+          await useCase.execute({
+            id: existingProvider.id,
+            gitProvider: { displayName: 'Renamed' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          });
+        });
+
+        it('saves the new name', () => {
+          expect(mockGitProviderService.updateGitProvider).toHaveBeenCalledWith(
+            existingProvider.id,
+            { displayName: 'Renamed' },
+          );
+        });
+      });
+
+      describe('when submitting an empty token', () => {
+        it('still requires a token', async () => {
+          await expect(
+            useCase.execute({
+              id: existingProvider.id,
+              gitProvider: { token: '' },
+              userId: String(adminUser.id),
+              organizationId: String(organizationId),
+            }),
+          ).rejects.toThrow('Git provider token is required');
+        });
+      });
+    });
+
     describe('when the provider rejects the candidate token', () => {
       let rejection: Promise<unknown>;
 
