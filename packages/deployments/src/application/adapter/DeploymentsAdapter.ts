@@ -524,6 +524,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      spaceContentNotifier,
     );
 
     this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
