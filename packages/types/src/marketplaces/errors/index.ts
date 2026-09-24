@@ -10,6 +10,7 @@ export * from './MarketplaceRepositoryUnreachableError';
 export * from './MarketplaceUrlNotReachableError';
 export * from './MarketplaceVendorMismatchError';
 export * from './MarketplacesError';
+export * from './MarketplacesUpstreamError';
 export * from './PluginDistributionInvalidStateError';
 export * from './PluginDistributionNotFoundError';
 export * from './UnknownMarketplaceDescriptorError';

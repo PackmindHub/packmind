@@ -14,6 +14,7 @@ import {
   MarketplaceUrlNotReachableError,
   GitProviderTokenInvalidError,
   MarketplaceRepositoryUnreachableError,
+  MarketplacesUpstreamError,
 } from '.';
 import {
   createMarketplaceDistributionId,
@@ -399,6 +400,10 @@ describe('MarketplaceRepositoryUnreachableError', () => {
 
   it('is an upstream error', () => {
     expect(isUpstreamError(error)).toBe(true);
+  });
+
+  it('belongs to the marketplaces upstream family', () => {
+    expect(error).toBeInstanceOf(MarketplacesUpstreamError);
   });
 
   it('answers upstream_unavailable', () => {

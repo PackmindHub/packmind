@@ -1,4 +1,4 @@
-import { PackmindUpstreamError } from '../../errors';
+import { MarketplacesUpstreamError } from './MarketplacesUpstreamError';
 
 /**
  * Error thrown when fetching a marketplace repository or its descriptor fails
@@ -8,7 +8,7 @@ import { PackmindUpstreamError } from '../../errors';
  * Neither a bad descriptor nor a 500: answers 502, the standard bucket for
  * "the thing behind us didn't answer".
  */
-export class MarketplaceRepositoryUnreachableError extends PackmindUpstreamError {
+export class MarketplaceRepositoryUnreachableError extends MarketplacesUpstreamError {
   constructor(
     public readonly owner: string,
     public readonly repo: string,
