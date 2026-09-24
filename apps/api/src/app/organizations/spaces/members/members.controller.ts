@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -18,12 +17,6 @@ import {
   UserSpaceRole,
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  CannotRemoveFromDefaultSpaceError,
-  CannotRemoveSelfError,
-  CannotUpdateOwnRoleError,
-  MemberNotFoundError,
-} from '@packmind/spaces';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceMembersService } from './members.service';
 
@@ -89,22 +82,12 @@ export class SpaceMembersController {
       { organizationId: orgId, spaceId, targetUserId },
     );
 
-    try {
-      return await this.membersService.removeMemberFromSpace({
-        userId: req.user.userId,
-        organizationId: orgId,
-        spaceId,
-        targetUserId,
-      });
-    } catch (error) {
-      if (error instanceof CannotRemoveFromDefaultSpaceError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof CannotRemoveSelfError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    return this.membersService.removeMemberFromSpace({
+      userId: req.user.userId,
+      organizationId: orgId,
+      spaceId,
+      targetUserId,
+    });
   }
 
   @Patch(':targetUserId')
@@ -120,22 +103,12 @@ export class SpaceMembersController {
       { organizationId: orgId, spaceId, targetUserId },
     );
 
-    try {
-      return await this.membersService.updateMemberRole({
-        userId: req.user.userId,
-        organizationId: orgId,
-        spaceId,
-        targetUserId,
-        role: body.role as UserSpaceRole,
-      });
-    } catch (error) {
-      if (error instanceof CannotUpdateOwnRoleError) {
-        throw new BadRequestException(error.message);
-      }
-      if (error instanceof MemberNotFoundError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    return this.membersService.updateMemberRole({
+      userId: req.user.userId,
+      organizationId: orgId,
+      spaceId,
+      targetUserId,
+      role: body.role as UserSpaceRole,
+    });
   }
 }
