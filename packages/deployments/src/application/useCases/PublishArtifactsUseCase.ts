@@ -277,9 +277,26 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         addedPackmindSkills,
       );
 
-      const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-      if (!firstTargetUpdates) {
+      if (fileUpdatesPerTarget.size === 0) {
         throw new NoFileUpdatesResolvedError();
+      }
+
+      /*
+       * Every target's files, in the one commit the repository gets.
+       *
+       * Only the first target's used to be handed to the job, while a
+       * distribution was created for each of them and the commit message named
+       * them all — so a repository with two targets received one of them and
+       * reported both. Paths are already target-prefixed, so the merge cannot
+       * collide across targets; `mergeFileUpdates` still deduplicates, which
+       * matters for the files two targets genuinely share.
+       */
+      const repositoryFileUpdates: FileUpdates = {
+        createOrUpdate: [],
+        delete: [],
+      };
+      for (const targetUpdates of fileUpdatesPerTarget.values()) {
+        this.mergeFileUpdates(repositoryFileUpdates, targetUpdates);
       }
 
       await this.createInProgressDistributions(
@@ -292,7 +309,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       await this.enqueuePublishJob(
         ctx,
         created[0],
-        firstTargetUpdates,
+        repositoryFileUpdates,
         commitMessage,
       );
 
