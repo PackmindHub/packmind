@@ -55,11 +55,9 @@ jest.mock('../../../shared/utils/edition', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { GithubAppSlugNotConfiguredError } from './errors/GithubAppSlugNotConfiguredError';
+import { GithubAppManifestConversionNetworkError } from './errors/GithubAppManifestConversionNetworkError';
 import { PackmindLogger } from '@packmind/logger';
 import { GitProvidersService } from './git-providers.service';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
@@ -241,7 +239,7 @@ describe('GitProvidersService', () => {
       });
 
       describe('when slug is missing', () => {
-        it('throws InternalServerErrorException', async () => {
+        it('throws GithubAppSlugNotConfiguredError', async () => {
           Configuration.getConfig.mockResolvedValue(null);
 
           await expect(
@@ -249,7 +247,7 @@ describe('GitProvidersService', () => {
               organizationId: orgId,
               userId,
             }),
-          ).rejects.toThrow(InternalServerErrorException);
+          ).rejects.toBeInstanceOf(GithubAppSlugNotConfiguredError);
         });
       });
     });
@@ -1668,6 +1666,47 @@ describe('GitProvidersService', () => {
             displayName: 'Production GitHub',
           }),
         );
+      });
+    });
+
+    describe('when GitHub answers the code conversion with an error', () => {
+      it('throws BadRequestException with the GitHub message', async () => {
+        const githubError = {
+          response: { status: 404, data: { message: 'Not Found' } },
+        };
+        mockedAxios.post = jest.fn().mockRejectedValue(githubError);
+        mockedAxios.isAxiosError = jest
+          .fn()
+          .mockReturnValue(true) as unknown as typeof mockedAxios.isAxiosError;
+
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toThrow(new BadRequestException('Not Found'));
+      });
+    });
+
+    describe('when GitHub cannot be reached for the code conversion', () => {
+      it('throws GithubAppManifestConversionNetworkError', async () => {
+        mockedAxios.post = jest
+          .fn()
+          .mockRejectedValue(new Error('connect ETIMEDOUT'));
+        mockedAxios.isAxiosError = jest
+          .fn()
+          .mockReturnValue(true) as unknown as typeof mockedAxios.isAxiosError;
+
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toBeInstanceOf(GithubAppManifestConversionNetworkError);
       });
     });
 

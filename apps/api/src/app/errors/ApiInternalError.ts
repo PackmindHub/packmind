@@ -3,7 +3,8 @@ import { PackmindInternalError } from '@packmind/types';
 export type ApiInternalErrorReason =
   | 'organization_not_found_in_token_after_check'
   | 'user_id_required_for_sse'
-  | 'workos_not_configured';
+  | 'workos_not_configured'
+  | 'github_app_slug_not_configured';
 
 export type ApiInternalErrorContext = {
   organizationId?: string;
