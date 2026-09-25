@@ -1,4 +1,5 @@
 import { MarketplaceDistributionId } from '../MarketplaceDistributionId';
+import { MarketplacesError } from './MarketplacesError';
 
 /**
  * Error thrown when a marketplace plugin distribution cannot be located in the
@@ -6,17 +7,24 @@ import { MarketplaceDistributionId } from '../MarketplaceDistributionId';
  * row has been soft-deleted, or no successful distribution exists for a given
  * `(package, marketplace)` pair when resolving by `packageId`.
  */
-export class PluginDistributionNotFoundError extends Error {
+export class PluginDistributionNotFoundError extends MarketplacesError {
   constructor(
     public readonly identifier:
       | { distributionId: MarketplaceDistributionId }
       | { packageId: string; marketplaceId: string },
   ) {
+    const context =
+      'distributionId' in identifier
+        ? { distributionId: identifier.distributionId }
+        : {
+            packageId: identifier.packageId,
+            marketplaceId: identifier.marketplaceId,
+          };
     const message =
       'distributionId' in identifier
-        ? `Marketplace plugin distribution with id "${identifier.distributionId}" was not found`
-        : `No active marketplace plugin distribution was found for package "${identifier.packageId}" on marketplace "${identifier.marketplaceId}"`;
-    super(message);
+        ? 'The plugin distribution was not found'
+        : 'No active marketplace plugin distribution was found for this package on this marketplace';
+    super('not_found', 'plugin_distribution_not_found', context, message);
     this.name = 'PluginDistributionNotFoundError';
   }
 }

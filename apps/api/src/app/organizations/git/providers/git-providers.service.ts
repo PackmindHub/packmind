@@ -40,11 +40,7 @@ import {
   InjectMarketplacesAdapter,
 } from '../../../shared/HexaInjection';
 import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
-import {
-  InvalidInstallStateError,
-  InstallStateSigner,
-  normalizeDisplayName,
-} from '@packmind/git';
+import { InstallStateSigner, normalizeDisplayName } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
@@ -312,15 +308,7 @@ export class GitProvidersService {
       );
     }
 
-    let payload;
-    try {
-      payload = this.signer.verify(command.state);
-    } catch (error) {
-      if (error instanceof InvalidInstallStateError) {
-        throw new BadRequestException('Invalid manifest state');
-      }
-      throw error;
-    }
+    const payload = this.signer.verify(command.state);
 
     if (payload.kind !== 'manifest') {
       throw new BadRequestException('Invalid manifest state');
@@ -397,15 +385,7 @@ export class GitProvidersService {
   async completeGithubAppInstall(
     command: CompleteGithubAppInstallCommand,
   ): Promise<GitProvider> {
-    let payload;
-    try {
-      payload = this.signer.verify(command.state);
-    } catch (error) {
-      if (error instanceof InvalidInstallStateError) {
-        throw new BadRequestException('Invalid or expired state token');
-      }
-      throw error;
-    }
+    const payload = this.signer.verify(command.state);
 
     if (payload.orgId !== String(command.organizationId)) {
       throw new BadRequestException('Invalid or expired state token');

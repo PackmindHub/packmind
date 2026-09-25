@@ -1,3 +1,5 @@
+import { MarketplacesError } from './MarketplacesError';
+
 /**
  * Error thrown when a marketplace descriptor parser claims the content but
  * subsequently fails to parse or validate it.
@@ -6,12 +8,12 @@
  * `JSON.parse`) is carried in `cause` for diagnostics; the message is kept
  * generic for safe surfacing in API responses.
  */
-export class MarketplaceDescriptorParseError extends Error {
+export class MarketplaceDescriptorParseError extends MarketplacesError {
   constructor(
     message: string,
     public readonly cause: unknown,
   ) {
-    super(message);
+    super('invalid_input', 'marketplace_descriptor_unparseable', {}, message);
     this.name = 'MarketplaceDescriptorParseError';
   }
 }

@@ -7,6 +7,7 @@ import {
   GitProviderId,
   GitRepo,
   GitRepoId,
+  GitRepoNotFoundError,
   IDeploymentPort,
   IGitPort,
   OrganizationId,
@@ -160,7 +161,7 @@ export class GitRepositoriesService {
     const gitRepo = await this.gitAdapter.getRepositoryById(repositoryId);
 
     if (!gitRepo) {
-      throw new Error(`Repository with ID ${repositoryId} not found`);
+      throw new GitRepoNotFoundError(repositoryId);
     }
 
     const command = {

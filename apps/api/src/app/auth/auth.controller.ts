@@ -12,6 +12,7 @@ import {
   Param,
   Query,
   HttpException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import {
@@ -211,7 +212,7 @@ export class AuthController {
     const accessToken = req.cookies?.auth_token;
 
     if (!accessToken) {
-      throw new Error('No valid access token found');
+      throw new UnauthorizedException('No valid access token found');
     }
 
     const result = await this.authService.selectOrganization(
