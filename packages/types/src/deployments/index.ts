@@ -17,6 +17,7 @@ export * from './PackageRelease';
 export * from './InvalidPackageReleaseVersionError';
 export * from './packageReleaseVersion';
 export * from './packageReleaseVersionRules';
+export * from './packageVersionSpec';
 export * from './PackmindFileConfig';
 export * from './PackmindLockFile';
 export * from './DistributionId';
