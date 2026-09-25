@@ -2,6 +2,8 @@
 
 ## Added
 
+- Components can be deleted in bulk again: pick rows in a package's Content list or in the space inventory, then Delete from the selection bar's menu. A row's own menu offers it too
+
 ## Changed
 
 - Skill files and package descriptions (new-package page, package edit form, Context drawers) now offer the WYSIWYG and Raw tabs that standards and commands already had
