@@ -1,3 +1,19 @@
+# [Unreleased]
+
+## Added
+
+- A package's Distribution now sends the version the page is read at: the release named in the bar above the tabs, or the package as it stands
+- Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
+- Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
+- `Update N distributions` is absent while a release is on screen: drift measures distance from the live package, not from the release being read
+- Distributing from anywhere else is unchanged — a packages-list selection, a repository's install list, a redistribute from Distribution all send the package as it stands
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [1.18.1] - 2026-09-25
 
 Hotfix release.
@@ -440,6 +456,7 @@ Hotfix release.
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...HEAD
 [1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
