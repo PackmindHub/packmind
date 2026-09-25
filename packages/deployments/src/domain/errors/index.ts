@@ -1,3 +1,4 @@
+export * from './ArtefactAlreadyInAnotherPackageError';
 export * from './ArtefactNotInSpaceError';
 export * from './ArtefactsMoveFailedError';
 export * from './ArtifactVersionNotFoundError';

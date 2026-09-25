@@ -13,6 +13,7 @@ import {
   createUserContextChangeEvent,
   createDistributionStatusChangeEvent,
   createChangeProposalUpdateEvent,
+  createSpaceContentChangedEvent,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -326,6 +327,53 @@ export class SSEEventPublisher {
     } catch (error) {
       SSEEventPublisher.getInstance().logger.error(
         'Failed to publish change proposal update event',
+        {
+          organizationId,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Makes the frontend's React Query cache refetch what a space content surface
+   * reads. Scoped to the space rather than one user, so a reader looking at a
+   * package or a component list sees what someone else just did to it rather
+   * than a snapshot from whenever they opened the page.
+   */
+  static async publishSpaceContentChangedEvent(
+    organizationId: string,
+    spaceId: string,
+  ): Promise<void> {
+    SSEEventPublisher.getInstance().logger.info(
+      'Publishing space content changed event',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      const event = createSpaceContentChangedEvent(organizationId, spaceId);
+
+      await SSEEventPublisher.publishEvent(
+        'SPACE_CONTENT_CHANGED',
+        [spaceId],
+        event,
+      );
+
+      SSEEventPublisher.getInstance().logger.debug(
+        'Successfully published space content changed event',
+        {
+          organizationId,
+          spaceId,
+        },
+      );
+    } catch (error) {
+      SSEEventPublisher.getInstance().logger.error(
+        'Failed to publish space content changed event',
         {
           organizationId,
           spaceId,

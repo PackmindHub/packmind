@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   SaveSkillVersionCommand,
   SaveSkillVersionResponse,
@@ -9,6 +13,8 @@ import {
   createOrganizationId,
   createSpaceId,
   createSkillFileId,
+  createUserId,
+  SkillUpdatedEvent,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { SkillSpaceNotAccessibleError } from '../../../domain/errors/SkillSpaceNotAccessibleError';
@@ -32,6 +38,7 @@ export class SaveSkillVersionUseCase
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
     private readonly skillFileService: SkillFileService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -127,6 +134,24 @@ export class SaveSkillVersionUseCase
       version: newVersionNumber,
       userId: skillVersion.userId,
     });
+
+    /*
+     * A new version is a change like any edit made in the app, and this is the
+     * path that had been saying nothing. It is how an accepted playbook change
+     * reaches a skill, so a reviewer approving one left every other reader — and
+     * every package holding that skill, which is now a version behind and may
+     * want releasing again — with no way of hearing about it.
+     */
+    this.eventEmitterService.emit(
+      new SkillUpdatedEvent({
+        skillId: skillVersion.skillId,
+        spaceId,
+        organizationId,
+        userId: createUserId(command.userId),
+        source: command.source ?? 'ui',
+        fileCount: skillVersion.files?.length ?? 0,
+      }),
+    );
 
     this.logger.info('SaveSkillVersion process completed successfully', {
       versionId: savedVersion.id,

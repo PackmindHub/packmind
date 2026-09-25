@@ -79,6 +79,30 @@ export interface ChangeProposalUpdateEvent extends SSEEvent<{
   type: 'CHANGE_PROPOSAL_UPDATE';
 }
 
+/**
+ * Something a space content surface shows is different: a standard, command or
+ * skill was created, edited or deleted, a package was created, renamed or
+ * deleted, or a component joined or left one.
+ *
+ * Drives client cache invalidation, and carries no more than the two ids needed
+ * to route it. A subscriber is not checked for membership of the space it names,
+ * so what the event says has to be worth nothing on its own — the reader learns
+ * what changed by refetching through an endpoint that does check.
+ *
+ * One event for all of it rather than one per kind of change. A package holds
+ * ids and a row is drawn by resolving each against the space's catalogue, so
+ * the two halves are read together and are stale together; splitting them would
+ * mean a reader who heard one half and not the other, which is the state this
+ * exists to end. It also means a publisher has one thing to remember rather
+ * than a choice to get wrong.
+ */
+export interface SpaceContentChangedEvent extends SSEEvent<{
+  organizationId: string;
+  spaceId: string;
+}> {
+  type: 'SPACE_CONTENT_CHANGED';
+}
+
 export type MarketplacePublishCompletedStatus =
   | 'success'
   | 'no_changes'
@@ -109,6 +133,7 @@ export type AnySSEEvent =
   | UserContextChangeEvent
   | DistributionStatusChangeEvent
   | ChangeProposalUpdateEvent
+  | SpaceContentChangedEvent
   | MarketplacePublishCompletedEvent;
 
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
@@ -200,6 +225,20 @@ export function createChangeProposalUpdateEvent(
 ): ChangeProposalUpdateEvent {
   return {
     type: 'CHANGE_PROPOSAL_UPDATE',
+    data: {
+      organizationId,
+      spaceId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createSpaceContentChangedEvent(
+  organizationId: string,
+  spaceId: string,
+): SpaceContentChangedEvent {
+  return {
+    type: 'SPACE_CONTENT_CHANGED',
     data: {
       organizationId,
       spaceId,

@@ -34,8 +34,10 @@ import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
 import { v4 as uuidv4 } from 'uuid';
 import { spaceFactory } from '@packmind/spaces/test';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 describe('RemoveArtefactsFromPackageUseCase', () => {
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let useCase: RemoveArtefactsFromPackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
@@ -117,11 +119,14 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
 
     stubbedLogger = stubLogger();
 
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
+
     useCase = new RemoveArtefactsFromPackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
       mockServices,
       mockEventEmitterService,
+      mockSpaceContentNotifier,
       stubbedLogger,
     );
   });
@@ -163,6 +168,13 @@ describe('RemoveArtefactsFromPackageUseCase', () => {
       };
 
       result = await useCase.execute(command);
+    });
+
+    it('tells the space it moved on', () => {
+      expect(mockSpaceContentNotifier.spaceContentChanged).toHaveBeenCalledWith(
+        organizationId,
+        spaceId,
+      );
     });
 
     it('calls removeCommands with only the removed recipe', () => {

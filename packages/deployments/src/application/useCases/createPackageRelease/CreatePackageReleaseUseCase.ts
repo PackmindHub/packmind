@@ -17,6 +17,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 import {
   resolveLatestComponentVersions,
   currentVersionOf,
@@ -50,6 +51,7 @@ export class CreatePackageReleaseUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly spaceContentNotifier: SpaceContentNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -150,6 +152,14 @@ export class CreatePackageReleaseUseCase
           },
           versions,
         );
+
+      // A release answers the question every package surface asks of a package
+      // — whether it is behind what it holds — so cutting one changes what a
+      // reader elsewhere is being told to do about it.
+      await this.spaceContentNotifier.spaceContentChanged(
+        command.organizationId,
+        spaceId,
+      );
 
       this.logger.info('Package release cut', {
         packageId,

@@ -7,8 +7,6 @@ import {
 } from '@packmind/node-utils';
 import {
   CaptureCommandCommand,
-  CaptureCommandWithPackagesCommand,
-  CaptureCommandWithPackagesResponse,
   DeleteCommandCommand,
   DeleteCommandsBatchCommand,
   GetCommandByIdCommand,
@@ -40,7 +38,6 @@ import { ICommandsDelayedJobs } from '../../domain/jobs/ICommandsDelayedJobs';
 import { DeployCommandsJobFactory } from '../../infra/jobs/DeployCommandsJobFactory';
 import { CommandsServices } from '../services/CommandsServices';
 import { CaptureCommandUseCase } from '../useCases/captureCommand/CaptureCommandUseCase';
-import { CaptureCommandWithPackagesUseCase } from '../useCases/captureCommandWithPackages/CaptureCommandWithPackagesUseCase';
 import { DeleteCommandUseCase } from '../useCases/deleteCommand/DeleteCommandUseCase';
 import { DeleteCommandsBatchUseCase } from '../useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase';
 import { FindCommandBySlugUseCase } from '../useCases/findCommandBySlug/FindCommandBySlugUseCase';
@@ -63,7 +60,6 @@ export class CommandsAdapter
   private commandsDelayedJobs: ICommandsDelayedJobs | null = null;
 
   private _captureCommand!: CaptureCommandUseCase;
-  private _captureCommandWithPackages!: CaptureCommandWithPackagesUseCase;
   private _updateCommandFromUI!: UpdateCommandFromUIUseCase;
   private _deleteCommand!: DeleteCommandUseCase;
   private _getCommandById!: GetCommandByIdUseCase;
@@ -120,13 +116,6 @@ export class CommandsAdapter
       this.commandsServices.getCommandService(),
       this.commandsServices.getCommandVersionService(),
       ports.eventEmitterService,
-    );
-
-    this._captureCommandWithPackages = new CaptureCommandWithPackagesUseCase(
-      this.accountsPort,
-      this._captureCommand,
-      this.deploymentPort,
-      this.spacesPort,
     );
 
     this._updateCommandFromUI = new UpdateCommandFromUIUseCase(
@@ -221,12 +210,6 @@ export class CommandsAdapter
 
   public captureCommand(command: CaptureCommandCommand) {
     return this._captureCommand.execute(command);
-  }
-
-  public async captureCommandWithPackages(
-    command: CaptureCommandWithPackagesCommand,
-  ): Promise<CaptureCommandWithPackagesResponse> {
-    return this._captureCommandWithPackages.execute(command);
   }
 
   public async updateCommandFromUI(

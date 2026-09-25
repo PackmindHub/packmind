@@ -1,4 +1,4 @@
-import { mockInterface } from '@packmind/test-utils';
+import { createMockInstance, mockInterface } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
@@ -7,19 +7,27 @@ import {
   createSpaceId,
   createStandardId,
   createUserId,
+  CommandCreatedEvent,
   CommandDeletedEvent,
+  CommandUpdatedEvent,
+  SkillCreatedEvent,
   SkillDeletedEvent,
+  SkillUpdatedEvent,
+  StandardCreatedEvent,
   StandardDeletedEvent,
+  StandardUpdatedEvent,
   PackmindEventSource,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
+import { SpaceContentNotifier } from '../services/SpaceContentNotifier';
 import { DeploymentsListener } from './DeploymentsListener';
 
 describe('DeploymentsListener', () => {
   let eventService: PackmindEventEmitterService;
   let mockPackageRepository: jest.Mocked<IPackageRepository>;
   let listener: DeploymentsListener;
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let mockDataSource: DataSource;
 
   const spaceId = createSpaceId('space-456');
@@ -45,7 +53,12 @@ describe('DeploymentsListener', () => {
       undefined,
     );
 
-    listener = new DeploymentsListener(mockPackageRepository);
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
+
+    listener = new DeploymentsListener(
+      mockPackageRepository,
+      mockSpaceContentNotifier,
+    );
     listener.initialize(eventService);
   });
 
@@ -257,6 +270,151 @@ describe('DeploymentsListener', () => {
         expect(
           mockPackageRepository.removeSkillFromAllPackages,
         ).toHaveBeenCalledWith(skillId2);
+      });
+    });
+  });
+
+  describe('when an artefact is deleted out of every package holding it', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+    describe('when a skill is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new SkillDeletedEvent({
+            skillId: createSkillId('skill-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space it moved on', () => {
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).toHaveBeenCalledWith(organizationId, spaceId);
+      });
+    });
+
+    describe('when a command is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new CommandDeletedEvent({
+            id: createCommandId('recipe-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space it moved on', () => {
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).toHaveBeenCalledWith(organizationId, spaceId);
+      });
+    });
+
+    describe('when a standard is deleted', () => {
+      beforeEach(async () => {
+        eventService.emit(
+          new StandardDeletedEvent({
+            standardId: createStandardId('standard-123'),
+            spaceId,
+            organizationId,
+            userId,
+            source,
+          }),
+        );
+        await settle();
+      });
+
+      it('tells the space it moved on', () => {
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).toHaveBeenCalledWith(organizationId, spaceId);
+      });
+    });
+  });
+
+  /*
+   * A component's life outside packages still moves a package surface: the rows
+   * are drawn by resolving the package's ids against the space catalogue, so a
+   * catalogue that changed under a package list that did not is a count with no
+   * row beneath it.
+   */
+  describe('when a component is created or edited elsewhere in the space', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+    const shared = { spaceId, organizationId, userId, source };
+
+    describe.each([
+      [
+        'a standard is created',
+        () =>
+          new StandardCreatedEvent({
+            ...shared,
+            standardId: createStandardId('standard-1'),
+            method: 'blank' as const,
+          }),
+      ],
+      [
+        'a standard is edited',
+        () =>
+          new StandardUpdatedEvent({
+            ...shared,
+            standardId: createStandardId('standard-1'),
+            newVersion: 2,
+          }),
+      ],
+      [
+        'a command is created',
+        () =>
+          new CommandCreatedEvent({
+            ...shared,
+            id: createCommandId('recipe-1'),
+          }),
+      ],
+      [
+        'a command is edited',
+        () =>
+          new CommandUpdatedEvent({
+            ...shared,
+            id: createCommandId('recipe-1'),
+            newVersion: 2,
+          }),
+      ],
+      [
+        'a skill is created',
+        () =>
+          new SkillCreatedEvent({
+            ...shared,
+            skillId: createSkillId('skill-1'),
+            fileCount: 1,
+          }),
+      ],
+      [
+        'a skill is edited',
+        () =>
+          new SkillUpdatedEvent({
+            ...shared,
+            skillId: createSkillId('skill-1'),
+            fileCount: 1,
+          }),
+      ],
+    ])('when %s', (_label, buildEvent) => {
+      beforeEach(async () => {
+        eventService.emit(buildEvent());
+        await settle();
+      });
+
+      it('tells the space it moved on', () => {
+        expect(
+          mockSpaceContentNotifier.spaceContentChanged,
+        ).toHaveBeenCalledWith(organizationId, spaceId);
       });
     });
   });
