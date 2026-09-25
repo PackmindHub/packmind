@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
@@ -46,6 +45,8 @@ import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 import axios from 'axios';
 import validator from 'validator';
+import { GithubAppSlugNotConfiguredError } from './errors/GithubAppSlugNotConfiguredError';
+import { GithubAppManifestConversionNetworkError } from './errors/GithubAppManifestConversionNetworkError';
 
 const origin = 'GitProvidersService';
 
@@ -175,9 +176,7 @@ export class GitProvidersService {
       if (!configuredSlug) {
         // Should be unreachable: 'shared' mode is only entered when the slug
         // is present. Guarded for safety against config races.
-        throw new InternalServerErrorException(
-          'GITHUB_APP_SLUG is not configured',
-        );
+        throw new GithubAppSlugNotConfiguredError();
       }
       slug = configuredSlug;
       // Shared mode uses an App with credentials in env. The install is bound
@@ -344,11 +343,14 @@ export class GitProvidersService {
       );
       conversionData = response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const message =
-          (error.response.data as { message?: string })?.message ??
-          'GitHub code conversion failed';
-        throw new BadRequestException(message);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const message =
+            (error.response.data as { message?: string })?.message ??
+            'GitHub code conversion failed';
+          throw new BadRequestException(message);
+        }
+        throw new GithubAppManifestConversionNetworkError(error);
       }
       throw error;
     }
