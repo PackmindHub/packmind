@@ -275,10 +275,8 @@ describeForVersion('>= 0.36.0', 'install at a version', () => {
           expect(result.returnCode).toBe(1);
         });
 
-        it('lists the available versions, latest first', () => {
-          expect(result.stdout).toContain(
-            'Available versions, latest first: 0.1.0, 0.0.1',
-          );
+        it('lists the available versions, newest first', () => {
+          expect(result.stdout).toContain('Available versions: 0.1.0, 0.0.1');
         });
       });
 
@@ -305,10 +303,8 @@ describeForVersion('>= 0.36.0', 'install at a version', () => {
           expect(result.returnCode).toBe(1);
         });
 
-        it('lists the available versions, latest first', () => {
-          expect(result.stdout).toContain(
-            'Available versions, latest first: 0.1.0, 0.0.1',
-          );
+        it('lists the available versions, newest first', () => {
+          expect(result.stdout).toContain('Available versions: 0.1.0, 0.0.1');
         });
       });
     });

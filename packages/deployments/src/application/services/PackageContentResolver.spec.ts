@@ -213,7 +213,7 @@ describe('PackageContentResolver', () => {
       ]);
     });
 
-    it('refuses with the available versions, latest first', async () => {
+    it('refuses with the available versions, newest first', async () => {
       await expect(
         resolver.resolve([
           {
@@ -223,7 +223,7 @@ describe('PackageContentResolver', () => {
           },
         ]),
       ).rejects.toThrow(
-        'Package @space/ops has no version 0.2.0. Available versions, latest first: 0.1.0, 0.0.1',
+        'Package @space/ops has no version 0.2.0. Available versions: 0.1.0, 0.0.1',
       );
     });
 
