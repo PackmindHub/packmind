@@ -24,6 +24,17 @@ import {
 const BURST_MS = 400;
 
 /**
+ * The longest a burst may defer the refresh, however long it goes on.
+ *
+ * Without a ceiling the wait above restarts on every event, so changes arriving
+ * steadily faster than it refresh nothing until they stop — which is exactly
+ * the long import the wait exists for, and exactly when an open picker is
+ * showing membership that is no longer true. Past this point the burst is
+ * refreshed mid-flight and the next events start a new one.
+ */
+const BURST_CEILING_MS = 2000;
+
+/**
  * Keeps a space content surface showing the space as it is rather than as it
  * was when the page was opened.
  *
@@ -49,6 +60,7 @@ export function SpaceContentSubscription(): null {
   const organizationId = space?.organizationId;
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const burstStartedAt = useRef<number | null>(null);
 
   useEffect(
     () => () => {
@@ -58,57 +70,86 @@ export function SpaceContentSubscription(): null {
   );
 
   const handleSpaceContentChanged = useCallback(() => {
-    if (!spaceId) return;
+    if (!spaceId || !organizationId) return;
+
+    const now = Date.now();
+    burstStartedAt.current ??= now;
+    const remaining = BURST_CEILING_MS - (now - burstStartedAt.current);
 
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      /*
-       * The memberships and the catalogues they are resolved against, together.
-       *
-       * A package holds ids; a row is drawn by finding each id in the space's
-       * standards, commands and skills. Refetching only the memberships
-       * therefore moved a package's count without adding the row, which is what
-       * a reader saw when someone else created a component straight into the
-       * package they were both looking at.
-       *
-       * The space prefix rather than a list of a dozen keys: every query the
-       * three component domains scope to a space hangs off it — each catalogue,
-       * and the by-id and by-slug reads the detail pane makes — and enumerating
-       * them is a list that would be wrong the first time one is added. It
-       * reaches no further than that: the space's own record is keyed by
-       * `detail` and `list` in that position, not by an id, so the surface does
-       * not pull the ground out from under itself.
-       *
-       * Packages hang off a different scope and are named separately, and so
-       * are a standard's rules, whose key is not space-scoped at all. Neither
-       * is the whole deployments scope invalidated: it also holds the
-       * distribution history, which no content change can affect and which is
-       * the most expensive thing on the page to fetch again.
-       *
-       * The releases are here because whether a package is behind what it holds
-       * is answered by comparing the two, and both sides move: a component
-       * gains a version, or someone cuts the release that catches up with it. A
-       * reader who heard only the first would be told to cut a release that had
-       * just been cut.
-       */
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE, spaceId],
-        }),
-        queryClient.invalidateQueries({ queryKey: LIST_PACKAGES_BY_SPACE_KEY }),
-        queryClient.invalidateQueries({ queryKey: GET_PACKAGE_BY_ID_KEY }),
-        queryClient.invalidateQueries({
-          queryKey: GET_RULES_BY_STANDARD_ID_KEY,
-        }),
-        queryClient.invalidateQueries({ queryKey: LIST_PACKAGE_RELEASES_KEY }),
-        queryClient.invalidateQueries({ queryKey: GET_PACKAGE_RELEASE_KEY }),
-      ]).catch((error) => {
-        console.error('SSE: Failed to refresh the space after a change', {
-          error,
+    timer.current = setTimeout(
+      () => {
+        burstStartedAt.current = null;
+
+        /*
+         * The memberships and the catalogues they are resolved against, together.
+         *
+         * A package holds ids; a row is drawn by finding each id in the space's
+         * standards, commands and skills. Refetching only the memberships
+         * therefore moved a package's count without adding the row, which is what
+         * a reader saw when someone else created a component straight into the
+         * package they were both looking at.
+         *
+         * The space prefix rather than a list of a dozen keys: every query the
+         * three component domains scope to a space hangs off it — each catalogue,
+         * and the by-id and by-slug reads the detail pane makes — and enumerating
+         * them is a list that would be wrong the first time one is added. It
+         * reaches no further than that: the space's own record is keyed by
+         * `detail` and `list` in that position, not by an id, so the surface does
+         * not pull the ground out from under itself.
+         *
+         * Packages hang off a different scope and are named separately, and so
+         * are a standard's rules. Neither is the whole deployments scope
+         * invalidated: it also holds the distribution history, which no content
+         * change can affect and which is the most expensive thing on the page to
+         * fetch again.
+         *
+         * Every key here names the space this event is about, so a reader with
+         * another space cached keeps it: a change in one space is not news about
+         * any other, and dropping them all would refetch on the next navigation
+         * for nothing. The package-by-id key is the one that cannot say so as a
+         * prefix — it is keyed by package first — so it is matched on the space
+         * wherever it sits.
+         *
+         * The releases are here because whether a package is behind what it holds
+         * is answered by comparing the two, and both sides move: a component
+         * gains a version, or someone cuts the release that catches up with it. A
+         * reader who heard only the first would be told to cut a release that had
+         * just been cut.
+         */
+        Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE, spaceId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [...LIST_PACKAGES_BY_SPACE_KEY, spaceId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: GET_PACKAGE_BY_ID_KEY,
+            predicate: (query) => query.queryKey.includes(spaceId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              ...GET_RULES_BY_STANDARD_ID_KEY,
+              organizationId,
+              spaceId,
+            ],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [...LIST_PACKAGE_RELEASES_KEY, spaceId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [...GET_PACKAGE_RELEASE_KEY, spaceId],
+          }),
+        ]).catch((error) => {
+          console.error('SSE: Failed to refresh the space after a change', {
+            error,
+          });
         });
-      });
-    }, BURST_MS);
-  }, [spaceId]);
+      },
+      Math.max(0, Math.min(BURST_MS, remaining)),
+    );
+  }, [spaceId, organizationId]);
 
   const params = useMemo(() => (spaceId ? [spaceId] : []), [spaceId]);
 
