@@ -1,5 +1,6 @@
 import { PublishPackagesUseCase } from './PublishPackagesUseCase';
 import { PackageService } from '../services/PackageService';
+import { PackageReleaseService } from '../services/PackageReleaseService';
 import {
   createUserId,
   createOrganizationId,
@@ -42,6 +43,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
+  let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
   let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
@@ -72,6 +74,10 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       spaceFactory({ id: spaceId, slug: 'test-space' }),
     );
 
+    mockPackageReleaseService = createMockInstance(PackageReleaseService);
+    mockPackageReleaseService.listReleases.mockResolvedValue([]);
+    mockPackageReleaseService.findByVersion.mockResolvedValue(null);
+
     useCase = new PublishPackagesUseCase(
       mockCommandsPort,
       mockStandardsPort,
@@ -80,6 +86,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       mockPackageService,
       mockDistributedPackageRepository,
       mockSpacesPort,
+      mockPackageReleaseService,
       mockLogger,
     );
   });

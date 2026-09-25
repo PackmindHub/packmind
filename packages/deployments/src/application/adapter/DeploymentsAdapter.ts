@@ -310,6 +310,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       this.distributedPackageRepository,
       this.spacesPort,
+      this.deploymentsServices.getPackageReleaseService(),
     );
 
     this._findActiveStandardVersionsByTargetUseCase =

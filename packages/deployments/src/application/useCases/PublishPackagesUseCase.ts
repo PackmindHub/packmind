@@ -18,6 +18,8 @@ import {
   createPackagesDeploymentId,
   Distribution,
   OrganizationId,
+  WILDCARD_VERSION_SPEC,
+  parsePackageVersionSpec,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
@@ -27,17 +29,33 @@ import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { PackageSpaceMissingError } from '../../domain/errors/PackageSpaceMissingError';
 import { NoTargetsProvidedError } from '../../domain/errors/NoTargetsProvidedError';
 import { NoPackagesProvidedError } from '../../domain/errors/NoPackagesProvidedError';
+import { InvalidPackageVersionSpecError } from '../../domain/errors/InvalidPackageVersionSpecError';
+import { PackageVersionNotAvailableError } from '../../domain/errors/PackageVersionNotAvailableError';
+import { PackageReleaseService } from '../services/PackageReleaseService';
+import { sortVersionsLatestFirst } from '../services/PackageContentResolver';
 
 const origin = 'PublishPackagesUseCase';
 
-type PackageVersionsMap = Map<
-  PackageId,
-  {
-    recipeVersionIds: CommandVersionId[];
-    standardVersionIds: StandardVersionId[];
-    skillVersionIds: SkillVersionId[];
-  }
->;
+type PackageComponentVersionIds = {
+  recipeVersionIds: CommandVersionId[];
+  standardVersionIds: StandardVersionId[];
+  skillVersionIds: SkillVersionId[];
+};
+
+type PackageVersionsMap = Map<PackageId, PackageComponentVersionIds>;
+
+/** One package, at the version this distribution is sending. */
+type ResolvedPackagePublish = {
+  pkg: Package;
+  /** `@space/package`, as the repo's packmind.json will spell it. */
+  slug: string;
+  /** What packmind.json should record: `*`, or the released version. */
+  versionSpec: string;
+  recipeIds: string[];
+  standardIds: string[];
+  skillIds: string[];
+  versions: PackageComponentVersionIds;
+};
 
 export class PublishPackagesUseCase implements IPublishPackages {
   constructor(
@@ -48,6 +66,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     public readonly packageService: PackageService,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly spacesPort: ISpacesPort,
+    private readonly packageReleaseService: PackageReleaseService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -84,59 +103,10 @@ export class PublishPackagesUseCase implements IPublishPackages {
       return pkg;
     });
 
-    const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
-      await Promise.all([
-        this.commandsPort.getLatestCommandVersions(
-          packages.flatMap((pkg) => pkg.recipes),
-        ),
-        this.standardsPort.getLatestStandardVersions(
-          packages.flatMap((pkg) => pkg.standards),
-        ),
-        this.skillsPort.getLatestSkillVersions(
-          packages.flatMap((pkg) => pkg.skills),
-        ),
-      ]);
-    const commandVersionIdByCommandId = new Map(
-      latestCommandVersions.map((version) => [version.recipeId, version.id]),
-    );
-    const standardVersionIdByStandardId = new Map(
-      latestStandardVersions.map((version) => [version.standardId, version.id]),
-    );
-    const skillVersionIdBySkillId = new Map(
-      latestSkillVersions.map((version) => [version.skillId, version.id]),
-    );
-
-    // An artifact with no version of its own is skipped.
-    const packageVersionsMap: PackageVersionsMap = new Map();
-    for (const pkg of packages) {
-      packageVersionsMap.set(pkg.id, {
-        recipeVersionIds: pkg.recipes.flatMap(
-          (recipeId) => commandVersionIdByCommandId.get(recipeId) ?? [],
-        ),
-        standardVersionIds: pkg.standards.flatMap(
-          (standardId) => standardVersionIdByStandardId.get(standardId) ?? [],
-        ),
-        skillVersionIds: pkg.skills.flatMap(
-          (skillId) => skillVersionIdBySkillId.get(skillId) ?? [],
-        ),
-      });
-    }
-
-    const commandVersionIds = Array.from(commandVersionIdByCommandId.values());
-    const standardVersionIds = Array.from(
-      standardVersionIdByStandardId.values(),
-    );
-    const skillVersionIds = Array.from(skillVersionIdBySkillId.values());
-
-    this.logger.info('Resolved package contents', {
-      packagesCount: packages.length,
-      commandVersionsCount: commandVersionIds.length,
-      standardVersionsCount: standardVersionIds.length,
-      skillVersionsCount: skillVersionIds.length,
-    });
-
     // Resolve package slugs in the `@<space-slug>/<package-slug>` form used by
     // the CLI so the deployed packmind.json references match across surfaces.
+    // Ahead of the version resolution, because a refusal names the package the
+    // way the repo's packmind.json will.
     const spaceSlugCache = new Map<SpaceId, string>();
     const packagesSlugs: string[] = [];
     for (const pkg of packages) {
@@ -153,33 +123,165 @@ export class PublishPackagesUseCase implements IPublishPackages {
       packagesSlugs.push(`@${spaceSlug}/${pkg.slug}`);
     }
 
+    /*
+     * Which version of each package is being sent.
+     *
+     * An absent entry is the live package, not the newest release: every
+     * surface that distributes without naming a version — a batch push, a
+     * redistribute from the sync surface — means "send what the package holds
+     * now", and that is what it has always done.
+     */
+    const specs = packages.map((pkg, index) => {
+      const raw = command.packageVersions?.[pkg.id as string];
+      if (raw === undefined || raw === WILDCARD_VERSION_SPEC) {
+        return { pkg, slug: packagesSlugs[index], version: null };
+      }
+      const parsed = parsePackageVersionSpec(raw);
+      if (!parsed) {
+        throw new InvalidPackageVersionSpecError(packagesSlugs[index], raw);
+      }
+      return {
+        pkg,
+        slug: packagesSlugs[index],
+        version: parsed.kind === 'exact' ? parsed.version : null,
+      };
+    });
+
+    const livePackages = specs.filter((spec) => spec.version === null);
+
+    const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
+      await Promise.all([
+        this.commandsPort.getLatestCommandVersions(
+          livePackages.flatMap((spec) => spec.pkg.recipes),
+        ),
+        this.standardsPort.getLatestStandardVersions(
+          livePackages.flatMap((spec) => spec.pkg.standards),
+        ),
+        this.skillsPort.getLatestSkillVersions(
+          livePackages.flatMap((spec) => spec.pkg.skills),
+        ),
+      ]);
+    const commandVersionIdByCommandId = new Map(
+      latestCommandVersions.map((version) => [version.recipeId, version.id]),
+    );
+    const standardVersionIdByStandardId = new Map(
+      latestStandardVersions.map((version) => [version.standardId, version.id]),
+    );
+    const skillVersionIdBySkillId = new Map(
+      latestSkillVersions.map((version) => [version.skillId, version.id]),
+    );
+
+    const resolved: ResolvedPackagePublish[] = await Promise.all(
+      specs.map(async ({ pkg, slug, version }) => {
+        if (version === null) {
+          // An artifact with no version of its own is skipped.
+          return {
+            pkg,
+            slug,
+            versionSpec: WILDCARD_VERSION_SPEC,
+            recipeIds: pkg.recipes,
+            standardIds: pkg.standards,
+            skillIds: pkg.skills,
+            versions: {
+              recipeVersionIds: pkg.recipes.flatMap(
+                (recipeId) => commandVersionIdByCommandId.get(recipeId) ?? [],
+              ),
+              standardVersionIds: pkg.standards.flatMap(
+                (standardId) =>
+                  standardVersionIdByStandardId.get(standardId) ?? [],
+              ),
+              skillVersionIds: pkg.skills.flatMap(
+                (skillId) => skillVersionIdBySkillId.get(skillId) ?? [],
+              ),
+            },
+          };
+        }
+
+        const release = await this.packageReleaseService.findByVersion(
+          pkg.id,
+          version,
+        );
+        if (!release) {
+          const releases = await this.packageReleaseService.listReleases(
+            pkg.id,
+          );
+          throw new PackageVersionNotAvailableError(
+            slug,
+            version,
+            sortVersionsLatestFirst(releases),
+          );
+        }
+
+        /*
+         * The release as captured, which is not the package as it stands: a
+         * component added since is absent here, and one deleted since is
+         * present. The artifact-id lists follow the release for the same
+         * reason — they feed the lock file, and a lock file listing a
+         * component the release does not carry describes a repo that does not
+         * exist.
+         */
+        return {
+          pkg,
+          slug,
+          versionSpec: release.version,
+          recipeIds: release.recipeVersions.map((v) => v.recipeId),
+          standardIds: release.standardVersions.map((v) => v.standardId),
+          skillIds: release.skillVersions.map((v) => v.skillId),
+          versions: {
+            recipeVersionIds: release.recipeVersions.map((v) => v.id),
+            standardVersionIds: release.standardVersions.map((v) => v.id),
+            skillVersionIds: release.skillVersions.map((v) => v.id),
+          },
+        };
+      }),
+    );
+
+    const packageVersionsMap: PackageVersionsMap = new Map(
+      resolved.map((entry) => [entry.pkg.id, entry.versions]),
+    );
+
+    // Deduplicated across packages: two packages sharing a component render it
+    // once, and two packages pinned to different releases of it render the
+    // first one listed.
+    const commandVersionIds = [
+      ...new Set(resolved.flatMap((e) => e.versions.recipeVersionIds)),
+    ];
+    const standardVersionIds = [
+      ...new Set(resolved.flatMap((e) => e.versions.standardVersionIds)),
+    ];
+    const skillVersionIds = [
+      ...new Set(resolved.flatMap((e) => e.versions.skillVersionIds)),
+    ];
+
+    const packageVersions: Record<string, string> = {};
+    for (const entry of resolved) {
+      packageVersions[entry.slug] = entry.versionSpec;
+    }
+
+    this.logger.info('Resolved package contents', {
+      packagesCount: packages.length,
+      commandVersionsCount: commandVersionIds.length,
+      standardVersionsCount: standardVersionIds.length,
+      skillVersionsCount: skillVersionIds.length,
+      packageVersions,
+    });
+
     // Feeds the lock file that publishArtifacts generates.
     const artifactSpaceIds: Record<string, string> = {};
     const artifactPackageIds: Record<string, string[]> = {};
 
-    for (const pkg of packages) {
-      for (const recipeId of pkg.recipes) {
-        artifactSpaceIds[recipeId] = pkg.spaceId as string;
-        if (!artifactPackageIds[recipeId]) {
-          artifactPackageIds[recipeId] = [];
+    for (const entry of resolved) {
+      const artifactIds = [
+        ...entry.recipeIds,
+        ...entry.standardIds,
+        ...entry.skillIds,
+      ];
+      for (const artifactId of artifactIds) {
+        artifactSpaceIds[artifactId] = entry.pkg.spaceId as string;
+        if (!artifactPackageIds[artifactId]) {
+          artifactPackageIds[artifactId] = [];
         }
-        artifactPackageIds[recipeId].push(pkg.id as string);
-      }
-
-      for (const standardId of pkg.standards) {
-        artifactSpaceIds[standardId] = pkg.spaceId as string;
-        if (!artifactPackageIds[standardId]) {
-          artifactPackageIds[standardId] = [];
-        }
-        artifactPackageIds[standardId].push(pkg.id as string);
-      }
-
-      for (const skillId of pkg.skills) {
-        artifactSpaceIds[skillId] = pkg.spaceId as string;
-        if (!artifactPackageIds[skillId]) {
-          artifactPackageIds[skillId] = [];
-        }
-        artifactPackageIds[skillId].push(pkg.id as string);
+        artifactPackageIds[artifactId].push(entry.pkg.id as string);
       }
     }
 
@@ -191,6 +293,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       skillVersionIds,
       targetIds: command.targetIds,
       packagesSlugs,
+      packageVersions,
       packageIds: command.packageIds,
       artifactSpaceIds,
       artifactPackageIds,
