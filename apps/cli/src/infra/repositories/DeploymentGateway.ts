@@ -74,6 +74,9 @@ export class DeploymentGateway implements IDeploymentGateway {
         method: 'POST',
         body: {
           packagesSlugs: command.packagesSlugs,
+          ...(command.packageVersions !== undefined && {
+            packageVersions: command.packageVersions,
+          }),
           packmindLockFile: command.packmindLockFile,
           ...(command.relativePath && { relativePath: command.relativePath }),
           ...(command.agents !== undefined && { agents: command.agents }),

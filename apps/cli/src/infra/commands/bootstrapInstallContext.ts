@@ -3,7 +3,6 @@ import * as inquirer from 'inquirer';
 import {
   CodingAgent,
   CODING_AGENT_TO_RENDER_MODE,
-  PackmindFileConfig,
   RenderMode,
 } from '@packmind/types';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
@@ -24,7 +23,6 @@ export type BootstrapInstallContextDependencies = {
   agentDetectionService: IAgentArtifactDetectionService;
   packmindGateway: IPackmindGateway;
   baseDirectory: string;
-  packages: string[];
   isTTY?: boolean;
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
@@ -47,8 +45,12 @@ export type BootstrapInstallContextOutcome = {
    */
   configCreated: boolean;
   /**
-   * Packages that bootstrap injected into a freshly-created `packmind.json`.
-   * Plumbed into the install summary so the user sees them as "added".
+   * Always empty, kept because the install summary merges it.
+   *
+   * Bootstrap creates the file without any package in it, even when the
+   * command named some: which version a package lands on is the install's
+   * answer to give, and a slug written here as `*` beforehand would be read
+   * back as "this repo follows the live package" and pin nothing.
    */
   packagesAdded: string[];
 };
@@ -61,7 +63,6 @@ export async function bootstrapInstallContext(
     agentDetectionService,
     packmindGateway,
     baseDirectory,
-    packages,
     isTTY = false,
     installDefaultSkills,
     cliVersion,
@@ -84,12 +85,8 @@ export async function bootstrapInstallContext(
   }
 
   if (homeAgent) {
-    const packagesMap: PackmindFileConfig['packages'] =
-      packages.length > 0
-        ? Object.fromEntries(packages.map((s) => [s, '*']))
-        : {};
     await configRepository.writeConfig(baseDirectory, {
-      packages: packagesMap,
+      packages: {},
       agents: [homeAgent],
     });
     logSuccessConsole(
@@ -99,7 +96,7 @@ export async function bootstrapInstallContext(
       configReady: true,
       warned: false,
       configCreated: true,
-      packagesAdded: [...packages],
+      packagesAdded: [],
     };
   }
 
@@ -108,12 +105,8 @@ export async function bootstrapInstallContext(
 
   if (detected.length > 0) {
     const agents = [...new Set(detected.map((d) => d.agent))];
-    const packagesMap: PackmindFileConfig['packages'] =
-      packages.length > 0
-        ? Object.fromEntries(packages.map((s) => [s, '*']))
-        : {};
     await configRepository.writeConfig(baseDirectory, {
-      packages: packagesMap,
+      packages: {},
       agents,
     });
     logSuccessConsole(
@@ -130,7 +123,7 @@ export async function bootstrapInstallContext(
       configReady: true,
       warned: false,
       configCreated: true,
-      packagesAdded: [...packages],
+      packagesAdded: [],
     };
   }
 

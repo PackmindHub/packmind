@@ -54,7 +54,7 @@ function makeConfigRepository(
     writeConfig: jest.fn().mockResolvedValue(undefined),
     configExists: jest.fn().mockResolvedValue(false),
     readConfig: jest.fn().mockResolvedValue(null),
-    addPackagesToConfig: jest.fn().mockResolvedValue(undefined),
+    upsertPackagesInConfig: jest.fn().mockResolvedValue(undefined),
     findDescendantConfigs: jest.fn().mockResolvedValue([]),
     readHierarchicalConfig: jest
       .fn()
@@ -129,7 +129,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: false,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -170,7 +169,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService,
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: [],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -208,7 +206,6 @@ describe('bootstrapInstallContext', () => {
           }),
         }),
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -245,7 +242,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService: singleAgentDetectionService,
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: ['@testing/cli-e2e'],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -255,7 +251,7 @@ describe('bootstrapInstallContext', () => {
         expect(singleAgentResult.configCreated).toBe(true);
       });
 
-      it('reports packagesAdded with the given packages', async () => {
+      it('leaves the packages to the install, which decides their version', async () => {
         const singleAgentConfigRepository = makeConfigRepository();
         const singleAgentDetectionService = makeDetectionService([
           { agent: 'claude', artifactPath: '/test/project/.claude' },
@@ -266,14 +262,13 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService: singleAgentDetectionService,
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: ['@testing/cli-e2e'],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,
           runInit: jest.fn(),
         });
 
-        expect(singleAgentResult.packagesAdded).toEqual(['@testing/cli-e2e']);
+        expect(singleAgentResult.packagesAdded).toEqual([]);
       });
     });
   });
@@ -296,7 +291,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway: makeGateway(),
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -315,7 +309,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway: makeGateway(),
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -339,7 +332,6 @@ describe('bootstrapInstallContext', () => {
           baseDirectory,
           // Even when packages are passed by the CLI, interactive init does not
           // pre-populate them — installUseCase handles that.
-          packages: ['@a/x'],
           isTTY: true,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -368,7 +360,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService,
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: ['@a/x'],
           isTTY: true,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -402,7 +393,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway: makeGateway(),
         baseDirectory,
-        packages: [],
         isTTY: false,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -433,7 +423,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway: makeGateway(),
         baseDirectory,
-        packages: [],
         isTTY: false,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -485,7 +474,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -528,7 +516,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -577,7 +564,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -621,7 +607,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -669,7 +654,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway,
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -727,7 +711,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService,
           packmindGateway,
           baseDirectory,
-          packages: [],
           isTTY: true,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -754,7 +737,6 @@ describe('bootstrapInstallContext', () => {
         agentDetectionService,
         packmindGateway: makeGateway(),
         baseDirectory,
-        packages: ['@space/pkg'],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -763,9 +745,9 @@ describe('bootstrapInstallContext', () => {
       });
     });
 
-    it('writes packmind.json with just the home agent', () => {
+    it('writes packmind.json with just the home agent and no package', () => {
       expect(configRepository.writeConfig).toHaveBeenCalledWith(baseDirectory, {
-        packages: { '@space/pkg': '*' },
+        packages: {},
         agents: ['claude'],
       });
     });
@@ -783,7 +765,7 @@ describe('bootstrapInstallContext', () => {
         configReady: true,
         warned: false,
         configCreated: true,
-        packagesAdded: ['@space/pkg'],
+        packagesAdded: [],
       });
     });
 
@@ -799,7 +781,6 @@ describe('bootstrapInstallContext', () => {
           getRenderModeConfiguration,
         }),
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -821,7 +802,6 @@ describe('bootstrapInstallContext', () => {
           getRenderModeConfiguration,
         }),
         baseDirectory,
-        packages: [],
         isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
@@ -839,7 +819,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService: makeDetectionService(),
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: [],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -856,7 +835,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService: makeDetectionService(),
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: [],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,
@@ -873,7 +851,6 @@ describe('bootstrapInstallContext', () => {
           agentDetectionService: makeDetectionService(),
           packmindGateway: makeGateway(),
           baseDirectory,
-          packages: [],
           isTTY: false,
           installDefaultSkills: jest.fn(),
           cliVersion,

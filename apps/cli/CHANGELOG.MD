@@ -2,6 +2,9 @@
 
 ## Added
 
+- `packmind install @space/my-package` now installs a released version of a package rather than whatever the package currently holds, and writes that version into `packmind.json`. With no version after the slug it installs the latest release; `@space/my-package:0.1.0` installs exactly that one; `@space/my-package:*` follows the package as it changes, which is what every repo did before. A version that was never released refuses the install and lists the ones that were, latest first — whether it was typed on the command line or written in `packmind.json`. A package that has never been released still installs as it stands, under `*`
+- A `packmind.json` written before this keeps saying `*` and keeps behaving exactly as it did: only a package named for the first time, or named with a version, is pinned. Each `packmind.json` in a repository carries its own versions, so two folders can be on two different releases of the same package
+
 ## Changed
 
 ## Fixed

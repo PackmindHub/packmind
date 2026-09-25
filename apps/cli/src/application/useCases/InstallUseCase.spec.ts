@@ -181,10 +181,9 @@ describe('InstallUseCase', () => {
         cliVersion: '0.0.0-test',
       });
 
-      expect(mockConfigFileRepository.addPackagesToConfig).toHaveBeenCalledWith(
-        '/test',
-        ['@my-space/my-package'],
-      );
+      expect(
+        mockConfigFileRepository.upsertPackagesInConfig,
+      ).toHaveBeenCalledWith('/test', { '@my-space/my-package': '*' });
     });
   });
 
@@ -284,7 +283,7 @@ describe('InstallUseCase', () => {
       });
 
       expect(
-        mockConfigFileRepository.addPackagesToConfig,
+        mockConfigFileRepository.upsertPackagesInConfig,
       ).not.toHaveBeenCalled();
     });
 
@@ -1901,6 +1900,128 @@ Old packmind content
           },
         }),
       );
+    });
+  });
+
+  describe('when packages carry versions', () => {
+    const mySpace = spaceFactory({
+      id: createSpaceId('space-1'),
+      slug: 'my-space',
+    });
+
+    beforeEach(() => {
+      mockSpaceService.getSpaces.mockResolvedValue([mySpace]);
+      mockSpaceService.getDefaultSpace.mockResolvedValue(mySpace);
+      mockSpaceService.getApiContext.mockReturnValue({
+        host: 'https://app.packmind.com',
+        organizationId: 'org-1',
+      });
+    });
+
+    describe('and packmind.json pins one', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@my-space/ops': '0.1.0', '@my-space/security': '*' },
+        });
+      });
+
+      it('sends each version as the file records it', async () => {
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: {
+              '@my-space/ops': '0.1.0',
+              '@my-space/security': '*',
+            },
+          }),
+        );
+      });
+    });
+
+    describe('and a version is typed on the command line', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      });
+
+      it('sends the typed version', async () => {
+        await useCase.execute({
+          packages: ['@my-space/ops:0.0.1'].map(parsePackageSlug),
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: { '@my-space/ops': '0.0.1' },
+          }),
+        );
+      });
+    });
+
+    describe('and no version is typed for a package the repo does not carry', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      });
+
+      it('names no version, so the newest release answers', async () => {
+        await useCase.execute({
+          packages: ['@my-space/ops'].map(parsePackageSlug),
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({ packageVersions: {} }),
+        );
+      });
+    });
+
+    describe('and the package is named again while packmind.json already pins it', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@my-space/ops': '*' },
+        });
+      });
+
+      it("keeps the file's own spec rather than moving it to a release", async () => {
+        await useCase.execute({
+          packages: ['@my-space/ops'].map(parsePackageSlug),
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: { '@my-space/ops': '*' },
+          }),
+        );
+      });
+    });
+
+    describe('and the server answers with what it rendered', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue(null);
+        mockGateway.deployment.install.mockResolvedValue({
+          ...installResponseFactory(),
+          resolvedPackageVersions: { '@my-space/ops': '0.1.0' },
+        });
+      });
+
+      it('records the concrete version in packmind.json', async () => {
+        await useCase.execute({
+          packages: ['@my-space/ops'].map(parsePackageSlug),
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(
+          mockConfigFileRepository.upsertPackagesInConfig,
+        ).toHaveBeenCalledWith('/test', { '@my-space/ops': '0.1.0' });
+      });
     });
   });
 });

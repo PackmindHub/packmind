@@ -33,10 +33,7 @@ import {
 } from './skillsCapabilityWarning';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
-import {
-  displayableParsedPackageSlug,
-  ParsedPackageSlug,
-} from '../../domain/entities/PackageSlug';
+import { ParsedPackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -505,7 +502,6 @@ export async function installHandler({
     agentDetectionService: new AgentArtifactDetectionService(),
     packmindGateway: packmindCliHexa.getPackmindGateway(),
     baseDirectory: cwd,
-    packages: packages.map(displayableParsedPackageSlug),
     isTTY: process.stdin.isTTY ?? false,
     installDefaultSkills:
       packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
@@ -653,7 +649,8 @@ export const installCommand = command({
     packages: restPositionals({
       type: PackageSlugArgType,
       displayName: 'packages',
-      description: 'Package slugs to install (e.g. @my-space/my-package)',
+      description:
+        'Packages to install, optionally at a version (e.g. @my-space/my-package, @my-space/my-package:1.2.3, @my-space/my-package:*). Without a version, the latest release is installed and written to packmind.json.',
     }),
     status: flag({
       long: 'status',
