@@ -3,6 +3,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
+  FileUpdates,
   createUserId,
   createOrganizationId,
   createPackageId,
@@ -985,6 +986,27 @@ describe('PublishArtifactsUseCase', () => {
 
       it('includes Staging target name in commit message', () => {
         expect(jobInput.commitMessage).toContain('Staging');
+      });
+
+      /*
+       * The commit message names both targets, so the commit has to carry
+       * both. Each target renders to its own prefixed paths, and only one set
+       * of them was ever handed to the job.
+       */
+      it('commits the files of the first target', () => {
+        const paths = (
+          jobInput as unknown as { fileUpdates: FileUpdates }
+        ).fileUpdates.createOrUpdate.map((file) => file.path);
+
+        expect(paths).toContain('docs/prod/.packmind/commands/test.md');
+      });
+
+      it('commits the files of the second target', () => {
+        const paths = (
+          jobInput as unknown as { fileUpdates: FileUpdates }
+        ).fileUpdates.createOrUpdate.map((file) => file.path);
+
+        expect(paths).toContain('docs/staging/.packmind/commands/test.md');
       });
     });
   });
