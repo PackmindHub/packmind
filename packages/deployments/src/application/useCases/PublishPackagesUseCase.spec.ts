@@ -244,6 +244,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -395,6 +401,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -458,6 +470,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [standardId]: pkg.spaceId,
@@ -763,6 +781,15 @@ describe('PublishPackagesUseCase', () => {
         packageVersions: {
           [`@${spaceSlug}/${package1.slug}`]: '*',
           [`@${spaceSlug}/${package2.slug}`]: '*',
+        },
+        perTarget: {
+          [targetId]: {
+            packageVersions: {
+              [`@${spaceSlug}/${package1.slug}`]: '*',
+              [`@${spaceSlug}/${package2.slug}`]: '*',
+            },
+            versionIds: expect.any(Array),
+          },
         },
         packageIds: [package1Id, package2Id],
         artifactSpaceIds: {
@@ -1220,30 +1247,77 @@ describe('PublishPackagesUseCase', () => {
         );
       });
 
-      it('distributes them separately', async () => {
+      it('still sends one publish, so the repository gets one commit', async () => {
         await useCase.execute(command);
 
-        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledTimes(2);
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledTimes(1);
       });
 
-      it('sends the release to the pinned one', async () => {
+      it('records the release against the pinned destination', async () => {
         await useCase.execute(command);
 
         expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
           expect.objectContaining({
-            targetIds: [pinnedTargetId],
-            packageVersions: { [slug()]: '0.1.0' },
+            perTarget: expect.objectContaining({
+              [pinnedTargetId]: expect.objectContaining({
+                packageVersions: { [slug()]: '0.1.0' },
+              }),
+            }),
           }),
         );
       });
 
-      it('sends the live package to the other', async () => {
+      it('records the wildcard against the other', async () => {
         await useCase.execute(command);
 
         expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
           expect.objectContaining({
-            targetIds: [wildcardTargetId],
-            packageVersions: { [slug()]: '*' },
+            perTarget: expect.objectContaining({
+              [wildcardTargetId]: expect.objectContaining({
+                packageVersions: { [slug()]: '*' },
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('renders the released version at the pinned destination', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [pinnedTargetId]: expect.objectContaining({
+                versionIds: [releasedRecipeVersion.id],
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('renders the live version at the other', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [wildcardTargetId]: expect.objectContaining({
+                versionIds: [liveRecipeVersion.id],
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('sends both versions as the union', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            commandVersionIds: expect.arrayContaining([
+              releasedRecipeVersion.id,
+              liveRecipeVersion.id,
+            ]),
           }),
         );
       });
