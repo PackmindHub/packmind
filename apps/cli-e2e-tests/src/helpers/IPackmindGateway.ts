@@ -4,6 +4,8 @@ import {
   IActivateUserAccountUseCase,
   ICaptureCommandUseCase,
   ICreateInvitationsUseCase,
+  IAddArtefactsToPackageUseCase,
+  ICreatePackageReleaseUseCase,
   ICreatePackageUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
@@ -48,6 +50,8 @@ export interface ICommandGateway {
 export interface IPackageGateway {
   create: Gateway<ICreatePackageUseCase>;
   list: Gateway<IListPackagesBySpaceUseCase>;
+  addArtefacts: Gateway<IAddArtefactsToPackageUseCase>;
+  createRelease: Gateway<ICreatePackageReleaseUseCase>;
 }
 
 export interface IStandardGateway {

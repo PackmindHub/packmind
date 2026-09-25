@@ -464,7 +464,7 @@ describe('ConfigFileRepository', () => {
     });
   });
 
-  describe('addPackagesToConfig', () => {
+  describe('upsertPackagesInConfig', () => {
     describe('when no existing config file', () => {
       beforeEach(() => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
@@ -472,10 +472,10 @@ describe('ConfigFileRepository', () => {
       });
 
       it('creates config with packages first (default order)', async () => {
-        await repository.addPackagesToConfig('/project', [
-          'backend',
-          'frontend',
-        ]);
+        await repository.upsertPackagesInConfig('/project', {
+          backend: '*',
+          frontend: '*',
+        });
 
         expect(mockFs.writeFile).toHaveBeenCalledWith(
           '/project/packmind.json',
@@ -485,10 +485,10 @@ describe('ConfigFileRepository', () => {
       });
 
       it('creates config with new packages', async () => {
-        await repository.addPackagesToConfig('/project', [
-          'backend',
-          'frontend',
-        ]);
+        await repository.upsertPackagesInConfig('/project', {
+          backend: '*',
+          frontend: '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -508,7 +508,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('preserves agents-first order', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const agentsIndex = writtenContent.indexOf('"agents"');
@@ -517,7 +519,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('adds new package while preserving existing packages', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -525,7 +529,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('preserves agents array', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -545,7 +551,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('preserves packages-first order', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const agentsIndex = writtenContent.indexOf('"agents"');
@@ -554,7 +562,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('preserves agents array', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -574,7 +584,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('does not add agents property', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -582,7 +594,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('adds new packages', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -602,10 +616,10 @@ describe('ConfigFileRepository', () => {
       });
 
       it('does not duplicate existing package', async () => {
-        await repository.addPackagesToConfig('/project', [
-          'backend',
-          'new-package',
-        ]);
+        await repository.upsertPackagesInConfig('/project', {
+          backend: '*',
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);
@@ -624,7 +638,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('creates fresh config', async () => {
-        await repository.addPackagesToConfig('/project', ['new-package']);
+        await repository.upsertPackagesInConfig('/project', {
+          'new-package': '*',
+        });
 
         const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
         const parsed = JSON.parse(writtenContent);

@@ -1252,7 +1252,7 @@ describe('GitProvidersService', () => {
     });
 
     describe('when signer.verify throws InvalidInstallStateError', () => {
-      it('throws BadRequestException', async () => {
+      it('propagates InvalidInstallStateError', async () => {
         mockSigner.verify.mockImplementation(() => {
           throw new InvalidInstallStateError();
         });
@@ -1265,9 +1265,7 @@ describe('GitProvidersService', () => {
             state: 'BAD_STATE',
             source: 'ui',
           }),
-        ).rejects.toThrow(
-          new BadRequestException('Invalid or expired state token'),
-        );
+        ).rejects.toThrow(InvalidInstallStateError);
       });
     });
 
@@ -1710,7 +1708,7 @@ describe('GitProvidersService', () => {
     });
 
     describe('when signer.verify throws InvalidInstallStateError', () => {
-      it('throws BadRequestException', async () => {
+      it('propagates InvalidInstallStateError', async () => {
         mockSigner.verify.mockImplementation(() => {
           throw new InvalidInstallStateError();
         });
@@ -1722,7 +1720,7 @@ describe('GitProvidersService', () => {
             code: 'gh-code-123',
             state: 'BAD_STATE',
           }),
-        ).rejects.toThrow(new BadRequestException('Invalid manifest state'));
+        ).rejects.toThrow(InvalidInstallStateError);
       });
     });
 
@@ -1826,7 +1824,23 @@ describe('GitProvidersService', () => {
               appSlug: 'my-packmind-app',
               revokedAt: null,
               linkedProviderCount: 0,
+              secretsUnreadable: false,
             });
+          });
+        });
+
+        describe('and its stored secrets could not be decrypted', () => {
+          it('reports the secrets as unreadable', async () => {
+            (
+              mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
+            ).mockResolvedValue({ ...activeApp, secretsUnreadable: true });
+            (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+              providers: [],
+            });
+
+            const result = await service.getGithubAppStatus({ orgId, userId });
+
+            expect(result.secretsUnreadable).toBe(true);
           });
         });
 
@@ -1908,6 +1922,7 @@ describe('GitProvidersService', () => {
             appSlug: 'my-packmind-app',
             revokedAt,
             linkedProviderCount: 0,
+            secretsUnreadable: false,
           });
         });
       });

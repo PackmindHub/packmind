@@ -87,6 +87,7 @@ export class OrganizationsController {
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
     @Query('packageSlug') packageSlug?: string | string[],
+    @Query('packageVersion') packageVersion?: string | string[],
     @Query('previousPackageSlug') previousPackageSlug?: string | string[],
     @Query('gitRemoteUrl') gitRemoteUrl?: string,
     @Query('gitBranch') gitBranch?: string,
@@ -102,6 +103,10 @@ export class OrganizationsController {
         ? packageSlug
         : [packageSlug]
       : [];
+
+    // Each entry is `<slug>=<spec>`, so the pairing survives a query string
+    // that reorders repeated parameters.
+    const packageVersions = toPackageVersionMap(packageVersion);
 
     // Normalize previousPackageSlug to array
     const previousPackagesSlugs = previousPackageSlug
@@ -148,6 +153,7 @@ export class OrganizationsController {
       userId,
       organizationId,
       packagesSlugs,
+      packageVersions,
       previousPackagesSlugs,
       gitRemoteUrl,
       gitBranch,
@@ -341,6 +347,7 @@ export class OrganizationsController {
     @Body()
     body: {
       packagesSlugs: string[];
+      packageVersions?: Record<string, string>;
       packmindLockFile: PackmindLockFile;
       relativePath?: string;
       agents?: string[];
@@ -384,6 +391,7 @@ export class OrganizationsController {
       userId,
       organizationId,
       packagesSlugs: body.packagesSlugs,
+      packageVersions: body.packageVersions,
       packmindLockFile: body.packmindLockFile,
       relativePath: body.relativePath,
       agents,
@@ -419,4 +427,32 @@ export class OrganizationsController {
       source: request.clientSource,
     });
   }
+}
+
+/**
+ * Reads repeated `packageVersion=<slug>=<spec>` query entries into a map.
+ *
+ * Paired inside each entry rather than by position against `packageSlug`: a
+ * query string is not ordered across two repeated parameters, and a version
+ * that silently lands on the wrong package pins the wrong release.
+ */
+function toPackageVersionMap(
+  packageVersion: string | string[] | undefined,
+): Record<string, string> | undefined {
+  if (!packageVersion) {
+    return undefined;
+  }
+
+  const entries = Array.isArray(packageVersion)
+    ? packageVersion
+    : [packageVersion];
+  const versions: Record<string, string> = {};
+
+  for (const entry of entries) {
+    const separator = entry.lastIndexOf('=');
+    if (separator <= 0) continue;
+    versions[entry.slice(0, separator)] = entry.slice(separator + 1);
+  }
+
+  return Object.keys(versions).length > 0 ? versions : undefined;
 }

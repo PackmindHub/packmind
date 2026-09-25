@@ -1,16 +1,24 @@
+import { MarketplacesError } from './MarketplacesError';
+
 /**
- * Error thrown by `ValidateMarketplaceUrlUseCase` when no tokenless Git
- * provider can reach the host derived from the supplied public URL (e.g.
- * the host is unknown, the URL is malformed, or every reachable provider
- * returned an unrecoverable transport error).
+ * Error thrown when no tokenless Git provider can reach the host derived from
+ * the supplied public URL — the URL is malformed, the host is unknown, or the
+ * provider lacks a credential.
  *
- * The original URL is preserved so the API surface and frontend can map this
- * error to the playground prototype's `not-public | not-reachable` UX
- * categories without re-parsing the input.
+ * Covers only caller-correctable cases: transport failures use
+ * `MarketplaceRepositoryUnreachableError` instead. The original URL is
+ * preserved so the API surface and frontend can map this error to the
+ * playground prototype's `not-public | not-reachable` UX categories without
+ * re-parsing the input.
  */
-export class MarketplaceUrlNotReachableError extends Error {
+export class MarketplaceUrlNotReachableError extends MarketplacesError {
   constructor(public readonly url: string) {
-    super(`Marketplace URL "${url}" is not reachable`);
+    super(
+      'invalid_input',
+      'marketplace_url_not_reachable',
+      { marketplaceUrl: url },
+      `Marketplace URL "${url}" is not reachable`,
+    );
     this.name = 'MarketplaceUrlNotReachableError';
   }
 }

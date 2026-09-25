@@ -456,6 +456,31 @@ describe('GitProviderService', () => {
       });
     });
 
+    describe('when the stored token could not be decrypted', () => {
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.checkProviderAuth>
+      >;
+
+      beforeEach(async () => {
+        mockGitProviderRepository.findById.mockResolvedValue({
+          ...mockGitProvider,
+          token: null,
+          tokenUnreadable: true,
+        });
+        result = await gitProviderService.checkProviderAuth(
+          createGitProviderId('provider-1'),
+        );
+      });
+
+      it('reports the token as unreadable', () => {
+        expect(result).toEqual({ ok: false, reason: 'token_unreadable' });
+      });
+
+      it('does not probe the provider', () => {
+        expect(mockGithubProviderInstance.checkAuth).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when the provider exists', () => {
       let result: Awaited<
         ReturnType<typeof gitProviderService.checkProviderAuth>

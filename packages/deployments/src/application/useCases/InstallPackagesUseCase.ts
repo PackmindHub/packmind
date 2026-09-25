@@ -22,6 +22,7 @@ import {
   SkillVersion,
   SpaceId,
   StandardVersion,
+  WILDCARD_VERSION_SPEC,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -33,17 +34,31 @@ import { NoPackageSlugsProvidedError } from '../../domain/errors/NoPackageSlugsP
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
-  buildArtifactMetadataMap,
+  PackageContentResolver,
+  readPackageVersionSpec,
+} from '../services/PackageContentResolver';
+import { PackageReleaseService } from '../services/PackageReleaseService';
+import {
+  ArtifactMetadataMap,
   enrichFileModificationsWithMetadata,
   flattenArtifactMetadataMap,
 } from '../utils/ArtifactMetadataUtils';
 
 const origin = 'InstallPackagesUseCase';
 
+/** A slug the caller asked for, the package it named, and its canonical form. */
+type ResolvedPackageEntry = {
+  originalSlug: string;
+  normalizedSlug: string;
+  pkg: PackageWithArtefacts;
+};
+
 export class InstallPackagesUseCase extends AbstractMemberUseCase<
   InstallPackagesCommand,
   InstallPackagesResponse
 > {
+  private readonly contentResolver: PackageContentResolver;
+
   constructor(
     private readonly packageService: PackageService,
     private readonly commandsPort: ICommandsPort,
@@ -54,11 +69,18 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    packageReleaseService: PackageReleaseService,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly lockFileService: PackmindLockFileService = new PackmindLockFileService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
+    this.contentResolver = new PackageContentResolver(
+      commandsPort,
+      standardsPort,
+      skillsPort,
+      packageReleaseService,
+    );
     this.logger.info('InstallPackagesUseCase initialized');
   }
 
@@ -100,8 +122,8 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     let standardVersions: StandardVersion[] = [];
     let skillVersions: SkillVersion[] = [];
     let normalizedAccessibleSlugs: string[] = [];
-    let artifactMetadata: ReturnType<typeof buildArtifactMetadataMap> | null =
-      null;
+    let artifactMetadata: ArtifactMetadataMap | null = null;
+    const resolvedPackageVersions: Record<string, string> = {};
 
     if (accessibleSlugs.length > 0) {
       const resolution = await this.resolvePackagesBySlugs(
@@ -114,102 +136,32 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       }
 
       normalizedAccessibleSlugs = resolution.normalizedSlugs;
-      const packages = resolution.packages;
 
       this.logger.info('Found accessible packages', {
-        count: packages.length,
-        slugs: packages.map((p) => p.slug),
+        count: resolution.entries.length,
+        slugs: resolution.entries.map((entry) => entry.pkg.slug),
       });
 
-      const allCommands = packages.flatMap((pkg) => pkg.recipes);
-      const allStandards = packages.flatMap((pkg) => pkg.standards);
-      const allSkills = packages.flatMap((pkg) => pkg.skills);
-
-      const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
-      const standards = [
-        ...new Map(allStandards.map((s) => [s.id, s])).values(),
-      ];
-      const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
-
-      const buildPackageIdMap = (
-        accessor: (pkg: PackageWithArtefacts) => { id: string }[],
-      ): Map<string, string[]> => {
-        const map = new Map<string, string[]>();
-        for (const pkg of packages) {
-          for (const artifact of accessor(pkg)) {
-            const existing = map.get(artifact.id as string);
-            if (existing) {
-              existing.push(pkg.id as string);
-            } else {
-              map.set(artifact.id as string, [pkg.id as string]);
-            }
-          }
-        }
-        return map;
-      };
-
-      const commandPackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
-      const standardPackageIdMap = buildPackageIdMap((pkg) => pkg.standards);
-      const skillPackageIdMap = buildPackageIdMap((pkg) => pkg.skills);
-
-      const commandVersionsPromises = recipes.map(async (recipe) => {
-        const versions = await this.commandsPort.listCommandVersions(recipe.id);
-        versions.sort(
-          (a: CommandVersion, b: CommandVersion) => b.version - a.version,
-        );
-        return versions[0];
-      });
-
-      recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
-        (rv): rv is NonNullable<typeof rv> => rv !== null,
-      );
-
-      const standardVersionsPromises = standards.map((standard) =>
-        this.standardsPort.getLatestStandardVersion(standard.id),
-      );
-
-      standardVersions = (await Promise.all(standardVersionsPromises)).filter(
-        (sv) => sv !== null,
-      );
-
-      const skillVersionsPromises = skills.map(async (skill) => {
-        const latestVersion = await this.skillsPort.getLatestSkillVersion(
-          skill.id,
-        );
-        if (latestVersion) {
-          const files = await this.skillsPort.getSkillFiles(latestVersion.id);
-          return { ...latestVersion, files };
-        }
-        return null;
-      });
-
-      skillVersions = (await Promise.all(skillVersionsPromises)).filter(
-        (skv) => skv !== null,
-      );
-
-      artifactMetadata = buildArtifactMetadataMap({
-        recipes: {
-          spaceIdMap: new Map(
-            recipes.map((r) => [r.id as string, r.spaceId as string]),
+      const content = await this.contentResolver.resolve(
+        resolution.entries.map((entry) => ({
+          pkg: entry.pkg,
+          slug: entry.originalSlug,
+          spec: readPackageVersionSpec(
+            entry.originalSlug,
+            command.packageVersions,
           ),
-          packageIdMap: commandPackageIdMap,
-          versions: recipeVersions,
-        },
-        standards: {
-          spaceIdMap: new Map(
-            standards.map((s) => [s.id as string, s.spaceId as string]),
-          ),
-          packageIdMap: standardPackageIdMap,
-          versions: standardVersions,
-        },
-        skills: {
-          spaceIdMap: new Map(
-            skills.map((s) => [s.id as string, s.spaceId as string]),
-          ),
-          packageIdMap: skillPackageIdMap,
-          versions: skillVersions,
-        },
-      });
+        })),
+      );
+
+      recipeVersions = content.commandVersions;
+      standardVersions = content.standardVersions;
+      skillVersions = content.skillVersions;
+      artifactMetadata = content.artifactMetadata;
+
+      for (const entry of resolution.entries) {
+        resolvedPackageVersions[entry.normalizedSlug] =
+          content.resolvedVersions.get(entry.pkg.id) ?? WILDCARD_VERSION_SPEC;
+      }
 
       const artifactFileUpdates =
         await this.codingAgentPort.deployArtifactsForAgents({
@@ -253,10 +205,23 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       allNormalizedSlugs.length > 0
         ? allNormalizedSlugs
         : command.packagesSlugs;
+    // A slug the caller cannot read keeps whatever it asked for: the version
+    // is theirs to change, and this install never looked at the package.
+    const configVersions: Record<string, string> = {
+      ...resolvedPackageVersions,
+    };
+    for (const slug of inaccessibleSlugs) {
+      const requested = command.packageVersions?.[slug];
+      if (requested !== undefined) {
+        configVersions[slug] = requested;
+      }
+    }
+
     const configFile = this.packmindConfigService.createConfigFileModification(
       configSlugs,
       undefined,
       command.agents,
+      configVersions,
     );
     mergedFileUpdates.createOrUpdate.push(configFile);
 
@@ -371,6 +336,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       resolvedAgents: codingAgents,
       missingAccess: inaccessibleSlugs,
       skillFolders: Array.from(new Set(skillFolders)),
+      resolvedPackageVersions,
       sourceArtifacts,
     };
   }
@@ -445,7 +411,8 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     slugs: string[],
     organizationId: OrganizationId,
   ): Promise<{
-    packages: PackageWithArtefacts[];
+    /** One per resolved slug, in the order the caller asked for them. */
+    entries: ResolvedPackageEntry[];
     notFoundSlugs: string[];
     normalizedSlugs: string[];
   }> {
@@ -471,9 +438,9 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       defaultSpaceSlug = defaultSpace?.slug ?? null;
     }
 
-    const packages: PackageWithArtefacts[] = [];
     const notFoundSlugs: string[] = [];
     const normalizedSlugMap = new Map<string, string>();
+    const packageByOriginalSlug = new Map<string, PackageWithArtefacts>();
 
     for (const [spaceSlug, group] of spaceGroups) {
       let resolvedSpaceSlug: string | null;
@@ -502,17 +469,17 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
           pkgSlugs,
           spaceId,
         );
-      packages.push(...found);
-
-      const foundSlugs = new Set(found.map((p) => p.slug));
+      const foundBySlug = new Map(found.map((p) => [p.slug, p]));
       for (const g of group) {
-        if (!foundSlugs.has(g.packageSlug)) {
+        const pkg = foundBySlug.get(g.packageSlug);
+        if (!pkg) {
           notFoundSlugs.push(g.originalSlug);
         } else {
           normalizedSlugMap.set(
             g.originalSlug,
             `@${resolvedSpaceSlug}/${g.packageSlug}`,
           );
+          packageByOriginalSlug.set(g.originalSlug, pkg);
         }
       }
     }
@@ -521,7 +488,14 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       .map((slug) => normalizedSlugMap.get(slug))
       .filter((s): s is string => s !== undefined);
 
-    return { packages, notFoundSlugs, normalizedSlugs };
+    const entries = slugs.flatMap((slug) => {
+      const pkg = packageByOriginalSlug.get(slug);
+      const normalizedSlug = normalizedSlugMap.get(slug);
+      if (!pkg || !normalizedSlug) return [];
+      return [{ originalSlug: slug, normalizedSlug, pkg }];
+    });
+
+    return { entries, notFoundSlugs, normalizedSlugs };
   }
 
   private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {

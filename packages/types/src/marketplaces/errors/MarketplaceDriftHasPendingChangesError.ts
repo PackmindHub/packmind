@@ -1,3 +1,5 @@
+import { MarketplacesError } from './MarketplacesError';
+
 /**
  * Error thrown when `AcceptMarketplaceDriftUseCase` refuses to accept the
  * descriptor because in-flight `pending_merge` or `to_be_removed`
@@ -8,12 +10,15 @@
  * silently strand their content. The caller must merge or cancel the
  * pending sync PR first.
  */
-export class MarketplaceDriftHasPendingChangesError extends Error {
+export class MarketplaceDriftHasPendingChangesError extends MarketplacesError {
   constructor(
     public readonly pendingMergeCount: number,
     public readonly pendingRemovalCount: number,
   ) {
     super(
+      'conflict',
+      'marketplace_drift_has_pending_changes',
+      { pendingMergeCount, pendingRemovalCount },
       `Cannot accept marketplace drift: ${pendingMergeCount} pending publish(es) and ${pendingRemovalCount} pending removal(s) are still staged on the sync branch`,
     );
     this.name = 'MarketplaceDriftHasPendingChangesError';

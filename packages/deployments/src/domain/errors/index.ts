@@ -19,6 +19,8 @@ export * from './PackageReleaseNotPersistedError';
 export * from './PackageReleaseRefusedError';
 export * from './PackageReloadFailedError';
 export * from './PackagesNotFoundError';
+export * from './PackageVersionNotAvailableError';
+export * from './InvalidPackageVersionSpecError';
 export * from './PackageSpaceMissingError';
 export * from './RenderModeConfigurationMissingError';
 export * from './RootTargetNotDeletableError';

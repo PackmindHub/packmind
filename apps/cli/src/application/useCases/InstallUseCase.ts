@@ -25,6 +25,10 @@ import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
 import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
 import { stripFullStandardLinkFooter } from '../../infra/utils/stripFullStandardLinkFooter';
 import { displayableParsedPackageSlug } from '../../domain/entities/PackageSlug';
+import {
+  WILDCARD_VERSION_SPEC,
+  formatPackageVersionSpec,
+} from '@packmind/types';
 import assert from 'assert';
 import { EXEC_NAME } from '../../infra/utils/execName';
 
@@ -75,7 +79,15 @@ export class InstallUseCase implements IInstallUseCase {
       await this.configFileRepository.configExists(baseDirectory);
     const lockFile = await this.lockFileRepository.read(baseDirectory);
     const config = await this.configFileRepository.readConfig(baseDirectory);
-    const slugsBefore = new Set(Object.keys(config?.packages ?? {}));
+    /*
+     * Which packages the repo already carried, in the canonical form.
+     *
+     * Not the file's own keys: a config that spells a package `ops` has it
+     * rewritten to `@space/ops` by the normalization below, and comparing the
+     * two spellings would report a package the repo has had all along as one
+     * this install added.
+     */
+    const slugsBefore = new Set<string>();
 
     if (!config && !hasExplicitPackages) {
       const configFileExists =
@@ -101,6 +113,17 @@ export class InstallUseCase implements IInstallUseCase {
 
     let packagesSlugs: string[];
     let normalizedPackages: string[] = [];
+    /*
+     * What each slug asks for, keyed the same way `packagesSlugs` is.
+     *
+     * A slug that is deliberately absent asks for the newest release: that is
+     * how `install @space/ops` on a package the repo has never carried lands
+     * on a version rather than following the package. A slug already in
+     * packmind.json keeps what the file says, even when it is named on the
+     * command line again — the repo's own pin is not something a bare install
+     * gets to move.
+     */
+    const packageVersions: Record<string, string> = {};
 
     if (hasExplicitPackages) {
       const explicitPackageSlugs = (command.packages ?? []).map(
@@ -110,19 +133,32 @@ export class InstallUseCase implements IInstallUseCase {
         await this.normalizePackageSlugs(explicitPackageSlugs);
       await this.validatePackageAccess(normalizedPackages);
 
-      const normalizedConfigPackages = config
+      const fromConfig = config
         ? await this.normalizeAndSaveConfigPackages(baseDirectory, config)
-        : [];
+        : { slugs: [], versions: {} };
+      fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
+      Object.assign(packageVersions, fromConfig.versions);
+
+      (command.packages ?? []).forEach((pkg, index) => {
+        const slug = normalizedPackages[index];
+        if (pkg.versionSpec) {
+          packageVersions[slug] = formatPackageVersionSpec(pkg.versionSpec);
+        }
+      });
+
       packagesSlugs = [
-        ...new Set([...normalizedConfigPackages, ...normalizedPackages]),
+        ...new Set([...fromConfig.slugs, ...normalizedPackages]),
       ];
     } else {
       // Note: config exists as we throw an error before if there's no explicit package not config.
       assert(config);
-      packagesSlugs = await this.normalizeAndSaveConfigPackages(
+      const fromConfig = await this.normalizeAndSaveConfigPackages(
         baseDirectory,
         config,
       );
+      fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
+      Object.assign(packageVersions, fromConfig.versions);
+      packagesSlugs = fromConfig.slugs;
     }
 
     if (packagesSlugs.length === 0) {
@@ -154,6 +190,7 @@ export class InstallUseCase implements IInstallUseCase {
 
     const response = await this.packmindGateway.deployment.install({
       packagesSlugs,
+      packageVersions,
       packmindLockFile: effectiveLockFile,
       agents: installAgents,
     });
@@ -404,10 +441,25 @@ export class InstallUseCase implements IInstallUseCase {
       result.errors.push(`Failed to write packmind-lock.json: ${errorMsg}`);
     }
 
-    if (normalizedPackages.length > 0) {
-      await this.configFileRepository.addPackagesToConfig(
+    /*
+     * What the server actually rendered, which is what the file must record:
+     * a package asked for with no version comes back on a concrete release,
+     * and writing that down is the whole point — a repo that kept asking for
+     * "newest" would move under itself on the next release.
+     *
+     * A server that predates pinning answers nothing, so a newly named
+     * package falls back to the wildcard it has always been given.
+     */
+    const versionsToRecord =
+      response.resolvedPackageVersions ??
+      Object.fromEntries(
+        normalizedPackages.map((slug) => [slug, WILDCARD_VERSION_SPEC]),
+      );
+
+    if (Object.keys(versionsToRecord).length > 0) {
+      await this.configFileRepository.upsertPackagesInConfig(
         baseDirectory,
-        normalizedPackages,
+        versionsToRecord,
       );
 
       const configAfter =
@@ -465,24 +517,30 @@ export class InstallUseCase implements IInstallUseCase {
     return { ...lockFile, artifacts: remappedArtifacts };
   }
 
+  /**
+   * The config's packages in `@space/package` form, with the version each one
+   * records. The versions travel beside the slugs rather than inside them, so
+   * normalizing a slug never loses what the repo pinned it to.
+   */
   private async normalizeAndSaveConfigPackages(
     baseDirectory: string,
     config: PackmindFileConfig,
-  ): Promise<string[]> {
+  ): Promise<{ slugs: string[]; versions: Record<string, string> }> {
     const originalSlugs = Object.keys(config.packages);
-    if (originalSlugs.length === 0) return [];
+    if (originalSlugs.length === 0) return { slugs: [], versions: {} };
 
     const normalizedSlugs = await this.normalizePackageSlugs(originalSlugs);
+    const normalizedPackagesMap: Record<string, string> = {};
+    for (let i = 0; i < normalizedSlugs.length; i++) {
+      normalizedPackagesMap[normalizedSlugs[i]] =
+        config.packages[originalSlugs[i]];
+    }
+
     const hasChanges = normalizedSlugs.some(
       (slug, i) => slug !== originalSlugs[i],
     );
 
     if (hasChanges) {
-      const normalizedPackagesMap: Record<string, string> = {};
-      for (let i = 0; i < normalizedSlugs.length; i++) {
-        normalizedPackagesMap[normalizedSlugs[i]] =
-          config.packages[originalSlugs[i]];
-      }
       await this.configFileRepository.updateConfig(
         baseDirectory,
         'packages',
@@ -490,7 +548,7 @@ export class InstallUseCase implements IInstallUseCase {
       );
     }
 
-    return normalizedSlugs;
+    return { slugs: normalizedSlugs, versions: normalizedPackagesMap };
   }
 
   private async validatePackageAccess(packages: string[]): Promise<void> {

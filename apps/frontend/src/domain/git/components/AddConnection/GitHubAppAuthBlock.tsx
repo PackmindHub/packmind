@@ -218,6 +218,23 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
             </PMVStack>
           ) : (
             <PMVStack gap={2} align="stretch">
+              {statusQuery.data?.secretsUnreadable && (
+                <PMAlert.Root
+                  status="error"
+                  data-testid="github-app-auth-secrets-unreadable"
+                >
+                  <PMAlert.Indicator />
+                  <PMAlert.Content>
+                    <PMAlert.Title>
+                      Packmind can't read this app's stored credentials
+                    </PMAlert.Title>
+                    <PMAlert.Description>
+                      Connections using it can't reach GitHub. Revoke the
+                      registration below, then register the app again.
+                    </PMAlert.Description>
+                  </PMAlert.Content>
+                </PMAlert.Root>
+              )}
               {installError && (
                 <PMAlert.Root status="error">
                   <PMAlert.Indicator />

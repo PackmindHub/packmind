@@ -15,4 +15,8 @@ export type OrganizationGitHubApp = {
   appPrivateKey: string;
   appWebhookSecret: string;
   revokedAt?: Date | null;
+  // Never persisted: set on read when a stored secret exists but cannot be
+  // decrypted. That secret is then an empty string, and the App must be
+  // revoked and registered again.
+  secretsUnreadable?: boolean;
 };

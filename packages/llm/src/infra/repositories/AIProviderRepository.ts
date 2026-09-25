@@ -84,23 +84,52 @@ export class AIProviderRepository
     return encryptedConfig;
   }
 
+  /**
+   * A key that cannot be decrypted is emptied and flagged instead of thrown,
+   * so the settings page can still load the configuration and ask for the key
+   * again.
+   */
   private async decryptSecrets(
+    organizationId: OrganizationId,
     config: LLMServiceConfig,
-  ): Promise<LLMServiceConfig> {
+  ): Promise<StoredAIProvider> {
     const encryptionService = await this.getEncryptionService();
     const decryptedConfig = { ...config } as LLMServiceConfig;
+    const unreadableFields: string[] = [];
+
+    const decryptOrEmpty = (field: 'apiKey' | 'llmApiKey', value: string) => {
+      try {
+        return encryptionService.decrypt(value);
+      } catch {
+        unreadableFields.push(field);
+        return '';
+      }
+    };
 
     if (this.hasApiKey(config) && config.apiKey) {
-      (decryptedConfig as { apiKey: string }).apiKey =
-        encryptionService.decrypt(config.apiKey);
+      (decryptedConfig as { apiKey: string }).apiKey = decryptOrEmpty(
+        'apiKey',
+        config.apiKey,
+      );
     }
 
     if (this.hasLlmApiKey(config) && config.llmApiKey) {
-      (decryptedConfig as { llmApiKey: string }).llmApiKey =
-        encryptionService.decrypt(config.llmApiKey);
+      (decryptedConfig as { llmApiKey: string }).llmApiKey = decryptOrEmpty(
+        'llmApiKey',
+        config.llmApiKey,
+      );
     }
 
-    return decryptedConfig;
+    if (unreadableFields.length === 0) {
+      return { config: decryptedConfig };
+    }
+
+    this.logger.warn('AI provider API key could not be decrypted', {
+      organizationId,
+      provider: config.provider,
+      fields: unreadableFields,
+    });
+    return { config: decryptedConfig, secretsUnreadable: true };
   }
 
   async save(
@@ -154,11 +183,7 @@ export class AIProviderRepository
       return null;
     }
 
-    const decryptedConfig = await this.decryptSecrets(configuration.config);
-
-    return {
-      config: decryptedConfig,
-    };
+    return this.decryptSecrets(organizationId, configuration.config);
   }
 
   async exists(organizationId: OrganizationId): Promise<boolean> {

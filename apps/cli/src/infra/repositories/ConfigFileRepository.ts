@@ -330,23 +330,25 @@ export class ConfigFileRepository implements IConfigFileRepository {
   }
 
   /**
-   * Adds new packages to an existing packmind.json while preserving property order.
-   * If the file doesn't exist, creates a new one with default order (packages first).
+   * Records which version each package is on, adding slugs the file does not
+   * yet carry.
    *
    * Uses JavaScript's built-in property order preservation: JSON.parse() preserves
    * insertion order for string keys, and mutating the existing object maintains
    * that order when JSON.stringify() outputs it.
    */
-  async addPackagesToConfig(
+  async upsertPackagesInConfig(
     baseDirectory: string,
-    newPackageSlugs: string[],
+    versionsBySlug: Record<string, string>,
   ): Promise<void> {
     const configPath = this.getConfigPath(baseDirectory);
 
     const rawContent = await this.tryReadFile(configPath);
     if (!rawContent) {
-      const newConfig = this.createConfigWithPackages(newPackageSlugs);
-      await this.writeConfigToPath(configPath, newConfig);
+      await this.writeConfigToPath(
+        configPath,
+        this.createConfigWithPackages(versionsBySlug),
+      );
       return;
     }
 
@@ -354,8 +356,10 @@ export class ConfigFileRepository implements IConfigFileRepository {
     try {
       parsed = JSON.parse(rawContent);
     } catch {
-      const newConfig = this.createConfigWithPackages(newPackageSlugs);
-      await this.writeConfigToPath(configPath, newConfig);
+      await this.writeConfigToPath(
+        configPath,
+        this.createConfigWithPackages(versionsBySlug),
+      );
       return;
     }
 
@@ -364,12 +368,20 @@ export class ConfigFileRepository implements IConfigFileRepository {
       parsed.packages = {};
     }
 
-    // Add new packages directly - mutating preserves key order
+    // Mutating preserves key order for slugs already there
     const packages = parsed.packages as Record<string, string>;
-    for (const slug of newPackageSlugs) {
-      if (!(slug in packages)) {
-        packages[slug] = '*';
+    let changed = false;
+    for (const [slug, version] of Object.entries(versionsBySlug)) {
+      if (packages[slug] !== version) {
+        packages[slug] = version;
+        changed = true;
       }
+    }
+
+    // Untouched when nothing moved: an install that changes no version must
+    // leave the file exactly as the repo committed it.
+    if (!changed) {
+      return;
     }
 
     // Write back - JSON.stringify() preserves original key order
@@ -455,11 +467,9 @@ export class ConfigFileRepository implements IConfigFileRepository {
     }
   }
 
-  private createConfigWithPackages(slugs: string[]): PackmindFileConfig {
-    const packages: Record<string, string> = {};
-    for (const slug of slugs) {
-      packages[slug] = '*';
-    }
-    return { packages };
+  private createConfigWithPackages(
+    versionsBySlug: Record<string, string>,
+  ): PackmindFileConfig {
+    return { packages: { ...versionsBySlug } };
   }
 }

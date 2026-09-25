@@ -5,7 +5,8 @@ export type CheckProviderAuthFailureReason =
   | 'unauthorized'
   | 'forbidden'
   | 'rate_limited'
-  | 'network';
+  | 'network'
+  | 'token_unreadable';
 
 export type CheckProviderAuthCommand = PackmindCommand & {
   gitProviderId: GitProviderId;

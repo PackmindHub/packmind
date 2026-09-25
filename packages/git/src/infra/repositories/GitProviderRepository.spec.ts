@@ -17,7 +17,7 @@ import {
   GitProviderNotFoundError,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, EncryptionService } from '@packmind/node-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
@@ -212,6 +212,90 @@ describe('GitProviderRepository', () => {
 
     it('includes second provider in results', async () => {
       expect(foundGitProviders.map((p) => p.id)).toContain(gitProvider2.id);
+    });
+  });
+
+  describe('when a stored token cannot be decrypted', () => {
+    let readableProvider: ReturnType<typeof gitProviderFactory>;
+    let corruptProvider: ReturnType<typeof gitProviderFactory>;
+
+    beforeEach(async () => {
+      readableProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+      });
+      corruptProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+      });
+      await gitProviderRepository.add(readableProvider);
+      await gitProviderRepository.add(corruptProvider);
+      // A well-formed envelope this instance's key cannot open, as after a
+      // key change.
+      await fixture.datasource.getRepository(GitProviderSchema).update(
+        { id: corruptProvider.id },
+        {
+          token: new EncryptionService('another-key').encrypt('lost-token'),
+        },
+      );
+    });
+
+    describe('when finding by organization ID', () => {
+      let found: GitProvider[];
+
+      beforeEach(async () => {
+        found = await gitProviderRepository.findByOrganizationId(
+          testOrganization.id,
+        );
+      });
+
+      it('still returns every provider', () => {
+        expect(found.map((p) => p.id).sort()).toEqual(
+          [readableProvider.id, corruptProvider.id].sort(),
+        );
+      });
+
+      it('decrypts the readable provider token', () => {
+        expect(found.find((p) => p.id === readableProvider.id)?.token).toBe(
+          readableProvider.token,
+        );
+      });
+
+      it('drops the unreadable token and flags it', () => {
+        expect(found.find((p) => p.id === corruptProvider.id)).toEqual(
+          expect.objectContaining({ token: null, tokenUnreadable: true }),
+        );
+      });
+    });
+
+    describe('when finding by ID', () => {
+      it('drops the unreadable token and flags it', async () => {
+        expect(
+          await gitProviderRepository.findById(corruptProvider.id),
+        ).toEqual(
+          expect.objectContaining({ token: null, tokenUnreadable: true }),
+        );
+      });
+    });
+
+    describe('when re-authenticating with a new token', () => {
+      it('returns the new token without the unreadable flag', async () => {
+        const updated = await gitProviderRepository.update(corruptProvider.id, {
+          token: 'fresh-token',
+        });
+
+        expect(updated).toEqual(
+          expect.not.objectContaining({ tokenUnreadable: true }),
+        );
+      });
+
+      it('stores a readable token', async () => {
+        await gitProviderRepository.update(corruptProvider.id, {
+          token: 'fresh-token',
+        });
+
+        expect(
+          (await gitProviderRepository.findById(corruptProvider.id))?.token,
+        ).toBe('fresh-token');
+      });
     });
   });
 

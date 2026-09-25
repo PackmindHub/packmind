@@ -12,7 +12,7 @@ import {
   OrganizationGitHubApp,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, EncryptionService } from '@packmind/node-utils';
 import { organizationGitHubAppFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
@@ -136,6 +136,48 @@ describe('OrganizationGitHubAppRepository', () => {
     it('stores encrypted fields in 3-part envelope format', () => {
       const parts = rawRow?.appClientSecret?.split(':');
       expect(parts?.length).toBe(3);
+    });
+  });
+
+  describe('when a stored secret cannot be decrypted', () => {
+    let app: OrganizationGitHubApp;
+    let found: OrganizationGitHubApp | null;
+
+    beforeEach(async () => {
+      app = organizationGitHubAppFactory({
+        organizationId: testOrganization.id,
+      });
+      await repository.add(app);
+      // A well-formed envelope this instance's key cannot open, as after a
+      // key change.
+      await fixture.datasource
+        .getRepository(OrganizationGitHubAppSchema)
+        .update(
+          { id: app.id },
+          {
+            appPrivateKey: new EncryptionService('another-key').encrypt(
+              'lost-private-key',
+            ),
+          },
+        );
+
+      found = await repository.findActiveByOrganizationId(testOrganization.id);
+    });
+
+    it('still returns the app', () => {
+      expect(found?.id).toBe(app.id);
+    });
+
+    it('empties the unreadable secret', () => {
+      expect(found?.appPrivateKey).toBe('');
+    });
+
+    it('decrypts the readable secrets', () => {
+      expect(found?.appClientSecret).toBe(app.appClientSecret);
+    });
+
+    it('flags the secrets as unreadable', () => {
+      expect(found?.secretsUnreadable).toBe(true);
     });
   });
 

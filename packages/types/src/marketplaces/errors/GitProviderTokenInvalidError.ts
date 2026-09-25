@@ -1,3 +1,5 @@
+import { MarketplacesError } from './MarketplacesError';
+
 /**
  * Error thrown when the Git provider token bound to a marketplace's git
  * repo is missing, expired, or otherwise rejected by the provider.
@@ -6,12 +8,17 @@
  * user-facing copy is the constant in this class and downstream code MUST
  * NOT include token bytes when rethrowing or logging.
  */
-export class GitProviderTokenInvalidError extends Error {
+export class GitProviderTokenInvalidError extends MarketplacesError {
   public static readonly USER_FACING_MESSAGE =
     'The package could not be published. Reason: Invalid or expired Git token.';
 
   constructor() {
-    super(GitProviderTokenInvalidError.USER_FACING_MESSAGE);
+    super(
+      'invalid_input',
+      'git_provider_token_invalid',
+      {},
+      GitProviderTokenInvalidError.USER_FACING_MESSAGE,
+    );
     this.name = 'GitProviderTokenInvalidError';
   }
 }

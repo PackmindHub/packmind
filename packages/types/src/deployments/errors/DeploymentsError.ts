@@ -7,6 +7,7 @@ export type DeploymentsErrorReason =
   | 'packages_not_found'
   | 'package_release_not_found'
   | 'package_release_refused'
+  | 'invalid_package_version_spec'
   | 'no_package_slugs_provided'
   | 'artefact_not_in_space'
   | 'target_not_found'

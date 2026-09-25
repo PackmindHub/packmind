@@ -23,6 +23,9 @@ import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'TestSavedLLMConfigurationUseCase';
 
+const UNREADABLE_API_KEY_MESSAGE =
+  "Packmind can't read the stored API key. Edit the configuration and enter the key again.";
+
 export class TestSavedLLMConfigurationUseCase
   extends AbstractAdminUseCase<
     TestSavedLLMConfigurationCommand,
@@ -56,6 +59,25 @@ export class TestSavedLLMConfigurationUseCase
     }
 
     const { config } = storedConfig;
+
+    // Calling the provider with an empty key would report a rejected key,
+    // which blames the provider for what is a storage problem on our side.
+    if (storedConfig.secretsUnreadable) {
+      return {
+        hasConfiguration: true,
+        provider: config.provider,
+        standardModel: {
+          model: 'model' in config && config.model ? config.model : 'unknown',
+          success: false,
+          error: {
+            message: UNREADABLE_API_KEY_MESSAGE,
+            type: AIServiceErrorTypes.AUTHENTICATION_ERROR,
+          },
+        },
+        overallSuccess: false,
+      };
+    }
+
     const llmService = createLLMService(config);
 
     const standardModelResult = await this.testModel(

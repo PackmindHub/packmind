@@ -11,6 +11,7 @@ const origin = 'EncryptionService';
 export class EncryptionService {
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16; // 128 bits
+  private readonly authTagLength = 16; // GCM default, what getAuthTag() returns
 
   constructor(
     private readonly encryptionKey: string,
@@ -85,10 +86,7 @@ export class EncryptionService {
 
     // Values predating encryption are returned untouched rather than treated
     // as corrupt ciphertext.
-    if (
-      !encryptedValue.includes(':') ||
-      encryptedValue.split(':').length !== 3
-    ) {
+    if (!this.isEncrypted(encryptedValue)) {
       this.logger.warn(
         'Value appears to be in plaintext format, returning as-is for backward compatibility',
       );
@@ -124,12 +122,38 @@ export class EncryptionService {
   }
 
   /**
-   * Shape check only, not a verification: callers use it to avoid encrypting an
-   * already-encrypted value a second time.
+   * Whether the value has the exact envelope `encrypt` produces: three base64
+   * parts, a 16-byte IV, a non-empty ciphertext and a 16-byte auth tag. Not a
+   * verification (the key is not checked), but strict enough that a plaintext
+   * secret which merely contains two colons is still encrypted on write and
+   * read back as plaintext, instead of being stored in clear and then failing
+   * to decrypt.
    */
   isEncrypted(value: string): boolean {
-    return Boolean(
-      value && value.includes(':') && value.split(':').length === 3,
+    if (!value) return false;
+
+    const parts = value.split(':');
+    if (parts.length !== 3) return false;
+
+    const [iv, ciphertext, tag] = parts;
+    return (
+      this.decodesToBytes(iv, this.ivLength) &&
+      this.isBase64(ciphertext) &&
+      this.decodesToBytes(tag, this.authTagLength)
+    );
+  }
+
+  private isBase64(value: string): boolean {
+    return (
+      value.length > 0 &&
+      value.length % 4 === 0 &&
+      /^[A-Za-z0-9+/]+={0,2}$/.test(value)
+    );
+  }
+
+  private decodesToBytes(value: string, byteLength: number): boolean {
+    return (
+      this.isBase64(value) && Buffer.from(value, 'base64').length === byteLength
     );
   }
 }

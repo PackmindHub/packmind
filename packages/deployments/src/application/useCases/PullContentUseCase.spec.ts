@@ -53,6 +53,7 @@ import { targetFactory } from '../../../test';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
+import { PackageReleaseService } from '../services/PackageReleaseService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -86,6 +87,7 @@ describe('PullContentUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
+  let packageReleaseService: jest.Mocked<PackageReleaseService>;
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
@@ -141,6 +143,10 @@ describe('PullContentUseCase', () => {
     renderModeConfigurationService = createMockInstance(
       RenderModeConfigurationService,
     );
+
+    packageReleaseService = createMockInstance(PackageReleaseService);
+    packageReleaseService.listReleases.mockResolvedValue([]);
+    packageReleaseService.findContentByVersion.mockResolvedValue(null);
 
     packmindConfigService = createMockInstance(PackmindConfigService);
 
@@ -233,6 +239,7 @@ describe('PullContentUseCase', () => {
       distributionRepository,
       targetResolutionService,
       spacesPort,
+      packageReleaseService,
       packmindConfigService,
       lockFileService,
       stubLogger(),
@@ -256,6 +263,7 @@ describe('PullContentUseCase', () => {
           distributionRepository,
           targetResolutionService,
           spacesPort,
+          packageReleaseService,
           packmindConfigService,
           lockFileService,
           stubLogger(),
@@ -755,6 +763,7 @@ describe('PullContentUseCase', () => {
           [`@${defaultSpace.slug}/test-package`],
           undefined,
           undefined,
+          { [`@${defaultSpace.slug}/test-package`]: '*' },
         );
       });
 
@@ -775,6 +784,7 @@ describe('PullContentUseCase', () => {
             [`@${defaultSpace.slug}/test-package`],
             undefined,
             [CodingAgents.claude, CodingAgents.cursor],
+            { [`@${defaultSpace.slug}/test-package`]: '*' },
           );
         });
       });
@@ -2368,7 +2378,7 @@ describe('PullContentUseCase', () => {
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith([], undefined, undefined);
+        ).toHaveBeenCalledWith([], undefined, undefined, {});
       });
 
       it('includes packmind.json in createOrUpdate', async () => {

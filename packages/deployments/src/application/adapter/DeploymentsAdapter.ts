@@ -402,6 +402,7 @@ export class DeploymentsAdapter
       this.distributionRepository,
       targetResolutionService,
       this.spacesPort,
+      this.deploymentsServices.getPackageReleaseService(),
     );
 
     this._installPackagesUseCase = new InstallPackagesUseCase(
@@ -414,6 +415,7 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.spacesPort,
       ports.eventEmitterService,
+      this.deploymentsServices.getPackageReleaseService(),
     );
 
     this._renderPackageAsPluginUseCase = new RenderPackageAsPluginUseCase(

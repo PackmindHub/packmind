@@ -13,15 +13,20 @@ export interface IConfigFileRepository {
   readConfig(baseDirectory: string): Promise<PackmindFileConfig | null>;
 
   /**
-   * Adds new packages to an existing packmind.json while preserving property order.
-   * If the file doesn't exist, creates a new one with default order (packages first).
+   * Records which version each package is on, adding slugs the file does not
+   * yet carry and preserving property order throughout. Creates the file when
+   * it does not exist.
+   *
+   * Writes nothing when every slug already carries that exact version — a
+   * repo pinned to 0.1.0 must come out of an install byte-identical, however
+   * many releases were cut in the meantime.
    *
    * @param baseDirectory - The directory containing packmind.json
-   * @param newPackageSlugs - Array of package slugs to add
+   * @param versionsBySlug - The version each slug is on, `*` for the live package
    */
-  addPackagesToConfig(
+  upsertPackagesInConfig(
     baseDirectory: string,
-    newPackageSlugs: string[],
+    versionsBySlug: Record<string, string>,
   ): Promise<void>;
 
   /**

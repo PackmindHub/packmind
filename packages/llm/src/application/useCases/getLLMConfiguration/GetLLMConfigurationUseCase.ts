@@ -86,6 +86,7 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
       fastestModel: this.getFastestModel(config),
       endpoint: this.getEndpoint(config),
       apiVersion: this.getApiVersion(config),
+      ...(storedConfig.secretsUnreadable && { secretsUnreadable: true }),
     };
   }
 
