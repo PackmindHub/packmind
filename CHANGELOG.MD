@@ -1,21 +1,29 @@
-# [Unreleased]
+# [1.18.1] - 2026-09-25
+
+Hotfix release.
 
 ## Added
 
-- Components can be deleted in bulk again: pick rows in a package's Content list or in the space inventory, then Delete from the selection bar's menu. A row's own menu offers it too
-- A package's Distribution now sends the version the page is read at: the release named in the bar above the tabs, or the package as it stands
-- Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
-- Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
-- `Update N distributions` is absent while a release is on screen: drift measures distance from the live package, not from the release being read
-- Distributing from anywhere else is unchanged — a packages-list selection, a repository's install list, a redistribute from Distribution all send the package as it stands
+- Components can be deleted again, one by one or in bulk: in a package's Content list or the space inventory, tick rows and pick Delete from the selection bar's `…` menu, or use a row's own `…` menu
+- A git connection whose stored token can no longer be decrypted now shows a "re-authenticate" status instead of breaking the page
 
 ## Changed
 
 - Skill files and package descriptions (new-package page, package edit form, Context drawers) now offer the WYSIWYG and Raw tabs that standards and commands already had
+- A rule's code examples list its languages side by side, each with its example count, instead of behind a select
+- A rule with no examples no longer opens on JavaScript: the language is taken from the rule itself, then from its standard, and otherwise left unchosen
+- A package's "up to date" destinations now say how old that claim is
 
 ## Fixed
 
-## Removed
+- Security: creating or updating a git connection, or completing a GitHub App install, no longer sends the decrypted git token back to the browser
+- Git connections, GitHub Apps and AI providers whose stored secrets cannot be decrypted (for example after an encryption key change) now load, list and can be renamed instead of failing
+- A secret containing colons, such as a token ending with `:`, was stored in clear and then failed to decrypt on every read. It is now encrypted
+- Code examples being written are no longer lost when switching language or moving to the Linter tab, and Save stays disabled until an example has content
+- Errors caused by the request (not found, refused, already exists) in standards, commands, spaces, LLM, coding-agent and marketplaces now answer with their proper status instead of a 500
+- Marketplaces: a GitHub Copilot marketplace hosted outside GitHub, such as GitLab, no longer rejects every plugin
+- Marketplaces: when no marketplace descriptor is found, the error now names every path that was checked, not only the Claude Code one
+- Distribution no longer claims nobody checked a marketplace lately when it had been checked
 
 # [1.18.0] - 2026-09-22
 
@@ -432,7 +440,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...HEAD
+[1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
 [1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
