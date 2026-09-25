@@ -1327,6 +1327,62 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
     });
 
+    /*
+     * Which of the three lists an id came out of is part of the question. A
+     * package holds its standards, commands and skills separately and an id is
+     * only unique within one of them, so an id looked up across all three
+     * answers for an artefact the caller never named — and refuses an add that
+     * conflicts with nothing.
+     */
+    describe('when another package holds a different artefact type with the same id', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const targetPackage = packageFactory({
+          id: packageId,
+          name: 'Backend playbook',
+          slug: 'backend-playbook',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+
+        mockPackageService.findById.mockResolvedValue(targetPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          targetPackage,
+          packageFactory({
+            id: createPackageId(uuidv4()),
+            name: 'Frontend playbook',
+            slug: 'frontend-playbook',
+            spaceId,
+            createdBy: userId,
+            recipes: [],
+            // The skill being added, spelled as a standard id.
+            standards: [createStandardId(String(skillId1))],
+            skills: [],
+          }),
+        ]);
+        mockSpacesPort.getSpaceById.mockResolvedValue(buildSpace());
+        mockSkillsPort.getSkill.mockResolvedValue(
+          buildSkill(skillId1, spaceId),
+        );
+
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          skillIds: [skillId1],
+        });
+      });
+
+      it('adds the skill', () => {
+        expect(result.added.skills).toEqual([skillId1]);
+      });
+    });
+
     describe('when the artefact is already in the package it is added to', () => {
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 

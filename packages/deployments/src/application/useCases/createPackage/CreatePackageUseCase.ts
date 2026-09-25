@@ -12,18 +12,19 @@ import {
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
-  ArtifactType,
   createPackageId,
   createUserId,
 } from '@packmind/types';
-import {
-  ArtefactAlreadyInAnotherPackageError,
-  ArtefactPlacementConflict,
-} from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
+import { ArtefactAlreadyInAnotherPackageError } from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
+import {
+  ArtefactsBeingPlaced,
+  findPlacementConflicts,
+  placementKey,
+} from '../../utils/findPlacementConflicts';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 
@@ -100,7 +101,7 @@ export class CreatePackageUseCase
     }
     this.logger.info('Resolved unique slug', { slug: packageSlug });
 
-    const namesById = new Map<string, { type: ArtifactType; name: string }>();
+    const artefacts: ArtefactsBeingPlaced = new Map();
 
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
@@ -114,7 +115,10 @@ export class CreatePackageUseCase
         if (!recipe || recipe.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('command', recipeIds[i], spaceId);
         }
-        namesById.set(recipe.id, { type: 'command', name: recipe.name });
+        artefacts.set(placementKey('command', recipe.id), {
+          type: 'command',
+          name: recipe.name,
+        });
       }
     }
 
@@ -134,7 +138,10 @@ export class CreatePackageUseCase
             spaceId,
           );
         }
-        namesById.set(standard.id, { type: 'standard', name: standard.name });
+        artefacts.set(placementKey('standard', standard.id), {
+          type: 'standard',
+          name: standard.name,
+        });
       }
     }
 
@@ -148,7 +155,10 @@ export class CreatePackageUseCase
         if (!skill || skill.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('skill', skillIds[i], spaceId);
         }
-        namesById.set(skill.id, { type: 'skill', name: skill.name });
+        artefacts.set(placementKey('skill', skill.id), {
+          type: 'skill',
+          name: skill.name,
+        });
       }
     }
 
@@ -165,27 +175,7 @@ export class CreatePackageUseCase
      * unique, so the rule costs nothing to check: no package exists yet to
      * exclude, which is the only way this differs from the add path.
      */
-    const conflicts: ArtefactPlacementConflict[] = [];
-
-    for (const pkg of existingPackages) {
-      const held = [
-        ...(pkg.standards ?? []),
-        ...(pkg.recipes ?? []),
-        ...(pkg.skills ?? []),
-      ].map(String);
-
-      for (const artefactId of held) {
-        const artefact = namesById.get(artefactId);
-        if (!artefact) continue;
-
-        conflicts.push({
-          artefactType: artefact.type,
-          artefactId,
-          artefactName: artefact.name,
-          packageName: pkg.name,
-        });
-      }
-    }
+    const conflicts = findPlacementConflicts(existingPackages, artefacts);
 
     if (conflicts.length > 0) {
       throw new ArtefactAlreadyInAnotherPackageError(conflicts, name);
