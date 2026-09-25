@@ -1576,6 +1576,9 @@ describe('GitProvidersService', () => {
     };
 
     const mockedAxios = axios as jest.Mocked<typeof axios>;
+    const actualAxios = jest.requireActual<typeof axios>('axios');
+    const ActualAxiosError = actualAxios.AxiosError;
+    const actualIsAxiosError = actualAxios.isAxiosError;
 
     beforeEach(() => {
       resolveGithubAppMode.mockResolvedValue('on-prem');
@@ -1671,13 +1674,22 @@ describe('GitProvidersService', () => {
 
     describe('when GitHub answers the code conversion with an error', () => {
       it('throws BadRequestException with the GitHub message', async () => {
-        const githubError = {
-          response: { status: 404, data: { message: 'Not Found' } },
-        };
+        const githubError = new ActualAxiosError(
+          'Request failed with status code 404',
+          'ERR_BAD_REQUEST',
+          undefined,
+          undefined,
+          {
+            status: 404,
+            statusText: 'Not Found',
+            data: { message: 'Not Found' },
+            headers: {},
+            config: {} as never,
+          },
+        );
         mockedAxios.post = jest.fn().mockRejectedValue(githubError);
-        mockedAxios.isAxiosError = jest
-          .fn()
-          .mockReturnValue(true) as unknown as typeof mockedAxios.isAxiosError;
+        mockedAxios.isAxiosError =
+          actualIsAxiosError as unknown as typeof mockedAxios.isAxiosError;
 
         await expect(
           service.completeGithubAppManifest({
@@ -1691,14 +1703,17 @@ describe('GitProvidersService', () => {
     });
 
     describe('when GitHub cannot be reached for the code conversion', () => {
-      it('throws GithubAppManifestConversionNetworkError', async () => {
+      beforeEach(() => {
         mockedAxios.post = jest
           .fn()
-          .mockRejectedValue(new Error('connect ETIMEDOUT'));
-        mockedAxios.isAxiosError = jest
-          .fn()
-          .mockReturnValue(true) as unknown as typeof mockedAxios.isAxiosError;
+          .mockRejectedValue(
+            new ActualAxiosError('timeout of 0ms exceeded', 'ECONNABORTED'),
+          );
+        mockedAxios.isAxiosError =
+          actualIsAxiosError as unknown as typeof mockedAxios.isAxiosError;
+      });
 
+      it('throws GithubAppManifestConversionNetworkError', async () => {
         await expect(
           service.completeGithubAppManifest({
             orgId,
@@ -1707,6 +1722,20 @@ describe('GitProvidersService', () => {
             state: 'MANIFEST_STATE',
           }),
         ).rejects.toBeInstanceOf(GithubAppManifestConversionNetworkError);
+      });
+
+      it('types the failure as upstream_unavailable', async () => {
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toMatchObject({
+          kind: 'upstream_unavailable',
+          reason: 'github_app_manifest_conversion_network_error',
+        });
       });
     });
 
