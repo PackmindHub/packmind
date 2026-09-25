@@ -1,5 +1,14 @@
 import type { ReactNode } from 'react';
-import { PMButton, PMHStack, PMIcon, PMText } from '@packmind/ui';
+import {
+  PMButton,
+  PMHStack,
+  PMIcon,
+  PMIconButton,
+  PMMenu,
+  PMPortal,
+  PMText,
+} from '@packmind/ui';
+import { LuEllipsisVertical } from 'react-icons/lu';
 
 /**
  * One thing the bar can do with what is picked. The label names the destination
@@ -16,6 +25,23 @@ export type SelectionAction = {
    */
   icon: ReactNode;
   onAct: () => void;
+};
+
+/**
+ * One thing the bar can do with what is picked, offered behind the menu rather
+ * than on the bar itself.
+ *
+ * Same shape as a button's action, because it is the same gesture asked for in
+ * a quieter place; the extra field is the one a button has no use for.
+ */
+export type SelectionMenuAction = SelectionAction & {
+  /**
+   * Drawn in the error colour, the way the package header above this list draws
+   * its own deletion. Only ever read here: a destructive control the bar draws
+   * as a button is the arrangement the menu exists to avoid, so there is
+   * nowhere else for this to mean anything.
+   */
+  destructive?: boolean;
 };
 
 /**
@@ -52,6 +78,7 @@ export function SelectionBar({
   total,
   onSelectAll,
   actions,
+  overflow,
   onClear,
 }: Readonly<{
   count: number;
@@ -73,6 +100,22 @@ export function SelectionBar({
    * bar is the only place a bulk one of either can be asked for.
    */
   actions: readonly SelectionAction[];
+  /**
+   * What can be done with the picked components without the bar saying so out
+   * loud, behind the same `⋮` the package header and each row of the list carry.
+   *
+   * Two gestures fit beside the count. The third was `Delete`, and drawn as a
+   * third button it sat at the same weight as the two that only change which
+   * package holds a component, one stray click from the pointer coming off the
+   * list. The header of this very pane already answered that question: its two
+   * send verbs are one split control, and everything that undoes something is a
+   * menu away.
+   *
+   * Absent when the caller offers none, rather than an empty menu: the space
+   * inventory has one gesture and no reason to grow a control that opens onto
+   * nothing.
+   */
+  overflow?: readonly SelectionMenuAction[];
   /**
    * Dropping the whole selection. Beside the count, for the reason `onSelectAll`
    * is: it changes what is picked rather than acting on it.
@@ -140,6 +183,44 @@ export function SelectionBar({
             {action.label}
           </PMButton>
         ))}
+        {overflow !== undefined && overflow.length > 0 && (
+          <PMMenu.Root>
+            <PMMenu.Trigger asChild>
+              {/*
+                Named for the selection rather than for a component, which is
+                what the rows below and the package above are named for: this
+                one acts on however many are ticked, and the count on the left
+                is what says how many.
+              */}
+              <PMIconButton
+                aria-label="More actions for the selection"
+                variant="tertiary"
+                size="xs"
+              >
+                <LuEllipsisVertical />
+              </PMIconButton>
+            </PMMenu.Trigger>
+            <PMPortal>
+              <PMMenu.Positioner>
+                <PMMenu.Content>
+                  {overflow.map((action) => (
+                    <PMMenu.Item
+                      key={action.label}
+                      value={action.label}
+                      color={action.destructive ? 'text.error' : undefined}
+                      onClick={action.onAct}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>{action.icon}</PMIcon>
+                        {action.label}
+                      </PMHStack>
+                    </PMMenu.Item>
+                  ))}
+                </PMMenu.Content>
+              </PMMenu.Positioner>
+            </PMPortal>
+          </PMMenu.Root>
+        )}
       </PMHStack>
     </PMHStack>
   );
