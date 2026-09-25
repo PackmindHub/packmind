@@ -13,6 +13,7 @@ import {
   type SSESubscriptionMessage,
 } from '@packmind/node-utils';
 import { Response } from 'express';
+import { ApiInternalError } from '../errors/ApiInternalError';
 
 const origin = 'SSEService';
 
@@ -259,7 +260,11 @@ export class SSEService implements OnModuleInit, OnModuleDestroy {
     organizationId?: string,
   ): void {
     if (!userId) {
-      throw new Error('userId is required for SSE connections');
+      throw new ApiInternalError(
+        'user_id_required_for_sse',
+        { connectionId, organizationId },
+        'userId is required for SSE connections',
+      );
     }
 
     const totalConnectionsBefore = this.getTotalConnectionCount();

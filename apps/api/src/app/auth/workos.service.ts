@@ -3,6 +3,7 @@ import { WorkOS } from '@workos-inc/node';
 import { Configuration } from '@packmind/node-utils';
 import type { SocialProvider } from '@packmind/types';
 import { SOCIAL_PROVIDERS } from '@packmind/types';
+import { ApiInternalError } from '../errors/ApiInternalError';
 
 @Injectable()
 export class WorkOsService {
@@ -52,7 +53,11 @@ export class WorkOsService {
   ): Promise<string> {
     const configured = await this.ensureInitialized();
     if (!configured || !this.workos || !this.clientId || !this.redirectUri) {
-      throw new Error('WorkOS is not configured');
+      throw new ApiInternalError(
+        'workos_not_configured',
+        { provider },
+        'WorkOS is not configured',
+      );
     }
 
     return this.workos.userManagement.getAuthorizationUrl({
@@ -68,7 +73,11 @@ export class WorkOsService {
   ): Promise<{ email: string; firstName?: string; lastName?: string }> {
     const configured = await this.ensureInitialized();
     if (!configured || !this.workos || !this.clientId) {
-      throw new Error('WorkOS is not configured');
+      throw new ApiInternalError(
+        'workos_not_configured',
+        {},
+        'WorkOS is not configured',
+      );
     }
 
     try {
