@@ -1,6 +1,7 @@
 import { PublishPackagesUseCase } from './PublishPackagesUseCase';
 import { PackageService } from '../services/PackageService';
 import { PackageReleaseService } from '../services/PackageReleaseService';
+import { TargetPackmindConfigReader } from '../services/TargetPackmindConfigReader';
 import {
   createUserId,
   createOrganizationId,
@@ -44,6 +45,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
+  let mockConfigReader: jest.Mocked<TargetPackmindConfigReader>;
   let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
@@ -74,6 +76,10 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       spaceFactory({ id: spaceId, slug: 'test-space' }),
     );
 
+    mockConfigReader = createMockInstance(TargetPackmindConfigReader);
+    mockConfigReader.read.mockResolvedValue(null);
+    mockConfigReader.pinnedVersion.mockReturnValue(null);
+
     mockPackageReleaseService = createMockInstance(PackageReleaseService);
     mockPackageReleaseService.listReleases.mockResolvedValue([]);
     mockPackageReleaseService.findByVersion.mockResolvedValue(null);
@@ -87,6 +93,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       mockDistributedPackageRepository,
       mockSpacesPort,
       mockPackageReleaseService,
+      mockConfigReader,
       mockLogger,
     );
   });

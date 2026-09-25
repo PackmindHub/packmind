@@ -6,7 +6,8 @@
 - Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
 - Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
 - `Update N distributions` is absent while a release is on screen: drift measures distance from the live package, not from the release being read
-- Distributing from anywhere else is unchanged — a packages-list selection, a repository's install list, a redistribute from Distribution all send the package as it stands
+- `Update` on a destination pinned to a version now moves it to the newest release instead of pushing the live package over its pin
+- A destination tracking `*` is left tracking it, so one `Update` can move a pinned repository and refresh a wildcard one in the same click
 
 ## Changed
 

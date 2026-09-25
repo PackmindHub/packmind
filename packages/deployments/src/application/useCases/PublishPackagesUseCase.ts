@@ -18,6 +18,8 @@ import {
   createPackagesDeploymentId,
   Distribution,
   OrganizationId,
+  PackmindFileConfig,
+  TargetId,
   WILDCARD_VERSION_SPEC,
   parsePackageVersionSpec,
 } from '@packmind/types';
@@ -32,7 +34,11 @@ import { NoPackagesProvidedError } from '../../domain/errors/NoPackagesProvidedE
 import { InvalidPackageVersionSpecError } from '../../domain/errors/InvalidPackageVersionSpecError';
 import { PackageVersionNotAvailableError } from '../../domain/errors/PackageVersionNotAvailableError';
 import { PackageReleaseService } from '../services/PackageReleaseService';
-import { sortVersionsLatestFirst } from '../services/PackageContentResolver';
+import {
+  highestVersionOf,
+  sortVersionsLatestFirst,
+} from '../services/PackageContentResolver';
+import { TargetPackmindConfigReader } from '../services/TargetPackmindConfigReader';
 
 const origin = 'PublishPackagesUseCase';
 
@@ -67,6 +73,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly spacesPort: ISpacesPort,
     private readonly packageReleaseService: PackageReleaseService,
+    private readonly configReader: TargetPackmindConfigReader,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -124,41 +131,243 @@ export class PublishPackagesUseCase implements IPublishPackages {
     }
 
     /*
-     * Which version of each package is being sent.
+     * Which version of each package this distribution sends, decided per
+     * destination.
      *
-     * An absent entry is the live package, not the newest release: every
-     * surface that distributes without naming a version — a batch push, a
-     * redistribute from the sync surface — means "send what the package holds
-     * now", and that is what it has always done.
+     * A version the caller named applies everywhere: the package pane's
+     * Distribute sends what its version bar reads, to every target it is
+     * pointed at. A package the caller named no version for is decided by the
+     * destination itself — a repo that pinned it moves to the newest release,
+     * and one tracking the live package keeps tracking it.
+     *
+     * That is what stops `Update` destroying a pin. It used to send the live
+     * package and write `*` over whatever the repo had chosen, because it had
+     * never asked.
      */
-    const specs = packages.map((pkg, index) => {
+    const explicit = packages.map((pkg, index) => {
       const raw = command.packageVersions?.[pkg.id as string];
-      if (raw === undefined || raw === WILDCARD_VERSION_SPEC) {
-        return { pkg, slug: packagesSlugs[index], version: null };
+      if (raw === undefined) {
+        return null;
+      }
+      if (raw === WILDCARD_VERSION_SPEC) {
+        return WILDCARD_VERSION_SPEC;
       }
       const parsed = parsePackageVersionSpec(raw);
       if (!parsed) {
         throw new InvalidPackageVersionSpecError(packagesSlugs[index], raw);
       }
-      return {
-        pkg,
-        slug: packagesSlugs[index],
-        version: parsed.kind === 'exact' ? parsed.version : null,
-      };
+      return parsed.kind === 'exact' ? parsed.version : WILDCARD_VERSION_SPEC;
     });
 
-    const livePackages = specs.filter((spec) => spec.version === null);
+    const versionsByTarget = new Map<TargetId, string[]>();
+    const latestReleaseCache = new Map<PackageId, string | null>();
+
+    for (const targetId of command.targetIds) {
+      // Only read the destination when something is left for it to decide.
+      const config = explicit.some((version) => version === null)
+        ? await this.configReader.read(targetId)
+        : null;
+
+      const versions: string[] = [];
+      for (let index = 0; index < packages.length; index++) {
+        const named = explicit[index];
+        if (named !== null) {
+          versions.push(named);
+          continue;
+        }
+        versions.push(
+          await this.versionForDestination(
+            packages[index],
+            packagesSlugs[index],
+            config,
+            latestReleaseCache,
+          ),
+        );
+      }
+      versionsByTarget.set(targetId, versions);
+    }
+
+    /*
+     * Destinations that need the same versions go out together, so the repo
+     * gets one commit for them. Two targets of one repository pinned
+     * differently are two groups and two commits, which is the honest shape:
+     * they are receiving different content.
+     */
+    const groups = new Map<
+      string,
+      { versions: string[]; targets: TargetId[] }
+    >();
+    for (const [targetId, versions] of versionsByTarget) {
+      const key = versions.join('\u0000');
+      const group = groups.get(key);
+      if (group) {
+        group.targets.push(targetId);
+      } else {
+        groups.set(key, { versions, targets: [targetId] });
+      }
+    }
+
+    const allDeployments: PackagesDeployment[] = [];
+
+    for (const group of groups.values()) {
+      const resolved = await this.resolveContent(
+        packages,
+        packagesSlugs,
+        group.versions,
+      );
+
+      const packageVersionsMap: PackageVersionsMap = new Map(
+        resolved.map((entry) => [entry.pkg.id, entry.versions]),
+      );
+
+      // Deduplicated across packages: two packages sharing a component render
+      // it once, and two packages pinned to different releases of it render
+      // the first one listed.
+      const commandVersionIds = [
+        ...new Set(resolved.flatMap((e) => e.versions.recipeVersionIds)),
+      ];
+      const standardVersionIds = [
+        ...new Set(resolved.flatMap((e) => e.versions.standardVersionIds)),
+      ];
+      const skillVersionIds = [
+        ...new Set(resolved.flatMap((e) => e.versions.skillVersionIds)),
+      ];
+
+      const packageVersions: Record<string, string> = {};
+      for (const entry of resolved) {
+        packageVersions[entry.slug] = entry.versionSpec;
+      }
+
+      this.logger.info('Resolved package contents', {
+        packagesCount: packages.length,
+        targetsCount: group.targets.length,
+        commandVersionsCount: commandVersionIds.length,
+        standardVersionsCount: standardVersionIds.length,
+        skillVersionsCount: skillVersionIds.length,
+        packageVersions,
+      });
+
+      // Feeds the lock file that publishArtifacts generates.
+      const artifactSpaceIds: Record<string, string> = {};
+      const artifactPackageIds: Record<string, string[]> = {};
+
+      for (const entry of resolved) {
+        const artifactIds = [
+          ...entry.recipeIds,
+          ...entry.standardIds,
+          ...entry.skillIds,
+        ];
+        for (const artifactId of artifactIds) {
+          artifactSpaceIds[artifactId] = entry.pkg.spaceId as string;
+          if (!artifactPackageIds[artifactId]) {
+            artifactPackageIds[artifactId] = [];
+          }
+          artifactPackageIds[artifactId].push(entry.pkg.id as string);
+        }
+      }
+
+      const { distributions } = await this.deploymentPort.publishArtifacts({
+        userId: command.userId,
+        organizationId: command.organizationId,
+        commandVersionIds,
+        standardVersionIds,
+        skillVersionIds,
+        targetIds: group.targets,
+        packagesSlugs,
+        packageVersions,
+        packageIds: command.packageIds,
+        artifactSpaceIds,
+        artifactPackageIds,
+      } as PublishArtifactsCommand);
+
+      await this.storeDistributedPackages(
+        packages,
+        packageVersionsMap,
+        distributions,
+      );
+
+      // PackagesDeployment is this use case's response shape, one per distribution.
+      allDeployments.push(
+        ...distributions.map((distribution) => ({
+          id: createPackagesDeploymentId(uuidv4()),
+          packages,
+          status: distribution.status,
+          gitCommit: distribution.gitCommit,
+          target: distribution.target,
+          error: distribution.error,
+          renderModes: distribution.renderModes,
+          createdAt: distribution.createdAt,
+          authorId: distribution.authorId,
+          organizationId: distribution.organizationId,
+        })),
+      );
+    }
+
+    this.logger.info('Successfully published packages', {
+      deploymentsCount: allDeployments.length,
+    });
+
+    return allDeployments;
+  }
+
+  /**
+   * The version one destination should receive of a package the caller named
+   * no version for.
+   *
+   * A destination that pinned the package moves to the newest release, which
+   * is the whole of "upgrade from the app": the reader asked for this
+   * destination to be brought up to date, and up to date for a pinned repo is
+   * the latest release, not the live package it deliberately stepped off.
+   *
+   * A destination tracking `*` keeps tracking it, and so does one that does
+   * not carry the package yet — there is nothing there to honour.
+   */
+  private async versionForDestination(
+    pkg: Package,
+    slug: string,
+    config: PackmindFileConfig | null,
+    latestReleaseCache: Map<PackageId, string | null>,
+  ): Promise<string> {
+    const pinned = this.configReader.pinnedVersion(config, slug, pkg.slug);
+    if (pinned === null) {
+      return WILDCARD_VERSION_SPEC;
+    }
+
+    if (!latestReleaseCache.has(pkg.id)) {
+      const releases = await this.packageReleaseService.listReleases(pkg.id);
+      latestReleaseCache.set(pkg.id, highestVersionOf(releases));
+    }
+
+    /*
+     * The pin itself when nothing can be read back, rather than `*`: a repo
+     * that cannot be moved forward must not be silently unpinned instead. The
+     * content resolution below then refuses on the version that is missing,
+     * which is the honest answer.
+     */
+    return latestReleaseCache.get(pkg.id) ?? pinned;
+  }
+
+  /** The three version-id lists each package contributes, at its version. */
+  private async resolveContent(
+    packages: Package[],
+    packagesSlugs: string[],
+    versions: string[],
+  ): Promise<ResolvedPackagePublish[]> {
+    const liveIndexes = versions.flatMap((version, index) =>
+      version === WILDCARD_VERSION_SPEC ? [index] : [],
+    );
+    const livePackages = liveIndexes.map((index) => packages[index]);
 
     const [latestCommandVersions, latestStandardVersions, latestSkillVersions] =
       await Promise.all([
         this.commandsPort.getLatestCommandVersions(
-          livePackages.flatMap((spec) => spec.pkg.recipes),
+          livePackages.flatMap((pkg) => pkg.recipes),
         ),
         this.standardsPort.getLatestStandardVersions(
-          livePackages.flatMap((spec) => spec.pkg.standards),
+          livePackages.flatMap((pkg) => pkg.standards),
         ),
         this.skillsPort.getLatestSkillVersions(
-          livePackages.flatMap((spec) => spec.pkg.skills),
+          livePackages.flatMap((pkg) => pkg.skills),
         ),
       ]);
     const commandVersionIdByCommandId = new Map(
@@ -171,9 +380,12 @@ export class PublishPackagesUseCase implements IPublishPackages {
       latestSkillVersions.map((version) => [version.skillId, version.id]),
     );
 
-    const resolved: ResolvedPackagePublish[] = await Promise.all(
-      specs.map(async ({ pkg, slug, version }) => {
-        if (version === null) {
+    return Promise.all(
+      packages.map(async (pkg, index) => {
+        const version = versions[index];
+        const slug = packagesSlugs[index];
+
+        if (version === WILDCARD_VERSION_SPEC) {
           // An artifact with no version of its own is skipped.
           return {
             pkg,
@@ -235,97 +447,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
         };
       }),
     );
-
-    const packageVersionsMap: PackageVersionsMap = new Map(
-      resolved.map((entry) => [entry.pkg.id, entry.versions]),
-    );
-
-    // Deduplicated across packages: two packages sharing a component render it
-    // once, and two packages pinned to different releases of it render the
-    // first one listed.
-    const commandVersionIds = [
-      ...new Set(resolved.flatMap((e) => e.versions.recipeVersionIds)),
-    ];
-    const standardVersionIds = [
-      ...new Set(resolved.flatMap((e) => e.versions.standardVersionIds)),
-    ];
-    const skillVersionIds = [
-      ...new Set(resolved.flatMap((e) => e.versions.skillVersionIds)),
-    ];
-
-    const packageVersions: Record<string, string> = {};
-    for (const entry of resolved) {
-      packageVersions[entry.slug] = entry.versionSpec;
-    }
-
-    this.logger.info('Resolved package contents', {
-      packagesCount: packages.length,
-      commandVersionsCount: commandVersionIds.length,
-      standardVersionsCount: standardVersionIds.length,
-      skillVersionsCount: skillVersionIds.length,
-      packageVersions,
-    });
-
-    // Feeds the lock file that publishArtifacts generates.
-    const artifactSpaceIds: Record<string, string> = {};
-    const artifactPackageIds: Record<string, string[]> = {};
-
-    for (const entry of resolved) {
-      const artifactIds = [
-        ...entry.recipeIds,
-        ...entry.standardIds,
-        ...entry.skillIds,
-      ];
-      for (const artifactId of artifactIds) {
-        artifactSpaceIds[artifactId] = entry.pkg.spaceId as string;
-        if (!artifactPackageIds[artifactId]) {
-          artifactPackageIds[artifactId] = [];
-        }
-        artifactPackageIds[artifactId].push(entry.pkg.id as string);
-      }
-    }
-
-    const { distributions } = await this.deploymentPort.publishArtifacts({
-      userId: command.userId,
-      organizationId: command.organizationId,
-      commandVersionIds,
-      standardVersionIds,
-      skillVersionIds,
-      targetIds: command.targetIds,
-      packagesSlugs,
-      packageVersions,
-      packageIds: command.packageIds,
-      artifactSpaceIds,
-      artifactPackageIds,
-    } as PublishArtifactsCommand);
-
-    await this.storeDistributedPackages(
-      packages,
-      packageVersionsMap,
-      distributions,
-    );
-
-    // PackagesDeployment is this use case's response shape, one per distribution.
-    const allDeployments: PackagesDeployment[] = distributions.map(
-      (distribution) => ({
-        id: createPackagesDeploymentId(uuidv4()),
-        packages,
-        status: distribution.status,
-        gitCommit: distribution.gitCommit,
-        target: distribution.target,
-        error: distribution.error,
-        renderModes: distribution.renderModes,
-        createdAt: distribution.createdAt,
-        authorId: distribution.authorId,
-        organizationId: distribution.organizationId,
-      }),
-    );
-
-    this.logger.info('Successfully published packages', {
-      deploymentsCount: allDeployments.length,
-    });
-
-    return allDeployments;
   }
 
   private async storeDistributedPackages(
