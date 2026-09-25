@@ -20,6 +20,7 @@ import {
   OrganizationId,
   PackmindFileConfig,
   TargetId,
+  TargetPublishOverride,
   WILDCARD_VERSION_SPEC,
   parsePackageVersionSpec,
 } from '@packmind/types';
@@ -47,8 +48,6 @@ type PackageComponentVersionIds = {
   standardVersionIds: StandardVersionId[];
   skillVersionIds: SkillVersionId[];
 };
-
-type PackageVersionsMap = Map<PackageId, PackageComponentVersionIds>;
 
 /** One package, at the version this distribution is sending. */
 type ResolvedPackagePublish = {
@@ -188,120 +187,125 @@ export class PublishPackagesUseCase implements IPublishPackages {
     }
 
     /*
-     * Destinations that need the same versions go out together, so the repo
-     * gets one commit for them. Two targets of one repository pinned
-     * differently are two groups and two commits, which is the honest shape:
-     * they are receiving different content.
+     * Each destination resolved on its own, then sent in one call.
+     *
+     * The repository still gets one commit: `publishArtifacts` renders every
+     * target of a repository into a single job, and `perTarget` tells it which
+     * of the union's versions belong where. Splitting the publish per version
+     * group instead would enqueue two jobs against one branch, and they commit
+     * from a worker — concurrently.
      */
-    const groups = new Map<
-      string,
-      { versions: string[]; targets: TargetId[] }
-    >();
+    const resolvedByTarget = new Map<TargetId, ResolvedPackagePublish[]>();
+    const contentCache = new Map<string, ResolvedPackagePublish[]>();
+
     for (const [targetId, versions] of versionsByTarget) {
       const key = versions.join('\u0000');
-      const group = groups.get(key);
-      if (group) {
-        group.targets.push(targetId);
-      } else {
-        groups.set(key, { versions, targets: [targetId] });
+      let resolved = contentCache.get(key);
+      if (!resolved) {
+        resolved = await this.resolveContent(packages, packagesSlugs, versions);
+        contentCache.set(key, resolved);
       }
+      resolvedByTarget.set(targetId, resolved);
     }
 
-    const allDeployments: PackagesDeployment[] = [];
+    const everyResolved = [...resolvedByTarget.values()].flat();
 
-    for (const group of groups.values()) {
-      const resolved = await this.resolveContent(
-        packages,
-        packagesSlugs,
-        group.versions,
-      );
+    // The union, which is what the publish diffs against what each
+    // destination already holds; `perTarget` narrows the rendering.
+    const commandVersionIds = [
+      ...new Set(everyResolved.flatMap((e) => e.versions.recipeVersionIds)),
+    ];
+    const standardVersionIds = [
+      ...new Set(everyResolved.flatMap((e) => e.versions.standardVersionIds)),
+    ];
+    const skillVersionIds = [
+      ...new Set(everyResolved.flatMap((e) => e.versions.skillVersionIds)),
+    ];
 
-      const packageVersionsMap: PackageVersionsMap = new Map(
-        resolved.map((entry) => [entry.pkg.id, entry.versions]),
-      );
-
-      // Deduplicated across packages: two packages sharing a component render
-      // it once, and two packages pinned to different releases of it render
-      // the first one listed.
-      const commandVersionIds = [
-        ...new Set(resolved.flatMap((e) => e.versions.recipeVersionIds)),
-      ];
-      const standardVersionIds = [
-        ...new Set(resolved.flatMap((e) => e.versions.standardVersionIds)),
-      ];
-      const skillVersionIds = [
-        ...new Set(resolved.flatMap((e) => e.versions.skillVersionIds)),
-      ];
-
+    const perTarget: Record<string, TargetPublishOverride> = {};
+    for (const [targetId, resolved] of resolvedByTarget) {
       const packageVersions: Record<string, string> = {};
       for (const entry of resolved) {
         packageVersions[entry.slug] = entry.versionSpec;
       }
-
-      this.logger.info('Resolved package contents', {
-        packagesCount: packages.length,
-        targetsCount: group.targets.length,
-        commandVersionsCount: commandVersionIds.length,
-        standardVersionsCount: standardVersionIds.length,
-        skillVersionsCount: skillVersionIds.length,
+      perTarget[targetId as string] = {
+        versionIds: resolved.flatMap((entry) => [
+          ...entry.versions.recipeVersionIds,
+          ...entry.versions.standardVersionIds,
+          ...entry.versions.skillVersionIds,
+        ]),
         packageVersions,
-      });
+      };
+    }
 
-      // Feeds the lock file that publishArtifacts generates.
-      const artifactSpaceIds: Record<string, string> = {};
-      const artifactPackageIds: Record<string, string[]> = {};
+    // Feeds the lock file that publishArtifacts generates. Keyed by artifact,
+    // and an artifact belongs to the same package and space whichever version
+    // of it a destination happens to receive.
+    const artifactSpaceIds: Record<string, string> = {};
+    const artifactPackageIds: Record<string, string[]> = {};
 
-      for (const entry of resolved) {
-        const artifactIds = [
-          ...entry.recipeIds,
-          ...entry.standardIds,
-          ...entry.skillIds,
-        ];
-        for (const artifactId of artifactIds) {
-          artifactSpaceIds[artifactId] = entry.pkg.spaceId as string;
-          if (!artifactPackageIds[artifactId]) {
-            artifactPackageIds[artifactId] = [];
-          }
-          artifactPackageIds[artifactId].push(entry.pkg.id as string);
+    for (const entry of everyResolved) {
+      const artifactIds = [
+        ...entry.recipeIds,
+        ...entry.standardIds,
+        ...entry.skillIds,
+      ];
+      for (const artifactId of artifactIds) {
+        artifactSpaceIds[artifactId] = entry.pkg.spaceId as string;
+        const owners = artifactPackageIds[artifactId];
+        if (!owners) {
+          artifactPackageIds[artifactId] = [entry.pkg.id as string];
+        } else if (!owners.includes(entry.pkg.id as string)) {
+          owners.push(entry.pkg.id as string);
         }
       }
-
-      const { distributions } = await this.deploymentPort.publishArtifacts({
-        userId: command.userId,
-        organizationId: command.organizationId,
-        commandVersionIds,
-        standardVersionIds,
-        skillVersionIds,
-        targetIds: group.targets,
-        packagesSlugs,
-        packageVersions,
-        packageIds: command.packageIds,
-        artifactSpaceIds,
-        artifactPackageIds,
-      } as PublishArtifactsCommand);
-
-      await this.storeDistributedPackages(
-        packages,
-        packageVersionsMap,
-        distributions,
-      );
-
-      // PackagesDeployment is this use case's response shape, one per distribution.
-      allDeployments.push(
-        ...distributions.map((distribution) => ({
-          id: createPackagesDeploymentId(uuidv4()),
-          packages,
-          status: distribution.status,
-          gitCommit: distribution.gitCommit,
-          target: distribution.target,
-          error: distribution.error,
-          renderModes: distribution.renderModes,
-          createdAt: distribution.createdAt,
-          authorId: distribution.authorId,
-          organizationId: distribution.organizationId,
-        })),
-      );
     }
+
+    this.logger.info('Resolved package contents', {
+      packagesCount: packages.length,
+      targetsCount: command.targetIds.length,
+      commandVersionsCount: commandVersionIds.length,
+      standardVersionsCount: standardVersionIds.length,
+      skillVersionsCount: skillVersionIds.length,
+    });
+
+    const { distributions } = await this.deploymentPort.publishArtifacts({
+      userId: command.userId,
+      organizationId: command.organizationId,
+      commandVersionIds,
+      standardVersionIds,
+      skillVersionIds,
+      targetIds: command.targetIds,
+      packagesSlugs,
+      packageVersions:
+        perTarget[command.targetIds[0] as string]?.packageVersions,
+      perTarget,
+      packageIds: command.packageIds,
+      artifactSpaceIds,
+      artifactPackageIds,
+    } as PublishArtifactsCommand);
+
+    await this.storeDistributedPackages(
+      packages,
+      resolvedByTarget,
+      distributions,
+    );
+
+    // PackagesDeployment is this use case's response shape, one per distribution.
+    const allDeployments: PackagesDeployment[] = distributions.map(
+      (distribution) => ({
+        id: createPackagesDeploymentId(uuidv4()),
+        packages,
+        status: distribution.status,
+        gitCommit: distribution.gitCommit,
+        target: distribution.target,
+        error: distribution.error,
+        renderModes: distribution.renderModes,
+        createdAt: distribution.createdAt,
+        authorId: distribution.authorId,
+        organizationId: distribution.organizationId,
+      }),
+    );
 
     this.logger.info('Successfully published packages', {
       deploymentsCount: allDeployments.length,
@@ -449,9 +453,14 @@ export class PublishPackagesUseCase implements IPublishPackages {
     );
   }
 
+  /**
+   * One set of join rows per distribution, at the versions that distribution's
+   * own destination received — which is not the same for every destination
+   * once one of them is pinned and another is not.
+   */
   private async storeDistributedPackages(
     packages: Package[],
-    packageVersionsMap: PackageVersionsMap,
+    resolvedByTarget: Map<TargetId, ResolvedPackagePublish[]>,
     distributions: Distribution[],
   ): Promise<void> {
     if (distributions.length === 0) {
@@ -465,8 +474,13 @@ export class PublishPackagesUseCase implements IPublishPackages {
     });
 
     for (const distribution of distributions) {
+      const resolved = resolvedByTarget.get(distribution.target.id);
+      const versionsByPackage = new Map(
+        (resolved ?? []).map((entry) => [entry.pkg.id, entry.versions]),
+      );
+
       for (const pkg of packages) {
-        const versions = packageVersionsMap.get(pkg.id);
+        const versions = versionsByPackage.get(pkg.id);
         if (!versions) continue;
 
         const distributedPackageId = createDistributedPackageId(uuidv4());

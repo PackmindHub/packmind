@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  TargetPublishOverride,
   IPublishArtifactsUseCase,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
@@ -82,10 +83,27 @@ type PrepareUnifiedDeploymentParams = {
   packagesSlugs: string[];
   /** What each slug pins; a slug with no entry is written as `*`. */
   packageVersions?: Record<string, string>;
+  /** Per-destination narrowing, where the targets do not all want the same. */
+  perTarget?: Record<string, TargetPublishOverride>;
   artifactSpaceIds: Record<string, string>;
   artifactPackageIds: Record<string, string[]>;
   accessiblePackageIds: string[];
 };
+
+/** The subset of a change set whose version ids appear in `versionIds`. */
+function narrowToVersionIds(
+  versions: ArtifactVersions,
+  versionIds: string[],
+): ArtifactVersions {
+  const allowed = new Set(versionIds);
+  return {
+    commandVersions: versions.commandVersions.filter((v) => allowed.has(v.id)),
+    standardVersions: versions.standardVersions.filter((v) =>
+      allowed.has(v.id),
+    ),
+    skillVersions: versions.skillVersions.filter((v) => allowed.has(v.id)),
+  };
+}
 
 // Key extractors: the only thing that differs between the three artifact kinds.
 const commandKey = (version: CommandVersion): string => version.recipeId;
@@ -265,6 +283,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         changeSet,
         packagesSlugs: command.packagesSlugs,
         packageVersions: command.packageVersions,
+        perTarget: command.perTarget,
         artifactSpaceIds: command.artifactSpaceIds ?? {},
         artifactPackageIds: command.artifactPackageIds ?? {},
         accessiblePackageIds: command.packageIds.map(String),
@@ -446,6 +465,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     changeSet,
     packagesSlugs,
     packageVersions,
+    perTarget,
     artifactSpaceIds,
     artifactPackageIds,
     accessiblePackageIds,
@@ -512,13 +532,27 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
+      /*
+       * What this destination receives, narrowed from the repository's union.
+       *
+       * Two targets of one repository can be on different versions of the
+       * same component — one pinned to a release, one tracking the package —
+       * so the union carries both and each target renders only its own. A
+       * target with no override renders the whole union, which is every
+       * target of every publish that has no versions to tell apart.
+       */
+      const targetOverride = perTarget?.[target.id];
+      const installedHere = targetOverride
+        ? narrowToVersionIds(installed, targetOverride.versionIds)
+        : installed;
+
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
         installed: {
-          recipeVersions: installed.commandVersions,
-          standardVersions: installed.standardVersions,
-          skillVersions: installed.skillVersions,
+          recipeVersions: installedHere.commandVersions,
+          standardVersions: installedHere.standardVersions,
+          skillVersions: installedHere.skillVersions,
         },
         removed: {
           recipeVersions: removed.commandVersions,
@@ -557,7 +591,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           packagesSlugs,
           existingPackages,
           existingPackmindJson?.agents,
-          packageVersions,
+          targetOverride?.packageVersions ?? packageVersions,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 

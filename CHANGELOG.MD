@@ -9,6 +9,7 @@
 - `Update N distributions` is absent while a release is on screen: drift measures distance from the live package, not from the release being read
 - `Update` on a destination pinned to a version now moves it to the newest release instead of pushing the live package over its pin
 - A destination tracking `*` is left tracking it, so one `Update` can move a pinned repository and refresh a wildcard one in the same click
+- A repository with several destinations now receives all of them in its one commit; only the first one's files were ever committed, while every destination was reported as distributed
 
 ## Changed
 
