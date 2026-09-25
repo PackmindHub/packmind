@@ -19,7 +19,12 @@ import { Package, Skill } from '@packmind/types';
  * it exists only in the live package, so its presence says "this repo is
  * tracking the package" and its absence says "this repo is on a release".
  */
-describeForVersion('>= 0.36.0', 'install at a version', () => {
+/*
+ * Strictly greater, not `>= 0.36.0`: the registry leg runs the latest
+ * published CLI, and 0.36.0 is published without any of this. A `>=` gate let
+ * every scenario below run against a binary that answers `*` to all of them.
+ */
+describeForVersion('> 0.36.0', 'install at a version', () => {
   describeWithUserSignedUp('install at a version', (getContext) => {
     let context: UserSignedUpContext;
     let pkg: Package;
@@ -276,7 +281,7 @@ describeForVersion('>= 0.36.0', 'install at a version', () => {
         });
 
         it('lists the available versions, newest first', () => {
-          expect(result.stdout).toContain('Available versions: 0.1.0, 0.0.1');
+          expect(result.stderr).toContain('Available versions: 0.1.0, 0.0.1');
         });
       });
 
@@ -304,7 +309,7 @@ describeForVersion('>= 0.36.0', 'install at a version', () => {
         });
 
         it('lists the available versions, newest first', () => {
-          expect(result.stdout).toContain('Available versions: 0.1.0, 0.0.1');
+          expect(result.stderr).toContain('Available versions: 0.1.0, 0.0.1');
         });
       });
     });

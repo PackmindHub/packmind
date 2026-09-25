@@ -2002,6 +2002,32 @@ Old packmind content
       });
     });
 
+    describe('and packmind.json spells a package without its space', () => {
+      beforeEach(() => {
+        // Read once before the install and once after, and the install
+        // rewrites the key in between.
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@my-space/ops': '*' },
+        });
+        mockConfigFileRepository.readConfig.mockResolvedValueOnce({
+          packages: { ops: '*' },
+        });
+        mockGateway.deployment.install.mockResolvedValue({
+          ...installResponseFactory(),
+          resolvedPackageVersions: { '@my-space/ops': '*' },
+        });
+      });
+
+      it('does not report the normalized slug as a package this install added', async () => {
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
+
+        expect(result.packagesAdded).toEqual([]);
+      });
+    });
+
     describe('and the server answers with what it rendered', () => {
       beforeEach(() => {
         mockConfigFileRepository.readConfig.mockResolvedValue(null);

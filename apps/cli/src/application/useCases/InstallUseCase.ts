@@ -79,7 +79,15 @@ export class InstallUseCase implements IInstallUseCase {
       await this.configFileRepository.configExists(baseDirectory);
     const lockFile = await this.lockFileRepository.read(baseDirectory);
     const config = await this.configFileRepository.readConfig(baseDirectory);
-    const slugsBefore = new Set(Object.keys(config?.packages ?? {}));
+    /*
+     * Which packages the repo already carried, in the canonical form.
+     *
+     * Not the file's own keys: a config that spells a package `ops` has it
+     * rewritten to `@space/ops` by the normalization below, and comparing the
+     * two spellings would report a package the repo has had all along as one
+     * this install added.
+     */
+    const slugsBefore = new Set<string>();
 
     if (!config && !hasExplicitPackages) {
       const configFileExists =
@@ -128,6 +136,7 @@ export class InstallUseCase implements IInstallUseCase {
       const fromConfig = config
         ? await this.normalizeAndSaveConfigPackages(baseDirectory, config)
         : { slugs: [], versions: {} };
+      fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
       Object.assign(packageVersions, fromConfig.versions);
 
       (command.packages ?? []).forEach((pkg, index) => {
@@ -147,6 +156,7 @@ export class InstallUseCase implements IInstallUseCase {
         baseDirectory,
         config,
       );
+      fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
       Object.assign(packageVersions, fromConfig.versions);
       packagesSlugs = fromConfig.slugs;
     }
