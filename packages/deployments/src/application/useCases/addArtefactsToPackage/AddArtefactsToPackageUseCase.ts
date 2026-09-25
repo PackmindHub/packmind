@@ -5,7 +5,6 @@ import {
 } from '@packmind/node-utils';
 import {
   AddArtefactsToPackageCommand,
-  ArtifactType,
   AddArtefactsToPackageResponse,
   IAccountsPort,
   IAddArtefactsToPackageUseCase,
@@ -26,6 +25,11 @@ import { PackageReloadFailedError } from '../../../domain/errors/PackageReloadFa
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
+import {
+  ArtefactsBeingPlaced,
+  findPlacementConflicts,
+  placementKey,
+} from '../../utils/findPlacementConflicts';
 
 const origin = 'AddArtefactsToPackageUseCase';
 
@@ -108,7 +112,7 @@ export class AddArtefactsToPackageUseCase
       currentSkillIds.includes(skillId),
     );
 
-    const namesById = new Map<string, { type: ArtifactType; name: string }>();
+    const artefacts: ArtefactsBeingPlaced = new Map();
 
     if (newCommandIds.length > 0) {
       const recipes = await Promise.all(
@@ -126,7 +130,10 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
-        namesById.set(recipe.id, { type: 'command', name: recipe.name });
+        artefacts.set(placementKey('command', recipe.id), {
+          type: 'command',
+          name: recipe.name,
+        });
       }
     }
 
@@ -146,7 +153,10 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
-        namesById.set(standard.id, { type: 'standard', name: standard.name });
+        artefacts.set(placementKey('standard', standard.id), {
+          type: 'standard',
+          name: standard.name,
+        });
       }
     }
 
@@ -164,7 +174,10 @@ export class AddArtefactsToPackageUseCase
             existingPackage.spaceId,
           );
         }
-        namesById.set(skill.id, { type: 'skill', name: skill.name });
+        artefacts.set(placementKey('skill', skill.id), {
+          type: 'skill',
+          name: skill.name,
+        });
       }
     }
 
@@ -183,7 +196,7 @@ export class AddArtefactsToPackageUseCase
      * a caller naming something they cannot see still hears about that first:
      * which package holds what is not owed to them.
      */
-    const conflicts = await this.findConflicts(spaceId, packageId, namesById);
+    const conflicts = await this.findConflicts(spaceId, packageId, artefacts);
 
     if (conflicts.length > 0) {
       throw new ArtefactAlreadyInAnotherPackageError(
@@ -257,38 +270,14 @@ export class AddArtefactsToPackageUseCase
   private async findConflicts(
     spaceId: SpaceId,
     packageId: PackageId,
-    namesById: Map<string, { type: ArtifactType; name: string }>,
+    artefacts: ArtefactsBeingPlaced,
   ): Promise<ArtefactPlacementConflict[]> {
-    if (namesById.size === 0) return [];
+    if (artefacts.size === 0) return [];
 
     const packages = await this.services
       .getPackageService()
       .getPackagesBySpaceId(spaceId);
 
-    const conflicts: ArtefactPlacementConflict[] = [];
-
-    for (const pkg of packages) {
-      if (pkg.id === packageId) continue;
-
-      const held = [
-        ...(pkg.standards ?? []),
-        ...(pkg.recipes ?? []),
-        ...(pkg.skills ?? []),
-      ].map(String);
-
-      for (const artefactId of held) {
-        const artefact = namesById.get(artefactId);
-        if (!artefact) continue;
-
-        conflicts.push({
-          artefactType: artefact.type,
-          artefactId,
-          artefactName: artefact.name,
-          packageName: pkg.name,
-        });
-      }
-    }
-
-    return conflicts;
+    return findPlacementConflicts(packages, artefacts, packageId);
   }
 }
