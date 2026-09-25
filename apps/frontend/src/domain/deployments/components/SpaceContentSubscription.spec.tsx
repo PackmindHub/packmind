@@ -101,20 +101,42 @@ describe('SpaceContentSubscription', () => {
 
     it('drops the cached list of the space packages', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+        queryKey: [...LIST_PACKAGES_BY_SPACE_KEY, SPACE_ID],
       });
     });
 
+    /*
+     * The one key that names its package before its space, so the space cannot
+     * be asked for as a prefix.
+     */
     it('drops the cached package a detail pane is reading', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({
         queryKey: GET_PACKAGE_BY_ID_KEY,
+        predicate: expect.any(Function),
       });
     });
 
-    // A standard's rules are not keyed by space, so the prefix misses them.
+    it('keeps the cached package of another space', () => {
+      const { predicate } = invalidateQueries.mock.calls
+        .map(([options]) => options)
+        .find(({ queryKey }) => queryKey === GET_PACKAGE_BY_ID_KEY);
+
+      expect(
+        predicate({
+          queryKey: [
+            ...GET_PACKAGE_BY_ID_KEY,
+            'package-1',
+            'space-2',
+            ORGANIZATION_ID,
+          ],
+        }),
+      ).toBe(false);
+    });
+
+    // A standard's rules hang off the standards scope, not the space prefix.
     it('drops the cached rules of a standard', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: GET_RULES_BY_STANDARD_ID_KEY,
+        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, ORGANIZATION_ID, SPACE_ID],
       });
     });
 
@@ -125,13 +147,13 @@ describe('SpaceContentSubscription', () => {
      */
     it('drops the cached releases a package is judged against', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: LIST_PACKAGE_RELEASES_KEY,
+        queryKey: [...LIST_PACKAGE_RELEASES_KEY, SPACE_ID],
       });
     });
 
     it('drops the cached release a pane is reading', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: GET_PACKAGE_RELEASE_KEY,
+        queryKey: [...GET_PACKAGE_RELEASE_KEY, SPACE_ID],
       });
     });
   });
@@ -148,6 +170,26 @@ describe('SpaceContentSubscription', () => {
 
     it('refreshes once for the whole burst', () => {
       expect(invalidateQueries).toHaveBeenCalledTimes(6);
+    });
+  });
+
+  /*
+   * A long import announces faster than the wait, so a wait that restarts on
+   * every event would refresh nothing until the import ended — which is when an
+   * open picker is offering membership that has stopped being true.
+   */
+  describe('when changes keep arriving faster than the wait', () => {
+    beforeEach(() => {
+      render(<SpaceContentSubscription />);
+
+      for (let elapsed = 0; elapsed < 5000; elapsed += 200) {
+        announce();
+        vi.advanceTimersByTime(200);
+      }
+    });
+
+    it('refreshes without waiting for them to stop', () => {
+      expect(invalidateQueries).toHaveBeenCalled();
     });
   });
 
