@@ -9,6 +9,7 @@ import {
   MissingGitInputError,
   UpdateGitProviderCommand,
   UpdateGitProviderResponse,
+  providerHasAuth,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
@@ -17,7 +18,6 @@ import {
   ensureDisplayNameAvailable,
   normalizeDisplayName,
 } from '../shared/validateDisplayName';
-import { providerHasAuth } from '../shared/providerAuthState';
 import {
   assertCandidateCredentialsWork,
   isProbeableSource,

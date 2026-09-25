@@ -19,11 +19,13 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitProvider,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepo,
   GitRepoId,
   ListAvailableReposResponse,
   ListProvidersResponse,
   OrganizationId,
+  toGitProviderWithoutToken,
 } from '@packmind/types';
 import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -58,7 +60,7 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Body() gitProvider: Omit<GitProvider, 'id'>,
-  ): Promise<GitProvider> {
+  ): Promise<GitProviderWithoutToken> {
     const userId = req.user.userId;
 
     this.logger.info(
@@ -69,11 +71,14 @@ export class GitProvidersController {
       },
     );
 
-    return await this.gitProvidersService.addGitProvider(
-      userId,
-      organizationId,
-      gitProvider,
-      req.clientSource,
+    // The token is decrypted on every read; it must never go back out.
+    return toGitProviderWithoutToken(
+      await this.gitProvidersService.addGitProvider(
+        userId,
+        organizationId,
+        gitProvider,
+        req.clientSource,
+      ),
     );
   }
 
@@ -227,7 +232,7 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Body() body: { installationId: number; state: string },
-  ): Promise<GitProvider> {
+  ): Promise<GitProviderWithoutToken> {
     this.logger.info(
       'POST /organizations/:orgId/git/providers/github/app/callback',
       {
@@ -251,13 +256,15 @@ export class GitProvidersController {
       );
     }
 
-    return await this.gitProvidersService.completeGithubAppInstall({
-      organizationId,
-      userId: req.user.userId,
-      installationId: body.installationId,
-      state: body.state,
-      source: req.clientSource,
-    });
+    return toGitProviderWithoutToken(
+      await this.gitProvidersService.completeGithubAppInstall({
+        organizationId,
+        userId: req.user.userId,
+        installationId: body.installationId,
+        state: body.state,
+        source: req.clientSource,
+      }),
+    );
   }
 
   @Get()
@@ -347,7 +354,7 @@ export class GitProvidersController {
     @Request() req: AuthenticatedRequest,
     @Param('id') gitProviderId: GitProviderId,
     @Body() gitProvider: Partial<Omit<GitProvider, 'id'>>,
-  ): Promise<GitProvider> {
+  ): Promise<GitProviderWithoutToken> {
     this.logger.info(
       'PUT /organizations/:orgId/git/providers/:id - Updating git provider',
       {
@@ -370,7 +377,7 @@ export class GitProvidersController {
         gitProviderId,
       },
     );
-    return updatedProvider;
+    return toGitProviderWithoutToken(updatedProvider);
   }
 
   @Delete(':id')

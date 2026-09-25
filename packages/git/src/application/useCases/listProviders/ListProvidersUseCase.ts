@@ -6,9 +6,9 @@ import {
   IListProvidersUseCase,
   ListProvidersCommand,
   ListProvidersResponse,
+  toGitProviderWithoutToken,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'ListProvidersUseCase';
 
@@ -39,15 +39,14 @@ export class ListProvidersUseCase
 
     const providerListItems: GitProviderListItem[] = providers.map(
       (provider) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { token, ...rest } = provider;
+        const tokenless = toGitProviderWithoutToken(provider);
         return {
-          ...rest,
+          ...tokenless,
           // Marketplaces are surfaced by their own API, so they must not
           // inflate the standard repository count.
-          repos: (rest.repos ?? []).filter((repo) => repo.type === 'standard'),
-          hasAuth: providerHasAuth(provider),
-          authMethod: rest.authMethod,
+          repos: (tokenless.repos ?? []).filter(
+            (repo) => repo.type === 'standard',
+          ),
           // Filled in by the API service layer, which can reach the
           // Deployments port; this use case stays within the Git domain.
           lastDistributionAt: null,

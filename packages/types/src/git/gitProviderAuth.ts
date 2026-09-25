@@ -1,4 +1,5 @@
-import { GitProvider } from '@packmind/types';
+import { GitProvider } from './GitProvider';
+import { GitProviderWithoutToken } from './contracts/IListProvidersUseCase';
 
 /**
  * Whether a git provider has configured credentials (PAT or active GitHub App
@@ -33,4 +34,16 @@ export function providerHasAuth(
   return (
     hasPatToken || provider.tokenUnreadable === true || hasActiveAppInstallation
   );
+}
+
+/**
+ * The shape a git provider may take when it leaves the server: the decrypted
+ * token is dropped, and whether one is configured is carried by `hasAuth`.
+ */
+export function toGitProviderWithoutToken(
+  provider: GitProvider,
+): GitProviderWithoutToken {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { token, ...rest } = provider;
+  return { ...rest, hasAuth: providerHasAuth(provider) };
 }

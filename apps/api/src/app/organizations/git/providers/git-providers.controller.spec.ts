@@ -251,8 +251,14 @@ describe('GitProvidersController', () => {
         );
       });
 
-      it('returns the service result', () => {
-        expect(result).toBe(mockProvider);
+      it('returns the provider without its token', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { token, ...rest } = mockProvider;
+        expect(result).toEqual({ ...rest, hasAuth: true });
+      });
+
+      it('does not send a token field', () => {
+        expect(result).not.toHaveProperty('token');
       });
 
       it('calls the service with the correct command', () => {
@@ -698,6 +704,28 @@ describe('GitProvidersController', () => {
       organizationId: orgId,
     };
 
+    describe('when the provider is created', () => {
+      let result: Awaited<ReturnType<typeof controller.addGitProvider>>;
+
+      beforeEach(async () => {
+        mockService.addGitProvider.mockResolvedValue({
+          ...body,
+          id: createGitProviderId('prov-1'),
+          token: 'ghp_decrypted-secret',
+        } as never);
+
+        result = await controller.addGitProvider(orgId, mockRequest, body);
+      });
+
+      it('does not send the token back', () => {
+        expect(result).not.toHaveProperty('token');
+      });
+
+      it('reports that a token is configured', () => {
+        expect(result.hasAuth).toBe(true);
+      });
+    });
+
     describe('when the display name collides with an existing provider', () => {
       it('propagates the domain error for the filter to map', async () => {
         mockService.addGitProvider.mockRejectedValue(
@@ -714,6 +742,37 @@ describe('GitProvidersController', () => {
   describe('updateGitProvider', () => {
     const providerId = createGitProviderId('prov-1');
     const body = { displayName: 'Marketplace' };
+
+    describe('when the provider is updated', () => {
+      let result: Awaited<ReturnType<typeof controller.updateGitProvider>>;
+
+      beforeEach(async () => {
+        mockService.updateGitProvider.mockResolvedValue({
+          id: providerId,
+          source: 'github',
+          organizationId: orgId,
+          url: 'https://github.com',
+          token: 'ghp_decrypted-secret',
+          authMethod: 'token',
+          displayName: 'Marketplace',
+        } as never);
+
+        result = await controller.updateGitProvider(
+          orgId,
+          mockRequest,
+          providerId,
+          body,
+        );
+      });
+
+      it('does not send the token back', () => {
+        expect(result).not.toHaveProperty('token');
+      });
+
+      it('reports that a token is configured', () => {
+        expect(result.hasAuth).toBe(true);
+      });
+    });
 
     describe('when the display name collides with another provider', () => {
       it('propagates the domain error for the filter to map', async () => {
