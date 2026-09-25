@@ -156,6 +156,7 @@ import { ListPackagesBySpaceUseCase } from '../useCases/listPackagesBySpace/List
 import { GetPackageSummaryUseCase } from '../useCases/getPackageSummary/GetPackageSummaryUseCase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
+import { TargetPackmindConfigReader } from '../services/TargetPackmindConfigReader';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
 import { GetLastDistributionDateByProvidersUseCase } from '../useCases/GetLastDistributionDateByProvidersUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
@@ -311,6 +312,10 @@ export class DeploymentsAdapter
       this.distributedPackageRepository,
       this.spacesPort,
       this.deploymentsServices.getPackageReleaseService(),
+      new TargetPackmindConfigReader(
+        this.deploymentsServices.getTargetService(),
+        this.gitPort,
+      ),
     );
 
     this._findActiveStandardVersionsByTargetUseCase =
