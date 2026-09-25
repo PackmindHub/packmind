@@ -1,4 +1,4 @@
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType, PackmindLockFileFile } from '@packmind/types';
 import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 import { PackmindLockFile } from '../../../../domain/repositories/PackmindLockFile';
 import {
@@ -1117,6 +1117,210 @@ describe('buildProposals', () => {
       const { conflicts } = await buildProposals(entries, getCtx);
 
       expect(conflicts).toHaveLength(0);
+    });
+  });
+});
+
+describe('buildProposals rule id resolution', () => {
+  const DELETED_RULE = 'Completely unique rule xyz';
+  const PACKMIND_FILE = '.packmind/standards/my-standard.md';
+  const CLAUDE_FILE = '.claude/rules/packmind/standard-my-standard.md';
+
+  const DEPLOYED_WITH_EXTRA_RULE = [
+    '# My Standard',
+    '',
+    'A description of the standard.',
+    '',
+    '## Rules',
+    '',
+    '* Do not use var',
+    '* Always use const',
+    `* ${DELETED_RULE}`,
+  ].join('\n');
+
+  function makeStandardLockFile(files: PackmindLockFileFile[]) {
+    return makeLockFile({
+      artifacts: {
+        'my-standard': {
+          source: 'user',
+          name: 'My Standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: [],
+          files,
+        },
+      },
+    });
+  }
+
+  function makeCtx(files: PackmindLockFileFile[]) {
+    return jest.fn().mockResolvedValue(
+      makeTargetContext({
+        lockFile: makeStandardLockFile(files),
+        deployedFiles: files.map((file) => ({
+          path: file.path,
+          content: DEPLOYED_WITH_EXTRA_RULE,
+        })),
+      }),
+    );
+  }
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('targets a deleted rule by the id fetched from the standard', async () => {
+    const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+    const fetchRuleIds = jest
+      .fn()
+      .mockResolvedValue(new Map([[DELETED_RULE, 'rule-xyz']]));
+
+    const { proposals } = await buildProposals(
+      [makeEntry({ changeType: 'updated' })],
+      getCtx,
+      fetchRuleIds,
+    );
+
+    expect(proposals).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.deleteRule,
+        payload: expect.objectContaining({ targetId: 'rule-xyz' }),
+      }),
+    );
+  });
+
+  it('fetches the rules with the space and artifact of the standard', async () => {
+    const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+    const fetchRuleIds = jest.fn().mockResolvedValue(new Map());
+
+    await buildProposals(
+      [makeEntry({ changeType: 'updated' })],
+      getCtx,
+      fetchRuleIds,
+    );
+
+    expect(fetchRuleIds).toHaveBeenCalledWith('space-123', 'artifact-1');
+  });
+
+  describe('when several agents render the same standard', () => {
+    it('fetches that standard rules once', async () => {
+      const files: PackmindLockFileFile[] = [
+        { path: PACKMIND_FILE, agent: 'packmind' },
+        { path: CLAUDE_FILE, agent: 'claude' },
+      ];
+      const getCtx = makeCtx(files);
+      const fetchRuleIds = jest.fn().mockResolvedValue(new Map());
+
+      await buildProposals(
+        [
+          makeEntry({ changeType: 'updated' }),
+          makeEntry({
+            changeType: 'updated',
+            filePath: CLAUDE_FILE,
+            codingAgent: 'claude',
+          }),
+        ],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(fetchRuleIds).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when the rule lookup fails', () => {
+    it('skips the entry rather than submitting an unresolved removal', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+      const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
+
+      const { skipped } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(skipped).toHaveLength(1);
+    });
+
+    it('submits no proposal for the skipped standard', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+      const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
+
+      const { proposals } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(proposals).toEqual([]);
+    });
+
+    describe('when the standard only gained rules', () => {
+      it('submits it anyway, since an addition names no existing rule', async () => {
+        const deployedSubset = [
+          '# My Standard',
+          '',
+          'A description of the standard.',
+          '',
+          '## Rules',
+          '',
+          '* Do not use var',
+        ].join('\n');
+        const getCtx = jest.fn().mockResolvedValue(
+          makeTargetContext({
+            lockFile: makeStandardLockFile([
+              { path: PACKMIND_FILE, agent: 'packmind' },
+            ]),
+            deployedFiles: [{ path: PACKMIND_FILE, content: deployedSubset }],
+          }),
+        );
+        const fetchRuleIds = jest.fn().mockRejectedValue(new Error('offline'));
+
+        const { proposals } = await buildProposals(
+          [makeEntry({ changeType: 'updated' })],
+          getCtx,
+          fetchRuleIds,
+        );
+
+        expect(proposals).toContainEqual(
+          expect.objectContaining({ type: ChangeProposalType.addRule }),
+        );
+      });
+    });
+  });
+
+  describe('when a changed rule is missing from the fetched ids', () => {
+    it('skips the entry', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+      const fetchRuleIds = jest
+        .fn()
+        .mockResolvedValue(new Map([['Some other rule', 'rule-other']]));
+
+      const { skipped } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+        fetchRuleIds,
+      );
+
+      expect(skipped).toHaveLength(1);
+    });
+  });
+
+  describe('when no fetcher is provided', () => {
+    it('falls back to the unresolved placeholder', async () => {
+      const getCtx = makeCtx([{ path: PACKMIND_FILE, agent: 'packmind' }]);
+
+      const { proposals } = await buildProposals(
+        [makeEntry({ changeType: 'updated' })],
+        getCtx,
+      );
+
+      expect(proposals).toContainEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({ targetId: 'unresolved' }),
+        }),
+      );
     });
   });
 });

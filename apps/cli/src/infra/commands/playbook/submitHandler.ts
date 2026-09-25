@@ -18,7 +18,11 @@ import {
   duplicateNameKey,
 } from './submit/duplicateNameChecker';
 import { createTargetContextResolver } from './submit/targetContextResolver';
-import { buildProposals, ProposalItem } from './submit/proposalBuilder';
+import {
+  buildProposals,
+  ProposalItem,
+  RuleIdsFetcher,
+} from './submit/proposalBuilder';
 import { validateProposalSkillDescriptions } from './submit/skillDescriptionValidator';
 import {
   fetchAvailablePackageSlugs,
@@ -180,12 +184,25 @@ export async function playbookSubmitHandler(
     packmindCliHexa,
   });
 
+  // Rule removals and edits are applied by rule id, and a standard's Markdown
+  // carries none, so they are read back from the standard before submitting.
+  const fetchRuleIds: RuleIdsFetcher = async (spaceId, standardId) => {
+    const rules = await packmindCliHexa
+      .getPackmindGateway()
+      .standards.getRules(spaceId, standardId);
+    return new Map(rules.map((rule) => [rule.content, rule.id]));
+  };
+
   // Build proposals
   const {
     proposals: allProposals,
     conflicts,
     skipped,
-  } = await buildProposals(submittableChanges, resolver.getTargetContext);
+  } = await buildProposals(
+    submittableChanges,
+    resolver.getTargetContext,
+    fetchRuleIds,
+  );
 
   // Pre-flight: reject skill proposals whose description exceeds the limit.
   // The backend enforces the same cap; failing fast here keeps the error tied

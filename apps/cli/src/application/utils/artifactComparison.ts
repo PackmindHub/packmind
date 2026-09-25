@@ -3,11 +3,21 @@ import {
   ChangeProposalType,
   canonicalJsonStringify,
   createRuleId,
+  RuleId,
 } from '@packmind/types';
 
 import { parseCommandFile } from './parseCommandFile';
 import { parseStandardMd } from './parseStandardMd';
 import { matchUpdatedRules } from './ruleSimilarity';
+import { logWarningConsole } from '../../infra/utils/consoleLogger';
+
+const RULE_LABEL_MAX_LENGTH = 60;
+
+function truncateRule(content: string): string {
+  return content.length > RULE_LABEL_MAX_LENGTH
+    ? `${content.slice(0, RULE_LABEL_MAX_LENGTH)}...`
+    : content;
+}
 
 export type FieldChange = {
   type: ChangeProposalType;
@@ -25,10 +35,28 @@ export type SkillDefinitionInput = {
   additionalProperties?: Record<string, unknown>;
 };
 
+/**
+ * Maps a deployed rule's content to its server-side id.
+ *
+ * `deleteRule` and `updateRule` proposals are applied by matching
+ * `payload.targetId` against the rule's real id, so a proposal built without
+ * one silently applies to nothing. The caller fetches the ids; passing the map
+ * is optional so that callers which only display a diff stay synchronous.
+ */
+export type RuleIdsByContent = ReadonlyMap<string, string>;
+
+/**
+ * Stands in for a rule id that could not be resolved. It matches no rule, so a
+ * proposal carrying it is applied to nothing; callers that asked for ids treat
+ * its presence as a failure rather than shipping it.
+ */
+export const UNRESOLVED_RULE_ID = 'unresolved';
+
 export function compareStandardFields(
   localContent: string,
   deployedContent: string,
   filePath: string,
+  ruleIdsByContent?: RuleIdsByContent,
 ): FieldChange[] {
   const localParsed = parseStandardMd(localContent, filePath);
   const serverParsed = parseStandardMd(deployedContent, filePath);
@@ -105,8 +133,24 @@ export function compareStandardFields(
     addedRules,
   );
 
+  // The placeholder kept for callers that supply no ids matches no rule, so
+  // the change it names is applied to nothing. A caller that did supply ids
+  // and still missed one is warned, rather than left to read a success line
+  // for a change that was dropped.
+  const resolveRuleId = (content: string, changeLabel: string): RuleId => {
+    const resolved = ruleIdsByContent?.get(content);
+    if (resolved) return createRuleId(resolved);
+
+    if (ruleIdsByContent) {
+      logWarningConsole(
+        `Could not resolve the rule "${truncateRule(content)}" in ${filePath} to a known rule; its ${changeLabel} may not be applied.`,
+      );
+    }
+    return createRuleId(UNRESOLVED_RULE_ID);
+  };
+
   for (const update of updates) {
-    const ruleId = createRuleId('unresolved');
+    const ruleId = resolveRuleId(update.oldValue, 'update');
     changes.push({
       type: ChangeProposalType.updateRule,
       payload: {
@@ -118,7 +162,7 @@ export function compareStandardFields(
   }
 
   for (const rule of remainingDeleted) {
-    const ruleId = createRuleId('unresolved');
+    const ruleId = resolveRuleId(rule, 'removal');
     changes.push({
       type: ChangeProposalType.deleteRule,
       payload: {

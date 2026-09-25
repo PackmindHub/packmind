@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- `playbook submit` now resolves a standard's rule ids before submitting, so removing or editing a rule is applied rather than silently dropped when submitted with `--no-review`
+
 ## Removed
 
 # [1.18.0] - 2026-09-22

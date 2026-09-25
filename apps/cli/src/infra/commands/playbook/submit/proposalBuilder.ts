@@ -12,6 +12,8 @@ import {
   compareStandardFields,
   compareCommandFields,
   compareSkillDefinitionFields,
+  RuleIdsByContent,
+  UNRESOLVED_RULE_ID,
 } from '../../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../../application/utils/pathUtils';
 import { logWarningConsole } from '../../../utils/consoleLogger';
@@ -142,6 +144,7 @@ function buildUpdatedStandardProposals(
   entry: PlaybookChangeEntry,
   artifactId: string | null,
   deployedContent: string | null,
+  ruleIdsByContent?: RuleIdsByContent,
 ): ProposalItem[] {
   if (!artifactId) return [];
 
@@ -156,6 +159,7 @@ function buildUpdatedStandardProposals(
       entry.content,
       deployedContent,
       entry.filePath,
+      ruleIdsByContent,
     );
     return fieldChanges.map((change) => ({
       ...base,
@@ -445,9 +449,66 @@ function toSkippedEntry(
   };
 }
 
+/**
+ * True when a rule removal or edit ended up with the placeholder id. The server
+ * matches these by id, so such a proposal is applied to nothing while the batch
+ * still reports success and the staged change is cleared. Additions are exempt:
+ * they name no existing rule.
+ */
+function hasUnresolvedRuleTarget(proposals: ProposalItem[]): boolean {
+  return proposals.some(
+    (proposal) =>
+      (proposal.type === ChangeProposalType.deleteRule ||
+        proposal.type === ChangeProposalType.updateRule) &&
+      (proposal.payload as { targetId?: string } | undefined)?.targetId ===
+        UNRESOLVED_RULE_ID,
+  );
+}
+
+/**
+ * Fetches a standard's rule ids once and remembers the answer, including the
+ * failure, so one unreachable standard costs one request.
+ */
+async function resolveRuleIds(
+  fetchRuleIds: RuleIdsFetcher,
+  spaceId: string,
+  standardId: string,
+  artifactName: string,
+  cache: Map<string, RuleIdsByContent | undefined>,
+): Promise<RuleIdsByContent | undefined> {
+  const cacheKey = `${spaceId}/${standardId}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  let resolved: RuleIdsByContent | undefined;
+  try {
+    resolved = await fetchRuleIds(spaceId, standardId);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    logWarningConsole(
+      `Could not read the rules of "${artifactName}" (${reason}); rule removals and edits may not be applied.`,
+    );
+    resolved = undefined;
+  }
+
+  cache.set(cacheKey, resolved);
+  return resolved;
+}
+
+/**
+ * Looks up the rules a deployed standard currently has, keyed by content.
+ *
+ * Rule removals and edits are applied by id, and the local Markdown carries
+ * none, so without this the proposal names no rule and is dropped in silence.
+ */
+export type RuleIdsFetcher = (
+  spaceId: string,
+  standardId: string,
+) => Promise<RuleIdsByContent>;
+
 export async function buildProposals(
   changes: PlaybookChangeEntry[],
   getTargetContext: (entry: PlaybookChangeEntry) => Promise<TargetContext>,
+  fetchRuleIds?: RuleIdsFetcher,
 ): Promise<{
   proposals: ProposalItem[];
   conflicts: ArtifactConflict[];
@@ -455,6 +516,7 @@ export async function buildProposals(
 }> {
   const proposals: ProposalItem[] = [];
   const skipped: SkippedEntry[] = [];
+  const ruleIdCache = new Map<string, RuleIdsByContent | undefined>();
   const updateSources = new Map<
     string,
     {
@@ -546,15 +608,42 @@ export async function buildProposals(
       }
 
       switch (entry.artifactType) {
-        case 'standard':
-          proposals.push(
-            ...buildUpdatedStandardProposals(
-              entry,
+        case 'standard': {
+          // One lookup per standard, reused when several agents render it.
+          let ruleIdsByContent: RuleIdsByContent | undefined;
+          if (fetchRuleIds && deployedContent) {
+            ruleIdsByContent = await resolveRuleIds(
+              fetchRuleIds,
+              entry.spaceId,
               artifactId,
-              deployedContent,
-            ),
+              entry.artifactName,
+              ruleIdCache,
+            );
+          }
+          const standardProposals = buildUpdatedStandardProposals(
+            entry,
+            artifactId,
+            deployedContent,
+            ruleIdsByContent,
           );
+          // Shipping a placeholder would lose the change in silence, which is
+          // what this resolution exists to prevent. Keep the staged change so
+          // the operator can retry instead.
+          if (fetchRuleIds && hasUnresolvedRuleTarget(standardProposals)) {
+            logWarningConsole(
+              `Skipping "${entry.artifactName}" — its rules could not be matched to the deployed standard, so a rule removal or edit would not be applied.`,
+            );
+            skipped.push(
+              toSkippedEntry(
+                entry,
+                'rule removals and edits could not be matched to the deployed standard',
+              ),
+            );
+            continue;
+          }
+          proposals.push(...standardProposals);
           break;
+        }
         case 'command':
           proposals.push(
             ...buildUpdatedCommandProposals(entry, artifactId, deployedContent),
