@@ -95,6 +95,7 @@ describe('OrganizationsController', () => {
             undefined,
             undefined,
             undefined,
+            undefined,
             'claude',
           );
 
@@ -116,6 +117,7 @@ describe('OrganizationsController', () => {
             undefined,
             undefined,
             undefined,
+            undefined,
             ['claude', 'cursor'],
           );
 
@@ -133,6 +135,7 @@ describe('OrganizationsController', () => {
             orgId,
             mockRequest,
             'backend',
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -159,6 +162,7 @@ describe('OrganizationsController', () => {
               undefined,
               undefined,
               undefined,
+              undefined,
               ['invalid-agent', 'another-invalid'],
               'true',
             );
@@ -177,6 +181,7 @@ describe('OrganizationsController', () => {
               orgId,
               mockRequest,
               'backend',
+              undefined,
               undefined,
               undefined,
               undefined,
@@ -206,6 +211,7 @@ describe('OrganizationsController', () => {
           undefined,
           undefined,
           undefined,
+          undefined,
           'true',
         );
 
@@ -223,6 +229,7 @@ describe('OrganizationsController', () => {
           orgId,
           mockRequest,
           'backend',
+          undefined,
           undefined,
           undefined,
           undefined,

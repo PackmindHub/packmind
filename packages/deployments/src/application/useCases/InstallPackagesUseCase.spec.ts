@@ -45,6 +45,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
+import { PackageReleaseService } from '../services/PackageReleaseService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
@@ -91,6 +92,7 @@ describe('InstallPackagesUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
+  let packageReleaseService: jest.Mocked<PackageReleaseService>;
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let lockFileService: jest.Mocked<PackmindLockFileService>;
   let spacesPort: jest.Mocked<ISpacesPort>;
@@ -181,6 +183,10 @@ describe('InstallPackagesUseCase', () => {
       CodingAgents.packmind,
     ]);
 
+    packageReleaseService = createMockInstance(PackageReleaseService);
+    packageReleaseService.listReleases.mockResolvedValue([]);
+    packageReleaseService.findContentByVersion.mockResolvedValue(null);
+
     packmindConfigService = createMockInstance(PackmindConfigService);
     packmindConfigService.createConfigFileModification.mockReturnValue({
       path: 'packmind.json',
@@ -233,6 +239,7 @@ describe('InstallPackagesUseCase', () => {
       accountsPort,
       spacesPort,
       eventEmitterService,
+      packageReleaseService,
       packmindConfigService,
       lockFileService,
       stubLogger(),
