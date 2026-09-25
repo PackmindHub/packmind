@@ -18,6 +18,7 @@ import type { Mock } from 'vitest';
 
 import { ContextPackagePane } from './ContextPackagePane';
 import type { ContextComponent, ContextGroup } from './buildPackageContext';
+import type { PackageDrift } from '../redesign/types';
 import {
   useDeletePackagesBatchMutation,
   useListPackageDeploymentsQuery,
@@ -102,8 +103,19 @@ vi.mock(
  * The header's other children are stood in for: they each reach for queries of
  * their own, and none of them is what this spec is reading.
  */
+/**
+ * Records what the header asks it to send, which is the one thing about this
+ * control the pane decides.
+ */
+const distributeProps = vi.fn();
+
 vi.mock('../PackageDeployments/DeployPackageButton', () => ({
-  DeployPackageButton: () => <div data-testid="deploy-button" />,
+  DeployPackageButton: (props: {
+    packageVersions?: Record<string, string>;
+  }) => {
+    distributeProps(props.packageVersions);
+    return <div data-testid="deploy-button" />;
+  },
 }));
 
 vi.mock('./AddComponentsDrawer', () => ({
@@ -212,6 +224,65 @@ const SKILL: ContextComponent = {
   href: '?component=skill-1',
   createdAt: null,
 };
+
+/**
+ * A package with one destination that has not caught up, which is what makes
+ * the header draw its corrective push.
+ */
+function driftWithOneBehindInstall(): PackageDrift {
+  const repo = {
+    id: 'repo-1' as PackageDrift['installLocations'][number]['repo']['id'],
+    owner: 'acme',
+    name: 'common',
+    providerId:
+      'provider-1' as PackageDrift['installLocations'][number]['repo']['providerId'],
+  };
+  const target = {
+    id: 'target-1' as PackageDrift['installLocations'][number]['target']['id'],
+    name: 'root',
+    isDefault: true,
+  };
+
+  return {
+    id: packageId,
+    name: 'Backend conventions',
+    description: '',
+    artifacts: [
+      {
+        id: 'std-1' as PackageDrift['artifacts'][number]['id'],
+        kind: 'standard',
+        name: 'Naming',
+        packmindVersion: 2,
+        isDeleted: false,
+        isPending: false,
+        installs: [
+          {
+            repo,
+            target,
+            branch: 'main',
+            deployedVersion: 1,
+            lastDeployedAt: '2026-01-01T00:00:00.000Z',
+            driftReason: 'behind',
+          },
+        ],
+      },
+    ],
+    installLocations: [
+      {
+        repo,
+        target,
+        branch: 'main',
+        lastDistributionStatus: null,
+        lastDistributedAt: null,
+      },
+    ],
+  };
+}
+
+/** One component, so the header's send control is drawn at all. */
+const ONE_GROUP: ContextGroup[] = [
+  { type: 'standard', label: 'Standards', components: [STANDARD] },
+];
 
 async function renderPane(
   readiness: PackageReleaseReadiness,
@@ -388,6 +459,41 @@ describe('ContextPackagePane', () => {
       expect(
         screen.getByRole('tab', { name: /Components/ }).textContent,
       ).toContain('1');
+    });
+
+    it('sends that release when distributing from under it', async () => {
+      await renderPane(released, { releases, address, groups: ONE_GROUP });
+
+      expect(distributeProps).toHaveBeenLastCalledWith({
+        [packageId]: '1.1.0',
+      });
+    });
+
+    describe('and a destination is behind', () => {
+      beforeEach(() => {
+        (usePackageDrift as Mock).mockReturnValue({
+          drift: driftWithOneBehindInstall(),
+          packages: [],
+          isLoading: false,
+          isError: false,
+        });
+      });
+
+      it('drops the push that would send the working copy instead', async () => {
+        await renderPane(released, { releases, address, groups: ONE_GROUP });
+
+        expect(
+          screen.queryByRole('button', { name: /Update/ }),
+        ).not.toBeInTheDocument();
+      });
+
+      it('keeps offering it on the working copy', async () => {
+        await renderPane(released, { releases, groups: ONE_GROUP });
+
+        expect(
+          screen.getByRole('button', { name: /Update 1 distribution/ }),
+        ).toBeInTheDocument();
+      });
     });
 
     it('leaves a reader outside the flag audience on the working copy', async () => {

@@ -39,6 +39,16 @@ export interface DeployPackageButtonProps {
   trigger?: 'standalone' | 'split';
   selectedPackages: Package[];
   /**
+   * Which version of each selected package to send, keyed by package id.
+   *
+   * Only the package pane passes it, because only there is a version being
+   * read: the pane's version bar says what is on screen, and distributing from
+   * under that bar sends what the reader is looking at. Everywhere else
+   * distribution is about a selection of packages with no version in view, and
+   * absent means the package as it stands.
+   */
+  packageVersions?: Record<string, string>;
+  /**
    * The coordinates of the single package this button is about, when the
    * control should also offer the channel Packmind does not perform itself: a
    * developer running `packmind install` in their own repository.
@@ -86,6 +96,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
   variant = 'primary',
   trigger = 'standalone',
   selectedPackages,
+  packageVersions,
   cliInstall,
 }) => {
   const [isCodeRepoOpen, setCodeRepoOpen] = useState(false);
@@ -200,6 +211,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
       >
         <CodeRepositoryDialogContents
           selectedPackages={selectedPackages}
+          packageVersions={packageVersions}
           onClose={() => setCodeRepoOpen(false)}
         />
       </PMDialog.Root>
@@ -209,8 +221,9 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
 
 const CodeRepositoryDialogContents: React.FC<{
   selectedPackages: Package[];
+  packageVersions?: Record<string, string>;
   onClose: () => void;
-}> = ({ selectedPackages, onClose }) => (
+}> = ({ selectedPackages, packageVersions, onClose }) => (
   <PMPortal>
     <PMDialog.Backdrop />
     <PMDialog.Positioner>
@@ -219,6 +232,7 @@ const CodeRepositoryDialogContents: React.FC<{
           selectedCommands={[]}
           selectedStandards={[]}
           selectedPackages={selectedPackages}
+          packageVersions={packageVersions}
           onDistributionComplete={(deploymentResults) => {
             onClose();
 

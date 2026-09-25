@@ -736,6 +736,14 @@ export function ContextPackagePane({
         size="sm"
         variant={headerActions.distributeVariant}
         selectedPackages={[pkg]}
+        /*
+         * What the bar above says is on screen. Distributing from under a bar
+         * that reads 0.2.0 sends 0.2.0, and the repo's packmind.json records
+         * it; reading the package as it stands sends that, under `*`. The two
+         * cannot disagree, because it is one reading and this control is
+         * inside it.
+         */
+        packageVersions={{ [pkg.id]: readingVersion ?? '*' }}
         cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
       />
     );
@@ -991,7 +999,16 @@ export function ContextPackagePane({
               nothing to catch up, and a greyed control saying so is a sentence
               written as a button.
             */}
-            {headerActions.update ? (
+            {/*
+              The corrective half goes when a release is on screen. Drift is a
+              statement about the package as it stands — how far each
+              destination is behind the live components — so under a bar
+              reading 0.1.0 it counts something the reader is not looking at,
+              and the loudest control on the surface would push live content
+              out of a pane showing a frozen version. Distribute stays, and
+              sends what the bar says.
+            */}
+            {headerActions.update && readingVersion === null ? (
               <PMHStack gap={SPLIT_BUTTON_SEAM}>
                 <PMTooltip
                   label={headerActions.update.lockTooltip}

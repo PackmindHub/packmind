@@ -62,6 +62,13 @@ interface RunDistributionProps {
   selectedCommands: Command[];
   selectedStandards: Standard[];
   selectedPackages?: Package[];
+  /**
+   * Which version of each selected package to send, keyed by package id.
+   *
+   * Absent means the live package, which is what every surface that has no
+   * version to offer means by distributing at all.
+   */
+  packageVersions?: Record<string, string>;
   onDistributionComplete?: (deploymentResults: PackagesDeployment[]) => void;
   children?: React.ReactNode;
 }
@@ -70,6 +77,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   selectedCommands,
   selectedStandards,
   selectedPackages = [],
+  packageVersions,
   onDistributionComplete,
   children,
 }) => {
@@ -151,6 +159,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
             id: pkg.id,
             name: pkg.name,
           })),
+          packageVersions,
         },
         selectedTargetIds,
       );
@@ -169,6 +178,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     }
   }, [
     selectedPackages,
+    packageVersions,
     onDistributionComplete,
     deployPackages,
     selectedTargetIds,
