@@ -85,8 +85,25 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
+      const targetId = changeProposal.payload.targetId;
+      const matchesTarget = rules.some((rule) => rule.id === targetId);
+
+      // A client that cannot know rule ids — the CLI reads standards from
+      // Markdown, which carries none — sends a placeholder id and identifies
+      // the rule by the content it is replacing. Only fall back when exactly
+      // one rule carries that content: with several, there is no way to tell
+      // which was meant, and rewriting all of them would collapse them into
+      // duplicates.
+      const contentMatches = matchesTarget
+        ? []
+        : rules.filter(
+            (rule) => rule.content === changeProposal.payload.oldValue,
+          );
+      const fallbackId =
+        contentMatches.length === 1 ? contentMatches[0].id : undefined;
+
       const updatedRules = rules.map((rule) => {
-        if (rule.id !== changeProposal.payload.targetId) {
+        if (rule.id !== targetId && rule.id !== fallbackId) {
           return rule;
         }
 
@@ -113,9 +130,16 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
-      const filteredRules = rules.filter(
-        (rule) => rule.id !== changeProposal.payload.targetId,
-      );
+      const targetId = changeProposal.payload.targetId;
+      const matchesTarget = rules.some((rule) => rule.id === targetId);
+
+      // As with updateRule, fall back to the content the proposal carries when
+      // its id names no rule. Every rule with that content goes: the client
+      // asked for it to be absent, and it holds no id to tell copies apart.
+      const removedContent = changeProposal.payload.item?.content;
+      const filteredRules = matchesTarget
+        ? rules.filter((rule) => rule.id !== targetId)
+        : rules.filter((rule) => rule.content !== removedContent);
 
       return {
         ...source,

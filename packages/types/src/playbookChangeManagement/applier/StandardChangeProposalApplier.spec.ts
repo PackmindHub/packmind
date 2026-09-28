@@ -450,6 +450,125 @@ describe('StandardChangeProposalApplier', () => {
           ).toThrow(ChangeProposalConflictError);
         });
       });
+
+      describe('when the target id names no rule', () => {
+        it('rewrites the rule carrying the replaced content', () => {
+          const rule = ruleFactory({ content: 'Old content' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: createRuleId('unresolved'),
+              oldValue: 'Old content',
+              newValue: 'New content',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[0].content).toBe('New content');
+        });
+
+        it('preserves the id of the rule it matched', () => {
+          const rule = ruleFactory({ content: 'Old content' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: createRuleId('unresolved'),
+              oldValue: 'Old content',
+              newValue: 'New content',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[0].id).toBe(rule.id);
+        });
+
+        it('leaves a rule whose content does not match', () => {
+          const rule = ruleFactory({ content: 'Something else entirely' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: createRuleId('unresolved'),
+              oldValue: 'Old content',
+              newValue: 'New content',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[0].content).toBe(
+            'Something else entirely',
+          );
+        });
+
+        describe('when several rules carry the replaced content', () => {
+          it('leaves them all alone, since none can be told from the others', () => {
+            const rules = [
+              ruleFactory({ content: 'Duplicated content' }),
+              ruleFactory({ content: 'Duplicated content' }),
+            ];
+            const source = standardVersionFactory({ rules });
+            const proposal = changeProposalFactory({
+              type: ChangeProposalType.updateRule,
+              payload: {
+                targetId: createRuleId('unresolved'),
+                oldValue: 'Duplicated content',
+                newValue: 'New content',
+              },
+            });
+
+            const result = applier.applyChangeProposals(source, [
+              proposal as ChangeProposal,
+            ]);
+
+            expect(
+              (result.version.rules ?? []).map((rule) => rule.content),
+            ).toEqual(['Duplicated content', 'Duplicated content']);
+          });
+        });
+      });
+
+      describe('when the target id names a rule', () => {
+        it('ignores another rule sharing the replaced content', () => {
+          const targeted = ruleFactory({
+            id: createRuleId('targeted'),
+            content: 'Shared content',
+          });
+          const untouched = ruleFactory({
+            id: createRuleId('untouched'),
+            content: 'Shared content',
+          });
+          const source = standardVersionFactory({
+            rules: [targeted, untouched],
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: targeted.id,
+              oldValue: 'Shared content',
+              newValue: 'New content',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[1].content).toBe(
+            'Shared content',
+          );
+        });
+      });
     });
 
     describe('deleteRule', () => {
@@ -510,6 +629,108 @@ describe('StandardChangeProposalApplier', () => {
 
         it('keeps the other rule', () => {
           expect((result.version.rules ?? [])[0].id).toBe(ruleToKeep.id);
+        });
+      });
+
+      describe('when the target id names no rule', () => {
+        it('removes the rule carrying the content the proposal names', () => {
+          const rule = ruleFactory({ content: 'To be deleted' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteRule,
+            payload: {
+              targetId: createRuleId('unresolved'),
+              item: {
+                id: createRuleId('unresolved'),
+                content: 'To be deleted',
+              },
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect(result.version.rules).toEqual([]);
+        });
+
+        it('keeps a rule whose content does not match', () => {
+          const rule = ruleFactory({ content: 'Keep me' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteRule,
+            payload: {
+              targetId: createRuleId('unresolved'),
+              item: {
+                id: createRuleId('unresolved'),
+                content: 'To be deleted',
+              },
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[0].id).toBe(rule.id);
+        });
+
+        describe('when several rules carry that content', () => {
+          it('removes all of them, since the standard is meant to be rid of it', () => {
+            const rules = [
+              ruleFactory({ content: 'Duplicated content' }),
+              ruleFactory({ content: 'Duplicated content' }),
+              ruleFactory({ content: 'Keep me' }),
+            ];
+            const source = standardVersionFactory({ rules });
+            const proposal = changeProposalFactory({
+              type: ChangeProposalType.deleteRule,
+              payload: {
+                targetId: createRuleId('unresolved'),
+                item: {
+                  id: createRuleId('unresolved'),
+                  content: 'Duplicated content',
+                },
+              },
+            });
+
+            const result = applier.applyChangeProposals(source, [
+              proposal as ChangeProposal,
+            ]);
+
+            expect(
+              (result.version.rules ?? []).map((rule) => rule.content),
+            ).toEqual(['Keep me']);
+          });
+        });
+      });
+
+      describe('when the target id names a rule', () => {
+        it('keeps another rule sharing its content', () => {
+          const targeted = ruleFactory({
+            id: createRuleId('targeted'),
+            content: 'Shared content',
+          });
+          const untouched = ruleFactory({
+            id: createRuleId('untouched'),
+            content: 'Shared content',
+          });
+          const source = standardVersionFactory({
+            rules: [targeted, untouched],
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteRule,
+            payload: {
+              targetId: targeted.id,
+              item: { id: targeted.id, content: 'Shared content' },
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect((result.version.rules ?? [])[0].id).toBe(untouched.id);
         });
       });
     });

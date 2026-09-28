@@ -15,6 +15,7 @@
 ## Fixed
 
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
+- Rule removals and edits submitted by a client that cannot know rule ids, such as the CLI reading standards from Markdown, are now matched by content instead of being dropped in silence
 
 ## Removed
 
