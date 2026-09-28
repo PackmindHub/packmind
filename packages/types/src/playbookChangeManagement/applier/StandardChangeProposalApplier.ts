@@ -2,7 +2,8 @@ import { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { StandardVersion } from '../../standards/StandardVersion';
-import { createRuleId } from '../../standards/RuleId';
+import { createRuleId, RuleId } from '../../standards/RuleId';
+import { ChangeProposalConflictError } from './ChangeProposalConflictError';
 import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
 import { STANDARD_CHANGE_TYPES } from './types';
 
@@ -86,21 +87,20 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       const rules = source.rules || [];
       const targetId = changeProposal.payload.targetId;
-      const matchesTarget = rules.some((rule) => rule.id === targetId);
 
-      // A client that cannot know rule ids — the CLI reads standards from
-      // Markdown, which carries none — sends a placeholder id and identifies
-      // the rule by the content it is replacing. Only fall back when exactly
-      // one rule carries that content: with several, there is no way to tell
-      // which was meant, and rewriting all of them would collapse them into
-      // duplicates.
-      const contentMatches = matchesTarget
-        ? []
-        : rules.filter(
-            (rule) => rule.content === changeProposal.payload.oldValue,
-          );
-      const fallbackId =
-        contentMatches.length === 1 ? contentMatches[0].id : undefined;
+      // A client reading standards from Markdown has no rule ids to send, so
+      // it names the rule by the content it is replacing instead.
+      let fallbackId: RuleId | undefined;
+      if (!rules.some((rule) => rule.id === targetId)) {
+        const matches = rules.filter(
+          (rule) =>
+            rule.content === this.getEffectivePayload(changeProposal).oldValue,
+        );
+        if (matches.length !== 1) {
+          throw new ChangeProposalConflictError(changeProposal.id);
+        }
+        fallbackId = matches[0].id;
+      }
 
       const updatedRules = rules.map((rule) => {
         if (rule.id !== targetId && rule.id !== fallbackId) {
@@ -131,19 +131,26 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       const rules = source.rules || [];
       const targetId = changeProposal.payload.targetId;
-      const matchesTarget = rules.some((rule) => rule.id === targetId);
 
-      // As with updateRule, fall back to the content the proposal carries when
-      // its id names no rule. Every rule with that content goes: the client
-      // asked for it to be absent, and it holds no id to tell copies apart.
-      const removedContent = changeProposal.payload.item?.content;
-      const filteredRules = matchesTarget
-        ? rules.filter((rule) => rule.id !== targetId)
-        : rules.filter((rule) => rule.content !== removedContent);
+      if (rules.some((rule) => rule.id === targetId)) {
+        return {
+          ...source,
+          rules: rules.filter((rule) => rule.id !== targetId),
+        };
+      }
+
+      // Every copy goes: the standard is meant to be rid of that content, and
+      // copies hold no id to tell them apart.
+      const removed = this.getEffectivePayload(changeProposal).item.content;
+      const remaining = rules.filter((rule) => rule.content !== removed);
+
+      if (remaining.length === rules.length) {
+        throw new ChangeProposalConflictError(changeProposal.id);
+      }
 
       return {
         ...source,
-        rules: filteredRules,
+        rules: remaining,
       };
     }
 
