@@ -1,8 +1,16 @@
 import {
+  buildErrorDiagnostics,
   createDiagnosticError,
   formatErrorDiagnostics,
 } from './errorDiagnostics';
 import { setDebug } from '../utils/debugMode';
+import { appendErrorLog } from '../utils/errorLog';
+
+jest.mock('../utils/errorLog');
+
+const mockAppendErrorLog = appendErrorLog as jest.MockedFunction<
+  typeof appendErrorLog
+>;
 
 describe('formatErrorDiagnostics', () => {
   const context = {
@@ -22,6 +30,10 @@ describe('formatErrorDiagnostics', () => {
     failure.cause = cause;
     return failure;
   };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   afterEach(() => {
     setDebug(false);
@@ -136,6 +148,44 @@ describe('formatErrorDiagnostics', () => {
             .message,
         ).toContain('Debug diagnostics:');
       });
+    });
+  });
+
+  describe('buildErrorDiagnostics', () => {
+    describe('when debug mode is off', () => {
+      it('still builds the block, so the log can record it', () => {
+        expect(buildErrorDiagnostics(buildFetchFailure(), context)).toContain(
+          '    2. Error: getaddrinfo ENOTFOUND api.packmind.com (code=ENOTFOUND, syscall=getaddrinfo)',
+        );
+      });
+    });
+  });
+
+  describe('when an error is created without --debug', () => {
+    beforeEach(() => {
+      createDiagnosticError('Request failed', buildFetchFailure(), context);
+    });
+
+    it('records the message in the error log', () => {
+      expect(mockAppendErrorLog.mock.calls[0][0].message).toBe(
+        'Request failed',
+      );
+    });
+
+    it('records the diagnostics in the error log', () => {
+      expect(mockAppendErrorLog.mock.calls[0][0].diagnostics).toContain(
+        '  Request: GET https://api.packmind.com/api/v0/skills',
+      );
+    });
+  });
+
+  describe('when an error is created under --debug', () => {
+    it('still records it once in the error log', () => {
+      setDebug(true);
+
+      createDiagnosticError('Request failed', buildFetchFailure(), context);
+
+      expect(mockAppendErrorLog).toHaveBeenCalledTimes(1);
     });
   });
 });

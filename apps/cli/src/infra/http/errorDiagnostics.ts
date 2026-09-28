@@ -1,4 +1,5 @@
 import { isDebug } from '../utils/debugMode';
+import { appendErrorLog } from '../utils/errorLog';
 
 /**
  * What a failed request was trying to do. Node's `fetch` rejects with a bare
@@ -74,23 +75,21 @@ function indent(text: string, prefix = '    '): string {
 }
 
 /**
- * A multi-line diagnostic block for an error, meant to be appended to the
- * user-facing message. Returns an empty string unless `--debug` was given,
- * so call sites can append it unconditionally.
+ * The diagnostic block for an error: the request attempted, the whole cause
+ * chain, and the deepest stack.
  *
- * The whole cause chain is reported because the useful part of a fetch failure
- * is never the top link: `fetch failed` wraps the `ECONNREFUSED`,
+ * The whole chain is reported because the useful part of a fetch failure is
+ * never the top link: `fetch failed` wraps the `ECONNREFUSED`,
  * `CERT_HAS_EXPIRED` or `UND_ERR_CONNECT_TIMEOUT` that actually explains it.
+ *
+ * Always built, whatever the flags — the error log records it even when the
+ * user is not shown it.
  */
-export function formatErrorDiagnostics(
+export function buildErrorDiagnostics(
   error: unknown,
   context?: IRequestContext,
 ): string {
-  if (!isDebug()) {
-    return '';
-  }
-
-  const lines: string[] = ['', 'Debug diagnostics:'];
+  const lines: string[] = [];
 
   if (context) {
     lines.push(`  Request: ${context.method} ${context.url}`);
@@ -116,18 +115,40 @@ export function formatErrorDiagnostics(
 }
 
 /**
+ * The diagnostics as they are appended to a user-facing message. Empty unless
+ * `--debug` was given, so call sites can append it unconditionally.
+ */
+export function formatErrorDiagnostics(
+  error: unknown,
+  context?: IRequestContext,
+): string {
+  if (!isDebug()) {
+    return '';
+  }
+
+  return `\nDebug diagnostics:\n${buildErrorDiagnostics(error, context)}`;
+}
+
+/**
  * An error carrying `message` plus, under `--debug`, the diagnostics for
  * `cause`. The cause is attached by assignment rather than through the
  * `new Error(message, { cause })` overload, which the monorepo's `es2020` lib
  * does not declare.
+ *
+ * The diagnostics reach `~/.packmind/error.log` either way: a user who hits
+ * this once should not have to reproduce it under `--debug` to report it.
  */
 export function createDiagnosticError(
   message: string,
   cause: unknown,
   context?: IRequestContext,
 ): Error {
+  const diagnostics = buildErrorDiagnostics(cause, context);
+
+  appendErrorLog({ message, diagnostics });
+
   const error: Error & { cause?: unknown } = new Error(
-    `${message}${formatErrorDiagnostics(cause, context)}`,
+    isDebug() ? `${message}\nDebug diagnostics:\n${diagnostics}` : message,
   );
   error.cause = cause;
   return error;
