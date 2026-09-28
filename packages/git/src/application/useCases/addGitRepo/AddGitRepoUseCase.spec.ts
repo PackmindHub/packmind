@@ -575,6 +575,68 @@ describe('AddGitRepoUseCase', () => {
         GitRepoAlreadyExistsError,
       );
     });
+
+    describe('when the duplicate is held by a CLI-managed provider that cannot be adopted', () => {
+      const holdingProviderId = createGitProviderId(uuidv4());
+      let error: unknown;
+
+      beforeEach(async () => {
+        const authenticatedProvider = gitProviderFactory({
+          id: gitProviderId,
+          source: GitProviderVendors.gitlab,
+          organizationId,
+          url: 'https://gitlab.acme.io',
+          token: 'token',
+          authMethod: 'token',
+        });
+        const cliManagedProvider = gitProviderFactory({
+          id: holdingProviderId,
+          source: GitProviderVendors.gitlab,
+          organizationId,
+          url: 'https://gitlab.com',
+          token: null,
+          authMethod: 'token',
+        });
+
+        mockGitProviderService.findGitProviderById.mockImplementation(
+          async (id: GitProviderId) =>
+            id === holdingProviderId
+              ? cliManagedProvider
+              : authenticatedProvider,
+        );
+        mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          gitRepoFactory({
+            owner: 'testowner',
+            repo: 'testrepo',
+            branch: 'main',
+            providerId: holdingProviderId,
+            type: 'standard',
+          }),
+        );
+
+        error = await useCase
+          .execute({
+            userId,
+            organizationId,
+            gitProviderId,
+            owner: 'testowner',
+            repo: 'testrepo',
+            branch: 'main',
+          })
+          .catch((e) => e);
+      });
+
+      it('throws GitRepoAlreadyExistsError', () => {
+        expect(error).toBeInstanceOf(GitRepoAlreadyExistsError);
+      });
+
+      it('names the holding provider and flags it as CLI-managed', () => {
+        expect((error as GitRepoAlreadyExistsError).holder).toEqual({
+          gitProviderId: holdingProviderId,
+          cliManaged: true,
+        });
+      });
+    });
   });
 
   describe('allowTokenlessProvider flag', () => {

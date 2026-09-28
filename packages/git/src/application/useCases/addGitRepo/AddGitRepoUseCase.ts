@@ -11,6 +11,7 @@ import {
   IAddGitRepoUseCase,
   IDeploymentPort,
   MissingGitInputError,
+  providerHasAuth,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
@@ -111,7 +112,24 @@ export class AddGitRepoUseCase
         userId,
         existingRepoId: existingRepo.id,
       });
-      throw new GitRepoAlreadyExistsError(owner, repo, branch, organization.id);
+      const holdingProvider =
+        existingRepo.providerId === gitProvider.id
+          ? gitProvider
+          : await this.gitProviderService.findGitProviderById(
+              existingRepo.providerId,
+            );
+      throw new GitRepoAlreadyExistsError(
+        owner,
+        repo,
+        branch,
+        organization.id,
+        holdingProvider
+          ? {
+              gitProviderId: holdingProvider.id,
+              cliManaged: !providerHasAuth(holdingProvider),
+            }
+          : undefined,
+      );
     }
 
     // The type is explicit so this use case can never create a
