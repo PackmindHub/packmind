@@ -917,72 +917,6 @@ export function ContextPackagePane({
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
             {/*
-              Creating and adding belong to the Content tab, so they leave with
-              it. The header sits above both tabs and used to keep every verb on
-              screen whatever the reader was looking at: on Distribution, two of
-              the four controls wrote components, which is not the question that
-              tab asks. Distribute stays on both, because it acts on the package
-              and not on the list being shown.
-            */}
-            {/*
-              One door for filling this package, whatever the way.
-
-              It was two buttons, `Add components` and `Create`, which asked the
-              reader to sort their own intention before they could act on it. The
-              intention is one, "get this into the package", and the two doors
-              divided it by a fact about the space the reader does not hold. Is
-              there already a standard about naming conventions in here? That is
-              only knowable after opening the picker and searching it, which is
-              behind one of the two doors.
-
-              The labels made it worse by sitting on different axes, a noun
-              phrase beside a bare verb, so they read as two subjects rather than
-              two ways of doing one thing. And the line they drew was not even
-              the real one: two of the four creation methods bring in something
-              that already exists, from the samples library or from disk. What
-              actually separates the halves is narrower, whether the component is
-              already in this space.
-
-              They joined first as a split button, wide half picking and chevron
-              creating, which put the two ways under one label and still made the
-              reader choose between them before the drawer they lead to had said
-              anything. So the chevron goes inside: the drawer already holds the
-              list, and it now holds the four ways of making something new in its
-              footer. Up here that leaves one button with one label, on both the
-              full package and the empty one, and it no longer changes shape with
-              what the space happens to have left.
-
-              Creating sits in this drawer, opened from the pane, and not in the
-              rail below the list of packages: the rail creates containers, this
-              creates what goes in them, and side by side the two would read as
-              the same gesture.
-
-              Secondary. The control used to go primary while the package was
-              empty, on the grounds that filling it is the thing to do next, but
-              the body below is already saying that in a sentence with its own
-              primary button under it. Two loud controls asking for the same act.
-              So the invitation stays where the explanation is, and up here
-              Distribute owns the one primary the header has.
-            */}
-            {/*
-              And it leaves with the working copy too. Adding writes the
-              editable package, so offered under a bar that says 1.1.0 it would
-              read as adding to that release, which is not a thing a release
-              does.
-            */}
-            {tab === COMPONENTS_TAB && readingVersion === null && (
-              <PMButton
-                variant="secondary"
-                size="sm"
-                onClick={() => setAddingComponents(true)}
-              >
-                <PMIcon fontSize="xs">
-                  <LuPlus />
-                </PMIcon>
-                Add components
-              </PMButton>
-            )}
-            {/*
               One send control, whatever the state. Catching up where the
               package already is and reaching somewhere new are two questions,
               and the header used to ask both out loud, side by side: a
@@ -1150,42 +1084,125 @@ export function ContextPackagePane({
         )}
 
         <PMBox paddingTop={5}>
-          <PMTabsCompound.List>
-            <PMTabsCompound.Trigger value={COMPONENTS_TAB}>
-              Components
-              {/*
-                The count travels on the tab rather than under the package name:
-                it is what tells the size of the half you are not looking at.
+          {/*
+            The rule under the tabs is drawn by this row rather than by the
+            list, so it runs the full width of the pane with the tab strip on
+            one end and the control that serves it on the other.
+          */}
+          <PMHStack
+            justify="space-between"
+            align="center"
+            gap={4}
+            borderBottomWidth="1px"
+            borderColor="border.secondary"
+          >
+            <PMTabsCompound.List borderBottomWidth={0}>
+              <PMTabsCompound.Trigger value={COMPONENTS_TAB}>
+                Components
+                {/*
+                  The count travels on the tab rather than under the package name:
+                  it is what tells the size of the half you are not looking at.
 
-                Of the release while one is on screen, not of the package: the
-                list under it is what that version pins, and a count of today's
-                package over a list of eleven months ago would be read as the
-                list being wrong.
-              */}
-              <PMText
-                fontSize="xs"
-                color="faded"
-                fontVariantNumeric="tabular-nums"
+                  Of the release while one is on screen, not of the package: the
+                  list under it is what that version pins, and a count of today's
+                  package over a list of eleven months ago would be read as the
+                  list being wrong.
+                */}
+                <PMText
+                  fontSize="xs"
+                  color="faded"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {readingVersion && readRelease
+                    ? pinnedComponentCount(readRelease.release)
+                    : total}
+                </PMText>
+              </PMTabsCompound.Trigger>
+              <PMTabsCompound.Trigger value={DISTRIBUTION_TAB}>
+                Distribution
+                {attention && (
+                  <PMTooltip label={attention.tooltip} showArrow>
+                    <PMBadge
+                      colorPalette={
+                        attention.tone === 'error' ? 'red' : 'orange'
+                      }
+                      size="sm"
+                    >
+                      {attention.count}
+                    </PMBadge>
+                  </PMTooltip>
+                )}
+              </PMTabsCompound.Trigger>
+            </PMTabsCompound.List>
+            {/*
+              Adding answers the tab, so it rides the tab strip rather than the
+              header. It used to stand up there beside Distribute and the menu,
+              which hold whichever tab is open, and then leave on Distribution:
+              from that row it read as the toolbar rearranging itself under a
+              reader who had only changed tabs. The rule was right and its place
+              was not. Down here the rule is visible instead of surprising — the
+              control belongs to the row it sits on, and goes when the other
+              half of that row is what is being read.
+            */}
+            {/*
+              One door for filling this package, whatever the way.
+
+              It was two buttons, `Add components` and `Create`, which asked the
+              reader to sort their own intention before they could act on it. The
+              intention is one, "get this into the package", and the two doors
+              divided it by a fact about the space the reader does not hold. Is
+              there already a standard about naming conventions in here? That is
+              only knowable after opening the picker and searching it, which is
+              behind one of the two doors.
+
+              The labels made it worse by sitting on different axes, a noun
+              phrase beside a bare verb, so they read as two subjects rather than
+              two ways of doing one thing. And the line they drew was not even
+              the real one: two of the four creation methods bring in something
+              that already exists, from the samples library or from disk. What
+              actually separates the halves is narrower, whether the component is
+              already in this space.
+
+              They joined first as a split button, wide half picking and chevron
+              creating, which put the two ways under one label and still made the
+              reader choose between them before the drawer they lead to had said
+              anything. So the chevron goes inside: the drawer already holds the
+              list, and it now holds the four ways of making something new in its
+              footer. That leaves one button with one label, on both the full
+              package and the empty one, and it no longer changes shape with
+              what the space happens to have left.
+
+              Creating sits in this drawer, opened from the pane, and not in the
+              rail below the list of packages: the rail creates containers, this
+              creates what goes in them, and side by side the two would read as
+              the same gesture.
+
+              Secondary. The control used to go primary while the package was
+              empty, on the grounds that filling it is the thing to do next, but
+              the body below is already saying that in a sentence with its own
+              primary button under it. Two loud controls asking for the same act.
+              So the invitation stays where the explanation is, and the one
+              primary this surface has belongs to Distribute.
+            */}
+            {/*
+              And it leaves with the working copy too. Adding writes the
+              editable package, so offered under a bar that says 1.1.0 it would
+              read as adding to that release, which is not a thing a release
+              does.
+            */}
+            {tab === COMPONENTS_TAB && readingVersion === null && (
+              <PMButton
+                variant="secondary"
+                size="sm"
+                onClick={() => setAddingComponents(true)}
               >
-                {readingVersion && readRelease
-                  ? pinnedComponentCount(readRelease.release)
-                  : total}
-              </PMText>
-            </PMTabsCompound.Trigger>
-            <PMTabsCompound.Trigger value={DISTRIBUTION_TAB}>
-              Distribution
-              {attention && (
-                <PMTooltip label={attention.tooltip} showArrow>
-                  <PMBadge
-                    colorPalette={attention.tone === 'error' ? 'red' : 'orange'}
-                    size="sm"
-                  >
-                    {attention.count}
-                  </PMBadge>
-                </PMTooltip>
-              )}
-            </PMTabsCompound.Trigger>
-          </PMTabsCompound.List>
+                <PMIcon fontSize="xs">
+                  <LuPlus />
+                </PMIcon>
+                Add components
+              </PMButton>
+            )}
+          </PMHStack>
         </PMBox>
       </PMBox>
 

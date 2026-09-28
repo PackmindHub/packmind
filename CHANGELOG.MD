@@ -10,6 +10,8 @@
 
 ## Changed
 
+- `Add components` moved from the package header onto the tab strip beside Components and Distribution: it has always served that tab alone, and now sits on the row it answers
+
 ## Fixed
 
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
