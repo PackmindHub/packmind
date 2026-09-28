@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -49,8 +50,38 @@ const SKILL = {
   version: 1,
 } as Skill;
 
+/*
+ * The selection is the surface's, not the pane's, so the tests below hold it
+ * the way the surface does: above the pane, so it outlives the reader opening
+ * one of the rows.
+ */
+function Harness({ picked }: { picked: ReadonlySet<string> }) {
+  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(picked);
+
+  return (
+    <SpaceInventoryPane
+      packages={[]}
+      catalogue={{
+        standards: [STANDARD],
+        commands: [],
+        skills: [SKILL],
+      }}
+      coverage="all"
+      onCoverageChange={vi.fn()}
+      spaceId={spaceId}
+      organizationId={organizationId}
+      orgSlug="acme"
+      spaceSlug="backend"
+      onCreatePackage={vi.fn()}
+      selectedKeys={selectedKeys}
+      onSelectedKeysChange={setSelectedKeys}
+    />
+  );
+}
+
 async function renderInventory(
   deleteComponents = vi.fn().mockResolvedValue({ deleted: [], failed: [] }),
+  picked: ReadonlySet<string> = new Set(),
 ) {
   (useDeleteContextComponents as Mock).mockReturnValue({
     deleteComponents,
@@ -61,21 +92,7 @@ async function renderInventory(
     render(
       <UIProvider>
         <MemoryRouter>
-          <SpaceInventoryPane
-            packages={[]}
-            catalogue={{
-              standards: [STANDARD],
-              commands: [],
-              skills: [SKILL],
-            }}
-            coverage="all"
-            onCoverageChange={vi.fn()}
-            spaceId={spaceId}
-            organizationId={organizationId}
-            orgSlug="acme"
-            spaceSlug="backend"
-            onCreatePackage={vi.fn()}
-          />
+          <Harness picked={picked} />
         </MemoryRouter>
       </UIProvider>,
     );
@@ -221,6 +238,18 @@ describe('SpaceInventoryPane', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
       expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+    });
+  });
+  /*
+   * Picked before the reader opened one of the rows, and still picked on the
+   * way back: the pane is unmounted while a component is read, so the ticks
+   * only survive because the surface above it is what holds them.
+   */
+  describe('when the surface hands it a selection', () => {
+    it('shows what was picked', async () => {
+      await renderInventory(undefined, new Set(['standard:std-1']));
+
+      expect(screen.getByText('1 selected')).toBeVisible();
     });
   });
 });

@@ -364,6 +364,19 @@ export function inventoryHref(searchParams: URLSearchParams): string {
 }
 
 /**
+ * Whether the component the address names was opened from the inventory.
+ *
+ * The one reading of `ORIGIN_PARAM` on this surface, because three places ask
+ * the same question of it — where the back link goes, where closing the
+ * component lands, and whether the selection made in the inventory is still
+ * worth holding — and three readings are three chances to disagree about where
+ * the reader is.
+ */
+export function isOpenedFromInventory(searchParams: URLSearchParams): boolean {
+  return searchParams.get(ORIGIN_PARAM) === INVENTORY_VALUE;
+}
+
+/**
  * The list a component that is open should close onto: the package it is being
  * read in, or the inventory when that is where it was opened from.
  *
@@ -382,9 +395,7 @@ export function componentExitParams(
 ): URLSearchParams {
   return packageDetailParams(
     searchParams,
-    searchParams.get(ORIGIN_PARAM) === INVENTORY_VALUE
-      ? INVENTORY_VALUE
-      : packageId,
+    isOpenedFromInventory(searchParams) ? INVENTORY_VALUE : packageId,
   );
 }
 
@@ -405,10 +416,9 @@ export function componentBackLink(
   pkg: Readonly<{ id: PackageId; name: string }>,
 ): Readonly<{ label: string; href: string }> {
   return {
-    label:
-      searchParams.get(ORIGIN_PARAM) === INVENTORY_VALUE
-        ? ALL_COMPONENTS_LABEL
-        : pkg.name,
+    label: isOpenedFromInventory(searchParams)
+      ? ALL_COMPONENTS_LABEL
+      : pkg.name,
     href: `?${componentExitParams(searchParams, pkg.id).toString()}`,
   };
 }

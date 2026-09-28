@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { useSearchParams } from 'react-router';
 import { LuPackageX } from 'react-icons/lu';
 import {
@@ -67,6 +73,8 @@ export function SpaceInventoryPane({
   orgSlug,
   spaceSlug,
   onCreatePackage,
+  selectedKeys,
+  onSelectedKeysChange: setSelectedKeys,
 }: Readonly<{
   packages: readonly PackageResponse[];
   catalogue: SpaceCatalogue;
@@ -89,19 +97,31 @@ export function SpaceInventoryPane({
    * pane gives: it decides what happens to the package afterwards.
    */
   onCreatePackage: () => void;
+  /**
+   * What is picked, by `componentSelectionKey`, and the way to change it.
+   *
+   * Held by the surface rather than here, unlike the package pane's own
+   * selection. That pane stays mounted while one of its components is read;
+   * this one does not. A row of this list names no package, so the surface
+   * answers it with the package that carries the component and swaps this pane
+   * out — which threw away every tick the reader had made, in the one list
+   * where they cannot be made again from memory.
+   *
+   * Still not in the address, for the reason it never was: a selection is a
+   * gesture in progress rather than a place. It is dropped by the surface when
+   * the reader leaves the inventory for somewhere that is not one of its rows.
+   */
+  selectedKeys: ReadonlySet<string>;
+  onSelectedKeysChange: Dispatch<SetStateAction<ReadonlySet<string>>>;
 }>) {
   const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
     null,
   );
   /*
-   * What is picked and what is being placed, held for the same reasons the
-   * package pane holds them: by key, because the groups are rebuilt on every
-   * render of the surface, and not in the URL, because a selection is a gesture
-   * in progress rather than a place.
+   * What is being placed. By component rather than by key, unlike the selection
+   * above it: the drawer acts on the components themselves, and it has to
+   * outlive the rows it was opened from.
    */
-  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
   const [placing, setPlacing] = useState<readonly ContextComponent[] | null>(
     null,
   );
@@ -199,14 +219,17 @@ export function SpaceInventoryPane({
     [shownGroups, selectedKeys],
   );
 
-  const toggleSelect = useCallback((component: ContextComponent) => {
-    setSelectedKeys((previous) => {
-      const next = new Set(previous);
-      const key = componentSelectionKey(component);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
-  }, []);
+  const toggleSelect = useCallback(
+    (component: ContextComponent) => {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        const key = componentSelectionKey(component);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      });
+    },
+    [setSelectedKeys],
+  );
 
   /* One update for a whole run, for the reason the package pane's copy is. */
   const selectMany = useCallback(
@@ -221,10 +244,13 @@ export function SpaceInventoryPane({
         return next;
       });
     },
-    [],
+    [setSelectedKeys],
   );
 
-  const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+  const clearSelection = useCallback(
+    () => setSelectedKeys(new Set()),
+    [setSelectedKeys],
+  );
 
   /*
    * Taking components out of the space, which is the one gesture this list can

@@ -21,6 +21,7 @@ import {
   inventoryHref,
   componentBackLink,
   componentExitParams,
+  isOpenedFromInventory,
   ORIGIN_PARAM,
   INVENTORY_VALUE,
   selectContextPackage,
@@ -207,6 +208,30 @@ describe('packageDetailParams and the origin', () => {
         ),
       ),
     ).toBe(`?package=${INVENTORY_VALUE}`);
+  });
+});
+
+describe('isOpenedFromInventory', () => {
+  it('is false for a component read inside a package', () => {
+    expect(
+      isOpenedFromInventory(
+        new URLSearchParams('package=pkg-1&component=command-1'),
+      ),
+    ).toBe(false);
+  });
+
+  /*
+   * What the surface reads to know whether the selection made in the inventory
+   * is still worth holding: the reader is inside one of its rows, not gone.
+   */
+  it('is true for a component opened from the inventory', () => {
+    expect(
+      isOpenedFromInventory(
+        new URLSearchParams(
+          `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+        ),
+      ),
+    ).toBe(true);
   });
 });
 
