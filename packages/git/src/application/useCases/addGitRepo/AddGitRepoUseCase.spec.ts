@@ -49,7 +49,7 @@ describe('AddGitRepoUseCase', () => {
     mockGitRepoService = {
       findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
       addGitRepo: jest.fn(),
-      reassignProvider: jest.fn(),
+      adoptGitRepo: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
     mockDeploymentPort = {
@@ -703,7 +703,7 @@ describe('AddGitRepoUseCase', () => {
       mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
         existingRepo,
       );
-      mockGitRepoService.reassignProvider.mockResolvedValue(adoptedRepo);
+      mockGitRepoService.adoptGitRepo.mockResolvedValue(adoptedRepo);
     });
 
     describe('when the authenticated provider targets the same host', () => {
@@ -723,9 +723,10 @@ describe('AddGitRepoUseCase', () => {
       });
 
       it('moves the existing repository under the authenticated provider', () => {
-        expect(mockGitRepoService.reassignProvider).toHaveBeenCalledWith(
-          existingRepoId,
+        expect(mockGitRepoService.adoptGitRepo).toHaveBeenCalledWith(
+          existingRepo,
           gitProviderId,
+          organizationId,
         );
       });
 
@@ -758,9 +759,10 @@ describe('AddGitRepoUseCase', () => {
       });
 
       it('adopts the repository recorded for github.com', () => {
-        expect(mockGitRepoService.reassignProvider).toHaveBeenCalledWith(
-          existingRepoId,
+        expect(mockGitRepoService.adoptGitRepo).toHaveBeenCalledWith(
+          existingRepo,
           gitProviderId,
+          organizationId,
         );
       });
     });
@@ -806,7 +808,7 @@ describe('AddGitRepoUseCase', () => {
       });
 
       it('does not move the repository', () => {
-        expect(mockGitRepoService.reassignProvider).not.toHaveBeenCalled();
+        expect(mockGitRepoService.adoptGitRepo).not.toHaveBeenCalled();
       });
     });
   });

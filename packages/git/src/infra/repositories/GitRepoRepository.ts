@@ -7,7 +7,7 @@ import {
 } from '../../domain/repositories/IGitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
@@ -297,11 +297,7 @@ export class GitRepoRepository
         throw new GitRepoNotFoundError(gitRepoId);
       }
 
-      const updated = await this.repository.save({
-        ...gitRepo,
-        providerId,
-        trackingRemovedAt: null,
-      });
+      const updated = await this.repository.save({ ...gitRepo, providerId });
 
       this.logger.info('Git repo provider reassigned', {
         gitRepoId,
@@ -312,6 +308,57 @@ export class GitRepoRepository
       this.logger.error('Failed to reassign git repo provider', {
         gitRepoId,
         providerId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async clearTrackingRemoved(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    this.logger.info('Clearing tracking removal on every branch', {
+      owner,
+      repo,
+      organizationId,
+    });
+
+    try {
+      const stamped = await this.repository
+        .createQueryBuilder('gitRepo')
+        .innerJoin(
+          GitProviderSchema.options.name,
+          'provider',
+          'gitRepo.providerId = provider.id',
+        )
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
+        .andWhere('provider.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('gitRepo.trackingRemovedAt IS NOT NULL')
+        .getMany();
+
+      if (stamped.length > 0) {
+        await this.repository.update(
+          { id: In(stamped.map((gitRepo) => gitRepo.id)) },
+          { trackingRemovedAt: null },
+        );
+      }
+
+      this.logger.info('Tracking removal cleared', {
+        owner,
+        repo,
+        organizationId,
+        clearedCount: stamped.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to clear tracking removal', {
+        owner,
+        repo,
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

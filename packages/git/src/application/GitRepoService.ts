@@ -107,11 +107,21 @@ export class GitRepoService {
     return this.gitRepoRepository.markTrackingRemoved(gitRepoId);
   }
 
-  async reassignProvider(
-    gitRepoId: GitRepoId,
+  /**
+   * Adding a repository from the app says it is to be governed, so a tracking
+   * removal recorded on any of its branches no longer hides it.
+   */
+  async adoptGitRepo(
+    gitRepo: GitRepo,
     providerId: GitProviderId,
+    organizationId: OrganizationId,
   ): Promise<GitRepo> {
-    return this.gitRepoRepository.reassignProvider(gitRepoId, providerId);
+    await this.gitRepoRepository.clearTrackingRemoved(
+      gitRepo.owner,
+      gitRepo.repo,
+      organizationId,
+    );
+    return this.gitRepoRepository.reassignProvider(gitRepo.id, providerId);
   }
 
   /**

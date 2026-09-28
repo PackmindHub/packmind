@@ -77,12 +77,16 @@ describe('CLI-managed repository adoption integration', () => {
 
   afterAll(() => fixture.destroy());
 
-  function recordFromCli(owner = OWNER, repo = REPO): Promise<GitRepo> {
+  function recordFromCli(
+    owner = OWNER,
+    repo = REPO,
+    branch = BRANCH,
+  ): Promise<GitRepo> {
     return testApp.gitHexa.getAdapter().findOrCreateGitRepo({
       ...admin.packmindCommand(),
       owner,
       repo,
-      branch: BRANCH,
+      branch,
       providerVendor: 'github',
       gitRemoteUrl: GIT_REMOTE_URL,
     });
@@ -212,6 +216,37 @@ describe('CLI-managed repository adoption integration', () => {
       expect(
         (await displayedHistory()).map((entry) => entry.target.gitRepo?.id),
       ).toEqual([cliRepo.id]);
+    });
+  });
+
+  describe('when tracking was removed on another branch of the repository', () => {
+    let adoptedRepo: GitRepo;
+
+    beforeEach(async () => {
+      const mainRepo = await testApp.gitHexa.getAdapter().setTrackedRepository({
+        ...admin.packmindCommand(),
+        owner: OWNER,
+        repo: REPO,
+        branch: 'main',
+        origin: 'track',
+        providerVendor: 'github',
+        gitRemoteUrl: GIT_REMOTE_URL,
+      });
+      await distributeTo(mainRepo);
+      await testApp.gitHexa.getAdapter().removeTrackedRepository({
+        ...admin.packmindCommand(),
+        owner: OWNER,
+        repo: REPO,
+      });
+
+      await distributeTo(await recordFromCli(OWNER, REPO, BRANCH));
+      adoptedRepo = await addFromApp(await connectAuthenticatedProvider());
+    });
+
+    it('shows the adopted branch history', async () => {
+      expect(
+        (await displayedHistory()).map((entry) => entry.target.gitRepo?.id),
+      ).toContain(adoptedRepo.id);
     });
   });
 });

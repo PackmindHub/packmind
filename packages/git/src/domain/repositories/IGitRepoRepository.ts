@@ -61,11 +61,19 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
   markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo>;
   /**
    * Moves a repository under another provider while keeping its id, so its
-   * targets and distribution history follow it. Clears the removal stamp: an
-   * adopted repository is one someone chose to govern again.
+   * targets and distribution history follow it.
    */
   reassignProvider(
     gitRepoId: GitRepoId,
     providerId: GitProviderId,
   ): Promise<GitRepo>;
+  /**
+   * Clears the removal stamp on every branch of a repository: a stamp on any
+   * one branch hides them all from governance views.
+   */
+  clearTrackingRemoved(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+  ): Promise<void>;
 }

@@ -537,18 +537,6 @@ describe('GitRepoRepository', () => {
       });
     });
 
-    describe('when the repository had its tracking removed', () => {
-      beforeEach(async () => {
-        await gitRepoRepository.markTrackingRemoved(gitRepo.id);
-        await gitRepoRepository.reassignProvider(gitRepo.id, otherProvider.id);
-        reloaded = await gitRepoRepository.findById(gitRepo.id);
-      });
-
-      it('clears the removal stamp', () => {
-        expect(reloaded?.trackingRemovedAt).toBeNull();
-      });
-    });
-
     describe('when the repository does not exist', () => {
       it('throws GitRepoNotFoundError', async () => {
         await expect(
@@ -558,6 +546,67 @@ describe('GitRepoRepository', () => {
           ),
         ).rejects.toThrow(GitRepoNotFoundError);
       });
+    });
+  });
+
+  describe('clearTrackingRemoved', () => {
+    let removedMain: GitRepo;
+    let removedDev: GitRepo;
+    let otherRepo: GitRepo;
+
+    beforeEach(async () => {
+      removedMain = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'Optimetriks',
+          repo: 'smala-native',
+          branch: 'main',
+        }),
+      );
+      removedDev = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'optimetriks',
+          repo: 'smala-native',
+          branch: 'dev',
+        }),
+      );
+      otherRepo = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'optimetriks',
+          repo: 'other-repo',
+          branch: 'main',
+        }),
+      );
+      await gitRepoRepository.markTrackingRemoved(removedMain.id);
+      await gitRepoRepository.markTrackingRemoved(removedDev.id);
+      await gitRepoRepository.markTrackingRemoved(otherRepo.id);
+
+      await gitRepoRepository.clearTrackingRemoved(
+        'optimetriks',
+        'smala-native',
+        testOrganization.id,
+      );
+    });
+
+    it('clears the stamp on every branch of the repository', async () => {
+      const reloaded = await Promise.all(
+        [removedMain, removedDev].map((gitRepo) =>
+          gitRepoRepository.findById(gitRepo.id),
+        ),
+      );
+
+      expect(reloaded.map((gitRepo) => gitRepo?.trackingRemovedAt)).toEqual([
+        null,
+        null,
+      ]);
+    });
+
+    it('leaves other repositories stamped', async () => {
+      const reloaded = await gitRepoRepository.findById(otherRepo.id);
+
+      expect(reloaded?.trackingRemovedAt).toEqual(expect.any(Date));
     });
   });
 });

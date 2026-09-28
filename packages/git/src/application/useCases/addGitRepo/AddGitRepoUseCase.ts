@@ -158,9 +158,10 @@ export class AddGitRepoUseCase
           fromGitProviderId: holdingProvider.id,
           toGitProviderId: gitProvider.id,
         });
-        return this.gitRepoService.reassignProvider(
-          existingRepo.id,
+        return this.gitRepoService.adoptGitRepo(
+          existingRepo,
           gitProvider.id,
+          organization.id,
         );
       }
 
