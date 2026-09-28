@@ -12,6 +12,14 @@ export type PublishArtifactsCommand = PackmindCommand & {
   skillVersionIds?: SkillVersionId[];
   targetIds: TargetId[];
   packagesSlugs: string[];
+  /**
+   * What each slug in `packagesSlugs` pins, keyed by that same slug: an exact
+   * `X.Y.Z` for a release, `*` for the live package.
+   *
+   * A slug with no entry is written as `*`, which is truthful — a distribution
+   * that named no version pushed the live package.
+   */
+  packageVersions?: Record<string, string>;
   packageIds: PackageId[];
   artifactSpaceIds?: Record<string, string>;
   artifactPackageIds?: Record<string, string[]>;

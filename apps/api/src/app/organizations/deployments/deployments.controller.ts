@@ -343,7 +343,12 @@ export class DeploymentsController {
   async publishPackages(
     @Param('orgId') organizationId: OrganizationId,
     @Body()
-    body: { targetIds: TargetId[]; packageIds: PackageId[] },
+    body: {
+      targetIds: TargetId[];
+      packageIds: PackageId[];
+      /** Which version of each package to send, keyed by package id. */
+      packageVersions?: Record<string, string>;
+    },
     @Req() request: AuthenticatedRequest,
   ): Promise<PackagesDeployment[]> {
     this.logger.info(
@@ -360,6 +365,7 @@ export class DeploymentsController {
       organizationId,
       targetIds: body.targetIds,
       packageIds: body.packageIds,
+      packageVersions: body.packageVersions,
     };
 
     const deployments = await this.deploymentsService.publishPackages(command);

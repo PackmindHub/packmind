@@ -15,9 +15,16 @@ import {
   createPackageId,
   createUserId,
 } from '@packmind/types';
+import { ArtefactAlreadyInAnotherPackageError } from '../../../domain/errors/ArtefactAlreadyInAnotherPackageError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { SpaceNotAccessibleError } from '../../../domain/errors/SpaceNotAccessibleError';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
+import {
+  ArtefactsBeingPlaced,
+  findPlacementConflicts,
+  placementKey,
+} from '../../utils/findPlacementConflicts';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 
@@ -37,6 +44,7 @@ export class CreatePackageUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly spaceContentNotifier: SpaceContentNotifier,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
@@ -93,6 +101,8 @@ export class CreatePackageUseCase
     }
     this.logger.info('Resolved unique slug', { slug: packageSlug });
 
+    const artefacts: ArtefactsBeingPlaced = new Map();
+
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
@@ -105,6 +115,10 @@ export class CreatePackageUseCase
         if (!recipe || recipe.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('command', recipeIds[i], spaceId);
         }
+        artefacts.set(placementKey('command', recipe.id), {
+          type: 'command',
+          name: recipe.name,
+        });
       }
     }
 
@@ -124,6 +138,10 @@ export class CreatePackageUseCase
             spaceId,
           );
         }
+        artefacts.set(placementKey('standard', standard.id), {
+          type: 'standard',
+          name: standard.name,
+        });
       }
     }
 
@@ -137,7 +155,30 @@ export class CreatePackageUseCase
         if (!skill || skill.spaceId !== spaceId) {
           throw new ArtefactNotInSpaceError('skill', skillIds[i], spaceId);
         }
+        artefacts.set(placementKey('skill', skill.id), {
+          type: 'skill',
+          name: skill.name,
+        });
       }
+    }
+
+    /*
+     * The same rule the add path enforces, on the other way of putting a
+     * component into a package.
+     *
+     * The form already greys out what another package holds, and greys it out
+     * against a list it fetched once — so two forms opened before a component
+     * was placed both offer it, which is the add drawer's bug wearing a
+     * different hat. Read here it is asked of the state being written to.
+     *
+     * `existingPackages` is the list already loaded above to make the slug
+     * unique, so the rule costs nothing to check: no package exists yet to
+     * exclude, which is the only way this differs from the add path.
+     */
+    const conflicts = findPlacementConflicts(existingPackages, artefacts);
+
+    if (conflicts.length > 0) {
+      throw new ArtefactAlreadyInAnotherPackageError(conflicts, name);
     }
 
     const savedPackage = await this.services.getPackageService().createPackage(
@@ -152,6 +193,11 @@ export class CreatePackageUseCase
       recipeIds,
       standardIds,
       skillIds,
+    );
+
+    await this.spaceContentNotifier.spaceContentChanged(
+      command.organizationId,
+      spaceId,
     );
 
     this.logger.info('Package created successfully', {

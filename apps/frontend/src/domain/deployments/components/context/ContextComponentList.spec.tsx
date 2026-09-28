@@ -339,4 +339,102 @@ describe('ContextComponentList', () => {
       expect(screen.getByText('How we name things')).toBeVisible();
     });
   });
+
+  describe('the row menu', () => {
+    async function renderRow(
+      handlers: Partial<
+        Pick<
+          Parameters<typeof ContextComponentList>[0],
+          'onMove' | 'onRemove' | 'onDelete'
+        >
+      >,
+    ) {
+      (useGetGroupedChangeProposalsQuery as Mock).mockReturnValue({
+        data: undefined,
+      });
+
+      await act(async () => {
+        render(
+          <UIProvider>
+            <MemoryRouter>
+              <ContextComponentList
+                sections={[
+                  {
+                    key: 'standard',
+                    label: 'Standards',
+                    count: 1,
+                    entries: [{ component: component('std-1') }],
+                  },
+                ]}
+                {...handlers}
+              />
+            </MemoryRouter>
+          </UIProvider>,
+        );
+      });
+    }
+
+    const openMenu = () =>
+      userEvent.click(
+        screen.getByRole('button', { name: 'More actions for Standard std-1' }),
+      );
+
+    describe('when the caller can delete', () => {
+      it('offers it on the row', async () => {
+        const onDelete = vi.fn();
+        await renderRow({ onDelete });
+
+        await openMenu();
+        await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+        expect(onDelete).toHaveBeenCalledWith(
+          expect.objectContaining({ key: 'std-1' }),
+        );
+      });
+
+      /*
+        The inventory reaches this list with nothing else to offer: its rows
+        belong to no package, so there is neither a move nor a removal for them.
+        Before this, that left them with no menu at all.
+      */
+      it('opens a menu even when it is the only gesture', async () => {
+        await renderRow({ onDelete: vi.fn() });
+
+        expect(
+          screen.getByRole('button', {
+            name: 'More actions for Standard std-1',
+          }),
+        ).toBeVisible();
+      });
+
+      it('puts it last, after the gestures that keep the component', async () => {
+        await renderRow({
+          onMove: vi.fn(),
+          onRemove: vi.fn(),
+          onDelete: vi.fn(),
+        });
+
+        await openMenu();
+        const items = screen
+          .getAllByRole('menuitem')
+          .map((item) => item.textContent);
+
+        expect(items).toEqual([
+          'Move to another package',
+          'Remove from package',
+          'Delete',
+        ]);
+      });
+    });
+
+    describe('when the caller cannot delete', () => {
+      it('says nothing about it', async () => {
+        await renderRow({ onMove: vi.fn() });
+
+        await openMenu();
+
+        expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBeNull();
+      });
+    });
+  });
 });

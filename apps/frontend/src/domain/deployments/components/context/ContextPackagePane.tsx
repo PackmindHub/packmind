@@ -44,6 +44,7 @@ import type {
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
+  componentSetKind,
   componentSetSubject,
   type ContextComponent,
   type ContextComponentType,
@@ -59,12 +60,13 @@ import {
   DISTRIBUTION_TAB,
   RELEASE_PARAM,
   TAB_PARAM,
+  componentBackLink,
   componentEditHref,
   componentEntryHref,
+  componentExitParams,
   componentRuleHref,
   selectRuleTab,
   isDefaultTab,
-  packageDetailHref,
   packageDetailParams,
   selectTab,
   withPaneDetailHref,
@@ -102,7 +104,7 @@ import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { usePackageDrift } from './usePackageDrift';
-import { useDeleteContextComponent } from './useDeleteContextComponent';
+import { useDeleteContextComponents } from './useDeleteContextComponents';
 import {
   useDeletePackagesBatchMutation,
   useGetPackageReleaseQuery,
@@ -250,14 +252,18 @@ export function ContextPackagePane({
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*
-   * Which component is being deleted, rather than a boolean, for the reason the
-   * move dialog holds a list: the confirmation has to outlive the row and the
-   * detail it was opened from, because deleting rebuilds both.
+   * What is being deleted, rather than a boolean, for the reason the move dialog
+   * holds a list: the confirmation has to outlive the row and the detail it was
+   * opened from, because deleting rebuilds both. A list rather than one
+   * component, for the reason `removing` is one: a row and a whole selection ask
+   * the same question, and two states holding it would be two dialogs promising
+   * different things.
    */
-  const [deletingComponent, setDeletingComponent] =
-    useState<ContextComponent | null>(null);
-  const { deleteComponent, isDeleting: isDeletingComponent } =
-    useDeleteContextComponent({ spaceId, organizationId });
+  const [deletingComponents, setDeletingComponents] = useState<
+    readonly ContextComponent[] | null
+  >(null);
+  const { deleteComponents, isDeleting: isDeletingComponent } =
+    useDeleteContextComponents({ spaceId, organizationId });
   /*
    * What is being taken out of this package, held as a list for the reason the
    * move is: the confirmation has to outlive the row and the detail it was
@@ -445,27 +451,63 @@ export function ContextPackagePane({
   };
 
   /*
-   * Deleting the component the pane is showing, which means the pane has to
-   * stop showing it: the address is what says a component is open, so it is the
-   * address that closes. The package stays selected, so what comes back is the
-   * list the component was read from.
+   * Deleting a picked set of components, or the one the pane is showing.
+   *
+   * A mixed selection is one request per type, so the answer is not a yes or a
+   * no: the hook reports both halves, and this says something true about each.
+   * The dialog closes only when nothing is left to try again on, which is the
+   * rule the removal confirmation follows by rethrowing.
+   *
+   * What went is dropped from the selection rather than the whole of it, for
+   * the reason `removeFromPackage` gives: this is also asked of a single row,
+   * and dropping three unrelated ticks because a fourth row left would undo
+   * work the user did not ask to undo.
    */
-  const deleteThisComponent = async (component: ContextComponent) => {
-    try {
-      await deleteComponent(component);
+  const deleteTheseComponents = async (
+    components: readonly ContextComponent[],
+  ) => {
+    const { deleted, failed } = await deleteComponents(components);
+
+    if (deleted.length > 0) {
       pmToaster.create({
         type: 'success',
-        title: `Deleted ${component.name}`,
-        description: 'It is gone from the space, not only from this package.',
+        title: `Deleted ${componentSetSubject(deleted)}`,
+        description: 'Gone from the space, not only from this package.',
       });
-      setDeletingComponent(null);
-      setSearchParams(packageDetailParams(searchParams, pkg.id));
-    } catch {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        for (const component of deleted) {
+          next.delete(componentSelectionKey(component));
+        }
+        return next;
+      });
+    }
+
+    if (failed.length > 0) {
       pmToaster.create({
         type: 'error',
-        title: `Couldn't delete ${component.name}`,
+        title: `Couldn't delete ${componentSetSubject(failed)}`,
         description: 'Try again, or check your space access.',
       });
+      setDeletingComponents(failed);
+      return;
+    }
+
+    setDeletingComponents(null);
+    /*
+     * The component on screen has stopped existing, so the address that says it
+     * is open has to close: the package stays selected, so what comes back is
+     * the list it was read from. Only when it is one of the deleted, since a
+     * selection can be deleted from the list with nothing open at all.
+     */
+    if (
+      detail &&
+      deleted.some(
+        (component) =>
+          componentSelectionKey(component) === componentSelectionKey(detail),
+      )
+    ) {
+      setSearchParams(componentExitParams(searchParams, pkg.id));
     }
   };
 
@@ -528,7 +570,7 @@ export function ContextPackagePane({
           componentSelectionKey(component) === componentSelectionKey(detail),
       )
     ) {
-      setSearchParams(packageDetailParams(searchParams, pkg.id));
+      setSearchParams(componentExitParams(searchParams, pkg.id));
     }
   };
 
@@ -695,6 +737,14 @@ export function ContextPackagePane({
         size="sm"
         variant={headerActions.distributeVariant}
         selectedPackages={[pkg]}
+        /*
+         * What the bar above says is on screen. Distributing from under a bar
+         * that reads 0.2.0 sends 0.2.0, and the repo's packmind.json records
+         * it; reading the package as it stands sends that, under `*`. The two
+         * cannot disagree, because it is one reading and this control is
+         * inside it.
+         */
+        packageVersions={{ [pkg.id]: readingVersion ?? '*' }}
         cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
       />
     );
@@ -751,28 +801,39 @@ export function ContextPackagePane({
    * existing the moment it is confirmed: a dialog living inside the detail
    * would be unmounted by its own success.
    */
-  const deleteComponentDialog = deletingComponent && (
-    <PMAlertDialog
-      title={`Delete ${COMPONENT_TYPE_LABELS_SINGULAR[
-        deletingComponent.type
-      ].toLowerCase()}`}
-      message={`Delete “${deletingComponent.name}”? It leaves the space, not just this package, and every package that holds it. This cannot be undone.`}
-      confirmText="Delete"
-      cancelText="Cancel"
-      onConfirm={() => void deleteThisComponent(deletingComponent)}
-      open
-      onOpenChange={({ open }) => {
-        if (!open) setDeletingComponent(null);
-      }}
-      isLoading={isDeletingComponent}
-    />
-  );
+  const deleteComponentDialog = deletingComponents &&
+    deletingComponents.length > 0 && (
+      <PMAlertDialog
+        title={`Delete ${componentSetKind(deletingComponents)}`}
+        message={`Delete ${componentSetSubject(deletingComponents)}? ${
+          deletingComponents.length === 1 ? 'It leaves' : 'They leave'
+        } the space, not just this package, and every package that holds ${
+          deletingComponents.length === 1 ? 'it' : 'them'
+        }. This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => void deleteTheseComponents(deletingComponents)}
+        open
+        onOpenChange={({ open }) => {
+          if (!open) setDeletingComponents(null);
+        }}
+        isLoading={isDeletingComponent}
+      />
+    );
 
   /*
    * The third thing this pane can show, beside its two tabs: one of the
    * components, in place of the tab strip rather than under it.
    */
   if (detail) {
+    /*
+     * Where closing it lands, which is not always this package: a component
+     * opened from the inventory is read inside whichever package carries it,
+     * and sending the reader there would cost them the list they were working
+     * in and everything they had picked in it.
+     */
+    const backLink = componentBackLink(searchParams, pkg);
+
     return (
       <>
         {/*
@@ -809,8 +870,8 @@ export function ContextPackagePane({
         ) : (
           <ContextComponentDetail
             component={detail}
-            backLabel={pkg.name}
-            backHref={packageDetailHref(searchParams, pkg.id)}
+            backLabel={backLink.label}
+            backHref={backLink.href}
             ruleHref={(ruleId) => componentRuleHref(searchParams, ruleId)}
             editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
             tab={tab}
@@ -820,7 +881,7 @@ export function ContextPackagePane({
             moveLabel="Move"
             onMove={() => setMoving([detail])}
             onRemove={() => setRemoving([detail])}
-            onDelete={() => setDeletingComponent(detail)}
+            onDelete={() => setDeletingComponents([detail])}
           />
         )}
         {moveDrawer}
@@ -947,7 +1008,16 @@ export function ContextPackagePane({
               nothing to catch up, and a greyed control saying so is a sentence
               written as a button.
             */}
-            {headerActions.update ? (
+            {/*
+              The corrective half goes when a release is on screen. Drift is a
+              statement about the package as it stands — how far each
+              destination is behind the live components — so under a bar
+              reading 0.1.0 it counts something the reader is not looking at,
+              and the loudest control on the surface would push live content
+              out of a pane showing a frozen version. Distribute stays, and
+              sends what the bar says.
+            */}
+            {headerActions.update && readingVersion === null ? (
               <PMHStack gap={SPLIT_BUTTON_SEAM}>
                 <PMTooltip
                   label={headerActions.update.lockTooltip}
@@ -1262,6 +1332,21 @@ export function ContextPackagePane({
                     onAct: () => setRemoving(selection),
                   },
                 ]}
+                /*
+                  Not a third button. The two above decide which package holds
+                  these components; this one decides whether they exist, and at
+                  the same weight it would sit one stray click from the pointer
+                  coming off the list. The header of this pane puts its own
+                  deletion behind the same menu, for the same reason.
+                */
+                overflow={[
+                  {
+                    label: 'Delete',
+                    icon: COMPONENT_ACTION_ICONS.delete,
+                    destructive: true,
+                    onAct: () => setDeletingComponents(selection),
+                  },
+                ]}
                 onClear={clearSelection}
               />
             )}
@@ -1314,6 +1399,7 @@ export function ContextPackagePane({
                 }))}
                 onMove={(component) => setMoving([component])}
                 onRemove={(component) => setRemoving([component])}
+                onDelete={(component) => setDeletingComponents([component])}
                 selectedKeys={selectedKeys}
                 onToggleSelect={toggleSelect}
                 onSelectMany={selectMany}

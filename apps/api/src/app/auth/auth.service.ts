@@ -52,6 +52,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { ApiInternalError } from '../errors/ApiInternalError';
 
 export interface GetMeResponse {
   edition: PackmindEdition;
@@ -348,7 +349,11 @@ export class AuthService {
 
       // At this point, payload.organization must exist (checked above)
       if (!payload.organization) {
-        throw new Error('Organization not found in token after check');
+        throw new ApiInternalError(
+          'organization_not_found_in_token_after_check',
+          { userId: payload.user.userId },
+          'Organization not found in token after check',
+        );
       }
 
       // Store the non-null organization for TypeScript narrowing

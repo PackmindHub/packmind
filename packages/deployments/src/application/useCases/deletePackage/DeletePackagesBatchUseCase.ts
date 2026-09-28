@@ -13,6 +13,7 @@ import {
   IDeletePackagesBatchUseCase,
 } from '@packmind/types';
 import { PackageNotFoundError } from '../../../domain/errors/PackageNotFoundError';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 const origin = 'DeletePackagesBatchUseCase';
 
@@ -20,6 +21,7 @@ export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
   constructor(
     private readonly packageService: PackageService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly spaceContentNotifier: SpaceContentNotifier,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -67,6 +69,11 @@ export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
           packageIds,
           spaceId,
         }),
+      );
+
+      await this.spaceContentNotifier.spaceContentChanged(
+        organizationId,
+        spaceId,
       );
 
       this.logger.info('Packages deletion completed successfully', {

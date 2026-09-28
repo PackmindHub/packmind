@@ -204,6 +204,14 @@ describe('Package removal from target integration', () => {
         });
       packageToRemove = response1.package;
 
+      /*
+       * The shared command is put in the second package by updating it rather
+       * than by creating it with the command already inside: creating refuses
+       * an artefact another package holds, and what is under test here is a
+       * package that shares one. Updating is the path that still allows it,
+       * deliberately, so that a package holding a shared artefact stays
+       * editable rather than becoming frozen.
+       */
       const response2 = await testApp.deploymentsHexa
         .getAdapter()
         .createPackage({
@@ -212,9 +220,20 @@ describe('Package removal from target integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package to Keep',
           description: 'Package that will remain',
-          recipeIds: [sharedCommand.id],
+          recipeIds: [],
           standardIds: [standard1.id],
         });
+
+      await testApp.deploymentsHexa.getAdapter().updatePackage({
+        ...dataFactory.packmindCommand(),
+        packageId: response2.package.id,
+        spaceId: dataFactory.space.id,
+        name: response2.package.name,
+        description: response2.package.description ?? '',
+        recipeIds: [sharedCommand.id],
+        standardIds: [standard1.id],
+        skillsIds: [],
+      });
 
       await testApp.deploymentsHexa.getAdapter().publishPackages({
         ...dataFactory.packmindCommand(),

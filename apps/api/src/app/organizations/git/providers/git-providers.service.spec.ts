@@ -55,11 +55,9 @@ jest.mock('../../../shared/utils/edition', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { GithubAppSlugNotConfiguredError } from './errors/GithubAppSlugNotConfiguredError';
+import { GithubAppManifestConversionNetworkError } from './errors/GithubAppManifestConversionNetworkError';
 import { PackmindLogger } from '@packmind/logger';
 import { GitProvidersService } from './git-providers.service';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
@@ -241,7 +239,7 @@ describe('GitProvidersService', () => {
       });
 
       describe('when slug is missing', () => {
-        it('throws InternalServerErrorException', async () => {
+        it('throws GithubAppSlugNotConfiguredError', async () => {
           Configuration.getConfig.mockResolvedValue(null);
 
           await expect(
@@ -249,7 +247,7 @@ describe('GitProvidersService', () => {
               organizationId: orgId,
               userId,
             }),
-          ).rejects.toThrow(InternalServerErrorException);
+          ).rejects.toBeInstanceOf(GithubAppSlugNotConfiguredError);
         });
       });
     });
@@ -1578,6 +1576,9 @@ describe('GitProvidersService', () => {
     };
 
     const mockedAxios = axios as jest.Mocked<typeof axios>;
+    const actualAxios = jest.requireActual<typeof axios>('axios');
+    const ActualAxiosError = actualAxios.AxiosError;
+    const actualIsAxiosError = actualAxios.isAxiosError;
 
     beforeEach(() => {
       resolveGithubAppMode.mockResolvedValue('on-prem');
@@ -1668,6 +1669,73 @@ describe('GitProvidersService', () => {
             displayName: 'Production GitHub',
           }),
         );
+      });
+    });
+
+    describe('when GitHub answers the code conversion with an error', () => {
+      it('throws BadRequestException with the GitHub message', async () => {
+        const githubError = new ActualAxiosError(
+          'Request failed with status code 404',
+          'ERR_BAD_REQUEST',
+          undefined,
+          undefined,
+          {
+            status: 404,
+            statusText: 'Not Found',
+            data: { message: 'Not Found' },
+            headers: {},
+            config: {} as never,
+          },
+        );
+        mockedAxios.post = jest.fn().mockRejectedValue(githubError);
+        mockedAxios.isAxiosError =
+          actualIsAxiosError as unknown as typeof mockedAxios.isAxiosError;
+
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toThrow(new BadRequestException('Not Found'));
+      });
+    });
+
+    describe('when GitHub cannot be reached for the code conversion', () => {
+      beforeEach(() => {
+        mockedAxios.post = jest
+          .fn()
+          .mockRejectedValue(
+            new ActualAxiosError('timeout of 0ms exceeded', 'ECONNABORTED'),
+          );
+        mockedAxios.isAxiosError =
+          actualIsAxiosError as unknown as typeof mockedAxios.isAxiosError;
+      });
+
+      it('throws GithubAppManifestConversionNetworkError', async () => {
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toBeInstanceOf(GithubAppManifestConversionNetworkError);
+      });
+
+      it('types the failure as upstream_unavailable', async () => {
+        await expect(
+          service.completeGithubAppManifest({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          }),
+        ).rejects.toMatchObject({
+          kind: 'upstream_unavailable',
+          reason: 'github_app_manifest_conversion_network_error',
+        });
       });
     });
 

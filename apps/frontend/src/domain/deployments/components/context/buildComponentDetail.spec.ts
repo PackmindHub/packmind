@@ -19,6 +19,11 @@ import {
   COMPONENTS_TAB,
   findSpaceComponent,
   inventoryHref,
+  componentBackLink,
+  componentExitParams,
+  isOpenedFromInventory,
+  ORIGIN_PARAM,
+  INVENTORY_VALUE,
   selectContextPackage,
   DISTRIBUTION_TAB,
   HISTORY_TAB,
@@ -106,6 +111,20 @@ describe('componentDetailHref', () => {
       ),
     ).toBe('?package=pkg-1&component=command-1');
   });
+
+  describe('when a package is named', () => {
+    it('drops an origin the previous component was read with', () => {
+      expect(
+        componentDetailHref(
+          new URLSearchParams(
+            `component=command-0&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+          ),
+          PACKAGE,
+          'command-1',
+        ),
+      ).toBe('?component=command-1&package=pkg-1');
+    });
+  });
 });
 
 describe('packageDetailParams', () => {
@@ -160,6 +179,116 @@ describe('packageDetailParams', () => {
           PACKAGE,
         ).get('tab'),
       ).toBe(DISTRIBUTION_TAB);
+    });
+  });
+});
+
+describe('packageDetailParams and the origin', () => {
+  /*
+   * Closing a component lands on a list, and a list is never "somewhere a
+   * component was opened from": left in place the origin would outlive the
+   * reading it describes and send the next back link to the wrong list.
+   */
+  it('drops the origin the component was read with', () => {
+    expect(
+      packageDetailParams(
+        new URLSearchParams(
+          `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+        ),
+        PACKAGE,
+      ).has(ORIGIN_PARAM),
+    ).toBe(false);
+  });
+
+  it('drops it on the way back to the inventory too', () => {
+    expect(
+      inventoryHref(
+        new URLSearchParams(
+          `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+        ),
+      ),
+    ).toBe(`?package=${INVENTORY_VALUE}`);
+  });
+});
+
+describe('isOpenedFromInventory', () => {
+  it('is false for a component read inside a package', () => {
+    expect(
+      isOpenedFromInventory(
+        new URLSearchParams('package=pkg-1&component=command-1'),
+      ),
+    ).toBe(false);
+  });
+
+  /*
+   * What the surface reads to know whether the selection made in the inventory
+   * is still worth holding: the reader is inside one of its rows, not gone.
+   */
+  it('is true for a component opened from the inventory', () => {
+    expect(
+      isOpenedFromInventory(
+        new URLSearchParams(
+          `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+        ),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('componentExitParams', () => {
+  it('leaves the package that was being read open', () => {
+    expect(
+      componentExitParams(
+        new URLSearchParams('package=pkg-1&component=command-1'),
+        PACKAGE,
+      ).toString(),
+    ).toBe('package=pkg-1');
+  });
+
+  /*
+   * The package the surface resolved is not where this reader came from: the
+   * inventory names no package in its links, so closing the component has to
+   * put back the list that was on screen, ticks and all.
+   */
+  describe('when the component was opened from the inventory', () => {
+    it('goes back to the inventory rather than to the package holding it', () => {
+      expect(
+        componentExitParams(
+          new URLSearchParams(
+            `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+          ),
+          PACKAGE,
+        ).toString(),
+      ).toBe(`package=${INVENTORY_VALUE}`);
+    });
+  });
+});
+
+describe('componentBackLink', () => {
+  const PKG = { id: PACKAGE, name: 'Backend conventions' };
+
+  it('names the package the component is being read in', () => {
+    expect(
+      componentBackLink(
+        new URLSearchParams('package=pkg-1&component=command-1'),
+        PKG,
+      ),
+    ).toEqual({ label: 'Backend conventions', href: '?package=pkg-1' });
+  });
+
+  describe('when the component was opened from the inventory', () => {
+    it('names the list it was opened from', () => {
+      expect(
+        componentBackLink(
+          new URLSearchParams(
+            `component=command-1&${ORIGIN_PARAM}=${INVENTORY_VALUE}`,
+          ),
+          PKG,
+        ),
+      ).toEqual({
+        label: 'All components',
+        href: `?package=${INVENTORY_VALUE}`,
+      });
     });
   });
 });
@@ -750,14 +879,22 @@ const pkgOf = (
 });
 
 describe('componentDetailHref with no package', () => {
-  it('names the component and clears the package', () => {
+  /*
+   * And says where the component was opened from. The inventory is the one list
+   * whose rows name no package, so the surface answers this address with
+   * whatever package carries the component: the origin is the only thing left
+   * saying which list the reader was in.
+   */
+  it('names the component, clears the package and marks the inventory', () => {
     expect(
       componentDetailHref(
         new URLSearchParams('package=all&coverage=none'),
         null,
         'standard-1',
       ),
-    ).toBe('?coverage=none&component=standard-1');
+    ).toBe(
+      `?coverage=none&${ORIGIN_PARAM}=${INVENTORY_VALUE}&component=standard-1`,
+    );
   });
 
   /*
@@ -771,7 +908,9 @@ describe('componentDetailHref with no package', () => {
         null,
         'skill-1',
       ),
-    ).toBe('?nav=plugin-first&component=skill-1');
+    ).toBe(
+      `?nav=plugin-first&${ORIGIN_PARAM}=${INVENTORY_VALUE}&component=skill-1`,
+    );
   });
 });
 
@@ -783,7 +922,7 @@ describe('withPaneDetailHref with no package', () => {
         new URLSearchParams('package=all'),
         null,
       ).href,
-    ).toBe('?component=standard-1');
+    ).toBe(`?${ORIGIN_PARAM}=${INVENTORY_VALUE}&component=standard-1`);
   });
 });
 

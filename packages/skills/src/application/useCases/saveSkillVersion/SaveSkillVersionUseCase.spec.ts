@@ -1,4 +1,5 @@
 import {
+  PackmindEventEmitterService,
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
@@ -17,6 +18,7 @@ import {
   OrganizationId,
   SaveSkillVersionCommand,
   SkillId,
+  SkillUpdatedEvent,
   SkillVersionInput,
   SpaceId,
   UserId,
@@ -38,6 +40,7 @@ describe('SaveSkillVersionUseCase', () => {
   let skillFileService: jest.Mocked<SkillFileService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -51,6 +54,8 @@ describe('SaveSkillVersionUseCase', () => {
 
     spacesPort = mockInterface<ISpacesPort>();
 
+    eventEmitterService = createMockInstance(PackmindEventEmitterService);
+
     stubbedLogger = stubLogger();
 
     usecase = new SaveSkillVersionUseCase(
@@ -59,6 +64,7 @@ describe('SaveSkillVersionUseCase', () => {
       skillService,
       skillVersionService,
       skillFileService,
+      eventEmitterService,
       stubbedLogger,
     );
   });
@@ -140,6 +146,34 @@ describe('SaveSkillVersionUseCase', () => {
       );
       skillVersionService.addSkillVersion.mockResolvedValue(savedSkillVersion);
       skillService.updateSkill.mockResolvedValue(skill);
+    });
+
+    /*
+     * This is how an accepted playbook change reaches a skill. Saying nothing
+     * left every other reader on the old version, and left the packages holding
+     * the skill — now a version behind, and candidates for a fresh release —
+     * with nothing to notice.
+     */
+    it('announces the new version', async () => {
+      await usecase.execute(command);
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            skillId,
+            spaceId,
+            organizationId,
+          }),
+        }),
+      );
+    });
+
+    it('announces it as a skill update', async () => {
+      await usecase.execute(command);
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(SkillUpdatedEvent),
+      );
     });
 
     it('validates user exists', async () => {

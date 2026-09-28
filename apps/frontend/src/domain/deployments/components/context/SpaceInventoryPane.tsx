@@ -1,11 +1,27 @@
-import { useCallback, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { useSearchParams } from 'react-router';
 import { LuPackageX } from 'react-icons/lu';
-import { PMBox, PMHStack, PMHeading, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMHStack,
+  PMHeading,
+  PMText,
+  PMVStack,
+  pmToaster,
+} from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
+  componentSetKind,
+  componentSetSubject,
   type ContextComponent,
   type ContextComponentType,
   type SpaceCatalogue,
@@ -24,6 +40,7 @@ import { withPaneDetailHref } from './buildComponentDetail';
 import { ContextChip } from './ContextChip';
 import { SelectionBar } from '../SelectionBar';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
+import { useDeleteContextComponents } from './useDeleteContextComponents';
 
 /**
  * Every component of the space, whatever package carries it.
@@ -56,6 +73,8 @@ export function SpaceInventoryPane({
   orgSlug,
   spaceSlug,
   onCreatePackage,
+  selectedKeys,
+  onSelectedKeysChange: setSelectedKeys,
 }: Readonly<{
   packages: readonly PackageResponse[];
   catalogue: SpaceCatalogue;
@@ -78,22 +97,46 @@ export function SpaceInventoryPane({
    * pane gives: it decides what happens to the package afterwards.
    */
   onCreatePackage: () => void;
+  /**
+   * What is picked, by `componentSelectionKey`, and the way to change it.
+   *
+   * Held by the surface rather than here, unlike the package pane's own
+   * selection. That pane stays mounted while one of its components is read;
+   * this one does not. A row of this list names no package, so the surface
+   * answers it with the package that carries the component and swaps this pane
+   * out — which threw away every tick the reader had made, in the one list
+   * where they cannot be made again from memory.
+   *
+   * Still not in the address, for the reason it never was: a selection is a
+   * gesture in progress rather than a place. It is dropped by the surface when
+   * the reader leaves the inventory for somewhere that is not one of its rows.
+   */
+  selectedKeys: ReadonlySet<string>;
+  onSelectedKeysChange: Dispatch<SetStateAction<ReadonlySet<string>>>;
 }>) {
   const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
     null,
   );
   /*
-   * What is picked and what is being placed, held for the same reasons the
-   * package pane holds them: by key, because the groups are rebuilt on every
-   * render of the surface, and not in the URL, because a selection is a gesture
-   * in progress rather than a place.
+   * What is being placed. By component rather than by key, unlike the selection
+   * above it: the drawer acts on the components themselves, and it has to
+   * outlive the rows it was opened from.
    */
-  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
   const [placing, setPlacing] = useState<readonly ContextComponent[] | null>(
     null,
   );
+  /*
+   * What is being deleted, held as a list for the reason `placing` is: a row
+   * and a whole selection ask the same question, and the confirmation has to
+   * outlive the row it was opened from, because deleting rebuilds the list.
+   */
+  const [deleting, setDeleting] = useState<readonly ContextComponent[] | null>(
+    null,
+  );
+  const { deleteComponents, isDeleting } = useDeleteContextComponents({
+    spaceId,
+    organizationId,
+  });
 
   /*
    * Read for the rows' addresses only. Every row of this list points into the
@@ -176,14 +219,17 @@ export function SpaceInventoryPane({
     [shownGroups, selectedKeys],
   );
 
-  const toggleSelect = useCallback((component: ContextComponent) => {
-    setSelectedKeys((previous) => {
-      const next = new Set(previous);
-      const key = componentSelectionKey(component);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
-  }, []);
+  const toggleSelect = useCallback(
+    (component: ContextComponent) => {
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        const key = componentSelectionKey(component);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      });
+    },
+    [setSelectedKeys],
+  );
 
   /* One update for a whole run, for the reason the package pane's copy is. */
   const selectMany = useCallback(
@@ -198,10 +244,57 @@ export function SpaceInventoryPane({
         return next;
       });
     },
-    [],
+    [setSelectedKeys],
   );
 
-  const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+  const clearSelection = useCallback(
+    () => setSelectedKeys(new Set()),
+    [setSelectedKeys],
+  );
+
+  /*
+   * Taking components out of the space, which is the one gesture this list can
+   * offer that the package pane's cannot claim on its own: a component here may
+   * be in no package at all, and before this there was nowhere left to delete it
+   * from.
+   *
+   * Reads both halves of the outcome, for the reason the package pane does: a
+   * mixed selection is one request per type, so the dialog closes only when
+   * nothing is left to try again on. What went is dropped from the selection
+   * rather than the whole of it, since this is also asked of a single row.
+   */
+  const deleteTheseComponents = async (
+    components: readonly ContextComponent[],
+  ) => {
+    const { deleted, failed } = await deleteComponents(components);
+
+    if (deleted.length > 0) {
+      pmToaster.create({
+        type: 'success',
+        title: `Deleted ${componentSetSubject(deleted)}`,
+        description: 'Gone from the space.',
+      });
+      setSelectedKeys((previous) => {
+        const next = new Set(previous);
+        for (const component of deleted) {
+          next.delete(componentSelectionKey(component));
+        }
+        return next;
+      });
+    }
+
+    if (failed.length > 0) {
+      pmToaster.create({
+        type: 'error',
+        title: `Couldn't delete ${componentSetSubject(failed)}`,
+        description: 'Try again, or check your space access.',
+      });
+      setDeleting(failed);
+      return;
+    }
+
+    setDeleting(null);
+  };
 
   return (
     <PMBox padding={6} flex="1" minH={0} overflowY="auto">
@@ -330,6 +423,20 @@ export function SpaceInventoryPane({
                     onAct: () => setPlacing(selection),
                   },
                 ]}
+                /*
+                  Behind the menu rather than beside the one gesture on the bar,
+                  which is where the package pane puts it too: the bar would
+                  otherwise draw "give these a package" and "these stop existing"
+                  as a matched pair of buttons.
+                */
+                overflow={[
+                  {
+                    label: 'Delete',
+                    icon: COMPONENT_ACTION_ICONS.delete,
+                    destructive: true,
+                    onAct: () => setDeleting(selection),
+                  },
+                ]}
                 onClear={clearSelection}
               />
             )}
@@ -356,6 +463,13 @@ export function SpaceInventoryPane({
                 of this.
               */
               showPackages={!showingOrphans && packages.length > 0}
+              /*
+                The only gesture a row of this list has. Moving and removing both
+                need a package to leave, and a component read here is in any
+                number of them, the whole point of the list being that the number
+                can be zero.
+              */
+              onDelete={(component) => setDeleting([component])}
               selectedKeys={selectedKeys}
               onToggleSelect={toggleSelect}
               onSelectMany={selectMany}
@@ -363,6 +477,29 @@ export function SpaceInventoryPane({
           </PMVStack>
         )}
       </PMBox>
+
+      {/*
+        Naming no package, unlike the package pane's copy of this: a component
+        read here is in any number of them.
+      */}
+      {deleting && deleting.length > 0 && (
+        <PMAlertDialog
+          title={`Delete ${componentSetKind(deleting)}`}
+          message={`Delete ${componentSetSubject(deleting)}? ${
+            deleting.length === 1 ? 'It leaves' : 'They leave'
+          } the space, and every package that holds ${
+            deleting.length === 1 ? 'it' : 'them'
+          }. This cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={() => void deleteTheseComponents(deleting)}
+          open
+          onOpenChange={({ open }) => {
+            if (!open) setDeleting(null);
+          }}
+          isLoading={isDeleting}
+        />
+      )}
 
       {/*
         No source: what is picked here is being given a package rather than

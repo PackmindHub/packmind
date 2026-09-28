@@ -495,9 +495,12 @@ export const useDeployPackagesMutation = () => {
     mutationFn: async ({
       packageIds,
       targetIds,
+      packageVersions,
     }: {
       packageIds: PackageId[];
       targetIds: TargetId[];
+      /** Which version of each package to send, keyed by package id. */
+      packageVersions?: Record<string, string>;
     }) => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to publish packages');
@@ -507,6 +510,7 @@ export const useDeployPackagesMutation = () => {
         organizationId: organization.id,
         packageIds,
         targetIds,
+        packageVersions,
       });
     },
     onSuccess: async () => {

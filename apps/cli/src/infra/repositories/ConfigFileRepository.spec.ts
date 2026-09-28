@@ -631,6 +631,27 @@ describe('ConfigFileRepository', () => {
       });
     });
 
+    describe('when every package already carries that exact version', () => {
+      beforeEach(() => {
+        const existingConfig = JSON.stringify(
+          { packages: { backend: '*', ops: '0.1.0' } },
+          null,
+          2,
+        );
+        mockFs.readFile.mockResolvedValue(existingConfig);
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('leaves the file alone', async () => {
+        await repository.upsertPackagesInConfig('/project', {
+          backend: '*',
+          ops: '0.1.0',
+        });
+
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when config has malformed JSON', () => {
       beforeEach(() => {
         mockFs.readFile.mockResolvedValue('not valid json');

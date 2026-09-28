@@ -27,6 +27,7 @@ import {
   LuPackageMinus,
   LuPlus,
   LuTerminal,
+  LuTrash2,
   LuWandSparkles,
 } from 'react-icons/lu';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
@@ -66,6 +67,7 @@ export const COMPONENT_ACTION_ICONS = {
   move: <LuFolderInput />,
   remove: <LuPackageMinus />,
   add: <LuPlus />,
+  delete: <LuTrash2 />,
 } as const;
 
 /**
@@ -122,6 +124,7 @@ export function ContextComponentList({
   showPackages = false,
   onMove,
   onRemove,
+  onDelete,
   selectedKeys,
   onToggleSelect,
   onSelectMany,
@@ -140,6 +143,12 @@ export function ContextComponentList({
    * leave only in a list scoped to one.
    */
   onRemove?: (component: ContextComponent) => void;
+  /**
+   * Taking a component out of the space altogether, which is the one gesture
+   * here that does not come with `onMove`: a component belonging to no package
+   * can still be deleted, and the space-wide inventory is where it is read.
+   */
+  onDelete?: (component: ContextComponent) => void;
   /** Which rows are picked, by `componentSelectionKey`. */
   selectedKeys?: ReadonlySet<string>;
   /**
@@ -286,6 +295,7 @@ export function ContextComponentList({
                 }
                 onMove={onMove}
                 onRemove={onRemove}
+                onDelete={onDelete}
                 isSelected={
                   selectedKeys?.has(componentSelectionKey(entry.component)) ??
                   false
@@ -448,6 +458,7 @@ function ComponentRow({
   pendingReviews,
   onMove,
   onRemove,
+  onDelete,
   isSelected,
   isSelecting,
   onToggleSelect,
@@ -462,6 +473,7 @@ function ComponentRow({
   pendingReviews: number;
   onMove?: (component: ContextComponent) => void;
   onRemove?: (component: ContextComponent) => void;
+  onDelete?: (component: ContextComponent) => void;
   isSelected: boolean;
   /** A batch is being assembled, so every checkbox that can be shown is. */
   isSelecting: boolean;
@@ -580,7 +592,7 @@ function ComponentRow({
           </PMBox>
         </Link>
       </PMBox>
-      {(onMove || onRemove) && (
+      {(onMove || onRemove || onDelete) && (
         <PMBox display="flex" alignItems="center" paddingRight={2}>
           {/*
             A menu, where moving alone was a single icon. Two ghost icons a few
@@ -623,6 +635,25 @@ function ComponentRow({
                       <PMHStack gap={2}>
                         <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
                         Remove from package
+                      </PMHStack>
+                    </PMMenu.Item>
+                  )}
+                  {/*
+                    Last, and in the error colour, which is where and how the
+                    package header puts its own deletion: the two gestures above
+                    it decide which package holds this component, and this one
+                    decides whether it exists. A reader running down the menu
+                    should meet them in that order.
+                  */}
+                  {onDelete && (
+                    <PMMenu.Item
+                      value="delete-component"
+                      color="text.error"
+                      onClick={() => onDelete(component)}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>{COMPONENT_ACTION_ICONS.delete}</PMIcon>
+                        Delete
                       </PMHStack>
                     </PMMenu.Item>
                   )}

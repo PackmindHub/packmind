@@ -65,6 +65,36 @@ async function seedPackage(
   return pkg;
 }
 
+/**
+ * Puts an artefact into a package that another package already holds.
+ *
+ * Creating a package with it and adding it both refuse that now, which is the
+ * rule these commands exist to restore. Updating a package replaces its
+ * membership wholesale and deliberately does not check, so that a package
+ * holding a shared artefact stays editable rather than frozen — which makes it
+ * the one way left to arrange the state `packages move` and `packages remove`
+ * are asked about here, alongside data written before the rule existed.
+ */
+async function seedPackageSharing(
+  context: UserSignedUpContext,
+  name: string,
+  contents: { recipeIds?: CommandId[]; standardIds?: StandardId[] } = {},
+): Promise<Package> {
+  const pkg = await seedPackage(context, name);
+
+  const { package: updated } = await context.gateway.packages.update({
+    packageId: pkg.id,
+    spaceId: context.space.id,
+    name: pkg.name,
+    description: pkg.description ?? '',
+    recipeIds: contents.recipeIds ?? [],
+    standardIds: contents.standardIds ?? [],
+    skillsIds: [],
+  });
+
+  return updated;
+}
+
 function packageRef(context: UserSignedUpContext, pkg: Package): string {
   return `@${context.space.slug}/${pkg.slug}`;
 }
@@ -199,7 +229,7 @@ describeForVersion('> 0.35.1', 'packages membership commands', () => {
         target = await seedPackage(context, 'Target package', {
           recipeIds: [command.id],
         });
-        other = await seedPackage(context, 'Other package', {
+        other = await seedPackageSharing(context, 'Other package', {
           recipeIds: [command.id],
         });
 
@@ -241,9 +271,11 @@ describeForVersion('> 0.35.1', 'packages membership commands', () => {
         firstSource = await seedPackage(context, 'First source package', {
           recipeIds: [command.id],
         });
-        secondSource = await seedPackage(context, 'Second source package', {
-          recipeIds: [command.id],
-        });
+        secondSource = await seedPackageSharing(
+          context,
+          'Second source package',
+          { recipeIds: [command.id] },
+        );
         target = await seedPackage(context, 'Target package');
 
         result = await context.runCli(
@@ -519,7 +551,7 @@ describeForVersion('> 0.35.1', 'packages membership commands', () => {
         pkg = await seedPackage(context, 'Target package', {
           recipeIds: [command.id],
         });
-        otherPackage = await seedPackage(context, 'Other package', {
+        otherPackage = await seedPackageSharing(context, 'Other package', {
           recipeIds: [command.id],
         });
 

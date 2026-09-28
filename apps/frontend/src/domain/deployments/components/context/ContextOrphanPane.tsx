@@ -28,7 +28,7 @@ import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
-import { useDeleteContextComponent } from './useDeleteContextComponent';
+import { useDeleteContextComponents } from './useDeleteContextComponents';
 
 /**
  * One component of the space, read with no package around it.
@@ -92,7 +92,7 @@ export function ContextOrphanPane({
   const [adding, setAdding] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const { deleteComponent, isDeleting } = useDeleteContextComponent({
+  const { deleteComponents, isDeleting } = useDeleteContextComponents({
     spaceId,
     organizationId,
   });
@@ -121,22 +121,30 @@ export function ContextOrphanPane({
    * from and the only list it was in.
    */
   const deleteThisComponent = async () => {
-    try {
-      await deleteComponent(component);
-      pmToaster.create({
-        type: 'success',
-        title: `Deleted ${component.name}`,
-        description: 'It is gone from the space.',
-      });
-      setConfirmingDelete(false);
-      setSearchParams(inventoryHref(searchParams).slice(1));
-    } catch {
+    /*
+     * The one-component case of the gesture the lists offer on a selection.
+     * Read from the outcome rather than from a throw, because the hook the
+     * lists share reports per type: with one component there is one type, so
+     * `failed` is empty or is this component.
+     */
+    const { failed } = await deleteComponents([component]);
+
+    if (failed.length > 0) {
       pmToaster.create({
         type: 'error',
         title: `Couldn't delete ${component.name}`,
         description: 'Try again, or check your space access.',
       });
+      return;
     }
+
+    pmToaster.create({
+      type: 'success',
+      title: `Deleted ${component.name}`,
+      description: 'It is gone from the space.',
+    });
+    setConfirmingDelete(false);
+    setSearchParams(inventoryHref(searchParams).slice(1));
   };
 
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type].toLowerCase();

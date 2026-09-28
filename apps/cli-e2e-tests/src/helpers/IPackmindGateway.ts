@@ -17,6 +17,7 @@ import {
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   IUpdateCommandFromUIUseCase,
+  IUpdatePackageUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IUploadSkillUseCase,
   IListSkillsBySpaceUseCase,
@@ -49,6 +50,7 @@ export interface ICommandGateway {
 
 export interface IPackageGateway {
   create: Gateway<ICreatePackageUseCase>;
+  update: Gateway<IUpdatePackageUseCase>;
   list: Gateway<IListPackagesBySpaceUseCase>;
   addArtefacts: Gateway<IAddArtefactsToPackageUseCase>;
   createRelease: Gateway<ICreatePackageReleaseUseCase>;

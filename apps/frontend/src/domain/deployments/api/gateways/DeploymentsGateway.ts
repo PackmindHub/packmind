@@ -243,10 +243,11 @@ export class DeploymentsGatewayApi
     organizationId,
     targetIds,
     packageIds,
+    packageVersions,
   }: NewPackmindCommandBody<PublishPackagesCommand>) => {
     return this._api.post(
       `${this._endpoint}/${organizationId}/deployments/packages/publish`,
-      { targetIds, packageIds },
+      { targetIds, packageIds, packageVersions },
     );
   };
 

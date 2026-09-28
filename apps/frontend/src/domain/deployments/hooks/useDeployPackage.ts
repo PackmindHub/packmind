@@ -10,6 +10,14 @@ interface DeployParams {
 
 interface BatchDeployParams {
   packages: DeployParams[];
+  /**
+   * Which version of each package to send, keyed by package id: an exact
+   * `X.Y.Z` for a release, `*` for the package as it stands.
+   *
+   * Absent — which is every call site but the package pane — means the live
+   * package, exactly as distribution has always worked.
+   */
+  packageVersions?: Record<string, string>;
 }
 
 export interface DeployByTargetGroup {
@@ -69,6 +77,7 @@ export const useDeployPackage = () => {
           const deployments = await publishMutation.mutateAsync({
             packageIds,
             targetIds,
+            packageVersions: batchParams.packageVersions,
           });
 
           console.log(

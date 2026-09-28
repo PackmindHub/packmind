@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { WorkOsService } from './workos.service';
 import { Configuration } from '@packmind/node-utils';
+import { ApiInternalError } from '../errors/ApiInternalError';
 
 jest.mock('@workos-inc/node', () => ({
   WorkOS: jest.fn().mockImplementation(() => ({
@@ -56,18 +57,18 @@ describe('WorkOsService', () => {
     });
 
     describe('getAuthorizationUrl', () => {
-      it('throws error', async () => {
+      it('throws ApiInternalError', async () => {
         await expect(
           service.getAuthorizationUrl('GoogleOAuth', 'state'),
-        ).rejects.toThrow('WorkOS is not configured');
+        ).rejects.toBeInstanceOf(ApiInternalError);
       });
     });
 
     describe('authenticateWithCode', () => {
-      it('throws error', async () => {
-        await expect(service.authenticateWithCode('code')).rejects.toThrow(
-          'WorkOS is not configured',
-        );
+      it('throws ApiInternalError', async () => {
+        await expect(
+          service.authenticateWithCode('code'),
+        ).rejects.toBeInstanceOf(ApiInternalError);
       });
     });
   });

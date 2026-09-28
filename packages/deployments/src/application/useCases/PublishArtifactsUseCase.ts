@@ -80,6 +80,8 @@ type PrepareUnifiedDeploymentParams = {
   codingAgents: CodingAgent[];
   changeSet: ArtifactChangeSet;
   packagesSlugs: string[];
+  /** What each slug pins; a slug with no entry is written as `*`. */
+  packageVersions?: Record<string, string>;
   artifactSpaceIds: Record<string, string>;
   artifactPackageIds: Record<string, string[]>;
   accessiblePackageIds: string[];
@@ -262,6 +264,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         codingAgents,
         changeSet,
         packagesSlugs: command.packagesSlugs,
+        packageVersions: command.packageVersions,
         artifactSpaceIds: command.artifactSpaceIds ?? {},
         artifactPackageIds: command.artifactPackageIds ?? {},
         accessiblePackageIds: command.packageIds.map(String),
@@ -425,6 +428,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     codingAgents,
     changeSet,
     packagesSlugs,
+    packageVersions,
     artifactSpaceIds,
     artifactPackageIds,
     accessiblePackageIds,
@@ -536,6 +540,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           packagesSlugs,
           existingPackages,
           existingPackmindJson?.agents,
+          packageVersions,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 

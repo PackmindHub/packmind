@@ -123,6 +123,7 @@ import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJob
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
+import { SpaceContentNotifier } from '../services/SpaceContentNotifier';
 import { MoveArtefactsToPackageUseCase } from '../useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase';
 import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -310,6 +311,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       this.distributedPackageRepository,
       this.spacesPort,
+      this.deploymentsServices.getPackageReleaseService(),
     );
 
     this._findActiveStandardVersionsByTargetUseCase =
@@ -503,6 +505,11 @@ export class DeploymentsAdapter
       this.deploymentsServices,
     );
 
+    // Every package write announces itself to the readers of the space, so a
+    // package surface left open shows what happened to it rather than what was
+    // true when it was opened.
+    const spaceContentNotifier = new SpaceContentNotifier();
+
     this._createPackageUseCase = new CreatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
@@ -510,6 +517,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      spaceContentNotifier,
     );
 
     this._createPackageReleaseUseCase = new CreatePackageReleaseUseCase(
@@ -519,6 +527,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      spaceContentNotifier,
     );
 
     this._getPackageReleaseUseCase = new GetPackageReleaseUseCase(
@@ -544,6 +553,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.skillsPort,
       ports.eventEmitterService,
+      spaceContentNotifier,
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUseCase(
@@ -555,6 +565,7 @@ export class DeploymentsAdapter
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUseCase(
       this.deploymentsServices.getPackageService(),
       ports.eventEmitterService,
+      spaceContentNotifier,
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUseCase(
@@ -564,6 +575,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      spaceContentNotifier,
     );
 
     this._moveArtefactsToPackageUseCase = new MoveArtefactsToPackageUseCase(
@@ -574,6 +586,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.skillsPort,
       ports.eventEmitterService,
+      spaceContentNotifier,
     );
 
     this._removeArtefactsFromPackageUseCase =
@@ -582,6 +595,7 @@ export class DeploymentsAdapter
         this.accountsPort,
         this.deploymentsServices,
         ports.eventEmitterService,
+        spaceContentNotifier,
       );
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(

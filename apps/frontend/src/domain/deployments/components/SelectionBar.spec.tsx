@@ -51,6 +51,52 @@ describe('SelectionBar', () => {
   });
 
   /*
+   * The bar's third action and everything after it. Two gestures fit beside the
+   * count; a third turned the right-hand group into a row of equal-weight
+   * buttons with a destructive one among them, which is the arrangement the
+   * package header above this list already rejected.
+   */
+  describe('actions behind the menu', () => {
+    it('keeps them off the bar', () => {
+      renderBar({
+        actions: [{ label: 'Move', icon: <span />, onAct: vi.fn() }],
+        overflow: [{ label: 'Delete', icon: <span />, onAct: vi.fn() }],
+      });
+
+      expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'Move' })).toBeVisible();
+    });
+
+    it('acts when one is picked from it', async () => {
+      const onAct = vi.fn();
+      renderBar({
+        overflow: [{ label: 'Delete', icon: <span />, onAct }],
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'More actions for the selection' }),
+      );
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+      expect(onAct).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when the caller has none', () => {
+      it('draws no menu at all', () => {
+        renderBar({
+          actions: [{ label: 'Move', icon: <span />, onAct: vi.fn() }],
+        });
+
+        expect(
+          screen.queryByRole('button', {
+            name: 'More actions for the selection',
+          }),
+        ).toBeNull();
+      });
+    });
+  });
+
+  /*
    * The half that was reported missing. It was there, at the far end of the
    * bar behind the actions, which is not where a reader looks for the way out
    * of a selection they made at the near end.

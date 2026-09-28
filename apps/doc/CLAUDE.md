@@ -14,8 +14,8 @@ Getting Started, Concepts, Playbook Maintenance, Tools & Integrations, Governanc
 Administration, Security & Privacy — matching the directories, except `home.mdx` and `index.mdx`
 which sit at the root.
 
-Note both the skill and `README.md` list the content directories but omit `playbook-maintenance/`,
-which does exist and is referenced throughout `docs.json`.
+Note the skill lists the content directories but omits `playbook-maintenance/`, which does exist and
+is referenced throughout `docs.json`.
 
 ## Commands
 

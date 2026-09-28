@@ -1,10 +1,12 @@
 import { PublishPackagesUseCase } from './PublishPackagesUseCase';
 import { PackageService } from '../services/PackageService';
+import { PackageReleaseService } from '../services/PackageReleaseService';
 import {
   PackagesDeployment,
   createUserId,
   createOrganizationId,
   createPackageId,
+  createPackageReleaseId,
   createCommandId,
   createStandardId,
   createTargetId,
@@ -54,6 +56,7 @@ describe('PublishPackagesUseCase', () => {
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
+  let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
   let mockLogger: PackmindLogger;
   const spaceSlug = 'my-space';
 
@@ -103,6 +106,10 @@ describe('PublishPackagesUseCase', () => {
       spaceFactory({ id: spaceId, slug: spaceSlug }),
     );
 
+    mockPackageReleaseService = createMockInstance(PackageReleaseService);
+    mockPackageReleaseService.listReleases.mockResolvedValue([]);
+    mockPackageReleaseService.findByVersion.mockResolvedValue(null);
+
     useCase = new PublishPackagesUseCase(
       mockCommandsPort,
       mockStandardsPort,
@@ -111,6 +118,7 @@ describe('PublishPackagesUseCase', () => {
       mockPackageService,
       mockDistributedPackageRepository,
       mockSpacesPort,
+      mockPackageReleaseService,
       mockLogger,
     );
   });
@@ -228,6 +236,7 @@ describe('PublishPackagesUseCase', () => {
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
+        packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -378,6 +387,7 @@ describe('PublishPackagesUseCase', () => {
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
+        packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -440,6 +450,7 @@ describe('PublishPackagesUseCase', () => {
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
+        packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
         packageIds: [packageId],
         artifactSpaceIds: {
           [standardId]: pkg.spaceId,
@@ -742,6 +753,10 @@ describe('PublishPackagesUseCase', () => {
           `@${spaceSlug}/${package1.slug}`,
           `@${spaceSlug}/${package2.slug}`,
         ],
+        packageVersions: {
+          [`@${spaceSlug}/${package1.slug}`]: '*',
+          [`@${spaceSlug}/${package2.slug}`]: '*',
+        },
         packageIds: [package1Id, package2Id],
         artifactSpaceIds: {
           [sharedCommandId]: package2.spaceId,
@@ -847,6 +862,187 @@ describe('PublishPackagesUseCase', () => {
         expect(
           mockDeploymentPort.publishArtifacts.mock.calls[0][0].skillVersionIds,
         ).toEqual([firstSkillVersion.id]);
+      });
+    });
+  });
+
+  describe('when the distribution names a version', () => {
+    const packageId = createPackageId(uuidv4());
+    const targetId = createTargetId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
+    const standardId = createStandardId(uuidv4());
+    /** In the release, and taken out of the package since. */
+    const retiredRecipeId = createCommandId(uuidv4());
+
+    let pkg: Package;
+    let liveRecipeVersion: CommandVersion;
+    let releasedRecipeVersion: CommandVersion;
+    let releasedRetiredRecipeVersion: CommandVersion;
+    let standardVersion: StandardVersion;
+    let command: PublishPackagesCommand;
+
+    const slug = () => `@${spaceSlug}/${pkg.slug}`;
+
+    const release = (version: string) => ({
+      id: createPackageReleaseId(uuidv4()),
+      packageId,
+      version,
+      name: 'Ops',
+      description: 'Ops package',
+      recipeVersions: [releasedRecipeVersion, releasedRetiredRecipeVersion],
+      standardVersions: [],
+      skillVersions: [],
+    });
+
+    beforeEach(() => {
+      liveRecipeVersion = commandVersionFactory({
+        recipeId,
+        version: 3,
+      });
+      releasedRecipeVersion = commandVersionFactory({
+        recipeId,
+        version: 1,
+      });
+      releasedRetiredRecipeVersion = commandVersionFactory({
+        recipeId: retiredRecipeId,
+        version: 1,
+      });
+      standardVersion = standardVersionFactory({ standardId, version: 1 });
+
+      pkg = packageFactory({
+        id: packageId,
+        recipes: [recipeId],
+        standards: [standardId],
+      });
+
+      command = {
+        userId,
+        organizationId,
+        packageIds: [packageId],
+        targetIds: [targetId],
+        packageVersions: { [packageId as string]: '0.1.0' },
+      };
+
+      mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+        pkg,
+      ]);
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
+        liveRecipeVersion,
+      ]);
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([
+        standardVersion,
+      ]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        distributions: [],
+      });
+      mockPackageReleaseService.findByVersion.mockResolvedValue(
+        release('0.1.0'),
+      );
+    });
+
+    it('sends the versions the release pinned, not the live ones', async () => {
+      await useCase.execute(command);
+
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          commandVersionIds: [
+            releasedRecipeVersion.id,
+            releasedRetiredRecipeVersion.id,
+          ],
+        }),
+      );
+    });
+
+    it('records the version against the slug packmind.json will carry', async () => {
+      await useCase.execute(command);
+
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageVersions: { [slug()]: '0.1.0' },
+        }),
+      );
+    });
+
+    it('does not resolve the live package at all', async () => {
+      await useCase.execute(command);
+
+      expect(mockCommandsPort.getLatestCommandVersions).toHaveBeenCalledWith(
+        [],
+      );
+    });
+
+    it('attributes a component the package no longer holds to the package', async () => {
+      await useCase.execute(command);
+
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifactPackageIds: expect.objectContaining({
+            [retiredRecipeId]: [packageId as string],
+          }),
+        }),
+      );
+    });
+
+    describe('and the version is the wildcard', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packageVersions: { [packageId as string]: '*' },
+        };
+      });
+
+      it('sends the live versions', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            commandVersionIds: [liveRecipeVersion.id],
+          }),
+        );
+      });
+
+      it('records the wildcard', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({ packageVersions: { [slug()]: '*' } }),
+        );
+      });
+    });
+
+    describe('and the version was never released', () => {
+      beforeEach(async () => {
+        mockPackageReleaseService.findByVersion.mockResolvedValue(null);
+        mockPackageReleaseService.listReleases.mockResolvedValue([
+          release('0.0.1'),
+          release('0.2.0'),
+        ]);
+        await useCase.execute(command).catch(() => undefined);
+      });
+
+      it('refuses, listing the versions that were', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `Package @${spaceSlug}/${pkg.slug} has no version 0.1.0. Available versions: 0.2.0, 0.0.1`,
+        );
+      });
+
+      it('distributes nothing', () => {
+        expect(mockDeploymentPort.publishArtifacts).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('and the version is not a version at all', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packageVersions: { [packageId as string]: '^0.1.0' },
+        };
+      });
+
+      it('refuses rather than reading it as the live package', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `"^0.1.0" is not a valid version for @${spaceSlug}/${pkg.slug}.`,
+        );
       });
     });
   });

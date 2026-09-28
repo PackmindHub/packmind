@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import type {
@@ -41,6 +41,7 @@ import {
   RULE_PARAM,
   findSpaceComponent,
   inventoryHref,
+  isOpenedFromInventory,
   packageDetailHref,
   selectContextPackage,
   selectDetailComponent,
@@ -443,6 +444,38 @@ export function SpaceContextSurface() {
    * the pane under that drawer and throw away the components picked to move.
    */
   const [creating, setCreating] = useState<CreateIntent | null>(null);
+
+  /*
+   * What is picked in the inventory, held here rather than in the pane that
+   * shows it.
+   *
+   * The package pane keeps its own, because it stays mounted while one of its
+   * components is read. The inventory cannot: its rows name no package, so
+   * opening one is answered with the package that carries the component and
+   * this pane is swapped out — which threw away every tick the reader had made.
+   * In that list the loss is not recoverable by hand: it holds every component
+   * of the space, and finding the four that were picked again means knowing
+   * them by heart.
+   *
+   * Still not in the address. A selection is a gesture in progress rather than
+   * a place, and nothing about it is worth sending to someone; it only has to
+   * outlive a detour into one of its own rows.
+   */
+  const [inventorySelection, setInventorySelection] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
+
+  /*
+   * And it is dropped the moment the reader is somewhere else — another
+   * package, a component opened from one — which is what unmounting the pane
+   * used to do and the only part of it worth keeping. A detour into one of the
+   * inventory's own rows is not somewhere else: the address says so.
+   */
+  const readingInventory =
+    showingInventory || isOpenedFromInventory(searchParams);
+  useEffect(() => {
+    if (!readingInventory) setInventorySelection(new Set());
+  }, [readingInventory]);
   const createAndOpen = useCallback(() => setCreating('open-it'), []);
   const createAndStay = useCallback(() => setCreating('stay'), []);
   const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
@@ -629,6 +662,8 @@ export function SpaceContextSurface() {
                 organizationId={organization.id}
                 orgSlug={orgSlug}
                 spaceSlug={spaceSlug}
+                selectedKeys={inventorySelection}
+                onSelectedKeysChange={setInventorySelection}
               />
             ) : (
               selectedPackage && (

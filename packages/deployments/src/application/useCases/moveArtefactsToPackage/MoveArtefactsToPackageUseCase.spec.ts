@@ -38,8 +38,10 @@ import { PackageRepository } from '../../../infra/repositories/PackageRepository
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { MoveArtefactsToPackageUseCase } from './MoveArtefactsToPackageUseCase';
+import { SpaceContentNotifier } from '../../services/SpaceContentNotifier';
 
 describe('MoveArtefactsToPackageUseCase', () => {
+  let mockSpaceContentNotifier: jest.Mocked<SpaceContentNotifier>;
   let useCase: MoveArtefactsToPackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
@@ -125,6 +127,8 @@ describe('MoveArtefactsToPackageUseCase', () => {
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
     stubbedLogger = stubLogger();
 
+    mockSpaceContentNotifier = createMockInstance(SpaceContentNotifier);
+
     useCase = new MoveArtefactsToPackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
@@ -133,6 +137,7 @@ describe('MoveArtefactsToPackageUseCase', () => {
       mockStandardsPort,
       mockSkillsPort,
       mockEventEmitterService,
+      mockSpaceContentNotifier,
       stubbedLogger,
     );
   });
@@ -167,6 +172,13 @@ describe('MoveArtefactsToPackageUseCase', () => {
       ]);
 
       result = await useCase.execute(moveCommand());
+    });
+
+    it('tells the space it moved on', () => {
+      expect(mockSpaceContentNotifier.spaceContentChanged).toHaveBeenCalledWith(
+        organizationId,
+        spaceId,
+      );
     });
 
     it('adds the artefact to the target package', () => {
