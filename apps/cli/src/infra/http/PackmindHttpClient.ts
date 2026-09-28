@@ -3,6 +3,7 @@ import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { PackmindEdition, UserOrganizationRole } from '@packmind/types';
 import { parsePackmindEdition, readPackmindEdition } from './packmindEdition';
+import { createDiagnosticError } from './errorDiagnostics';
 import { Agent } from 'undici';
 import * as tls from 'tls';
 import * as fs from 'fs';
@@ -71,8 +72,10 @@ export class PackmindHttpClient {
         'utf-8',
       );
       decoded = JSON.parse(decodedString);
-    } catch {
-      throw new Error('Invalid API key');
+    } catch (error) {
+      // The decode failure is the only clue about *why* the key is unreadable,
+      // so it stays reachable even when not printed.
+      throw createDiagnosticError('Invalid API key', error);
     }
 
     const jwtPayload = this.decodeJwt(decoded.jwt);
@@ -168,6 +171,8 @@ export class PackmindHttpClient {
       // Re-throw if already processed
       if (err.statusCode) throw error;
 
+      const requestContext = { method, url };
+
       const code = err?.code || err?.cause?.code;
       if (
         code === 'ECONNREFUSED' ||
@@ -178,13 +183,17 @@ export class PackmindHttpClient {
             err.message.includes('network') ||
             err.message.includes('NetworkError')))
       ) {
-        throw new Error(
+        throw createDiagnosticError(
           `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+          error,
+          requestContext,
         );
       }
 
-      throw new Error(
+      throw createDiagnosticError(
         `Request failed: ${err?.message || JSON.stringify(error)}`,
+        error,
+        requestContext,
       );
     }
   }

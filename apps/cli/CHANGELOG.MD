@@ -1,3 +1,9 @@
+# [Unreleased]
+
+## Added
+
+- Added `--debug` flag on every command. Currently, only debug the network issues.
+
 # [0.36.0] - 2026-09-23
 
 ## Added
