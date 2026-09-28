@@ -14,6 +14,7 @@ import { Logger } from './customParameters/Logger';
 import { RuleID } from './customParameters/RuleID';
 import { LevelType } from './customParameters/LevelType';
 import { DiffMode } from '../../domain/entities/DiffMode';
+import { isDebug } from '../utils/debugMode';
 
 export const lintCommand = command({
   name: 'lint',
@@ -47,10 +48,6 @@ export const lintCommand = command({
       long: 'draft',
       description: 'Use draft detection programs (requires --rule)',
     }),
-    debug: flag({
-      long: 'debug',
-      description: 'Enable debug logging',
-    }),
     continueOnError: flag({
       long: 'continue-on-error',
       description: 'Exit with status code 0 even if violations are found',
@@ -81,9 +78,11 @@ export const lintCommand = command({
       );
     }
 
+    // `--debug` is the global flag, consumed in main.ts before parsing, so it
+    // is read here rather than declared among this command's args.
     const packmindLogger = new PackmindLogger(
       'PackmindCLI',
-      args.debug ? LogLevel.DEBUG : LogLevel.INFO,
+      isDebug() ? LogLevel.DEBUG : LogLevel.INFO,
     );
 
     const deps: LintHandlerDependencies = {

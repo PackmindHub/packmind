@@ -27,6 +27,12 @@ import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 import { gitCommand } from './infra/commands/git/gitCommand';
 import { warnOnLegacyExecName } from './infra/commands/legacyExecNameWarning';
 import { EXEC_NAME } from './infra/utils/execName';
+import {
+  DEBUG_FLAG,
+  extractDebugFlag,
+  isDebug,
+  setDebug,
+} from './infra/utils/debugMode';
 
 // Warn before anything else runs, so even early-exit flags such as `--version`
 // surface the deprecation of the legacy executable name.
@@ -92,8 +98,13 @@ if (hasEmbeddedWasmFiles()) {
   }
 }
 
+// `--debug` applies to every subcommand, so it is consumed here rather than
+// declared on each of them. Stripping it keeps the per-command parsers unaware
+// of a flag they never opted into.
+const { args, debug } = extractDebugFlag(process.argv.slice(2));
+setDebug(debug);
+
 // Check for --version or -v flag
-const args = process.argv.slice(2);
 if (args.includes('--version') || args.includes('-v')) {
   logConsole(`${EXEC_NAME} version ${CLI_VERSION}`);
   process.exit(0);
@@ -101,7 +112,7 @@ if (args.includes('--version') || args.includes('-v')) {
 
 const app = subcommands({
   name: EXEC_NAME,
-  description: 'Packmind CLI tool',
+  description: `Packmind CLI tool (add ${DEBUG_FLAG} to any command for diagnostic output)`,
   cmds: {
     commands: commandsCommand,
     config: configCommand,
@@ -127,5 +138,8 @@ const app = subcommands({
 
 run(app, args).catch((error) => {
   logErrorConsole(error.message);
+  if (isDebug() && error instanceof Error && error.stack) {
+    logErrorConsole(error.stack);
+  }
   process.exit(1);
 });

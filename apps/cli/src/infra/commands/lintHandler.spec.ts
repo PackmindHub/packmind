@@ -93,7 +93,6 @@ describe('lintHandler', () => {
     overrides: Partial<LintHandlerArgs> = {},
   ): LintHandlerArgs => ({
     draft: false,
-    debug: false,
     logger: Loggers.human,
     continueOnError: false,
     continueOnMissingKey: false,
