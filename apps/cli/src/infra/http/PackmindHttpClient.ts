@@ -3,7 +3,7 @@ import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { PackmindEdition, UserOrganizationRole } from '@packmind/types';
 import { parsePackmindEdition, readPackmindEdition } from './packmindEdition';
-import { createDiagnosticError } from '../utils/errorDiagnostics';
+import { createDiagnosticError, reportError } from '../utils/errorDiagnostics';
 import { Agent } from 'undici';
 import * as tls from 'tls';
 import * as fs from 'fs';
@@ -168,10 +168,16 @@ export class PackmindHttpClient {
         statusCode?: number;
       };
 
-      // Re-throw if already processed
-      if (err.statusCode) throw error;
-
       const requestContext = { method, url };
+
+      // A 4xx or 5xx was already turned into an error carrying its status,
+      // which callers branch on, so it is re-thrown rather than wrapped. It
+      // still needs recording: the status alone does not say which request
+      // produced it.
+      if (err.statusCode) {
+        reportError(error, requestContext);
+        throw error;
+      }
 
       const code = err?.code || err?.cause?.code;
       if (

@@ -142,7 +142,7 @@ export function createDiagnosticError(
  * is first seen — the top-level catch, an unhandled rejection, or any call
  * through the CLI facade that a command would otherwise swallow.
  */
-export function reportError(error: unknown): void {
+export function reportError(error: unknown, context?: IRequestContext): void {
   if (isReported(error)) {
     return;
   }
@@ -150,6 +150,6 @@ export function reportError(error: unknown): void {
 
   appendErrorLog({
     message: error instanceof Error ? error.message : String(error),
-    diagnostics: buildErrorDiagnostics(error),
+    diagnostics: buildErrorDiagnostics(error, context),
   });
 }

@@ -21,7 +21,9 @@ describe('errorLog', () => {
   const now = new Date('2026-09-28T09:12:33.123Z');
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    // resetAllMocks, not clearAllMocks: a spec below installs a throwing
+    // `appendFileSync`, and an implementation survives clearAllMocks.
+    jest.resetAllMocks();
     resetErrorLogDeduplication();
     mockOs.homedir.mockReturnValue(home);
     mockFs.existsSync.mockReturnValue(true);
@@ -199,6 +201,59 @@ describe('errorLog', () => {
 
         expect(mockFs.appendFileSync).not.toHaveBeenCalled();
       });
+    });
+    describe('when a later message merely shares a prefix with a logged one', () => {
+      beforeEach(() => {
+        appendErrorLog({ message: 'Invalid API key', argv: [], now });
+        jest.clearAllMocks();
+      });
+
+      it('records it, being a distinct failure', () => {
+        recordReportedMessage('Invalid API key: missing organizationId');
+
+        expect(mockFs.appendFileSync).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when a logged message contains a later, shorter one', () => {
+      beforeEach(() => {
+        appendErrorLog({
+          message: 'Invalid API key: missing organizationId',
+          argv: [],
+          now,
+        });
+        jest.clearAllMocks();
+      });
+
+      it('records the shorter one too', () => {
+        recordReportedMessage('Invalid API key');
+
+        expect(mockFs.appendFileSync).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('when the write fails and is retried in the same run', () => {
+    beforeEach(() => {
+      mockFs.appendFileSync.mockImplementationOnce(() => {
+        throw new Error('ENOSPC: no space left on device');
+      });
+      appendErrorLog({ message: 'boom', argv: [], now });
+    });
+
+    it('lets the retry through rather than treating it as logged', () => {
+      appendErrorLog({ message: 'boom', argv: [], now });
+
+      expect(mockFs.appendFileSync).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('when the same entry is written twice after a success', () => {
+    it('records it once', () => {
+      appendErrorLog({ message: 'boom', argv: [], now });
+      appendErrorLog({ message: 'boom', argv: [], now });
+
+      expect(mockFs.appendFileSync).toHaveBeenCalledTimes(1);
     });
   });
 });

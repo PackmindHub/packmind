@@ -108,4 +108,25 @@ describe('withErrorReporting', () => {
       expect(withErrorReporting({ name: 'packmind' }).name).toBe('packmind');
     });
   });
+
+  describe('when the rejection value is frozen', () => {
+    class Facade {
+      async run(): Promise<never> {
+        throw Object.freeze(new Error('frozen failure'));
+      }
+    }
+
+    it('surfaces the original failure rather than a tagging error', async () => {
+      const facade = withErrorReporting(new Facade());
+
+      await expect(facade.run()).rejects.toThrow('frozen failure');
+    });
+
+    it('still records it', async () => {
+      const facade = withErrorReporting(new Facade());
+
+      await expect(facade.run()).rejects.toThrow();
+      expect(mockAppendErrorLog).toHaveBeenCalledTimes(1);
+    });
+  });
 });

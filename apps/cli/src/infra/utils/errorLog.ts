@@ -72,14 +72,34 @@ export function resetErrorLogDeduplication(): void {
 }
 
 /**
- * Whether an entry already covers this text. Commands decorate a message on
- * the way out — `Failed to list skills:` wrapped around what the gateway
- * raised — so containment either way counts as the same failure.
+ * Whether `message` only restates an entry already in the log.
+ *
+ * Commands decorate on the way out — `Failed to list skills:` wrapped around
+ * what the gateway raised — and that restatement is worth skipping. Plain
+ * containment is not enough to decide it: `Invalid API key` contains nothing
+ * of `Invalid API key: missing organizationId`, yet one contains the other as
+ * text, and treating them as the same would drop a distinct failure. So the
+ * surrounding text has to be decoration and nothing else — a prefix ending in
+ * a colon, and no trailing content.
  */
+function isRestatementOf(message: string, logged: string): boolean {
+  if (message === logged) {
+    return true;
+  }
+
+  const start = message.indexOf(logged);
+  if (start === -1) {
+    return false;
+  }
+
+  const before = message.slice(0, start);
+  const after = message.slice(start + logged.length);
+
+  return /^[^\n]*:\s*$/.test(before) && after.trim() === '';
+}
+
 function isAlreadyCovered(message: string): boolean {
-  return loggedMessages.some(
-    (logged) => message.includes(logged) || logged.includes(message),
-  );
+  return loggedMessages.some((logged) => isRestatementOf(message, logged));
 }
 
 export interface IErrorLogRecord {
@@ -106,9 +126,6 @@ export function appendErrorLog(record: IErrorLogRecord): void {
   if (loggedThisRun.has(signature)) {
     return;
   }
-  loggedThisRun.add(signature);
-  loggedMessages.push(record.message);
-
   try {
     const logDir = path.join(os.homedir(), ERROR_LOG_DIR);
     if (!fs.existsSync(logDir)) {
@@ -131,6 +148,11 @@ export function appendErrorLog(record: IErrorLogRecord): void {
     ].join('\n');
 
     fs.appendFileSync(logPath, entry, { mode: 0o600 });
+
+    // Recorded only once the entry is actually on disk: a write that failed
+    // must not stop a later attempt in the same run from succeeding.
+    loggedThisRun.add(signature);
+    loggedMessages.push(record.message);
   } catch {
     // Logging an error must never raise one.
   }
@@ -158,11 +180,18 @@ export function markReported(error: unknown): void {
   if (typeof error !== 'object' || error === null) {
     return;
   }
-  Object.defineProperty(error, REPORTED, {
-    value: true,
-    enumerable: false,
-    configurable: true,
-  });
+
+  try {
+    Object.defineProperty(error, REPORTED, {
+      value: true,
+      enumerable: false,
+      configurable: true,
+    });
+  } catch {
+    // A frozen or sealed rejection value cannot carry the tag. Losing it
+    // costs a duplicate entry; letting the TypeError out would replace the
+    // failure the user came to see.
+  }
 }
 
 /**
