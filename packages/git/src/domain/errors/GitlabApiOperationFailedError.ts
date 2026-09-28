@@ -1,4 +1,5 @@
 import { GitUpstreamError, GitUpstreamErrorContext } from './GitUpstreamError';
+import { providerErrorMessage, statusOf } from './providerErrorMessage';
 
 /**
  * A call we made to the GitLab API did not succeed — committing, branching,
@@ -17,10 +18,8 @@ export class GitlabApiOperationFailedError extends GitUpstreamError {
     super(
       'upstream_unavailable',
       'gitlab_api_operation_failed',
-      { ...context, operation },
-      `Failed to ${operation}: ${
-        cause instanceof Error ? cause.message : String(cause)
-      }`,
+      { ...context, operation, status: context.status ?? statusOf(cause) },
+      `Failed to ${operation}: ${providerErrorMessage(cause)}`,
     );
     this.name = 'GitlabApiOperationFailedError';
   }
