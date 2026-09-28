@@ -113,6 +113,34 @@ export const TAB_PARAM = 'tab';
  */
 export const INVENTORY_VALUE = 'all';
 
+/**
+ * Which list the open component was opened from, when that list is not the one
+ * the address would otherwise imply.
+ *
+ * Only the inventory ever writes it, and it writes the same value the `package`
+ * parameter uses for that list. The inventory's rows name no package, so the
+ * surface answers such an address with whatever package happens to carry the
+ * component: without this, closing the component landed the reader in a package
+ * they never opened, and took with it the selection they had made in the list
+ * they were actually working in.
+ *
+ * In the address rather than in state because it describes the reading, not the
+ * reader: a link pasted from a component opened in the inventory is a link that
+ * belongs to the inventory, and going back has to mean the same thing in a new
+ * tab as it does in the one it was copied from.
+ *
+ * It lives exactly as long as the reading it describes. Every builder that
+ * closes a component drops it, so no list can inherit an origin from the
+ * component that was open before it.
+ */
+export const ORIGIN_PARAM = 'from';
+
+/**
+ * What the inventory is called wherever it is named: the rail row, the back
+ * links that return to it, and the pane's own heading.
+ */
+export const ALL_COMPONENTS_LABEL = 'All components';
+
 export const COMPONENTS_TAB = 'components';
 export const INSTRUCTIONS_TAB = 'instructions';
 
@@ -260,8 +288,25 @@ export function componentDetailHref(
   componentKey: string,
 ): string {
   const next = new URLSearchParams(searchParams);
-  if (packageId) next.set(PACKAGE_PARAM, packageId);
-  else next.delete(PACKAGE_PARAM);
+  if (packageId) {
+    next.set(PACKAGE_PARAM, packageId);
+    /*
+     * And the origin of the component that was open before this one, which was
+     * about that reading and not this one. The rail's search results are built
+     * with a package while a component opened from the inventory is on screen,
+     * so this is a link that can be followed with one in the address.
+     */
+    next.delete(ORIGIN_PARAM);
+  } else {
+    next.delete(PACKAGE_PARAM);
+    /*
+     * Naming no package means the inventory: it is the only list whose rows
+     * leave the parameter empty. Written down here because the surface cannot
+     * tell afterwards — it resolves such an address to the package that carries
+     * the component, and that package is not where the reader came from.
+     */
+    next.set(ORIGIN_PARAM, INVENTORY_VALUE);
+  }
   next.set(COMPONENT_PARAM, componentKey);
   // A file belongs to the component it was opened from, so a different
   // component cannot inherit it. Two skills can hold the same path. A rule is
@@ -291,6 +336,12 @@ export function packageDetailParams(
   next.delete(FILE_PARAM);
   next.delete(RULE_PARAM);
   /*
+   * And where that component was opened from. A list is not somewhere a
+   * component was read from, so an origin left here would outlive the reading
+   * it describes and answer for the next component opened from this list.
+   */
+  next.delete(ORIGIN_PARAM);
+  /*
    * And the tab, when it was one only a component has. `selectTab` already
    * reads such a value as the package's default, so the screen would be right
    * either way; the address would not, and it is the address that gets pasted
@@ -310,6 +361,56 @@ export function packageDetailParams(
  */
 export function inventoryHref(searchParams: URLSearchParams): string {
   return `?${packageDetailParams(searchParams, INVENTORY_VALUE).toString()}`;
+}
+
+/**
+ * The list a component that is open should close onto: the package it is being
+ * read in, or the inventory when that is where it was opened from.
+ *
+ * One answer for the three places that ask. The back link asks it, and so do
+ * the two gestures that make the open component stop belonging here — deleting
+ * it, and taking it out of the package — because both have to close an address
+ * that names something the pane can no longer show.
+ *
+ * Params rather than a string, for the reason `packageDetailParams` is: a back
+ * link wants something to navigate to, and a component that has just been
+ * deleted wants the parameters themselves.
+ */
+export function componentExitParams(
+  searchParams: URLSearchParams,
+  packageId: PackageId,
+): URLSearchParams {
+  return packageDetailParams(
+    searchParams,
+    searchParams.get(ORIGIN_PARAM) === INVENTORY_VALUE
+      ? INVENTORY_VALUE
+      : packageId,
+  );
+}
+
+/**
+ * What the way back out of a component says and where it goes.
+ *
+ * The two travel together because they can disagree, and a back link that names
+ * one list and lands on another is worse than either mistake alone.
+ *
+ * A component opened from the inventory is read inside whatever package carries
+ * it — the pane has to name one, since that is what the move and the removal
+ * act on — but the reader never chose that package, and the list they did
+ * choose is holding the components they had picked. So the way out is the list
+ * they came from.
+ */
+export function componentBackLink(
+  searchParams: URLSearchParams,
+  pkg: Readonly<{ id: PackageId; name: string }>,
+): Readonly<{ label: string; href: string }> {
+  return {
+    label:
+      searchParams.get(ORIGIN_PARAM) === INVENTORY_VALUE
+        ? ALL_COMPONENTS_LABEL
+        : pkg.name,
+    href: `?${componentExitParams(searchParams, pkg.id).toString()}`,
+  };
 }
 
 /** The way back out of a component, to the package it was read from. */

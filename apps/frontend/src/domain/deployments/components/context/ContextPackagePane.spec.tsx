@@ -134,6 +134,21 @@ vi.mock('./ContextPackageDistribution', () => ({
   ContextPackageDistribution: () => <div data-testid="distribution-tab" />,
 }));
 
+/*
+ * Stood in for by its way out, which is the one thing this pane decides about
+ * it: the detail itself reaches for a query per component type, and none of
+ * them is what these tests are reading.
+ */
+vi.mock('./ContextComponentDetail', () => ({
+  ContextComponentDetail: ({
+    backLabel,
+    backHref,
+  }: {
+    backLabel: string;
+    backHref: string;
+  }) => <a href={backHref}>{backLabel}</a>,
+}));
+
 vi.mock('../PackagesPopover', () => ({
   RemoveArtifactFromPackageConfirm: () => <div data-testid="remove-artifact" />,
 }));
@@ -290,12 +305,15 @@ async function renderPane(
     releases = [],
     address = '/',
     groups = [],
+    detail = null,
   }: {
     releases?: PackageReleaseSummary[];
     /** The address the pane opens at, which is what names the version read. */
     address?: string;
     /** What the package holds, which most of these tests do not care about. */
     groups?: ContextGroup[];
+    /** The component the pane shows in place of its tabs, when there is one. */
+    detail?: ContextComponent | null;
   } = {},
 ) {
   (useListPackageReleasesQuery as Mock).mockReturnValue({
@@ -321,7 +339,7 @@ async function renderPane(
             catalogue={{ standards: [], commands: [], skills: [] }}
             groups={groups}
             total={3}
-            detail={null}
+            detail={detail}
             detailFile={null}
             detailRule={null}
             spaceId={spaceId}
@@ -639,6 +657,37 @@ describe('ContextPackagePane', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
         expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+      });
+    });
+  });
+  /*
+   * The pane names a package whatever the reader did to get here: a component
+   * opened from the inventory is still read inside whichever package carries
+   * it. Closing it has to put back the list the reader was actually in, which
+   * is also the list holding the components they had picked.
+   */
+  describe('the way out of an open component', () => {
+    it('goes back to the package it is being read in', async () => {
+      await renderPane(READY_NEVER_RELEASED, {
+        address: '/?package=pkg-1&component=std-1',
+        detail: STANDARD,
+      });
+
+      expect(
+        screen.getByRole('link', { name: 'Backend conventions' }),
+      ).toHaveAttribute('href', '?package=pkg-1');
+    });
+
+    describe('when the component was opened from the inventory', () => {
+      it('goes back to the inventory', async () => {
+        await renderPane(READY_NEVER_RELEASED, {
+          address: '/?component=std-1&from=all',
+          detail: STANDARD,
+        });
+
+        expect(
+          screen.getByRole('link', { name: 'All components' }),
+        ).toHaveAttribute('href', '?package=all');
       });
     });
   });

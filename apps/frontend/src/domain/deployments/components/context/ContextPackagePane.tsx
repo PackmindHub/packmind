@@ -60,12 +60,13 @@ import {
   DISTRIBUTION_TAB,
   RELEASE_PARAM,
   TAB_PARAM,
+  componentBackLink,
   componentEditHref,
   componentEntryHref,
+  componentExitParams,
   componentRuleHref,
   selectRuleTab,
   isDefaultTab,
-  packageDetailHref,
   packageDetailParams,
   selectTab,
   withPaneDetailHref,
@@ -506,7 +507,7 @@ export function ContextPackagePane({
           componentSelectionKey(component) === componentSelectionKey(detail),
       )
     ) {
-      setSearchParams(packageDetailParams(searchParams, pkg.id));
+      setSearchParams(componentExitParams(searchParams, pkg.id));
     }
   };
 
@@ -569,7 +570,7 @@ export function ContextPackagePane({
           componentSelectionKey(component) === componentSelectionKey(detail),
       )
     ) {
-      setSearchParams(packageDetailParams(searchParams, pkg.id));
+      setSearchParams(componentExitParams(searchParams, pkg.id));
     }
   };
 
@@ -825,6 +826,14 @@ export function ContextPackagePane({
    * components, in place of the tab strip rather than under it.
    */
   if (detail) {
+    /*
+     * Where closing it lands, which is not always this package: a component
+     * opened from the inventory is read inside whichever package carries it,
+     * and sending the reader there would cost them the list they were working
+     * in and everything they had picked in it.
+     */
+    const backLink = componentBackLink(searchParams, pkg);
+
     return (
       <>
         {/*
@@ -861,8 +870,8 @@ export function ContextPackagePane({
         ) : (
           <ContextComponentDetail
             component={detail}
-            backLabel={pkg.name}
-            backHref={packageDetailHref(searchParams, pkg.id)}
+            backLabel={backLink.label}
+            backHref={backLink.href}
             ruleHref={(ruleId) => componentRuleHref(searchParams, ruleId)}
             editHref={componentEditHref(detail, { orgSlug, spaceSlug }, pkg.id)}
             tab={tab}
