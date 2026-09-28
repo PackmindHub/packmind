@@ -107,6 +107,13 @@ export class GitRepoService {
     return this.gitRepoRepository.markTrackingRemoved(gitRepoId);
   }
 
+  async reassignProvider(
+    gitRepoId: GitRepoId,
+    providerId: GitProviderId,
+  ): Promise<GitRepo> {
+    return this.gitRepoRepository.reassignProvider(gitRepoId, providerId);
+  }
+
   /**
    * Matches tracked and untracked repos alike, so a caller can tell "connected
    * to Packmind but not governed" apart from "never seen this repository".

@@ -59,4 +59,13 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
    * not stamp a removal.
    */
   markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo>;
+  /**
+   * Moves a repository under another provider while keeping its id, so its
+   * targets and distribution history follow it. Clears the removal stamp: an
+   * adopted repository is one someone chose to govern again.
+   */
+  reassignProvider(
+    gitRepoId: GitRepoId,
+    providerId: GitProviderId,
+  ): Promise<GitRepo>;
 }

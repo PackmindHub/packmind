@@ -277,6 +277,45 @@ export class GitRepoRepository
     }
   }
 
+  async reassignProvider(
+    gitRepoId: GitRepoId,
+    providerId: GitProviderId,
+  ): Promise<GitRepo> {
+    this.logger.info('Reassigning git repo provider', {
+      gitRepoId,
+      providerId,
+    });
+
+    try {
+      const gitRepo = await this.repository.findOne({
+        where: { id: gitRepoId },
+      });
+
+      if (!gitRepo) {
+        throw new GitRepoNotFoundError(gitRepoId);
+      }
+
+      const updated = await this.repository.save({
+        ...gitRepo,
+        providerId,
+        trackingRemovedAt: null,
+      });
+
+      this.logger.info('Git repo provider reassigned', {
+        gitRepoId,
+        providerId,
+      });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to reassign git repo provider', {
+        gitRepoId,
+        providerId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findByOwnerAndRepoInOrganization(
     owner: string,
     repo: string,

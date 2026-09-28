@@ -12,7 +12,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { GitRepo, GitProvider } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../test';
-import { createOrganizationId, Organization } from '@packmind/types';
+import {
+  createGitRepoId,
+  createOrganizationId,
+  GitRepoNotFoundError,
+  Organization,
+} from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
 
 describe('GitRepoRepository', () => {
@@ -457,6 +462,59 @@ describe('GitRepoRepository', () => {
 
     it('keeps the row readable rather than soft-deleting it', () => {
       expect(reloaded).not.toBeNull();
+    });
+  });
+
+  describe('reassignProvider', () => {
+    let otherProvider: GitProvider;
+    let gitRepo: GitRepo;
+    let reloaded: GitRepo | null;
+
+    beforeEach(async () => {
+      otherProvider = await gitProviderRepository.save(
+        gitProviderFactory({ organizationId: testOrganization.id }),
+      );
+      gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+      );
+    });
+
+    describe('when the repository is moved to another provider', () => {
+      beforeEach(async () => {
+        await gitRepoRepository.reassignProvider(gitRepo.id, otherProvider.id);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('points the repository at the new provider', () => {
+        expect(reloaded?.providerId).toEqual(otherProvider.id);
+      });
+
+      it('keeps the tracked flag', () => {
+        expect(reloaded?.isTracked).toBe(true);
+      });
+    });
+
+    describe('when the repository had its tracking removed', () => {
+      beforeEach(async () => {
+        await gitRepoRepository.markTrackingRemoved(gitRepo.id);
+        await gitRepoRepository.reassignProvider(gitRepo.id, otherProvider.id);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('clears the removal stamp', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+
+    describe('when the repository does not exist', () => {
+      it('throws GitRepoNotFoundError', async () => {
+        await expect(
+          gitRepoRepository.reassignProvider(
+            createGitRepoId(uuidv4()),
+            otherProvider.id,
+          ),
+        ).rejects.toThrow(GitRepoNotFoundError);
+      });
     });
   });
 });

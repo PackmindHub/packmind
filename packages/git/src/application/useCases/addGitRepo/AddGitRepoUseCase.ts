@@ -1,9 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  extractBaseUrl,
+  MemberContext,
+} from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
   AddGitRepoResponse,
   createUserId,
+  GitProvider,
   GitProviderMissingTokenError,
   GitProviderOrganizationMismatchError,
   GitRepoAlreadyExistsError,
@@ -17,6 +22,40 @@ import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 
 const origin = 'AddGitRepoUseCase';
+
+const DEFAULT_HOST_BY_SOURCE: Partial<Record<GitProvider['source'], string>> = {
+  github: 'https://github.com',
+  gitlab: 'https://gitlab.com',
+};
+
+// GitHub providers, App installs included, may store no URL: their API client
+// always targets github.com, as GitLab's falls back to gitlab.com.
+function hostOf(provider: GitProvider): string | null {
+  const url = provider.url
+    ? extractBaseUrl(provider.url)
+    : DEFAULT_HOST_BY_SOURCE[provider.source];
+  return url?.toLowerCase() ?? null;
+}
+
+/**
+ * A repository the CLI recorded before the organization connected an
+ * authenticated provider for the same host moves under it, rather than
+ * blocking it as a duplicate.
+ */
+function isAdoptableBy(
+  holdingProvider: GitProvider,
+  gitProvider: GitProvider,
+): boolean {
+  const host = hostOf(gitProvider);
+  return (
+    holdingProvider.id !== gitProvider.id &&
+    !providerHasAuth(holdingProvider) &&
+    providerHasAuth(gitProvider) &&
+    holdingProvider.source === gitProvider.source &&
+    host !== null &&
+    hostOf(holdingProvider) === host
+  );
+}
 
 export class AddGitRepoUseCase
   extends AbstractMemberUseCase<AddGitRepoCommand, AddGitRepoResponse>
@@ -103,6 +142,28 @@ export class AddGitRepoUseCase
       );
 
     if (existingRepo) {
+      const holdingProvider =
+        existingRepo.providerId === gitProvider.id
+          ? gitProvider
+          : await this.gitProviderService.findGitProviderById(
+              existingRepo.providerId,
+            );
+
+      // Adoption keeps the row, hence its id, targets and distribution
+      // history; no Default target is added since the repository has one.
+      if (holdingProvider && isAdoptableBy(holdingProvider, gitProvider)) {
+        this.logger.info('Adopting repository from CLI-managed provider', {
+          organizationId: organization.id,
+          gitRepoId: existingRepo.id,
+          fromGitProviderId: holdingProvider.id,
+          toGitProviderId: gitProvider.id,
+        });
+        return this.gitRepoService.reassignProvider(
+          existingRepo.id,
+          gitProvider.id,
+        );
+      }
+
       this.logger.error('Repository already exists in organization', {
         owner,
         repo,
@@ -112,12 +173,6 @@ export class AddGitRepoUseCase
         userId,
         existingRepoId: existingRepo.id,
       });
-      const holdingProvider =
-        existingRepo.providerId === gitProvider.id
-          ? gitProvider
-          : await this.gitProviderService.findGitProviderById(
-              existingRepo.providerId,
-            );
       throw new GitRepoAlreadyExistsError(
         owner,
         repo,

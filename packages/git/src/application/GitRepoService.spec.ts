@@ -289,4 +289,29 @@ describe('GitRepoService', () => {
       );
     });
   });
+
+  describe('reassignProvider', () => {
+    const newProviderId = createGitProviderId('provider-2');
+    const reassigned: GitRepo = { ...mockGitRepo, providerId: newProviderId };
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      mockGitRepoRepository.reassignProvider.mockResolvedValue(reassigned);
+      result = await gitRepoService.reassignProvider(
+        mockGitRepo.id,
+        newProviderId,
+      );
+    });
+
+    it('delegates to the repository', () => {
+      expect(mockGitRepoRepository.reassignProvider).toHaveBeenCalledWith(
+        mockGitRepo.id,
+        newProviderId,
+      );
+    });
+
+    it('returns the reassigned repository', () => {
+      expect(result).toEqual(reassigned);
+    });
+  });
 });
