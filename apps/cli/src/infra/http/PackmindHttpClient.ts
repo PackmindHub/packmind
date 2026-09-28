@@ -3,7 +3,7 @@ import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { PackmindEdition, UserOrganizationRole } from '@packmind/types';
 import { parsePackmindEdition, readPackmindEdition } from './packmindEdition';
-import { createDiagnosticError } from './errorDiagnostics';
+import { createDiagnosticError } from '../utils/errorDiagnostics';
 import { Agent } from 'undici';
 import * as tls from 'tls';
 import * as fs from 'fs';

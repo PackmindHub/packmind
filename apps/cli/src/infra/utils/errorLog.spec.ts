@@ -4,9 +4,11 @@ import * as path from 'path';
 import {
   appendErrorLog,
   getErrorLogPath,
+  recordReportedMessage,
   resetErrorLogDeduplication,
 } from './errorLog';
 
+jest.unmock('./errorLog');
 jest.mock('fs');
 jest.mock('os');
 
@@ -157,6 +159,46 @@ describe('errorLog', () => {
 
     it('records both', () => {
       expect(mockFs.appendFileSync).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('recordReportedMessage', () => {
+    describe('when nothing has covered the message', () => {
+      beforeEach(() => {
+        recordReportedMessage('File or directory "/nope" does not exist');
+      });
+
+      it('records it', () => {
+        expect(appended()).toContain(
+          'File or directory "/nope" does not exist',
+        );
+      });
+
+      it('records where it was reported from', () => {
+        expect(appended()).toContain('  Reported at:');
+      });
+
+      it('leaves this module out of that stack', () => {
+        expect(appended()).not.toContain('recordReportedMessage');
+      });
+    });
+
+    describe('when a full report already covers the message', () => {
+      it('does not restate it without its diagnostics', () => {
+        appendErrorLog({
+          message: 'Packmind server is not accessible',
+          diagnostics: '  Request: GET https://packmind.test/skills',
+          argv: ['skills', 'list'],
+          now,
+        });
+        jest.clearAllMocks();
+
+        recordReportedMessage(
+          'Failed to list skills:\nPackmind server is not accessible',
+        );
+
+        expect(mockFs.appendFileSync).not.toHaveBeenCalled();
+      });
     });
   });
 });

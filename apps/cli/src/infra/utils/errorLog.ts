@@ -38,6 +38,13 @@ function invokedCommand(argv: readonly string[]): string {
   return ['packmind', ...subcommand].join(' ');
 }
 
+function indent(text: string, prefix = '    '): string {
+  return text
+    .split('\n')
+    .map((line) => `${prefix}${line}`)
+    .join('\n');
+}
+
 function rotateIfOversized(logPath: string): void {
   if (fs.statSync(logPath).size <= MAX_LOG_BYTES) {
     return;
@@ -55,9 +62,24 @@ function rotateIfOversized(logPath: string): void {
  */
 const loggedThisRun = new Set<string>();
 
+/** Messages already recorded, so a summary does not restate a full report. */
+const loggedMessages: string[] = [];
+
 /** Lets a test isolate one run from the next. */
 export function resetErrorLogDeduplication(): void {
   loggedThisRun.clear();
+  loggedMessages.length = 0;
+}
+
+/**
+ * Whether an entry already covers this text. Commands decorate a message on
+ * the way out — `Failed to list skills:` wrapped around what the gateway
+ * raised — so containment either way counts as the same failure.
+ */
+function isAlreadyCovered(message: string): boolean {
+  return loggedMessages.some(
+    (logged) => message.includes(logged) || logged.includes(message),
+  );
 }
 
 export interface IErrorLogRecord {
@@ -85,6 +107,7 @@ export function appendErrorLog(record: IErrorLogRecord): void {
     return;
   }
   loggedThisRun.add(signature);
+  loggedMessages.push(record.message);
 
   try {
     const logDir = path.join(os.homedir(), ERROR_LOG_DIR);
@@ -111,4 +134,72 @@ export function appendErrorLog(record: IErrorLogRecord): void {
   } catch {
     // Logging an error must never raise one.
   }
+}
+
+/**
+ * Marks an error whose diagnostics are already in the log.
+ *
+ * One failure surfaces at several layers — the HTTP client builds it, the use
+ * case lets it through, the command catches it — and each has a reason to
+ * report. The tag rides the error itself rather than relying on its message,
+ * which callers decorate on the way up.
+ */
+const REPORTED = Symbol.for('packmind.cli.errorReported');
+
+export function isReported(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as Record<symbol, unknown>)[REPORTED] === true
+  );
+}
+
+export function markReported(error: unknown): void {
+  if (typeof error !== 'object' || error === null) {
+    return;
+  }
+  Object.defineProperty(error, REPORTED, {
+    value: true,
+    enumerable: false,
+    configurable: true,
+  });
+}
+
+/**
+ * Records a message reported straight to the console, for the failures raised
+ * and handled inside a command — a missing path, a rejected argument — which
+ * never pass a use case and so have no error object to report.
+ *
+ * Skipped when a full report already covers the text, so the richer entry is
+ * not restated without its diagnostics.
+ */
+function reportingSite(message: string): string | undefined {
+  const stack = new Error(message).stack;
+  if (!stack) {
+    return undefined;
+  }
+
+  // Drop this module's own frames, so the stack opens on the handler that
+  // reported rather than on the plumbing that recorded it.
+  const frames = stack
+    .split('\n')
+    .filter(
+      (line) =>
+        !line.includes('reportingSite') &&
+        !line.includes('recordReportedMessage') &&
+        !line.includes('logErrorConsole'),
+    );
+
+  return `  Reported at:\n${indent(frames.join('\n'))}`;
+}
+
+export function recordReportedMessage(message: string): void {
+  if (isAlreadyCovered(message)) {
+    return;
+  }
+
+  appendErrorLog({
+    message,
+    diagnostics: reportingSite(message),
+  });
 }

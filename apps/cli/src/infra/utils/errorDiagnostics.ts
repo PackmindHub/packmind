@@ -1,4 +1,4 @@
-import { appendErrorLog } from '../utils/errorLog';
+import { appendErrorLog, isReported, markReported } from './errorLog';
 
 /**
  * What a failed request was trying to do. Node's `fetch` rejects with a bare
@@ -132,5 +132,24 @@ export function createDiagnosticError(
 
   const error: Error & { cause?: unknown } = new Error(message);
   error.cause = cause;
+  // Its diagnostics name the request, which a later report could not recover.
+  markReported(error);
   return error;
+}
+
+/**
+ * Records an error and its stack in `~/.packmind/error.log`, once, wherever it
+ * is first seen — the top-level catch, an unhandled rejection, or any call
+ * through the CLI facade that a command would otherwise swallow.
+ */
+export function reportError(error: unknown): void {
+  if (isReported(error)) {
+    return;
+  }
+  markReported(error);
+
+  appendErrorLog({
+    message: error instanceof Error ? error.message : String(error),
+    diagnostics: buildErrorDiagnostics(error),
+  });
 }

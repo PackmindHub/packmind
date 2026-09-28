@@ -2,7 +2,7 @@
 
 ## Added
 
-- Network errors are now recorded in `~/.packmind/error.log`, with the failing request and its cause
+- Errors are now recorded with their stack in `~/.packmind/error.log`, and network failures with the request and cause behind them
 
 ## Changed
 

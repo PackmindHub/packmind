@@ -2,7 +2,7 @@ import {
   buildErrorDiagnostics,
   createDiagnosticError,
 } from './errorDiagnostics';
-import { appendErrorLog } from '../utils/errorLog';
+import { appendErrorLog } from './errorLog';
 
 jest.mock('../utils/errorLog');
 
