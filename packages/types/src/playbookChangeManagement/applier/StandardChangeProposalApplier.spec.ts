@@ -378,6 +378,25 @@ describe('StandardChangeProposalApplier', () => {
         expect((result.version.rules ?? [])[0].content).toBe('New content');
       });
 
+      describe('when no rule holds the targeted id', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const rule = ruleFactory({ content: 'Old content' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: createRuleId('rule-from-older-version'),
+              oldValue: 'Old content',
+              newValue: 'New content',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
+      });
+
       it('preserves the rule ID', () => {
         const ruleId = createRuleId('rule-to-update');
         const rule = ruleFactory({ id: ruleId, content: 'Old content' });
@@ -470,6 +489,25 @@ describe('StandardChangeProposalApplier', () => {
         ]);
 
         expect(result.version.rules).toEqual([]);
+      });
+
+      describe('when no rule holds the targeted id', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const rule = ruleFactory({ content: 'To be deleted' });
+          const source = standardVersionFactory({ rules: [rule] });
+          const staleId = createRuleId('rule-from-older-version');
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteRule,
+            payload: {
+              targetId: staleId,
+              item: { id: staleId, content: 'To be deleted' },
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
       });
 
       describe('when deleting one of multiple rules', () => {

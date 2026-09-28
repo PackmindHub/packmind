@@ -107,6 +107,16 @@ export abstract class AbstractChangeProposalApplier<
     return result.merged;
   }
 
+  protected assertTargetExists(
+    changeProposalId: ChangeProposalId,
+    items: { id: string }[],
+    targetId: string,
+  ): void {
+    if (!items.some((item) => item.id === targetId)) {
+      throw new ChangeProposalConflictError(changeProposalId);
+    }
+  }
+
   private handleRemoveFromPackages(
     original: PackageId[],
     added: PackageId[] | null,
