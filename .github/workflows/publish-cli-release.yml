@@ -30,11 +30,11 @@ env:
 
 jobs:
   sign-macos-cli:
-    runs-on: depot-macos-15
+    runs-on: ${{ vars.MACOS_ACTION_RUNNER_TAG || 'macos-15' }}depot-macos-15
     timeout-minutes: 30
     outputs:
       version: ${{ steps.get-version.outputs.version }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -140,31 +140,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Download CLI npm package artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.cli-artifact }}
           path: dist/apps/cli
-      
+
       - name: Verify package.json
         run: |
           echo "📦 Verifying CLI package..."
           cat dist/apps/cli/package.json
           ls -la dist/apps/cli/
-      
+
       - name: Publish to npm
         working-directory: dist/apps/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
-      
+
       - name: Summary
         run: |
           echo "## npm Publishing Summary" >> $GITHUB_STEP_SUMMARY
@@ -177,23 +177,23 @@ jobs:
     needs: [sign-macos-cli, publish-npm]
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Download CLI executables
         uses: actions/download-artifact@v4
         with:
           name: cli-executables-${{ needs.sign-macos-cli.outputs.version }}
           path: executables
-      
+
       - name: Download signed macOS arm64 executable
         uses: actions/download-artifact@v4
         with:
           name: cli-macos-arm64-signed-${{ needs.sign-macos-cli.outputs.version }}
           path: executables-signed
-      
+
       - name: Extract changelog for version
         id: extract-changelog
         env:
@@ -215,7 +215,7 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG_SECTION" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      
+
       - name: Prepare release assets
         env:
           VERSION: ${{ needs.sign-macos-cli.outputs.version }}
@@ -270,7 +270,7 @@ jobs:
           echo ""
           echo "📦 Release assets prepared:"
           ls -lh release-assets/
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -309,7 +309,7 @@ jobs:
             release-assets/packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}
             release-assets/packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe
             release-assets/packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe
-      
+
       - name: Summary
         env:
           VERSION: ${{ needs.sign-macos-cli.outputs.version }}
