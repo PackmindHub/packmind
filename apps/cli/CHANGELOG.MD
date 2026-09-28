@@ -2,17 +2,14 @@
 
 ## Added
 
+- Added `--debug` flag on every command. Currently, only debug the network issues.
+- Network errors are now recorded in `~/.packmind/error.log`, whether or not `--debug` was passed
+
 ## Changed
 
 ## Fixed
 
 ## Removed
-
-# [0.36.1] - 2026-09-28
-
-## Added
-
-- Added `--debug` flag on every command. Currently, only debug the network issues.
 
 # [0.36.0] - 2026-09-23
 
@@ -516,8 +513,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.1...HEAD
-[0.36.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...release-cli/0.36.1
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...HEAD
 [0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
 [0.35.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...release-cli/0.35.1
 [0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0
