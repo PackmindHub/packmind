@@ -11,6 +11,12 @@
 
 ## Removed
 
+# [0.36.1] - 2026-09-28
+
+## Added
+
+- Errors are now recorded with their stack in `~/.packmind/error.log`, and network failures with the request and cause behind them
+
 # [0.36.0] - 2026-09-23
 
 ## Added
@@ -513,7 +519,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.1...HEAD
+[0.36.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...release-cli/0.36.1
 [0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
 [0.35.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...release-cli/0.35.1
 [0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0

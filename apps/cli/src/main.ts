@@ -27,6 +27,7 @@ import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 import { gitCommand } from './infra/commands/git/gitCommand';
 import { warnOnLegacyExecName } from './infra/commands/legacyExecNameWarning';
 import { EXEC_NAME } from './infra/utils/execName';
+import { reportError } from './infra/utils/errorDiagnostics';
 
 // Warn before anything else runs, so even early-exit flags such as `--version`
 // surface the deprecation of the legacy executable name.
@@ -125,7 +126,22 @@ const app = subcommands({
   },
 });
 
+// Last resort for a failure that escapes every handler: without these the
+// stack reaches the terminal and nothing else.
+process.on('uncaughtException', (error) => {
+  reportError(error);
+  logErrorConsole(error.message);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  reportError(reason);
+  logErrorConsole(reason instanceof Error ? reason.message : String(reason));
+  process.exit(1);
+});
+
 run(app, args).catch((error) => {
+  reportError(error);
   logErrorConsole(error.message);
   process.exit(1);
 });

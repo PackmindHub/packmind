@@ -1,6 +1,11 @@
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 
+// The invalid-key and network paths build diagnostic errors, which append to
+// `~/.packmind/error.log`. Unmocked, a test run writes to the real home
+// directory of whoever runs it.
+jest.mock('../utils/errorLog');
+
 describe('PackmindHttpClient', () => {
   const createTestApiKey = (orgId = 'org-123', role?: string) => {
     const jwtPayload = {
