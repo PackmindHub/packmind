@@ -116,8 +116,10 @@ export class GitRepoRepository
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        // Hosts treat owner and repo case-insensitively, so a CLI clone and
+        // the provider API can spell the same repository differently.
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('gitRepo.branch = :branch', { branch })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,

@@ -206,6 +206,49 @@ describe('GitRepoRepository', () => {
     });
   });
 
+  describe('findByOwnerRepoAndBranchInOrganization', () => {
+    let gitRepo: GitRepo;
+
+    beforeEach(async () => {
+      gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'Optimetriks',
+          repo: 'Smala-Native',
+          branch: 'main',
+        }),
+      );
+    });
+
+    describe('when the owner and repo differ only by case', () => {
+      it('finds the repository', async () => {
+        const found =
+          await gitRepoRepository.findByOwnerRepoAndBranchInOrganization(
+            'optimetriks',
+            'smala-native',
+            'main',
+            testOrganization.id,
+          );
+
+        expect(found?.id).toEqual(gitRepo.id);
+      });
+    });
+
+    describe('when the branch differs only by case', () => {
+      it('finds no repository', async () => {
+        const found =
+          await gitRepoRepository.findByOwnerRepoAndBranchInOrganization(
+            'Optimetriks',
+            'Smala-Native',
+            'Main',
+            testOrganization.id,
+          );
+
+        expect(found).toBeNull();
+      });
+    });
+  });
+
   describe('findByProviderId', () => {
     let gitRepo1: GitRepo;
     let gitRepo2: GitRepo;

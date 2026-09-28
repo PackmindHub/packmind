@@ -77,11 +77,11 @@ describe('CLI-managed repository adoption integration', () => {
 
   afterAll(() => fixture.destroy());
 
-  function recordFromCli(): Promise<GitRepo> {
+  function recordFromCli(owner = OWNER, repo = REPO): Promise<GitRepo> {
     return testApp.gitHexa.getAdapter().findOrCreateGitRepo({
       ...admin.packmindCommand(),
-      owner: OWNER,
-      repo: REPO,
+      owner,
+      repo,
       branch: BRANCH,
       providerVendor: 'github',
       gitRemoteUrl: GIT_REMOTE_URL,
@@ -168,6 +168,20 @@ describe('CLI-managed repository adoption integration', () => {
       expect(
         (await displayedHistory()).map((entry) => entry.target.gitRepo?.id),
       ).toEqual([cliRepo.id]);
+    });
+  });
+
+  describe('when the CLI spelled the repository with another case', () => {
+    let cliRepo: GitRepo;
+    let adoptedRepo: GitRepo;
+
+    beforeEach(async () => {
+      cliRepo = await recordFromCli('Optimetriks', 'Smala-Native');
+      adoptedRepo = await addFromApp(await connectAuthenticatedProvider());
+    });
+
+    it('adopts the same repository', () => {
+      expect(adoptedRepo.id).toBe(cliRepo.id);
     });
   });
 
