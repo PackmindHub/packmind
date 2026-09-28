@@ -2,8 +2,7 @@
 
 ## Added
 
-- Added `--debug` flag on every command. Currently, only debug the network issues.
-- Network errors are now recorded in `~/.packmind/error.log`, whether or not `--debug` was passed
+- Network errors are now recorded in `~/.packmind/error.log`, with the failing request and its cause
 
 ## Changed
 

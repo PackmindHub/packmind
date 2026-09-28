@@ -31,6 +31,7 @@ export type LintHandlerArgs = {
   path?: string;
   draft: boolean;
   rule?: { standardSlug: string; ruleId: RuleId };
+  debug: boolean;
   language?: string;
   logger: Loggers;
   continueOnError: boolean;

@@ -1,4 +1,3 @@
-import { isDebug } from '../utils/debugMode';
 import { appendErrorLog } from '../utils/errorLog';
 
 /**
@@ -82,8 +81,7 @@ function indent(text: string, prefix = '    '): string {
  * never the top link: `fetch failed` wraps the `ECONNREFUSED`,
  * `CERT_HAS_EXPIRED` or `UND_ERR_CONNECT_TIMEOUT` that actually explains it.
  *
- * Always built, whatever the flags — the error log records it even when the
- * user is not shown it.
+ * Always built: the error log records it on every failure.
  */
 export function buildErrorDiagnostics(
   error: unknown,
@@ -115,28 +113,13 @@ export function buildErrorDiagnostics(
 }
 
 /**
- * The diagnostics as they are appended to a user-facing message. Empty unless
- * `--debug` was given, so call sites can append it unconditionally.
- */
-export function formatErrorDiagnostics(
-  error: unknown,
-  context?: IRequestContext,
-): string {
-  if (!isDebug()) {
-    return '';
-  }
-
-  return `\nDebug diagnostics:\n${buildErrorDiagnostics(error, context)}`;
-}
-
-/**
- * An error carrying `message` plus, under `--debug`, the diagnostics for
- * `cause`. The cause is attached by assignment rather than through the
+ * An error carrying `message`, with its diagnostics recorded in
+ * `~/.packmind/error.log` rather than shown: the console keeps the one line a
+ * user can act on, and the log holds what a report needs.
+ *
+ * The cause is attached by assignment rather than through the
  * `new Error(message, { cause })` overload, which the monorepo's `es2020` lib
  * does not declare.
- *
- * The diagnostics reach `~/.packmind/error.log` either way: a user who hits
- * this once should not have to reproduce it under `--debug` to report it.
  */
 export function createDiagnosticError(
   message: string,
@@ -147,9 +130,7 @@ export function createDiagnosticError(
 
   appendErrorLog({ message, diagnostics });
 
-  const error: Error & { cause?: unknown } = new Error(
-    isDebug() ? `${message}\nDebug diagnostics:\n${diagnostics}` : message,
-  );
+  const error: Error & { cause?: unknown } = new Error(message);
   error.cause = cause;
   return error;
 }
