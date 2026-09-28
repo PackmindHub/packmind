@@ -100,6 +100,8 @@ them rather than inferring from neighbouring code:
 - **Port-Adapter Cross-Domain Integration** — how one domain may reach another
 - **Scoped Repository Patterns** — `OrganizationScopedRepository` / `SpaceScopedRepository`
 - **Domain Events**
+- **Domain Error Handling** — error families (domain / internal / upstream) mapped centrally by
+  `DomainExceptionFilter`
 - **Back-end repositories SQL queries using TypeORM**
 - **Back-end TypeScript Clean Code Practices**
 
