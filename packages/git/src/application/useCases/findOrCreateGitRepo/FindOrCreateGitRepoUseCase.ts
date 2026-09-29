@@ -11,7 +11,13 @@ import {
   IGitPort,
   UnresolvableGitProviderError,
 } from '@packmind/types';
-import { extractBaseUrl, parseGitProviderVendor } from '@packmind/node-utils';
+import {
+  extractBaseUrl,
+  parseGitProviderVendor,
+  sameGitHost,
+} from '@packmind/node-utils';
+import { isProbeableSource } from '../shared/probeCandidateCredentials';
+import { providerHostUrl } from '../shared/providerHostUrl';
 
 const origin = 'FindOrCreateGitRepoUseCase';
 
@@ -42,12 +48,12 @@ export class FindOrCreateGitRepoUseCase
     const { owner, repo, branch, organization, userId } = command;
 
     const gitRemoteUrl = command.gitRemoteUrl;
-    const providerVendor: GitProviderVendor =
-      command.providerVendor !== undefined
-        ? (command.providerVendor as GitProviderVendor)
-        : gitRemoteUrl
-          ? parseGitProviderVendor(gitRemoteUrl)
-          : 'unknown';
+    // The remote is the server's own evidence; the vendor a CLI sends is only
+    // trusted from CLIs that predate sending the remote.
+    const providerVendor: GitProviderVendor = gitRemoteUrl
+      ? parseGitProviderVendor(gitRemoteUrl)
+      : ((command.providerVendor as GitProviderVendor | undefined) ??
+        'unknown');
 
     const organizationId = organization.id;
 
@@ -63,81 +69,94 @@ export class FindOrCreateGitRepoUseCase
       organizationId,
     });
 
-    const vendorProviders = providersResponse.providers.filter(
-      (p) => p.source === providerVendor,
+    // A provider's URL states which instance it reaches, so a self-hosted
+    // remote finds the provider an admin configured for it, whatever vendor a
+    // substring of the remote suggests.
+    const hostProviders = providersResponse.providers.filter((p) =>
+      gitRemoteUrl
+        ? sameGitHost(providerHostUrl(p), gitRemoteUrl)
+        : p.source === providerVendor,
+    );
+    const tokenProviders = hostProviders.filter(
+      (p) => p.hasAuth && isProbeableSource(p.source),
     );
 
-    // Unknown vendors expose no API to list repositories, so there is nothing
-    // to probe a token against.
-    if (providerVendor !== 'unknown') {
-      const tokenProviders = vendorProviders.filter((p) => p.hasAuth);
+    // Every provider is probed before anything is created: creating on the
+    // first match would raise a duplicate-repo error when a later provider
+    // already hosts the repo.
+    type ProviderInfo = (typeof tokenProviders)[number];
+    const providersWithAccess: ProviderInfo[] = [];
 
-      // Every provider is probed before anything is created: creating on the
-      // first match would raise a duplicate-repo error when a later provider
-      // already hosts the repo.
-      type ProviderInfo = (typeof tokenProviders)[number];
-      const providersWithAccess: ProviderInfo[] = [];
+    for (const provider of tokenProviders) {
+      const existingRepos = await this.gitPort.listRepos(provider.id);
+      const existingRepo = existingRepos.find(
+        (r) =>
+          r.owner.toLowerCase() === owner.toLowerCase() &&
+          r.repo.toLowerCase() === repo.toLowerCase() &&
+          r.branch === branch,
+      );
 
-      for (const provider of tokenProviders) {
-        const existingRepos = await this.gitPort.listRepos(provider.id);
-        const existingRepo = existingRepos.find(
-          (r) =>
-            r.owner.toLowerCase() === owner.toLowerCase() &&
-            r.repo.toLowerCase() === repo.toLowerCase() &&
-            r.branch === branch,
-        );
-
-        if (existingRepo) {
-          this.logger.info('Found existing repo under token provider', {
-            providerId: provider.id,
-            repoId: existingRepo.id,
-          });
-          return existingRepo;
-        }
-
-        try {
-          const availableRepos = await this.gitPort.listAvailableRepos({
-            gitProviderId: provider.id,
-            userId,
-            organizationId,
-          });
-          const canAccess = availableRepos.repositories.some(
-            (r) =>
-              r.owner.toLowerCase() === owner.toLowerCase() &&
-              r.name.toLowerCase() === repo.toLowerCase(),
-          );
-
-          if (canAccess) {
-            providersWithAccess.push(provider);
-          }
-        } catch (error) {
-          this.logger.info('Failed to list available repos for provider', {
-            providerId: provider.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-          // Swallowed: this provider's token may be expired or revoked, which
-          // only rules out this provider.
-        }
+      if (existingRepo) {
+        this.logger.info('Found existing repo under token provider', {
+          providerId: provider.id,
+          repoId: existingRepo.id,
+        });
+        return existingRepo;
       }
 
-      if (providersWithAccess.length > 0) {
-        const provider = providersWithAccess[0];
-        this.logger.info(
-          'Token can access repo, creating under token provider',
-          { providerId: provider.id },
-        );
-        return this.gitPort.addGitRepo({
+      try {
+        const availableRepos = await this.gitPort.listAvailableRepos({
+          gitProviderId: provider.id,
           userId,
           organizationId,
-          gitProviderId: provider.id,
-          owner,
-          repo,
-          branch,
         });
+        const canAccess = availableRepos.repositories.some(
+          (r) =>
+            r.owner.toLowerCase() === owner.toLowerCase() &&
+            r.name.toLowerCase() === repo.toLowerCase(),
+        );
+
+        if (canAccess) {
+          providersWithAccess.push(provider);
+        }
+      } catch (error) {
+        this.logger.info('Failed to list available repos for provider', {
+          providerId: provider.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Swallowed: this provider's token may be expired or revoked, which
+        // only rules out this provider.
       }
     }
 
-    this.logger.info('No token provider has access, falling back to tokenless');
+    if (providersWithAccess.length > 0) {
+      const provider = providersWithAccess[0];
+      this.logger.info('Token can access repo, creating under token provider', {
+        providerId: provider.id,
+      });
+      return this.gitPort.addGitRepo({
+        userId,
+        organizationId,
+        gitProviderId: provider.id,
+        owner,
+        repo,
+        branch,
+      });
+    }
+
+    if (tokenProviders.length > 0) {
+      this.logger.warn(
+        'No authenticated provider of the host can reach the repository, falling back to a CLI-managed provider',
+        {
+          organizationId,
+          gitProviderIds: tokenProviders.map((p) => p.id),
+        },
+      );
+    } else {
+      this.logger.info(
+        'No token provider has access, falling back to tokenless',
+      );
+    }
 
     let expectedProviderUrl: string;
     if (providerVendor === 'github') {
@@ -150,11 +169,15 @@ export class FindOrCreateGitRepoUseCase
       throw new UnresolvableGitProviderError(owner, repo);
     }
 
-    let tokenlessProvider = vendorProviders.find(
-      (p) =>
-        !p.hasAuth &&
-        p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
+    // Older servers stored a whole ssh:// remote as the URL, so the host is
+    // what matches; an exact URL still wins when several providers qualify.
+    const tokenlessProviders = hostProviders.filter(
+      (p) => !p.hasAuth && sameGitHost(p.url, expectedProviderUrl),
     );
+    let tokenlessProvider =
+      tokenlessProviders.find(
+        (p) => p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
+      ) ?? tokenlessProviders[0];
 
     if (!tokenlessProvider) {
       const newProvider = await this.gitPort.addGitProvider({
