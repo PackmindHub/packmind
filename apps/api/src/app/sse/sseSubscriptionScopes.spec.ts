@@ -43,6 +43,15 @@ describe('resolveSSESubscriptionScope', () => {
     });
   });
 
+  describe('when an event type is declared but nothing publishes it', () => {
+    it.each(['NOTIFICATION', 'CREATE'])(
+      'refuses %s rather than guessing a scope for it',
+      (eventType) => {
+        expect(resolveSSESubscriptionScope(eventType)).toBeUndefined();
+      },
+    );
+  });
+
   describe('when the event type is not declared', () => {
     it('resolves nothing for an unknown event type', () => {
       expect(resolveSSESubscriptionScope('SOMETHING_INVENTED')).toBeUndefined();
