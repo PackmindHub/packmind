@@ -19,6 +19,11 @@
 
 - A clone URL embedding a token (`https://oauth2:<token>@host`) no longer leaks it into server logs or the Git connections page
 - Remotes stored with such a token are cleaned by a migration
+- On a self-managed GitLab, `packmind install`, `init` and `track` now use the connection configured for the instance instead of a CLI-managed one
+- That connection is matched by host, so a remote cloned over HTTPS or SSH reaches it alike
+- Adding a repository the CLI already recorded on that instance moves it under the connection with its targets and history, instead of refusing it as a duplicate
+- A CLI-managed connection is no longer listed once it holds no repository
+- A repository cloned over `ssh://` or with a user in its URL no longer gets a CLI-managed connection of its own
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
 
 ## Removed
