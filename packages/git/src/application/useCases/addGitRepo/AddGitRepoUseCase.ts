@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
-  extractBaseUrl,
   MemberContext,
+  sameGitHost,
 } from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
@@ -20,40 +20,25 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { providerHostUrl } from '../shared/providerHostUrl';
 
 const origin = 'AddGitRepoUseCase';
-
-const DEFAULT_HOST_BY_SOURCE: Partial<Record<GitProvider['source'], string>> = {
-  github: 'https://github.com',
-  gitlab: 'https://gitlab.com',
-};
-
-// GitHub providers, App installs included, may store no URL: their API client
-// always targets github.com, as GitLab's falls back to gitlab.com.
-function hostOf(provider: GitProvider): string | null {
-  const url = provider.url
-    ? extractBaseUrl(provider.url)
-    : DEFAULT_HOST_BY_SOURCE[provider.source];
-  return url?.toLowerCase() ?? null;
-}
 
 /**
  * A repository the CLI recorded before the organization connected an
  * authenticated provider for the same host moves under it, rather than
- * blocking it as a duplicate.
+ * blocking it as a duplicate. The host decides, not the source: the CLI
+ * records a self-hosted instance under an `unknown` provider.
  */
 function isAdoptableBy(
   holdingProvider: GitProvider,
   gitProvider: GitProvider,
 ): boolean {
-  const host = hostOf(gitProvider);
   return (
     holdingProvider.id !== gitProvider.id &&
     !providerHasAuth(holdingProvider) &&
     providerHasAuth(gitProvider) &&
-    holdingProvider.source === gitProvider.source &&
-    host !== null &&
-    hostOf(holdingProvider) === host
+    sameGitHost(providerHostUrl(gitProvider), providerHostUrl(holdingProvider))
   );
 }
 
@@ -158,11 +143,20 @@ export class AddGitRepoUseCase
           fromGitProviderId: holdingProvider.id,
           toGitProviderId: gitProvider.id,
         });
-        return this.gitRepoService.adoptGitRepo(
+        const adoptedRepo = await this.gitRepoService.adoptGitRepo(
           existingRepo,
           gitProvider.id,
           organization.id,
         );
+        // An emptied CLI-managed provider would stay listed beside the
+        // connection that now holds its repositories.
+        if (!(await this.gitRepoService.hasGitRepos(holdingProvider.id))) {
+          await this.gitProviderService.deleteGitProvider(
+            holdingProvider.id,
+            createUserId(userId),
+          );
+        }
+        return adoptedRepo;
       }
 
       this.logger.error('Repository already exists in organization', {

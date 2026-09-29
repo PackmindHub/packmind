@@ -72,6 +72,14 @@ export class GitRepoService {
     });
   }
 
+  // Marketplace repositories count too: a provider holding one still serves.
+  async hasGitRepos(providerId: GitProviderId): Promise<boolean> {
+    const gitRepos = await this.gitRepoRepository.findByProviderId(providerId, {
+      type: 'any',
+    });
+    return gitRepos.length > 0;
+  }
+
   async findGitReposByOrganizationId(
     organizationId: OrganizationId,
   ): Promise<GitRepo[]> {

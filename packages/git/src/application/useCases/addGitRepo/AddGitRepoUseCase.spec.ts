@@ -42,6 +42,7 @@ describe('AddGitRepoUseCase', () => {
   beforeEach(() => {
     mockGitProviderService = {
       findGitProviderById: jest.fn(),
+      deleteGitProvider: jest.fn(),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -50,6 +51,7 @@ describe('AddGitRepoUseCase', () => {
       findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
       addGitRepo: jest.fn(),
       adoptGitRepo: jest.fn(),
+      hasGitRepos: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
     mockDeploymentPort = {
@@ -704,6 +706,7 @@ describe('AddGitRepoUseCase', () => {
         existingRepo,
       );
       mockGitRepoService.adoptGitRepo.mockResolvedValue(adoptedRepo);
+      mockGitRepoService.hasGitRepos.mockResolvedValue(false);
     });
 
     describe('when the authenticated provider targets the same host', () => {
@@ -736,6 +739,26 @@ describe('AddGitRepoUseCase', () => {
 
       it('creates no new target', () => {
         expect(mockDeploymentPort.addTarget).not.toHaveBeenCalled();
+      });
+
+      it('removes the emptied CLI-managed provider', () => {
+        expect(mockGitProviderService.deleteGitProvider).toHaveBeenCalledWith(
+          holdingProviderId,
+          userId,
+        );
+      });
+    });
+
+    describe('when the CLI-managed provider still holds other repositories', () => {
+      beforeEach(async () => {
+        mockGitRepoService.hasGitRepos.mockResolvedValue(true);
+        givenProviders(authenticatedProvider(), cliManagedProvider());
+
+        await addRepo();
+      });
+
+      it('keeps the CLI-managed provider', () => {
+        expect(mockGitProviderService.deleteGitProvider).not.toHaveBeenCalled();
       });
     });
 
@@ -780,11 +803,36 @@ describe('AddGitRepoUseCase', () => {
       });
     });
 
-    describe('when the providers are of different vendors', () => {
+    describe('when the CLI recorded a self-hosted instance as an unknown vendor', () => {
+      beforeEach(async () => {
+        givenProviders(
+          authenticatedProvider({ url: 'https://gitlab.acme.io' }),
+          cliManagedProvider({
+            source: GitProviderVendors.unknown,
+            url: 'https://gitlab.acme.io',
+          }),
+        );
+
+        await addRepo();
+      });
+
+      it('adopts the repository', () => {
+        expect(mockGitRepoService.adoptGitRepo).toHaveBeenCalledWith(
+          existingRepo,
+          gitProviderId,
+          organizationId,
+        );
+      });
+    });
+
+    describe('when the providers are on different hosts', () => {
       it('throws GitRepoAlreadyExistsError', async () => {
         givenProviders(
-          authenticatedProvider(),
-          cliManagedProvider({ source: GitProviderVendors.unknown }),
+          authenticatedProvider({ url: 'https://gitlab.acme.io' }),
+          cliManagedProvider({
+            source: GitProviderVendors.unknown,
+            url: 'https://gitlab.acme.io.evil.com',
+          }),
         );
 
         await expect(addRepo()).rejects.toThrow(GitRepoAlreadyExistsError);
