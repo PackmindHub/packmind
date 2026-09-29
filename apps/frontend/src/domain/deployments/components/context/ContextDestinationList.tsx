@@ -782,7 +782,19 @@ function FailureNote({
       </PMText>
       {onOpenHistory && (
         <PMBox marginTop={1}>
-          <PMLink as="button" fontSize="xs" onClick={onOpenHistory}>
+          {/*
+            Underlined, because in here it is the only control and `plain`
+            leaves it indistinguishable from the message above it. The `Why?`
+            on the row above carries the branding colour instead: that one has
+            to be found in a line of faded text, this one is already inside
+            what that line opened.
+          */}
+          <PMLink
+            as="button"
+            variant="underline"
+            fontSize="xs"
+            onClick={onOpenHistory}
+          >
             See the full run
           </PMLink>
         </PMBox>
