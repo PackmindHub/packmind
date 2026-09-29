@@ -1,4 +1,10 @@
 import { GitCommitSchema } from '@packmind/git';
+import {
+  EventTypeNotSubscribableError,
+  SSESubscriptionAuthorizer,
+  SubscriptionSubjectNotAccessibleError,
+} from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { gitCommitFactory } from '@packmind/git/test';
 import { TargetNotFoundError } from '@packmind/deployments';
 import {
@@ -304,6 +310,118 @@ describe('Broken access control - target ownership validation', () => {
         });
 
       expect(history).toEqual([]);
+    });
+  });
+  /*
+   * POST /sse/subscribe took an event type and an arbitrary params array and
+   * registered the subscription without asking whether the caller could see
+   * what params named, so knowing a space id was enough to learn when that
+   * space changed, whatever organization owned it. What leaked was activity
+   * rather than content — the events carry only the ids needed to route them —
+   * but it was a timing side channel across an organization boundary.
+   *
+   * Driven against the real spaces adapter and two real organizations, because
+   * the hole was precisely that no query was made: a test with a stubbed
+   * membership lookup would have passed with it open.
+   */
+  describe('SSE subscription authorization', () => {
+    let authorizer: SSESubscriptionAuthorizer;
+
+    beforeEach(() => {
+      authorizer = new SSESubscriptionAuthorizer(
+        testApp.spacesHexa.getAdapter(),
+        stubLogger(),
+      );
+    });
+
+    describe('when the event type is scoped to a space', () => {
+      it('subscribes a member to their own space', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'SPACE_CONTENT_CHANGED',
+            params: [orgA.space.id],
+          }),
+        ).resolves.toBeUndefined();
+      });
+
+      it('refuses a space belonging to another organization', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'SPACE_CONTENT_CHANGED',
+            params: [orgB.space.id],
+          }),
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
+      });
+
+      it('refuses a space of the caller own organization they never joined', async () => {
+        const unjoinedSpace = await testApp.spacesHexa
+          .getAdapter()
+          .createSpace({
+            ...orgA.packmindCommand(),
+            name: 'A space nobody joined',
+          });
+
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'SPACE_CONTENT_CHANGED',
+            params: [unjoinedSpace.id],
+          }),
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
+      });
+
+      it('refuses change proposals on another organization space', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'CHANGE_PROPOSAL_UPDATE',
+            params: [orgB.space.id],
+          }),
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
+      });
+    });
+
+    describe('when the event type is scoped to an organization', () => {
+      it('subscribes a caller to their own organization', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'DISTRIBUTION_STATUS_CHANGE',
+            params: [orgA.organization.id],
+          }),
+        ).resolves.toBeUndefined();
+      });
+
+      it('refuses another organization', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'DISTRIBUTION_STATUS_CHANGE',
+            params: [orgB.organization.id],
+          }),
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
+      });
+    });
+
+    describe('when the event type is not one anything publishes', () => {
+      it('refuses it rather than registering it', async () => {
+        await expect(
+          authorizer.assertMaySubscribe({
+            userId: orgA.user.id,
+            organizationId: orgA.organization.id,
+            eventType: 'SOMETHING_INVENTED',
+            params: [orgA.space.id],
+          }),
+        ).rejects.toThrow(EventTypeNotSubscribableError);
+      });
     });
   });
 });
