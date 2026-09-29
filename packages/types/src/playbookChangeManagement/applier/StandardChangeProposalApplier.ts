@@ -85,11 +85,6 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
-      this.assertTargetExists(
-        changeProposal.id,
-        rules,
-        changeProposal.payload.targetId,
-      );
       const updatedRules = rules.map((rule) => {
         if (rule.id !== changeProposal.payload.targetId) {
           return rule;
@@ -118,11 +113,6 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
-      this.assertTargetExists(
-        changeProposal.id,
-        rules,
-        changeProposal.payload.targetId,
-      );
       const filteredRules = rules.filter(
         (rule) => rule.id !== changeProposal.payload.targetId,
       );
