@@ -18,8 +18,9 @@ export function parseGitRepoInfo(gitRemoteUrl: string): {
   const path = (gitRemoteUrl.trim().match(SCHEME_URL_PATH) ??
     gitRemoteUrl.trim().match(SCP_LIKE_PATH))?.[1];
 
+  // An scp-like remote may name an absolute path: `git@host:/group/repo.git`.
   const segments = path
-    ?.replace(/\/+$/, '')
+    ?.replace(/^\/+|\/+$/g, '')
     .replace(/\.git$/i, '')
     .split('/');
 

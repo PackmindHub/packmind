@@ -28,6 +28,15 @@ describe('parseGitRepoInfo', () => {
     });
   });
 
+  describe('when an scp-like remote names an absolute path', () => {
+    it('ignores the leading slash', () => {
+      expect(parseGitRepoInfo('git@gitlab.acme.io:/acme/app.git')).toEqual({
+        owner: 'acme',
+        repo: 'app',
+      });
+    });
+  });
+
   describe('when the remote has no owner', () => {
     it('throws', () => {
       expect(() => parseGitRepoInfo('https://github.com/repo')).toThrow(
