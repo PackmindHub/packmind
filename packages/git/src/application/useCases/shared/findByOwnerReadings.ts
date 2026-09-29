@@ -1,21 +1,20 @@
 import { GitProviderId, GitRepo } from '@packmind/types';
-
-export type OwnerReading = {
-  owner: string;
-  // The only provider whose repositories the reading names, null for any.
-  providerId: GitProviderId | null;
-};
+import { OwnerReading } from '../../GitProviderService';
 
 /**
- * The first repository a reading of the owner finds, readings tried in order.
+ * The first repository a reading of the owner finds, readings tried in order,
+ * each looked up among the repositories of the provider it names, if any.
  */
 export async function findByOwnerReadings(
   readings: ReadonlyArray<OwnerReading>,
-  find: (owner: string) => Promise<GitRepo | null>,
+  find: (
+    owner: string,
+    opts: { providerId?: GitProviderId },
+  ) => Promise<GitRepo | null>,
 ): Promise<GitRepo | null> {
   for (const { owner, providerId } of readings) {
-    const gitRepo = await find(owner);
-    if (gitRepo && (providerId === null || gitRepo.providerId === providerId)) {
+    const gitRepo = await find(owner, providerId ? { providerId } : {});
+    if (gitRepo) {
       return gitRepo;
     }
   }

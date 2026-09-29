@@ -12,6 +12,7 @@ import {
   IAccountsPort,
   IGitPort,
   Organization,
+  UnresolvableGitProviderError,
   User,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -111,6 +112,43 @@ describe('FindOrCreateGitRepoUseCase', () => {
 
     it('does not create a repository', () => {
       expect(mockGitPort.addGitRepo).not.toHaveBeenCalled();
+    });
+  });
+
+  // The GitHub API client targets github.com whatever URL the provider stores.
+  describe('when a GitHub token provider stores another github.com URL', () => {
+    let existingRepo: GitRepo;
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      const tokenProviderId = createGitProviderId(uuidv4());
+      existingRepo = gitRepoFactory({
+        owner: 'acme',
+        repo: 'widgets',
+        branch: 'dev',
+        providerId: tokenProviderId,
+      });
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [
+          {
+            id: tokenProviderId,
+            source: GitProviderVendors.github,
+            organizationId,
+            url: 'https://api.github.com',
+            authMethod: 'token',
+            displayName: 'token-provider',
+            hasAuth: true,
+            lastDistributionAt: null,
+          },
+        ],
+      });
+      mockGitPort.listRepos.mockResolvedValue([existingRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('finds the repository under it', () => {
+      expect(result).toEqual(existingRepo);
     });
   });
 
@@ -323,6 +361,22 @@ describe('FindOrCreateGitRepoUseCase', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('when the remote names no host', () => {
+    beforeEach(() => {
+      mockGitPort.listProviders.mockResolvedValue({ providers: [] });
+    });
+
+    it('refuses the repository as unresolvable', async () => {
+      await expect(
+        useCase.execute({
+          ...command,
+          providerVendor: 'unknown',
+          gitRemoteUrl: 'file:///srv/repos/acme/widgets.git',
+        }),
+      ).rejects.toBeInstanceOf(UnresolvableGitProviderError);
     });
   });
 

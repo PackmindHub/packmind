@@ -152,6 +152,12 @@ describe('providerPathPrefix', () => {
       'ssh://git@gitlab.acme.io:2222/acme/app.git',
       null,
     ],
+    [
+      'a URL under a prefix naming the API root',
+      'https://devtools.acme.io/gitlab/api/v4',
+      'gitlab',
+    ],
+    ['a URL naming the API root', 'https://gitlab.acme.io/api/v4/', null],
     ['null', null, null],
   ])('with %s', (_label, url, expected) => {
     it(`returns ${expected}`, () => {
@@ -163,15 +169,28 @@ describe('providerPathPrefix', () => {
 describe('ownerReadingsOf', () => {
   const prefixed = 'https://devtools.acme.io/gitlab';
 
-  describe('when the remote is on a provider installed under a prefix', () => {
-    it('reads the owner with and without the prefix', () => {
+  describe('when a web remote is on a provider installed under a prefix', () => {
+    it('reads the owner without the prefix', () => {
       expect(
         ownerReadingsOf(
           'gitlab/group/sub',
           prefixed,
-          'git@devtools.acme.io:gitlab/group/sub/app.git',
+          'https://devtools.acme.io/gitlab/group/sub/app.git',
         ),
-      ).toEqual(['gitlab/group/sub', 'group/sub']);
+      ).toEqual(['group/sub']);
+    });
+  });
+
+  // GitLab leaves its relative URL root out of SSH clone URLs.
+  describe('when an SSH remote is on a provider installed under a prefix', () => {
+    it('reads the owner as is', () => {
+      expect(
+        ownerReadingsOf(
+          'gitlab/group',
+          prefixed,
+          'git@devtools.acme.io:gitlab/group/app.git',
+        ),
+      ).toEqual(['gitlab/group']);
     });
   });
 

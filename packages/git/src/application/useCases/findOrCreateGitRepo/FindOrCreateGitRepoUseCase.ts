@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import {
   extractBaseUrl,
+  gitHostOf,
   ownerReadingsOf,
   parseGitProviderVendor,
   sameGitHost,
@@ -46,7 +47,7 @@ export class FindOrCreateGitRepoUseCase
   protected async executeForMembers(
     command: FindOrCreateGitRepoCommand & MemberContext,
   ): Promise<FindOrCreateGitRepoResponse> {
-    const { repo, branch, organization, userId } = command;
+    const { owner, repo, branch, organization, userId } = command;
 
     const gitRemoteUrl = command.gitRemoteUrl;
     // The remote is the server's own evidence; the vendor a CLI sends is only
@@ -60,7 +61,7 @@ export class FindOrCreateGitRepoUseCase
 
     this.logger.info('Finding or creating git repo', {
       providerVendor,
-      owner: command.owner,
+      owner,
       repo,
       branch,
     });
@@ -69,9 +70,6 @@ export class FindOrCreateGitRepoUseCase
       userId,
       organizationId,
     });
-    // Repositories of a CLI-managed provider keep the owner the remote names.
-    const owner = command.owner;
-
     // A provider's URL states which instance it reaches, so a self-hosted
     // remote finds the provider an admin configured for it, whatever vendor a
     // substring of the remote suggests.
@@ -178,7 +176,9 @@ export class FindOrCreateGitRepoUseCase
       expectedProviderUrl = 'https://github.com';
     } else if (providerVendor === 'gitlab') {
       expectedProviderUrl = 'https://gitlab.com';
-    } else if (gitRemoteUrl) {
+    } else if (gitRemoteUrl && gitHostOf(gitRemoteUrl)) {
+      // Without a host, no provider could ever match the remote again, and a
+      // new one would be created on every call.
       expectedProviderUrl = extractBaseUrl(gitRemoteUrl);
     } else {
       throw new UnresolvableGitProviderError(owner, repo);
@@ -189,6 +189,27 @@ export class FindOrCreateGitRepoUseCase
     const tokenlessProviders = hostProviders.filter(
       (p) => !p.hasAuth && sameGitHost(p.url, expectedProviderUrl),
     );
+
+    // Older servers kept one provider per ssh:// remote, so the repository
+    // may sit under any CLI-managed provider of the host.
+    for (const provider of tokenlessProviders) {
+      const tokenlessRepos = await this.gitPort.listRepos(provider.id);
+      const existingTokenlessRepo = tokenlessRepos.find(
+        (r) =>
+          r.owner.toLowerCase() === owner.toLowerCase() &&
+          r.repo.toLowerCase() === repo.toLowerCase() &&
+          r.branch === branch,
+      );
+
+      if (existingTokenlessRepo) {
+        this.logger.info('Found existing repo under tokenless provider', {
+          providerId: provider.id,
+          repoId: existingTokenlessRepo.id,
+        });
+        return existingTokenlessRepo;
+      }
+    }
+
     let tokenlessProvider =
       tokenlessProviders.find(
         (p) => p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
@@ -215,22 +236,6 @@ export class FindOrCreateGitRepoUseCase
         hasAuth: false,
         lastDistributionAt: null,
       };
-    }
-
-    const tokenlessRepos = await this.gitPort.listRepos(tokenlessProvider.id);
-    const existingTokenlessRepo = tokenlessRepos.find(
-      (r) =>
-        r.owner.toLowerCase() === owner.toLowerCase() &&
-        r.repo.toLowerCase() === repo.toLowerCase() &&
-        r.branch === branch,
-    );
-
-    if (existingTokenlessRepo) {
-      this.logger.info('Found existing repo under tokenless provider', {
-        providerId: tokenlessProvider.id,
-        repoId: existingTokenlessRepo.id,
-      });
-      return existingTokenlessRepo;
     }
 
     this.logger.info('Creating repo under tokenless provider', {

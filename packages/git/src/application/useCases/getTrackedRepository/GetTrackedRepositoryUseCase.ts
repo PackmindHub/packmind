@@ -38,12 +38,15 @@ export class GetTrackedRepositoryUseCase
       organization.id,
       owner,
     );
-    const gitRepo = await findByOwnerReadings(ownerReadings, (ownerReading) =>
-      this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        ownerReading,
-        repo,
-      ),
+    const gitRepo = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading, opts) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+          opts,
+        ),
     );
 
     return { gitRepo };

@@ -3,6 +3,7 @@ import {
   AbstractAdminUseCase,
   AdminContext,
   PackmindEventEmitterService,
+  providerPathPrefix,
 } from '@packmind/node-utils';
 import {
   createUserId,
@@ -51,11 +52,12 @@ export class UpdateTrackedBranchUseCase
     );
     const existingTracked = await findByOwnerReadings(
       ownerReadings,
-      (ownerReading) =>
+      (ownerReading, opts) =>
         this.gitRepoService.findTrackedByOwnerRepoInOrganization(
           organization.id,
           ownerReading,
           repo,
+          opts,
         ),
     );
 
@@ -95,10 +97,15 @@ export class UpdateTrackedBranchUseCase
     // Clear-then-set = last-one-wins (plain update, no locking).
     await this.gitRepoService.updateTracked(existingTracked.id, false);
 
+    // The provider URL stands in for the remote, so the owner is given as a
+    // web remote of that provider would carry it.
+    const pathPrefix = providerPathPrefix(provider?.url);
     const gitRepo = await this.findOrCreateGitRepo.execute({
       userId,
       organizationId: organization.id,
-      owner: existingTracked.owner,
+      owner: pathPrefix
+        ? `${pathPrefix}/${existingTracked.owner}`
+        : existingTracked.owner,
       repo,
       branch,
       providerVendor: provider?.source,

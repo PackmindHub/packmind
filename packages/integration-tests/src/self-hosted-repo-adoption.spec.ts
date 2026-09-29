@@ -569,6 +569,29 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
     });
   });
 
+  describe('when older servers kept one CLI-managed connection per SSH remote', () => {
+    let lib: GitRepo;
+    let found: GitRepo;
+
+    beforeEach(async () => {
+      await saveGhost('ssh://git@gitlab.acme.io:2222/acme/app.git', [{}]);
+      ({
+        repos: [lib],
+      } = await saveGhost('ssh://git@gitlab.acme.io:2222/acme/lib.git', [
+        { repo: 'lib' },
+      ]));
+
+      found = await recordFromCli({
+        repo: 'lib',
+        remote: 'ssh://git@gitlab.acme.io:2222/acme/lib.git',
+      });
+    });
+
+    it('finds the repository under the connection holding it', () => {
+      expect(found.id).toBe(lib.id);
+    });
+  });
+
   describe('when the CLI-managed connection belongs to another organization', () => {
     let otherOrgRepo: GitRepo;
     let repo: GitRepo;
@@ -689,6 +712,91 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
       });
     });
 
+    describe('and the connection URL names the API root', () => {
+      let token: GitProvider;
+      let repo: GitRepo;
+
+      beforeEach(async () => {
+        token = await connectTokenProvider(`${PREFIXED_HOST}/api/v4`);
+        repo = await recordPrefixedFromCli();
+      });
+
+      it('creates it under the connection', () => {
+        expect(repo).toMatchObject({ providerId: token.id, owner: OWNER });
+      });
+    });
+
+    describe('and the instance also has a group named after the prefix', () => {
+      let repo: GitRepo;
+
+      beforeEach(async () => {
+        await connectTokenProvider(PREFIXED_HOST, {
+          accessTo: [`${OWNER}/${REPO}`, `gitlab/${OWNER}/${REPO}`],
+        });
+        repo = await recordPrefixedFromCli();
+      });
+
+      it('reads the web remote with its prefix removed', () => {
+        expect(repo.owner).toBe(OWNER);
+      });
+    });
+
+    // GitLab leaves its relative URL root out of SSH clone URLs.
+    describe('and the remote is an SSH one', () => {
+      let token: GitProvider;
+      let repo: GitRepo;
+
+      beforeEach(async () => {
+        token = await connectTokenProvider(PREFIXED_HOST, {
+          accessTo: [`gitlab/${OWNER}/${REPO}`],
+        });
+        repo = await recordFromCli({
+          owner: `gitlab/${OWNER}`,
+          remote: `git@devtools.acme.io:gitlab/${OWNER}/${REPO}.git`,
+        });
+      });
+
+      it('reads its owner as is', () => {
+        expect(repo).toMatchObject({
+          providerId: token.id,
+          owner: `gitlab/${OWNER}`,
+        });
+      });
+    });
+
+    describe('and the tracked branch of a group starting with the prefix moves', () => {
+      let token: GitProvider;
+      let moved: GitRepo;
+
+      beforeEach(async () => {
+        token = await connectTokenProvider(PREFIXED_HOST, {
+          accessTo: [`gitlab/${OWNER}/${REPO}`],
+        });
+        await testApp.gitHexa.getAdapter().setTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: `gitlab/gitlab/${OWNER}`,
+          repo: REPO,
+          branch: BRANCH,
+          origin: 'track',
+          gitRemoteUrl: `https://devtools.acme.io/gitlab/gitlab/${OWNER}/${REPO}.git`,
+        });
+        moved = await testApp.gitHexa.getAdapter().updateTrackedBranch({
+          ...admin.packmindCommand(),
+          owner: `gitlab/gitlab/${OWNER}`,
+          repo: REPO,
+          branch: 'develop',
+        });
+      });
+
+      it('tracks the new branch under the connection with the same group', () => {
+        expect(moved).toMatchObject({
+          providerId: token.id,
+          owner: `gitlab/${OWNER}`,
+          branch: 'develop',
+        });
+      });
+    });
+
     describe('and another host has a group named after the prefix', () => {
       let tracked: GitRepo;
 
@@ -770,6 +878,30 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
     });
 
     it('stays tracked after the adoption', async () => {
+      const { gitRepo } = await testApp.gitHexa
+        .getAdapter()
+        .getTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: OWNER,
+          repo: REPO,
+        });
+
+      expect(gitRepo?.id).toBe(tracked.id);
+    });
+  });
+
+  describe('when the connection spells the tracked owner with another case', () => {
+    let tracked: GitRepo;
+
+    beforeEach(async () => {
+      tracked = await trackFromCli();
+      await addFromApp(
+        await connectTokenProvider(HOST, { accessTo: [`Acme/${REPO}`] }),
+        { owner: 'Acme' },
+      );
+    });
+
+    it('stays found by the owner the CLI reads', async () => {
       const { gitRepo } = await testApp.gitHexa
         .getAdapter()
         .getTrackedRepository({

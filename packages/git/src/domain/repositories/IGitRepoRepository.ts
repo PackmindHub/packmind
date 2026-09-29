@@ -51,6 +51,7 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null>;
   updateTracked(gitRepoId: GitRepoId, isTracked: boolean): Promise<GitRepo>;
   /**

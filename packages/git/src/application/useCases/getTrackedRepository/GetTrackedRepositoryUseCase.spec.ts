@@ -102,7 +102,7 @@ describe('GetTrackedRepositoryUseCase', () => {
     it('queries by organization, owner and repo', () => {
       expect(
         mockGitRepoService.findTrackedByOwnerRepoInOrganization,
-      ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets');
+      ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets', {});
     });
   });
 

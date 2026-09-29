@@ -60,11 +60,12 @@ export class SetTrackedRepositoryUseCase
     );
     const existingTracked = await findByOwnerReadings(
       ownerReadings,
-      (ownerReading) =>
+      (ownerReading, opts) =>
         this.gitRepoService.findTrackedByOwnerRepoInOrganization(
           organization.id,
           ownerReading,
           repo,
+          opts,
         ),
     );
 

@@ -88,11 +88,13 @@ export class GitRepoService {
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     return this.gitRepoRepository.findTrackedByOwnerRepoInOrganization(
       organizationId,
       owner,
       repo,
+      opts,
     );
   }
 
@@ -137,11 +139,13 @@ export class GitRepoService {
     owner: string,
     repo: string,
     organizationId: OrganizationId,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     return this.gitRepoRepository.findByOwnerAndRepoInOrganization(
       owner,
       repo,
       organizationId,
+      opts,
     );
   }
 

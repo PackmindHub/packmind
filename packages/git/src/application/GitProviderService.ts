@@ -17,8 +17,13 @@ import {
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { ownerReadingsOf } from '@packmind/node-utils';
-import { OwnerReading } from './useCases/shared/findByOwnerReadings';
 import { v4 as uuidv4 } from 'uuid';
+
+export type OwnerReading = {
+  owner: string;
+  // The only provider whose repositories the reading names, null for any.
+  providerId: GitProviderId | null;
+};
 
 export class GitProviderService {
   constructor(
@@ -84,7 +89,7 @@ export class GitProviderService {
       { owner, providerId: null },
       ...providers.flatMap((provider) =>
         ownerReadingsOf(owner, provider.url, gitRemoteUrl)
-          .slice(1)
+          .filter((reading) => reading !== owner)
           .map((reading) => ({ owner: reading, providerId: provider.id })),
       ),
     ];

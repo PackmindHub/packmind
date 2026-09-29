@@ -53,11 +53,12 @@ export class RemoveTrackedRepositoryUseCase
     );
     const existingTracked = await findByOwnerReadings(
       ownerReadings,
-      (ownerReading) =>
+      (ownerReading, opts) =>
         this.gitRepoService.findTrackedByOwnerRepoInOrganization(
           organization.id,
           ownerReading,
           repo,
+          opts,
         ),
     );
 
@@ -67,11 +68,12 @@ export class RemoveTrackedRepositoryUseCase
       // has never seen, which is a mistake worth failing on.
       const knownRepo = await findByOwnerReadings(
         ownerReadings,
-        (ownerReading) =>
+        (ownerReading, opts) =>
           this.gitRepoService.findByOwnerAndRepoInOrganization(
             ownerReading,
             repo,
             organization.id,
+            opts,
           ),
       );
 

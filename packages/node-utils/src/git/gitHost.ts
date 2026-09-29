@@ -45,6 +45,7 @@ export function sameGitHost(
 // Only a web URL can carry an installation prefix: a CLI-managed provider may
 // hold a whole ssh:// remote, whose path is a repository, not a prefix.
 const WEB_URL_PATH = /^https?:\/\/[^/]+\/([^?#]*)/i;
+const WEB_REMOTE = /^https?:\/\//i;
 
 /**
  * The path a provider URL puts before every group, lowercased and without
@@ -58,16 +59,18 @@ export function providerPathPrefix(
     ?.trim()
     .match(WEB_URL_PATH)?.[1]
     .replace(/^\/+|\/+$/g, '')
+    // The GitLab client accepts a URL that already names its API root.
+    .replace(/(^|\/)api\/v4$/i, '')
     .toLowerCase();
   return path ? path : null;
 }
 
 /**
- * The owners a provider may name a remote's group, the remote's own first. A
- * remote cloned from an instance installed under a path prefix carries that
- * prefix before the group (`gitlab/group` under
- * `https://devtools.acme.io/gitlab`), which the provider never reports. The
- * prefix is only this provider's when the remote, if known, is on its host.
+ * The owners a provider may name a remote's group. A web remote of an instance
+ * installed under a path prefix carries that prefix before the group
+ * (`gitlab/group` under `https://devtools.acme.io/gitlab`), which the provider
+ * never reports; an SSH remote never carries it. When the remote is unknown,
+ * both readings remain, the owner as given first.
  */
 export function ownerReadingsOf(
   owner: string,
@@ -75,12 +78,14 @@ export function ownerReadingsOf(
   gitRemoteUrl?: string,
 ): string[] {
   const prefix = providerPathPrefix(providerUrl);
-  if (
-    !prefix ||
-    !owner.toLowerCase().startsWith(`${prefix}/`) ||
-    (gitRemoteUrl && !sameGitHost(providerUrl, gitRemoteUrl))
-  ) {
+  if (!prefix || !owner.toLowerCase().startsWith(`${prefix}/`)) {
     return [owner];
   }
-  return [owner, owner.slice(prefix.length + 1)];
+  const withoutPrefix = owner.slice(prefix.length + 1);
+  if (!gitRemoteUrl) {
+    return [owner, withoutPrefix];
+  }
+  const remoteCarriesPrefix =
+    sameGitHost(providerUrl, gitRemoteUrl) && WEB_REMOTE.test(gitRemoteUrl);
+  return [remoteCarriesPrefix ? withoutPrefix : owner];
 }
