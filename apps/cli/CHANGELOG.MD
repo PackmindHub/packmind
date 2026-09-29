@@ -18,6 +18,8 @@
 
 # [0.36.1] - 2026-09-28
 
+- `packmind track`, `init` and `install` keep the full group path of a GitLab remote (`group/subgroup/repo`) instead of its last two segments
+
 ## Added
 
 - Errors are now recorded with their stack in `~/.packmind/error.log`, and network failures with the request and cause behind them

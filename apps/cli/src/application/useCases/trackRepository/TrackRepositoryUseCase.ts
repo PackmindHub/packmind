@@ -6,23 +6,35 @@ import {
 import { IRepositoryTrackingGateway } from '../../../domain/repositories/IRepositoryTrackingGateway';
 import { IGitService } from '../../../domain/services/IGitService';
 
+// `scheme://[user@]host[:port]/path`: https, http, ssh, git+ssh alike.
+const SCHEME_URL_PATH = /^[a-z][a-z0-9+.-]*:\/\/[^/]+\/(.+)$/i;
+// scp-like SSH, `[user@]host:path`, which git writes without a scheme.
+const SCP_LIKE_PATH = /^(?:[^@/\s]+@)?[^/:\s]+:(?!\/\/)(.+)$/;
+
 /**
- * Parse a git remote URL to extract owner and repo.
+ * Parse a git remote URL to extract owner and repo. The repo is the last path
+ * segment and the owner everything before it, so a GitLab subgroup stays whole.
  * Mirrors the backend `parseGitRepoInfo` helper so both sides agree.
  */
 export function parseOwnerRepo(gitRemoteUrl: string): {
   owner: string;
   repo: string;
 } {
-  const match = gitRemoteUrl.match(/[/:]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/i);
+  const path = (gitRemoteUrl.trim().match(SCHEME_URL_PATH) ??
+    gitRemoteUrl.trim().match(SCP_LIKE_PATH))?.[1];
 
-  if (!match) {
+  const segments = path
+    ?.replace(/\/+$/, '')
+    .replace(/\.git$/i, '')
+    .split('/');
+
+  if (!segments || segments.length < 2 || segments.some((s) => s === '')) {
     throw new Error(`Unable to parse git remote URL: ${gitRemoteUrl}`);
   }
 
   return {
-    owner: match[1],
-    repo: match[2].replace(/\.git$/, ''),
+    owner: segments.slice(0, -1).join('/'),
+    repo: segments[segments.length - 1],
   };
 }
 

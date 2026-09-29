@@ -25,6 +25,7 @@
 - A CLI-managed connection is no longer listed once it holds no repository
 - A repository cloned over `ssh://` or with a user in its URL no longer gets a CLI-managed connection of its own
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
+- A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
 
 ## Removed
 
