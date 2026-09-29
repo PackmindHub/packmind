@@ -27,6 +27,19 @@ describe('gitHostOf', () => {
   });
 
   describe.each([
+    ['an https IPv6 remote', 'https://[2001:db8::1]/acme/app.git'],
+    [
+      'an https IPv6 remote with a port',
+      'https://[2001:db8::1]:8443/acme/app.git',
+    ],
+    ['an scp-like IPv6 SSH remote', 'git@[2001:db8::1]:acme/app.git'],
+  ])('with %s', (_label, url) => {
+    it('returns the bracketed address', () => {
+      expect(gitHostOf(url)).toBe('[2001:db8::1]');
+    });
+  });
+
+  describe.each([
     ['null', null],
     ['undefined', undefined],
     ['an empty string', ''],
@@ -79,6 +92,28 @@ describe('sameGitHost', () => {
   ])('when the remote is on %s', (_label, remote) => {
     it('returns false', () => {
       expect(sameGitHost('https://gitlab.acme.io', remote)).toBe(false);
+    });
+  });
+
+  describe('when two remotes are on different IPv6 hosts', () => {
+    it('returns false', () => {
+      expect(
+        sameGitHost(
+          'https://[2001:db8::1]/acme/app.git',
+          'https://[2001:db8::2]/acme/app.git',
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe('when an SSH remote points at the provider IPv6 host', () => {
+    it('returns true', () => {
+      expect(
+        sameGitHost(
+          'https://[2001:DB8::1]:8443',
+          'ssh://git@[2001:db8::1]:2222/acme/app.git',
+        ),
+      ).toBe(true);
     });
   });
 

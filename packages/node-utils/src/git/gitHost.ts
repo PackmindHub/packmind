@@ -1,9 +1,14 @@
+// An IPv6 literal is bracketed and holds colons, so it cannot end at one.
+const HOST = String.raw`(\[[0-9a-f:.]+\]|[^/:?#@\s\[\]]+)`;
 // `scheme://[user@]host[:port]/...`: https, http, ssh, git+ssh alike.
-const SCHEME_URL = /^[a-z][a-z0-9+.-]*:\/\/(?:[^@/]*@)?([^/:?#]+)/i;
+const SCHEME_URL = new RegExp(
+  String.raw`^[a-z][a-z0-9+.-]*:\/\/(?:[^@/]*@)?${HOST}`,
+  'i',
+);
 // scp-like SSH, `[user@]host:path`, which git writes without a scheme.
-const SCP_LIKE = /^(?:[^@/\s]+@)?([^/:\s]+):(?!\/\/)/;
+const SCP_LIKE = new RegExp(String.raw`^(?:[^@/\s]+@)?${HOST}:(?!\/\/)`, 'i');
 // A bare `host[:port][/path]`, as an admin may type a provider URL.
-const BARE_HOST = /^([^/:@\s]+)(?::\d+)?(?:\/|$)/;
+const BARE_HOST = new RegExp(String.raw`^${HOST}(?::\d+)?(?:\/|$)`, 'i');
 
 /**
  * The host of a git remote or of a git provider URL, lowercased, without
