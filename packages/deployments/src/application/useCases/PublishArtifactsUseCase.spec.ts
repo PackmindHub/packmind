@@ -762,12 +762,12 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('enqueues a job with the distribution id', async () => {
+    it('enqueues a job with the distribution ids', async () => {
       await useCase.execute(command);
 
       expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledWith(
         expect.objectContaining({
-          distributionId: expect.any(String),
+          distributionIds: [expect.any(String)],
           organizationId,
           userId,
         }),
@@ -1007,6 +1007,22 @@ describe('PublishArtifactsUseCase', () => {
         ).fileUpdates.createOrUpdate.map((file) => file.path);
 
         expect(paths).toContain('docs/staging/.packmind/commands/test.md');
+      });
+
+      /*
+       * The job is what moves a distribution out of 'in_progress'. Naming only
+       * the first one left every other target of the repository reading as
+       * 'Distributing now' after the commit had landed.
+       */
+      it('names every distribution of the repository on the job', () => {
+        const { distributionIds } = jobInput as unknown as {
+          distributionIds: string[];
+        };
+
+        expect(distributionIds).toEqual([
+          result.distributions[0].id,
+          result.distributions[1].id,
+        ]);
       });
     });
   });

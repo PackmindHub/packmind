@@ -9,6 +9,7 @@
 - `Update` on a destination pinned to a version now moves it to the newest release instead of pushing the live package over its pin
 - A destination tracking `*` is left tracking it, so one `Update` can move a pinned repository and refresh a wildcard one in the same click
 - A repository with several destinations now receives all of them in its one commit; only the first one's files were ever committed, while every destination was reported as distributed
+- That same commit now marks every destination of the repository as distributed: only the first left `Distributing now`, and the others waited for ever on a job that had already run
 
 ## Changed
 

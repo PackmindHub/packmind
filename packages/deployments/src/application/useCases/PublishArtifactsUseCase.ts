@@ -327,7 +327,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       );
       await this.enqueuePublishJob(
         ctx,
-        created[0],
+        created,
         repositoryFileUpdates,
         commitMessage,
       );
@@ -399,19 +399,26 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return distributions;
   }
 
+  /*
+   * One job per repository, naming every distribution it fulfils.
+   *
+   * The job used to carry the first distribution alone, so only that one left
+   * 'in_progress' when the commit landed: a repository's other targets kept
+   * reading as 'Distributing now' for ever, waiting on a job that had already
+   * run.
+   */
   private async enqueuePublishJob(
     ctx: RepositoryPublishContext,
-    firstDistribution: Distribution,
+    distributions: Distribution[],
     fileUpdates: FileUpdates,
     commitMessage: string,
   ): Promise<void> {
     const { command, repositoryId, gitRepo, targets, requestedVersions } = ctx;
 
     await this.publishArtifactsDelayedJob.addJob({
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       organizationId: command.organizationId as OrganizationId,
       userId: command.userId as UserId,
-      targetId: targets[0].id,
       gitRepoId: gitRepo.id,
       fileUpdates,
       commitMessage,
@@ -425,7 +432,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     this.logger.info('Enqueued publish artifacts job for repository', {
       repositoryId,
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       targetsCount: targets.length,
     });
   }
