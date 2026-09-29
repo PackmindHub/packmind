@@ -55,10 +55,16 @@ export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   servedVersion: string | null;
   distributingVersion: string | null;
   latestVersion: string | null;
-  changedPackageDetails: PackageDetailField[];
+  changedPackageDetails: PackageDetailChange[];
 };
 
 export type PackageDetailField = 'name' | 'description';
+
+export type PackageDetailChange = {
+  field: PackageDetailField;
+  previous: string;
+  current: string;
+};
 
 export type ListMarketplaceDistributionsCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
