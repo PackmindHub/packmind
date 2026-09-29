@@ -260,7 +260,7 @@ export class GitProviderRepository
       .subQuery()
       .select('1')
       .from(GitRepoSchema, 'gitRepo')
-      .where('gitRepo.providerId = :id')
+      .where('gitRepo.providerId = :id', { id })
       .andWhere('gitRepo.deletedAt IS NULL')
       .getQuery();
     const result = await this.repository
