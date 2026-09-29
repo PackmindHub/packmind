@@ -450,6 +450,124 @@ describe('InstallUseCase', () => {
     });
   });
 
+  /*
+   * `--upgrade` releases a pin by dropping it from `packageVersions`: a slug
+   * the CLI names no version for is a request for the newest release, and
+   * what comes back is what gets written to packmind.json.
+   */
+  describe('when --upgrade is passed', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/ops': '0.0.1', '@space/security': '*' },
+      });
+      mockLockFileRepository.read.mockResolvedValue(
+        lockFileFactory({ packageSlugs: ['@space/ops', '@space/security'] }),
+      );
+    });
+
+    it('asks for the newest release of a pinned package', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        upgrade: true,
+      });
+
+      expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageVersions: { '@space/security': '*' },
+        }),
+      );
+    });
+
+    it('still installs both packages', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        upgrade: true,
+      });
+
+      expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packagesSlugs: ['@space/ops', '@space/security'],
+        }),
+      );
+    });
+
+    it('writes the version the server resolved into packmind.json', async () => {
+      mockGateway.deployment.install.mockResolvedValue({
+        ...installResponseFactory(),
+        resolvedPackageVersions: {
+          '@space/ops': '0.1.0',
+          '@space/security': '*',
+        },
+      });
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        upgrade: true,
+      });
+
+      expect(
+        mockConfigFileRepository.upsertPackagesInConfig,
+      ).toHaveBeenCalledWith('/test', {
+        '@space/ops': '0.1.0',
+        '@space/security': '*',
+      });
+    });
+
+    describe('when a package is named on the command line at a version', () => {
+      beforeEach(() => {
+        mockSpaceService.getSpaces.mockResolvedValue([
+          spaceFactory({ id: createSpaceId('space-1'), slug: 'space' }),
+        ]);
+        mockSpaceService.getApiContext.mockReturnValue({
+          host: 'https://app.packmind.com',
+          organizationId: 'org-1',
+        });
+      });
+
+      it('keeps the version the command line named', async () => {
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          upgrade: true,
+          packages: [parsePackageSlug('@space/ops:0.0.1')],
+        });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: { '@space/ops': '0.0.1', '@space/security': '*' },
+          }),
+        );
+      });
+    });
+  });
+
+  describe('when --upgrade is not passed', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/ops': '0.0.1', '@space/security': '*' },
+      });
+      mockLockFileRepository.read.mockResolvedValue(
+        lockFileFactory({ packageSlugs: ['@space/ops', '@space/security'] }),
+      );
+    });
+
+    it('keeps the pin the file records', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
+
+      expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageVersions: { '@space/ops': '0.0.1', '@space/security': '*' },
+        }),
+      );
+    });
+  });
+
   describe('when explicit packages are provided without @ prefix', () => {
     describe('when organization has a single space', () => {
       const mySpace = spaceFactory({

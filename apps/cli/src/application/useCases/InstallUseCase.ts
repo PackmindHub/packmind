@@ -28,9 +28,35 @@ import { displayableParsedPackageSlug } from '../../domain/entities/PackageSlug'
 import {
   WILDCARD_VERSION_SPEC,
   formatPackageVersionSpec,
+  parsePackageVersionSpec,
 } from '@packmind/types';
 import assert from 'assert';
 import { EXEC_NAME } from '../../infra/utils/execName';
+
+/**
+ * What each slug asks for once `--upgrade` has had its say.
+ *
+ * A slug the caller leaves out of the map asks the server for the newest
+ * release, so releasing a pin is dropping its entry rather than naming a
+ * version — the CLI never has to learn what the newest release is, and cannot
+ * disagree with the server about it. What comes back is written to
+ * `packmind.json`, which is how the upgrade lands in the file.
+ *
+ * A package tracking `*` keeps its entry: dropping that one would pin a repo
+ * that had deliberately chosen not to be pinned.
+ */
+export function releasePins(
+  versions: Record<string, string>,
+  upgrade: boolean,
+): Record<string, string> {
+  if (!upgrade) return versions;
+
+  return Object.fromEntries(
+    Object.entries(versions).filter(
+      ([, raw]) => parsePackageVersionSpec(raw)?.kind !== 'exact',
+    ),
+  );
+}
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -137,7 +163,10 @@ export class InstallUseCase implements IInstallUseCase {
         ? await this.normalizeAndSaveConfigPackages(baseDirectory, config)
         : { slugs: [], versions: {} };
       fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
-      Object.assign(packageVersions, fromConfig.versions);
+      Object.assign(
+        packageVersions,
+        releasePins(fromConfig.versions, command.upgrade ?? false),
+      );
 
       (command.packages ?? []).forEach((pkg, index) => {
         const slug = normalizedPackages[index];
@@ -157,7 +186,10 @@ export class InstallUseCase implements IInstallUseCase {
         config,
       );
       fromConfig.slugs.forEach((slug) => slugsBefore.add(slug));
-      Object.assign(packageVersions, fromConfig.versions);
+      Object.assign(
+        packageVersions,
+        releasePins(fromConfig.versions, command.upgrade ?? false),
+      );
       packagesSlugs = fromConfig.slugs;
     }
 

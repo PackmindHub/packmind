@@ -446,10 +446,13 @@ export async function installHandler({
   installPath,
   packages,
   status,
+  upgrade,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
   status: boolean;
+  /** Optional so the many call sites that never upgrade stay as they are. */
+  upgrade?: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -557,6 +560,7 @@ export async function installHandler({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
         cliVersion: CLI_VERSION,
+        upgrade,
         homeAgent: dirHomeAgent,
       });
       results.push(result);
@@ -656,6 +660,11 @@ export const installCommand = command({
       long: 'status',
       description:
         'Show status of all packmind.json files and their packages in the workspace',
+    }),
+    upgrade: flag({
+      long: 'upgrade',
+      description:
+        "Move every package pinned to a version in packmind.json to that package's latest release. Packages tracking * are left tracking it.",
     }),
   },
   handler: installHandler,
