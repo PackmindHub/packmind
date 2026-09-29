@@ -1,4 +1,3 @@
-import { GitProviderVendor } from '@packmind/types';
 import {
   ITrackRepositoryUseCase,
   TrackRepositoryCommand,
@@ -25,20 +24,6 @@ export function parseOwnerRepo(gitRemoteUrl: string): {
     owner: match[1],
     repo: match[2].replace(/\.git$/, ''),
   };
-}
-
-/**
- * Infer the git provider vendor from a remote URL.
- */
-function parseProviderVendor(gitRemoteUrl: string): GitProviderVendor {
-  const normalized = gitRemoteUrl.toLowerCase();
-  if (normalized.includes('github.com')) {
-    return 'github';
-  }
-  if (normalized.includes('gitlab.com')) {
-    return 'gitlab';
-  }
-  return 'unknown';
 }
 
 /**
@@ -74,7 +59,6 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       this.gitService.getCurrentBranch(repoPath);
     const branch = requestedBranch ?? currentBranch;
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
-    const providerVendor = parseProviderVendor(gitRemoteUrl);
 
     // Falling back to the checked-out branch is meaningless with a detached
     // HEAD: git names it `HEAD`, and tracking that would record nothing under a
@@ -199,7 +183,6 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       repo,
       branch,
       origin,
-      providerVendor,
       gitRemoteUrl,
     });
     return { status: 'set', owner, repo, branch, gitRepo };
