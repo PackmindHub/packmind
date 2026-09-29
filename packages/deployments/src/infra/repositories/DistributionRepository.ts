@@ -1437,6 +1437,8 @@ export class DistributionRepository implements IDistributionRepository {
         operation: 'add' | 'remove';
         status: DistributionStatus;
         lastDistributedAt: string;
+        /** Written only when the distribution failed; null on every other row. */
+        error: string | null;
       };
 
       const rows = await this.repository
@@ -1454,6 +1456,15 @@ export class DistributionRepository implements IDistributionRepository {
         .addSelect('distributedPackage.operation', 'operation')
         .addSelect('distribution.status', 'status')
         .addSelect('distribution.createdAt', 'lastDistributedAt')
+        /*
+         * The reason the last attempt failed, taken from the very distribution
+         * this row already stands for: the DISTINCT ON above has picked the
+         * latest one for the pair, so no second query can disagree with it.
+         * Without it a failed destination knows it is red and not why, and the
+         * reader is sent to the distribution history to find the same record
+         * by hand.
+         */
+        .addSelect('distribution.error', 'error')
         .getRawMany<RawRow>();
 
       const activeRows = rows.filter(
@@ -1474,6 +1485,8 @@ export class DistributionRepository implements IDistributionRepository {
         packageId: row.packageId,
         lastDistributionStatus: row.status,
         lastDistributedAt: row.lastDistributedAt,
+        // Normalised, because the column is nullable and the contract is not.
+        lastDistributionError: row.error ?? null,
       }));
     } catch (error) {
       this.logger.error('Failed to list active package operations by space', {
