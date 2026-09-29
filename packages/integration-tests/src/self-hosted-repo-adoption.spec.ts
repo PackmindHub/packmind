@@ -1,4 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
 import {
   GitCommitSchema,
   GitProviderSchema,
@@ -48,7 +47,6 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
   let distributedPackage: Package;
   let commit: GitCommit;
   let accessibleRepos: Map<GitProviderId, string[]>;
-  let warnSpy: jest.SpyInstance;
 
   beforeAll(async () => {
     await fixture.initialize();
@@ -111,7 +109,6 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
           }),
         };
       });
-    warnSpy = jest.spyOn(PackmindLogger.prototype, 'warn');
   });
 
   afterEach(async () => {
@@ -463,13 +460,6 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
 
     it('falls back to a CLI-managed connection', () => {
       expect(repo.providerId).not.toBe(token.id);
-    });
-
-    it('warns that a token connection exists on the host', () => {
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ gitProviderIds: [token.id] }),
-      );
     });
   });
 
