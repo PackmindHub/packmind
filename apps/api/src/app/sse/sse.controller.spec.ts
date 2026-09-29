@@ -1,10 +1,12 @@
-import { ForbiddenException } from '@nestjs/common';
 import { stubLogger } from '@packmind/test-utils';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  SSESubscriptionAuthorizer,
+  SubscriptionSubjectNotAccessibleError,
+} from '@packmind/node-utils';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { SSEController } from './sse.controller';
 import { SSEService } from './sse.service';
-import { SSESubscriptionAuthorizer } from './sse-subscription.authorizer';
 
 const userId = createUserId('0f1d4a5e-7b2c-4d8e-9f31-5a6b7c8d9e01');
 const organizationId = createOrganizationId(
@@ -80,7 +82,11 @@ describe('SSEController', () => {
   describe('when the caller may not subscribe to what it named', () => {
     beforeEach(() => {
       authorizer.assertMaySubscribe.mockRejectedValue(
-        new ForbiddenException('Access denied'),
+        new SubscriptionSubjectNotAccessibleError({
+          userId,
+          eventType: 'SPACE_CONTENT_CHANGED',
+          params: [spaceId],
+        }),
       );
     });
 
@@ -101,7 +107,7 @@ describe('SSEController', () => {
           eventType: 'SPACE_CONTENT_CHANGED',
           params: [spaceId],
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
     });
   });
 

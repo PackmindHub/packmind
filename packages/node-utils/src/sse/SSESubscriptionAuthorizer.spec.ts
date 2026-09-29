@@ -1,4 +1,3 @@
-import { ForbiddenException } from '@nestjs/common';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ISpacesPort,
@@ -7,7 +6,11 @@ import {
   createSpaceId,
   createUserId,
 } from '@packmind/types';
-import { SSESubscriptionAuthorizer } from './sse-subscription.authorizer';
+import { SSESubscriptionAuthorizer } from './SSESubscriptionAuthorizer';
+import {
+  EventTypeNotSubscribableError,
+  SubscriptionSubjectNotAccessibleError,
+} from './SSESubscriptionErrors';
 
 const userId = createUserId('0f1d4a5e-7b2c-4d8e-9f31-5a6b7c8d9e01');
 const organizationId = createOrganizationId(
@@ -37,7 +40,7 @@ describe('SSESubscriptionAuthorizer', () => {
           eventType: 'SOMETHING_INVENTED',
           params: [spaceId],
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(EventTypeNotSubscribableError);
     });
 
     it('does not look up a membership', async () => {
@@ -114,7 +117,7 @@ describe('SSESubscriptionAuthorizer', () => {
             eventType: 'SPACE_CONTENT_CHANGED',
             params: [spaceId],
           }),
-        ).rejects.toThrow(ForbiddenException);
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
       });
     });
 
@@ -127,7 +130,7 @@ describe('SSESubscriptionAuthorizer', () => {
             eventType: 'SPACE_CONTENT_CHANGED',
             params: [],
           }),
-        ).rejects.toThrow(ForbiddenException);
+        ).rejects.toThrow(EventTypeNotSubscribableError);
       });
     });
 
@@ -170,7 +173,7 @@ describe('SSESubscriptionAuthorizer', () => {
             eventType: 'DISTRIBUTION_STATUS_CHANGE',
             params: [otherOrganizationId],
           }),
-        ).rejects.toThrow(ForbiddenException);
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
       });
     });
 
@@ -182,7 +185,7 @@ describe('SSESubscriptionAuthorizer', () => {
             eventType: 'DISTRIBUTION_STATUS_CHANGE',
             params: [organizationId],
           }),
-        ).rejects.toThrow(ForbiddenException);
+        ).rejects.toThrow(SubscriptionSubjectNotAccessibleError);
       });
     });
   });
