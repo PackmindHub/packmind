@@ -201,6 +201,14 @@ export function ContextPackageDistribution({
                 Distribution history
               </PMLink>
             }
+            /*
+              The same drawer, reached from the row that raised the question.
+              The link above answers "what has happened here"; a failed row
+              that has already read its reason and wants the rest of the run
+              is asking about one landing, and sending it to the top of the
+              list to find the same panel is a detour through nothing.
+            */
+            onOpenHistory={() => setHistoryOpen(true)}
             onUpdate={(picked) => {
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);

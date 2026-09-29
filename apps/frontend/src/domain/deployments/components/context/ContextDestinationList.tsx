@@ -23,6 +23,7 @@ import { ContextChip } from './ContextChip';
 import { ContextPickBox } from './ContextPickBox';
 import { ContextSearchField } from './ContextSearchField';
 import {
+  STATE_TONE,
   destinationTone,
   filterPackageDestinations,
   needsAHand,
@@ -53,6 +54,7 @@ export function ContextDestinationList({
   destinations,
   headerAction,
   onUpdate,
+  onOpenHistory,
 }: Readonly<{
   destinations: readonly PackageDestination[];
   /**
@@ -71,6 +73,16 @@ export function ContextDestinationList({
    * the buttons off the list at once.
    */
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
+  /**
+   * Showing the distribution events, for a failed row whose message was not
+   * the whole answer.
+   *
+   * Absent on a caller that has no events to show, and then the offer goes
+   * with it: a way out that goes nowhere costs more than not offering one.
+   * It is the same destination `headerAction` usually carries, reached from
+   * the row that raised the question rather than from the top of the list.
+   */
+  onOpenHistory?: () => void;
 }>) {
   const [filter, setFilter] = useState<PackageDestinationFilter>('all');
   const [query, setQuery] = useState('');
@@ -193,6 +205,7 @@ export function ContextDestinationList({
            */
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
+          onOpenHistory={onOpenHistory}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -204,6 +217,7 @@ export function ContextDestinationList({
           rows={pending}
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
+          onOpenHistory={onOpenHistory}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -341,6 +355,7 @@ function Band({
   total,
   isFirst,
   onUpdate,
+  onOpenHistory,
   selection,
 }: Readonly<{
   label: string;
@@ -353,6 +368,7 @@ function Band({
   total?: number;
   isFirst: boolean;
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
+  onOpenHistory?: () => void;
   selection?: RowSelection;
 }>) {
   if (rows.length === 0) return null;
@@ -396,6 +412,7 @@ function Band({
           key={row.key}
           destination={row}
           onUpdate={onUpdate}
+          onOpenHistory={onOpenHistory}
           selection={selection}
         />
       ))}
@@ -507,10 +524,12 @@ function UpToDateBand({
 function DestinationRow({
   destination,
   onUpdate,
+  onOpenHistory,
   selection,
 }: Readonly<{
   destination: PackageDestination;
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
+  onOpenHistory?: () => void;
   selection?: RowSelection;
 }>) {
   const [expanded, setExpanded] = useState(false);
@@ -520,8 +539,14 @@ function DestinationRow({
    * rest, so a row whose line is the whole story has nothing to open. That
    * includes a drifted marketplace, whose copy is known to be behind and not
    * by what.
+   *
+   * A failure with a message opens too, even when it left nothing behind it.
+   * The drift alone would fold that row shut over the one thing on this list
+   * nobody can work out for themselves.
    */
-  const canExpand = destination.behindArtifacts.length > 0;
+  const canExpand =
+    destination.behindArtifacts.length > 0 ||
+    destination.failureReason !== null;
   const isPicked = selection?.selectedKeys.has(destination.key) ?? false;
 
   return (
@@ -583,7 +608,14 @@ function DestinationRow({
                 textAlign: 'left' as const,
                 cursor: 'pointer',
                 'aria-expanded': expanded,
-                'aria-label': `${expanded ? 'Hide' : 'Show'} what is behind on ${destination.name}`,
+                /*
+                  Named after what opening it answers. On a failed row that is
+                  the reason, whatever else is folded under it, because the
+                  reason is why the row was opened.
+                */
+                'aria-label': destination.failureReason
+                  ? `${expanded ? 'Hide' : 'Show'} why the last distribution failed on ${destination.name}`
+                  : `${expanded ? 'Hide' : 'Show'} what is behind on ${destination.name}`,
                 _focusVisible: {
                   outline: '2px solid',
                   outlineColor: 'branding.primary',
@@ -636,14 +668,38 @@ function DestinationRow({
                 that answer is worth a hover and not the width it would cost
                 every row beside it.
               */}
-              <PMText
-                fontSize="xs"
-                color="faded"
-                truncate
-                title={reportTitle(destination)}
-              >
-                {stateSentence(destination)}
-              </PMText>
+              <PMHStack gap={1} align="baseline" minW={0}>
+                <PMText
+                  fontSize="xs"
+                  color="faded"
+                  truncate
+                  title={reportTitle(destination)}
+                >
+                  {stateSentence(destination)}
+                </PMText>
+                {/*
+                  The invitation, on the row that raised the question and in
+                  the sentence that raised it. The chevron beside the name says
+                  a row opens and not that opening it answers anything, and a
+                  reader who has just read that a distribution failed is asking
+                  exactly one thing.
+
+                  Styled as a link and not one: the whole left of the row is
+                  already the button that opens it, and a second control inside
+                  that button would be an interactive element nested in another.
+                */}
+                {destination.failureReason && (
+                  <PMBox
+                    as="span"
+                    fontSize="xs"
+                    flexShrink={0}
+                    color="branding.primary"
+                    textDecoration="underline"
+                  >
+                    Why?
+                  </PMBox>
+                )}
+              </PMHStack>
             </PMBox>
           </PMHStack>
         </PMBox>
@@ -664,12 +720,71 @@ function DestinationRow({
             waiting to be written for the first time, and one waiting to be
             taken away.
           */}
+          {destination.failureReason && (
+            <FailureNote
+              reason={destination.failureReason}
+              onOpenHistory={onOpenHistory}
+              hasMoreBelow={destination.behindArtifacts.length > 0}
+            />
+          )}
           {destination.behindArtifacts.map((entry) => (
             <DriftArtifactRow
               key={`${entry.artifact.id}-${entry.reason}`}
               entry={entry}
             />
           ))}
+        </PMBox>
+      )}
+    </PMBox>
+  );
+}
+
+/**
+ * Why a landing is red, as the distribution that failed put it.
+ *
+ * The message unedited. It is whatever the git provider or the job threw, and
+ * rewording it here would leave the reader searching their provider for a
+ * sentence Packmind invented. What it needs instead is the room a raw message
+ * takes: it wraps rather than truncates, and it keeps its own line breaks.
+ *
+ * The events stay one click further out. This answers "why is this red now",
+ * which is the question the row raised; "what has happened here over time" is
+ * a different one, and it is worth a panel rather than a place in every
+ * expanded row.
+ */
+function FailureNote({
+  reason,
+  onOpenHistory,
+  hasMoreBelow,
+}: Readonly<{
+  reason: string;
+  onOpenHistory?: () => void;
+  /** Whether drift rows follow, which is the only thing this needs a gap for. */
+  hasMoreBelow: boolean;
+}>) {
+  return (
+    <PMBox
+      borderLeftWidth="2px"
+      borderColor={STATE_TONE.failed}
+      paddingLeft={3}
+      paddingY={1}
+      marginBottom={hasMoreBelow ? 3 : 0}
+    >
+      <PMText
+        fontSize="xs"
+        as="div"
+        fontFamily="mono"
+        // Honours the breaks a multi-line provider error arrives with.
+        whiteSpace="pre-wrap"
+        wordBreak="break-word"
+      >
+        {reason}
+      </PMText>
+      {onOpenHistory && (
+        <PMBox marginTop={1}>
+          <PMLink as="button" fontSize="xs" onClick={onOpenHistory}>
+            See the full run
+          </PMLink>
         </PMBox>
       )}
     </PMBox>

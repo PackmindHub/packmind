@@ -544,6 +544,136 @@ describe('ContextDestinationList', () => {
     });
   });
 
+  describe('why a failed row is red', () => {
+    const REASON =
+      'Push rejected: branch protection on main requires a pull request';
+
+    const rejected = (overrides: Partial<PackageDestination> = {}) =>
+      destination({
+        name: 'acme/checkout-api',
+        state: 'failed',
+        failureReason: REASON,
+        ...overrides,
+      });
+
+    it('invites the reader to ask, on the row that raised the question', () => {
+      renderList([rejected()]);
+
+      expect(screen.getByText('Why?')).toBeInTheDocument();
+    });
+
+    it('keeps the message folded until it is asked for', () => {
+      renderList([rejected()]);
+
+      expect(screen.queryByText(REASON)).not.toBeInTheDocument();
+    });
+
+    it('reads the message out on the row, with no drawer to open', async () => {
+      renderList([rejected()]);
+
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show why the last distribution failed on acme/checkout-api',
+        }),
+      );
+
+      expect(screen.getByText(REASON)).toBeInTheDocument();
+    });
+
+    it('opens a failure that left nothing behind it, which the drift alone would fold shut', async () => {
+      renderList([rejected({ behindCount: 0, behindArtifacts: [] })]);
+
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show why the last distribution failed on acme/checkout-api',
+        }),
+      );
+
+      expect(screen.getByText(REASON)).toBeInTheDocument();
+    });
+
+    it('still lists what is behind under the message that explains it', async () => {
+      renderList([
+        rejected({
+          behindCount: 1,
+          behindArtifacts: [behind('feature-flags-audit', 5)],
+        }),
+      ]);
+
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show why the last distribution failed on acme/checkout-api',
+        }),
+      );
+
+      expect(screen.getByText(REASON)).toBeInTheDocument();
+      expect(screen.getByText('feature-flags-audit')).toBeInTheDocument();
+    });
+
+    describe('when the failure came with no message', () => {
+      it('asks nothing it cannot answer', () => {
+        renderList([rejected({ failureReason: null })]);
+
+        expect(screen.queryByText('Why?')).not.toBeInTheDocument();
+      });
+
+      it('falls back to the drift for whether the row opens at all', () => {
+        renderList([
+          rejected({
+            failureReason: null,
+            behindCount: 0,
+            behindArtifacts: [],
+          }),
+        ]);
+
+        expect(
+          screen.queryByRole('button', { name: /^Show /, hidden: false }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when the caller can show the distribution events', () => {
+      it('offers the whole run under the message, for the reader the message did not satisfy', async () => {
+        const onOpenHistory = vi.fn();
+        render(
+          <UIProvider>
+            <ContextDestinationList
+              destinations={[rejected()]}
+              onOpenHistory={onOpenHistory}
+            />
+          </UIProvider>,
+        );
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show why the last distribution failed on acme/checkout-api',
+          }),
+        );
+        await userEvent.click(
+          screen.getByRole('button', { name: 'See the full run' }),
+        );
+
+        expect(onOpenHistory).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the caller has no events to show', () => {
+      it('does not offer a way out that goes nowhere', async () => {
+        renderList([rejected()]);
+
+        await userEvent.click(
+          screen.getByRole('button', {
+            name: 'Show why the last distribution failed on acme/checkout-api',
+          }),
+        );
+
+        expect(
+          screen.queryByRole('button', { name: 'See the full run' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe('how old the row says it is', () => {
     describe('when the report behind an aligned row is recent', () => {
       it('says nothing about the date, which is every row on a live package', async () => {
