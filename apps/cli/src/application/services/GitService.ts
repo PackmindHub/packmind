@@ -10,6 +10,7 @@ import {
   GitRemoteResult,
   IGitService,
 } from '../../domain/services/IGitService';
+import { stripGitRemoteCredentials } from '@packmind/node-utils';
 
 const origin = 'GitService';
 
@@ -387,10 +388,11 @@ export class GitService implements IGitService {
   }
 
   private normalizeGitUrl(url: string): string {
-    // Return the URL as-is - the backend handles both SSH and HTTPS formats
-    // and needs the protocol information to extract the base URL correctly.
-    // Only remove the .git suffix for consistency.
-    return url.replace(/\.git$/, '');
+    // The backend handles both SSH and HTTPS formats and needs the protocol to
+    // extract the base URL, so the URL keeps its shape. A token embedded for
+    // cloning never leaves the machine, and the .git suffix is dropped for
+    // consistency.
+    return stripGitRemoteCredentials(url).replace(/\.git$/, '');
   }
 
   /**

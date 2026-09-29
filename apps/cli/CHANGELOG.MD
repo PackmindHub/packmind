@@ -10,6 +10,8 @@
 
 ## Fixed
 
+- The CLI drops any token embedded in the repository's remote URL before sending it to Packmind
+
 ## Removed
 
 # [0.36.1] - 2026-09-28
