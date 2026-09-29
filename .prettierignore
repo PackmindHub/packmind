@@ -25,3 +25,4 @@ packmind-lock.json
 
 **/playwright-report/
 **/test-results/
+tools/**
