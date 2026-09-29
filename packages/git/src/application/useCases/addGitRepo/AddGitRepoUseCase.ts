@@ -12,11 +12,13 @@ import {
   GitProvider,
   GitProviderMissingTokenError,
   GitProviderOrganizationMismatchError,
+  GitRepo,
   GitRepoAlreadyExistsError,
   IAccountsPort,
   IAddGitRepoUseCase,
   IDeploymentPort,
   MissingGitInputError,
+  OrganizationId,
   providerHasAuth,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
@@ -119,9 +121,6 @@ export class AddGitRepoUseCase
       throw new GitProviderMissingTokenError(gitProviderId);
     }
 
-    // The CLI recorded a remote of an instance installed under a path prefix
-    // with that prefix before the group, which the provider does not report.
-    const pathPrefix = providerPathPrefix(gitProvider.url);
     const existingRepo =
       (await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
         owner,
@@ -129,14 +128,13 @@ export class AddGitRepoUseCase
         branch,
         organization.id,
       )) ??
-      (pathPrefix
-        ? await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
-            `${pathPrefix}/${owner}`,
-            repo,
-            branch,
-            organization.id,
-          )
-        : null);
+      (await this.findRecordedUnderPathPrefix(
+        gitProvider,
+        owner,
+        repo,
+        branch,
+        organization.id,
+      ));
 
     if (existingRepo) {
       const holdingProvider =
@@ -218,5 +216,41 @@ export class AddGitRepoUseCase
     });
 
     return createdRepo;
+  }
+
+  // The CLI recorded a remote of an instance installed under a path prefix
+  // with that prefix before the group, which the provider does not report. On
+  // another host the prefixed owner is a group of its own.
+  private async findRecordedUnderPathPrefix(
+    gitProvider: GitProvider,
+    owner: string,
+    repo: string,
+    branch: string,
+    organizationId: OrganizationId,
+  ): Promise<GitRepo | null> {
+    const pathPrefix = providerPathPrefix(gitProvider.url);
+    if (!pathPrefix) {
+      return null;
+    }
+    const gitRepo =
+      await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
+        `${pathPrefix}/${owner}`,
+        repo,
+        branch,
+        organizationId,
+      );
+    if (!gitRepo) {
+      return null;
+    }
+    const holdingProvider = await this.gitProviderService.findGitProviderById(
+      gitRepo.providerId,
+    );
+    return holdingProvider &&
+      sameGitHost(
+        providerHostUrl(holdingProvider),
+        providerHostUrl(gitProvider),
+      )
+      ? gitRepo
+      : null;
   }
 }

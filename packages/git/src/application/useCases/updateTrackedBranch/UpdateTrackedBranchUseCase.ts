@@ -17,6 +17,7 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'UpdateTrackedBranchUseCase';
 
@@ -41,20 +42,22 @@ export class UpdateTrackedBranchUseCase
   protected async executeForAdmins(
     command: UpdateTrackedBranchCommand & AdminContext,
   ): Promise<UpdateTrackedBranchResponse> {
-    const { owner: remoteOwner, repo, branch, organization, userId } = command;
+    const { owner, repo, branch, organization, userId } = command;
     // A remote cloned from an instance installed under a path prefix carries
-    // that prefix before the group; the repository is recorded without it.
-    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
       organization.id,
-      remoteOwner,
+      owner,
     );
-
-    const existingTracked =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        owner,
-        repo,
-      );
+    const existingTracked = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+        ),
+    );
 
     // Nothing tracked yet — the caller must init/track first.
     if (!existingTracked) {
@@ -95,7 +98,7 @@ export class UpdateTrackedBranchUseCase
     const gitRepo = await this.findOrCreateGitRepo.execute({
       userId,
       organizationId: organization.id,
-      owner,
+      owner: existingTracked.owner,
       repo,
       branch,
       providerVendor: provider?.source,

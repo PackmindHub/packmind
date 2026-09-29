@@ -23,7 +23,9 @@ import { RemoveTrackedRepositoryUseCase } from './RemoveTrackedRepositoryUseCase
 // Owners in these specs carry no installation prefix, so they pass through.
 const ownerAsIsProviderService = () =>
   ({
-    ownerAsProvidersNameIt: jest.fn(async (_organizationId, owner) => owner),
+    ownerReadings: jest.fn(async (_organizationId, owner) => [
+      { owner, providerId: null },
+    ]),
   }) as Partial<
     jest.Mocked<GitProviderService>
   > as jest.Mocked<GitProviderService>;

@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import {
   extractBaseUrl,
-  ownerWithoutProviderPrefix,
+  ownerReadingsOf,
   parseGitProviderVendor,
   sameGitHost,
 } from '@packmind/node-utils';
@@ -69,13 +69,8 @@ export class FindOrCreateGitRepoUseCase
       userId,
       organizationId,
     });
-    // A remote cloned from an instance installed under a path prefix carries
-    // that prefix before the group; the provider reports the group alone.
-    const owner = ownerWithoutProviderPrefix(
-      command.owner,
-      providersResponse.providers.map((p) => p.url),
-      gitRemoteUrl,
-    );
+    // Repositories of a CLI-managed provider keep the owner the remote names.
+    const owner = command.owner;
 
     // A provider's URL states which instance it reaches, so a self-hosted
     // remote finds the provider an admin configured for it, whatever vendor a
@@ -93,16 +88,24 @@ export class FindOrCreateGitRepoUseCase
     // first match would raise a duplicate-repo error when a later provider
     // already hosts the repo.
     type ProviderInfo = (typeof tokenProviders)[number];
-    const providersWithAccess: ProviderInfo[] = [];
+    const providersWithAccess: { provider: ProviderInfo; owner: string }[] = [];
 
     for (const provider of tokenProviders) {
-      const existingRepos = await this.gitPort.listRepos(provider.id);
-      const existingRepo = existingRepos.find(
-        (r) =>
-          r.owner.toLowerCase() === owner.toLowerCase() &&
-          r.repo.toLowerCase() === repo.toLowerCase() &&
-          r.branch === branch,
+      // A provider installed under a path prefix names the group without it.
+      const owners = ownerReadingsOf(owner, provider.url, gitRemoteUrl).map(
+        (reading) => reading.toLowerCase(),
       );
+      const existingRepos = await this.gitPort.listRepos(provider.id);
+      const existingRepo = owners
+        .map((reading) =>
+          existingRepos.find(
+            (r) =>
+              r.owner.toLowerCase() === reading &&
+              r.repo.toLowerCase() === repo.toLowerCase() &&
+              r.branch === branch,
+          ),
+        )
+        .find(Boolean);
 
       if (existingRepo) {
         this.logger.info('Found existing repo under token provider', {
@@ -118,14 +121,18 @@ export class FindOrCreateGitRepoUseCase
           userId,
           organizationId,
         });
-        const canAccess = availableRepos.repositories.some(
-          (r) =>
-            r.owner.toLowerCase() === owner.toLowerCase() &&
-            r.name.toLowerCase() === repo.toLowerCase(),
-        );
+        const accessibleRepo = owners
+          .map((reading) =>
+            availableRepos.repositories.find(
+              (r) =>
+                r.owner.toLowerCase() === reading &&
+                r.name.toLowerCase() === repo.toLowerCase(),
+            ),
+          )
+          .find(Boolean);
 
-        if (canAccess) {
-          providersWithAccess.push(provider);
+        if (accessibleRepo) {
+          providersWithAccess.push({ provider, owner: accessibleRepo.owner });
         }
       } catch (error) {
         this.logger.info('Failed to list available repos for provider', {
@@ -138,7 +145,7 @@ export class FindOrCreateGitRepoUseCase
     }
 
     if (providersWithAccess.length > 0) {
-      const provider = providersWithAccess[0];
+      const { provider, owner: providerOwner } = providersWithAccess[0];
       this.logger.info('Token can access repo, creating under token provider', {
         providerId: provider.id,
       });
@@ -146,7 +153,7 @@ export class FindOrCreateGitRepoUseCase
         userId,
         organizationId,
         gitProviderId: provider.id,
-        owner,
+        owner: providerOwner,
         repo,
         branch,
       });

@@ -16,7 +16,8 @@ import {
 } from '@packmind/types';
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
-import { ownerWithoutProviderPrefix } from '@packmind/node-utils';
+import { ownerReadingsOf } from '@packmind/node-utils';
+import { OwnerReading } from './useCases/shared/findByOwnerReadings';
 import { v4 as uuidv4 } from 'uuid';
 
 export class GitProviderService {
@@ -67,18 +68,26 @@ export class GitProviderService {
     return this.gitProviderRepository.deleteById(id, userId);
   }
 
-  async ownerAsProvidersNameIt(
+  /**
+   * The owners a remote's group may be recorded under, the remote's own first.
+   * A group read without an installation path prefix only names the
+   * repositories of the provider installed under that prefix.
+   */
+  async ownerReadings(
     organizationId: OrganizationId,
     owner: string,
     gitRemoteUrl?: string,
-  ): Promise<string> {
+  ): Promise<OwnerReading[]> {
     const providers =
       await this.gitProviderRepository.findByOrganizationId(organizationId);
-    return ownerWithoutProviderPrefix(
-      owner,
-      providers.map((provider) => provider.url),
-      gitRemoteUrl,
-    );
+    return [
+      { owner, providerId: null },
+      ...providers.flatMap((provider) =>
+        ownerReadingsOf(owner, provider.url, gitRemoteUrl)
+          .slice(1)
+          .map((reading) => ({ owner: reading, providerId: provider.id })),
+      ),
+    ];
   }
 
   async deleteGitProviderIfEmpty(

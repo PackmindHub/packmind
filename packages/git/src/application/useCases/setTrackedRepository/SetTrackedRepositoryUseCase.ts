@@ -16,6 +16,7 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'SetTrackedRepositoryUseCase';
 
@@ -41,7 +42,7 @@ export class SetTrackedRepositoryUseCase
     command: SetTrackedRepositoryCommand & AdminContext,
   ): Promise<SetTrackedRepositoryResponse> {
     const {
-      owner: remoteOwner,
+      owner,
       repo,
       branch,
       origin: trackingOrigin,
@@ -51,19 +52,21 @@ export class SetTrackedRepositoryUseCase
       userId,
     } = command;
     // A remote cloned from an instance installed under a path prefix carries
-    // that prefix before the group; the repository is recorded without it.
-    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
       organization.id,
-      remoteOwner,
+      owner,
       gitRemoteUrl,
     );
-
-    const existingTracked =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        owner,
-        repo,
-      );
+    const existingTracked = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+        ),
+    );
 
     if (existingTracked) {
       // Idempotent: the requested branch is already tracked.

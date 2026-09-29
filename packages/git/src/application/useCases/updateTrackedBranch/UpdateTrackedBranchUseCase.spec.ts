@@ -94,7 +94,9 @@ describe('UpdateTrackedBranchUseCase', () => {
 
     mockGitProviderService = {
       findGitProviderById: jest.fn().mockResolvedValue(provider),
-      ownerAsProvidersNameIt: jest.fn(async (_organizationId, owner) => owner),
+      ownerReadings: jest.fn(async (_organizationId, owner) => [
+        { owner, providerId: null },
+      ]),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;

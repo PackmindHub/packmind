@@ -98,7 +98,9 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
           lastLoadedPage: 1,
           partial: false,
           repositories: repos.map((fullName) => {
-            const [owner, name] = fullName.split('/');
+            const separator = fullName.lastIndexOf('/');
+            const owner = fullName.slice(0, separator);
+            const name = fullName.slice(separator + 1);
             return {
               owner,
               name,
@@ -658,6 +660,89 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
           });
 
         expect(gitRepo?.id).toBe(tracked.id);
+      });
+    });
+
+    describe('and its group itself starts with the prefix', () => {
+      let token: GitProvider;
+      let tracked: GitRepo;
+
+      beforeEach(async () => {
+        token = await connectTokenProvider(PREFIXED_HOST, {
+          accessTo: [`gitlab/${OWNER}/${REPO}`],
+        });
+        tracked = await testApp.gitHexa.getAdapter().setTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: `gitlab/gitlab/${OWNER}`,
+          repo: REPO,
+          branch: BRANCH,
+          origin: 'track',
+          gitRemoteUrl: `https://devtools.acme.io/gitlab/gitlab/${OWNER}/${REPO}.git`,
+        });
+      });
+
+      it('tracks it under the connection with the group it reports', () => {
+        expect(tracked).toMatchObject({
+          providerId: token.id,
+          owner: `gitlab/${OWNER}`,
+        });
+      });
+    });
+
+    describe('and another host has a group named after the prefix', () => {
+      let tracked: GitRepo;
+
+      beforeEach(async () => {
+        await connectTokenProvider(PREFIXED_HOST);
+        tracked = await testApp.gitHexa.getAdapter().setTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: `gitlab/${OWNER}`,
+          repo: REPO,
+          branch: BRANCH,
+          origin: 'track',
+          gitRemoteUrl: `https://gitlab.other.io/gitlab/${OWNER}/${REPO}.git`,
+        });
+      });
+
+      it('keeps the group of the other host', () => {
+        expect(tracked.owner).toBe(`gitlab/${OWNER}`);
+      });
+
+      it('finds its tracking by that group', async () => {
+        const { gitRepo } = await testApp.gitHexa
+          .getAdapter()
+          .getTrackedRepository({
+            ...admin.packmindCommand(),
+            owner: `gitlab/${OWNER}`,
+            repo: REPO,
+          });
+
+        expect(gitRepo?.id).toBe(tracked.id);
+      });
+    });
+
+    describe('and a connection of another host holds the prefixed group', () => {
+      let otherHostRepo: GitRepo;
+      let added: GitRepo;
+
+      beforeEach(async () => {
+        otherHostRepo = await addFromApp(
+          await connectTokenProvider('https://gitlab.other.io', {
+            accessTo: [`gitlab/${OWNER}/${REPO}`],
+          }),
+          { owner: `gitlab/${OWNER}` },
+        );
+        added = await addFromApp(await connectTokenProvider(PREFIXED_HOST));
+      });
+
+      it('adds the repository on the prefixed connection', () => {
+        expect(added.owner).toBe(OWNER);
+      });
+
+      it('leaves the other connection its repository', async () => {
+        expect(await currentProviderOf(otherHostRepo)).toBe(
+          otherHostRepo.providerId,
+        );
       });
     });
   });

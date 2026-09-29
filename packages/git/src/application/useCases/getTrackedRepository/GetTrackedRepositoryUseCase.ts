@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'GetTrackedRepositoryUseCase';
 
@@ -30,20 +31,20 @@ export class GetTrackedRepositoryUseCase
   protected async executeForMembers(
     command: GetTrackedRepositoryCommand & MemberContext,
   ): Promise<GetTrackedRepositoryResponse> {
-    const { owner: remoteOwner, repo, organization } = command;
+    const { owner, repo, organization } = command;
     // A remote cloned from an instance installed under a path prefix carries
-    // that prefix before the group; the repository is recorded without it.
-    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
       organization.id,
-      remoteOwner,
+      owner,
     );
-
-    const gitRepo =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+    const gitRepo = await findByOwnerReadings(ownerReadings, (ownerReading) =>
+      this.gitRepoService.findTrackedByOwnerRepoInOrganization(
         organization.id,
-        owner,
+        ownerReading,
         repo,
-      );
+      ),
+    );
 
     return { gitRepo };
   }

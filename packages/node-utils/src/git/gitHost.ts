@@ -63,25 +63,24 @@ export function providerPathPrefix(
 }
 
 /**
- * The owner as the provider names it. A remote cloned from an instance
- * installed under a path prefix carries that prefix before the group
- * (`gitlab/group` under `https://devtools.acme.io/gitlab`), which the provider
- * never reports. Only providers on the remote's host are considered when the
- * remote is known.
+ * The owners a provider may name a remote's group, the remote's own first. A
+ * remote cloned from an instance installed under a path prefix carries that
+ * prefix before the group (`gitlab/group` under
+ * `https://devtools.acme.io/gitlab`), which the provider never reports. The
+ * prefix is only this provider's when the remote, if known, is on its host.
  */
-export function ownerWithoutProviderPrefix(
+export function ownerReadingsOf(
   owner: string,
-  providerUrls: ReadonlyArray<string | null | undefined>,
+  providerUrl: string | null | undefined,
   gitRemoteUrl?: string,
-): string {
-  for (const providerUrl of providerUrls) {
-    if (gitRemoteUrl && !sameGitHost(providerUrl, gitRemoteUrl)) {
-      continue;
-    }
-    const prefix = providerPathPrefix(providerUrl);
-    if (prefix && owner.toLowerCase().startsWith(`${prefix}/`)) {
-      return owner.slice(prefix.length + 1);
-    }
+): string[] {
+  const prefix = providerPathPrefix(providerUrl);
+  if (
+    !prefix ||
+    !owner.toLowerCase().startsWith(`${prefix}/`) ||
+    (gitRemoteUrl && !sameGitHost(providerUrl, gitRemoteUrl))
+  ) {
+    return [owner];
   }
-  return owner;
+  return [owner, owner.slice(prefix.length + 1)];
 }

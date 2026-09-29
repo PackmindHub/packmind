@@ -15,7 +15,7 @@ import { TargetService } from './TargetService';
 import { generateTargetName, normalizeRelativePath } from './gitInfoHelpers';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import {
-  ownerWithoutProviderPrefix,
+  ownerReadingsOf,
   parseGitRepoInfo,
   parseGitProviderVendor,
 } from '@packmind/node-utils';
@@ -40,26 +40,24 @@ export class TargetResolutionService {
     gitBranch: string,
     relativePath: string,
   ): Promise<Target | null> {
-    const { owner: remoteOwner, repo } = parseGitRepoInfo(gitRemoteUrl);
+    const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
 
     const providersResponse = await this.gitPort.listProviders({
       userId,
       organizationId,
     });
-    // The provider reports the group without the installation path prefix a
-    // remote of a prefixed instance carries.
-    const owner = ownerWithoutProviderPrefix(
-      remoteOwner,
-      providersResponse.providers.map((provider) => provider.url),
-      gitRemoteUrl,
-    );
 
     let gitRepoId: string | null = null;
     for (const provider of providersResponse.providers) {
+      // A provider installed under a path prefix names the group without the
+      // prefix its remotes carry.
+      const owners = ownerReadingsOf(owner, provider.url, gitRemoteUrl).map(
+        (reading) => reading.toLowerCase(),
+      );
       const repos = await this.gitPort.listRepos(provider.id);
       const matchingRepo = repos.find(
         (r) =>
-          r.owner.toLowerCase() === owner.toLowerCase() &&
+          owners.includes(r.owner.toLowerCase()) &&
           r.repo.toLowerCase() === repo.toLowerCase() &&
           r.branch === gitBranch,
       );
