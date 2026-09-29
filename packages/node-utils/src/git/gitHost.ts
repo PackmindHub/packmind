@@ -41,3 +41,47 @@ export function sameGitHost(
   const providerHost = gitHostOf(providerUrl);
   return providerHost !== null && providerHost === gitHostOf(gitRemoteUrl);
 }
+
+// Only a web URL can carry an installation prefix: a CLI-managed provider may
+// hold a whole ssh:// remote, whose path is a repository, not a prefix.
+const WEB_URL_PATH = /^https?:\/\/[^/]+\/([^?#]*)/i;
+
+/**
+ * The path a provider URL puts before every group, lowercased and without
+ * slashes — `gitlab` for `https://devtools.acme.io/gitlab` — or null when the
+ * instance sits at the root of its host.
+ */
+export function providerPathPrefix(
+  providerUrl: string | null | undefined,
+): string | null {
+  const path = providerUrl
+    ?.trim()
+    .match(WEB_URL_PATH)?.[1]
+    .replace(/^\/+|\/+$/g, '')
+    .toLowerCase();
+  return path ? path : null;
+}
+
+/**
+ * The owner as the provider names it. A remote cloned from an instance
+ * installed under a path prefix carries that prefix before the group
+ * (`gitlab/group` under `https://devtools.acme.io/gitlab`), which the provider
+ * never reports. Only providers on the remote's host are considered when the
+ * remote is known.
+ */
+export function ownerWithoutProviderPrefix(
+  owner: string,
+  providerUrls: ReadonlyArray<string | null | undefined>,
+  gitRemoteUrl?: string,
+): string {
+  for (const providerUrl of providerUrls) {
+    if (gitRemoteUrl && !sameGitHost(providerUrl, gitRemoteUrl)) {
+      continue;
+    }
+    const prefix = providerPathPrefix(providerUrl);
+    if (prefix && owner.toLowerCase().startsWith(`${prefix}/`)) {
+      return owner.slice(prefix.length + 1);
+    }
+  }
+  return owner;
+}

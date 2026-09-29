@@ -1,3 +1,4 @@
+import { GitProviderService } from '../../GitProviderService';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { stubLogger, mockInterface } from '@packmind/test-utils';
@@ -18,6 +19,14 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepoService } from '../../GitRepoService';
 import { RemoveTrackedRepositoryUseCase } from './RemoveTrackedRepositoryUseCase';
+
+// Owners in these specs carry no installation prefix, so they pass through.
+const ownerAsIsProviderService = () =>
+  ({
+    ownerAsProvidersNameIt: jest.fn(async (_organizationId, owner) => owner),
+  }) as Partial<
+    jest.Mocked<GitProviderService>
+  > as jest.Mocked<GitProviderService>;
 
 describe('RemoveTrackedRepositoryUseCase', () => {
   let useCase: RemoveTrackedRepositoryUseCase;
@@ -69,6 +78,7 @@ describe('RemoveTrackedRepositoryUseCase', () => {
   const buildUseCase = () =>
     new RemoveTrackedRepositoryUseCase(
       mockGitRepoService,
+      ownerAsIsProviderService(),
       mockEventEmitter,
       mockAccountsAdapter,
       stubLogger(),

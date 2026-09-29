@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import {
   extractBaseUrl,
+  ownerWithoutProviderPrefix,
   parseGitProviderVendor,
   sameGitHost,
 } from '@packmind/node-utils';
@@ -45,7 +46,7 @@ export class FindOrCreateGitRepoUseCase
   protected async executeForMembers(
     command: FindOrCreateGitRepoCommand & MemberContext,
   ): Promise<FindOrCreateGitRepoResponse> {
-    const { owner, repo, branch, organization, userId } = command;
+    const { repo, branch, organization, userId } = command;
 
     const gitRemoteUrl = command.gitRemoteUrl;
     // The remote is the server's own evidence; the vendor a CLI sends is only
@@ -59,7 +60,7 @@ export class FindOrCreateGitRepoUseCase
 
     this.logger.info('Finding or creating git repo', {
       providerVendor,
-      owner,
+      owner: command.owner,
       repo,
       branch,
     });
@@ -68,6 +69,13 @@ export class FindOrCreateGitRepoUseCase
       userId,
       organizationId,
     });
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; the provider reports the group alone.
+    const owner = ownerWithoutProviderPrefix(
+      command.owner,
+      providersResponse.providers.map((p) => p.url),
+      gitRemoteUrl,
+    );
 
     // A provider's URL states which instance it reaches, so a self-hosted
     // remote finds the provider an admin configured for it, whatever vendor a

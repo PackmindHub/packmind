@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  providerPathPrefix,
   sameGitHost,
 } from '@packmind/node-utils';
 import {
@@ -118,13 +119,24 @@ export class AddGitRepoUseCase
       throw new GitProviderMissingTokenError(gitProviderId);
     }
 
+    // The CLI recorded a remote of an instance installed under a path prefix
+    // with that prefix before the group, which the provider does not report.
+    const pathPrefix = providerPathPrefix(gitProvider.url);
     const existingRepo =
-      await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
+      (await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
         owner,
         repo,
         branch,
         organization.id,
-      );
+      )) ??
+      (pathPrefix
+        ? await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
+            `${pathPrefix}/${owner}`,
+            repo,
+            branch,
+            organization.id,
+          )
+        : null);
 
     if (existingRepo) {
       const holdingProvider =
@@ -147,6 +159,7 @@ export class AddGitRepoUseCase
           existingRepo,
           gitProvider.id,
           organization.id,
+          owner,
         );
         // An emptied CLI-managed provider would stay listed beside the
         // connection that now holds its repositories.

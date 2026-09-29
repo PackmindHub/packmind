@@ -535,6 +535,24 @@ describe('GitRepoRepository', () => {
       it('keeps the tracked flag', () => {
         expect(reloaded?.isTracked).toBe(true);
       });
+
+      it('keeps the owner', () => {
+        expect(reloaded?.owner).toEqual(gitRepo.owner);
+      });
+    });
+
+    describe('when the new provider names the owner differently', () => {
+      it('rewrites the owner', async () => {
+        await gitRepoRepository.reassignProvider(
+          gitRepo.id,
+          otherProvider.id,
+          'renamed-owner',
+        );
+
+        expect((await gitRepoRepository.findById(gitRepo.id))?.owner).toEqual(
+          'renamed-owner',
+        );
+      });
     });
 
     describe('when the repository does not exist', () => {

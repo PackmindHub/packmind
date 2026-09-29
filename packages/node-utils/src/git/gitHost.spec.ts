@@ -1,4 +1,9 @@
-import { gitHostOf, sameGitHost } from './gitHost';
+import {
+  gitHostOf,
+  ownerWithoutProviderPrefix,
+  providerPathPrefix,
+  sameGitHost,
+} from './gitHost';
 
 describe('gitHostOf', () => {
   describe.each([
@@ -128,6 +133,79 @@ describe('sameGitHost', () => {
   describe('when neither host can be read', () => {
     it('returns false', () => {
       expect(sameGitHost('', '')).toBe(false);
+    });
+  });
+});
+
+describe('providerPathPrefix', () => {
+  describe.each([
+    ['a URL at the root of its host', 'https://gitlab.acme.io', null],
+    ['a URL with a trailing slash', 'https://gitlab.acme.io/', null],
+    ['a URL under a prefix', 'https://devtools.acme.io/GitLab/', 'gitlab'],
+    [
+      'a URL under a nested prefix',
+      'https://acme.io/tools/gitlab',
+      'tools/gitlab',
+    ],
+    [
+      'a whole ssh:// remote',
+      'ssh://git@gitlab.acme.io:2222/acme/app.git',
+      null,
+    ],
+    ['null', null, null],
+  ])('with %s', (_label, url, expected) => {
+    it(`returns ${expected}`, () => {
+      expect(providerPathPrefix(url)).toBe(expected);
+    });
+  });
+});
+
+describe('ownerWithoutProviderPrefix', () => {
+  const prefixed = 'https://devtools.acme.io/gitlab';
+
+  describe('when the remote is on a provider installed under a prefix', () => {
+    it('drops the prefix from the owner', () => {
+      expect(
+        ownerWithoutProviderPrefix(
+          'gitlab/group/sub',
+          [prefixed],
+          'git@devtools.acme.io:gitlab/group/sub/app.git',
+        ),
+      ).toBe('group/sub');
+    });
+  });
+
+  describe('when the remote is on another host', () => {
+    it('keeps the owner', () => {
+      expect(
+        ownerWithoutProviderPrefix(
+          'gitlab/group',
+          [prefixed],
+          'https://gitlab.other.io/gitlab/group/app.git',
+        ),
+      ).toBe('gitlab/group');
+    });
+  });
+
+  describe('when no remote is known', () => {
+    it('drops the prefix of any provider', () => {
+      expect(ownerWithoutProviderPrefix('GitLab/group', [null, prefixed])).toBe(
+        'group',
+      );
+    });
+  });
+
+  describe('when the owner does not start with the prefix', () => {
+    it('keeps the owner', () => {
+      expect(ownerWithoutProviderPrefix('gitlabber/group', [prefixed])).toBe(
+        'gitlabber/group',
+      );
+    });
+  });
+
+  describe('when the owner is the prefix alone', () => {
+    it('keeps the owner', () => {
+      expect(ownerWithoutProviderPrefix('gitlab', [prefixed])).toBe('gitlab');
     });
   });
 });

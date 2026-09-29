@@ -13,6 +13,7 @@ import {
   RepositoryNotTrackableError,
   RepositoryTrackingRemovedEvent,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 
 const origin = 'RemoveTrackedRepositoryUseCase';
@@ -31,6 +32,7 @@ export class RemoveTrackedRepositoryUseCase
 {
   constructor(
     private readonly gitRepoService: GitRepoService,
+    private readonly gitProviderService: GitProviderService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -41,7 +43,13 @@ export class RemoveTrackedRepositoryUseCase
   protected async executeForAdmins(
     command: RemoveTrackedRepositoryCommand & AdminContext,
   ): Promise<RemoveTrackedRepositoryResponse> {
-    const { owner, repo, organization, userId } = command;
+    const { owner: remoteOwner, repo, organization, userId } = command;
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; the repository is recorded without it.
+    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+      organization.id,
+      remoteOwner,
+    );
 
     const existingTracked =
       await this.gitRepoService.findTrackedByOwnerRepoInOrganization(

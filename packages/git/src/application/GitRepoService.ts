@@ -115,13 +115,18 @@ export class GitRepoService {
     gitRepo: GitRepo,
     providerId: GitProviderId,
     organizationId: OrganizationId,
+    owner: string = gitRepo.owner,
   ): Promise<GitRepo> {
     await this.gitRepoRepository.clearTrackingRemoved(
       gitRepo.owner,
       gitRepo.repo,
       organizationId,
     );
-    return this.gitRepoRepository.reassignProvider(gitRepo.id, providerId);
+    return this.gitRepoRepository.reassignProvider(
+      gitRepo.id,
+      providerId,
+      owner,
+    );
   }
 
   /**

@@ -16,6 +16,7 @@ import {
 } from '@packmind/types';
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
+import { ownerWithoutProviderPrefix } from '@packmind/node-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 export class GitProviderService {
@@ -64,6 +65,20 @@ export class GitProviderService {
 
   async deleteGitProvider(id: GitProviderId, userId: UserId): Promise<void> {
     return this.gitProviderRepository.deleteById(id, userId);
+  }
+
+  async ownerAsProvidersNameIt(
+    organizationId: OrganizationId,
+    owner: string,
+    gitRemoteUrl?: string,
+  ): Promise<string> {
+    const providers =
+      await this.gitProviderRepository.findByOrganizationId(organizationId);
+    return ownerWithoutProviderPrefix(
+      owner,
+      providers.map((provider) => provider.url),
+      gitRemoteUrl,
+    );
   }
 
   async deleteGitProviderIfEmpty(

@@ -41,7 +41,13 @@ export class UpdateTrackedBranchUseCase
   protected async executeForAdmins(
     command: UpdateTrackedBranchCommand & AdminContext,
   ): Promise<UpdateTrackedBranchResponse> {
-    const { owner, repo, branch, organization, userId } = command;
+    const { owner: remoteOwner, repo, branch, organization, userId } = command;
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; the repository is recorded without it.
+    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+      organization.id,
+      remoteOwner,
+    );
 
     const existingTracked =
       await this.gitRepoService.findTrackedByOwnerRepoInOrganization(

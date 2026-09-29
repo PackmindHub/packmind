@@ -590,6 +590,78 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
     });
   });
 
+  describe('when the instance is installed under a path prefix', () => {
+    const PREFIXED_HOST = 'https://devtools.acme.io/gitlab';
+    const PREFIXED_REMOTE = 'https://devtools.acme.io/gitlab/acme/app.git';
+    // The CLI reads every segment before the repository as the owner.
+    const recordPrefixedFromCli = () =>
+      recordFromCli({ owner: 'gitlab/acme', remote: PREFIXED_REMOTE });
+
+    describe('and the CLI recorded the repository before the connection', () => {
+      let cliRepo: GitRepo;
+      let adopted: GitRepo;
+
+      beforeEach(async () => {
+        cliRepo = await recordPrefixedFromCli();
+        adopted = await addFromApp(await connectTokenProvider(PREFIXED_HOST));
+      });
+
+      it('adopts the same repository', () => {
+        expect(adopted.id).toBe(cliRepo.id);
+      });
+
+      it('records the owner the provider reports', () => {
+        expect(adopted.owner).toBe(OWNER);
+      });
+
+      it('lets the CLI find it afterwards', async () => {
+        expect((await recordPrefixedFromCli()).id).toBe(cliRepo.id);
+      });
+    });
+
+    describe('and the connection exists before the CLI runs', () => {
+      let token: GitProvider;
+      let repo: GitRepo;
+
+      beforeEach(async () => {
+        token = await connectTokenProvider(PREFIXED_HOST);
+        repo = await recordPrefixedFromCli();
+      });
+
+      it('creates it under the connection', () => {
+        expect(repo).toMatchObject({ providerId: token.id, owner: OWNER });
+      });
+    });
+
+    describe('and the repository is tracked from the CLI', () => {
+      let tracked: GitRepo;
+
+      beforeEach(async () => {
+        await connectTokenProvider(PREFIXED_HOST);
+        tracked = await testApp.gitHexa.getAdapter().setTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: 'gitlab/acme',
+          repo: REPO,
+          branch: BRANCH,
+          origin: 'track',
+          gitRemoteUrl: PREFIXED_REMOTE,
+        });
+      });
+
+      it('finds it by the owner the CLI reads', async () => {
+        const { gitRepo } = await testApp.gitHexa
+          .getAdapter()
+          .getTrackedRepository({
+            ...admin.packmindCommand(),
+            owner: 'gitlab/acme',
+            repo: REPO,
+          });
+
+        expect(gitRepo?.id).toBe(tracked.id);
+      });
+    });
+  });
+
   describe('when the CLI spelled the repository with another case', () => {
     let cliRepo: GitRepo;
     let adopted: GitRepo;

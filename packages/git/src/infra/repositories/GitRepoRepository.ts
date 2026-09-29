@@ -282,6 +282,7 @@ export class GitRepoRepository
   async reassignProvider(
     gitRepoId: GitRepoId,
     providerId: GitProviderId,
+    owner?: string,
   ): Promise<GitRepo> {
     this.logger.info('Reassigning git repo provider', {
       gitRepoId,
@@ -297,7 +298,11 @@ export class GitRepoRepository
         throw new GitRepoNotFoundError(gitRepoId);
       }
 
-      const updated = await this.repository.save({ ...gitRepo, providerId });
+      const updated = await this.repository.save({
+        ...gitRepo,
+        providerId,
+        owner: owner ?? gitRepo.owner,
+      });
 
       this.logger.info('Git repo provider reassigned', {
         gitRepoId,

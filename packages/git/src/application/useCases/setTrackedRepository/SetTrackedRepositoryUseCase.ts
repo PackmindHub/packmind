@@ -14,6 +14,7 @@ import {
   SetTrackedRepositoryCommand,
   SetTrackedRepositoryResponse,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 
 const origin = 'SetTrackedRepositoryUseCase';
@@ -27,6 +28,7 @@ export class SetTrackedRepositoryUseCase
 {
   constructor(
     private readonly gitRepoService: GitRepoService,
+    private readonly gitProviderService: GitProviderService,
     private readonly findOrCreateGitRepo: IFindOrCreateGitRepoUseCase,
     private readonly eventEmitterService: PackmindEventEmitterService,
     accountsAdapter: IAccountsPort,
@@ -39,7 +41,7 @@ export class SetTrackedRepositoryUseCase
     command: SetTrackedRepositoryCommand & AdminContext,
   ): Promise<SetTrackedRepositoryResponse> {
     const {
-      owner,
+      owner: remoteOwner,
       repo,
       branch,
       origin: trackingOrigin,
@@ -48,6 +50,13 @@ export class SetTrackedRepositoryUseCase
       organization,
       userId,
     } = command;
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; the repository is recorded without it.
+    const owner = await this.gitProviderService.ownerAsProvidersNameIt(
+      organization.id,
+      remoteOwner,
+      gitRemoteUrl,
+    );
 
     const existingTracked =
       await this.gitRepoService.findTrackedByOwnerRepoInOrganization(

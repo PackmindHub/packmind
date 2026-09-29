@@ -14,7 +14,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { TargetService } from './TargetService';
 import { generateTargetName, normalizeRelativePath } from './gitInfoHelpers';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
-import { parseGitRepoInfo, parseGitProviderVendor } from '@packmind/node-utils';
+import {
+  ownerWithoutProviderPrefix,
+  parseGitRepoInfo,
+  parseGitProviderVendor,
+} from '@packmind/node-utils';
 
 const origin = 'TargetResolutionService';
 
@@ -36,12 +40,19 @@ export class TargetResolutionService {
     gitBranch: string,
     relativePath: string,
   ): Promise<Target | null> {
-    const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
+    const { owner: remoteOwner, repo } = parseGitRepoInfo(gitRemoteUrl);
 
     const providersResponse = await this.gitPort.listProviders({
       userId,
       organizationId,
     });
+    // The provider reports the group without the installation path prefix a
+    // remote of a prefixed instance carries.
+    const owner = ownerWithoutProviderPrefix(
+      remoteOwner,
+      providersResponse.providers.map((provider) => provider.url),
+      gitRemoteUrl,
+    );
 
     let gitRepoId: string | null = null;
     for (const provider of providersResponse.providers) {

@@ -728,6 +728,7 @@ describe('AddGitRepoUseCase', () => {
           existingRepo,
           gitProviderId,
           organizationId,
+          'optimetriks',
         );
       });
 
@@ -770,6 +771,7 @@ describe('AddGitRepoUseCase', () => {
           existingRepo,
           gitProviderId,
           organizationId,
+          'optimetriks',
         );
       });
     });
@@ -805,6 +807,35 @@ describe('AddGitRepoUseCase', () => {
           existingRepo,
           gitProviderId,
           organizationId,
+          'optimetriks',
+        );
+      });
+    });
+
+    describe('when the CLI recorded the owner under an installation path prefix', () => {
+      beforeEach(async () => {
+        const prefixedRepo = { ...existingRepo, owner: 'gitlab/optimetriks' };
+        mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockImplementation(
+          async (owner) =>
+            owner === 'gitlab/optimetriks' ? prefixedRepo : null,
+        );
+        givenProviders(
+          authenticatedProvider({ url: 'https://devtools.acme.io/gitlab' }),
+          cliManagedProvider({
+            source: GitProviderVendors.unknown,
+            url: 'https://devtools.acme.io',
+          }),
+        );
+
+        await addRepo();
+      });
+
+      it('adopts it under the owner the provider reports', () => {
+        expect(mockGitRepoService.adoptGitRepo).toHaveBeenCalledWith(
+          expect.objectContaining({ owner: 'gitlab/optimetriks' }),
+          gitProviderId,
+          organizationId,
+          'optimetriks',
         );
       });
     });
