@@ -159,6 +159,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       )
     ) {
       const files = source.files || [];
+      this.assertTargetExists(
+        changeProposal.id,
+        files,
+        changeProposal.payload.targetId,
+      );
       const updatedFiles = files.map((file) => {
         if (file.id !== changeProposal.payload.targetId) {
           return file;
@@ -192,6 +197,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       )
     ) {
       const files = source.files || [];
+      this.assertTargetExists(
+        changeProposal.id,
+        files,
+        changeProposal.payload.targetId,
+      );
       const updatedFiles = files.map((file) => {
         if (file.id !== changeProposal.payload.targetId) {
           return file;
@@ -220,6 +230,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       )
     ) {
       const files = source.files || [];
+      this.assertTargetExists(
+        changeProposal.id,
+        files,
+        changeProposal.payload.targetId,
+      );
       const filteredFiles = files.filter(
         (file) => file.id !== changeProposal.payload.targetId,
       );

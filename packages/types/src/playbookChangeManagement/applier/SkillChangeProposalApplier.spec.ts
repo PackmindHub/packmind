@@ -430,6 +430,28 @@ describe('SkillChangeProposalApplier', () => {
         });
       });
 
+      describe('when no file holds the targeted id', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const file = skillFileFactory({
+            id: createSkillFileId('current-file'),
+            content: 'content',
+          });
+          const source = skillVersionFactory({ files: [file] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillFileContent,
+            payload: {
+              targetId: createSkillFileId('file-from-older-version'),
+              oldValue: 'content',
+              newValue: 'updated content',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
+      });
+
       it('does not modify other files', () => {
         const targetFileId = createSkillFileId('target-file');
         const otherFileId = createSkillFileId('other-file');
@@ -480,6 +502,28 @@ describe('SkillChangeProposalApplier', () => {
         ]);
 
         expect(result.version.files[0].permissions).toBe('read-write');
+      });
+
+      describe('when no file holds the targeted id', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const file = skillFileFactory({
+            id: createSkillFileId('current-file'),
+            permissions: 'read',
+          });
+          const source = skillVersionFactory({ files: [file] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillFilePermissions,
+            payload: {
+              targetId: createSkillFileId('file-from-older-version'),
+              oldValue: 'read',
+              newValue: 'read-write',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
       });
 
       it('does not modify other files', () => {
@@ -537,6 +581,33 @@ describe('SkillChangeProposalApplier', () => {
         ]);
 
         expect(result.version.files).toEqual([]);
+      });
+
+      describe('when no file holds the targeted id', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const file = skillFileFactory({
+            id: createSkillFileId('current-file'),
+          });
+          const source = skillVersionFactory({ files: [file] });
+          const staleId = createSkillFileId('file-from-older-version');
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteSkillFile,
+            payload: {
+              targetId: staleId,
+              item: {
+                id: staleId,
+                path: file.path,
+                content: file.content,
+                permissions: file.permissions,
+                isBase64: file.isBase64,
+              },
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
       });
 
       describe('when deleting one of multiple files', () => {
