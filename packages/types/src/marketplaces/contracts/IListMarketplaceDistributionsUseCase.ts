@@ -32,6 +32,11 @@ import { MarketplaceId } from '../MarketplaceId';
  * reported `installedRevision` differs from this value. Null for distributions
  * published before fingerprints existed (→ drift cannot be determined; installs
  * fall back to count-only display).
+ *
+ * `changedPackageDetails` lists the package-level fields that differ between
+ * the release the marketplace holds and the latest release, so a version that
+ * changes no component can still say what it changes. Empty when there is no
+ * newer release, or no held release to compare against.
  */
 export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   packageName: string;
@@ -50,7 +55,10 @@ export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   servedVersion: string | null;
   distributingVersion: string | null;
   latestVersion: string | null;
+  changedPackageDetails: PackageDetailField[];
 };
+
+export type PackageDetailField = 'name' | 'description';
 
 export type ListMarketplaceDistributionsCommand = PackmindCommand & {
   marketplaceId: MarketplaceId;
