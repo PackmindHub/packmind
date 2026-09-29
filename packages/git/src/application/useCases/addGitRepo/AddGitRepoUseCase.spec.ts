@@ -42,7 +42,7 @@ describe('AddGitRepoUseCase', () => {
   beforeEach(() => {
     mockGitProviderService = {
       findGitProviderById: jest.fn(),
-      deleteGitProvider: jest.fn(),
+      deleteGitProviderIfEmpty: jest.fn(),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -51,7 +51,6 @@ describe('AddGitRepoUseCase', () => {
       findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
       addGitRepo: jest.fn(),
       adoptGitRepo: jest.fn(),
-      hasGitRepos: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
     mockDeploymentPort = {
@@ -706,7 +705,6 @@ describe('AddGitRepoUseCase', () => {
         existingRepo,
       );
       mockGitRepoService.adoptGitRepo.mockResolvedValue(adoptedRepo);
-      mockGitRepoService.hasGitRepos.mockResolvedValue(false);
     });
 
     describe('when the authenticated provider targets the same host', () => {
@@ -741,24 +739,10 @@ describe('AddGitRepoUseCase', () => {
         expect(mockDeploymentPort.addTarget).not.toHaveBeenCalled();
       });
 
-      it('removes the emptied CLI-managed provider', () => {
-        expect(mockGitProviderService.deleteGitProvider).toHaveBeenCalledWith(
-          holdingProviderId,
-          userId,
-        );
-      });
-    });
-
-    describe('when the CLI-managed provider still holds other repositories', () => {
-      beforeEach(async () => {
-        mockGitRepoService.hasGitRepos.mockResolvedValue(true);
-        givenProviders(authenticatedProvider(), cliManagedProvider());
-
-        await addRepo();
-      });
-
-      it('keeps the CLI-managed provider', () => {
-        expect(mockGitProviderService.deleteGitProvider).not.toHaveBeenCalled();
+      it('removes the CLI-managed provider if it holds no repository any more', () => {
+        expect(
+          mockGitProviderService.deleteGitProviderIfEmpty,
+        ).toHaveBeenCalledWith(holdingProviderId, userId);
       });
     });
 

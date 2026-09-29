@@ -66,6 +66,13 @@ export class GitProviderService {
     return this.gitProviderRepository.deleteById(id, userId);
   }
 
+  async deleteGitProviderIfEmpty(
+    id: GitProviderId,
+    userId: UserId,
+  ): Promise<boolean> {
+    return this.gitProviderRepository.deleteIfHoldsNoRepository(id, userId);
+  }
+
   async getAvailableRepos(
     gitProviderId: GitProviderId,
     page = 1,

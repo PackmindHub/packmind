@@ -150,12 +150,10 @@ export class AddGitRepoUseCase
         );
         // An emptied CLI-managed provider would stay listed beside the
         // connection that now holds its repositories.
-        if (!(await this.gitRepoService.hasGitRepos(holdingProvider.id))) {
-          await this.gitProviderService.deleteGitProvider(
-            holdingProvider.id,
-            createUserId(userId),
-          );
-        }
+        await this.gitProviderService.deleteGitProviderIfEmpty(
+          holdingProvider.id,
+          createUserId(userId),
+        );
         return adoptedRepo;
       }
 

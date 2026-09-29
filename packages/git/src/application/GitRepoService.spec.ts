@@ -200,41 +200,6 @@ describe('GitRepoService', () => {
     });
   });
 
-  describe('hasGitRepos', () => {
-    describe('when the provider holds a repository of any type', () => {
-      beforeEach(() => {
-        mockGitRepoRepository.findByProviderId.mockResolvedValue([
-          { ...mockGitRepo, type: 'marketplace' },
-        ]);
-      });
-
-      it('returns true', async () => {
-        expect(
-          await gitRepoService.hasGitRepos(createGitProviderId('provider-1')),
-        ).toBe(true);
-      });
-
-      it('counts every repository type', async () => {
-        await gitRepoService.hasGitRepos(createGitProviderId('provider-1'));
-
-        expect(mockGitRepoRepository.findByProviderId).toHaveBeenCalledWith(
-          createGitProviderId('provider-1'),
-          { type: 'any' },
-        );
-      });
-    });
-
-    describe('when the provider holds no repository', () => {
-      it('returns false', async () => {
-        mockGitRepoRepository.findByProviderId.mockResolvedValue([]);
-
-        expect(
-          await gitRepoService.hasGitRepos(createGitProviderId('provider-1')),
-        ).toBe(false);
-      });
-    });
-  });
-
   describe('findGitReposByOrganizationId', () => {
     const mockRepos = [mockGitRepo];
     let result: GitRepo[];
