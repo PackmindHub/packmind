@@ -17,6 +17,8 @@
 
 ## Fixed
 
+- A clone URL embedding a token (`https://oauth2:<token>@host`) no longer leaks it into server logs or the Git connections page
+- Remotes stored with such a token are cleaned by a migration
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
 
 ## Removed
