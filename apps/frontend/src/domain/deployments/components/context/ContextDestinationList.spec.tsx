@@ -44,6 +44,7 @@ function destination(
     hasWorkToSend: false,
     installKey: 'repo-1::target-1',
     prUrl: null,
+    failureReason: null,
     lastActivityAt: '2026-09-01T10:00:00.000Z',
     /*
      * Stated rather than worked out from the date above, because the selector

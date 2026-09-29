@@ -18,6 +18,7 @@ function landing(installKey: string): PackageDestination {
     hasWorkToSend: true,
     installKey,
     prUrl: null,
+    failureReason: null,
     lastActivityAt: null,
     hasStaleReport: false,
   };
@@ -35,6 +36,7 @@ function catalog(id: string): PackageDestination {
     hasWorkToSend: true,
     installKey: null,
     prUrl: null,
+    failureReason: null,
     lastActivityAt: null,
     hasStaleReport: false,
   };

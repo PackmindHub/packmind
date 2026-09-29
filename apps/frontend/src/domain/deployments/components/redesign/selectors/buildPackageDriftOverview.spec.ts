@@ -267,6 +267,7 @@ function distributedPackage(opts: {
   packageOverrides?: Partial<Package>;
   lastDistributionStatus?: DistributionStatus;
   lastDistributedAt?: string;
+  lastDistributionError?: string | null;
   standards?: DeployedStandardTargetInfo[];
   recipes?: DeployedCommandTargetInfo[];
   skills?: DeployedSkillTargetInfo[];
@@ -281,6 +282,7 @@ function distributedPackage(opts: {
     lastDistributionStatus:
       opts.lastDistributionStatus ?? DistributionStatus.success,
     lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
+    lastDistributionError: opts.lastDistributionError ?? null,
     deployedStandards: opts.standards ?? [],
     deployedRecipes: opts.recipes ?? [],
     deployedCommands: opts.recipes ?? [],
@@ -556,6 +558,24 @@ describe('buildPackageDriftOverview', () => {
       ]);
       expect(pkg.installLocations[0].lastDistributionStatus).toBe(
         DistributionStatus.failure,
+      );
+    });
+
+    it('captures the message it failed with on the same install location', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              lastDistributionError:
+                'Push rejected: branch protection requires a pull request',
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+      expect(pkg.installLocations[0].lastDistributionError).toBe(
+        'Push rejected: branch protection requires a pull request',
       );
     });
   });

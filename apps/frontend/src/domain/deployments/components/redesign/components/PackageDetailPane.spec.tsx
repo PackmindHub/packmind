@@ -72,6 +72,7 @@ const driftedPackage = (installCount: number): PackageDrift => {
       branch: install.branch,
       lastDistributionStatus: DistributionStatus.success,
       lastDistributedAt: install.lastDeployedAt,
+      lastDistributionError: null,
     })),
   };
 };
@@ -93,6 +94,7 @@ const packageOnTwoTargets = (): PackageDrift => {
       branch: install.branch,
       lastDistributionStatus: DistributionStatus.success,
       lastDistributedAt: install.lastDeployedAt,
+      lastDistributionError: null,
     })),
   };
 };
