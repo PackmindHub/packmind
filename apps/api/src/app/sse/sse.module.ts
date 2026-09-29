@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { SSEController } from './sse.controller';
 import { SSEService } from './sse.service';
+import { SSESubscriptionAuthorizer } from './sse-subscription.authorizer';
 import { PackmindLogger } from '@packmind/logger';
 
 @Module({
   controllers: [SSEController],
   providers: [
     SSEService,
+    SSESubscriptionAuthorizer,
     {
       provide: PackmindLogger,
       useFactory: () => new PackmindLogger('SSEModule'),
