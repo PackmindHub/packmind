@@ -44,7 +44,8 @@ vi.mock('../PackageDistributionList', () => ({
   PackageDistributionList: () => <div data-testid="distribution-history" />,
 }));
 
-const REASON = 'Push rejected: branch protection on main requires a pull request';
+const REASON =
+  'Push rejected: branch protection on main requires a pull request';
 
 const failedDestination: PackageDestination = {
   key: 'r:repo-1::target-1',
