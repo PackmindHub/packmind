@@ -476,7 +476,7 @@ export function ContextPackageRail({
           flexShrink={0}
         >
           <PMButton
-            variant="secondary"
+            variant="primary"
             size="sm"
             width="full"
             onClick={onCreatePackage}
