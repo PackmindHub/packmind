@@ -797,6 +797,42 @@ describe('Self-hosted CLI-managed repository adoption integration', () => {
       });
     });
 
+    describe('and another host tracks a repository at the prefixed path', () => {
+      let otherHostTracked: GitRepo;
+      let token: GitProvider;
+      let tracked: GitRepo;
+
+      beforeEach(async () => {
+        otherHostTracked = await testApp.gitHexa
+          .getAdapter()
+          .setTrackedRepository({
+            ...admin.packmindCommand(),
+            owner: `gitlab/${OWNER}`,
+            repo: REPO,
+            branch: BRANCH,
+            origin: 'track',
+            gitRemoteUrl: `https://gitlab.other.io/gitlab/${OWNER}/${REPO}.git`,
+          });
+        token = await connectTokenProvider(PREFIXED_HOST);
+        tracked = await testApp.gitHexa.getAdapter().setTrackedRepository({
+          ...admin.packmindCommand(),
+          owner: `gitlab/${OWNER}`,
+          repo: REPO,
+          branch: BRANCH,
+          origin: 'track',
+          gitRemoteUrl: PREFIXED_REMOTE,
+        });
+      });
+
+      it('tracks the repository of the remote host', () => {
+        expect(tracked).toMatchObject({ providerId: token.id, owner: OWNER });
+      });
+
+      it('leaves the other host its tracked repository', () => {
+        expect(tracked.id).not.toBe(otherHostTracked.id);
+      });
+    });
+
     describe('and another host has a group named after the prefix', () => {
       let tracked: GitRepo;
 

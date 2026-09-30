@@ -19,7 +19,7 @@ import {
   sameGitHost,
 } from '@packmind/node-utils';
 import { isProbeableSource } from '../shared/probeCandidateCredentials';
-import { providerHostUrl } from '../shared/providerHostUrl';
+import { providerHostUrl } from '../../services/providerHostUrl';
 
 const origin = 'FindOrCreateGitRepoUseCase';
 

@@ -16,7 +16,8 @@ import {
 } from '@packmind/types';
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
-import { ownerReadingsOf } from '@packmind/node-utils';
+import { ownerReadingsOf, sameGitHost } from '@packmind/node-utils';
+import { providerHostUrl } from './services/providerHostUrl';
 import { v4 as uuidv4 } from 'uuid';
 
 export type OwnerReading = {
@@ -74,9 +75,10 @@ export class GitProviderService {
   }
 
   /**
-   * The owners a remote's group may be recorded under, the remote's own first.
-   * A group read without an installation path prefix only names the
-   * repositories of the provider installed under that prefix.
+   * The owners a remote's group may be recorded under. With the remote, only
+   * the providers of its host are read; without it, the owner as given names
+   * a repository of any provider, and a group read without an installation
+   * path prefix only one of the provider installed under that prefix.
    */
   async ownerReadings(
     organizationId: OrganizationId,
@@ -85,10 +87,22 @@ export class GitProviderService {
   ): Promise<OwnerReading[]> {
     const providers =
       await this.gitProviderRepository.findByOrganizationId(organizationId);
+    if (gitRemoteUrl) {
+      return providers
+        .filter((provider) =>
+          sameGitHost(providerHostUrl(provider), gitRemoteUrl),
+        )
+        .flatMap((provider) =>
+          ownerReadingsOf(owner, provider.url, gitRemoteUrl).map((reading) => ({
+            owner: reading,
+            providerId: provider.id,
+          })),
+        );
+    }
     return [
       { owner, providerId: null },
       ...providers.flatMap((provider) =>
-        ownerReadingsOf(owner, provider.url, gitRemoteUrl)
+        ownerReadingsOf(owner, provider.url)
           .filter((reading) => reading !== owner)
           .map((reading) => ({ owner: reading, providerId: provider.id })),
       ),

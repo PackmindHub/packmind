@@ -23,7 +23,7 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { providerHostUrl } from '../shared/providerHostUrl';
+import { providerHostUrl } from '../../services/providerHostUrl';
 
 const origin = 'AddGitRepoUseCase';
 
