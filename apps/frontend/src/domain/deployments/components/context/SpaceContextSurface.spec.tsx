@@ -44,6 +44,7 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackagesBySpaceQuery: vi.fn(),
+  useDeletePackagesBatchMutation: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../../../standards/api/queries/StandardsQueries', () => ({

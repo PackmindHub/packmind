@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
-import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMBox,
+  PMHStack,
+  PMSpinner,
+  PMText,
+  PMVStack,
+  pmToaster,
+} from '@packmind/ui';
 import type {
   OrganizationId,
   PackageId,
@@ -24,7 +31,10 @@ import {
   useGetStandardsQuery,
 } from '../../../standards/api/queries/StandardsQueries';
 import { useSpaceOutdatedPlugins } from '@packmind/proprietary/frontend/domain/spaces/components/overview/useSpaceOutdatedPlugins';
-import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import {
+  useDeletePackagesBatchMutation,
+  useListPackagesBySpaceQuery,
+} from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
 import { buildPackageAttentionIndex } from './buildPackageAttention';
@@ -432,6 +442,69 @@ export function SpaceContextSurface() {
     [show],
   );
 
+  const { mutateAsync: deletePackagesBatch } = useDeletePackagesBatchMutation();
+
+  /*
+   * Deleting the packages the rail has picked.
+   *
+   * Held here rather than in the rail that offers it, because the two things
+   * that have to happen after the request are the surface's: the space the
+   * request is scoped to, and the address of the package being read — which the
+   * rail cannot clear, and which would otherwise leave the reader looking at a
+   * pane for a package that no longer exists.
+   *
+   * It rethrows, which is the contract the rail's confirmation follows: what
+   * failed is still there to try again on, so the dialog stays open on it.
+   */
+  const deletePackages = useCallback(
+    async (packageIds: readonly PackageId[]) => {
+      if (!spaceId || !organization) return;
+
+      try {
+        await deletePackagesBatch({
+          organizationId: organization.id,
+          spaceId,
+          packageIds: [...packageIds],
+        });
+        pmToaster.create({
+          type: 'success',
+          title:
+            packageIds.length === 1
+              ? 'Deleted 1 package'
+              : `Deleted ${packageIds.length} packages`,
+          description:
+            'The standards, commands and skills they held stay in the space.',
+        });
+        /*
+         * Only when the package being read is one of them: a selection is made
+         * by running down the rail, and closing a pane the reader never picked
+         * would undo navigation they did not ask to undo.
+         */
+        const openPackageId = selectedPackage?.id;
+        if (openPackageId && packageIds.includes(openPackageId)) {
+          forgetPackage();
+        }
+      } catch (error) {
+        pmToaster.create({
+          type: 'error',
+          title:
+            packageIds.length === 1
+              ? "Couldn't delete the package"
+              : "Couldn't delete those packages",
+          description: 'Try again, or check your space access.',
+        });
+        throw error;
+      }
+    },
+    [
+      deletePackagesBatch,
+      forgetPackage,
+      organization,
+      selectedPackage,
+      spaceId,
+    ],
+  );
+
   /*
    * Naming a new package, held here and not in the rail that opens it, because
    * what happens once it exists is a selection and the selection is this
@@ -626,6 +699,7 @@ export function SpaceContextSurface() {
               onShowInventory={showInventory}
               onShowOrphans={showOrphans}
               onCreatePackage={createAndOpen}
+              onDeletePackages={deletePackages}
             />
           )}
           {/*
