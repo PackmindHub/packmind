@@ -84,7 +84,7 @@ export const PackageEditFormBody = ({
   const updatePackageMutation = useUpdatePackageMutation();
 
   const handleCancel = () => {
-    navigate(backHref);
+    void navigate(backHref);
   };
 
   const handleSave = async () => {
@@ -116,7 +116,7 @@ export const PackageEditFormBody = ({
         description: `"${editName}" has been updated`,
       });
 
-      navigate(backHref);
+      void navigate(backHref);
     } catch (err) {
       console.error('Failed to update package:', err);
       const errorMessage =
