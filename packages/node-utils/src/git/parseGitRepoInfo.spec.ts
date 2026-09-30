@@ -37,6 +37,22 @@ describe('parseGitRepoInfo', () => {
     });
   });
 
+  describe('when the remote has no scheme, as older CLIs sent it', () => {
+    it('reads the path after the host', () => {
+      expect(parseGitRepoInfo('github.com/my-company/my-repo')).toEqual({
+        owner: 'my-company',
+        repo: 'my-repo',
+      });
+    });
+
+    it('keeps the whole group path as owner', () => {
+      expect(parseGitRepoInfo('gitlab.acme.io/group/sub/app')).toEqual({
+        owner: 'group/sub',
+        repo: 'app',
+      });
+    });
+  });
+
   describe('when the remote has no owner', () => {
     it('throws', () => {
       expect(() => parseGitRepoInfo('https://github.com/repo')).toThrow(
