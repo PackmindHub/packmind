@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-28T09:46:31.846Z",
+  "generatedAt": "2026-09-30T14:46:19.760Z",
   "around": "2026-07-24",
   "from": "2026-09-01",
-  "to": "2026-09-29",
+  "to": "2026-10-01",
   "days": [
     {
       "date": "2026-09-01",
@@ -358,18 +358,64 @@
     },
     {
       "date": "2026-09-28",
-      "addedCode": 2130,
-      "addedComment": 687,
-      "commits": 14,
+      "addedCode": 4358,
+      "addedComment": 984,
+      "commits": 28,
       "byModel": {
         "Claude Opus 5": {
-          "added": 2817,
-          "comment": 687
+          "added": 4101,
+          "comment": 941
+        },
+        "Claude Opus 5.5": {
+          "added": 1241,
+          "comment": 43
         }
       },
-      "added": 2817,
-      "commentRatio": 0.24387646432374868,
+      "added": 5342,
+      "commentRatio": 0.18420067390490452,
       "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-29",
+      "addedCode": 2471,
+      "addedComment": 464,
+      "commits": 21,
+      "byModel": {
+        "Claude Opus 5": {
+          "added": 2667,
+          "comment": 429
+        },
+        "Claude Opus 5.5": {
+          "added": 268,
+          "comment": 35
+        }
+      },
+      "added": 2935,
+      "commentRatio": 0.15809199318568995,
+      "model": "Claude Opus 5"
+    },
+    {
+      "date": "2026-09-30",
+      "addedCode": 2961,
+      "addedComment": 360,
+      "commits": 18,
+      "byModel": {
+        "Claude Opus 5.5": {
+          "added": 2554,
+          "comment": 162
+        },
+        "Claude Sonnet 5.5": {
+          "added": 98,
+          "comment": 10
+        },
+        "Claude Opus 5": {
+          "added": 669,
+          "comment": 188
+        }
+      },
+      "added": 3321,
+      "commentRatio": 0.10840108401084012,
+      "model": "Claude Opus 5.5"
     }
   ]
 }

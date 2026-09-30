@@ -167,6 +167,37 @@ const sharedRows = sharedDays.flatMap((d) =>
     ]),
 );
 
+// Once there are several shared days the per-day rows repeat one finding many
+// times over. The aggregate leads; the days move under a fold, where they serve
+// as evidence rather than as the argument.
+const sharedModels = [
+  ...new Set(sharedDays.flatMap((d) => Object.keys(d.byModel))),
+]
+  .map((model) => {
+    let added = 0;
+    let comment = 0;
+    let days = 0;
+    for (const d of sharedDays) {
+      const cell = d.byModel[model];
+      if (!cell) continue;
+      added += cell.added;
+      comment += cell.comment;
+      days++;
+    }
+    return { model, added, comment, days, ratio: comment / added };
+  })
+  .filter((m) => m.added >= 500)
+  .sort((a, b) => b.ratio - a.ratio);
+
+// How often the highest-ratio model of a shared day was the same one: a run of
+// six is worth more than a single day at twice the gap.
+const topOf = (d) =>
+  Object.entries(d.byModel)
+    .filter(([, cell]) => cell.added >= 100)
+    .sort((a, b) => b[1].comment / b[1].added - a[1].comment / a[1].added)[0]?.[0];
+const winner = sharedModels[0]?.model;
+const wins = sharedDays.filter((d) => topOf(d) === winner).length;
+
 const payload = {
   points,
   legend,
@@ -249,21 +280,37 @@ ${
   <div class="card-head">
     <h3>The comparisons the calendar cannot spoil</h3>
     <p>On a day that two models share, both wrote the same codebase under the same instructions. Whatever separates
-    them on that day is the model, not the rule.</p>
+    them on that day is the model, not the rule. Pooled over the
+    ${fmtInt(sharedDays.length)} shared ${sharedDays.length === 1 ? 'day' : 'days'}:</p>
+    <ul class="keys">
+      ${sharedModels
+        .map(
+          (m) =>
+            `<li><b>${short(m.model)} ${fmtPct(m.ratio)}</b> &mdash; ${fmtInt(m.added)} lines over
+            ${fmtInt(m.days)} ${m.days === 1 ? 'day' : 'days'}</li>`,
+        )
+        .join('\n      ')}
+    </ul>
+    <p>${
+      wins === sharedDays.length && sharedDays.length > 1
+        ? `<b>${short(winner)} is the highest of every one of the ${fmtInt(sharedDays.length)} days</b>, not an
+        average pulled up by one of them.`
+        : `${short(winner)} is the highest on ${fmtInt(wins)} of the ${fmtInt(sharedDays.length)} days.`
+    }</p>
+    ${
+      heldFixed.length > 0
+        ? `<p>And the mirror of it &mdash; hold the model fixed and let the date vary, which asks
+    whether the rule did anything at all: ${heldFixed
+      .map(
+        (m) =>
+          `<b>${short(m.model)}</b> wrote ${fmtPct(m.before.ratio)} on ${fmtInt(m.before.added)} lines before
+          ${dayEn(options.mark)} and ${fmtPct(m.after.ratio)} on ${fmtInt(m.after.added)} lines after it`,
+      )
+      .join('; ')}.</p>`
+        : ''
+    }
   </div>
-  <div id="t-shared"></div>
-  ${
-    heldFixed.length > 0
-      ? `<p style="margin-top:14px">And the mirror of it &mdash; hold the model fixed and let the date vary, which asks
-  whether the rule did anything at all: ${heldFixed
-    .map(
-      (m) =>
-        `<b>${short(m.model)}</b> wrote ${fmtPct(m.before.ratio)} on ${fmtInt(m.before.added)} lines before
-        ${dayEn(options.mark)} and ${fmtPct(m.after.ratio)} on ${fmtInt(m.after.added)} lines after it`,
-    )
-    .join('; ')}.</p>`
-      : ''
-  }
+  <details><summary>See each shared day</summary><div id="t-shared"></div></details>
 </div>
 `
     : ''
