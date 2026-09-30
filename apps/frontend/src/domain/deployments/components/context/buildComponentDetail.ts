@@ -472,6 +472,22 @@ export function contextPackageHref(
 }
 
 /**
+ * The drawer that names a new package, in the address while it is open: a
+ * reload keeps it on screen, and a screen outside the space can link straight
+ * to it — the plugin-first navigation has no creation page to send anyone to.
+ */
+export const CREATE_PARAM = 'create';
+export const CREATE_PACKAGE_VALUE = 'package';
+
+export function contextCreatePackageHref({
+  orgSlug,
+  spaceSlug,
+}: ContextLinkTarget): string {
+  const params = new URLSearchParams({ [CREATE_PARAM]: CREATE_PACKAGE_VALUE });
+  return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
+}
+
+/**
  * Where a link to a package goes, in the navigation the reader has.
  *
  * The one place that answers it, because the answer is not the same twice and

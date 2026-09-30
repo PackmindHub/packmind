@@ -45,6 +45,8 @@ import {
 } from './buildSpaceInventory';
 import {
   COMPONENT_PARAM,
+  CREATE_PACKAGE_VALUE,
+  CREATE_PARAM,
   FILE_PARAM,
   INVENTORY_VALUE,
   RELEASE_PARAM,
@@ -363,6 +365,7 @@ export function SpaceContextSurface() {
           // release belongs to the package it was cut from, so 1.1.0 carried
           // into the next package would name one of its releases or none.
           previous.delete(RELEASE_PARAM);
+          previous.delete(CREATE_PARAM);
           // A rail click asks for the whole of what it names unless it names
           // the filtered part itself, so a filter left over from the previous
           // selection would answer a question the click did not ask. Clicking
@@ -515,8 +518,18 @@ export function SpaceContextSurface() {
    * the reader wants to look at next. Asked for from a move with nowhere to go,
    * it is a target for the drawer still open on screen: opening it would remount
    * the pane under that drawer and throw away the components picked to move.
+   *
+   * `open-it` is in the address, so a reload keeps the drawer and a link from
+   * outside the space can open it. `stay` is not: it belongs to a drawer that
+   * is not in the address either.
    */
-  const [creating, setCreating] = useState<CreateIntent | null>(null);
+  const [creatingToStay, setCreatingToStay] = useState(false);
+  const creating: CreateIntent | null =
+    searchParams.get(CREATE_PARAM) === CREATE_PACKAGE_VALUE
+      ? 'open-it'
+      : creatingToStay
+        ? 'stay'
+        : null;
 
   /*
    * What is picked in the inventory, held here rather than in the pane that
@@ -549,8 +562,26 @@ export function SpaceContextSurface() {
   useEffect(() => {
     if (!readingInventory) setInventorySelection(new Set());
   }, [readingInventory]);
-  const createAndOpen = useCallback(() => setCreating('open-it'), []);
-  const createAndStay = useCallback(() => setCreating('stay'), []);
+  const createAndOpen = useCallback(() => {
+    setSearchParams(
+      (previous) => {
+        previous.set(CREATE_PARAM, CREATE_PACKAGE_VALUE);
+        return previous;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+  const createAndStay = useCallback(() => setCreatingToStay(true), []);
+  const closeCreate = useCallback(() => {
+    setCreatingToStay(false);
+    setSearchParams(
+      (previous) => {
+        previous.delete(CREATE_PARAM);
+        return previous;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
   const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
   const showOrphans = useCallback(
     () => show(INVENTORY_VALUE, NO_PACKAGE_VALUE),
@@ -622,7 +653,7 @@ export function SpaceContextSurface() {
       organizationId={organization.id}
       open
       onOpenChange={(isOpen) => {
-        if (!isOpen) setCreating(null);
+        if (!isOpen) closeCreate();
       }}
       onCreated={(packageId) => {
         if (creating === 'open-it') selectPackage(packageId);
