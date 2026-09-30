@@ -8,6 +8,8 @@
 
 ## Changed
 
+- `packmind track` and `packmind init` no longer send a provider vendor guessed from the remote URL: the server works it out from the remote, which is what lets a self-managed GitLab use its connection
+
 ## Fixed
 
 - The CLI drops any token embedded in the repository's remote URL before sending it to Packmind
@@ -15,6 +17,8 @@
 ## Removed
 
 # [0.36.1] - 2026-09-28
+
+- `packmind track`, `init` and `install` keep the full group path of a GitLab remote (`group/subgroup/repo`) instead of its last two segments
 
 ## Added
 

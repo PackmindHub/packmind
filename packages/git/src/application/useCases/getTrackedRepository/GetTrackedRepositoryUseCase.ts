@@ -6,7 +6,9 @@ import {
   IAccountsPort,
   IGetTrackedRepositoryUseCase,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'GetTrackedRepositoryUseCase';
 
@@ -19,6 +21,7 @@ export class GetTrackedRepositoryUseCase
 {
   constructor(
     private readonly gitRepoService: GitRepoService,
+    private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -29,13 +32,22 @@ export class GetTrackedRepositoryUseCase
     command: GetTrackedRepositoryCommand & MemberContext,
   ): Promise<GetTrackedRepositoryResponse> {
     const { owner, repo, organization } = command;
-
-    const gitRepo =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        owner,
-        repo,
-      );
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
+      organization.id,
+      owner,
+    );
+    const gitRepo = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading, opts) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+          opts,
+        ),
+    );
 
     return { gitRepo };
   }

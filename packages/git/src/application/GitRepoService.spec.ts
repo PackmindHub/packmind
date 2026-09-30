@@ -317,6 +317,7 @@ describe('GitRepoService', () => {
       expect(mockGitRepoRepository.reassignProvider).toHaveBeenCalledWith(
         mockGitRepo.id,
         newProviderId,
+        mockGitRepo.owner,
       );
     });
 

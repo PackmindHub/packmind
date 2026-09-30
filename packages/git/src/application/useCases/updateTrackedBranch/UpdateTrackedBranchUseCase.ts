@@ -3,6 +3,7 @@ import {
   AbstractAdminUseCase,
   AdminContext,
   PackmindEventEmitterService,
+  providerPathPrefix,
 } from '@packmind/node-utils';
 import {
   createUserId,
@@ -17,6 +18,7 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'UpdateTrackedBranchUseCase';
 
@@ -42,13 +44,22 @@ export class UpdateTrackedBranchUseCase
     command: UpdateTrackedBranchCommand & AdminContext,
   ): Promise<UpdateTrackedBranchResponse> {
     const { owner, repo, branch, organization, userId } = command;
-
-    const existingTracked =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        owner,
-        repo,
-      );
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
+      organization.id,
+      owner,
+    );
+    const existingTracked = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading, opts) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+          opts,
+        ),
+    );
 
     // Nothing tracked yet — the caller must init/track first.
     if (!existingTracked) {
@@ -86,10 +97,15 @@ export class UpdateTrackedBranchUseCase
     // Clear-then-set = last-one-wins (plain update, no locking).
     await this.gitRepoService.updateTracked(existingTracked.id, false);
 
+    // The provider URL stands in for the remote, so the owner is given as a
+    // web remote of that provider would carry it.
+    const pathPrefix = providerPathPrefix(provider?.url);
     const gitRepo = await this.findOrCreateGitRepo.execute({
       userId,
       organizationId: organization.id,
-      owner,
+      owner: pathPrefix
+        ? `${pathPrefix}/${existingTracked.owner}`
+        : existingTracked.owner,
       repo,
       branch,
       providerVendor: provider?.source,
