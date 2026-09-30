@@ -63,6 +63,8 @@ export type InstallDriftEntry = {
   mostRecentDeployedAtDays: number;
   lastDistributionStatus: DistributionStatus | null;
   lastDistributedAt: string | null;
+  /** Why `lastDistributionStatus` reads `failure`, and null on every other status. */
+  lastDistributionError: string | null;
   behindArtifacts: DriftArtifactEntry[];
   alignedArtifactCount: number;
 };
@@ -80,6 +82,7 @@ function emptyEntry(location: InstallLocation): InstallDriftEntry {
     mostRecentDeployedAtDays: Number.POSITIVE_INFINITY,
     lastDistributionStatus: location.lastDistributionStatus,
     lastDistributedAt: location.lastDistributedAt,
+    lastDistributionError: location.lastDistributionError,
     behindArtifacts: [],
     alignedArtifactCount: 0,
   };

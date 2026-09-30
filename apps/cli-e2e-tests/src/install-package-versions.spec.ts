@@ -20,11 +20,12 @@ import { Package, Skill } from '@packmind/types';
  * tracking the package" and its absence says "this repo is on a release".
  */
 /*
- * Strictly greater, not `>= 0.36.0`: the registry leg runs the latest
- * published CLI, and 0.36.0 is published without any of this. A `>=` gate let
- * every scenario below run against a binary that answers `*` to all of them.
+ * Strictly greater, not `>= 0.36.1`: the registry leg runs the latest
+ * published CLI, and 0.36.0 and 0.36.1 are published without any of this. A
+ * looser gate lets every scenario below run against a binary that answers `*`
+ * to all of them.
  */
-describeForVersion('> 0.36.0', 'install at a version', () => {
+describeForVersion('> 0.36.1', 'install at a version', () => {
   describeWithUserSignedUp('install at a version', (getContext) => {
     let context: UserSignedUpContext;
     let pkg: Package;

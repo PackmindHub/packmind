@@ -1,3 +1,4 @@
+import { GitProviderService } from '../../GitProviderService';
 import { stubLogger, mockInterface } from '@packmind/test-utils';
 import {
   createGitProviderId,
@@ -14,6 +15,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { gitRepoFactory } from '../../../../test';
 import { GitRepoService } from '../../GitRepoService';
 import { GetTrackedRepositoryUseCase } from './GetTrackedRepositoryUseCase';
+
+// Owners in these specs carry no installation prefix, so they pass through.
+const ownerAsIsProviderService = () =>
+  ({
+    ownerReadings: jest.fn(async (_organizationId, owner) => [
+      { owner, providerId: null },
+    ]),
+  }) as Partial<
+    jest.Mocked<GitProviderService>
+  > as jest.Mocked<GitProviderService>;
 
 describe('GetTrackedRepositoryUseCase', () => {
   let useCase: GetTrackedRepositoryUseCase;
@@ -63,6 +74,7 @@ describe('GetTrackedRepositoryUseCase', () => {
 
     useCase = new GetTrackedRepositoryUseCase(
       mockGitRepoService,
+      ownerAsIsProviderService(),
       mockAccountsAdapter,
       stubLogger(),
     );
@@ -90,7 +102,7 @@ describe('GetTrackedRepositoryUseCase', () => {
     it('queries by organization, owner and repo', () => {
       expect(
         mockGitRepoService.findTrackedByOwnerRepoInOrganization,
-      ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets');
+      ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets', {});
     });
   });
 

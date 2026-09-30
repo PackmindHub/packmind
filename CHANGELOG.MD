@@ -6,13 +6,28 @@
 - Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
 - Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
 - `Update N distributions` is absent while a release is on screen: drift measures distance from the live package, not from the release being read
-- Distributing from anywhere else is unchanged — a packages-list selection, a repository's install list, a redistribute from Distribution all send the package as it stands
+- `Update` on a destination pinned to a version now moves it to the newest release instead of pushing the live package over its pin
+- A destination tracking `*` is left tracking it, so one `Update` can move a pinned repository and refresh a wildcard one in the same click
+- A repository with several destinations now receives all of them in its one commit; only the first one's files were ever committed, while every destination was reported as distributed
+- That same commit now marks every destination of the repository as distributed: only the first left `Distributing now`, and the others waited for ever on a job that had already run
+- Packages can be picked in the Context rail and deleted together, from the band under the list: the standards, commands and skills they held stay in the space
 
 ## Changed
 
+- `Add components` moved from the package header onto the tab strip beside Components and Distribution: it has always served that tab alone, and now sits on the row it answers
+
 ## Fixed
 
+- A clone URL embedding a token (`https://oauth2:<token>@host`) no longer leaks it into server logs or the Git connections page
+- Remotes stored with such a token are cleaned by a migration
+- On a self-managed GitLab, `packmind install`, `init` and `track` now use the connection configured for the instance instead of a CLI-managed one
+- That connection is matched by host, so a remote cloned over HTTPS or SSH reaches it alike
+- Adding a repository the CLI already recorded on that instance moves it under the connection with its targets and history, instead of refusing it as a duplicate
+- A CLI-managed connection is no longer listed once it holds no repository
+- A repository cloned over `ssh://` or with a user in its URL no longer gets a CLI-managed connection of its own
+- A self-managed GitLab installed under a path such as `/gitlab` matches its connection: the path is no longer read as part of the group
 - Opening a component from All components keeps the rows already picked, and closing it goes back to that list rather than to the package carrying the component
+- A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
 
 ## Removed
 

@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  TargetPublishOverride,
   IPublishArtifactsUseCase,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
@@ -82,10 +83,27 @@ type PrepareUnifiedDeploymentParams = {
   packagesSlugs: string[];
   /** What each slug pins; a slug with no entry is written as `*`. */
   packageVersions?: Record<string, string>;
+  /** Per-destination narrowing, where the targets do not all want the same. */
+  perTarget?: Record<string, TargetPublishOverride>;
   artifactSpaceIds: Record<string, string>;
   artifactPackageIds: Record<string, string[]>;
   accessiblePackageIds: string[];
 };
+
+/** The subset of a change set whose version ids appear in `versionIds`. */
+function narrowToVersionIds(
+  versions: ArtifactVersions,
+  versionIds: string[],
+): ArtifactVersions {
+  const allowed = new Set(versionIds);
+  return {
+    commandVersions: versions.commandVersions.filter((v) => allowed.has(v.id)),
+    standardVersions: versions.standardVersions.filter((v) =>
+      allowed.has(v.id),
+    ),
+    skillVersions: versions.skillVersions.filter((v) => allowed.has(v.id)),
+  };
+}
 
 // Key extractors: the only thing that differs between the three artifact kinds.
 const commandKey = (version: CommandVersion): string => version.recipeId;
@@ -265,6 +283,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         changeSet,
         packagesSlugs: command.packagesSlugs,
         packageVersions: command.packageVersions,
+        perTarget: command.perTarget,
         artifactSpaceIds: command.artifactSpaceIds ?? {},
         artifactPackageIds: command.artifactPackageIds ?? {},
         accessiblePackageIds: command.packageIds.map(String),
@@ -277,9 +296,26 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         addedPackmindSkills,
       );
 
-      const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-      if (!firstTargetUpdates) {
+      if (fileUpdatesPerTarget.size === 0) {
         throw new NoFileUpdatesResolvedError();
+      }
+
+      /*
+       * Every target's files, in the one commit the repository gets.
+       *
+       * Only the first target's used to be handed to the job, while a
+       * distribution was created for each of them and the commit message named
+       * them all — so a repository with two targets received one of them and
+       * reported both. Paths are already target-prefixed, so the merge cannot
+       * collide across targets; `mergeFileUpdates` still deduplicates, which
+       * matters for the files two targets genuinely share.
+       */
+      const repositoryFileUpdates: FileUpdates = {
+        createOrUpdate: [],
+        delete: [],
+      };
+      for (const targetUpdates of fileUpdatesPerTarget.values()) {
+        this.mergeFileUpdates(repositoryFileUpdates, targetUpdates);
       }
 
       await this.createInProgressDistributions(
@@ -291,8 +327,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       );
       await this.enqueuePublishJob(
         ctx,
-        created[0],
-        firstTargetUpdates,
+        created,
+        repositoryFileUpdates,
         commitMessage,
       );
 
@@ -363,19 +399,26 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return distributions;
   }
 
+  /*
+   * One job per repository, naming every distribution it fulfils.
+   *
+   * The job used to carry the first distribution alone, so only that one left
+   * 'in_progress' when the commit landed: a repository's other targets kept
+   * reading as 'Distributing now' for ever, waiting on a job that had already
+   * run.
+   */
   private async enqueuePublishJob(
     ctx: RepositoryPublishContext,
-    firstDistribution: Distribution,
+    distributions: Distribution[],
     fileUpdates: FileUpdates,
     commitMessage: string,
   ): Promise<void> {
     const { command, repositoryId, gitRepo, targets, requestedVersions } = ctx;
 
     await this.publishArtifactsDelayedJob.addJob({
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       organizationId: command.organizationId as OrganizationId,
       userId: command.userId as UserId,
-      targetId: targets[0].id,
       gitRepoId: gitRepo.id,
       fileUpdates,
       commitMessage,
@@ -389,7 +432,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     this.logger.info('Enqueued publish artifacts job for repository', {
       repositoryId,
-      distributionId: firstDistribution.id,
+      distributionIds: distributions.map((distribution) => distribution.id),
       targetsCount: targets.length,
     });
   }
@@ -429,6 +472,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     changeSet,
     packagesSlugs,
     packageVersions,
+    perTarget,
     artifactSpaceIds,
     artifactPackageIds,
     accessiblePackageIds,
@@ -495,13 +539,27 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
+      /*
+       * What this destination receives, narrowed from the repository's union.
+       *
+       * Two targets of one repository can be on different versions of the
+       * same component — one pinned to a release, one tracking the package —
+       * so the union carries both and each target renders only its own. A
+       * target with no override renders the whole union, which is every
+       * target of every publish that has no versions to tell apart.
+       */
+      const targetOverride = perTarget?.[target.id];
+      const installedHere = targetOverride
+        ? narrowToVersionIds(installed, targetOverride.versionIds)
+        : installed;
+
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
         installed: {
-          recipeVersions: installed.commandVersions,
-          standardVersions: installed.standardVersions,
-          skillVersions: installed.skillVersions,
+          recipeVersions: installedHere.commandVersions,
+          standardVersions: installedHere.standardVersions,
+          skillVersions: installedHere.skillVersions,
         },
         removed: {
           recipeVersions: removed.commandVersions,
@@ -540,7 +598,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           packagesSlugs,
           existingPackages,
           existingPackmindJson?.agents,
-          packageVersions,
+          targetOverride?.packageVersions ?? packageVersions,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 

@@ -289,4 +289,40 @@ describe('GitRepoService', () => {
       );
     });
   });
+
+  describe('adoptGitRepo', () => {
+    const newProviderId = createGitProviderId('provider-2');
+    const organizationId = createOrganizationId('org-1');
+    const adopted: GitRepo = { ...mockGitRepo, providerId: newProviderId };
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      mockGitRepoRepository.reassignProvider.mockResolvedValue(adopted);
+      result = await gitRepoService.adoptGitRepo(
+        mockGitRepo,
+        newProviderId,
+        organizationId,
+      );
+    });
+
+    it('clears the tracking removal on every branch of the repository', () => {
+      expect(mockGitRepoRepository.clearTrackingRemoved).toHaveBeenCalledWith(
+        mockGitRepo.owner,
+        mockGitRepo.repo,
+        organizationId,
+      );
+    });
+
+    it('moves the repository under the new provider', () => {
+      expect(mockGitRepoRepository.reassignProvider).toHaveBeenCalledWith(
+        mockGitRepo.id,
+        newProviderId,
+        mockGitRepo.owner,
+      );
+    });
+
+    it('returns the adopted repository', () => {
+      expect(result).toEqual(adopted);
+    });
+  });
 });

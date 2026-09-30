@@ -3,6 +3,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
+  FileUpdates,
   createUserId,
   createOrganizationId,
   createPackageId,
@@ -761,12 +762,12 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('enqueues a job with the distribution id', async () => {
+    it('enqueues a job with the distribution ids', async () => {
       await useCase.execute(command);
 
       expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledWith(
         expect.objectContaining({
-          distributionId: expect.any(String),
+          distributionIds: [expect.any(String)],
           organizationId,
           userId,
         }),
@@ -985,6 +986,43 @@ describe('PublishArtifactsUseCase', () => {
 
       it('includes Staging target name in commit message', () => {
         expect(jobInput.commitMessage).toContain('Staging');
+      });
+
+      /*
+       * The commit message names both targets, so the commit has to carry
+       * both. Each target renders to its own prefixed paths, and only one set
+       * of them was ever handed to the job.
+       */
+      it('commits the files of the first target', () => {
+        const paths = (
+          jobInput as unknown as { fileUpdates: FileUpdates }
+        ).fileUpdates.createOrUpdate.map((file) => file.path);
+
+        expect(paths).toContain('docs/prod/.packmind/commands/test.md');
+      });
+
+      it('commits the files of the second target', () => {
+        const paths = (
+          jobInput as unknown as { fileUpdates: FileUpdates }
+        ).fileUpdates.createOrUpdate.map((file) => file.path);
+
+        expect(paths).toContain('docs/staging/.packmind/commands/test.md');
+      });
+
+      /*
+       * The job is what moves a distribution out of 'in_progress'. Naming only
+       * the first one left every other target of the repository reading as
+       * 'Distributing now' after the commit had landed.
+       */
+      it('names every distribution of the repository on the job', () => {
+        const { distributionIds } = jobInput as unknown as {
+          distributionIds: string[];
+        };
+
+        expect(distributionIds).toEqual([
+          result.distributions[0].id,
+          result.distributions[1].id,
+        ]);
       });
     });
   });

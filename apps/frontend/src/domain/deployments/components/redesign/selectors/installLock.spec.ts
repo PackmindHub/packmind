@@ -34,6 +34,7 @@ function makeEntry(
     mostRecentDeployedAtDays: Number.POSITIVE_INFINITY,
     lastDistributionStatus: null,
     lastDistributedAt: null,
+    lastDistributionError: null,
     behindArtifacts: [],
     alignedArtifactCount: 0,
     ...overrides,
@@ -105,6 +106,7 @@ describe('packageLockProfile', () => {
       branch: 'main',
       lastDistributionStatus: i.status ?? null,
       lastDistributedAt: null,
+      lastDistributionError: null,
     }));
     return {
       id: createPackageId(`pkg-${label}`),

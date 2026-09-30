@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { SkillFile, SkillVersionId } from '@packmind/types';
+import { SkillFile, SkillFileId, SkillVersionId } from '@packmind/types';
 import { ISkillFileRepository } from '../../domain/repositories/ISkillFileRepository';
 
 const origin = 'SkillFileService';
@@ -28,6 +28,20 @@ export class SkillFileService {
     } catch (error) {
       this.logger.error('Failed to find skill files by version ID', {
         skillVersionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findById(skillFileId: SkillFileId): Promise<SkillFile | null> {
+    this.logger.info('Finding skill file by ID', { skillFileId });
+
+    try {
+      return await this.skillFileRepository.findById(skillFileId);
+    } catch (error) {
+      this.logger.error('Failed to find skill file by ID', {
+        skillFileId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

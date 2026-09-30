@@ -1,4 +1,5 @@
 import { GitUpstreamError } from './GitUpstreamError';
+import { providerErrorMessage } from './providerErrorMessage';
 
 /**
  * The provider call behind a directory existence check failed with something
@@ -19,9 +20,7 @@ export class DirectoryExistenceCheckFailedError extends GitUpstreamError {
       'upstream_unavailable',
       'directory_existence_check_failed',
       { gitRepoId, directoryPath, branch },
-      `Failed to check directory existence: ${
-        cause instanceof Error ? cause.message : String(cause)
-      }`,
+      `Failed to check directory existence: ${providerErrorMessage(cause)}`,
     );
     this.name = 'DirectoryExistenceCheckFailedError';
   }

@@ -89,6 +89,7 @@ describe('behindInstallsRequiringCliCount', () => {
       branch: 'main',
       lastDistributionStatus: null,
       lastDistributedAt: null,
+      lastDistributionError: null,
     }));
     return {
       id: createPackageId(`pkg-${label}`),

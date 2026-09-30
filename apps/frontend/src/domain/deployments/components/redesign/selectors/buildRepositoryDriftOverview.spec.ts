@@ -145,6 +145,7 @@ function makeByTargetEntry(opts: {
         lastDistributionStatus:
           opts.lastDistributionStatus ?? DistributionStatus.success,
         lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
+        lastDistributionError: null,
         deployedRecipes: [],
         deployedCommands: [],
         deployedStandards: opts.deployedStandards ?? [],

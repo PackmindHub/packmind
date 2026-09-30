@@ -660,6 +660,44 @@ This downloads all commands, standards, and skills from the specified packages a
   installed alongside your package contents.
 </Note>
 
+### Package Versions
+
+Each package listed in `packmind.json` records which version of that package the folder receives. Add the version after the slug to choose it:
+
+```bash
+packmind install @my-space/ops:0.1.0
+```
+
+| What you type         | What you get                                                            | What `packmind.json` records      |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------- |
+| `@my-space/ops`       | The latest release                                                      | that release, for example `0.1.0` |
+| `@my-space/ops:0.1.0` | Exactly that release                                                    | `0.1.0`                           |
+| `@my-space/ops:*`     | The package as it stands, including changes made since the last release | `*`                               |
+
+A package pinned to a version stays on it. Cutting a new release in Packmind does not move a folder that pinned an older one, and neither does running `packmind install` again — your playbook only changes when you decide it does.
+
+Asking for a version that was never released stops the install and lists the versions that do exist, newest first. A package that has never been released installs as it stands, recorded as `*`.
+
+Each `packmind.json` carries its own versions, so two folders in the same repository can sit on two different releases of the same package.
+
+### Upgrade to the Latest Releases
+
+Move every pinned package to its latest release:
+
+```bash
+packmind install --upgrade
+```
+
+This rewrites `packmind.json` with the version each package landed on, so you can see exactly what moved in your diff before committing it.
+
+Packages tracking `*` keep tracking it — their line in `packmind.json` is left alone — and their files are refreshed like any install.
+
+To move a single package instead, name it with the version you want:
+
+```bash
+packmind install @my-space/ops:0.2.0
+```
+
 ### Lock File (`packmind-lock.json`)
 
 When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts.

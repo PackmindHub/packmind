@@ -32,6 +32,7 @@ export const createActivePackage = (
     package: pkg,
     lastDistributionStatus: DistributionStatus.success,
     lastDistributedAt: new Date().toISOString(),
+    lastDistributionError: null,
     deployedRecipes: [],
     deployedCommands: [],
     deployedStandards: [],

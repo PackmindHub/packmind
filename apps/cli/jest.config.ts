@@ -7,6 +7,7 @@ module.exports = {
   displayName: 'packmind-cli',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   transform: swcTransformWithDefineFields,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/apps/cli',

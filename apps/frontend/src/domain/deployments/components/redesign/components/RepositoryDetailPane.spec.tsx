@@ -63,6 +63,7 @@ const driftedPackage: PackageDrift = {
       branch: 'main',
       lastDistributionStatus: DistributionStatus.success,
       lastDistributedAt: install.lastDeployedAt,
+      lastDistributionError: null,
     },
   ],
 };

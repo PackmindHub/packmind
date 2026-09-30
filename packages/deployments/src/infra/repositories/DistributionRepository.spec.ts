@@ -2128,6 +2128,7 @@ describe('DistributionRepository', () => {
       operation,
       status,
       lastDistributedAt,
+      error: null,
     });
 
     it('projects successful adds onto the active-row shape', async () => {
@@ -2144,6 +2145,7 @@ describe('DistributionRepository', () => {
           packageId: packageId1,
           lastDistributionStatus: DistributionStatus.success,
           lastDistributedAt,
+          lastDistributionError: null,
         },
       ]);
     });
@@ -2162,6 +2164,7 @@ describe('DistributionRepository', () => {
           packageId: packageId1,
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
+          lastDistributionError: null,
         },
       ]);
     });
@@ -2191,6 +2194,7 @@ describe('DistributionRepository', () => {
           packageId: packageId1,
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
+          lastDistributionError: null,
         },
       ]);
     });
@@ -2209,6 +2213,7 @@ describe('DistributionRepository', () => {
           packageId: packageId1,
           lastDistributionStatus: DistributionStatus.in_progress,
           lastDistributedAt,
+          lastDistributionError: null,
         },
       ]);
     });
@@ -2264,6 +2269,46 @@ describe('DistributionRepository', () => {
         expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
           'distribution.id',
           'DESC',
+        );
+      });
+    });
+
+    describe('the message of a failed distribution', () => {
+      it('is carried onto the active row, so a destination can say why it is red', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          {
+            ...rawRow(packageId1, 'add', DistributionStatus.failure),
+            error: 'Push rejected: branch protection requires a pull request',
+          },
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].lastDistributionError).toBe(
+          'Push rejected: branch protection requires a pull request',
+        );
+      });
+
+      it('is null on a distribution that did not fail', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          rawRow(packageId1, 'add', DistributionStatus.success),
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].lastDistributionError).toBeNull();
+      });
+
+      it('is selected from the distribution the row already stands for', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+          'distribution.error',
+          'error',
         );
       });
     });

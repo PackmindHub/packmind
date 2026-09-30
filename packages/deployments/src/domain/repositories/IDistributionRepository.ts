@@ -189,6 +189,15 @@ export type ActivePackageOperationRow = {
   packageId: PackageId;
   lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
+  /**
+   * Why the last attempt failed, and null whenever it did not.
+   *
+   * It belongs to the same distribution as the status beside it rather than to
+   * the latest failure anywhere: a pair that failed on Monday and succeeded on
+   * Tuesday reads `success` and no message, which is the truth about where it
+   * stands now.
+   */
+  lastDistributionError: string | null;
 };
 
 export type OutdatedDeployment<TArtifactId extends string> = {

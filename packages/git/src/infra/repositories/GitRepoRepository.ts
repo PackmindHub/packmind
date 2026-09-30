@@ -7,7 +7,7 @@ import {
 } from '../../domain/repositories/IGitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
@@ -116,8 +116,10 @@ export class GitRepoRepository
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        // Hosts treat owner and repo case-insensitively, so a CLI clone and
+        // the provider API can spell the same repository differently.
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('gitRepo.branch = :branch', { branch })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,
@@ -165,6 +167,7 @@ export class GitRepoRepository
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     this.logger.info('Finding tracked git repo by owner, repo, organization', {
       organizationId,
@@ -173,20 +176,29 @@ export class GitRepoRepository
     });
 
     try {
-      const gitRepo = await this.repository
+      const queryBuilder = this.repository
         .createQueryBuilder('gitRepo')
         .innerJoin(
           GitProviderSchema.options.name,
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        // Hosts treat owner and repo case-insensitively, and an adoption
+        // records the owner as the provider spells it.
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('gitRepo.isTracked = :isTracked', { isTracked: true })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,
-        })
-        .getOne();
+        });
+
+      if (opts?.providerId) {
+        queryBuilder.andWhere('gitRepo.providerId = :providerId', {
+          providerId: opts.providerId,
+        });
+      }
+
+      const gitRepo = await queryBuilder.getOne();
 
       this.logger.info('Tracked git repo lookup completed', {
         organizationId,
@@ -277,6 +289,97 @@ export class GitRepoRepository
     }
   }
 
+  async reassignProvider(
+    gitRepoId: GitRepoId,
+    providerId: GitProviderId,
+    owner?: string,
+  ): Promise<GitRepo> {
+    this.logger.info('Reassigning git repo provider', {
+      gitRepoId,
+      providerId,
+    });
+
+    try {
+      const gitRepo = await this.repository.findOne({
+        where: { id: gitRepoId },
+      });
+
+      if (!gitRepo) {
+        throw new GitRepoNotFoundError(gitRepoId);
+      }
+
+      const updated = await this.repository.save({
+        ...gitRepo,
+        providerId,
+        owner: owner ?? gitRepo.owner,
+      });
+
+      this.logger.info('Git repo provider reassigned', {
+        gitRepoId,
+        providerId,
+      });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to reassign git repo provider', {
+        gitRepoId,
+        providerId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async clearTrackingRemoved(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    this.logger.info('Clearing tracking removal on every branch', {
+      owner,
+      repo,
+      organizationId,
+    });
+
+    try {
+      const stamped = await this.repository
+        .createQueryBuilder('gitRepo')
+        .innerJoin(
+          GitProviderSchema.options.name,
+          'provider',
+          'gitRepo.providerId = provider.id',
+        )
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
+        .andWhere('provider.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('gitRepo.trackingRemovedAt IS NOT NULL')
+        .getMany();
+
+      if (stamped.length > 0) {
+        await this.repository.update(
+          { id: In(stamped.map((gitRepo) => gitRepo.id)) },
+          { trackingRemovedAt: null },
+        );
+      }
+
+      this.logger.info('Tracking removal cleared', {
+        owner,
+        repo,
+        organizationId,
+        clearedCount: stamped.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to clear tracking removal', {
+        owner,
+        repo,
+        organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findByOwnerAndRepoInOrganization(
     owner: string,
     repo: string,
@@ -304,8 +407,8 @@ export class GitRepoRepository
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,
         });

@@ -62,6 +62,8 @@ export type InstallLocation = {
   branch: string;
   lastDistributionStatus: DistributionStatus | null;
   lastDistributedAt: string | null;
+  /** The message that distribution left behind when it failed, null otherwise. */
+  lastDistributionError: string | null;
 };
 
 export type PackageDrift = {

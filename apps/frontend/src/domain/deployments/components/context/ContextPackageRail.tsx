@@ -1,8 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
+  PMAlertDialog,
   PMBox,
   PMButton,
+  PMCheckbox,
   PMHStack,
   PMIcon,
   PMText,
@@ -17,7 +19,12 @@ import {
   type ContextComponent,
   type SpaceCatalogue,
 } from './buildPackageContext';
-import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import {
+  COMPONENT_ACTION_ICONS,
+  COMPONENT_TYPE_ICONS,
+} from './ContextComponentList';
+import { ContextPickBox } from './ContextPickBox';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 import type { PackageAttention } from './buildPackageAttention';
 import { withPaneDetailHref } from './buildComponentDetail';
 import { ContextSearchField } from './ContextSearchField';
@@ -62,6 +69,7 @@ export function ContextPackageRail({
   onShowInventory,
   onShowOrphans,
   onCreatePackage,
+  onDeletePackages,
 }: Readonly<{
   packages: readonly PackageResponse[];
   /** What the space owns, so the search can look inside the packages. */
@@ -96,6 +104,17 @@ export function ContextPackageRail({
    * selects the package once it exists, and the rail has no address of its own.
    */
   onCreatePackage: () => void;
+  /**
+   * Deleting the packages that were picked, held by the surface for the reason
+   * `onCreatePackage` is: the rail owns which rows are ticked, and the surface
+   * owns the space they belong to and the address of the one that is open, so
+   * it is the only place that can both make the request and put the reader
+   * somewhere once the package they were reading is gone.
+   *
+   * Rejects when nothing was deleted, which is what keeps the confirmation open
+   * on a selection that is still there to try again on.
+   */
+  onDeletePackages: (packageIds: readonly PackageId[]) => Promise<void>;
 }>) {
   /*
    * Local, and deliberately not in the URL beside the open package. The package
@@ -110,6 +129,18 @@ export function ContextPackageRail({
    * while it is on. Nothing about it is worth carrying into a link.
    */
   const [onlyDrifted, setOnlyDrifted] = useState(false);
+  /*
+   * Local for the same reason again, and the strongest case of the three: a
+   * selection is a gesture half-made. Carrying it in the address would put a
+   * list of packages somebody was about to delete into every link built from
+   * these params, and hand the person who opened that link a loaded control
+   * they never touched.
+   *
+   * Ids rather than rows, so the set survives the list being refetched under it.
+   */
+  const [picked, setPicked] = useState<ReadonlySet<PackageId>>(new Set());
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   /*
    * A space can reach this rail with no package and still have something to
@@ -194,6 +225,49 @@ export function ContextPackageRail({
     needle !== '' &&
     matchCount > 0 &&
     shownRows.every((row) => !attention.has(row.pkg.id));
+
+  /*
+   * Read off the packages rather than off the set, so what the bar counts and
+   * what the request carries are the same thing: the set can outlive a package
+   * deleted from somewhere else, and a bar saying "3 selected" over two rows is
+   * a bar lying about the only number it exists to give.
+   *
+   * It keeps the rail's order rather than the order things were ticked in,
+   * which is the order the confirmation is read against.
+   */
+  const selected = useMemo(
+    () => packages.filter((pkg) => picked.has(pkg.id)).map((pkg) => pkg.id),
+    [packages, picked],
+  );
+  /*
+   * A row that is ticked but filtered out is still ticked. The bar says how
+   * many, so the count has to include it — but everything that picks more only
+   * ever reaches the rows on screen, which is the rule `onSelectAll` follows.
+   */
+  const isSelecting = selected.length > 0;
+
+  const toggleSelect = (packageId: PackageId) =>
+    setPicked((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(packageId)) next.add(packageId);
+      return next;
+    });
+
+  const deleteSelected = async () => {
+    setIsDeleting(true);
+    try {
+      await onDeletePackages(selected);
+      setPicked(new Set());
+      setConfirmingDelete(false);
+    } catch {
+      /*
+       * Left open, and on the same selection: the surface has said what went
+       * wrong, and the one thing the reader can do about it is ask again.
+       */
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <PMBox
@@ -340,7 +414,10 @@ export function ContextPackageRail({
               attention={attention.get(row.pkg.id)}
               isDriftPinned={filtering && !attention.has(row.pkg.id)}
               isActive={!showingInventory && row.pkg.id === selectedPackageId}
+              isSelected={picked.has(row.pkg.id)}
+              isSelecting={isSelecting}
               onClick={() => onSelect(row.pkg.id)}
+              onToggleSelect={() => toggleSelect(row.pkg.id)}
             />
           ))}
         </PMVStack>
@@ -358,26 +435,208 @@ export function ContextPackageRail({
 
         It is also the only way to create one in this navigation — Context is
         what replaces the Packages page, and that page carried the button.
+
+        It gives the band up to the selection rather than sitting above it,
+        which is the arrangement the Distribution rail has: one band under the
+        list, showing whichever of the two the reader is in the middle of. A
+        rail stacking both would be taller for the nine visits out of ten where
+        nothing is picked, to keep offering a package to create to the reader
+        who is busy deleting three.
       */}
-      <PMBox
-        paddingX={3}
-        paddingY="10px"
-        borderTopWidth="1px"
-        borderColor="border.tertiary"
-        flexShrink={0}
-      >
-        <PMButton
-          variant="secondary"
-          size="sm"
-          width="full"
-          onClick={onCreatePackage}
+      {isSelecting ? (
+        <RailSelectionBar
+          count={selected.length}
+          shownCount={shownRows.length}
+          shownSelectedCount={
+            shownRows.filter((row) => picked.has(row.pkg.id)).length
+          }
+          onSelectAllShown={() =>
+            setPicked((previous) => {
+              const next = new Set(previous);
+              for (const row of shownRows) next.add(row.pkg.id);
+              return next;
+            })
+          }
+          onClearShown={() =>
+            setPicked((previous) => {
+              const next = new Set(previous);
+              for (const row of shownRows) next.delete(row.pkg.id);
+              return next;
+            })
+          }
+          onClearAll={() => setPicked(new Set())}
+          onDelete={() => setConfirmingDelete(true)}
+        />
+      ) : (
+        <PMBox
+          paddingX={3}
+          paddingY="10px"
+          borderTopWidth="1px"
+          borderColor="border.tertiary"
+          flexShrink={0}
         >
-          <PMIcon fontSize="xs">
-            <LuPlus />
-          </PMIcon>
-          New package
-        </PMButton>
-      </PMBox>
+          <PMButton
+            variant="primary"
+            size="sm"
+            width="full"
+            onClick={onCreatePackage}
+          >
+            <PMIcon fontSize="xs">
+              <LuPlus />
+            </PMIcon>
+            New package
+          </PMButton>
+        </PMBox>
+      )}
+
+      {/*
+        The same sentence the package's own header confirms with, in its plural:
+        a package is a set of memberships, so deleting one is not deleting what
+        it holds, and that is the question a reader about to remove several of
+        them is asking.
+      */}
+      <PMAlertDialog
+        title={
+          selected.length === 1 ? 'Delete package' : 'Delete these packages'
+        }
+        message={`${PACKAGE_MESSAGES.confirmation.deleteBatchPackages(
+          selected.length,
+        )} The standards, commands and skills they hold stay in the space.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => void deleteSelected()}
+        open={confirmingDelete}
+        onOpenChange={({ open }) => setConfirmingDelete(open)}
+        isLoading={isDeleting}
+      />
+    </PMBox>
+  );
+}
+
+/**
+ * What is picked, and the one thing that can be done with it.
+ *
+ * Shaped after the action bar of the Distribution rail rather than after the
+ * `SelectionBar` the panes of this surface share, because it lives where that
+ * one does: in the band under a 320px list, not across the top of a pane. The
+ * shared bar puts its count, its two picking controls and its actions on one
+ * line, which is a line this rail does not have. Two lines and the same
+ * anatomy — the tri-state box and the readout above, the way out and the action
+ * below — is what the rail beside it already taught the reader.
+ *
+ * It replaces the create button rather than joining it, so the band keeps one
+ * height and says one thing at a time.
+ */
+function RailSelectionBar({
+  count,
+  shownCount,
+  shownSelectedCount,
+  onSelectAllShown,
+  onClearShown,
+  onClearAll,
+  onDelete,
+}: Readonly<{
+  /** Everything picked, filtered-out rows included: it is what Delete acts on. */
+  count: number;
+  /** How many rows the search and the drift filter left. */
+  shownCount: number;
+  /** How many of those are picked, which is what the box above reflects. */
+  shownSelectedCount: number;
+  onSelectAllShown: () => void;
+  onClearShown: () => void;
+  onClearAll: () => void;
+  onDelete: () => void;
+}>) {
+  const allShownSelected = shownCount > 0 && shownSelectedCount === shownCount;
+  const someShownSelected = shownSelectedCount > 0 && !allShownSelected;
+
+  return (
+    <PMBox
+      paddingX={3}
+      paddingY={3}
+      borderTopWidth="1px"
+      borderColor="border.tertiary"
+      bg="background.secondary"
+      flexShrink={0}
+    >
+      <PMVStack gap={2.5} align="stretch">
+        <PMHStack gap={2} align="center" minW={0}>
+          {/*
+            Reaches the rows on screen and no further: the box mirrors what the
+            search and the drift filter left, so it can never pick a package the
+            reader cannot see. Indeterminate is the state that says the two
+            numbers differ, which is the only way a reader can tell a partly
+            picked list from a filtered one.
+          */}
+          <PMCheckbox
+            size="sm"
+            checked={
+              allShownSelected
+                ? true
+                : someShownSelected
+                  ? 'indeterminate'
+                  : false
+            }
+            onCheckedChange={(details) => {
+              if (details.checked === true) onSelectAllShown();
+              else onClearShown();
+            }}
+            disabled={shownCount === 0}
+            aria-label="Select every package the rail is showing"
+            /*
+              A 16px box on a bar this size is a target the pointer misses, and
+              the count beside it is a readout rather than a label, so a miss has
+              nothing to land on. The padding grows the target to 32px and the
+              negative margin gives back the room it took, so nothing on the bar
+              moves. Taken verbatim from the rail this bar is modelled on.
+            */
+            padding={2}
+            margin={-2}
+          />
+          {/*
+            No second term after the count, where the Distribution bar names the
+            distributions its button is about to send. The honest one here would
+            be the components these packages hold, and printing it beside a
+            Delete button would say they go with them — which is the one thing
+            about this action that is not true. The confirmation says what
+            survives instead.
+          */}
+          <PMText
+            fontSize="xs"
+            color="secondary"
+            fontVariantNumeric="tabular-nums"
+            truncate
+            flex={1}
+            minW={0}
+          >
+            {count} selected
+          </PMText>
+        </PMHStack>
+        <PMHStack gap={2} justify="space-between" align="center">
+          <PMBox
+            as="button"
+            onClick={onClearAll}
+            fontSize="xs"
+            color="text.faded"
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            padding={0}
+            _hover={{ color: 'text.primary' }}
+          >
+            Clear
+          </PMBox>
+          {/*
+            Where the Distribution rail draws its primary action, in the one
+            variant that says this is the destructive kind. The confirmation
+            behind it is what the weight of the position is paid for with.
+          */}
+          <PMButton variant="danger" size="sm" onClick={onDelete}>
+            <PMIcon fontSize="sm">{COMPONENT_ACTION_ICONS.delete}</PMIcon>
+            Delete
+          </PMButton>
+        </PMHStack>
+      </PMVStack>
     </PMBox>
   );
 }
@@ -784,7 +1043,10 @@ function PackageRow({
   attention,
   isDriftPinned,
   isActive,
+  isSelected,
+  isSelecting,
   onClick,
+  onToggleSelect,
 }: Readonly<{
   row: PackageSearchRow;
   needle: string;
@@ -796,7 +1058,12 @@ function PackageRow({
    */
   isDriftPinned: boolean;
   isActive: boolean;
+  /** Ticked, which is not the same as open: a selection can span rows nobody is reading. */
+  isSelected: boolean;
+  /** A batch is being assembled, so every checkbox that can be shown is. */
+  isSelecting: boolean;
   onClick: () => void;
+  onToggleSelect: () => void;
 }>) {
   const { pkg, matches, isPinned } = row;
   const count = packageComponentCount(pkg);
@@ -821,86 +1088,128 @@ function PackageRow({
       overflow="hidden"
       borderBottomWidth="1px"
       borderColor="border.tertiary"
-      bg={isActive ? 'background.secondary' : 'transparent'}
+      // The picked row stays legible once the pointer has left it, and reads the
+      // same as the open one: both are rows the reader has singled out, and a
+      // second tint for the second kind would be a colour to learn.
+      bg={isActive || isSelected ? 'background.secondary' : 'transparent'}
+      // Chakra's `_groupHover` keys off this class, not `role="group"`. It is
+      // what reveals the checkbox under the pointer.
+      className="group"
     >
       {/*
-        The package and its matched components are separate targets: clicking
-        the name opens the package here, clicking a match opens that component.
-        One control wrapping both would force the user through the package to
-        reach the thing they were actually searching for.
+        The tick and the row are side by side, not one inside the other: a
+        control nested in a button is activated by the button, so ticking a
+        package would open it. The same arrangement the component list has.
       */}
-      <PMBox
-        as="button"
-        display="flex"
-        alignItems="center"
-        gap={2}
-        width="full"
-        textAlign="left"
-        paddingX={3}
-        paddingY="10px"
-        cursor="pointer"
-        _hover={isActive ? undefined : { bg: 'background.secondary' }}
-        transition="background-color 150ms ease-out"
-        onClick={onClick}
-        aria-current={isActive ? 'true' : undefined}
-      >
+      <PMHStack gap={0} align="stretch">
+        <PMBox width="28px" flexShrink={0} display="flex">
+          <ContextPickBox shown={isSelected || isSelecting}>
+            <PMCheckbox
+              size="sm"
+              checked={isSelected}
+              onCheckedChange={onToggleSelect}
+              inputProps={{ 'aria-label': `Select ${pkg.name}` }}
+            />
+          </ContextPickBox>
+        </PMBox>
         {/*
-          The crate, the same mark the sidebar keeps for the container. It sits
-          on the name's line rather than centred on the pair: centred, it sank
-          into the gap between the two lines and read as a bullet for the row
-          instead of as the type of the thing named.
+          The package and its matched components are separate targets: clicking
+          the name opens the package here, clicking a match opens that component.
+          One control wrapping both would force the user through the package to
+          reach the thing they were actually searching for.
         */}
-        <RowIcon color={isActive ? 'text.secondary' : 'text.faded'}>
-          <LuPackage />
-        </RowIcon>
-        <PMBox flex={1} minW={0}>
+        <PMBox
+          as="button"
+          display="flex"
+          alignItems="center"
+          gap={2}
+          flex={1}
+          minW={0}
+          textAlign="left"
+          // The gap the 28px column took from the row. Without it the crate sits
+          // flush against the checkbox and the two read as one control. Same
+          // value the Distribution rail gives its own row after the same column.
+          paddingLeft={2}
+          paddingRight={3}
+          paddingY="10px"
+          cursor="pointer"
+          _hover={
+            isActive || isSelected ? undefined : { bg: 'background.secondary' }
+          }
+          transition="background-color 150ms ease-out"
+          onClick={onClick}
+          aria-current={isActive ? 'true' : undefined}
+        >
           {/*
-            The mark shares the name's line rather than taking one of its own:
-            the eye runs down the left edge for names and down the right edge
-            for state, which is the arrangement the Distribution rail already
-            has. The name keeps `minW={0}` so it is the half that truncates.
+            The crate, the same mark the sidebar keeps for the container. It sits
+            on the name's line rather than centred on the pair: centred, it sank
+            into the gap between the two lines and read as a bullet for the row
+            instead of as the type of the thing named.
           */}
-          <PMHStack gap={2} align="center" minW={0}>
+          <RowIcon color={isActive ? 'text.secondary' : 'text.faded'}>
+            <LuPackage />
+          </RowIcon>
+          <PMBox flex={1} minW={0}>
+            {/*
+              The mark shares the name's line rather than taking one of its own:
+              the eye runs down the left edge for names and down the right edge
+              for state, which is the arrangement the Distribution rail already
+              has. The name keeps `minW={0}` so it is the half that truncates.
+            */}
+            <PMHStack gap={2} align="center" minW={0}>
+              <PMBox
+                as="div"
+                flex={1}
+                minW={0}
+                fontSize="sm"
+                fontWeight={isActive ? 'semibold' : 'medium'}
+                color={isActive ? 'text.primary' : 'text.secondary'}
+                truncate
+              >
+                {highlight(pkg.name, needle)}
+              </PMBox>
+              {attention && <AttentionMark attention={attention} />}
+            </PMHStack>
+            {/*
+              One text node rather than a row of boxes, so the line ends in an
+              ellipsis instead of being cut mid-word by the rail.
+
+              The word under a pinned row is the whole reason to mark it: it is
+              the only row of a search that the query did not reach, and without
+              it the package the pane happens to be showing reads as a result.
+            */}
             <PMBox
               as="div"
-              flex={1}
-              minW={0}
-              fontSize="sm"
-              fontWeight={isActive ? 'semibold' : 'medium'}
-              color={isActive ? 'text.primary' : 'text.secondary'}
+              paddingTop="3px"
+              color="text.faded"
+              fontSize="xs"
               truncate
             >
-              {highlight(pkg.name, needle)}
+              {count} component{count === 1 ? '' : 's'}
+              {activity &&
+                ` \u00b7 ${activity.changedAt ? 'updated' : 'created'} ${formatRelativeDate(
+                  activity.changedAt ?? activity.createdAt,
+                )}`}
+              {pinnedNote(isPinned, isDriftPinned)}
             </PMBox>
-            {attention && <AttentionMark attention={attention} />}
-          </PMHStack>
-          {/*
-            One text node rather than a row of boxes, so the line ends in an
-            ellipsis instead of being cut mid-word by the rail.
-
-            The word under a pinned row is the whole reason to mark it: it is
-            the only row of a search that the query did not reach, and without
-            it the package the pane happens to be showing reads as a result.
-          */}
-          <PMBox
-            as="div"
-            paddingTop="3px"
-            color="text.faded"
-            fontSize="xs"
-            truncate
-          >
-            {count} component{count === 1 ? '' : 's'}
-            {activity &&
-              ` \u00b7 ${activity.changedAt ? 'updated' : 'created'} ${formatRelativeDate(
-                activity.changedAt ?? activity.createdAt,
-              )}`}
-            {pinnedNote(isPinned, isDriftPinned)}
           </PMBox>
         </PMBox>
-      </PMBox>
+      </PMHStack>
 
       {shown.length > 0 && (
-        <PMVStack gap={0} align="stretch" paddingX={2} paddingBottom={2}>
+        /*
+          Offset by the checkbox column above it, so the matches hang under the
+          package's own content rather than under the gutter: the sub-list moved
+          with the row when the column pushed it across, and left at the row's
+          left edge it read as a second list rather than as this package's.
+        */
+        <PMVStack
+          gap={0}
+          align="stretch"
+          paddingLeft="28px"
+          paddingRight={2}
+          paddingBottom={2}
+        >
           {shown.map((component) => (
             <ComponentMatchRow
               key={component.key}

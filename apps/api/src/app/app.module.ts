@@ -70,6 +70,7 @@ import {
   SpacesManagementModule,
 } from '@packmind/spaces-management';
 import { CliVersionLoggerMiddleware } from './shared/middleware/CliVersionLoggerMiddleware';
+import { GitRemoteCredentialsMiddleware } from './shared/middleware/GitRemoteCredentialsMiddleware';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { SSEModule } from './sse/sse.module';
@@ -299,6 +300,9 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CliVersionLoggerMiddleware).forRoutes('*');
+    // Credentials go before anything logs the request URL.
+    consumer
+      .apply(GitRemoteCredentialsMiddleware, CliVersionLoggerMiddleware)
+      .forRoutes('*');
   }
 }

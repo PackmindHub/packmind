@@ -352,6 +352,19 @@ describe('GitService', () => {
       });
     });
 
+    describe('when the remote embeds a token for cloning', () => {
+      it('returns the remote without it', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\thttps://oauth2:glpat-secret@gitlab.acme.org/acme/app.git (fetch)\norigin\thttps://oauth2:glpat-secret@gitlab.acme.org/acme/app.git (push)\n',
+        });
+
+        expect(service.getGitRemoteUrl('/repo')).toEqual({
+          gitRemoteUrl: 'https://gitlab.acme.org/acme/app',
+        });
+      });
+    });
+
     describe('when multiple remotes are available', () => {
       it('returns origin remote by default', () => {
         gitRunner.mockReturnValue({

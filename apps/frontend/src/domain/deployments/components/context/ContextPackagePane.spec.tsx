@@ -289,6 +289,7 @@ function driftWithOneBehindInstall(): PackageDrift {
         branch: 'main',
         lastDistributionStatus: null,
         lastDistributedAt: null,
+        lastDistributionError: null,
       },
     ],
   };
@@ -421,6 +422,37 @@ describe('ContextPackagePane', () => {
     await renderPane(READY_NEVER_RELEASED);
 
     expect(screen.getByText('Backend conventions')).toBeInTheDocument();
+  });
+
+  /*
+   * Where the add control lives, rather than only when it is drawn. It answers
+   * the tab, so it has to sit on the tab strip: read from the header, beside
+   * two controls that hold whichever tab is open, a button that comes and goes
+   * is a toolbar rearranging itself under a reader who only changed tabs.
+   */
+  it('offers adding on the tab strip rather than among the package controls', async () => {
+    await renderPane(READY_NEVER_RELEASED, { groups: ONE_GROUP });
+
+    expect(screen.getByRole('tablist').parentElement).toContainElement(
+      screen.getByRole('button', { name: /Add components/ }),
+    );
+  });
+
+  it('leaves the package controls in place when Distribution opens', async () => {
+    await renderPane(READY_NEVER_RELEASED, { groups: ONE_GROUP });
+
+    await userEvent.click(screen.getByRole('tab', { name: /Distribution/ }));
+    await screen.findByTestId('distribution-tab');
+
+    expect(
+      screen.queryByRole('button', { name: /Add components/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('deploy-button')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: 'More actions for Backend conventions',
+      }),
+    ).toBeInTheDocument();
   });
 
   describe('when the address names a release', () => {

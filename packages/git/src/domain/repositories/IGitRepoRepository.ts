@@ -51,6 +51,7 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null>;
   updateTracked(gitRepoId: GitRepoId, isTracked: boolean): Promise<GitRepo>;
   /**
@@ -59,4 +60,23 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
    * not stamp a removal.
    */
   markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo>;
+  /**
+   * Moves a repository under another provider while keeping its id, so its
+   * targets and distribution history follow it. The owner is rewritten when
+   * the new provider names it differently.
+   */
+  reassignProvider(
+    gitRepoId: GitRepoId,
+    providerId: GitProviderId,
+    owner?: string,
+  ): Promise<GitRepo>;
+  /**
+   * Clears the removal stamp on every branch of a repository: a stamp on any
+   * one branch hides them all from governance views.
+   */
+  clearTrackingRemoved(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+  ): Promise<void>;
 }
