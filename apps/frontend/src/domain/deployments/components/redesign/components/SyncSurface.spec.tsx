@@ -277,6 +277,34 @@ describe('SyncSurface', () => {
       });
     });
 
+    describe('for a batch leaving several releases behind', () => {
+      it('lists them by version rather than as strings', () => {
+        const base = pinnedAt('0.9.0');
+        const twoPins: PackageDrift = {
+          ...base,
+          /* Newer than both pins, so both landings have somewhere to go. */
+          latestReleaseVersion: '0.11.0',
+          installLocations: base.installLocations.map((location, index) => ({
+            ...location,
+            versionSpec: index === 0 ? '0.10.0' : '0.9.0',
+          })),
+        };
+
+        renderSurface({
+          packages: [twoPins, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [twoPins.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        /* Lexically `0.10.0` sorts first, which is not an order of releases. */
+        expect(
+          screen.getAllByText(/0\.9\.0, 0\.10\.0 → 0\.11\.0/).length,
+        ).toBeGreaterThan(0);
+      });
+    });
+
     describe('for a batch mixing a pinned destination with a live one', () => {
       it('names both moves, so neither half of the batch is hidden', () => {
         const base = pinnedAt('0.1.0');

@@ -38,6 +38,8 @@ import {
 import type { IconType } from 'react-icons';
 import { Link } from 'react-router';
 import {
+  comparePackageReleaseVersions,
+  parsePackageReleaseVersion,
   parsePackageVersionSpec,
   type GitProviderId,
   type PackageId,
@@ -915,6 +917,25 @@ function buildPackageBlocks(
 }
 
 /**
+ * Release versions in order, oldest first.
+ *
+ * By the parsed triple and never by the string: `0.10.0` sorts below `0.9.0`
+ * lexically, which would print the versions a batch is leaving in an order that
+ * is not an order. A version that does not parse falls back to a locale compare
+ * rather than to the default sort, which is by UTF-16 code unit.
+ */
+function sortVersionsAscending(versions: string[]): string[] {
+  return [...versions].sort((a, b) => {
+    const parsedA = parsePackageReleaseVersion(a);
+    const parsedB = parsePackageReleaseVersion(b);
+    if (parsedA && parsedB) {
+      return comparePackageReleaseVersions(parsedA, parsedB);
+    }
+    return a.localeCompare(b);
+  });
+}
+
+/**
  * Where a package is headed across the landings this batch picked, in one line.
  *
  * The versions it is leaving, which can be several: one repository pinned to
@@ -938,12 +959,9 @@ function packageMoveLine(block: PackageBlock): string {
   }
 
   const to = block.pkg.latestReleaseVersion;
+  const leaving = sortVersionsAscending([...from]).join(', ');
   const pinned =
-    from.size > 0 && to
-      ? `${[...from].sort().join(', ')} → ${to}`
-      : from.size > 0
-        ? `${[...from].sort().join(', ')} → no release yet`
-        : null;
+    from.size > 0 ? `${leaving} → ${to ?? 'no release yet'}` : null;
 
   if (pinned && tracksLive) return `${pinned} · live version`;
   if (pinned) return pinned;
