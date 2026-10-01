@@ -41,6 +41,8 @@ type PackageAccumulator = {
   description: string;
   artifacts: Map<string, ArtifactAccumulator>;
   installLocations: InstallLocation[];
+  latestReleaseVersion: string | null;
+  hasUnreleasedChanges: boolean;
 };
 
 function toRepoRef(gitRepo: GitRepo): RepoRef {
@@ -76,6 +78,13 @@ function ensurePackage(
     description: active.package.description,
     artifacts: new Map(),
     installLocations: [],
+    /*
+     * Taken from whichever destination of this package is seen first, and not
+     * merged across them: both are facts about the package itself, so every
+     * destination of it carries the same pair.
+     */
+    latestReleaseVersion: active.latestReleaseVersion,
+    hasUnreleasedChanges: active.hasUnreleasedChanges,
   };
   packages.set(active.packageId, created);
   return created;
@@ -341,6 +350,7 @@ export function buildPackageDriftOverview(
         ),
         lastDistributedAt: toDistributionDate(active.lastDistributedAt),
         lastDistributionError: active.lastDistributionError ?? null,
+        versionSpec: active.versionSpec ?? null,
       });
       for (const s of active.deployedStandards)
         pushStandard(pkg, s, repoRef, targetRef, branch);
@@ -373,6 +383,8 @@ export function buildPackageDriftOverview(
       })),
     ),
     installLocations: sortInstallLocations(p.installLocations),
+    latestReleaseVersion: p.latestReleaseVersion,
+    hasUnreleasedChanges: p.hasUnreleasedChanges,
   }));
 }
 

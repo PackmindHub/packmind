@@ -262,6 +262,8 @@ function driftWithOneBehindInstall(): PackageDrift {
     id: packageId,
     name: 'Backend conventions',
     description: '',
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
     artifacts: [
       {
         id: 'std-1' as PackageDrift['artifacts'][number]['id'],
@@ -290,6 +292,7 @@ function driftWithOneBehindInstall(): PackageDrift {
         lastDistributionStatus: null,
         lastDistributedAt: null,
         lastDistributionError: null,
+        versionSpec: null,
       },
     ],
   };

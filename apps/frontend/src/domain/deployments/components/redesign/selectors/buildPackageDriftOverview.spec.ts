@@ -301,6 +301,35 @@ function distributedPackage(opts: {
 }
 
 describe('buildPackageDriftOverview', () => {
+  describe('what a destination asked for and where its package stands', () => {
+    const overview = (opts: Parameters<typeof distributedPackage>[0]) =>
+      buildPackageDriftOverview([
+        makeByTarget({ packages: [distributedPackage(opts)] }),
+      ])[0];
+
+    it('carries the spec onto the landing it belongs to', () => {
+      expect(
+        overview({ versionSpec: '0.1.0' }).installLocations[0].versionSpec,
+      ).toBe('0.1.0');
+    });
+
+    it('carries the newest release onto the package', () => {
+      expect(
+        overview({ latestReleaseVersion: '0.2.0' }).latestReleaseVersion,
+      ).toBe('0.2.0');
+    });
+
+    it('carries whether the package has moved past it', () => {
+      expect(
+        overview({ hasUnreleasedChanges: true }).hasUnreleasedChanges,
+      ).toBe(true);
+    });
+
+    it('reports no spec when the distribution recorded none', () => {
+      expect(overview({}).installLocations[0].versionSpec).toBeNull();
+    });
+  });
+
   describe('when no targets are provided', () => {
     it('returns an empty array', () => {
       expect(buildPackageDriftOverview([])).toEqual([]);

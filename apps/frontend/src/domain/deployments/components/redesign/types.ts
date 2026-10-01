@@ -64,6 +64,16 @@ export type InstallLocation = {
   lastDistributedAt: string | null;
   /** The message that distribution left behind when it failed, null otherwise. */
   lastDistributionError: string | null;
+  /**
+   * Which version of the package this destination asked for: `*` when it tracks
+   * the live package, an exact `X.Y.Z` when it is pinned to a release, and null
+   * when the distribution recorded none.
+   *
+   * On the landing rather than on the package, because it is the one fact here
+   * that differs between two destinations of the same package: a repository can
+   * be pinned while another tracking the same package is not.
+   */
+  versionSpec: string | null;
 };
 
 export type PackageDrift = {
@@ -72,6 +82,16 @@ export type PackageDrift = {
   description: string;
   artifacts: ArtifactDrift[];
   installLocations: InstallLocation[];
+  /**
+   * The newest release of this package, or null when it has never been cut.
+   *
+   * A fact about the package rather than about any one landing, which is why it
+   * sits here and `versionSpec` sits on the landing. Together they say whether a
+   * pinned destination has somewhere to move to.
+   */
+  latestReleaseVersion: string | null;
+  /** Whether the package has moved on from `latestReleaseVersion`. */
+  hasUnreleasedChanges: boolean;
 };
 
 /**

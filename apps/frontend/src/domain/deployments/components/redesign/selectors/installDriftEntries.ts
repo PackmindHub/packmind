@@ -65,6 +65,12 @@ export type InstallDriftEntry = {
   lastDistributedAt: string | null;
   /** Why `lastDistributionStatus` reads `failure`, and null on every other status. */
   lastDistributionError: string | null;
+  /**
+   * What this landing's `packmind.json` asked for, carried through so a caller
+   * holding an entry can work out its standing without re-joining the package's
+   * install locations by repo and target.
+   */
+  versionSpec: string | null;
   behindArtifacts: DriftArtifactEntry[];
   alignedArtifactCount: number;
 };
@@ -83,6 +89,7 @@ function emptyEntry(location: InstallLocation): InstallDriftEntry {
     lastDistributionStatus: location.lastDistributionStatus,
     lastDistributedAt: location.lastDistributedAt,
     lastDistributionError: location.lastDistributionError,
+    versionSpec: location.versionSpec,
     behindArtifacts: [],
     alignedArtifactCount: 0,
   };

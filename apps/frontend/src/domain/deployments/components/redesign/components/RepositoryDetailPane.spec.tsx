@@ -45,6 +45,8 @@ const driftedPackage: PackageDrift = {
   id: packageId,
   name: 'Backend guidelines',
   description: 'How the services are written.',
+  latestReleaseVersion: null,
+  hasUnreleasedChanges: false,
   artifacts: [
     {
       id: createStandardId('standard-1'),
@@ -64,6 +66,7 @@ const driftedPackage: PackageDrift = {
       lastDistributionStatus: DistributionStatus.success,
       lastDistributedAt: install.lastDeployedAt,
       lastDistributionError: null,
+      versionSpec: null,
     },
   ],
 };

@@ -90,12 +90,15 @@ describe('behindInstallsRequiringCliCount', () => {
       lastDistributionStatus: null,
       lastDistributedAt: null,
       lastDistributionError: null,
+      versionSpec: null,
     }));
     return {
       id: createPackageId(`pkg-${label}`),
       name: label,
       description: '',
       installLocations,
+      latestReleaseVersion: null,
+      hasUnreleasedChanges: false,
       artifacts: [
         {
           id: artifactId,
