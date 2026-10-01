@@ -113,6 +113,7 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      withDeleted: jest.fn().mockReturnThis(),
       innerJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -252,6 +253,10 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('keeps distributions whose repository row is absent', () => {
         expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
           expect.stringContaining('"gitRepo"."id" IS NULL'),
@@ -303,6 +308,10 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('loads the command versions the history is filtered on', () => {
         expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
           'distributedPackage.recipeVersions',
@@ -342,6 +351,10 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('loads the standard versions the history is filtered on', () => {
         expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
           'distributedPackage.standardVersions',
@@ -379,6 +392,10 @@ describe('DistributionRepository', () => {
 
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
+      });
+
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
       });
 
       it('loads the skill versions the history is filtered on', () => {

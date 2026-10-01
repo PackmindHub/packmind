@@ -245,6 +245,8 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const distributions = await this.repository
         .createQueryBuilder('distribution')
+        // History keeps targets and repositories that were later removed.
+        .withDeleted()
         .innerJoinAndSelect(
           'distribution.distributedPackages',
           'distributedPackage',
@@ -301,6 +303,8 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const distributions = await this.repository
         .createQueryBuilder('distribution')
+        // History keeps targets and repositories that were later removed.
+        .withDeleted()
         .innerJoinAndSelect(
           'distribution.distributedPackages',
           'distributedPackage',
@@ -359,6 +363,8 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const distributions = await this.repository
         .createQueryBuilder('distribution')
+        // History keeps targets and repositories that were later removed.
+        .withDeleted()
         .innerJoinAndSelect(
           'distribution.distributedPackages',
           'distributedPackage',
@@ -935,6 +941,8 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       const distributions = await this.repository
         .createQueryBuilder('distribution')
+        // History keeps targets and repositories that were later removed.
+        .withDeleted()
         .innerJoinAndSelect(
           'distribution.distributedPackages',
           'distributedPackage',
