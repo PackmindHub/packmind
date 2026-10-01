@@ -4,6 +4,7 @@ export {
   ParserNotAvailableError,
   ParserInitializationError,
 } from './core/ParserError';
+export { LinterAstInternalError } from './core/LinterAstInternalError';
 export type { ASTNode } from './core/types/ast.types';
 export { LinterAstAdapter } from './application/LinterAstAdapter';
 
