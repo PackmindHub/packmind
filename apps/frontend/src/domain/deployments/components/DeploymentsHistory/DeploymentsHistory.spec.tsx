@@ -277,6 +277,28 @@ describe('DeploymentsHistory', () => {
     });
   });
 
+  describe('when the repository of the target can no longer be found', () => {
+    const base = distribution(1);
+    const orphan = distribution(1, {
+      target: {
+        ...base.target,
+        gitRepo: undefined,
+      } as DistributionHistoryEntry['target'],
+    });
+
+    it('names the repository unknown', () => {
+      renderHistory([orphan]);
+
+      expect(screen.getByText('Unknown repository')).toBeInTheDocument();
+    });
+
+    it('does not print the repository id in the row', () => {
+      renderHistory([orphan]);
+
+      expect(screen.queryByText(/repo-1/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('when a distribution took the package out of a target', () => {
     it('says so beside the place, having no column left to say it in', () => {
       renderHistory([distribution(1, {}, 'remove')]);

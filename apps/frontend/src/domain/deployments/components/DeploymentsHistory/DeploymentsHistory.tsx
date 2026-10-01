@@ -34,6 +34,7 @@ export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
 
 /** Paths that mean "the repository itself", which the target line leaves out. */
 const ROOT_TARGET_PATHS = new Set(['', '/', '.', './']);
+const UNKNOWN_REPOSITORY = 'Unknown repository';
 
 type DeploymentsHistoryProps = {
   entityId: string;
@@ -190,7 +191,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     if (!target) return 'No target specified';
     const place = target.gitRepo
       ? `${target.gitRepo.owner}/${target.gitRepo.repo}`
-      : `Repository ${target.gitRepoId}`;
+      : UNKNOWN_REPOSITORY;
     const isRoot = ROOT_TARGET_PATHS.has(target.path);
     const detail = [target.gitRepo?.branch, isRoot ? null : target.path]
       .filter(Boolean)
@@ -202,7 +203,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           variant="small"
           fontWeight="medium"
           truncate
-          title={place}
+          title={target.gitRepo ? place : `${place} (${target.gitRepoId})`}
           data-testid={DeploymentsHistoryDataTestId.DestinationRepository}
         >
           {place}
