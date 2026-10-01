@@ -4,6 +4,7 @@ import {
   GitCommit,
   DeleteItem,
   DeleteItemType,
+  NoChangesDetectedError,
   NoFilesToCommitError,
 } from '@packmind/types';
 import { CommitFile } from '../../../domain/repositories/IGitRepo';
@@ -143,9 +144,11 @@ export class CommitToGitUseCase {
         repo: repo.repo,
         fileCount: files.length,
       });
-      // Sentinel: deployment logic catches this rather than treating it as a
-      // failure.
-      throw new Error('NO_CHANGES_DETECTED');
+      throw new NoChangesDetectedError({
+        gitRepoId: repo.id,
+        owner: repo.owner,
+        repo: repo.repo,
+      });
     }
 
     return this.gitCommitService.addCommit(commitData);
