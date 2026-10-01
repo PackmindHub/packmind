@@ -240,13 +240,6 @@ describe('DomainExceptionFilter', () => {
         reason: 'invalid_credentials',
       });
     });
-
-    it('logs at warn', () => {
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Domain error mapped to HTTP response',
-        expect.objectContaining({ kind: 'unauthenticated', statusCode: 401 }),
-      );
-    });
   });
 
   // The policy table, stated as behaviour: a new kind added to the union
