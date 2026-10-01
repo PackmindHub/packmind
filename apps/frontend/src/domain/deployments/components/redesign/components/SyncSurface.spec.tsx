@@ -219,6 +219,102 @@ describe('SyncSurface', () => {
     });
   });
 
+  describe('what the review says the distribution will do', () => {
+    const pinnedAt = (versionSpec: string | null): PackageDrift => ({
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: false,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: versionSpec === null ? install.driftReason : 'aligned',
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec,
+      })),
+    });
+
+    const review = (pkg: PackageDrift) =>
+      renderSurface({
+        packages: [pkg],
+        scope: { kind: 'bulk' as const, packageIds: [pkg.id] },
+      });
+
+    describe('for a destination pinned to an older release', () => {
+      it('names the release it is leaving and the one it arrives on', () => {
+        review(pinnedAt('0.1.0'));
+
+        expect(screen.getAllByText('0.1.0 → 0.3.0').length).toBeGreaterThan(0);
+      });
+
+      it('no longer counts components, which a pinned landing has none of', () => {
+        review(pinnedAt('0.1.0'));
+
+        expect(screen.queryByText(/0 components to update/)).toBeNull();
+      });
+    });
+
+    /*
+     * Two packages, because the line that names where a package is headed sits
+     * on the block header, and a batch of one takes that header off: its name
+     * is already the title of the screen.
+     */
+    describe('for a destination tracking the live package', () => {
+      it('names the live package rather than a version it is moving to', () => {
+        const tracksLive = pinnedAt(null);
+        renderSurface({
+          packages: [tracksLive, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [tracksLive.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        expect(screen.getAllByText(/live version/).length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('for a batch mixing a pinned destination with a live one', () => {
+      it('names both moves, so neither half of the batch is hidden', () => {
+        const base = pinnedAt('0.1.0');
+        /* One landing pinned, the rest left tracking the live package. */
+        const pinned: PackageDrift = {
+          ...base,
+          installLocations: base.installLocations.map((location, index) => ({
+            ...location,
+            versionSpec: index === 0 ? '0.1.0' : null,
+          })),
+          artifacts: base.artifacts.map((artifact) => ({
+            ...artifact,
+            installs: artifact.installs.map((install) => ({
+              ...install,
+              // The live-tracking landings need something late to be sent.
+              driftReason:
+                install.target.id === base.installLocations[0]?.target.id
+                  ? ('aligned' as const)
+                  : ('behind' as const),
+            })),
+          })),
+        };
+
+        renderSurface({
+          packages: [pinned, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [pinned.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        expect(
+          screen.getAllByText(/0\.1\.0 → 0\.3\.0 · live version/).length,
+        ).toBeGreaterThan(0);
+      });
+    });
+  });
+
   describe('when an Auto-update destination is given', () => {
     it('offers it on the receipt', async () => {
       renderWithProviders(

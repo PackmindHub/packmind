@@ -37,7 +37,12 @@ import {
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { Link } from 'react-router';
-import type { GitProviderId, PackageId, TargetId } from '@packmind/types';
+import {
+  parsePackageVersionSpec,
+  type GitProviderId,
+  type PackageId,
+  type TargetId,
+} from '@packmind/types';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import {
   installDriftEntries,
@@ -909,6 +914,66 @@ function buildPackageBlocks(
   return out;
 }
 
+/**
+ * Where a package is headed across the landings this batch picked, in one line.
+ *
+ * The versions it is leaving, which can be several: one repository pinned to
+ * 0.1.0 and another to 0.2.0 both move to the newest release, and a line naming
+ * only one of them would describe half the batch. Landings tracking the live
+ * package are named as such rather than by a number, since no number describes
+ * where they are going.
+ *
+ * Deliberately coarse. It says what kind of move this is and to what, and the
+ * rows below it say which landing is which; a line that tried to be exact about
+ * every landing would be the list it sits above.
+ */
+function packageMoveLine(block: PackageBlock): string {
+  const from = new Set<string>();
+  let tracksLive = false;
+
+  for (const entry of block.driftedEntries) {
+    const pin = parsePackageVersionSpec(entry.versionSpec);
+    if (pin?.kind === 'exact') from.add(pin.version);
+    else tracksLive = true;
+  }
+
+  const to = block.pkg.latestReleaseVersion;
+  const pinned =
+    from.size > 0 && to
+      ? `${[...from].sort().join(', ')} → ${to}`
+      : from.size > 0
+        ? `${[...from].sort().join(', ')} → no release yet`
+        : null;
+
+  if (pinned && tracksLive) return `${pinned} · live version`;
+  if (pinned) return pinned;
+  return 'live version';
+}
+
+/**
+ * What this distribution would do to one landing, in a few words.
+ *
+ * Two different answers, because the two kinds of destination move for
+ * different reasons. A landing tracking the live package moves component by
+ * component, and naming how many is the strongest thing that can be said about
+ * it. A pinned one moves as a whole, from the release it is on to the newest
+ * there is — and it has no late component at all, so the count it used to show
+ * read `0 components to update` over a repository three releases behind.
+ *
+ * `destinationStanding` has already decided that this landing is one a push
+ * moves; this only says what the move is.
+ */
+function entryMoveLine(entry: InstallDriftEntry, pkg: PackageDrift): string {
+  const pin = parsePackageVersionSpec(entry.versionSpec);
+  if (pin?.kind === 'exact' && pkg.latestReleaseVersion) {
+    return `${pin.version} → ${pkg.latestReleaseVersion}`;
+  }
+
+  return `${entry.behindArtifacts.length} component${
+    entry.behindArtifacts.length === 1 ? '' : 's'
+  } to update`;
+}
+
 type EntryWithLock = {
   entry: InstallDriftEntry;
   lock: LockReason | null;
@@ -955,6 +1020,7 @@ function InstallSyncRows({
           <InstallSyncRow
             key={key}
             entry={entry}
+            pkg={block.pkg}
             showTarget={multiLandingRepos.has(entry.repo.id)}
             selected={selected.has(key)}
             lockReason={lock}
@@ -1106,6 +1172,15 @@ function PackageSyncBlock({
             flexShrink={0}
             fontVariantNumeric="tabular-nums"
           >
+            {/*
+              Where this package is going, beside how much of it was picked.
+              A batch can mix a repository pinned to 0.1.0 with one tracking the
+              live package, and without this the reader confirms a push whose
+              effect differs per destination with nothing on screen saying so.
+            */}
+            <PMText fontSize="xs" color="secondary">
+              {packageMoveLine(block)}
+            </PMText>
             <PMText fontSize="xs" color="faded">
               {selectedCount} of {total} selected
               {lockedInBlock > 0 && ` · ${lockedInBlock} locked`}
@@ -1374,6 +1449,8 @@ const LOCK_ROW_BADGE: Record<
 
 type InstallSyncRowProps = {
   entry: InstallDriftEntry;
+  /** The package this landing carries, which knows its newest release. */
+  pkg: PackageDrift;
   /** The repository holds more than one landing, so the row has to say which. */
   showTarget: boolean;
   selected: boolean;
@@ -1383,6 +1460,7 @@ type InstallSyncRowProps = {
 
 function InstallSyncRow({
   entry,
+  pkg,
   showTarget,
   selected,
   lockReason,
@@ -1539,8 +1617,7 @@ function InstallSyncRow({
             </PMBadge>
           )}
           <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            {entry.behindArtifacts.length} component
-            {entry.behindArtifacts.length === 1 ? '' : 's'} to update
+            {entryMoveLine(entry, pkg)}
           </PMText>
           {entry.mostRecentDeployedAt && (
             <PMHStack
@@ -1943,9 +2020,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
                             fontVariantNumeric="tabular-nums"
                             marginLeft="auto"
                           >
-                            {entry.behindArtifacts.length} component
-                            {entry.behindArtifacts.length === 1 ? '' : 's'} to
-                            update
+                            {entryMoveLine(entry, block.pkg)}
                           </PMText>
                         </PMHStack>
                       ))}
