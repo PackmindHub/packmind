@@ -2158,6 +2158,7 @@ describe('DistributionRepository', () => {
       packageId: ReturnType<typeof createPackageId>,
       operation: 'add' | 'remove',
       status: DistributionStatus,
+      versionSpec: string | null = null,
     ) => ({
       targetId,
       packageId,
@@ -2165,6 +2166,7 @@ describe('DistributionRepository', () => {
       status,
       lastDistributedAt,
       error: null,
+      versionSpec,
     });
 
     it('projects successful adds onto the active-row shape', async () => {
@@ -2182,6 +2184,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.success,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2201,6 +2204,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2231,6 +2235,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2250,8 +2255,47 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.in_progress,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
+    });
+
+    describe('the version spec the destination was left on', () => {
+      it('is carried onto the active row', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          rawRow(packageId1, 'add', DistributionStatus.success, '0.2.0'),
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].versionSpec).toBe('0.2.0');
+      });
+
+      it('reads null on a row written before the column existed', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          {
+            ...rawRow(packageId1, 'add', DistributionStatus.success),
+            versionSpec: undefined,
+          },
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].versionSpec).toBeNull();
+      });
+
+      it('is selected from the distributed package', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+          'distributedPackage.version_spec',
+          'versionSpec',
+        );
+      });
     });
 
     it('filters by spaceId via parameterized query', async () => {

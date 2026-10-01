@@ -260,6 +260,7 @@ function buildActivePackage(args: {
     lastDistributionStatus: row.lastDistributionStatus,
     lastDistributedAt: row.lastDistributedAt,
     lastDistributionError: row.lastDistributionError,
+    versionSpec: row.versionSpec,
     deployedRecipes: packageDeployedCommands,
     // Same value under the command-named field the type also requires.
     deployedCommands: packageDeployedCommands,

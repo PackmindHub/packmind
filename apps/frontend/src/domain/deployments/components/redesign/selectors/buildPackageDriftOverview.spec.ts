@@ -268,6 +268,7 @@ function distributedPackage(opts: {
   lastDistributionStatus?: DistributionStatus;
   lastDistributedAt?: string;
   lastDistributionError?: string | null;
+  versionSpec?: string | null;
   standards?: DeployedStandardTargetInfo[];
   recipes?: DeployedCommandTargetInfo[];
   skills?: DeployedSkillTargetInfo[];
@@ -283,6 +284,7 @@ function distributedPackage(opts: {
       opts.lastDistributionStatus ?? DistributionStatus.success,
     lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
     lastDistributionError: opts.lastDistributionError ?? null,
+    versionSpec: opts.versionSpec ?? null,
     deployedStandards: opts.standards ?? [],
     deployedRecipes: opts.recipes ?? [],
     deployedCommands: opts.recipes ?? [],

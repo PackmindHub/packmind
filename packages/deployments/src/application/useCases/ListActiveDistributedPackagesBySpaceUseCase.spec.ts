@@ -97,12 +97,14 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     packageId: PackageId,
     status: DistributionStatus,
     lastDistributionError: string | null = null,
+    versionSpec: string | null = null,
   ): ActivePackageOperationRow => ({
     targetId,
     packageId,
     lastDistributionStatus: status,
     lastDistributedAt,
     lastDistributionError,
+    versionSpec,
   });
 
   const buildTarget = (id: TargetId): Target => ({
@@ -235,6 +237,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
               lastDistributionStatus: DistributionStatus.success,
               lastDistributedAt,
               lastDistributionError: null,
+              versionSpec: null,
               deployedRecipes: [],
               deployedCommands: [],
               deployedStandards: [],
@@ -313,6 +316,63 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         expect(result[0].packages[0].lastDistributionError).toBe(
           'Push rejected: branch protection requires a pull request',
         );
+      });
+    });
+
+    describe('the version spec a destination was left on', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      const listWithSpec = async (versionSpec: string | null) => {
+        const targetId = createTargetId(uuidv4());
+        const pkg = buildPackage();
+
+        distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [
+            activeRow(
+              targetId,
+              pkg.id,
+              DistributionStatus.success,
+              null,
+              versionSpec,
+            ),
+          ],
+        );
+        targetRepository.findActiveInSpace.mockResolvedValue([
+          buildTarget(targetId),
+        ]);
+        packageRepository.findBySpaceId.mockResolvedValue([pkg]);
+
+        return useCase.execute(command);
+      };
+
+      describe('when the destination is pinned to a release', () => {
+        beforeEach(async () => {
+          result = await listWithSpec('0.1.0');
+        });
+
+        it('reports the release it is pinned to', () => {
+          expect(result[0].packages[0].versionSpec).toBe('0.1.0');
+        });
+      });
+
+      describe('when the destination tracks the live package', () => {
+        beforeEach(async () => {
+          result = await listWithSpec('*');
+        });
+
+        it('reports the wildcard', () => {
+          expect(result[0].packages[0].versionSpec).toBe('*');
+        });
+      });
+
+      describe('when the distribution recorded no spec', () => {
+        beforeEach(async () => {
+          result = await listWithSpec(null);
+        });
+
+        it('reports none, rather than inventing the wildcard', () => {
+          expect(result[0].packages[0].versionSpec).toBeNull();
+        });
       });
     });
 

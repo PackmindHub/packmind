@@ -1447,6 +1447,8 @@ export class DistributionRepository implements IDistributionRepository {
         lastDistributedAt: string;
         /** Written only when the distribution failed; null on every other row. */
         error: string | null;
+        /** Null on every row written before the column existed. */
+        versionSpec: string | null;
       };
 
       const rows = await this.repository
@@ -1473,6 +1475,13 @@ export class DistributionRepository implements IDistributionRepository {
          * by hand.
          */
         .addSelect('distribution.error', 'error')
+        /*
+         * Taken from the same DISTINCT ON row as everything else here, which is
+         * what makes it the spec this destination is on rather than one it
+         * passed through: a repository pinned to 0.1.0 and then moved to 0.2.0
+         * has two rows, and only the latest describes the branch as it stands.
+         */
+        .addSelect('distributedPackage.version_spec', 'versionSpec')
         .getRawMany<RawRow>();
 
       const activeRows = rows.filter(
@@ -1495,6 +1504,7 @@ export class DistributionRepository implements IDistributionRepository {
         lastDistributedAt: row.lastDistributedAt,
         // Normalised, because the column is nullable and the contract is not.
         lastDistributionError: row.error ?? null,
+        versionSpec: row.versionSpec ?? null,
       }));
     } catch (error) {
       this.logger.error('Failed to list active package operations by space', {

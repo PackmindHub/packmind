@@ -52,6 +52,24 @@ export type ActiveDistributedPackage = {
    * learned that something did, rather than in the distribution history.
    */
   lastDistributionError: string | null;
+  /**
+   * Which version of this package the destination asked for: `*` when it tracks
+   * the live package, an exact `X.Y.Z` when it is pinned to a release.
+   *
+   * What tells a *drifted* destination from a *behind* one, and the two are not
+   * the same thing. A `*` destination is measured against the live package, so
+   * a component edited since its last distribution leaves it drifted and a push
+   * puts it right. A pinned one deliberately stepped off the live package:
+   * measuring it the same way reports it behind the moment anyone edits a
+   * component, and the push it is then offered sends the release the repository
+   * already has.
+   *
+   * Null means the distribution recorded no spec — every row written before the
+   * column existed, and every one written by a path that has none to record. A
+   * reader that measures drift against the pin treats it as the live package,
+   * which is how those destinations already behave.
+   */
+  versionSpec: string | null;
   deployedRecipes: DeployedCommandTargetInfo[];
   // Command-named twin of `deployedRecipes` (superset); same value.
   deployedCommands: DeployedCommandTargetInfo[];
