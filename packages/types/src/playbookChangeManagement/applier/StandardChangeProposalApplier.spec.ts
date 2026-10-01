@@ -490,21 +490,25 @@ describe('StandardChangeProposalApplier', () => {
           expect((result.version.rules ?? [])[0].id).toBe(rule.id);
         });
 
-        it('throws ChangeProposalConflictError when no rule carries it', () => {
-          const rule = ruleFactory({ content: 'Something else entirely' });
-          const source = standardVersionFactory({ rules: [rule] });
-          const proposal = changeProposalFactory({
-            type: ChangeProposalType.updateRule,
-            payload: {
-              targetId: createRuleId('unresolved'),
-              oldValue: 'Old content',
-              newValue: 'New content',
-            },
-          });
+        describe('when no rule carries it', () => {
+          it('throws ChangeProposalConflictError', () => {
+            const rule = ruleFactory({ content: 'Something else entirely' });
+            const source = standardVersionFactory({ rules: [rule] });
+            const proposal = changeProposalFactory({
+              type: ChangeProposalType.updateRule,
+              payload: {
+                targetId: createRuleId('unresolved'),
+                oldValue: 'Old content',
+                newValue: 'New content',
+              },
+            });
 
-          expect(() =>
-            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
-          ).toThrow(ChangeProposalConflictError);
+            expect(() =>
+              applier.applyChangeProposals(source, [
+                proposal as ChangeProposal,
+              ]),
+            ).toThrow(ChangeProposalConflictError);
+          });
         });
 
         describe('when several rules carry the replaced content', () => {
@@ -675,23 +679,27 @@ describe('StandardChangeProposalApplier', () => {
           expect(result.version.rules).toEqual([]);
         });
 
-        it('throws ChangeProposalConflictError when no rule carries that content', () => {
-          const rule = ruleFactory({ content: 'Keep me' });
-          const source = standardVersionFactory({ rules: [rule] });
-          const proposal = changeProposalFactory({
-            type: ChangeProposalType.deleteRule,
-            payload: {
-              targetId: createRuleId('unresolved'),
-              item: {
-                id: createRuleId('unresolved'),
-                content: 'To be deleted',
+        describe('when no rule carries that content', () => {
+          it('throws ChangeProposalConflictError', () => {
+            const rule = ruleFactory({ content: 'Keep me' });
+            const source = standardVersionFactory({ rules: [rule] });
+            const proposal = changeProposalFactory({
+              type: ChangeProposalType.deleteRule,
+              payload: {
+                targetId: createRuleId('unresolved'),
+                item: {
+                  id: createRuleId('unresolved'),
+                  content: 'To be deleted',
+                },
               },
-            },
-          });
+            });
 
-          expect(() =>
-            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
-          ).toThrow(ChangeProposalConflictError);
+            expect(() =>
+              applier.applyChangeProposals(source, [
+                proposal as ChangeProposal,
+              ]),
+            ).toThrow(ChangeProposalConflictError);
+          });
         });
 
         describe('when a reviewer adjusted the decision', () => {
