@@ -264,6 +264,13 @@ describe('DistributionRepository', () => {
         );
       });
 
+      it('keeps distributions whose repository was soft-deleted', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.stringContaining('"gitRepo"."deleted_at" IS NOT NULL'),
+          expect.anything(),
+        );
+      });
+
       // TypeORM only rewrites `alias.property` before a space, `=`, `)` or `,`,
       // so the predicate must not rely on it — see TRACKED_BRANCH_SCOPE.
       it('fully qualifies the repository column it filters on', () => {

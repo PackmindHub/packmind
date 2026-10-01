@@ -10,6 +10,9 @@
  * governing sibling, so nothing is shadowed and the legacy "show every branch"
  * behaviour is preserved.
  *
+ * A row whose repository was soft-deleted is never hidden: history reads join
+ * deleted repositories, and one that is gone is not a branch Packmind governs.
+ *
  * A row can qualify as its own governing sibling: there is no
  * `tracked_repo."id" <> shadowed."id"` condition. That is what makes removal
  * hide the whole repository — a removed row shadows itself and every other
@@ -34,6 +37,7 @@
  */
 export const TRACKED_BRANCH_SCOPE = `(
   "gitRepo"."id" IS NULL
+  OR "gitRepo"."deleted_at" IS NOT NULL
   OR "gitRepo"."id" NOT IN (
     SELECT shadowed."id"
     FROM "git_repos" shadowed
