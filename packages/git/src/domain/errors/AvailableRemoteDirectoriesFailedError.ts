@@ -1,4 +1,5 @@
 import { GitUpstreamError } from './GitUpstreamError';
+import { providerErrorMessage } from './providerErrorMessage';
 
 /**
  * The provider call behind the remote directory listing failed. Same shape
@@ -18,9 +19,7 @@ export class AvailableRemoteDirectoriesFailedError extends GitUpstreamError {
       'upstream_unavailable',
       'available_remote_directories_failed',
       { organizationId, gitRepoId },
-      `Failed to get available targets: ${
-        cause instanceof Error ? cause.message : String(cause)
-      }`,
+      `Failed to get available targets: ${providerErrorMessage(cause)}`,
     );
     this.name = 'AvailableRemoteDirectoriesFailedError';
   }

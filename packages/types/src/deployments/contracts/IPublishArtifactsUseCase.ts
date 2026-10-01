@@ -21,8 +21,33 @@ export type PublishArtifactsCommand = PackmindCommand & {
    */
   packageVersions?: Record<string, string>;
   packageIds: PackageId[];
+  /**
+   * What individual destinations of the same repository should receive, when
+   * they do not all want the same thing — one target pinned to a release and
+   * another tracking the live package, say.
+   *
+   * Keyed by target id; a target with no entry takes the repository-wide
+   * fields above. The version ids listed here must also appear in
+   * `commandVersionIds` / `standardVersionIds` / `skillVersionIds`, which
+   * carry the union: those are what the publish resolves and diffs against
+   * what each destination already holds, and this only narrows what is
+   * rendered where.
+   *
+   * It exists so a repository still gets one commit. Splitting the publish
+   * per version group would enqueue two jobs against one branch, and they
+   * commit from a worker, concurrently.
+   */
+  perTarget?: Record<string, TargetPublishOverride>;
   artifactSpaceIds?: Record<string, string>;
   artifactPackageIds?: Record<string, string[]>;
+};
+
+/** What one destination receives, where it differs from the repository. */
+export type TargetPublishOverride = {
+  /** Artifact version ids to render here; others in the union are skipped. */
+  versionIds: string[];
+  /** What each package slug pins here, written into this target's packmind.json. */
+  packageVersions?: Record<string, string>;
 };
 
 export type PublishArtifactsResponse = {

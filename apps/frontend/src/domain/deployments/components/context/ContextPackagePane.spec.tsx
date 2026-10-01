@@ -289,6 +289,7 @@ function driftWithOneBehindInstall(): PackageDrift {
         branch: 'main',
         lastDistributionStatus: null,
         lastDistributedAt: null,
+        lastDistributionError: null,
       },
     ],
   };

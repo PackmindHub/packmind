@@ -169,6 +169,50 @@ describe('buildPackageDestinations', () => {
       expect(rows[0].state).toBe('failed');
     });
 
+    describe('the reason a failed row is red', () => {
+      it('travels with the row, so the reader never leaves the list to read it', () => {
+        const rows = buildPackageDestinations({
+          installs: [
+            install({
+              repoId: 'repo-1',
+              targetId: 'target-1',
+              lastDistributionStatus: DistributionStatus.failure,
+              lastDistributionError:
+                'Push rejected: branch protection requires a pull request',
+            }),
+          ],
+        });
+
+        expect(rows[0].failureReason).toBe(
+          'Push rejected: branch protection requires a pull request',
+        );
+      });
+
+      it('is null on a row that did not fail, whatever the install last reported', () => {
+        const rows = buildPackageDestinations({
+          installs: [
+            install({
+              repoId: 'repo-1',
+              targetId: 'target-1',
+              lastDistributionStatus: DistributionStatus.success,
+              lastDistributionError: 'a message from some older attempt',
+            }),
+          ],
+        });
+
+        expect(rows[0].failureReason).toBeNull();
+      });
+
+      it('is null on a marketplace, which reports no message of its own', () => {
+        const rows = buildPackageDestinations({
+          installs: [],
+          publications: [publication({ lastAttempt: 'failed' })],
+        });
+
+        expect(rows[0].failureReason).toBeNull();
+      });
+    });
+
     describe('when a push is already on its way', () => {
       it('is waiting rather than behind, so the row does not offer to push twice', () => {
         const rows = buildPackageDestinations({

@@ -16,7 +16,15 @@ import {
 } from '@packmind/types';
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
+import { ownerReadingsOf, sameGitHost } from '@packmind/node-utils';
+import { providerHostUrl } from './services/providerHostUrl';
 import { v4 as uuidv4 } from 'uuid';
+
+export type OwnerReading = {
+  owner: string;
+  // The only provider whose repositories the reading names, null for any.
+  providerId: GitProviderId | null;
+};
 
 export class GitProviderService {
   constructor(
@@ -64,6 +72,48 @@ export class GitProviderService {
 
   async deleteGitProvider(id: GitProviderId, userId: UserId): Promise<void> {
     return this.gitProviderRepository.deleteById(id, userId);
+  }
+
+  /**
+   * The owners a remote's group may be recorded under. With the remote, only
+   * the providers of its host are read; without it, the owner as given names
+   * a repository of any provider, and a group read without an installation
+   * path prefix only one of the provider installed under that prefix.
+   */
+  async ownerReadings(
+    organizationId: OrganizationId,
+    owner: string,
+    gitRemoteUrl?: string,
+  ): Promise<OwnerReading[]> {
+    const providers =
+      await this.gitProviderRepository.findByOrganizationId(organizationId);
+    if (gitRemoteUrl) {
+      return providers
+        .filter((provider) =>
+          sameGitHost(providerHostUrl(provider), gitRemoteUrl),
+        )
+        .flatMap((provider) =>
+          ownerReadingsOf(owner, provider.url, gitRemoteUrl).map((reading) => ({
+            owner: reading,
+            providerId: provider.id,
+          })),
+        );
+    }
+    return [
+      { owner, providerId: null },
+      ...providers.flatMap((provider) =>
+        ownerReadingsOf(owner, provider.url)
+          .filter((reading) => reading !== owner)
+          .map((reading) => ({ owner: reading, providerId: provider.id })),
+      ),
+    ];
+  }
+
+  async deleteGitProviderIfEmpty(
+    id: GitProviderId,
+    userId: UserId,
+  ): Promise<boolean> {
+    return this.gitProviderRepository.deleteIfHoldsNoRepository(id, userId);
   }
 
   async getAvailableRepos(

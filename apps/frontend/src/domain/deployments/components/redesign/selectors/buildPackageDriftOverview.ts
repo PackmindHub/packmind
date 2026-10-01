@@ -340,6 +340,7 @@ export function buildPackageDriftOverview(
           active.lastDistributionStatus,
         ),
         lastDistributedAt: toDistributionDate(active.lastDistributedAt),
+        lastDistributionError: active.lastDistributionError ?? null,
       });
       for (const s of active.deployedStandards)
         pushStandard(pkg, s, repoRef, targetRef, branch);

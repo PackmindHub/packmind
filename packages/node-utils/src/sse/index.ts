@@ -12,3 +12,16 @@ export {
   serializeSSERedisMessage,
   deserializeSSERedisMessage,
 } from './types';
+export { SSESubscriptionAuthorizer } from './SSESubscriptionAuthorizer';
+export type { MaySubscribeQuery } from './SSESubscriptionAuthorizer';
+export {
+  SSESubscriptionError,
+  EventTypeNotSubscribableError,
+  SubscriptionSubjectNotAccessibleError,
+  type SSESubscriptionErrorReason,
+  type SSESubscriptionErrorContext,
+} from './SSESubscriptionErrors';
+export {
+  resolveSSESubscriptionScope,
+  type SSESubscriptionScope,
+} from './sseSubscriptionScopes';

@@ -1,4 +1,3 @@
-import { GitProviderVendor } from '@packmind/types';
 import {
   ITrackRepositoryUseCase,
   TrackRepositoryCommand,
@@ -7,38 +6,37 @@ import {
 import { IRepositoryTrackingGateway } from '../../../domain/repositories/IRepositoryTrackingGateway';
 import { IGitService } from '../../../domain/services/IGitService';
 
+// `scheme://[user@]host[:port]/path`: https, http, ssh, git+ssh alike.
+const SCHEME_URL_PATH = /^[a-z][a-z0-9+.-]*:\/\/[^/]+\/(.+)$/i;
+// scp-like SSH, `[user@]host:path`, which git writes without a scheme.
+const SCP_LIKE_PATH = /^(?:[^@/\s]+@)?[^/:\s]+:(?!\/\/)(.+)$/;
+
 /**
- * Parse a git remote URL to extract owner and repo.
+ * Parse a git remote URL to extract owner and repo. The repo is the last path
+ * segment and the owner everything before it, so a GitLab subgroup stays whole.
  * Mirrors the backend `parseGitRepoInfo` helper so both sides agree.
  */
 export function parseOwnerRepo(gitRemoteUrl: string): {
   owner: string;
   repo: string;
 } {
-  const match = gitRemoteUrl.match(/[/:]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/i);
+  const path = (gitRemoteUrl.trim().match(SCHEME_URL_PATH) ??
+    gitRemoteUrl.trim().match(SCP_LIKE_PATH))?.[1];
 
-  if (!match) {
+  // An scp-like remote may name an absolute path: `git@host:/group/repo.git`.
+  const segments = path
+    ?.replace(/^\/+|\/+$/g, '')
+    .replace(/\.git$/i, '')
+    .split('/');
+
+  if (!segments || segments.length < 2 || segments.some((s) => s === '')) {
     throw new Error(`Unable to parse git remote URL: ${gitRemoteUrl}`);
   }
 
   return {
-    owner: match[1],
-    repo: match[2].replace(/\.git$/, ''),
+    owner: segments.slice(0, -1).join('/'),
+    repo: segments[segments.length - 1],
   };
-}
-
-/**
- * Infer the git provider vendor from a remote URL.
- */
-function parseProviderVendor(gitRemoteUrl: string): GitProviderVendor {
-  const normalized = gitRemoteUrl.toLowerCase();
-  if (normalized.includes('github.com')) {
-    return 'github';
-  }
-  if (normalized.includes('gitlab.com')) {
-    return 'gitlab';
-  }
-  return 'unknown';
 }
 
 /**
@@ -74,7 +72,6 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       this.gitService.getCurrentBranch(repoPath);
     const branch = requestedBranch ?? currentBranch;
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
-    const providerVendor = parseProviderVendor(gitRemoteUrl);
 
     // Falling back to the checked-out branch is meaningless with a detached
     // HEAD: git names it `HEAD`, and tracking that would record nothing under a
@@ -199,7 +196,6 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       repo,
       branch,
       origin,
-      providerVendor,
       gitRemoteUrl,
     });
     return { status: 'set', owner, repo, branch, gitRepo };

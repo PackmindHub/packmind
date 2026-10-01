@@ -44,6 +44,14 @@ export type ActiveDistributedPackage = {
   package: Package;
   lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
+  /**
+   * Why that last distribution failed, and null whenever it did not.
+   *
+   * The raw message the job caught, unedited. A destination that reads `failed`
+   * carries the reason with it, so the reader learns what went wrong where they
+   * learned that something did, rather than in the distribution history.
+   */
+  lastDistributionError: string | null;
   deployedRecipes: DeployedCommandTargetInfo[];
   // Command-named twin of `deployedRecipes` (superset); same value.
   deployedCommands: DeployedCommandTargetInfo[];

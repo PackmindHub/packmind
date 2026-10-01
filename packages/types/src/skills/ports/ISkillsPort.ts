@@ -4,6 +4,7 @@ import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Skill } from '../Skill';
 import { SkillFile } from '../SkillFile';
+import { SkillFileId } from '../SkillFileId';
 import { SkillId } from '../SkillId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillVersionId } from '../SkillVersionId';
@@ -51,6 +52,7 @@ export interface ISkillsPort {
     organizationId: OrganizationId,
   ): Promise<Skill | null>;
   getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
+  getSkillFile(skillFileId: SkillFileId): Promise<SkillFile | null>;
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
   updateSkillFileFromUI(
     command: UpdateSkillFileFromUICommand,

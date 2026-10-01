@@ -25,6 +25,7 @@ import {
   SaveSkillVersionCommand,
   Skill,
   SkillFile,
+  SkillFileId,
   SkillId,
   SkillVersion,
   SkillVersionId,
@@ -311,6 +312,10 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this.repositories
       .getSkillFileRepository()
       .findBySkillVersionId(skillVersionId);
+  }
+
+  getSkillFile(skillFileId: SkillFileId): Promise<SkillFile | null> {
+    return this.services.getSkillFileService().findById(skillFileId);
   }
 
   getLatestSkillVersions(skillIds: SkillId[]): Promise<SkillVersion[]> {

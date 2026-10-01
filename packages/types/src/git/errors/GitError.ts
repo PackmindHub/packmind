@@ -38,6 +38,8 @@ export type GitErrorContext = {
   field?: string;
   vendor?: string;
   action?: string;
+  existingGitProviderId?: string;
+  existingProviderCliManaged?: boolean;
 };
 
 /**

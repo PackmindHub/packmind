@@ -4,12 +4,25 @@
 
 - `packmind install @space/my-package` now installs a released version of a package rather than whatever the package currently holds, and writes that version into `packmind.json`. With no version after the slug it installs the latest release; `@space/my-package:0.1.0` installs exactly that one; `@space/my-package:*` follows the package as it changes, which is what every repo did before. A version that was never released refuses the install and lists the ones that were, newest first — whether it was typed on the command line or written in `packmind.json`. A package that has never been released still installs as it stands, under `*`
 - A `packmind.json` written before this keeps saying `*` and keeps behaving exactly as it did: only a package named for the first time, or named with a version, is pinned. Each `packmind.json` in a repository carries its own versions, so two folders can be on two different releases of the same package
+- `packmind install --upgrade` moves every package `packmind.json` pins to a version onto that package's latest release, and writes the version it landed on. A package tracking `*` keeps tracking it, and is installed the way any install installs it, so its files do not go stale
 
 ## Changed
 
+- `packmind track` and `packmind init` no longer send a provider vendor guessed from the remote URL: the server works it out from the remote, which is what lets a self-managed GitLab use its connection
+
 ## Fixed
 
+- The CLI drops any token embedded in the repository's remote URL before sending it to Packmind
+
 ## Removed
+
+# [0.36.1] - 2026-09-28
+
+- `packmind track`, `init` and `install` keep the full group path of a GitLab remote (`group/subgroup/repo`) instead of its last two segments
+
+## Added
+
+- Errors are now recorded with their stack in `~/.packmind/error.log`, and network failures with the request and cause behind them
 
 # [0.36.0] - 2026-09-23
 
@@ -513,7 +526,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.1...HEAD
+[0.36.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...release-cli/0.36.1
 [0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
 [0.35.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.0...release-cli/0.35.1
 [0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0

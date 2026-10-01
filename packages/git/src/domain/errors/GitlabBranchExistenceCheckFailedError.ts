@@ -1,5 +1,6 @@
 import { isNativeError } from 'util/types';
 import { GitUpstreamError } from './GitUpstreamError';
+import { providerErrorMessage } from './providerErrorMessage';
 
 /**
  * Probing whether a branch exists failed with something other than the 404,
@@ -20,7 +21,7 @@ export class GitlabBranchExistenceCheckFailedError extends GitUpstreamError {
       'gitlab_branch_existence_check_failed',
       { owner, repo, branch },
       isNativeError(cause)
-        ? `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${cause.message}`
+        ? `Failed to check if branch exists for ${owner}/${repo}/${branch}: ${providerErrorMessage(cause)}`
         : `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: ${cause}`,
     );
     this.name = 'GitlabBranchExistenceCheckFailedError';

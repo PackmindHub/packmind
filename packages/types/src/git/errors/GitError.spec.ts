@@ -90,6 +90,62 @@ describe('GitRepoAlreadyExistsError', () => {
       organizationId: 'org-1',
     });
   });
+
+  describe('when the holding provider is known', () => {
+    describe('and it is CLI-managed', () => {
+      const cliManagedError = new GitRepoAlreadyExistsError(
+        'packmind',
+        'packmind',
+        'main',
+        'org-1',
+        { gitProviderId: 'provider-1', cliManaged: true },
+      );
+
+      it('says the repository is held by a CLI-managed connection', () => {
+        expect(cliManagedError.message).toBe(
+          "Repository packmind/packmind on branch 'main' already exists in this organization under a CLI-managed connection",
+        );
+      });
+
+      it('keeps the holding provider out of the message', () => {
+        expect(cliManagedError.message).not.toContain('provider-1');
+      });
+
+      it('carries the holding provider in the context', () => {
+        expect(cliManagedError.context).toEqual({
+          owner: 'packmind',
+          repo: 'packmind',
+          branch: 'main',
+          organizationId: 'org-1',
+          existingGitProviderId: 'provider-1',
+          existingProviderCliManaged: true,
+        });
+      });
+    });
+
+    describe('and it has credentials', () => {
+      const authenticatedError = new GitRepoAlreadyExistsError(
+        'packmind',
+        'packmind',
+        'main',
+        'org-1',
+        { gitProviderId: 'provider-1', cliManaged: false },
+      );
+
+      it('says the repository is held by another git provider', () => {
+        expect(authenticatedError.message).toBe(
+          "Repository packmind/packmind on branch 'main' already exists in this organization under another git provider",
+        );
+      });
+
+      it('carries the holding provider in the context', () => {
+        expect(authenticatedError.context).toMatchObject({
+          existingGitProviderId: 'provider-1',
+          existingProviderCliManaged: false,
+        });
+      });
+    });
+  });
 });
 
 describe('GitProviderHasRepositoriesError', () => {

@@ -65,3 +65,27 @@ describe.each([
     expect(error.kind).toBe('upstream_unavailable');
   });
 });
+
+describe('GitlabApiOperationFailedError', () => {
+  describe('when GitLab refuses the commit with a push rule', () => {
+    const error = new GitlabApiOperationFailedError(
+      'commit files to GitLab',
+      Object.assign(new Error('Request failed with status code 400'), {
+        response: {
+          status: 400,
+          data: { message: 'Commit message does not follow the pattern' },
+        },
+      }),
+    );
+
+    it('tells the caller what GitLab said', () => {
+      expect(error.message).toBe(
+        'Failed to commit files to GitLab: Commit message does not follow the pattern',
+      );
+    });
+
+    it('keeps the HTTP status in the context', () => {
+      expect(error.context.status).toBe(400);
+    });
+  });
+});

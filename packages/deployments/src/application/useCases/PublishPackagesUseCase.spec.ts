@@ -1,6 +1,7 @@
 import { PublishPackagesUseCase } from './PublishPackagesUseCase';
 import { PackageService } from '../services/PackageService';
 import { PackageReleaseService } from '../services/PackageReleaseService';
+import { TargetPackmindConfigReader } from '../services/TargetPackmindConfigReader';
 import {
   PackagesDeployment,
   createUserId,
@@ -57,6 +58,7 @@ describe('PublishPackagesUseCase', () => {
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
+  let mockConfigReader: jest.Mocked<TargetPackmindConfigReader>;
   let mockLogger: PackmindLogger;
   const spaceSlug = 'my-space';
 
@@ -106,6 +108,10 @@ describe('PublishPackagesUseCase', () => {
       spaceFactory({ id: spaceId, slug: spaceSlug }),
     );
 
+    mockConfigReader = createMockInstance(TargetPackmindConfigReader);
+    mockConfigReader.read.mockResolvedValue(null);
+    mockConfigReader.pinnedVersion.mockReturnValue(null);
+
     mockPackageReleaseService = createMockInstance(PackageReleaseService);
     mockPackageReleaseService.listReleases.mockResolvedValue([]);
     mockPackageReleaseService.findByVersion.mockResolvedValue(null);
@@ -119,6 +125,7 @@ describe('PublishPackagesUseCase', () => {
       mockDistributedPackageRepository,
       mockSpacesPort,
       mockPackageReleaseService,
+      mockConfigReader,
       mockLogger,
     );
   });
@@ -237,6 +244,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -388,6 +401,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -451,6 +470,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+        perTarget: {
+          [targetId]: {
+            packageVersions: { [`@${spaceSlug}/${pkg.slug}`]: '*' },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [packageId],
         artifactSpaceIds: {
           [standardId]: pkg.spaceId,
@@ -757,6 +782,15 @@ describe('PublishPackagesUseCase', () => {
           [`@${spaceSlug}/${package1.slug}`]: '*',
           [`@${spaceSlug}/${package2.slug}`]: '*',
         },
+        perTarget: {
+          [targetId]: {
+            packageVersions: {
+              [`@${spaceSlug}/${package1.slug}`]: '*',
+              [`@${spaceSlug}/${package2.slug}`]: '*',
+            },
+            versionIds: expect.any(Array),
+          },
+        },
         packageIds: [package1Id, package2Id],
         artifactSpaceIds: {
           [sharedCommandId]: package2.spaceId,
@@ -1043,6 +1077,264 @@ describe('PublishPackagesUseCase', () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `"^0.1.0" is not a valid version for @${spaceSlug}/${pkg.slug}.`,
         );
+      });
+    });
+  });
+
+  describe('when the distribution names no version', () => {
+    const packageId = createPackageId(uuidv4());
+    const pinnedTargetId = createTargetId(uuidv4());
+    const wildcardTargetId = createTargetId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
+
+    let pkg: Package;
+    let liveRecipeVersion: CommandVersion;
+    let releasedRecipeVersion: CommandVersion;
+    let command: PublishPackagesCommand;
+
+    const slug = () => `@${spaceSlug}/${pkg.slug}`;
+
+    const configPinning = (version: string) => ({
+      packages: { [slug()]: version },
+    });
+
+    const release = (version: string) => ({
+      id: createPackageReleaseId(uuidv4()),
+      packageId,
+      version,
+      name: 'Ops',
+      description: '',
+      recipeVersions: [releasedRecipeVersion],
+      standardVersions: [],
+      skillVersions: [],
+    });
+
+    beforeEach(() => {
+      liveRecipeVersion = commandVersionFactory({ recipeId, version: 3 });
+      releasedRecipeVersion = commandVersionFactory({ recipeId, version: 2 });
+
+      pkg = packageFactory({
+        id: packageId,
+        recipes: [recipeId],
+        standards: [],
+      });
+
+      command = {
+        userId,
+        organizationId,
+        packageIds: [packageId],
+        targetIds: [pinnedTargetId],
+      };
+
+      mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+        pkg,
+      ]);
+      mockCommandsPort.getLatestCommandVersions.mockResolvedValue([
+        liveRecipeVersion,
+      ]);
+      mockStandardsPort.getLatestStandardVersions.mockResolvedValue([]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        distributions: [],
+      });
+
+      /*
+       * Stands in for the real lookup, which parses the spec: anything that is
+       * not the wildcard is a pin.
+       */
+      mockConfigReader.pinnedVersion.mockImplementation(
+        (config, scopedSlug, bareSlug) => {
+          const raw =
+            config?.packages?.[scopedSlug] ?? config?.packages?.[bareSlug];
+          return raw && raw !== '*' ? raw : null;
+        },
+      );
+      mockPackageReleaseService.listReleases.mockResolvedValue([
+        release('0.0.1'),
+        release('0.1.0'),
+      ]);
+      mockPackageReleaseService.findByVersion.mockResolvedValue(
+        release('0.1.0'),
+      );
+    });
+
+    describe('and the destination pins the package', () => {
+      beforeEach(() => {
+        mockConfigReader.read.mockResolvedValue(configPinning('0.0.1'));
+      });
+
+      it('moves it to the newest release rather than the live package', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: { [slug()]: '0.1.0' },
+          }),
+        );
+      });
+
+      it('sends what that release pinned', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            commandVersionIds: [releasedRecipeVersion.id],
+          }),
+        );
+      });
+
+      describe('and the package has no release to move to', () => {
+        beforeEach(() => {
+          mockPackageReleaseService.listReleases.mockResolvedValue([]);
+          mockPackageReleaseService.findByVersion.mockResolvedValue(null);
+        });
+
+        it('keeps the pin rather than silently unpinning the repo', async () => {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            `Package ${slug()} has no version 0.0.1`,
+          );
+        });
+      });
+    });
+
+    describe('and the destination tracks the live package', () => {
+      beforeEach(() => {
+        mockConfigReader.read.mockResolvedValue(configPinning('*'));
+      });
+
+      it('keeps it tracking the live package', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({ packageVersions: { [slug()]: '*' } }),
+        );
+      });
+
+      it('sends the live versions', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            commandVersionIds: [liveRecipeVersion.id],
+          }),
+        );
+      });
+    });
+
+    describe('and the destination does not carry the package yet', () => {
+      beforeEach(() => {
+        mockConfigReader.read.mockResolvedValue(null);
+      });
+
+      it('sends the live package', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({ packageVersions: { [slug()]: '*' } }),
+        );
+      });
+    });
+
+    describe('and two destinations want different versions', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          targetIds: [pinnedTargetId, wildcardTargetId],
+        };
+        mockConfigReader.read.mockImplementation(async (targetId) =>
+          targetId === pinnedTargetId
+            ? configPinning('0.0.1')
+            : configPinning('*'),
+        );
+      });
+
+      it('still sends one publish, so the repository gets one commit', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledTimes(1);
+      });
+
+      it('records the release against the pinned destination', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [pinnedTargetId]: expect.objectContaining({
+                packageVersions: { [slug()]: '0.1.0' },
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('records the wildcard against the other', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [wildcardTargetId]: expect.objectContaining({
+                packageVersions: { [slug()]: '*' },
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('renders the released version at the pinned destination', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [pinnedTargetId]: expect.objectContaining({
+                versionIds: [releasedRecipeVersion.id],
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('renders the live version at the other', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            perTarget: expect.objectContaining({
+              [wildcardTargetId]: expect.objectContaining({
+                versionIds: [liveRecipeVersion.id],
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('sends both versions as the union', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            commandVersionIds: expect.arrayContaining([
+              releasedRecipeVersion.id,
+              liveRecipeVersion.id,
+            ]),
+          }),
+        );
+      });
+    });
+
+    describe('and the caller named a version after all', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packageVersions: { [packageId as string]: '*' },
+        };
+      });
+
+      it('never reads the destination', async () => {
+        await useCase.execute(command);
+
+        expect(mockConfigReader.read).not.toHaveBeenCalled();
       });
     });
   });

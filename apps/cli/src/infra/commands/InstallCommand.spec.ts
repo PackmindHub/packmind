@@ -302,6 +302,45 @@ describe('installCommand', () => {
     });
   });
 
+  describe('--upgrade', () => {
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    describe('when the flag is passed', () => {
+      it('asks the install to release its pins', async () => {
+        await handler({
+          installPath: '',
+          packages: [],
+          status: false,
+          upgrade: true,
+        });
+
+        expect(mockInstall).toHaveBeenCalledWith(
+          expect.objectContaining({ upgrade: true }),
+        );
+      });
+    });
+
+    describe('when the flag is absent', () => {
+      it('leaves the pins alone', async () => {
+        await handler({
+          installPath: '',
+          packages: [],
+          status: false,
+        });
+
+        expect(mockInstall).toHaveBeenCalledWith(
+          expect.objectContaining({ upgrade: undefined }),
+        );
+      });
+    });
+  });
+
   describe('install result handling', () => {
     beforeEach(() => {
       mockFs.existsSync.mockReturnValue(true);

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { EXEC_NAME } from './execName';
+import { recordReportedMessage } from './errorLog';
 
 const CLI_PREFIX = EXEC_NAME;
 
@@ -33,6 +34,7 @@ export function logInfoConsole(message: string, logger = console): void {
  */
 export function logErrorConsole(message: string, logger = console): void {
   logger.error(chalk.bgRed.bold(CLI_PREFIX), chalk.red(message));
+  recordReportedMessage(message);
 }
 
 /**

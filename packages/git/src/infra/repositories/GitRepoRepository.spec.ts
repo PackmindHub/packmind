@@ -12,7 +12,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { GitRepo, GitProvider } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../test';
-import { createOrganizationId, Organization } from '@packmind/types';
+import {
+  createGitRepoId,
+  createOrganizationId,
+  GitRepoNotFoundError,
+  Organization,
+} from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
 
 describe('GitRepoRepository', () => {
@@ -198,6 +203,49 @@ describe('GitRepoRepository', () => {
         { type: 'any', providerId: secondProvider.id },
       );
       expect(found?.providerId).toBe(secondProvider.id);
+    });
+  });
+
+  describe('findByOwnerRepoAndBranchInOrganization', () => {
+    let gitRepo: GitRepo;
+
+    beforeEach(async () => {
+      gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'Optimetriks',
+          repo: 'Smala-Native',
+          branch: 'main',
+        }),
+      );
+    });
+
+    describe('when the owner and repo differ only by case', () => {
+      it('finds the repository', async () => {
+        const found =
+          await gitRepoRepository.findByOwnerRepoAndBranchInOrganization(
+            'optimetriks',
+            'smala-native',
+            'main',
+            testOrganization.id,
+          );
+
+        expect(found?.id).toEqual(gitRepo.id);
+      });
+    });
+
+    describe('when the branch differs only by case', () => {
+      it('finds no repository', async () => {
+        const found =
+          await gitRepoRepository.findByOwnerRepoAndBranchInOrganization(
+            'Optimetriks',
+            'Smala-Native',
+            'Main',
+            testOrganization.id,
+          );
+
+        expect(found).toBeNull();
+      });
     });
   });
 
@@ -457,6 +505,126 @@ describe('GitRepoRepository', () => {
 
     it('keeps the row readable rather than soft-deleting it', () => {
       expect(reloaded).not.toBeNull();
+    });
+  });
+
+  describe('reassignProvider', () => {
+    let otherProvider: GitProvider;
+    let gitRepo: GitRepo;
+    let reloaded: GitRepo | null;
+
+    beforeEach(async () => {
+      otherProvider = await gitProviderRepository.save(
+        gitProviderFactory({ organizationId: testOrganization.id }),
+      );
+      gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+      );
+    });
+
+    describe('when the repository is moved to another provider', () => {
+      beforeEach(async () => {
+        await gitRepoRepository.reassignProvider(gitRepo.id, otherProvider.id);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('points the repository at the new provider', () => {
+        expect(reloaded?.providerId).toEqual(otherProvider.id);
+      });
+
+      it('keeps the tracked flag', () => {
+        expect(reloaded?.isTracked).toBe(true);
+      });
+
+      it('keeps the owner', () => {
+        expect(reloaded?.owner).toEqual(gitRepo.owner);
+      });
+    });
+
+    describe('when the new provider names the owner differently', () => {
+      it('rewrites the owner', async () => {
+        await gitRepoRepository.reassignProvider(
+          gitRepo.id,
+          otherProvider.id,
+          'renamed-owner',
+        );
+
+        expect((await gitRepoRepository.findById(gitRepo.id))?.owner).toEqual(
+          'renamed-owner',
+        );
+      });
+    });
+
+    describe('when the repository does not exist', () => {
+      it('throws GitRepoNotFoundError', async () => {
+        await expect(
+          gitRepoRepository.reassignProvider(
+            createGitRepoId(uuidv4()),
+            otherProvider.id,
+          ),
+        ).rejects.toThrow(GitRepoNotFoundError);
+      });
+    });
+  });
+
+  describe('clearTrackingRemoved', () => {
+    let removedMain: GitRepo;
+    let removedDev: GitRepo;
+    let otherRepo: GitRepo;
+
+    beforeEach(async () => {
+      removedMain = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'Optimetriks',
+          repo: 'smala-native',
+          branch: 'main',
+        }),
+      );
+      removedDev = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'optimetriks',
+          repo: 'smala-native',
+          branch: 'dev',
+        }),
+      );
+      otherRepo = await gitRepoRepository.add(
+        gitRepoFactory({
+          providerId: testProvider.id,
+          owner: 'optimetriks',
+          repo: 'other-repo',
+          branch: 'main',
+        }),
+      );
+      await gitRepoRepository.markTrackingRemoved(removedMain.id);
+      await gitRepoRepository.markTrackingRemoved(removedDev.id);
+      await gitRepoRepository.markTrackingRemoved(otherRepo.id);
+
+      await gitRepoRepository.clearTrackingRemoved(
+        'optimetriks',
+        'smala-native',
+        testOrganization.id,
+      );
+    });
+
+    it('clears the stamp on every branch of the repository', async () => {
+      const reloaded = await Promise.all(
+        [removedMain, removedDev].map((gitRepo) =>
+          gitRepoRepository.findById(gitRepo.id),
+        ),
+      );
+
+      expect(reloaded.map((gitRepo) => gitRepo?.trackingRemovedAt)).toEqual([
+        null,
+        null,
+      ]);
+    });
+
+    it('leaves other repositories stamped', async () => {
+      const reloaded = await gitRepoRepository.findById(otherRepo.id);
+
+      expect(reloaded?.trackingRemovedAt).toEqual(expect.any(Date));
     });
   });
 });

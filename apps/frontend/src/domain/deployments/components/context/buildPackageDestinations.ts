@@ -255,6 +255,20 @@ export type PackageDestination = {
   prUrl: string | null;
   lastActivityAt: string | null;
   /**
+   * Why this destination is red, from the very distribution its `failed` state
+   * was read off, and null on any other state.
+   *
+   * On the row rather than a click away, because the row is where the reader
+   * learns there is a failure at all: sending them to the distribution history
+   * to find that same record by hand is asking them to re-derive what this
+   * list already knows.
+   *
+   * Always null for a marketplace. A publication reports whether its last
+   * attempt landed and nothing about why it did not, so a message there would
+   * have to be invented.
+   */
+  failureReason: string | null;
+  /**
    * Whether `lastActivityAt` is old enough for the row to say so.
    *
    * Computed once, here, rather than left to whatever renders the row: a dot
@@ -330,18 +344,27 @@ function repositoryRow(
   if (multiLanding.has(entry.repo.id)) details.push(targetLabel(entry.target));
 
   const lastActivityAt = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
+  const state = repositoryState(entry);
 
   return {
     key: `r:${entry.repo.id}::${entry.target.id}`,
     kind: 'repository',
     name: `${entry.repo.owner}/${entry.repo.name}`,
     details,
-    state: repositoryState(entry),
+    state,
     behindArtifacts: entry.behindArtifacts,
     behindCount: entry.behindArtifacts.length,
     hasWorkToSend: entry.behindArtifacts.length > 0,
     installKey: `${entry.repo.id}::${entry.target.id}`,
     prUrl: null,
+    /*
+     * Gated on the state and not merely copied across: the install carries the
+     * message of its last distribution whatever became of it, and a landing
+     * that failed on Monday and succeeded on Tuesday would otherwise print
+     * Monday's error under a green row.
+     */
+    failureReason:
+      state === 'failed' ? (entry.lastDistributionError ?? null) : null,
     lastActivityAt,
     hasStaleReport: isReportStale(lastActivityAt),
   };
@@ -380,6 +403,8 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
             : 'aligned',
     behindArtifacts: [],
     behindCount: 0,
+    // See `failureReason`: a publication reports no message of its own.
+    failureReason: null,
     /*
      * The copy has been overtaken, whatever became of the last attempt. A
      * publish that failed left it outdated too, and republishing is how that

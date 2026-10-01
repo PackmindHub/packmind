@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexaFactory } from './PackmindCliHexaFactory';
+import { withErrorReporting } from './infra/utils/errorReporting';
 
 import {
   LintFilesAgainstRuleCommand,
@@ -108,6 +109,11 @@ export class PackmindCliHexa {
       });
       throw error;
     }
+
+    // Every command reaches its use cases through this facade, so wrapping it
+    // once records the stack of any failure — including the ones a command
+    // catches and reduces to a one-line message.
+    return withErrorReporting(this);
   }
 
   public get output(): IOutput {

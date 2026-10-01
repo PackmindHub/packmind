@@ -85,6 +85,8 @@ GitLab connections use a personal access token:
 2. Create a new token with the `api` scope (full API access).
 3. Copy your token (it starts with `glpat-`) and paste it into Packmind.
 
+For a self-managed GitLab, enter your instance URL (for example `https://gitlab.acme.io`). Packmind matches repositories to the connection by host, so a clone over HTTPS or SSH reaches the same connection.
+
 ## Managing Repository Access
 
 To change which repositories a GitHub App connection can reach, open the connection from the **Connections** tab and use **View Packmind on GitHub**. This opens the Packmind app's page on GitHub, where you can add or remove repositories. The new access takes effect in Packmind without reconnecting.
@@ -94,6 +96,8 @@ To change which repositories a GitHub App connection can reach, open the connect
 Once you've added your providers, **add repositories** for each provider.
 
 When you add a Git repository, Packmind automatically creates a default target with the root path "/" for that repository. This allows you to immediately start distributing standards and commands to the entire repository. You can later create additional targets for specific paths within the repository if needed.
+
+A repository the CLI already distributed to keeps its history when you add it: it moves under the connection with its existing targets instead of being created again, and the CLI-created entry for that host disappears once it holds no repository.
 
 ## Distribution Targets
 

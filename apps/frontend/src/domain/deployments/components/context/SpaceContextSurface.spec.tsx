@@ -6,6 +6,7 @@ import {
   MemoryRouter,
   Route,
   Routes,
+  useLocation,
   useSearchParams,
 } from 'react-router';
 import { UIProvider } from '@packmind/ui';
@@ -44,6 +45,7 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackagesBySpaceQuery: vi.fn(),
+  useDeletePackagesBatchMutation: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock('../../../standards/api/queries/StandardsQueries', () => ({
@@ -85,6 +87,33 @@ vi.mock(
 vi.mock('./MoveComponentDrawer', () => ({
   MoveComponentDrawer: () => <div data-testid="move-drawer" />,
 }));
+
+vi.mock('./CreatePackageDrawer', () => ({
+  CreatePackageDrawer: ({
+    onOpenChange,
+    onCreated,
+  }: {
+    onOpenChange: (open: boolean) => void;
+    onCreated: (packageId: string) => void;
+  }) => (
+    <div data-testid="create-package-drawer">
+      <button onClick={() => onOpenChange(false)}>Cancel</button>
+      <button
+        onClick={() => {
+          onOpenChange(false);
+          onCreated('pkg-1');
+        }}
+      >
+        Create
+      </button>
+    </div>
+  ),
+}));
+
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
 
 /*
  * Stood in for by the one thing this test asks of it: the way back out of the
@@ -168,7 +197,12 @@ async function renderSurface(address: string) {
           <Routes>
             <Route
               path="/org/:orgSlug/space/:spaceSlug/context"
-              element={<SpaceContextSurface />}
+              element={
+                <>
+                  <SpaceContextSurface />
+                  <LocationProbe />
+                </>
+              }
             />
           </Routes>
         </MemoryRouter>
@@ -224,6 +258,60 @@ describe('SpaceContextSurface', () => {
       );
 
       expect(screen.queryByText('1 selected')).toBeNull();
+    });
+  });
+
+  describe('package creation in the address', () => {
+    const search = () => screen.getByTestId('location-search').textContent;
+
+    describe('when arrived at with a request to create a package', () => {
+      beforeEach(async () => {
+        await renderSurface('?create=package');
+      });
+
+      it('opens the package creation drawer', () => {
+        expect(screen.getByTestId('create-package-drawer')).toBeInTheDocument();
+      });
+
+      it('keeps the request in the address, so a reload keeps the drawer', () => {
+        expect(search()).toBe('?create=package');
+      });
+
+      describe('when the drawer is cancelled', () => {
+        beforeEach(async () => {
+          await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        });
+
+        it('closes the drawer', () => {
+          expect(screen.queryByTestId('create-package-drawer')).toBeNull();
+        });
+
+        it('drops the request from the address', () => {
+          expect(search()).toBe('');
+        });
+      });
+
+      describe('when the package is created', () => {
+        beforeEach(async () => {
+          await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+        });
+
+        it('opens the new package instead of the drawer', () => {
+          expect(search()).toBe('?package=pkg-1');
+        });
+      });
+    });
+
+    describe('when New package is clicked in the rail', () => {
+      it('writes the request to the address', async () => {
+        await renderSurface('');
+
+        await userEvent.click(
+          screen.getByRole('button', { name: /New package/ }),
+        );
+
+        expect(search()).toBe('?create=package');
+      });
     });
   });
 });

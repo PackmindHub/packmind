@@ -15,6 +15,12 @@ export type IInstallCommand = {
    */
   cliVersion: string;
   /**
+   * Releases every package `packmind.json` pins to an exact version, moving it
+   * to that package's newest release. A package tracking `*` keeps tracking
+   * it, and is installed as any install installs it.
+   */
+  upgrade?: boolean;
+  /**
    * When set, the install runs in single-agent home-install mode: the locally
    * configured `agents` array is ignored, only the home agent is rendered,
    * and the agent's home directory prefix (e.g. `.claude/`) is stripped from

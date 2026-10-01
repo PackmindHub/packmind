@@ -96,11 +96,13 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     targetId: TargetId,
     packageId: PackageId,
     status: DistributionStatus,
+    lastDistributionError: string | null = null,
   ): ActivePackageOperationRow => ({
     targetId,
     packageId,
     lastDistributionStatus: status,
     lastDistributedAt,
+    lastDistributionError,
   });
 
   const buildTarget = (id: TargetId): Target => ({
@@ -232,6 +234,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
               package: pkg,
               lastDistributionStatus: DistributionStatus.success,
               lastDistributedAt,
+              lastDistributionError: null,
               deployedRecipes: [],
               deployedCommands: [],
               deployedStandards: [],
@@ -277,6 +280,38 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       it('marks the package distribution status as failure', () => {
         expect(result[0].packages[0].lastDistributionStatus).toBe(
           DistributionStatus.failure,
+        );
+      });
+    });
+
+    describe('the message behind a failed distribution', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const targetId = createTargetId(uuidv4());
+        const pkg = buildPackage();
+
+        distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [
+            activeRow(
+              targetId,
+              pkg.id,
+              DistributionStatus.failure,
+              'Push rejected: branch protection requires a pull request',
+            ),
+          ],
+        );
+        targetRepository.findActiveInSpace.mockResolvedValue([
+          buildTarget(targetId),
+        ]);
+        packageRepository.findBySpaceId.mockResolvedValue([pkg]);
+
+        result = await useCase.execute(command);
+      });
+
+      it('reaches the caller beside the status it explains', () => {
+        expect(result[0].packages[0].lastDistributionError).toBe(
+          'Push rejected: branch protection requires a pull request',
         );
       });
     });
