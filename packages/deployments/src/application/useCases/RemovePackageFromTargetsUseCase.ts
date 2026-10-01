@@ -525,6 +525,8 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       recipeVersions: [],
       skillVersions: [],
       operation: 'remove',
+      // The package is leaving the destination; it asks for no version at all.
+      versionSpec: null,
     });
 
     if (removedStandardVersions.length > 0) {

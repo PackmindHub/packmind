@@ -70,6 +70,7 @@ const distributionTo = (
       standardVersions: [],
       skillVersions: [],
       operation: 'add',
+      versionSpec: null,
     },
   ],
   createdAt: '2026-08-01T10:00:00.000Z',

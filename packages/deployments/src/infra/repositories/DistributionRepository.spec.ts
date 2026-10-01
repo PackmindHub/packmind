@@ -577,6 +577,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -628,6 +629,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv2],
               recipeVersions: [],
               skillVersions: [],
@@ -673,6 +675,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -733,6 +736,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [svOld],
               recipeVersions: [],
               skillVersions: [],
@@ -744,6 +748,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [svNew],
               recipeVersions: [],
               skillVersions: [],
@@ -883,6 +888,7 @@ describe('DistributionRepository', () => {
                 distributionId: createDistributionId('dist-1'),
                 packageId: packageId1,
                 operation: 'add',
+                versionSpec: null,
                 standardVersions: [sv1],
                 recipeVersions: [cv1],
                 skillVersions: [skv1],
@@ -1334,6 +1340,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1422,6 +1429,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1450,6 +1458,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId1,
               operation: 'remove',
+              versionSpec: null,
               standardVersions: [],
               recipeVersions: [],
               skillVersions: [],
@@ -1466,6 +1475,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-3'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-2'),
@@ -1551,6 +1561,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1577,6 +1588,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1b'),
