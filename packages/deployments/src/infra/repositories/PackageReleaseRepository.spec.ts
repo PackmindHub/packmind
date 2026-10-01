@@ -236,6 +236,72 @@ describe('PackageReleaseRepository', () => {
     });
   });
 
+  describe('reading the latest release of several packages at once', () => {
+    const otherPackage: Package = packageFactory({
+      spaceId: pkg.spaceId,
+      name: 'Backend pack',
+      description: 'What the backend team ships with',
+    });
+
+    beforeEach(async () => {
+      await fixture.datasource.getRepository(PackageSchema).save(otherPackage);
+
+      /*
+       * `0.9.0` after `0.10.0` on purpose: the newest has to be picked by the
+       * parsed triple, and as strings `0.10.0` sorts below `0.9.0`.
+       */
+      await repository.createWithVersions(
+        releaseOf('0.10.0'),
+        pinnedVersions(),
+      );
+      await repository.createWithVersions(releaseOf('0.9.0'), pinnedVersions());
+      await repository.createWithVersions(
+        { ...releaseOf('2.0.0'), packageId: otherPackage.id },
+        pinnedVersions(),
+      );
+    });
+
+    it('picks the highest version by triple rather than by string', async () => {
+      const latest = await repository.findLatestByPackageIds([pkg.id]);
+
+      expect(latest.get(pkg.id)?.version).toBe('0.10.0');
+    });
+
+    it('keys each package to its own newest release', async () => {
+      const latest = await repository.findLatestByPackageIds([
+        pkg.id,
+        otherPackage.id,
+      ]);
+
+      expect(latest.get(otherPackage.id)?.version).toBe('2.0.0');
+    });
+
+    it('hydrates the pins of the release it picked', async () => {
+      const latest = await repository.findLatestByPackageIds([pkg.id]);
+
+      expect(latest.get(pkg.id)?.standardVersions.map((v) => v.id)).toEqual([
+        standardVersion.id,
+      ]);
+    });
+
+    it('omits a package that has never been released', async () => {
+      const neverReleased = packageFactory({ spaceId: pkg.spaceId });
+      await fixture.datasource.getRepository(PackageSchema).save(neverReleased);
+
+      const latest = await repository.findLatestByPackageIds([
+        neverReleased.id,
+      ]);
+
+      expect(latest.has(neverReleased.id)).toBe(false);
+    });
+
+    it('reads no package at all without querying', async () => {
+      const latest = await repository.findLatestByPackageIds([]);
+
+      expect(latest.size).toBe(0);
+    });
+  });
+
   describe('when a package has no release', () => {
     it('returns no release', async () => {
       const releases = await repository.findByPackageId(pkg.id);

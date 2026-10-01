@@ -70,6 +70,33 @@ export type ActiveDistributedPackage = {
    * which is how those destinations already behave.
    */
   versionSpec: string | null;
+  /**
+   * The newest release this package has, or null when it has never been cut.
+   *
+   * What a pinned destination is measured against: it is behind when a release
+   * newer than its pin exists, and `Update` is then the thing that moves it,
+   * because a release is something `Update` can actually send.
+   *
+   * A fact about the package rather than about this destination, repeated on
+   * every destination of it. The alternative is a second map the reader has to
+   * join by hand, and every consumer of this payload works a destination at a
+   * time.
+   */
+  latestReleaseVersion: string | null;
+  /**
+   * Whether the package has moved on from `latestReleaseVersion` — a component
+   * edited, added or removed since, or its own name or description changed.
+   *
+   * The other half of what makes a pinned destination behind, and the half
+   * `Update` cannot fix: there is nothing newer to send, so the way out is to
+   * cut a release. Reading it as drift and offering `Update` is what let a
+   * reader press that button all afternoon against an unchanged repository.
+   *
+   * True for a package that has never been released and holds components, since
+   * all of it is unreleased; false for one holding no component at all, which
+   * has nothing to cut.
+   */
+  hasUnreleasedChanges: boolean;
   deployedRecipes: DeployedCommandTargetInfo[];
   // Command-named twin of `deployedRecipes` (superset); same value.
   deployedCommands: DeployedCommandTargetInfo[];

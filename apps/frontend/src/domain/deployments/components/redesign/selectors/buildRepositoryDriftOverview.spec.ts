@@ -147,6 +147,8 @@ function makeByTargetEntry(opts: {
         lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
         lastDistributionError: null,
         versionSpec: null,
+        latestReleaseVersion: null,
+        hasUnreleasedChanges: false,
         deployedRecipes: [],
         deployedCommands: [],
         deployedStandards: opts.deployedStandards ?? [],

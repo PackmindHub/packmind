@@ -23,6 +23,7 @@ import {
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   Package,
+  PackageId,
   PendingCommandInfo,
   PendingSkillInfo,
   PendingStandardInfo,
@@ -47,6 +48,12 @@ import {
 } from '../../domain/repositories/IDistributionRepository';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
+import { PackageReleaseService } from '../services/PackageReleaseService';
+import {
+  evaluatePackageReleaseGate,
+  type PackageGateSnapshot,
+} from '../services/packageReleaseGateHelpers';
+import { resolveLatestComponentVersions } from '../services/packageReleaseResolution';
 
 const origin = 'ListActiveDistributedPackagesBySpaceUseCase';
 
@@ -67,6 +74,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
+    private readonly packageReleaseService: PackageReleaseService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
@@ -132,6 +140,16 @@ export class ListActiveDistributedPackagesBySpaceUseCase
       return [];
     }
 
+    /*
+     * Narrowed to the packages this space actually distributes, rather than
+     * every package it holds: a package nobody has pushed anywhere draws no
+     * destination, so its release state would be read and thrown away.
+     */
+    const distributedPackageIds = new Set(activeOps.map((op) => op.packageId));
+    const releaseState = await this.readReleaseState(
+      packages.filter((pkg) => distributedPackageIds.has(pkg.id)),
+    );
+
     const operationsByTarget = groupActiveOpsByTarget(activeOps);
     const outdatedByTargetId = indexOutdatedByTarget(outdatedByTarget);
     const standardsById = indexById(standards);
@@ -182,12 +200,113 @@ export class ListActiveDistributedPackagesBySpaceUseCase
               commandsById,
               standardsById,
               skillsById,
+              release: releaseState.get(row.packageId) ?? NEVER_RELEASED,
             }),
           )
           .filter((entry): entry is ActiveDistributedPackage => entry !== null),
       };
     });
   }
+
+  /**
+   * Where each package stands against its own newest release.
+   *
+   * A fixed number of reads however many packages are given: one batched
+   * release lookup, and one resolution of every component of every package at
+   * once. Asking package by package would be two queries and three port calls
+   * each, on a read that draws a whole space.
+   */
+  private async readReleaseState(
+    packages: Package[],
+  ): Promise<Map<PackageId, PackageReleaseState>> {
+    if (packages.length === 0) return new Map();
+
+    const [latestReleases, resolution] = await Promise.all([
+      this.packageReleaseService.findLatestByPackageIds(
+        packages.map((pkg) => pkg.id),
+      ),
+      resolveLatestComponentVersions(
+        {
+          // Deduplicated: one component can belong to several packages.
+          recipeIds: [...new Set(packages.flatMap((pkg) => pkg.recipes ?? []))],
+          standardIds: [
+            ...new Set(packages.flatMap((pkg) => pkg.standards ?? [])),
+          ],
+          skillIds: [...new Set(packages.flatMap((pkg) => pkg.skills ?? []))],
+        },
+        {
+          commandsPort: this.commandsPort,
+          standardsPort: this.standardsPort,
+          skillsPort: this.skillsPort,
+        },
+      ),
+    ]);
+
+    const latestVersionIds = new Map<string, string>();
+    for (const component of resolution.resolved) {
+      latestVersionIds.set(
+        `${component.family}:${component.componentId}`,
+        component.versionId,
+      );
+    }
+
+    const state = new Map<PackageId, PackageReleaseState>();
+    for (const pkg of packages) {
+      const latestRelease = latestReleases.get(pkg.id) ?? null;
+      state.set(pkg.id, {
+        latestReleaseVersion: latestRelease?.version ?? null,
+        /*
+         * The same gate the release panel reads, so the two cannot disagree
+         * about whether there is anything to cut. `no_components` is not an
+         * unreleased change: an empty package has nothing to release.
+         */
+        hasUnreleasedChanges:
+          evaluatePackageReleaseGate(
+            toGateSnapshot(pkg, latestVersionIds),
+            latestRelease,
+          ) === 'ready',
+      });
+    }
+
+    return state;
+  }
+}
+
+/** Where one package stands against its own newest release. */
+type PackageReleaseState = Pick<
+  ActiveDistributedPackage,
+  'latestReleaseVersion' | 'hasUnreleasedChanges'
+>;
+
+/**
+ * What a package whose release state could not be read reports.
+ *
+ * Says "never released, nothing unreleased", which is the reading that offers
+ * neither `Update` nor a release: inventing either would send a reader after a
+ * button for a package this read knows nothing about.
+ */
+const NEVER_RELEASED: PackageReleaseState = {
+  latestReleaseVersion: null,
+  hasUnreleasedChanges: false,
+};
+
+/** The package as the release gate sees it, at the versions resolved above. */
+function toGateSnapshot(
+  pkg: Package,
+  latestVersionIds: Map<string, string>,
+): PackageGateSnapshot {
+  const component = (family: string, id: string) => ({
+    id,
+    latestVersionId: latestVersionIds.get(`${family}:${id}`) ?? null,
+  });
+
+  return {
+    name: pkg.name,
+    description: pkg.description,
+    recipes: (pkg.recipes ?? []).map((id) => component('recipe', id)),
+    standards: (pkg.standards ?? []).map((id) => component('standard', id)),
+    skills: (pkg.skills ?? []).map((id) => component('skill', id)),
+  };
 }
 
 function buildActivePackage(args: {
@@ -199,6 +318,7 @@ function buildActivePackage(args: {
   commandsById: Map<string, Command>;
   standardsById: Map<string, Standard>;
   skillsById: Map<string, Skill>;
+  release: PackageReleaseState;
 }): ActiveDistributedPackage | null {
   const {
     row,
@@ -209,6 +329,7 @@ function buildActivePackage(args: {
     commandsById,
     standardsById,
     skillsById,
+    release,
   } = args;
   if (!pkg) return null;
 
@@ -261,6 +382,8 @@ function buildActivePackage(args: {
     lastDistributedAt: row.lastDistributedAt,
     lastDistributionError: row.lastDistributionError,
     versionSpec: row.versionSpec,
+    latestReleaseVersion: release.latestReleaseVersion,
+    hasUnreleasedChanges: release.hasUnreleasedChanges,
     deployedRecipes: packageDeployedCommands,
     // Same value under the command-named field the type also requires.
     deployedCommands: packageDeployedCommands,

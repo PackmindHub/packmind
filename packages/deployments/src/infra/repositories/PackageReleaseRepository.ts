@@ -7,6 +7,8 @@ import {
   PackageReleaseEntry,
   PackageReleaseId,
   PinnedCommandVersion,
+  comparePackageReleaseVersions,
+  parsePackageReleaseVersion,
   PinnedSkillVersion,
   PinnedStandardVersion,
   createCommandId,
@@ -31,7 +33,34 @@ type PinRow = {
   componentId: string;
   name: string;
   version: number;
+  /**
+   * Which release pinned this version.
+   *
+   * Carried on the row because the pin reads take a list of releases rather
+   * than one: the space-wide read below asks for the newest release of every
+   * package at once, and three queries that each returned an unlabelled pile of
+   * versions could not be put back together.
+   */
+  releaseId: string;
 };
+
+/**
+ * Keys a flat pin read back by the release each row names, preserving the order
+ * the query returned them in.
+ */
+function groupPins<T>(
+  rows: PinRow[],
+  toPin: (row: PinRow) => T,
+): Map<PackageReleaseId, T[]> {
+  const byRelease = new Map<PackageReleaseId, T[]>();
+  for (const row of rows) {
+    const releaseId = row.releaseId as PackageReleaseId;
+    const pins = byRelease.get(releaseId);
+    if (pins) pins.push(toPin(row));
+    else byRelease.set(releaseId, [toPin(row)]);
+  }
+  return byRelease;
+}
 
 export class PackageReleaseRepository
   extends AbstractRepository<PackageRelease>
@@ -143,6 +172,78 @@ export class PackageReleaseRepository
     }
   }
 
+  async findLatestByPackageIds(
+    packageIds: PackageId[],
+  ): Promise<Map<PackageId, PackageReleaseDetail>> {
+    this.logger.info('Finding the latest release of each package', {
+      packageCount: packageIds.length,
+    });
+
+    if (packageIds.length === 0) return new Map();
+
+    try {
+      const releases = await this.repository
+        .createQueryBuilder('packageRelease')
+        .where('packageRelease.packageId IN (:...packageIds)', { packageIds })
+        .getMany();
+
+      /*
+       * Highest by parsed triple, never by the version string: `0.10.0` sorts
+       * below `0.9.0` lexically, and the whole point of this read is to name the
+       * release a destination would be moved to.
+       */
+      const latestByPackage = new Map<PackageId, PackageReleaseEntry>();
+      for (const release of releases) {
+        const parsed = parsePackageReleaseVersion(release.version);
+        if (!parsed) continue;
+        const best = latestByPackage.get(release.packageId);
+        const bestParsed = best
+          ? parsePackageReleaseVersion(best.version)
+          : null;
+        if (
+          !bestParsed ||
+          comparePackageReleaseVersions(parsed, bestParsed) > 0
+        ) {
+          latestByPackage.set(release.packageId, release);
+        }
+      }
+
+      /*
+       * Three queries for every package of the space rather than three per
+       * package: this read backs the drift rail, which draws every destination
+       * of a space at once.
+       */
+      const releaseIds = [...latestByPackage.values()].map(
+        (release) => release.id,
+      );
+      const [recipeVersions, standardVersions, skillVersions] =
+        await Promise.all([
+          this.findRecipePins(releaseIds),
+          this.findStandardPins(releaseIds),
+          this.findSkillPins(releaseIds),
+        ]);
+
+      const details = new Map<PackageId, PackageReleaseDetail>();
+      for (const [packageId, release] of latestByPackage) {
+        details.set(packageId, {
+          ...release,
+          recipeVersions: recipeVersions.get(release.id) ?? [],
+          standardVersions: standardVersions.get(release.id) ?? [],
+          skillVersions: skillVersions.get(release.id) ?? [],
+        });
+      }
+
+      this.logger.info('Latest releases found', { count: details.size });
+      return details;
+    } catch (error) {
+      this.logger.error('Failed to find the latest release of each package', {
+        packageCount: packageIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findByPackageIdAndVersion(
     packageId: PackageId,
     version: string,
@@ -165,12 +266,17 @@ export class PackageReleaseRepository
 
       const [recipeVersions, standardVersions, skillVersions] =
         await Promise.all([
-          this.findRecipePins(release.id),
-          this.findStandardPins(release.id),
-          this.findSkillPins(release.id),
+          this.findRecipePins([release.id]),
+          this.findStandardPins([release.id]),
+          this.findSkillPins([release.id]),
         ]);
 
-      return { ...release, recipeVersions, standardVersions, skillVersions };
+      return {
+        ...release,
+        recipeVersions: recipeVersions.get(release.id) ?? [],
+        standardVersions: standardVersions.get(release.id) ?? [],
+        skillVersions: skillVersions.get(release.id) ?? [],
+      };
     } catch (error) {
       this.logger.error(
         'Failed to find package release by package ID and version',
@@ -244,22 +350,25 @@ export class PackageReleaseRepository
   }
 
   private async findRecipePins(
-    releaseId: PackageReleaseId,
-  ): Promise<PinnedCommandVersion[]> {
+    releaseIds: PackageReleaseId[],
+  ): Promise<Map<PackageReleaseId, PinnedCommandVersion[]>> {
+    if (releaseIds.length === 0) return new Map();
+
     const rows = await this.repository
       .createQueryBuilder('packageRelease')
       .withDeleted()
       .innerJoin('packageRelease.recipeVersions', 'recipeVersion')
-      .where('packageRelease.id = :releaseId', { releaseId })
+      .where('packageRelease.id IN (:...releaseIds)', { releaseIds })
       .select('recipeVersion.id', 'id')
       .addSelect('recipeVersion.recipeId', 'componentId')
       .addSelect('recipeVersion.name', 'name')
       .addSelect('recipeVersion.version', 'version')
+      .addSelect('packageRelease.id', 'releaseId')
       .orderBy('recipeVersion.name', 'ASC')
       .addOrderBy('recipeVersion.id', 'ASC')
       .getRawMany<PinRow>();
 
-    return rows.map((row) => ({
+    return groupPins(rows, (row) => ({
       id: createCommandVersionId(row.id),
       recipeId: createCommandId(row.componentId),
       name: row.name,
@@ -268,22 +377,25 @@ export class PackageReleaseRepository
   }
 
   private async findStandardPins(
-    releaseId: PackageReleaseId,
-  ): Promise<PinnedStandardVersion[]> {
+    releaseIds: PackageReleaseId[],
+  ): Promise<Map<PackageReleaseId, PinnedStandardVersion[]>> {
+    if (releaseIds.length === 0) return new Map();
+
     const rows = await this.repository
       .createQueryBuilder('packageRelease')
       .withDeleted()
       .innerJoin('packageRelease.standardVersions', 'standardVersion')
-      .where('packageRelease.id = :releaseId', { releaseId })
+      .where('packageRelease.id IN (:...releaseIds)', { releaseIds })
       .select('standardVersion.id', 'id')
       .addSelect('standardVersion.standardId', 'componentId')
       .addSelect('standardVersion.name', 'name')
       .addSelect('standardVersion.version', 'version')
+      .addSelect('packageRelease.id', 'releaseId')
       .orderBy('standardVersion.name', 'ASC')
       .addOrderBy('standardVersion.id', 'ASC')
       .getRawMany<PinRow>();
 
-    return rows.map((row) => ({
+    return groupPins(rows, (row) => ({
       id: createStandardVersionId(row.id),
       standardId: createStandardId(row.componentId),
       name: row.name,
@@ -292,22 +404,25 @@ export class PackageReleaseRepository
   }
 
   private async findSkillPins(
-    releaseId: PackageReleaseId,
-  ): Promise<PinnedSkillVersion[]> {
+    releaseIds: PackageReleaseId[],
+  ): Promise<Map<PackageReleaseId, PinnedSkillVersion[]>> {
+    if (releaseIds.length === 0) return new Map();
+
     const rows = await this.repository
       .createQueryBuilder('packageRelease')
       .withDeleted()
       .innerJoin('packageRelease.skillVersions', 'skillVersion')
-      .where('packageRelease.id = :releaseId', { releaseId })
+      .where('packageRelease.id IN (:...releaseIds)', { releaseIds })
       .select('skillVersion.id', 'id')
       .addSelect('skillVersion.skillId', 'componentId')
       .addSelect('skillVersion.name', 'name')
       .addSelect('skillVersion.version', 'version')
+      .addSelect('packageRelease.id', 'releaseId')
       .orderBy('skillVersion.name', 'ASC')
       .addOrderBy('skillVersion.id', 'ASC')
       .getRawMany<PinRow>();
 
-    return rows.map((row) => ({
+    return groupPins(rows, (row) => ({
       id: createSkillVersionId(row.id),
       skillId: createSkillId(row.componentId),
       name: row.name,

@@ -34,6 +34,8 @@ export const createActivePackage = (
     lastDistributedAt: new Date().toISOString(),
     lastDistributionError: null,
     versionSpec: null,
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
     deployedRecipes: [],
     deployedCommands: [],
     deployedStandards: [],

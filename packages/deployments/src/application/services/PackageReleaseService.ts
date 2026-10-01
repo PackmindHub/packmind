@@ -124,6 +124,20 @@ export class PackageReleaseService {
     return this.findByVersion(packageId, currentVersionOf(releases));
   }
 
+  /**
+   * The newest release of each named package, in a fixed number of queries
+   * rather than one pair per package. See the repository method.
+   */
+  async findLatestByPackageIds(
+    packageIds: PackageId[],
+  ): Promise<Map<PackageId, PackageReleaseDetail>> {
+    this.logger.info('Finding the latest release of each package', {
+      packageCount: packageIds.length,
+    });
+
+    return this.packageReleaseRepository.findLatestByPackageIds(packageIds);
+  }
+
   async findContentByVersion(
     packageId: PackageId,
     version: string,

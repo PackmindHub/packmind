@@ -36,6 +36,7 @@ import {
 } from '../../domain/repositories/IDistributionRepository';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
+import { PackageReleaseService } from '../services/PackageReleaseService';
 import { ListActiveDistributedPackagesBySpaceUseCase } from './ListActiveDistributedPackagesBySpaceUseCase';
 
 describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
@@ -52,10 +53,19 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
   let targetRepository: jest.Mocked<
     Pick<ITargetRepository, 'findActiveInSpace'>
   >;
-  let standardsPort: jest.Mocked<Pick<IStandardsPort, 'listStandardsBySpace'>>;
-  let commandsPort: jest.Mocked<Pick<ICommandsPort, 'listCommandsBySpace'>>;
-  let skillsPort: jest.Mocked<Pick<ISkillsPort, 'listSkillsBySpace'>>;
+  let standardsPort: jest.Mocked<
+    Pick<IStandardsPort, 'listStandardsBySpace' | 'getLatestStandardVersions'>
+  >;
+  let commandsPort: jest.Mocked<
+    Pick<ICommandsPort, 'listCommandsBySpace' | 'getLatestCommandVersions'>
+  >;
+  let skillsPort: jest.Mocked<
+    Pick<ISkillsPort, 'listSkillsBySpace' | 'getLatestSkillVersions'>
+  >;
   let gitPort: jest.Mocked<Pick<IGitPort, 'getOrganizationRepositories'>>;
+  let packageReleaseService: jest.Mocked<
+    Pick<PackageReleaseService, 'findLatestByPackageIds'>
+  >;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -166,18 +176,25 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
     standardsPort = {
       listStandardsBySpace: jest.fn().mockResolvedValue([]),
+      getLatestStandardVersions: jest.fn().mockResolvedValue([]),
     };
 
     commandsPort = {
       listCommandsBySpace: jest.fn().mockResolvedValue([]),
+      getLatestCommandVersions: jest.fn().mockResolvedValue([]),
     };
 
     skillsPort = {
       listSkillsBySpace: jest.fn().mockResolvedValue([]),
+      getLatestSkillVersions: jest.fn().mockResolvedValue([]),
     };
 
     gitPort = {
       getOrganizationRepositories: jest.fn().mockResolvedValue([gitRepo]),
+    };
+
+    packageReleaseService = {
+      findLatestByPackageIds: jest.fn().mockResolvedValue(new Map()),
     };
 
     stubbedLogger = stubLogger();
@@ -192,6 +209,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       commandsPort as unknown as ICommandsPort,
       skillsPort as unknown as ISkillsPort,
       gitPort as unknown as IGitPort,
+      packageReleaseService as unknown as PackageReleaseService,
       stubbedLogger,
     );
   });
@@ -238,6 +256,8 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
               lastDistributedAt,
               lastDistributionError: null,
               versionSpec: null,
+              latestReleaseVersion: null,
+              hasUnreleasedChanges: false,
               deployedRecipes: [],
               deployedCommands: [],
               deployedStandards: [],
@@ -372,6 +392,134 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
         it('reports none, rather than inventing the wildcard', () => {
           expect(result[0].packages[0].versionSpec).toBeNull();
+        });
+      });
+    });
+
+    describe('where a package stands against its own newest release', () => {
+      const standardId = createStandardId(uuidv4());
+
+      let pkg: Package;
+      let latestStandardVersion: { id: string; standardId: string };
+
+      const releaseOf = (version: string, pinnedStandardVersionId: string) => ({
+        id: 'release-1',
+        packageId: pkg.id,
+        version,
+        name: pkg.name,
+        description: pkg.description,
+        recipeVersions: [],
+        standardVersions: [
+          { id: pinnedStandardVersionId, standardId, name: 'std', version: 1 },
+        ],
+        skillVersions: [],
+      });
+
+      const list = async () => {
+        const targetId = createTargetId(uuidv4());
+
+        distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [activeRow(targetId, pkg.id, DistributionStatus.success)],
+        );
+        targetRepository.findActiveInSpace.mockResolvedValue([
+          buildTarget(targetId),
+        ]);
+        packageRepository.findBySpaceId.mockResolvedValue([pkg]);
+
+        const result = await useCase.execute(command);
+        return result[0].packages[0];
+      };
+
+      beforeEach(() => {
+        pkg = buildPackage({ standards: [standardId] });
+        latestStandardVersion = { id: 'sv-2', standardId };
+
+        standardsPort.getLatestStandardVersions.mockResolvedValue([
+          latestStandardVersion,
+        ] as never);
+      });
+
+      describe('when the package matches its newest release', () => {
+        beforeEach(() => {
+          packageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map([[pkg.id, releaseOf('0.2.0', 'sv-2')]]) as never,
+          );
+        });
+
+        it('names the release it is on', async () => {
+          expect((await list()).latestReleaseVersion).toBe('0.2.0');
+        });
+
+        it('reports nothing unreleased', async () => {
+          expect((await list()).hasUnreleasedChanges).toBe(false);
+        });
+      });
+
+      describe('when a component has moved on since the newest release', () => {
+        beforeEach(() => {
+          packageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map([[pkg.id, releaseOf('0.2.0', 'sv-1')]]) as never,
+          );
+        });
+
+        it('reports unreleased changes', async () => {
+          expect((await list()).hasUnreleasedChanges).toBe(true);
+        });
+      });
+
+      describe('when the package has never been released', () => {
+        beforeEach(() => {
+          packageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map(),
+          );
+        });
+
+        it('names no release', async () => {
+          expect((await list()).latestReleaseVersion).toBeNull();
+        });
+
+        it('reports its whole content as unreleased', async () => {
+          expect((await list()).hasUnreleasedChanges).toBe(true);
+        });
+      });
+
+      describe('when the package holds no component at all', () => {
+        beforeEach(() => {
+          pkg = buildPackage();
+          packageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map(),
+          );
+        });
+
+        it('reports nothing to release', async () => {
+          expect((await list()).hasUnreleasedChanges).toBe(false);
+        });
+      });
+
+      describe('and the space holds packages nobody distributes', () => {
+        it('reads the release state of only the distributed ones', async () => {
+          const undistributed = buildPackage();
+          const targetId = createTargetId(uuidv4());
+
+          packageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map(),
+          );
+          distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+            [activeRow(targetId, pkg.id, DistributionStatus.success)],
+          );
+          targetRepository.findActiveInSpace.mockResolvedValue([
+            buildTarget(targetId),
+          ]);
+          packageRepository.findBySpaceId.mockResolvedValue([
+            pkg,
+            undistributed,
+          ]);
+
+          await useCase.execute(command);
+
+          expect(
+            packageReleaseService.findLatestByPackageIds,
+          ).toHaveBeenCalledWith([pkg.id]);
         });
       });
     });
