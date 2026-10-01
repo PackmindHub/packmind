@@ -42,6 +42,7 @@ function destination(
     behindArtifacts: [],
     behindCount: 0,
     hasWorkToSend: false,
+    remedy: 'none' as const,
     installKey: 'repo-1::target-1',
     prUrl: null,
     failureReason: null,
@@ -62,16 +63,25 @@ function destination(
      * carries no count.
      */
     hasWorkToSend: overrides.hasWorkToSend ?? row.behindCount > 0,
+    // Follows what there is to send, unless a test is about the release case.
+    remedy:
+      overrides.remedy ??
+      ((overrides.hasWorkToSend ?? row.behindCount > 0) ? 'update' : 'none'),
   };
 }
 
 function renderList(
   destinations: PackageDestination[],
   onUpdate?: (destinations: readonly PackageDestination[]) => void,
+  { onCreateRelease }: { onCreateRelease?: () => void } = {},
 ) {
   return render(
     <UIProvider>
-      <ContextDestinationList destinations={destinations} onUpdate={onUpdate} />
+      <ContextDestinationList
+        destinations={destinations}
+        onUpdate={onUpdate}
+        onCreateRelease={onCreateRelease}
+      />
     </UIProvider>,
   );
 }
@@ -80,7 +90,7 @@ describe('ContextDestinationList', () => {
   it('reads a repository and a marketplace as rows of one list', () => {
     renderList([
       destination({
-        state: 'behind',
+        state: 'drifted',
         behindCount: 1,
         behindArtifacts: [behind('a', 2)],
       }),
@@ -89,7 +99,7 @@ describe('ContextDestinationList', () => {
         kind: 'marketplace',
         name: 'packmind-marketplace',
         details: [],
-        state: 'behind',
+        state: 'drifted',
         installKey: null,
       }),
     ]);
@@ -102,7 +112,7 @@ describe('ContextDestinationList', () => {
     it('keeps failures out of the drifted band, since the two are not put right the same way', () => {
       renderList([
         destination({ key: 'a', state: 'failed' }),
-        destination({ key: 'b', state: 'behind', behindCount: 1 }),
+        destination({ key: 'b', state: 'drifted', behindCount: 1 }),
       ]);
 
       expect(screen.getByText('Failed')).toBeInTheDocument();
@@ -110,14 +120,14 @@ describe('ContextDestinationList', () => {
     });
 
     it('leaves out a band with nothing in it', () => {
-      renderList([destination({ state: 'behind', behindCount: 1 })]);
+      renderList([destination({ state: 'drifted', behindCount: 1 })]);
 
       expect(screen.queryByText('Failed')).not.toBeInTheDocument();
     });
 
     it('says what share of the destinations it holds', () => {
       renderList([
-        destination({ key: 'a', state: 'behind', behindCount: 1 }),
+        destination({ key: 'a', state: 'drifted', behindCount: 1 }),
         destination({ key: 'b' }),
         destination({ key: 'c' }),
       ]);
@@ -169,7 +179,7 @@ describe('ContextDestinationList', () => {
       destination({
         key: 'a',
         name: 'acme/late',
-        state: 'behind',
+        state: 'drifted',
         behindCount: 1,
       }),
       destination({ key: 'b', name: 'acme/fine' }),
@@ -208,7 +218,7 @@ describe('ContextDestinationList', () => {
     describe('when nothing falls under a reading', () => {
       it('leaves its chip out rather than offering a control that does nothing', () => {
         renderList([
-          destination({ key: 'a', state: 'behind', behindCount: 1 }),
+          destination({ key: 'a', state: 'drifted', behindCount: 1 }),
           destination({ key: 'b' }),
         ]);
 
@@ -221,8 +231,8 @@ describe('ContextDestinationList', () => {
     describe('when a reading holds everything', () => {
       it('leaves it out too, since it is the same list under a second name', () => {
         renderList([
-          destination({ key: 'a', state: 'behind', behindCount: 1 }),
-          destination({ key: 'b', state: 'behind', behindCount: 1 }),
+          destination({ key: 'a', state: 'drifted', behindCount: 1 }),
+          destination({ key: 'b', state: 'drifted', behindCount: 1 }),
         ]);
 
         expect(
@@ -234,7 +244,7 @@ describe('ContextDestinationList', () => {
       });
 
       it('drops the whole row when only "all" is left, rather than heading the list with a control', () => {
-        renderList([destination({ state: 'behind', behindCount: 1 })]);
+        renderList([destination({ state: 'drifted', behindCount: 1 })]);
 
         expect(
           screen.queryByRole('button', { name: /All destinations/ }),
@@ -266,7 +276,7 @@ describe('ContextDestinationList', () => {
         key: 'a',
         name: 'acme/checkout-api',
         details: ['main', 'services/api'],
-        state: 'behind',
+        state: 'drifted',
         behindCount: 1,
       }),
       destination({ key: 'b', name: 'acme/ledger', details: ['release'] }),
@@ -338,7 +348,7 @@ describe('ContextDestinationList', () => {
     it('names the late components rather than only counting them', () => {
       renderList([
         destination({
-          state: 'behind',
+          state: 'drifted',
           behindCount: 2,
           behindArtifacts: [
             behind('feature-flags-audit', 5),
@@ -357,7 +367,7 @@ describe('ContextDestinationList', () => {
     it('names two and counts the rest, so the row stays a row', () => {
       renderList([
         destination({
-          state: 'behind',
+          state: 'drifted',
           behindCount: 4,
           behindArtifacts: [
             behind('a', 2),
@@ -379,7 +389,7 @@ describe('ContextDestinationList', () => {
           destination({
             key: 'm:mkt-1',
             kind: 'marketplace',
-            state: 'behind',
+            state: 'drifted',
             installKey: null,
             behindCount: 0,
           }),
@@ -398,7 +408,7 @@ describe('ContextDestinationList', () => {
         key: 'a',
         name: 'acme/one',
         installKey: 'repo-1::t1',
-        state: 'behind',
+        state: 'drifted',
         behindCount: 1,
         behindArtifacts: [behind('a', 2)],
       }),
@@ -406,7 +416,7 @@ describe('ContextDestinationList', () => {
         key: 'b',
         name: 'acme/two',
         installKey: 'repo-2::t2',
-        state: 'behind',
+        state: 'drifted',
         behindCount: 1,
         behindArtifacts: [behind('b', 2)],
       }),
@@ -485,7 +495,7 @@ describe('ContextDestinationList', () => {
     const late = () =>
       destination({
         name: 'acme/checkout-api',
-        state: 'behind',
+        state: 'drifted',
         behindCount: 3,
         behindArtifacts: [
           behind('feature-flags-audit', 5),
@@ -532,7 +542,7 @@ describe('ContextDestinationList', () => {
             kind: 'marketplace',
             name: 'acme-marketplace',
             details: [],
-            state: 'behind',
+            state: 'drifted',
             installKey: null,
           }),
         ]);
@@ -674,6 +684,66 @@ describe('ContextDestinationList', () => {
     });
   });
 
+  describe('what a row pinned to a release says', () => {
+    const pinned = (remedy: 'update' | 'release') =>
+      destination({
+        state: 'behind',
+        behindCount: 0,
+        remedy,
+        hasWorkToSend: remedy === 'update',
+      });
+
+    describe('when a newer release exists', () => {
+      it('says so rather than naming components', () => {
+        renderList([pinned('update')]);
+
+        expect(
+          screen.getByText('A newer release is available'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when it sits on the newest release there is', () => {
+      it('says the package has changes left to release', () => {
+        renderList([pinned('release')]);
+
+        expect(
+          screen.getByText(
+            'On the newest release; the package has changes to release',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('offers no update, which would commit nothing', () => {
+        renderList([pinned('release')], vi.fn());
+
+        expect(
+          screen.queryByRole('button', { name: /^Update/ }),
+        ).not.toBeInTheDocument();
+      });
+
+      it('offers the release instead, where the update would have been', () => {
+        const onCreateRelease = vi.fn();
+        renderList([pinned('release')], vi.fn(), { onCreateRelease });
+
+        expect(
+          screen.getByRole('button', { name: 'Create a release' }),
+        ).toBeInTheDocument();
+      });
+
+      it('opens the release drawer when it is pressed', async () => {
+        const onCreateRelease = vi.fn();
+        renderList([pinned('release')], vi.fn(), { onCreateRelease });
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Create a release' }),
+        );
+
+        expect(onCreateRelease).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('how old the row says it is', () => {
     describe('when the report behind an aligned row is recent', () => {
       it('says nothing about the date, which is every row on a live package', async () => {
@@ -774,7 +844,7 @@ describe('ContextDestinationList', () => {
       it('leaves its sentence untouched, since it reports an event and not a claim', () => {
         renderList([
           destination({
-            state: 'behind',
+            state: 'drifted',
             behindCount: 1,
             behindArtifacts: [behind('a', 2)],
             hasStaleReport: true,
@@ -854,7 +924,7 @@ describe('ContextDestinationList', () => {
       renderList(
         [
           destination({
-            state: 'behind',
+            state: 'drifted',
             behindCount: 1,
             behindArtifacts: [behind('a', 2)],
           }),
@@ -929,7 +999,7 @@ describe('ContextDestinationList', () => {
           kind: 'marketplace',
           name: 'acme-marketplace',
           details: [],
-          state: 'behind',
+          state: 'drifted',
           installKey: null,
           hasWorkToSend: true,
         });
@@ -949,7 +1019,7 @@ describe('ContextDestinationList', () => {
             outdated(),
             destination({
               key: 'r:repo-1',
-              state: 'behind',
+              state: 'drifted',
               behindCount: 1,
               behindArtifacts: [behind('a', 2)],
             }),

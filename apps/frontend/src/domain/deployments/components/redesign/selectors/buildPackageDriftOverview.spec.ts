@@ -27,8 +27,10 @@ import {
 import {
   buildPackageDriftOverview,
   packageAttentionInstallCount,
+  packageBehindInstallCount,
   packageFailedInstallCount,
   packageHasDrift,
+  packageHasSendableWork,
   packageHasFailedDistribution,
   packageRepositoryCount,
   sortPackagesByDriftFirst,
@@ -301,6 +303,82 @@ function distributedPackage(opts: {
 }
 
 describe('buildPackageDriftOverview', () => {
+  describe('a destination pinned to a release', () => {
+    const pinned = (
+      opts: Partial<Parameters<typeof distributedPackage>[0]> = {},
+    ) =>
+      buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              versionSpec: '0.1.0',
+              latestReleaseVersion: '0.1.0',
+              standards: [makeStandardInfo({ latest: 3, deployed: 2 })],
+              ...opts,
+            }),
+          ],
+        }),
+      ])[0];
+
+    it('does not report its components as late against the live package', () => {
+      expect(pinned().artifacts[0].installs[0].driftReason).toBe('aligned');
+    });
+
+    it('does not report a component the release never carried as missing', () => {
+      const pkg = pinned({
+        pendingStandards: [
+          { id: 'std-new', name: 'Writing SQL queries', slug: 'sql' },
+        ] as never,
+      });
+
+      expect(
+        pkg.artifacts.every((artifact) =>
+          artifact.installs.every(
+            (install) => install.driftReason === 'aligned',
+          ),
+        ),
+      ).toBe(true);
+    });
+
+    describe('and sitting on the newest release there is', () => {
+      it('reads as up to date when the package has not moved', () => {
+        expect(packageHasDrift(pinned({ hasUnreleasedChanges: false }))).toBe(
+          false,
+        );
+      });
+
+      it('still needs a hand when the package has moved past it', () => {
+        expect(packageHasDrift(pinned({ hasUnreleasedChanges: true }))).toBe(
+          true,
+        );
+      });
+
+      it('counts as a destination needing a hand', () => {
+        expect(
+          packageBehindInstallCount(pinned({ hasUnreleasedChanges: true })),
+        ).toBe(1);
+      });
+
+      it('has nothing a distribution could send', () => {
+        expect(
+          packageHasSendableWork(pinned({ hasUnreleasedChanges: true })),
+        ).toBe(false);
+      });
+    });
+
+    describe('and a newer release exists', () => {
+      const behindARelease = { latestReleaseVersion: '0.2.0' };
+
+      it('needs a hand', () => {
+        expect(packageHasDrift(pinned(behindARelease))).toBe(true);
+      });
+
+      it('has something a distribution would send', () => {
+        expect(packageHasSendableWork(pinned(behindARelease))).toBe(true);
+      });
+    });
+  });
+
   describe('what a destination asked for and where its package stands', () => {
     const overview = (opts: Parameters<typeof distributedPackage>[0]) =>
       buildPackageDriftOverview([

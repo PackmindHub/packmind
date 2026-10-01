@@ -821,6 +821,20 @@ export const useCreatePackageReleaseMutation = () => {
           variables.packageId,
         ),
       });
+      /*
+       * A cut moves every pinned destination of this package: one sitting on
+       * what was the newest release is now a release behind, and what it needs
+       * changes from cutting a release to distributing it. Drift reads the
+       * newest release and whether the package has moved past it, so leaving
+       * this key alone leaves the rows offering `Create a release` after the
+       * release has been created.
+       *
+       * Nothing needed this before releases reached drift, which is why the cut
+       * only ever refreshed its own list.
+       */
+      await queryClient.invalidateQueries({
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+      });
     },
     onError: (error) => {
       console.error('Error creating package release:', error);

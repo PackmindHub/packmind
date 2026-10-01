@@ -889,7 +889,15 @@ function buildPackageBlocks(
     if (scope.kind === 'package' && pkg.id !== scope.packageId) continue;
     if (bulkAllowed && !bulkAllowed.has(pkg.id)) continue;
     const driftedEntries = installDriftEntries(pkg).filter((e) => {
-      if (e.behindArtifacts.length === 0) return false;
+      /*
+       * What a distribution would actually move, which the late-component count
+       * stopped answering once pins became real: a landing pinned to an older
+       * release has no late component — every one of them is what that release
+       * pinned — and a push moves it to the newest release all the same. Reading
+       * the count here is what made this screen say "Nothing to distribute" over
+       * a repository three releases behind.
+       */
+      if (e.standing.remedy !== 'update') return false;
       if (installFilter) {
         return installFilter.has(localInstallKey(e.repo.id, e.target.id));
       }

@@ -14,7 +14,7 @@ import { SyncSurface } from './SyncSurface';
 import type { MarketplaceSyncTarget } from './SyncSurface';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import { STUB_PACKAGES, STUB_PROVIDER_OK } from '../stubPackages';
-import type { MarketplaceDrift } from '../types';
+import type { MarketplaceDrift, PackageDrift } from '../types';
 
 vi.mock('../../../api/queries/DeploymentsQueries', () => ({
   useDeployPackagesMutation: vi.fn(),
@@ -170,6 +170,52 @@ describe('SyncSurface', () => {
       );
 
       expect(onCancel).toHaveBeenCalled();
+    });
+  });
+
+  describe('when a destination is pinned to an older release', () => {
+    /*
+     * No late component anywhere on it — every one is exactly what its release
+     * pinned — and a distribution moves it to the newest release all the same.
+     * Selecting what to send by the late-component count made this screen read
+     * "Nothing to distribute" over a repository several releases behind.
+     */
+    const pinnedBehind: PackageDrift = {
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: false,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: 'aligned' as const,
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec: '0.1.0',
+      })),
+    };
+
+    const pinnedScope = {
+      kind: 'bulk' as const,
+      packageIds: [pinnedBehind.id],
+    };
+
+    it('offers the distribution rather than reading as nothing to do', async () => {
+      renderSurface({ packages: [pinnedBehind], scope: pinnedScope });
+
+      expect(
+        await screen.findByRole('button', { name: /^Distribute/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not say there is nothing to distribute', () => {
+      renderSurface({ packages: [pinnedBehind], scope: pinnedScope });
+
+      expect(
+        screen.queryByText('Nothing to distribute.'),
+      ).not.toBeInTheDocument();
     });
   });
 

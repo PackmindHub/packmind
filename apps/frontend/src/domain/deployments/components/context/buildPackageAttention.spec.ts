@@ -8,9 +8,10 @@ import {
 
 type Destination = { repo: string; target: string };
 
+// Named as well as identified: the landing selectors sort on owner and name.
 const at = ({ repo, target }: Destination) => ({
-  repo: { id: repo },
-  target: { id: target },
+  repo: { id: repo, owner: 'acme', name: repo },
+  target: { id: target, name: target },
 });
 
 const drift = (
@@ -30,10 +31,30 @@ const drift = (
         })),
       },
     ],
-    installLocations: locations.map(({ status, ...destination }) => ({
-      ...at(destination),
-      lastDistributionStatus: status,
-    })),
+    /*
+     * A landing named only through an artifact install still gets its location:
+     * `buildPackageDriftOverview` writes one per (target, package) whatever the
+     * artifacts say, and the selectors read the landings from there.
+     */
+    installLocations: [
+      ...locations.map(({ status, ...destination }) => ({
+        ...at(destination),
+        lastDistributionStatus: status,
+      })),
+      ...installs
+        .filter(
+          (install) =>
+            !locations.some(
+              (location) =>
+                location.repo === install.repo &&
+                location.target === install.target,
+            ),
+        )
+        .map(({ driftReason: _driftReason, ...destination }) => ({
+          ...at(destination),
+          lastDistributionStatus: null,
+        })),
+    ],
   }) as unknown as PackageDrift;
 
 const stalePlugin = (

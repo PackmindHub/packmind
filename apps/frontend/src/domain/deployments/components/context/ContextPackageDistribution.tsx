@@ -13,6 +13,8 @@ import {
 } from '@packmind/ui';
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
+import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { PackageDistributionList } from '../PackageDistributionList';
@@ -108,6 +110,26 @@ export function ContextPackageDistribution({
     [providersResponse],
   );
   const [isHistoryOpen, setHistoryOpen] = useState(false);
+  /*
+   * The release drawer, reached from the row that raised the question. The
+   * package's version bar above the tabs owns one too, and the readiness both
+   * read is the same cached query rather than a second fetch: what differs is
+   * only where the reader was standing when they asked for it.
+   */
+  const [isReleaseOpen, setReleaseOpen] = useState(false);
+
+  const { data: releases } = useListPackageReleasesQuery(
+    organization?.id,
+    pkg.spaceId,
+    pkg.id,
+  );
+  /*
+   * Withheld until it is known, so the row offers nothing rather than a button
+   * that opens an empty form: the drawer is built from this, and a reader who
+   * clicked before it arrived would be looking at a release with no versions to
+   * choose from.
+   */
+  const releaseReadiness = releases?.readiness ?? null;
 
   const {
     destinations,
@@ -213,8 +235,25 @@ export function ContextPackageDistribution({
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);
             }}
+            onCreateRelease={
+              releaseReadiness ? () => setReleaseOpen(true) : undefined
+            }
           />
         </PMBox>
+      )}
+
+      {organization && releaseReadiness && (
+        <CreatePackageReleaseDrawer
+          packageId={pkg.id}
+          spaceId={pkg.spaceId}
+          organizationId={organization.id}
+          readiness={releaseReadiness}
+          componentsCount={
+            pkg.recipes.length + pkg.standards.length + pkg.skills.length
+          }
+          open={isReleaseOpen}
+          onOpenChange={setReleaseOpen}
+        />
       )}
 
       {/*

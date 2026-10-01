@@ -11,12 +11,17 @@ import type { MockedFunction } from 'vitest';
 
 import { deploymentsGateways } from '../gateways';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { LIST_PACKAGE_RELEASES_KEY } from '../queryKeys';
+import {
+  getListPackageReleasesKey,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+  LIST_PACKAGE_RELEASES_KEY,
+} from '../queryKeys';
 import {
   useAddArtefactsToPackagesMutation,
   useRemoveArtefactsFromPackageMutation,
   useUpdatePackageMutation,
   useListPackageReleasesQuery,
+  useCreatePackageReleaseMutation,
 } from './DeploymentsQueries';
 
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
@@ -29,6 +34,7 @@ vi.mock('../gateways', () => ({
     addArtefactsToPackage: vi.fn(),
     removeArtefactsFromPackage: vi.fn(),
     listPackageReleases: vi.fn(),
+    createPackageRelease: vi.fn(),
   },
 }));
 
@@ -50,6 +56,14 @@ const readinessWasInvalidated = (
 ): boolean =>
   spy.mock.calls.some(
     ([filters]) => filters?.queryKey === LIST_PACKAGE_RELEASES_KEY,
+  );
+
+const driftWasInvalidated = (
+  spy: MockedFunction<QueryClient['invalidateQueries']>,
+): boolean =>
+  spy.mock.calls.some(
+    ([filters]) =>
+      filters?.queryKey === LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   );
 
 function buildHarness(staleTime?: number) {
@@ -104,6 +118,62 @@ describe('DeploymentsQueries package release readiness', () => {
 
       await waitFor(() =>
         expect(readinessWasInvalidated(invalidateQueries)).toBe(true),
+      );
+    });
+  });
+
+  describe('when a release is cut', () => {
+    const cutARelease = async () => {
+      (
+        deploymentsGateways.createPackageRelease as MockedFunction<
+          typeof deploymentsGateways.createPackageRelease
+        >
+      ).mockResolvedValue({} as never);
+
+      const harness = buildHarness();
+      const { result } = renderHook(() => useCreatePackageReleaseMutation(), {
+        wrapper: harness.wrapper,
+      });
+
+      await result.current.mutateAsync({
+        organizationId,
+        spaceId,
+        packageId,
+        version: '0.4.0',
+      } as never);
+
+      return harness;
+    };
+
+    /* This one names the package, unlike the prefix invalidations above it. */
+    it('invalidates the list of releases', async () => {
+      const { invalidateQueries } = await cutARelease();
+
+      await waitFor(() =>
+        expect(
+          invalidateQueries.mock.calls.some(
+            ([filters]) =>
+              JSON.stringify(filters?.queryKey) ===
+              JSON.stringify(
+                getListPackageReleasesKey(spaceId, organizationId, packageId),
+              ),
+          ),
+        ).toBe(true),
+      );
+    });
+
+    /*
+     * The drift of every pinned destination of this package has just changed:
+     * one sitting on what was the newest release is now a release behind, and
+     * what it is offered changes from cutting a release to distributing it.
+     * Without this the rows keep offering `Create a release` after the release
+     * has been created.
+     */
+    it('invalidates the drift the destinations are read from', async () => {
+      const { invalidateQueries } = await cutARelease();
+
+      await waitFor(() =>
+        expect(driftWasInvalidated(invalidateQueries)).toBe(true),
       );
     });
   });

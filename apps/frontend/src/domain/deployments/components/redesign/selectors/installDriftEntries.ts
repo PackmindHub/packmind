@@ -1,5 +1,10 @@
 import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
 import type { DistributionStatus } from '@packmind/types';
+import {
+  destinationStanding,
+  needsAttention,
+  type DestinationStanding,
+} from './destinationStanding';
 import type {
   ArtifactDrift,
   InstallDriftReason,
@@ -71,6 +76,14 @@ export type InstallDriftEntry = {
    * install locations by repo and target.
    */
   versionSpec: string | null;
+  /**
+   * Where this landing stands, from its pin and the package's release state.
+   *
+   * Filled in once the artifacts have been counted, because a landing tracking
+   * the live package is judged on them. A pinned one is not: its artifacts all
+   * read aligned by then, and its standing comes from the releases instead.
+   */
+  standing: DestinationStanding;
   behindArtifacts: DriftArtifactEntry[];
   alignedArtifactCount: number;
 };
@@ -90,6 +103,8 @@ function emptyEntry(location: InstallLocation): InstallDriftEntry {
     lastDistributedAt: location.lastDistributedAt,
     lastDistributionError: location.lastDistributionError,
     versionSpec: location.versionSpec,
+    // Replaced below, once this landing's artifacts have been counted.
+    standing: { status: 'up-to-date', remedy: 'none' },
     behindArtifacts: [],
     alignedArtifactCount: 0,
   };
@@ -130,10 +145,25 @@ export function installDriftEntries(pkg: PackageDrift): InstallDriftEntry[] {
   }
 
   const entries = Array.from(byLocation.values());
+  for (const entry of entries) {
+    entry.standing = destinationStanding({
+      versionSpec: entry.versionSpec,
+      latestReleaseVersion: pkg.latestReleaseVersion,
+      hasUnreleasedChanges: pkg.hasUnreleasedChanges,
+      behindArtifactCount: entry.behindArtifacts.length,
+    });
+  }
+
+  /*
+   * Split on the standing rather than on the artifact count, so a pinned
+   * landing waiting on a release sorts with the ones that need a hand. Its
+   * artifacts all read aligned — that is the pin working — and counting them
+   * would sink it to the bottom of the list with the landings that are fine.
+   */
   const drifted: InstallDriftEntry[] = [];
   const aligned: InstallDriftEntry[] = [];
   for (const entry of entries) {
-    if (entry.behindArtifacts.length > 0) drifted.push(entry);
+    if (needsAttention(entry.standing)) drifted.push(entry);
     else aligned.push(entry);
   }
 
