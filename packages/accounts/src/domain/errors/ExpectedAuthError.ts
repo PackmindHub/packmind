@@ -1,10 +1,9 @@
 /**
- * Base class for expected authentication errors.
+ * Base class for expected authentication errors that no `kind` can answer yet.
  *
- * These represent legitimate user-facing outcomes (wrong password, rate limit
- * reached, etc.) — NOT application bugs. Callers (e.g. NestJS controllers,
- * exception filters) should log instances of this class at `warn` level
- * without stack traces, and map them to the appropriate HTTP response.
+ * Only `TooManyLoginAttemptsError` is left: it must answer 429 with
+ * `bannedUntil` in the body, which `DomainExceptionFilter` cannot produce, so
+ * the sign-in controller still maps it by hand and logs it at `warn`.
  */
 export abstract class ExpectedAuthError extends Error {
   protected constructor(message: string, name: string) {
