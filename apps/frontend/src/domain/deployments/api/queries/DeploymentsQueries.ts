@@ -1123,6 +1123,13 @@ export const useRemovePackageFromTargetsMutation = () => {
     },
     onError: (error) => {
       console.error('Error removing package from targets:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to Remove Package',
+        description: isPackmindError(error)
+          ? error.message
+          : 'An unexpected error occurred while removing the package.',
+      });
     },
   });
 };

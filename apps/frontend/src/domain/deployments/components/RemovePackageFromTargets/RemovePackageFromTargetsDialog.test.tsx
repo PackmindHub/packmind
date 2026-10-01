@@ -206,6 +206,47 @@ describe('RemovePackageFromTargetsDialog', () => {
     });
   });
 
+  describe('when the removal is rejected', () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    let removePackageFromTargets: ReturnType<typeof vi.fn>;
+    let onOpenChange: MockedFunction<(open: boolean) => void>;
+
+    beforeEach(async () => {
+      unhandled.length = 0;
+      process.on('unhandledRejection', onUnhandled);
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      removePackageFromTargets = vi
+        .fn()
+        .mockRejectedValue(new Error('Target not found'));
+      mockUseRemovePackageFromTargets.mockReturnValue({
+        removePackageFromTargets,
+        isRemoving: false,
+      } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
+      onOpenChange = vi.fn();
+      renderDialog({ onOpenChange });
+
+      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('button', { name: /^Remove \(/ }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove' }));
+      await waitFor(() => expect(removePackageFromTargets).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    afterEach(() => {
+      process.off('unhandledRejection', onUnhandled);
+      vi.restoreAllMocks();
+    });
+
+    it('leaves no unhandled rejection behind', () => {
+      expect(unhandled).toEqual([]);
+    });
+
+    it('keeps the dialog open', () => {
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    });
+  });
+
   /*
    * The footer Cancel used to be wrapped in a `PMDialog.CloseTrigger`, which the
    * dialog recipe positions absolutely at the top-right of the content: it left

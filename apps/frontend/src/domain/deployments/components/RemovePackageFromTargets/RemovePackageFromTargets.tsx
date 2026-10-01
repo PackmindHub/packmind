@@ -83,8 +83,9 @@ const RemovePackageFromTargetsComponent: React.FC<
 
       onRemovalComplete?.(response.results);
     } catch (e: unknown) {
+      // The mutation's onError already told the user; rethrowing would only
+      // surface as an unhandled rejection from the button's onClick.
       console.error('Removal failed:', e);
-      throw e;
     }
   }, [
     canRemove,
