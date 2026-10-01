@@ -20,10 +20,19 @@ import type { MockedFunction } from 'vitest';
 
 import { RemovePackageFromTargetsDialog } from './RemovePackageFromTargetsDialog';
 import { useRemovePackageFromTargets } from '../../hooks';
+import { useGetTargetsByOrganizationQuery } from '../../api/queries/DeploymentsQueries';
 
 vi.mock('../../hooks', () => ({
   useRemovePackageFromTargets: vi.fn(),
 }));
+
+vi.mock('../../api/queries/DeploymentsQueries', () => ({
+  useGetTargetsByOrganizationQuery: vi.fn(),
+}));
+
+const mockUseGetTargets = useGetTargetsByOrganizationQuery as MockedFunction<
+  typeof useGetTargetsByOrganizationQuery
+>;
 
 const mockUseRemovePackageFromTargets =
   useRemovePackageFromTargets as MockedFunction<
@@ -125,10 +134,30 @@ const renderDialog = (props?: {
 
 describe('RemovePackageFromTargetsDialog', () => {
   beforeEach(() => {
+    mockUseGetTargets.mockReturnValue({
+      data: undefined,
+    } as unknown as ReturnType<typeof useGetTargetsByOrganizationQuery>);
     mockUseRemovePackageFromTargets.mockReturnValue({
       removePackageFromTargets: vi.fn(),
       isRemoving: false,
     } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
+  });
+
+  describe('when a target was deleted since it received the package', () => {
+    beforeEach(() => {
+      mockUseGetTargets.mockReturnValue({
+        data: [{ ...AT_MONOREPO_ROOT.target, repository: MONOREPO }],
+      } as unknown as ReturnType<typeof useGetTargetsByOrganizationQuery>);
+      renderDialog({ distributions: [AT_WEBAPP_ROOT, AT_MONOREPO_ROOT] });
+    });
+
+    it('offers only the targets that still exist', () => {
+      expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    });
+
+    it('does not name the deleted target', () => {
+      expect(screen.queryByText(/webapp/)).not.toBeInTheDocument();
+    });
   });
 
   it('names the destinations it takes the package out of', () => {

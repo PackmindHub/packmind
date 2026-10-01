@@ -40,6 +40,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
  */
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageDeploymentsQuery: vi.fn(),
+  useGetTargetsByOrganizationQuery: () => ({ data: undefined }),
   useDeletePackagesBatchMutation: vi.fn(),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackageReleasesQuery: vi.fn(),
