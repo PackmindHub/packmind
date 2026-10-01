@@ -16,12 +16,16 @@
  * - `conflict`: the command is well-formed, but the current state of the
  *   resource forbids it — a duplicate, or an operation the resource's role
  *   rules out.
+ * - `unauthenticated`: the caller has not proven who they are — credentials
+ *   that do not match. Distinct from `forbidden`, where the caller is known
+ *   and their rights are the subject.
  */
 export type DomainErrorKind =
   | 'forbidden'
   | 'not_found'
   | 'invalid_input'
-  | 'conflict';
+  | 'conflict'
+  | 'unauthenticated';
 
 export interface DomainError {
   readonly kind: DomainErrorKind;
@@ -33,6 +37,7 @@ const VALID_KINDS = [
   'not_found',
   'invalid_input',
   'conflict',
+  'unauthenticated',
 ] as const satisfies readonly DomainErrorKind[];
 
 export function isDomainError(value: unknown): value is DomainError {

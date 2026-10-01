@@ -217,6 +217,38 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the exception is an unauthenticated domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'unauthenticated',
+          'invalid_credentials',
+          'Invalid email or password',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 401', () => {
+      expect(capturedStatus()).toBe(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('returns the message and reason to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 401,
+        message: 'Invalid email or password',
+        reason: 'invalid_credentials',
+      });
+    });
+
+    it('logs at warn', () => {
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Domain error mapped to HTTP response',
+        expect.objectContaining({ kind: 'unauthenticated', statusCode: 401 }),
+      );
+    });
+  });
+
   // The policy table, stated as behaviour: a new kind added to the union
   // without a row here fails to compile, and a row given the wrong status
   // fails here.
@@ -225,6 +257,7 @@ describe('DomainExceptionFilter', () => {
     ['not_found', HttpStatus.NOT_FOUND],
     ['invalid_input', HttpStatus.BAD_REQUEST],
     ['conflict', HttpStatus.CONFLICT],
+    ['unauthenticated', HttpStatus.UNAUTHORIZED],
   ] satisfies ReadonlyArray<[DomainErrorKind, number]>)(
     'when the domain error kind is %s',
     (kind, expectedStatus) => {
