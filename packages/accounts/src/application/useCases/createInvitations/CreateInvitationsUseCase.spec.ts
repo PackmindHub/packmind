@@ -1,4 +1,7 @@
-import { UserNotFoundError } from '@packmind/node-utils';
+import {
+  MembershipOrganizationNotFoundError,
+  UserNotFoundError,
+} from '@packmind/node-utils';
 import {
   mockInterface,
   stubLogger,
@@ -664,7 +667,7 @@ describe('CreateInvitationsUseCase', () => {
     };
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      `Organization ${organizationId} not found`,
+      MembershipOrganizationNotFoundError,
     );
   });
 

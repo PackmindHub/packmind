@@ -1,6 +1,7 @@
 import {
   UserNotFoundError,
   UserNotInOrganizationError,
+  MembershipOrganizationNotFoundError,
 } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test';
 import {
@@ -344,7 +345,7 @@ describe('GetSkillWithFilesUseCase', () => {
 
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
-          `Organization ${organizationId} not found`,
+          MembershipOrganizationNotFoundError,
         );
       });
     });

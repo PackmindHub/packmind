@@ -2,6 +2,7 @@ import {
   PackmindEventEmitterService,
   UserNotFoundError,
   UserNotInOrganizationError,
+  MembershipOrganizationNotFoundError,
 } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
@@ -625,7 +626,7 @@ describe('SaveSkillVersionUseCase', () => {
 
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
-          `Organization ${organizationId} not found`,
+          MembershipOrganizationNotFoundError,
         );
       });
     });
