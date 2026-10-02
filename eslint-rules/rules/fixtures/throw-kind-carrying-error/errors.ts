@@ -47,3 +47,38 @@ export class UnknownKindError extends Error {
 export class KindWithoutReasonError extends Error {
   readonly kind = 'not_found' as const;
 }
+
+export class NullableKindError extends Error {
+  readonly kind: DomainErrorKind | null = 'not_found';
+  readonly reason = 'nullable';
+}
+
+export class OptionalKindError extends Error {
+  readonly kind?: DomainErrorKind;
+  readonly reason = 'optional';
+}
+
+export class NumericReasonError extends Error {
+  readonly kind = 'not_found' as const;
+  readonly reason: number = 404;
+}
+
+export class OptionalReasonError extends Error {
+  readonly kind = 'not_found' as const;
+  readonly reason?: string;
+}
+
+export class NullableReasonError extends Error {
+  readonly kind = 'not_found' as const;
+  readonly reason: string | null = null;
+}
+
+export interface InternalErrorShape {
+  readonly kind: 'internal';
+  readonly reason: string;
+}
+
+export interface DomainErrorShape {
+  readonly kind: DomainErrorKind;
+  readonly reason: string;
+}

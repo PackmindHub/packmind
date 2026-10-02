@@ -5,14 +5,17 @@ const ts = require('typescript');
 /**
  * `DomainExceptionFilter` maps a thrown value to a status by its `kind`; a value
  * without one answers 500. Mirrors `isDomainError` / `isInternalError` /
- * `isUpstreamError`: a literal `kind` from these families plus a `reason`.
+ * `isUpstreamError`: a literal `kind` from these families, a string `reason`,
+ * and — for internal and upstream kinds — an `Error` instance.
  */
-const KNOWN_KINDS = new Set([
+const DOMAIN_KINDS = new Set([
   'not_found',
   'forbidden',
   'invalid_input',
   'conflict',
   'unauthenticated',
+]);
+const ERROR_ONLY_KINDS = new Set([
   'internal',
   'upstream_unavailable',
   'upstream_rate_limited',
@@ -20,21 +23,48 @@ const KNOWN_KINDS = new Set([
 
 const UNCHECKABLE = ts.TypeFlags.Any | ts.TypeFlags.Unknown;
 
-function kindLiterals(checker, type) {
-  const kind = checker.getPropertyOfType(type, 'kind');
-  if (!kind) return null;
-  const kindType = checker.getNonNullableType(checker.getTypeOfSymbol(kind));
-  const members = kindType.isUnion() ? kindType.types : [kindType];
-  return members.map((t) => (t.isStringLiteral() ? t.value : null));
+function members(type) {
+  return type.isUnion() ? type.types : [type];
+}
+
+// Optional or nullable members are kept: at runtime they fail the guards.
+function requiredPropertyType(checker, type, name) {
+  const symbol = checker.getPropertyOfType(type, name);
+  if (!symbol || symbol.flags & ts.SymbolFlags.Optional) return null;
+  return checker.getTypeOfSymbol(symbol);
+}
+
+function extendsError(checker, type) {
+  const seen = new Set();
+  const visit = (current) => {
+    if (seen.has(current)) return false;
+    seen.add(current);
+    // `isInternalError` narrows to `InternalError & Error`.
+    if (current.isIntersection()) return current.types.some(visit);
+    if (current.getSymbol()?.getName() === 'Error') return true;
+    const target = current.target ?? current;
+    if (!(target.objectFlags & ts.ObjectFlags.ClassOrInterface)) return false;
+    return checker.getBaseTypes(target).some(visit);
+  };
+  return visit(type);
 }
 
 function carriesKnownKind(checker, type) {
-  const literals = kindLiterals(checker, type);
-  if (!literals || literals.length === 0) return false;
-  if (!literals.every((value) => value !== null && KNOWN_KINDS.has(value))) {
+  const kindType = requiredPropertyType(checker, type, 'kind');
+  const reasonType = requiredPropertyType(checker, type, 'reason');
+  if (!kindType || !reasonType) return false;
+
+  const kinds = members(kindType);
+  if (!kinds.every((t) => t.isStringLiteral())) return false;
+  const isDomainKind = (t) => DOMAIN_KINDS.has(t.value);
+  const isErrorOnlyKind = (t) => ERROR_ONLY_KINDS.has(t.value);
+  if (!kinds.every((t) => isDomainKind(t) || isErrorOnlyKind(t))) return false;
+
+  if (!members(reasonType).every((t) => t.flags & ts.TypeFlags.StringLike)) {
     return false;
   }
-  return Boolean(checker.getPropertyOfType(type, 'reason'));
+
+  return !kinds.some(isErrorOnlyKind) || extendsError(checker, type);
 }
 
 /** @type {import('eslint').Rule.RuleModule} */
@@ -43,12 +73,12 @@ module.exports = {
     type: 'problem',
     docs: {
       description:
-        'Require thrown values to carry a `kind` and `reason` that DomainExceptionFilter recognises',
+        'Require thrown values to be errors that DomainExceptionFilter recognises by their `kind` and `reason`',
     },
     schema: [],
     messages: {
       missingKind:
-        "Thrown value of type '{{type}}' carries no recognised `kind`, so the API answers 500. Throw a class extending the package's DomainError base, PackmindInternalError or PackmindUpstreamError.",
+        "Thrown value of type '{{type}}' is not an error DomainExceptionFilter recognises (a known `kind` and a string `reason`), so the API answers 500. Throw a class extending the package's DomainError base, PackmindInternalError or PackmindUpstreamError.",
     },
   },
   create(context) {
@@ -70,8 +100,9 @@ module.exports = {
         // (or not) where it was first thrown.
         if (type.flags & UNCHECKABLE) return;
 
-        const members = type.isUnion() ? type.types : [type];
-        if (members.every((member) => carriesKnownKind(checker, member))) {
+        if (
+          members(type).every((member) => carriesKnownKind(checker, member))
+        ) {
           return;
         }
 
