@@ -286,6 +286,7 @@ jobs:
           name: playwright-report-${{ github.run_number }}-${{ github.sha }}
           path: apps/e2e-tests/playwright-report/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Collect Docker container logs
         if: always()
