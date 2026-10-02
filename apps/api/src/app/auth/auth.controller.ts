@@ -37,7 +37,6 @@ import {
   CheckEmailAvailabilityResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
-  TooManyLoginAttemptsError,
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
@@ -121,56 +120,34 @@ export class AuthController {
       email: maskEmail(signInRequest.email),
     });
 
-    try {
-      const { accessToken, ...result } =
-        await this.authService.signIn(signInRequest);
+    const { accessToken, ...result } =
+      await this.authService.signIn(signInRequest);
 
-      // Get cookie security setting from Configuration
-      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
-      const isSecure = cookieSecure === 'true';
+    // Get cookie security setting from Configuration
+    const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+    const isSecure = cookieSecure === 'true';
 
-      this.logger.log('Cookie configuration', {
-        cookieSecure,
-        isSecure,
-        source: 'Configuration.getConfig',
-      });
+    this.logger.log('Cookie configuration', {
+      cookieSecure,
+      isSecure,
+      source: 'Configuration.getConfig',
+    });
 
-      // Set JWT token as httpOnly cookie
-      response.cookie('auth_token', accessToken, {
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-        path: '/',
-      });
+    // Set JWT token as httpOnly cookie
+    response.cookie('auth_token', accessToken, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      path: '/',
+    });
 
-      this.logger.log(`POST /auth/signin - User signed in successfully`, {
-        userId: result.user.id,
-        email: maskEmail(result.user.email),
-      });
+    this.logger.log(`POST /auth/signin - User signed in successfully`, {
+      userId: result.user.id,
+      email: maskEmail(result.user.email),
+    });
 
-      return result;
-    } catch (error) {
-      // Kept by hand: no kind answers 429 with bannedUntil in the body, so
-      // DomainExceptionFilter cannot produce this answer. Invalid credentials
-      // carry `unauthenticated` and are answered 401 by the filter.
-      if (error instanceof TooManyLoginAttemptsError) {
-        this.logger.warn(`POST /auth/signin - ${error.name}`, {
-          email: maskEmail(signInRequest.email),
-          reason: error.message,
-        });
-
-        throw new HttpException(
-          {
-            message: error.message,
-            bannedUntil: error.bannedUntil.toISOString(),
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-
-      throw error;
-    }
+    return result;
   }
 
   @Post('signout')

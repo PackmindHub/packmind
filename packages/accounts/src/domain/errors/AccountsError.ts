@@ -19,7 +19,8 @@ export type AccountsErrorReason =
   | 'cannot_demote_last_admin'
   | 'invalid_authentication_type'
   | 'user_creation_fields_required'
-  | 'invalid_credentials';
+  | 'invalid_credentials'
+  | 'too_many_login_attempts';
 
 export type AccountsErrorContext = {
   organizationId?: string;
