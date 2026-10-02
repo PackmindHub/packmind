@@ -14,6 +14,7 @@ import {
   isUpstreamError,
   UpstreamErrorKind,
 } from '@packmind/types';
+import { describeCause } from './describeCause';
 
 const origin = 'DomainExceptionFilter';
 
@@ -78,19 +79,6 @@ type ErrorResponseBody = {
   message: string;
   reason: string;
 };
-
-/**
- * What of a wrapped failure goes into the log: an `Error` contributes its own
- * message and stack, which `cause` exists to keep; anything else is logged as
- * thrown.
- */
-function describeCause(cause: unknown): unknown {
-  if (cause instanceof Error) {
-    return { name: cause.name, message: cause.message, stack: cause.stack };
-  }
-
-  return cause;
-}
 
 function hasContext(value: unknown): value is { context: unknown } {
   return typeof value === 'object' && value !== null && 'context' in value;
