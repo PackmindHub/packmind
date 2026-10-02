@@ -19,17 +19,26 @@
  * - `unauthenticated`: the caller has not proven who they are — credentials
  *   that do not match. Distinct from `forbidden`, where the caller is known
  *   and their rights are the subject.
+ * - `rate_limited`: the caller has been throttled for its own behaviour — too
+ *   many attempts — and must wait before trying again. Distinct from the
+ *   upstream `upstream_rate_limited`, where a third party throttles *us*.
  */
 export type DomainErrorKind =
   | 'forbidden'
   | 'not_found'
   | 'invalid_input'
   | 'conflict'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'rate_limited';
 
 export interface DomainError {
   readonly kind: DomainErrorKind;
   readonly reason: string;
+  /**
+   * How long the caller must wait, sent as `Retry-After`. Only meaningful for
+   * `rate_limited`.
+   */
+  readonly retryAfterSeconds?: number;
 }
 
 const VALID_KINDS = [
@@ -38,6 +47,7 @@ const VALID_KINDS = [
   'invalid_input',
   'conflict',
   'unauthenticated',
+  'rate_limited',
 ] as const satisfies readonly DomainErrorKind[];
 
 export function isDomainError(value: unknown): value is DomainError {

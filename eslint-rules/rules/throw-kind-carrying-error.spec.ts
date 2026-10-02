@@ -23,6 +23,7 @@ const imports = `import {
   PackageNotFoundError,
   PackmindInternalError,
   InvalidPasswordError,
+  TooManyAttemptsError,
   StringKindError,
   UnknownKindError,
   KindWithoutReasonError,
@@ -53,6 +54,11 @@ ruleTester.run(
       },
       {
         code: `${imports}throw new PackmindInternalError('lost', 'Release vanished');`,
+        filename,
+      },
+      // A throttle the caller earned is a domain kind.
+      {
+        code: `${imports}throw new TooManyAttemptsError();`,
         filename,
       },
       // A rethrown catch variable is unknown: typed where it was first thrown.

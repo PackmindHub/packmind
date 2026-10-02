@@ -51,7 +51,8 @@ rethrow), since their type is decided where they were first thrown. Out of
 scope: `application/jobs/` and `application/listeners/`, which run outside the
 HTTP scope.
 
-Runs at `warn` until the remaining sites are migrated (#862).
+Runs at `error`: every in-scope throw site carries a kind, so a new kindless
+throw fails lint.
 
 ## Wiring
 

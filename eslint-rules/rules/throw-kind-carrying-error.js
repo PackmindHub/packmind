@@ -14,6 +14,7 @@ const DOMAIN_KINDS = new Set([
   'invalid_input',
   'conflict',
   'unauthenticated',
+  'rate_limited',
 ]);
 const ERROR_ONLY_KINDS = new Set([
   'internal',

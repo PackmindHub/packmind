@@ -30,6 +30,11 @@ export class PackmindInternalError extends Error {
   }
 }
 
+export class TooManyAttemptsError extends Error {
+  readonly kind = 'rate_limited' as const;
+  readonly reason: string = 'too_many_attempts';
+}
+
 export abstract class ExpectedAuthError extends Error {}
 
 export class InvalidPasswordError extends ExpectedAuthError {}
