@@ -8,6 +8,7 @@ import { GET_RULES_BY_STANDARD_ID_KEY } from '../../standards/api/queryKeys';
 import {
   GET_PACKAGE_BY_ID_KEY,
   GET_PACKAGE_RELEASE_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGE_RELEASES_KEY,
 } from '../api/queryKeys';
@@ -104,6 +105,13 @@ export function SpaceContentSubscription(): null {
          * change can affect and which is the most expensive thing on the page to
          * fetch again.
          *
+         * What a package's destinations are standing on is named, though, which
+         * that reading once excluded. It is not history: every landing carries
+         * whether the package has moved past the release it is pinned to, and a
+         * component joining the package is exactly what moves it. Left out, the
+         * Distribution tab went on calling a repository up to date while the
+         * release bar above it offered the release that would fix it.
+         *
          * Every key here names the space this event is about, so a reader with
          * another space cached keeps it: a change in one space is not news about
          * any other, and dropping them all would refetch on the next navigation
@@ -140,6 +148,12 @@ export function SpaceContentSubscription(): null {
           }),
           queryClient.invalidateQueries({
             queryKey: [...GET_PACKAGE_RELEASE_KEY, spaceId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              ...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+              spaceId,
+            ],
           }),
         ]).catch((error) => {
           console.error('SSE: Failed to refresh the space after a change', {

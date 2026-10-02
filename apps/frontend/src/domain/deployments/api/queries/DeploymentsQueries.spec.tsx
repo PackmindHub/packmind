@@ -120,6 +120,37 @@ describe('DeploymentsQueries package release readiness', () => {
         expect(readinessWasInvalidated(invalidateQueries)).toBe(true),
       );
     });
+
+    /*
+     * The release gate decides `hasUnreleasedChanges` on every landing, and the
+     * gate reads the name and the description. Refreshing only the readiness
+     * left the Distribution tab calling a pinned repository up to date beside a
+     * release bar offering the release that would fix it.
+     */
+    it('invalidates the drift the destinations are read from', async () => {
+      (
+        deploymentsGateways.updatePackage as MockedFunction<
+          typeof deploymentsGateways.updatePackage
+        >
+      ).mockResolvedValue({} as never);
+
+      const { wrapper, invalidateQueries } = buildHarness();
+      const { result } = renderHook(() => useUpdatePackageMutation(), {
+        wrapper,
+      });
+
+      await result.current.mutateAsync({
+        organizationId,
+        spaceId,
+        packageId,
+        name: 'frontend-package',
+        description: 'A renamed package',
+      } as never);
+
+      await waitFor(() =>
+        expect(driftWasInvalidated(invalidateQueries)).toBe(true),
+      );
+    });
   });
 
   describe('when a release is cut', () => {
@@ -220,6 +251,34 @@ describe('DeploymentsQueries package release readiness', () => {
 
       expect(readinessWasInvalidated(invalidateQueries)).toBe(false);
     });
+
+    /*
+     * The component the package just gained is what moves it past the release
+     * its destinations are pinned to, so the tab showing where they stand has
+     * to be asked again. It was not, and the only thing that moved the status
+     * was reloading the page.
+     */
+    it('invalidates the drift the destinations are read from', async () => {
+      (
+        deploymentsGateways.addArtefactsToPackage as MockedFunction<
+          typeof deploymentsGateways.addArtefactsToPackage
+        >
+      ).mockResolvedValue({} as never);
+
+      const { wrapper, invalidateQueries } = buildHarness();
+      const { result } = renderHook(() => useAddArtefactsToPackagesMutation(), {
+        wrapper,
+      });
+
+      await result.current.mutateAsync({
+        spaceId,
+        entries: [{ packageId, skillIds: [skillId] }],
+      });
+
+      await waitFor(() =>
+        expect(driftWasInvalidated(invalidateQueries)).toBe(true),
+      );
+    });
   });
 
   describe('when a component is removed from a package', () => {
@@ -244,6 +303,30 @@ describe('DeploymentsQueries package release readiness', () => {
 
       await waitFor(() =>
         expect(readinessWasInvalidated(invalidateQueries)).toBe(true),
+      );
+    });
+
+    it('invalidates the drift the destinations are read from', async () => {
+      (
+        deploymentsGateways.removeArtefactsFromPackage as MockedFunction<
+          typeof deploymentsGateways.removeArtefactsFromPackage
+        >
+      ).mockResolvedValue({} as never);
+
+      const { wrapper, invalidateQueries } = buildHarness();
+      const { result } = renderHook(
+        () => useRemoveArtefactsFromPackageMutation(),
+        { wrapper },
+      );
+
+      await result.current.mutateAsync({
+        spaceId,
+        packageId,
+        skillIds: [skillId],
+      });
+
+      await waitFor(() =>
+        expect(driftWasInvalidated(invalidateQueries)).toBe(true),
       );
     });
   });

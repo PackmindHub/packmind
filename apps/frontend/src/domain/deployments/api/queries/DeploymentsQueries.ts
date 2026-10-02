@@ -851,16 +851,28 @@ export const useCreatePackageReleaseMutation = () => {
  * pane without navigation; arriving at or returning to the pane refetches via the
  * query's `refetchOnMount: 'always'` setting.
  *
+ * The drift key alongside it, because the Distribution tab runs that same gate:
+ * `hasUnreleasedChanges` on every landing is the gate's verdict, and a pinned
+ * destination sitting on the newest release reads `up to date` until it flips.
+ * Refreshing only the readiness left the release bar offering a release and the
+ * tab below it still calling the repository up to date — one pane, two answers,
+ * until the page was reloaded.
+ *
  * Invalidated by prefix rather than per package: one package pane is mounted
  * at a time, so this refetches exactly the one on screen and marks the rest
  * stale without a request.
  */
-function invalidatePackageReleaseReadiness(
+function invalidatePackageReleaseState(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
-  return queryClient.invalidateQueries({
-    queryKey: LIST_PACKAGE_RELEASES_KEY,
-  });
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: LIST_PACKAGE_RELEASES_KEY,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+    }),
+  ]);
 }
 
 function invalidateChangeProposalQueries(
@@ -892,7 +904,7 @@ export const useUpdatePackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
       await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
@@ -960,7 +972,7 @@ export const useAddArtefactsToPackagesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
@@ -1011,7 +1023,7 @@ export const useMoveArtefactsToPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_PACKAGE_BY_ID_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
@@ -1058,7 +1070,7 @@ export const useRemoveArtefactsFromPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
