@@ -342,11 +342,16 @@ jobs:
           name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/cli/
 
-      - name: Build CLI executables for all platforms
+      # Only publish-cli-release (release-cli/* tags) reads the other platforms.
+      # Every other run needs linux-x64 alone: quality-packmind-cli lints with
+      # it, and the step below checks it starts.
+      - name: Build CLI executables
+        env:
+          CLI_TARGET: ${{ startsWith(github.ref, 'refs/tags/release-cli/') && 'all' || 'linux-x64' }}
         run: |
-          echo "📦 Building CLI executables with embedded WASM files..."
+          echo "📦 Building CLI executables (target: $CLI_TARGET) with embedded WASM files..."
           bun --version
-          bun run apps/cli/bun-build.ts --target=all
+          bun run apps/cli/bun-build.ts --target=$CLI_TARGET
 
       - name: List built executables
         run: |
@@ -365,10 +370,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cli-executables-${{ steps.get-version.outputs.version }}
+          # Missing platforms are expected off release-cli/* tags (see the
+          # build step); publish-cli-release fails on its own if one is absent.
           path: |
             dist/apps/cli-executables/packmind-cli-linux-x64
             dist/apps/cli-executables/packmind-cli-linux-arm64
             dist/apps/cli-executables/packmind-cli-macos-arm64
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
             dist/apps/cli-executables/packmind-cli-windows-arm64.exe
+          if-no-files-found: error
           retention-days: 30
