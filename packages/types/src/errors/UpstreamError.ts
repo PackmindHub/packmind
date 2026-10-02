@@ -1,3 +1,5 @@
+import { attachCause, PackmindErrorOptions } from './ErrorCause';
+
 /**
  * A failure owned by neither party to the call: a third-party service we
  * depend on — GitHub, GitLab — refused us or did not answer. Sibling to
@@ -87,6 +89,7 @@ export class PackmindUpstreamError extends Error implements UpstreamError {
     context: Record<string, unknown>,
     message: string,
     retryAfterSeconds?: number,
+    options?: PackmindErrorOptions,
   ) {
     super(message);
     this.name = 'PackmindUpstreamError';
@@ -94,5 +97,6 @@ export class PackmindUpstreamError extends Error implements UpstreamError {
     this.reason = reason;
     this.context = context;
     this.retryAfterSeconds = retryAfterSeconds;
+    attachCause(this, options);
   }
 }

@@ -223,9 +223,10 @@ describe('CommitToGitUseCase', () => {
         await expect(commit()).rejects.toBeInstanceOf(NoChangesDetectedError);
       });
 
-      // Callers outside this repo still match on the message.
-      it('keeps the NO_CHANGES_DETECTED message', async () => {
-        await expect(commit()).rejects.toThrow(/^NO_CHANGES_DETECTED$/);
+      it('names the no_changes_detected reason', async () => {
+        await expect(commit()).rejects.toMatchObject({
+          reason: 'no_changes_detected',
+        });
       });
 
       it('does not record a commit', async () => {
