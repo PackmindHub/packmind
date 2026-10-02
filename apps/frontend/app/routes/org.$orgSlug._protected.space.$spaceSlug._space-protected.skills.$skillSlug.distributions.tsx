@@ -3,6 +3,7 @@ import { PMBox, PMEmptyState, PMSpinner, PMText } from '@packmind/ui';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 import { SkillDistributionsList } from '../../src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList';
 import { useListSkillDistributionsQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
+import { useCountOnLiveTargets } from '../../src/domain/deployments/hooks/useLiveTargetIds';
 
 export default function SkillDistributionsRouteModule() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -13,7 +14,7 @@ export default function SkillDistributionsRouteModule() {
 
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListSkillDistributionsQuery(skill.id);
-  const hasDistributions = distributions && distributions.length > 0;
+  const hasDistributions = (useCountOnLiveTargets(distributions) ?? 0) > 0;
 
   if (isLoadingDistributions) {
     return (

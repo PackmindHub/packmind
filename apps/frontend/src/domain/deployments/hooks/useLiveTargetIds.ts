@@ -20,3 +20,15 @@ export const isOnLiveTarget = (
   distribution: { target: { id: TargetId } },
   liveTargetIds: ReadonlySet<TargetId> | undefined,
 ): boolean => !liveTargetIds || liveTargetIds.has(distribution.target.id);
+
+/** How many distributions sit on a live target; `undefined` until they load. */
+export const useCountOnLiveTargets = (
+  distributions: ReadonlyArray<{ target: { id: TargetId } }> | undefined,
+): number | undefined => {
+  const liveTargetIds = useLiveTargetIds();
+
+  return useMemo(
+    () => distributions?.filter((d) => isOnLiveTarget(d, liveTargetIds)).length,
+    [distributions, liveTargetIds],
+  );
+};
