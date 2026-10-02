@@ -44,6 +44,7 @@ import {
   GitRepo,
   createGitProviderId,
   createGitCommitId,
+  NoChangesDetectedError,
 } from '@packmind/types';
 
 describe('RemovePackageFromTargetsUseCase', () => {
@@ -415,7 +416,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
         beforeEach(() => {
           mockDistributionRepository.listByTargetIds.mockResolvedValue([]);
           mockGitPort.commitToGit.mockRejectedValue(
-            new Error('NO_CHANGES_DETECTED'),
+            new NoChangesDetectedError(),
           );
         });
 

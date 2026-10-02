@@ -40,6 +40,7 @@ const KIND_POLICY: Record<DomainErrorKind, KindPolicy> = {
   not_found: { status: HttpStatus.NOT_FOUND, logLevel: 'warn' },
   invalid_input: { status: HttpStatus.BAD_REQUEST, logLevel: 'warn' },
   conflict: { status: HttpStatus.CONFLICT, logLevel: 'warn' },
+  unauthenticated: { status: HttpStatus.UNAUTHORIZED, logLevel: 'warn' },
 };
 
 /**

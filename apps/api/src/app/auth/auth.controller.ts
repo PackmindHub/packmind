@@ -38,7 +38,6 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   TooManyLoginAttemptsError,
-  ExpectedAuthError,
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
@@ -152,30 +151,22 @@ export class AuthController {
 
       return result;
     } catch (error) {
-      // Expected auth errors are legitimate user-facing outcomes (wrong
-      // password, rate limit reached) — not application bugs. Log them at
-      // warn level without stack trace so Datadog error dashboards stay
-      // focused on real incidents.
-      // Kept by hand: no kind yields 401, nor 429 with bannedUntil in the
-      // body, so DomainExceptionFilter cannot produce these answers.
-      if (error instanceof ExpectedAuthError) {
+      // Kept by hand: no kind answers 429 with bannedUntil in the body, so
+      // DomainExceptionFilter cannot produce this answer. Invalid credentials
+      // carry `unauthenticated` and are answered 401 by the filter.
+      if (error instanceof TooManyLoginAttemptsError) {
         this.logger.warn(`POST /auth/signin - ${error.name}`, {
           email: maskEmail(signInRequest.email),
           reason: error.message,
         });
 
-        if (error instanceof TooManyLoginAttemptsError) {
-          throw new HttpException(
-            {
-              message: error.message,
-              bannedUntil: error.bannedUntil.toISOString(),
-            },
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-
-        // InvalidEmailOrPasswordError (and future ExpectedAuthError subclasses)
-        throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+        throw new HttpException(
+          {
+            message: error.message,
+            bannedUntil: error.bannedUntil.toISOString(),
+          },
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
       }
 
       throw error;

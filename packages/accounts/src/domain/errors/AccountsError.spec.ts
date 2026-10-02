@@ -18,6 +18,7 @@ import { CliLoginCodeUserNotFoundError } from './CliLoginCodeUserNotFoundError';
 import { CliLoginCodeMembershipNotFoundError } from './CliLoginCodeMembershipNotFoundError';
 import { CliLoginCodeOrganizationNotFoundError } from './CliLoginCodeOrganizationNotFoundError';
 import { CliLoginCodeApiKeyError } from './CliLoginCodeApiKeyError';
+import { InvalidEmailOrPasswordError } from './InvalidEmailOrPasswordError';
 
 describe('EmailAlreadyExistsError', () => {
   const error = new EmailAlreadyExistsError('test@example.com');
@@ -335,5 +336,25 @@ describe('CliLoginCodeApiKeyError', () => {
 
   it('is not a domain error, so a wiring fault is never a 4xx', () => {
     expect(isDomainError(error)).toBe(false);
+  });
+});
+
+describe('InvalidEmailOrPasswordError', () => {
+  const error = new InvalidEmailOrPasswordError();
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers unauthenticated', () => {
+    expect(error.kind).toBe('unauthenticated');
+  });
+
+  it('carries the invalid_credentials reason', () => {
+    expect(error.reason).toBe('invalid_credentials');
+  });
+
+  it('keeps an empty context, so the log never names the account', () => {
+    expect(error.context).toEqual({});
   });
 });
