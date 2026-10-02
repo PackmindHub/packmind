@@ -500,14 +500,14 @@ describe('SyncSurface', () => {
         ).toBeInTheDocument();
       });
 
-      it('no longer claims the distributions were updated', async () => {
+      it('no longer claims the destinations were updated', async () => {
         renderMixed();
 
         await distribute();
         await screen.findByRole('button', { name: 'Done' });
 
         expect(
-          screen.queryByText('Distributions updated'),
+          screen.queryByText('Destinations updated'),
         ).not.toBeInTheDocument();
       });
 
@@ -527,7 +527,7 @@ describe('SyncSurface', () => {
         await distribute();
 
         expect(
-          await screen.findByText(/Those distributions are now aligned/),
+          await screen.findByText(/Those destinations are now aligned/),
         ).toBeInTheDocument();
       });
     });
@@ -656,7 +656,7 @@ describe('SyncSurface', () => {
 
       expect(
         screen.getByRole('button', {
-          name: /^Distribute to \d+ distributions?$/,
+          name: /^Distribute to \d+ destinations?$/,
         }),
       ).toBeInTheDocument();
     });
@@ -671,7 +671,7 @@ describe('SyncSurface', () => {
 
       expect(
         screen.getByRole('button', {
-          name: 'Select at least one distribution',
+          name: 'Select at least one destination',
         }),
       ).toBeDisabled();
     });

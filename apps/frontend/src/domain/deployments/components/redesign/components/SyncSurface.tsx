@@ -599,9 +599,9 @@ export function SyncSurface({
               {titleForScope(scope, blocks, marketplaceTargets)}
             </PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Selected distributions receive a direct commit on their configured
+              Selected destinations receive a direct commit on their configured
               branch bringing every bundled component to its Packmind version.
-              Distributions without a connected provider are listed separately
+              Destinations without a connected provider are listed separately
               and must be updated via{' '}
               <PMText as="span" fontFamily="mono" fontSize="xs">
                 packmind install
@@ -795,7 +795,7 @@ export function SyncSurface({
                   : actionableAllLocked
                     ? 'Waiting on in-progress distributions'
                     : !hasPick
-                      ? 'Select at least one distribution'
+                      ? 'Select at least one destination'
                       : confirmLabel(stats, marketplaceStats)}
             </PMButton>
           </PMHStack>
@@ -807,11 +807,11 @@ export function SyncSurface({
 
 /** What the footer says while both halves are in flight. */
 function syncingLine(installCount: number, pluginCount: number): string {
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
   if (installCount === 0) return `Distributing ${plugins}…`;
-  if (pluginCount === 0) return `Distributing to ${distributions}…`;
-  return `Distributing to ${distributions}, and ${plugins}…`;
+  if (pluginCount === 0) return `Distributing to ${destinations}…`;
+  return `Distributing to ${destinations}, and ${plugins}…`;
 }
 
 /**
@@ -820,6 +820,11 @@ function syncingLine(installCount: number, pluginCount: number): string {
  * The mixed case drops the package count rather than stating four numbers in
  * one button: what the reader needs before clicking is how far this goes, and
  * the two destinations counts carry that.
+ *
+ * Destinations and not distributions, which is what this counted until a reader
+ * pointed out that you do not distribute to a distribution. The number is a set
+ * of repository-and-target pairs, deduplicated across the packages picked, and
+ * the list this button sits under has called those destinations all along.
  */
 function confirmLabel(
   stats: Readonly<{ installCount: number; packageCount: number }>,
@@ -830,7 +835,7 @@ function confirmLabel(
 ): string {
   const { installCount, packageCount } = stats;
   const { pluginCount, marketplaceCount } = marketplaceStats;
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
 
   if (pluginCount === 0) {
@@ -839,15 +844,15 @@ function confirmLabel(
      * already named it. Counting it here would put "1 package" in front of the
      * only number the reader is deciding on.
      */
-    if (packageCount <= 1) return `Distribute to ${distributions}`;
-    return `Distribute ${packageCount} packages to ${distributions}`;
+    if (packageCount <= 1) return `Distribute to ${destinations}`;
+    return `Distribute ${packageCount} packages to ${destinations}`;
   }
   if (installCount === 0) {
     return `Distribute ${plugins} to ${marketplaceCount} marketplace${
       marketplaceCount === 1 ? '' : 's'
     }`;
   }
-  return `Distribute to ${distributions} and ${plugins}`;
+  return `Distribute to ${destinations} and ${plugins}`;
 }
 
 function titleForScope(
@@ -1845,8 +1850,8 @@ function AllInProgressState({ count }: Readonly<{ count: number }>) {
       </PMText>
       <PMText fontSize="xs" color="secondary" textAlign="center" maxW="56ch">
         {count === 1
-          ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to distribute.'
-          : `All ${count} drifted distributions are currently in progress. Wait for them to finish, then come back to distribute.`}
+          ? 'The only drifted destination is currently in progress. Wait for it to finish, then come back to distribute.'
+          : `All ${count} drifted destinations are currently in progress. Wait for them to finish, then come back to distribute.`}
       </PMText>
     </PMVStack>
   );
@@ -1863,7 +1868,7 @@ function NoActionableNote() {
       bg="background.secondary"
     >
       <PMText fontSize="sm" color="secondary">
-        Nothing to distribute from the app — every drifted distribution lives on
+        Nothing to distribute from the app — every drifted destination lives on
         a provider without a connected token. Use the CLI section below.
       </PMText>
     </PMBox>
@@ -1872,7 +1877,7 @@ function NoActionableNote() {
 
 function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
   const [expanded, setExpanded] = useState(true);
-  const distributionsCount = cliBlocks.reduce(
+  const destinationsCount = cliBlocks.reduce(
     (acc, b) => acc + b.cliEntries.length,
     0,
   );
@@ -1928,8 +1933,8 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               <LuTerminal />
             </PMIcon>
             <PMText fontSize="sm" fontWeight="semibold" color="primary">
-              {distributionsCount} distribution
-              {distributionsCount === 1 ? '' : 's'} need{' '}
+              {destinationsCount} destination
+              {destinationsCount === 1 ? '' : 's'} need{' '}
               <PMText
                 as="span"
                 fontFamily="mono"
@@ -2064,7 +2069,7 @@ function NothingToDistribute() {
         Nothing to distribute.
       </PMText>
       <PMText fontSize="xs" color="secondary">
-        Every component is on its latest version on every distribution.
+        Every component is on its latest version on every destination.
       </PMText>
     </PMVStack>
   );
@@ -2113,18 +2118,18 @@ function SuccessSurface({
             what is true of both as soon as a catalog is in the batch.
           */}
           <PMHeading level="h3">
-            {hadMarketplaces ? 'Distribution started' : 'Distributions updated'}
+            {hadMarketplaces ? 'Distribution started' : 'Destinations updated'}
           </PMHeading>
         </PMHStack>
         {hadRepositories && (
           <PMText fontSize="sm" color="secondary">
             {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-            distributed on {stats.installCount} distribution
+            distributed to {stats.installCount} destination
             {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
             component update{stats.artifactUpdateCount === 1 ? '' : 's'} in
-            total). Each distribution received a direct commit on its configured
+            total). Each destination received a direct commit on its configured
             branch bringing the bundled components to their Packmind version.
-            Those distributions are now aligned.
+            Those destinations are now aligned.
           </PMText>
         )}
         {/*
