@@ -59,7 +59,7 @@ export default [
               tsconfigRootDir: process.cwd(),
             },
           },
-          rules: { 'packmind/throw-kind-carrying-error': 'warn' },
+          rules: { 'packmind/throw-kind-carrying-error': 'error' },
         },
       ]
     : []),
