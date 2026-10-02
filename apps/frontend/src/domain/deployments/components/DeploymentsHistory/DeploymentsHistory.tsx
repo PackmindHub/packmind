@@ -21,6 +21,7 @@ import {
   DistributedPackageHistoryEntry,
   DistributionHistoryEntry,
   DistributionHistoryEntryOf,
+  PackageId,
   RenderMode,
   SkillDistributionHistoryEntry,
   StandardDistributionHistoryEntry,
@@ -44,6 +45,8 @@ type DeploymentsHistoryProps = {
   title?: string;
   orgSlug?: string;
   spaceSlug?: string;
+  /** Packages absent from this set are shown unlinked; omit to link them all. */
+  livePackageIds?: ReadonlySet<PackageId>;
   hidePackageColumn?: boolean;
   hideVersionColumn?: boolean;
 } & (
@@ -69,6 +72,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   title = 'Distribution History',
   orgSlug,
   spaceSlug,
+  livePackageIds,
   hidePackageColumn = false,
   hideVersionColumn = false,
 }) => {
@@ -344,7 +348,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   ): React.ReactNode => {
     const packages = deployment.distributedPackages
       ?.map((dp) => dp.package)
-      .filter(Boolean);
+      .filter((pkg): pkg is NonNullable<typeof pkg> => Boolean(pkg));
 
     if (!packages || packages.length === 0) return '-';
 
@@ -352,19 +356,23 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     if (orgSlug && spaceSlug) {
       return (
         <PMBox display="flex" flexDirection="column" gap={1}>
-          {packages.map((pkg) => (
-            <PMLink asChild key={pkg!.id} variant="active">
-              <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg!.id)}>
-                {pkg!.name}
-              </Link>
-            </PMLink>
-          ))}
+          {packages.map((pkg) =>
+            !livePackageIds || livePackageIds.has(pkg.id) ? (
+              <PMLink asChild key={pkg.id} variant="active">
+                <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg.id)}>
+                  {pkg.name}
+                </Link>
+              </PMLink>
+            ) : (
+              <PMText key={pkg.id}>{pkg.name}</PMText>
+            ),
+          )}
         </PMBox>
       );
     }
 
     // Otherwise just show names
-    return packages.map((pkg) => pkg!.name).join(', ');
+    return packages.map((pkg) => pkg.name).join(', ');
   };
 
   const baseColumns: PMTableColumn[] = [

@@ -13,6 +13,7 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  PackageId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
@@ -422,6 +423,57 @@ describe('DeploymentsHistory', () => {
       expect(await screen.findByRole('tooltip')).toHaveTextContent(LONG_ERROR);
     });
   });
+  describe('the package a distribution went out in', () => {
+    const renderWithPackage = (livePackageIds?: ReadonlySet<PackageId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[
+                artifactDistribution([
+                  {
+                    ...withCommandVersion(1, 4),
+                    package: { id: packageId, name: 'Backend guidelines' },
+                  } as CommandDistributionHistoryEntry['distributedPackages'][number],
+                ]),
+              ]}
+              type="command"
+              entityId={commandId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              orgSlug="acme"
+              spaceSlug="global"
+              livePackageIds={livePackageIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    it('links to a package that still exists', () => {
+      renderWithPackage(new Set([packageId]));
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+
+    it('names a deleted package without linking to it', () => {
+      renderWithPackage(new Set());
+
+      expect(screen.getByText('Backend guidelines')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Backend guidelines' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('links while the live packages are not known yet', () => {
+      renderWithPackage(undefined);
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("a command's history", () => {
     it('shows the version of the command that was distributed', () => {
       renderCommandHistory([artifactDistribution([withCommandVersion(1, 4)])]);
