@@ -9,7 +9,12 @@ import {
   UserSignedUpContext,
 } from './helpers';
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
-import { Package, PackmindLockFile, Standard } from '@packmind/types';
+import {
+  DistributionHistoryEntry,
+  Package,
+  PackmindLockFile,
+  Standard,
+} from '@packmind/types';
 
 /**
  * `install --check-upgrades`: what `install --upgrade` would change, without
@@ -35,6 +40,9 @@ describeForVersion('> 0.36.1', 'install --check-upgrades', () => {
     beforeEach(async () => {
       context = await getContext();
       await setupGitRepo(context.testDir);
+      // Tracked repo and branch: a regular install records a distribution, so
+      // the check below can show that `--check-upgrades` does not.
+      await context.runCli('git track');
 
       updateFile(
         'packmind.json',
@@ -132,6 +140,82 @@ describeForVersion('> 0.36.1', 'install --check-upgrades', () => {
 
       it('leaves the installed standard untouched', () => {
         expect(readFile(standardFile, context.testDir)).toBe(standardBefore);
+      });
+    });
+
+    describe('distribution recording', () => {
+      let distributionsBefore: DistributionHistoryEntry[];
+      let distributionsAfter: DistributionHistoryEntry[];
+
+      const listDistributions = () =>
+        context.gateway.deployments.listDeploymentsByPackage(
+          context.space.id,
+          pkg.id,
+        );
+
+      beforeEach(async () => {
+        distributionsBefore = await listDistributions();
+        await context.runCli('install --check-upgrades');
+        distributionsAfter = await listDistributions();
+      });
+
+      it('records a distribution for the initial install', () => {
+        expect(distributionsBefore.length).toBeGreaterThan(0);
+      });
+
+      it('is not recorded as a distribution', () => {
+        expect(distributionsAfter).toHaveLength(distributionsBefore.length);
+      });
+    });
+
+    describe('when the package is tracked at `*`', () => {
+      let result: RunCliResult;
+      let configBefore: string;
+
+      const packagesInConfig = (): Record<string, string> =>
+        JSON.parse(readFile('packmind.json', context.testDir)).packages;
+
+      beforeEach(async () => {
+        await context.runCli(`install ${packageSlug()}:*`);
+
+        const command = await context.gateway.commands.create({
+          name: 'Added after install',
+          summary: 'A command added to the package after the install',
+          spaceId: context.space.id,
+          steps: [{ name: 'Step one', description: 'Do the thing' }],
+        });
+        await context.gateway.packages.addArtefacts({
+          spaceId: context.space.id,
+          packageId: pkg.id,
+          recipeIds: [command.id],
+        });
+
+        configBefore = readFile('packmind.json', context.testDir);
+        result = await context.runCli('install --check-upgrades');
+      });
+
+      it('tracks the package at `*` before the check', () => {
+        expect(JSON.parse(configBefore).packages[packageSlug()]).toBe('*');
+      });
+
+      it('exits with code 1', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('shows the package at `*` with one component to update', () => {
+        expect(result.stdout).toContain(
+          `${packageSlug()}  * · 1 component to update`,
+        );
+      });
+
+      it('lists the new command as added', () => {
+        expect(result.stdout).toMatch(
+          /\+ command\s+Added after install\s+\(new\)/,
+        );
+      });
+
+      it('keeps the package tracked at `*` in packmind.json', () => {
+        expect(packagesInConfig()[packageSlug()]).toBe('*');
       });
     });
 
