@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { DistributionHistoryEntry, PackageId } from '@packmind/types';
-import { useGetTargetsByOrganizationQuery } from '../api/queries/DeploymentsQueries';
 import { listActiveDistributions } from '../utils/listActiveDistributions';
+import { isOnLiveTarget, useLiveTargetIds } from './useLiveTargetIds';
 
 /**
  * The history keeps targets that were deleted since, so a distribution can
@@ -12,13 +12,13 @@ export const useActiveDistributions = <D extends DistributionHistoryEntry>(
   distributions: D[],
   packageId: PackageId,
 ): D[] => {
-  const { data: liveTargets } = useGetTargetsByOrganizationQuery();
+  const liveTargetIds = useLiveTargetIds();
 
-  return useMemo(() => {
-    const active = listActiveDistributions(distributions, packageId);
-    if (!liveTargets) return active;
-
-    const liveTargetIds = new Set(liveTargets.map((target) => target.id));
-    return active.filter((d) => liveTargetIds.has(d.target.id));
-  }, [distributions, packageId, liveTargets]);
+  return useMemo(
+    () =>
+      listActiveDistributions(distributions, packageId).filter((d) =>
+        isOnLiveTarget(d, liveTargetIds),
+      ),
+    [distributions, packageId, liveTargetIds],
+  );
 };

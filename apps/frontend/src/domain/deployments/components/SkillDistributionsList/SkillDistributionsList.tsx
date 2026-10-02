@@ -4,6 +4,7 @@ import { useListSkillDistributionsQuery } from '../../api/queries/DeploymentsQue
 import { SkillId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 import { useLivePackageIds } from '../../hooks/useLivePackageIds';
+import { useLiveTargetIds } from '../../hooks/useLiveTargetIds';
 
 interface SkillDistributionsListProps {
   skillId: SkillId;
@@ -26,6 +27,7 @@ export const SkillDistributionsList: React.FC<SkillDistributionsListProps> = ({
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
   const livePackageIds = useLivePackageIds();
+  const liveTargetIds = useLiveTargetIds();
 
   const buildUserMap = (
     data: { users: Array<{ userId: string; displayName: string }> } | undefined,
@@ -51,6 +53,7 @@ export const SkillDistributionsList: React.FC<SkillDistributionsListProps> = ({
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
       livePackageIds={livePackageIds}
+      liveTargetIds={liveTargetIds}
     />
   );
 };

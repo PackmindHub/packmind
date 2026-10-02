@@ -25,11 +25,13 @@ import {
   RenderMode,
   SkillDistributionHistoryEntry,
   StandardDistributionHistoryEntry,
+  TargetId,
 } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
+import { isOnLiveTarget } from '../../hooks/useLiveTargetIds';
 
 export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
 
@@ -47,6 +49,8 @@ type DeploymentsHistoryProps = {
   spaceSlug?: string;
   /** Packages absent from this set are shown unlinked; omit to link them all. */
   livePackageIds?: ReadonlySet<PackageId>;
+  /** Rows on a target absent from this set are greyed out; omit to show all as live. */
+  liveTargetIds?: ReadonlySet<TargetId>;
   hidePackageColumn?: boolean;
   hideVersionColumn?: boolean;
 } & (
@@ -73,6 +77,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   orgSlug,
   spaceSlug,
   livePackageIds,
+  liveTargetIds,
   hidePackageColumn = false,
   hideVersionColumn = false,
 }) => {
@@ -436,6 +441,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   }
 
+  const deletedRowKeys = new Set<string>(
+    rows
+      .filter(({ deployment }) => !isOnLiveTarget(deployment, liveTargetIds))
+      .map(({ deployment }) => deployment.id),
+  );
+
   const tableData: PMTableRow[] = rows.map(
     ({ deployment, version, removed }) => ({
       key: deployment.id,
@@ -474,6 +485,11 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           reading vertically.
         */
         tableProps={{ tableLayout: 'fixed', width: '100%' }}
+        getRowProps={(row) =>
+          deletedRowKeys.has(row.key as string)
+            ? { opacity: 0.55, cursor: 'not-allowed', 'aria-disabled': true }
+            : {}
+        }
       />
     </PMPageSection>
   );

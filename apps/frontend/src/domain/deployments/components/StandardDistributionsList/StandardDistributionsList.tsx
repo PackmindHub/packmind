@@ -4,6 +4,7 @@ import { useListStandardDistributionsQuery } from '../../api/queries/Deployments
 import { StandardId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 import { useLivePackageIds } from '../../hooks/useLivePackageIds';
+import { useLiveTargetIds } from '../../hooks/useLiveTargetIds';
 
 interface StandardDistributionsListProps {
   standardId: StandardId;
@@ -24,6 +25,7 @@ export const StandardDistributionsList: React.FC<
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
   const livePackageIds = useLivePackageIds();
+  const liveTargetIds = useLiveTargetIds();
 
   const buildUserMap = (
     data: { users: Array<{ userId: string; displayName: string }> } | undefined,
@@ -49,6 +51,7 @@ export const StandardDistributionsList: React.FC<
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
       livePackageIds={livePackageIds}
+      liveTargetIds={liveTargetIds}
     />
   );
 };

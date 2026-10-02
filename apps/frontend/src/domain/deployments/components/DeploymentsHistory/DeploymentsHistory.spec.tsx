@@ -14,6 +14,7 @@ import {
   createOrganizationId,
   createPackageId,
   PackageId,
+  TargetId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
@@ -423,6 +424,45 @@ describe('DeploymentsHistory', () => {
       expect(await screen.findByRole('tooltip')).toHaveTextContent(LONG_ERROR);
     });
   });
+  describe('when a target was deleted since', () => {
+    const renderWithLiveTargets = (liveTargetIds?: ReadonlySet<TargetId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[distribution(1), distribution(2)]}
+              type="package"
+              entityId={packageId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              liveTargetIds={liveTargetIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    const bodyRows = () => screen.getAllByRole('row').slice(1);
+
+    it('greys out the row on the deleted target', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[1]).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('leaves the row on a live target as it is', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[0]).not.toHaveAttribute('aria-disabled');
+    });
+
+    it('greys out nothing while the live targets are not known yet', () => {
+      renderWithLiveTargets(undefined);
+
+      bodyRows().forEach((row) =>
+        expect(row).not.toHaveAttribute('aria-disabled'),
+      );
+    });
+  });
+
   describe('the package a distribution went out in', () => {
     const renderWithPackage = (livePackageIds?: ReadonlySet<PackageId>) =>
       render(
