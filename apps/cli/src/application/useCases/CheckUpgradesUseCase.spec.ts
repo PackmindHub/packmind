@@ -23,7 +23,7 @@ const lockEntry = (
   overrides: Partial<PackmindLockFileEntry> &
     Pick<PackmindLockFileEntry, 'type'>,
 ): PackmindLockFileEntry => ({
-  name: 'Artifact',
+  name: '',
   id: `${overrides.type}-id`,
   version: 1,
   spaceId: 'space-1',
@@ -284,6 +284,32 @@ describe('CheckUpgradesUseCase', () => {
             fromVersion: 1,
           },
         ],
+      });
+    });
+  });
+
+  describe('when a lock file entry carries a display name', () => {
+    it('reports the artifact by that name', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          serverLockFile: lockFileFactory({
+            'user:skill:create-endpoint': lockEntry({
+              type: 'skill',
+              name: 'Create endpoint',
+            }),
+          }),
+        }),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(
+        result.packages[0].artifacts.find((a) => a.change === 'added'),
+      ).toEqual({
+        type: 'skill',
+        name: 'Create endpoint',
+        change: 'added',
+        toVersion: 1,
       });
     });
   });

@@ -119,12 +119,12 @@ describeForVersion('> 0.36.1', 'install --check-upgrades', () => {
       });
 
       it('shows the package moving to the newer release', () => {
-        expect(result.stdout).toContain('0.1.0 → 0.2.0');
+        expect(result.stdout).toMatchOutput(`${packageSlug()}  0.1.0 → 0.2.0`);
       });
 
       it('lists the standard as updated', () => {
-        expect(result.stdout).toMatch(
-          /~ standard\s+Upgradable standard\s+v\d+ → v\d+/,
+        expect(result.stdout).toMatchOutput(
+          '~ standard  Upgradable standard  v',
         );
       });
 
@@ -203,14 +203,14 @@ describeForVersion('> 0.36.1', 'install --check-upgrades', () => {
       });
 
       it('shows the package at `*` with one component to update', () => {
-        expect(result.stdout).toContain(
+        expect(result.stdout).toMatchOutput(
           `${packageSlug()}  * · 1 component to update`,
         );
       });
 
       it('lists the new command as added', () => {
-        expect(result.stdout).toMatch(
-          /\+ command\s+Added after install\s+\(new\)/,
+        expect(result.stdout).toMatchOutput(
+          '+ command   Added after install  (new)',
         );
       });
 

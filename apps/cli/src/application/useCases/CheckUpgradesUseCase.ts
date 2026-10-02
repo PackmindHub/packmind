@@ -173,7 +173,7 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
         diffs.push({
           change: {
             type: entry.type,
-            name: this.slugOf(key),
+            name: this.displayNameOf(key, entry),
             change: 'added',
             toVersion: entry.version,
           },
@@ -183,7 +183,7 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
         diffs.push({
           change: {
             type: entry.type,
-            name: this.slugOf(key),
+            name: this.displayNameOf(key, entry),
             change: 'updated',
             fromVersion: before.version,
             toVersion: entry.version,
@@ -198,7 +198,7 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
         diffs.push({
           change: {
             type: entry.type,
-            name: this.slugOf(key),
+            name: this.displayNameOf(key, entry),
             change: 'removed',
             fromVersion: entry.version,
           },
@@ -220,8 +220,8 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
     );
   }
 
-  /** Keys are `${source}:${type}:${slug}`. */
-  private slugOf(key: string): string {
-    return key.split(':').slice(2).join(':');
+  /** Shows the name the app shows; keys (`${source}:${type}:${slug}`) only carry the slug. */
+  private displayNameOf(key: string, entry: PackmindLockFileEntry): string {
+    return entry.name || key.split(':').slice(2).join(':');
   }
 }
