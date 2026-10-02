@@ -8,6 +8,7 @@ describe('isDomainError', () => {
       'invalid_input',
       'conflict',
       'unauthenticated',
+      'rate_limited',
     ])('and the kind is %s', (kind) => {
       it('returns true', () => {
         const value = { kind, reason: 'example reason' };

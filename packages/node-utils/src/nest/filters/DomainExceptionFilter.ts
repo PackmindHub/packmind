@@ -41,6 +41,7 @@ const KIND_POLICY: Record<DomainErrorKind, KindPolicy> = {
   invalid_input: { status: HttpStatus.BAD_REQUEST, logLevel: 'warn' },
   conflict: { status: HttpStatus.CONFLICT, logLevel: 'warn' },
   unauthenticated: { status: HttpStatus.UNAUTHORIZED, logLevel: 'warn' },
+  rate_limited: { status: HttpStatus.TOO_MANY_REQUESTS, logLevel: 'warn' },
 };
 
 /**
@@ -126,13 +127,21 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         kind: exception.kind,
         reason: exception.reason,
         ...(hasContext(exception) ? { context: exception.context } : {}),
+        ...(typeof exception.retryAfterSeconds === 'number'
+          ? { retryAfterSeconds: exception.retryAfterSeconds }
+          : {}),
       });
 
-      host
-        .switchToHttp()
-        .getResponse<HttpResponse>()
-        .status(statusCode)
-        .json(body);
+      const response = host.switchToHttp().getResponse<HttpResponse>();
+
+      if (typeof exception.retryAfterSeconds === 'number') {
+        response.setHeader?.(
+          'Retry-After',
+          String(exception.retryAfterSeconds),
+        );
+      }
+
+      response.status(statusCode).json(body);
       return;
     }
 
