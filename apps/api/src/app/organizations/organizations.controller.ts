@@ -351,6 +351,7 @@ export class OrganizationsController {
       packmindLockFile: PackmindLockFile;
       relativePath?: string;
       agents?: string[];
+      preview?: boolean;
     },
   ): Promise<InstallPackagesResponse> {
     const userId = request.user.userId;
@@ -395,6 +396,7 @@ export class OrganizationsController {
       packmindLockFile: body.packmindLockFile,
       relativePath: body.relativePath,
       agents,
+      preview: body.preview === true,
       source: request.clientSource,
     });
   }

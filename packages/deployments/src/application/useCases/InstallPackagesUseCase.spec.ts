@@ -308,6 +308,52 @@ describe('InstallPackagesUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
     });
 
+    it('returns the id of each resolved package keyed by its slug', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.resolvedPackageIds).toEqual({
+        '@public/my-package': publicPackage.id,
+      });
+    });
+
+    describe('when preview is true', () => {
+      let previewCommand: InstallPackagesCommand;
+
+      beforeEach(() => {
+        previewCommand = { ...command, preview: true };
+      });
+
+      it('does not emit ArtifactsPulledEvent', async () => {
+        await useCase.execute(previewCommand);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
+      });
+
+      it('returns the same file updates as a regular install', async () => {
+        const installResult = await useCase.execute(command);
+        const previewResult = await useCase.execute(previewCommand);
+
+        expect(previewResult.fileUpdates).toEqual(installResult.fileUpdates);
+      });
+
+      it('returns the same resolved package versions as a regular install', async () => {
+        const installResult = await useCase.execute(command);
+        const previewResult = await useCase.execute(previewCommand);
+
+        expect(previewResult.resolvedPackageVersions).toEqual(
+          installResult.resolvedPackageVersions,
+        );
+      });
+
+      it('returns the id of each resolved package keyed by its slug', async () => {
+        const result = await useCase.execute(previewCommand);
+
+        expect(result.resolvedPackageIds).toEqual({
+          '@public/my-package': publicPackage.id,
+        });
+      });
+    });
+
     it('returns sourceArtifacts counts based on the packages being installed', async () => {
       const standardA: Standard = {
         id: createStandardId(uuidv4()),
