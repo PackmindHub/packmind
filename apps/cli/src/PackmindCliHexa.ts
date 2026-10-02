@@ -16,6 +16,10 @@ import {
   IInstallResult,
 } from './domain/useCases/IInstallUseCase';
 import {
+  ICheckUpgradesCommand,
+  ICheckUpgradesResult,
+} from './domain/useCases/ICheckUpgradesUseCase';
+import {
   IUninstallCommand,
   IUninstallResult,
 } from './domain/useCases/IUninstallUseCase';
@@ -134,6 +138,12 @@ export class PackmindCliHexa {
 
   public async install(command: IInstallCommand): Promise<IInstallResult> {
     return this.hexa.useCases.install.execute(command);
+  }
+
+  public async checkUpgrades(
+    command: ICheckUpgradesCommand,
+  ): Promise<ICheckUpgradesResult> {
+    return this.hexa.useCases.checkUpgrades.execute(command);
   }
 
   public async uninstall(

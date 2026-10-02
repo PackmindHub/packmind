@@ -107,6 +107,67 @@ describe('DeploymentGateway', () => {
     });
   });
 
+  describe('install', () => {
+    const defaultCommand = {
+      packagesSlugs: ['@space/backend'],
+      packageVersions: { '@space/backend': '0.1.0' },
+      packmindLockFile: {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {},
+      },
+    };
+
+    beforeEach(() => {
+      mockHttpClient.request.mockResolvedValue({});
+    });
+
+    it('posts the install to the organization install endpoint', async () => {
+      await gateway.install(defaultCommand);
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/install`,
+        {
+          method: 'POST',
+          body: {
+            packagesSlugs: ['@space/backend'],
+            packageVersions: { '@space/backend': '0.1.0' },
+            packmindLockFile: defaultCommand.packmindLockFile,
+          },
+        },
+      );
+    });
+
+    describe('when preview is true', () => {
+      it('sends preview in the body', async () => {
+        await gateway.install({ ...defaultCommand, preview: true });
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.objectContaining({ preview: true }),
+          }),
+        );
+      });
+    });
+
+    describe('when preview is false', () => {
+      it('does not send preview in the body', async () => {
+        await gateway.install({ ...defaultCommand, preview: false });
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.not.objectContaining({
+              preview: expect.anything(),
+            }),
+          }),
+        );
+      });
+    });
+  });
+
   describe('getDeployed', () => {
     const defaultCommand = {
       packagesSlugs: ['backend'],

@@ -80,6 +80,7 @@ export class DeploymentGateway implements IDeploymentGateway {
           packmindLockFile: command.packmindLockFile,
           ...(command.relativePath && { relativePath: command.relativePath }),
           ...(command.agents !== undefined && { agents: command.agents }),
+          ...(command.preview && { preview: true }),
         },
       },
     );
