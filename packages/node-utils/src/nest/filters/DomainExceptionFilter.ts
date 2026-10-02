@@ -79,6 +79,19 @@ type ErrorResponseBody = {
   reason: string;
 };
 
+/**
+ * What of a wrapped failure goes into the log: an `Error` contributes its own
+ * message and stack, which `cause` exists to keep; anything else is logged as
+ * thrown.
+ */
+function describeCause(cause: unknown): unknown {
+  if (cause instanceof Error) {
+    return { name: cause.name, message: cause.message, stack: cause.stack };
+  }
+
+  return cause;
+}
+
 function hasContext(value: unknown): value is { context: unknown } {
   return typeof value === 'object' && value !== null && 'context' in value;
 }
@@ -181,6 +194,9 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         message: exception.message,
         stack: exception.stack,
         ...(exception.context ? { context: exception.context } : {}),
+        ...(exception.cause !== undefined
+          ? { cause: describeCause(exception.cause) }
+          : {}),
       });
     }
 
