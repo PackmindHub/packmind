@@ -458,6 +458,7 @@ export function DeploymentsOverviewRedesignContent() {
                     onSyncPackageOnTarget={handleSyncPackageOnTarget}
                     onSyncRepository={handleSyncRepository}
                     packageHistoryHref={packageHistoryHref}
+                    packageReleaseHref={packagePageHref}
                     gitSettingsHref={gitSettingsHref}
                   />
                 ) : (

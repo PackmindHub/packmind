@@ -34,6 +34,8 @@ export interface GitRepoUI {
   owner: string;
   repo: string;
   branch: string;
+  /** The branch Packmind distributes to; at most one per repository. */
+  isTracked: boolean;
   providerId: GitProviderId;
   provider?: GitProviderUI;
 }

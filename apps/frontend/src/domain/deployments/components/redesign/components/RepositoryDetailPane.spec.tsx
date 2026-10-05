@@ -45,6 +45,8 @@ const driftedPackage: PackageDrift = {
   id: packageId,
   name: 'Backend guidelines',
   description: 'How the services are written.',
+  latestReleaseVersion: null,
+  hasUnreleasedChanges: false,
   artifacts: [
     {
       id: createStandardId('standard-1'),
@@ -64,6 +66,7 @@ const driftedPackage: PackageDrift = {
       lastDistributionStatus: DistributionStatus.success,
       lastDistributedAt: install.lastDeployedAt,
       lastDistributionError: null,
+      versionSpec: null,
     },
   ],
 };
@@ -149,6 +152,7 @@ function renderPane(
           onSyncPackageOnTarget={onSyncPackageOnTarget}
           onSyncRepository={vi.fn()}
           packageHistoryHref={() => null}
+          packageReleaseHref={() => '/space/packages/pkg-1'}
           gitSettingsHref={gitSettingsHref}
         />
       </UIProvider>
@@ -208,6 +212,76 @@ describe('RepositoryDetailPane', () => {
       renderPane(vi.fn(), withOneOfEach);
 
       expect(segment(/^Aligned, 0 packages$/)).toBeInTheDocument();
+    });
+  });
+
+  describe('when a package is pinned to a release', () => {
+    /** On the newest release there is, with the package moved past it. */
+    const needsARelease: RepositoryDrift = {
+      ...repo,
+      targets: [
+        {
+          id: targetId,
+          target: targetRef,
+          packages: [
+            {
+              ...driftedPackage,
+              latestReleaseVersion: '0.1.0',
+              hasUnreleasedChanges: true,
+              artifacts: [
+                {
+                  ...driftedPackage.artifacts[0],
+                  installs: [{ ...install, driftReason: 'aligned' }],
+                },
+              ],
+              installLocations: [
+                {
+                  ...driftedPackage.installLocations[0],
+                  versionSpec: '0.1.0',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('says the package has changes left to release', () => {
+      renderPane(vi.fn(), needsARelease);
+
+      expect(
+        screen.getByText(
+          'On the newest release, package has unreleased changes',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('offers a way to cut one', () => {
+      renderPane(vi.fn(), needsARelease);
+
+      expect(
+        screen.getByRole('link', { name: 'Create a release' }),
+      ).toBeInTheDocument();
+    });
+
+    it('offers no distribution for it, which would commit nothing', () => {
+      renderPane(vi.fn(), needsARelease);
+
+      expect(
+        screen.queryByRole('button', {
+          name: `Distribute ${driftedPackage.name} on this target`,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('cannot be put in a batch either', () => {
+      renderPane(vi.fn(), needsARelease);
+
+      expect(
+        screen.queryByRole('checkbox', {
+          name: `Select ${driftedPackage.name} for distribution`,
+        }),
+      ).not.toBeInTheDocument();
     });
   });
 

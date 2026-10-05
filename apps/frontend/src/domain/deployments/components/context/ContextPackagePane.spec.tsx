@@ -40,6 +40,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
  */
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageDeploymentsQuery: vi.fn(),
+  useGetTargetsByOrganizationQuery: () => ({ data: undefined }),
   useDeletePackagesBatchMutation: vi.fn(),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackageReleasesQuery: vi.fn(),
@@ -262,6 +263,8 @@ function driftWithOneBehindInstall(): PackageDrift {
     id: packageId,
     name: 'Backend conventions',
     description: '',
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
     artifacts: [
       {
         id: 'std-1' as PackageDrift['artifacts'][number]['id'],
@@ -290,6 +293,7 @@ function driftWithOneBehindInstall(): PackageDrift {
         lastDistributionStatus: null,
         lastDistributedAt: null,
         lastDistributionError: null,
+        versionSpec: null,
       },
     ],
   };

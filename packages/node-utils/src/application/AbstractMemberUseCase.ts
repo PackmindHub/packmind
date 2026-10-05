@@ -14,6 +14,7 @@ import {
   UserOrganizationMembership,
 } from '@packmind/types';
 import {
+  MembershipOrganizationNotFoundError,
   OrganizationContext,
   UserAccessError,
   UserAccessErrorContext,
@@ -116,7 +117,7 @@ export abstract class AbstractMemberUseCase<
   protected handleValidationError(
     error: UserAccessError,
     command: Command,
-  ): Error | never {
+  ): UserAccessError {
     this.logger.error('Member validation failed', {
       userId: command.userId,
       organizationId: command.organizationId,
@@ -130,16 +131,14 @@ export abstract class AbstractMemberUseCase<
     command: Command & MemberContext,
   ): Promise<Result>;
 
-  private translateUserAccessError(error: UserAccessError): Error {
+  private translateUserAccessError(error: UserAccessError): UserAccessError {
     const { userId, organizationId } = error.context;
 
     switch (error.reason) {
       case 'user_not_found':
         return new UserNotFoundError({ userId, organizationId });
       case 'user_not_in_organization':
-        return new UserNotInOrganizationError(
-          this.toOrganizationContext({ userId, organizationId }),
-        );
+        return new UserNotInOrganizationError({ userId, organizationId });
       default:
         return error;
     }
@@ -157,19 +156,23 @@ export abstract class AbstractMemberUseCase<
     const organizationId = createOrganizationId(command.organizationId);
     const membership = this.findMembership(user, organizationId, context);
 
-    const organization = await this.fetchOrganization(organizationId);
+    const organization = await this.fetchOrganization(organizationId, {
+      userId: command.userId,
+      organizationId,
+    });
 
     return { user, organization, membership };
   }
 
   private async fetchOrganization(
     organizationId: OrganizationId,
+    context: OrganizationContext,
   ): Promise<Organization> {
     const organization =
       await this.accountsPort.getOrganizationById(organizationId);
 
     if (!organization) {
-      throw new Error(`Organization ${organizationId} not found`);
+      throw new MembershipOrganizationNotFoundError(context);
     }
 
     return organization;
@@ -199,24 +202,9 @@ export abstract class AbstractMemberUseCase<
     );
 
     if (!membership) {
-      throw new UserNotInOrganizationError(this.toOrganizationContext(context));
+      throw new UserNotInOrganizationError(context);
     }
 
     return membership;
-  }
-
-  private toOrganizationContext(
-    context: UserAccessErrorContext,
-  ): OrganizationContext {
-    if (!context.organizationId) {
-      throw new Error(
-        'Organization ID is required for member access operations',
-      );
-    }
-
-    return {
-      userId: context.userId,
-      organizationId: context.organizationId,
-    };
   }
 }

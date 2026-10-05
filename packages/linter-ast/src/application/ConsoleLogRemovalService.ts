@@ -1,5 +1,6 @@
 import { ProgrammingLanguage } from '@packmind/types';
 import JavaScriptParser from '../parsers/JavaScriptParser';
+import { LinterAstInternalError } from '../core/LinterAstInternalError';
 
 export class ConsoleLogRemovalService {
   private readonly jsParser: JavaScriptParser;
@@ -10,14 +11,16 @@ export class ConsoleLogRemovalService {
 
   /**
    * Removes console method-call statements from JavaScript source code using AST parsing.
-   * @throws Error if language is not JAVASCRIPT
+   * @throws LinterAstInternalError if language is not JAVASCRIPT
    */
   async removeConsoleLogStatements(
     sourceCode: string,
     language: ProgrammingLanguage,
   ): Promise<string> {
     if (language !== ProgrammingLanguage.JAVASCRIPT) {
-      throw new Error(
+      throw new LinterAstInternalError(
+        'console_removal_language_unsupported',
+        { language },
         `ConsoleLogRemovalService only supports JAVASCRIPT, received: ${language}`,
       );
     }
@@ -81,7 +84,12 @@ export class ConsoleLogRemovalService {
 
       return cleaned;
     } catch (error) {
-      throw new Error(`Can not parse JS CODE ${error}`);
+      throw new LinterAstInternalError(
+        'console_removal_parse_failed',
+        { language },
+        `Can not parse JS CODE ${error}`,
+        { cause: error },
+      );
     }
   }
 }

@@ -105,6 +105,7 @@ import {
   useListSkillDistributionsQuery,
   useListStandardDistributionsQuery,
 } from '../../api/queries/DeploymentsQueries';
+import { useCountOnLiveTargets } from '../../hooks/useLiveTargetIds';
 import { CommandDistributionsList } from '../CommandDistributionsList/CommandDistributionsList';
 import { SkillDistributionsList } from '../SkillDistributionsList/SkillDistributionsList';
 import { StandardDistributionsList } from '../StandardDistributionsList/StandardDistributionsList';
@@ -870,19 +871,22 @@ function CommandDistributionCount({
   commandId,
 }: Readonly<{ commandId: CommandId }>) {
   const { data } = useListCommandDistributionsQuery(commandId);
-  return <TabCount value={data?.length} />;
+  const count = useCountOnLiveTargets(data);
+  return <TabCount value={count} />;
 }
 
 function StandardDistributionCount({
   standardId,
 }: Readonly<{ standardId: StandardId }>) {
   const { data } = useListStandardDistributionsQuery(standardId);
-  return <TabCount value={data?.length} />;
+  const count = useCountOnLiveTargets(data);
+  return <TabCount value={count} />;
 }
 
 function SkillDistributionCount({ skillId }: Readonly<{ skillId: SkillId }>) {
   const { data } = useListSkillDistributionsQuery(skillId);
-  return <TabCount value={data?.length} />;
+  const count = useCountOnLiveTargets(data);
+  return <TabCount value={count} />;
 }
 
 /**
@@ -1037,11 +1041,12 @@ function CommandDistribution({
    * cannot report upward.
    */
   const { data: landings } = useListCommandDistributionsQuery(commandId);
+  const landingCount = useCountOnLiveTargets(landings);
 
   return (
     <DistributionBody
       path={command?.slug ? `.packmind/recipes/${command.slug}.md` : null}
-      count={landings?.length}
+      count={landingCount}
     >
       <CommandDistributionsList
         recipeId={commandId}
@@ -1060,11 +1065,12 @@ function StandardDistribution({
   const { data } = useGetStandardByIdQuery(standardId);
   const slug = data?.standard?.slug;
   const { data: landings } = useListStandardDistributionsQuery(standardId);
+  const landingCount = useCountOnLiveTargets(landings);
 
   return (
     <DistributionBody
       path={slug ? `.packmind/standards/${slug}.md` : null}
-      count={landings?.length}
+      count={landingCount}
     >
       <StandardDistributionsList
         standardId={standardId}
@@ -1088,11 +1094,12 @@ function SkillDistribution({
   const { data } = useGetSkillWithFilesByIdQuery(skillId);
   const slug = data?.latestVersion.slug;
   const { data: landings } = useListSkillDistributionsQuery(skillId);
+  const landingCount = useCountOnLiveTargets(landings);
 
   return (
     <DistributionBody
       path={slug ? `.packmind/skills/${slug}/` : null}
-      count={landings?.length}
+      count={landingCount}
     >
       <SkillDistributionsList
         skillId={skillId}

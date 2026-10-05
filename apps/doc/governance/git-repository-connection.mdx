@@ -99,6 +99,22 @@ When you add a Git repository, Packmind automatically creates a default target w
 
 A repository the CLI already distributed to keeps its history when you add it: it moves under the connection with its existing targets instead of being created again, and the CLI-created entry for that host disappears once it holds no repository.
 
+A repository you add from the Git connection panel is tracked on its default branch.
+
+## Changing a Repository's Branch
+
+Each repository is distributed to and tracked on one branch. To move it to another branch:
+
+1. Open the connection from the **Connections** tab and click **Manage**.
+2. Next to the repository, click **change branch** and type the branch name, then press Enter.
+3. Click **Apply changes**.
+
+The new branch replaces the current one rather than being added next to it. Packmind checks the branch with your Git provider first: a branch that doesn't exist is refused with an error under the field, and if the provider can't be reached nothing changes and you are asked to try again.
+
+Changing the branch never deletes history. Distributions recorded on the branch you leave are kept, and switching back shows that branch's history again — see [Moving the Tracked Branch Is Reversible](/governance/distribution#moving-the-tracked-branch-is-reversible).
+
+A repository added before branches were tracked may still list several branches. The first time you change its branch, Packmind starts tracking the one you chose and shows only that branch from then on.
+
 ## Distribution Targets
 
 Before distributing your standards and commands, you can configure targets in **Settings** → **Distribution** → **Targets**. A target defines a specific path within your Git repository where standards and commands will be distributed.

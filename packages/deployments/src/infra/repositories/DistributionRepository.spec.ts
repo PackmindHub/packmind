@@ -113,6 +113,7 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      withDeleted: jest.fn().mockReturnThis(),
       innerJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -252,9 +253,20 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('keeps distributions whose repository row is absent', () => {
         expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
           expect.stringContaining('"gitRepo"."id" IS NULL'),
+          expect.anything(),
+        );
+      });
+
+      it('keeps distributions whose repository was soft-deleted', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.stringContaining('"gitRepo"."deleted_at" IS NOT NULL'),
           expect.anything(),
         );
       });
@@ -303,6 +315,10 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('loads the command versions the history is filtered on', () => {
         expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
           'distributedPackage.recipeVersions',
@@ -342,6 +358,10 @@ describe('DistributionRepository', () => {
         expectScopedToRemovedTracking();
       });
 
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
+      });
+
       it('loads the standard versions the history is filtered on', () => {
         expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
           'distributedPackage.standardVersions',
@@ -379,6 +399,10 @@ describe('DistributionRepository', () => {
 
       it('hides a repository whose tracking was removed', () => {
         expectScopedToRemovedTracking();
+      });
+
+      it('keeps rows whose repository or target was soft-deleted', () => {
+        expect(mockQueryBuilder.withDeleted).toHaveBeenCalled();
       });
 
       it('loads the skill versions the history is filtered on', () => {
@@ -577,6 +601,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -628,6 +653,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv2],
               recipeVersions: [],
               skillVersions: [],
@@ -673,6 +699,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -733,6 +760,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [svOld],
               recipeVersions: [],
               skillVersions: [],
@@ -744,6 +772,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [svNew],
               recipeVersions: [],
               skillVersions: [],
@@ -883,6 +912,7 @@ describe('DistributionRepository', () => {
                 distributionId: createDistributionId('dist-1'),
                 packageId: packageId1,
                 operation: 'add',
+                versionSpec: null,
                 standardVersions: [sv1],
                 recipeVersions: [cv1],
                 skillVersions: [skv1],
@@ -1334,6 +1364,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1422,6 +1453,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1450,6 +1482,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId1,
               operation: 'remove',
+              versionSpec: null,
               standardVersions: [],
               recipeVersions: [],
               skillVersions: [],
@@ -1466,6 +1499,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-3'),
               packageId: packageId2,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-2'),
@@ -1551,6 +1585,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-1'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1577,6 +1612,7 @@ describe('DistributionRepository', () => {
               distributionId: createDistributionId('dist-2'),
               packageId: packageId1,
               operation: 'add',
+              versionSpec: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1b'),
@@ -2122,6 +2158,7 @@ describe('DistributionRepository', () => {
       packageId: ReturnType<typeof createPackageId>,
       operation: 'add' | 'remove',
       status: DistributionStatus,
+      versionSpec: string | null = null,
     ) => ({
       targetId,
       packageId,
@@ -2129,6 +2166,7 @@ describe('DistributionRepository', () => {
       status,
       lastDistributedAt,
       error: null,
+      versionSpec,
     });
 
     it('projects successful adds onto the active-row shape', async () => {
@@ -2146,6 +2184,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.success,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2165,6 +2204,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2195,6 +2235,7 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.failure,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
     });
@@ -2214,8 +2255,47 @@ describe('DistributionRepository', () => {
           lastDistributionStatus: DistributionStatus.in_progress,
           lastDistributedAt,
           lastDistributionError: null,
+          versionSpec: null,
         },
       ]);
+    });
+
+    describe('the version spec the destination was left on', () => {
+      it('is carried onto the active row', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          rawRow(packageId1, 'add', DistributionStatus.success, '0.2.0'),
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].versionSpec).toBe('0.2.0');
+      });
+
+      it('reads null on a row written before the column existed', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          {
+            ...rawRow(packageId1, 'add', DistributionStatus.success),
+            versionSpec: undefined,
+          },
+        ]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result[0].versionSpec).toBeNull();
+      });
+
+      it('is selected from the distributed package', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+          'distributedPackage.version_spec',
+          'versionSpec',
+        );
+      });
     });
 
     it('filters by spaceId via parameterized query', async () => {

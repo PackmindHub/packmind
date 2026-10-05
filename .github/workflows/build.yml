@@ -94,6 +94,7 @@ jobs:
         with:
           name: api-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/api/
+          retention-days: 10
 
   build-frontend:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
@@ -151,6 +152,7 @@ jobs:
         with:
           name: frontend-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: apps/frontend/build/client
+          retention-days: 10
 
   build-packages:
     # Wider runner: this job fans out to 45 tasks with a ~6s critical path, so
@@ -240,6 +242,7 @@ jobs:
           name: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/packages/standards/samples/generated/
           if-no-files-found: ignore
+          retention-days: 10
 
   # Split out of build-packages: it is the longest single test target, so running
   # it on its own runner takes it off that job's critical path.
@@ -341,6 +344,7 @@ jobs:
         with:
           name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/cli/
+          retention-days: 10
 
       - name: Build CLI executables for all platforms
         run: |
@@ -371,4 +375,4 @@ jobs:
             dist/apps/cli-executables/packmind-cli-macos-arm64
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
             dist/apps/cli-executables/packmind-cli-windows-arm64.exe
-          retention-days: 30
+          retention-days: 10

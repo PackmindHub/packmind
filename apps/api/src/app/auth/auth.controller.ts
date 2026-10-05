@@ -37,8 +37,6 @@ import {
   CheckEmailAvailabilityResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
-  TooManyLoginAttemptsError,
-  ExpectedAuthError,
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
@@ -122,64 +120,34 @@ export class AuthController {
       email: maskEmail(signInRequest.email),
     });
 
-    try {
-      const { accessToken, ...result } =
-        await this.authService.signIn(signInRequest);
+    const { accessToken, ...result } =
+      await this.authService.signIn(signInRequest);
 
-      // Get cookie security setting from Configuration
-      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
-      const isSecure = cookieSecure === 'true';
+    // Get cookie security setting from Configuration
+    const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+    const isSecure = cookieSecure === 'true';
 
-      this.logger.log('Cookie configuration', {
-        cookieSecure,
-        isSecure,
-        source: 'Configuration.getConfig',
-      });
+    this.logger.log('Cookie configuration', {
+      cookieSecure,
+      isSecure,
+      source: 'Configuration.getConfig',
+    });
 
-      // Set JWT token as httpOnly cookie
-      response.cookie('auth_token', accessToken, {
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-        path: '/',
-      });
+    // Set JWT token as httpOnly cookie
+    response.cookie('auth_token', accessToken, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      path: '/',
+    });
 
-      this.logger.log(`POST /auth/signin - User signed in successfully`, {
-        userId: result.user.id,
-        email: maskEmail(result.user.email),
-      });
+    this.logger.log(`POST /auth/signin - User signed in successfully`, {
+      userId: result.user.id,
+      email: maskEmail(result.user.email),
+    });
 
-      return result;
-    } catch (error) {
-      // Expected auth errors are legitimate user-facing outcomes (wrong
-      // password, rate limit reached) — not application bugs. Log them at
-      // warn level without stack trace so Datadog error dashboards stay
-      // focused on real incidents.
-      // Kept by hand: no kind yields 401, nor 429 with bannedUntil in the
-      // body, so DomainExceptionFilter cannot produce these answers.
-      if (error instanceof ExpectedAuthError) {
-        this.logger.warn(`POST /auth/signin - ${error.name}`, {
-          email: maskEmail(signInRequest.email),
-          reason: error.message,
-        });
-
-        if (error instanceof TooManyLoginAttemptsError) {
-          throw new HttpException(
-            {
-              message: error.message,
-              bannedUntil: error.bannedUntil.toISOString(),
-            },
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-
-        // InvalidEmailOrPasswordError (and future ExpectedAuthError subclasses)
-        throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
-      }
-
-      throw error;
-    }
+    return result;
   }
 
   @Post('signout')

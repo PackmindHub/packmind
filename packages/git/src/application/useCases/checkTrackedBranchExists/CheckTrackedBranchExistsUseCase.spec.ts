@@ -1,14 +1,18 @@
 import { Cache } from '@packmind/node-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { mockInterface, stubLogger } from '@packmind/test-utils';
 import {
+  GitProvider,
   GitRepo,
   GitRepoNotFoundError,
+  IAccountsPort,
   MissingGitInputError,
   createGitProviderId,
   createGitRepoId,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { CheckBranchExistsUseCase } from '../checkBranchExists/CheckBranchExistsUseCase';
 import { CheckTrackedBranchExistsUseCase } from './CheckTrackedBranchExistsUseCase';
@@ -24,11 +28,18 @@ const mockCacheInstance = mockInterface<Cache>();
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 const repositoryId = createGitRepoId('repo-1');
+const userId = createUserId('user-1');
+const organizationId = createOrganizationId('org-1');
 const command = {
   repositoryId,
-  userId: createUserId('user-1'),
-  organizationId: createOrganizationId('org-1'),
+  userId,
+  organizationId,
 };
+
+const gitProvider = {
+  id: createGitProviderId('provider-1'),
+  organizationId,
+} as GitProvider;
 
 const gitRepo = {
   id: repositoryId,
@@ -41,11 +52,14 @@ const gitRepo = {
 describe('CheckTrackedBranchExistsUseCase', () => {
   let useCase: CheckTrackedBranchExistsUseCase;
   let gitRepoService: jest.Mocked<GitRepoService>;
+  let gitProviderService: jest.Mocked<GitProviderService>;
   let checkBranchExists: jest.Mocked<CheckBranchExistsUseCase>;
 
   beforeEach(() => {
     gitRepoService = mockInterface<GitRepoService>();
     gitRepoService.findGitRepoById.mockResolvedValue(gitRepo);
+    gitProviderService = mockInterface<GitProviderService>();
+    gitProviderService.findGitProviderById.mockResolvedValue(gitProvider);
     checkBranchExists = mockInterface<CheckBranchExistsUseCase>();
     checkBranchExists.execute.mockResolvedValue(true);
 
@@ -53,9 +67,22 @@ describe('CheckTrackedBranchExistsUseCase', () => {
     mockCacheInstance.get.mockResolvedValue(null);
     mockCacheInstance.set.mockResolvedValue(undefined);
 
+    const accountsAdapter = mockInterface<IAccountsPort>();
+    accountsAdapter.getUserById.mockResolvedValue(
+      userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'member' }],
+      }),
+    );
+    accountsAdapter.getOrganizationById.mockResolvedValue(
+      organizationFactory({ id: organizationId }),
+    );
+
     useCase = new CheckTrackedBranchExistsUseCase(
       gitRepoService,
+      gitProviderService,
       checkBranchExists,
+      accountsAdapter,
       stubLogger(),
     );
   });
@@ -116,6 +143,48 @@ describe('CheckTrackedBranchExistsUseCase', () => {
   describe('when the repository is unknown', () => {
     beforeEach(() => {
       gitRepoService.findGitRepoById.mockResolvedValue(null);
+    });
+
+    it('throws a repository not found error', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        GitRepoNotFoundError,
+      );
+    });
+  });
+
+  // A repository of another organization and one that does not exist are the
+  // same answer by design.
+  describe('when the repository belongs to another organization', () => {
+    beforeEach(() => {
+      gitProviderService.findGitProviderById.mockResolvedValue({
+        ...gitProvider,
+        organizationId: createOrganizationId('org-2'),
+      });
+    });
+
+    it('throws a repository not found error', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        GitRepoNotFoundError,
+      );
+    });
+
+    it('does not call the provider', async () => {
+      await useCase.execute(command).catch(() => undefined);
+
+      expect(checkBranchExists.execute).not.toHaveBeenCalled();
+    });
+
+    // The cached answer was computed for the owning organization.
+    it('does not read the cache', async () => {
+      await useCase.execute(command).catch(() => undefined);
+
+      expect(mockCacheInstance.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when the repository's provider no longer exists", () => {
+    beforeEach(() => {
+      gitProviderService.findGitProviderById.mockResolvedValue(null);
     });
 
     it('throws a repository not found error', async () => {

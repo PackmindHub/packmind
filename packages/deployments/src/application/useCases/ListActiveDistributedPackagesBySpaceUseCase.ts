@@ -23,6 +23,8 @@ import {
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   Package,
+  PackageId,
+  parsePackageVersionSpec,
   PendingCommandInfo,
   PendingSkillInfo,
   PendingStandardInfo,
@@ -47,6 +49,12 @@ import {
 } from '../../domain/repositories/IDistributionRepository';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
+import { PackageReleaseService } from '../services/PackageReleaseService';
+import {
+  evaluatePackageReleaseGate,
+  type PackageComponentSnapshot,
+  type PackageGateSnapshot,
+} from '../services/packageReleaseGateHelpers';
 
 const origin = 'ListActiveDistributedPackagesBySpaceUseCase';
 
@@ -67,6 +75,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     private readonly commandsPort: ICommandsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
+    private readonly packageReleaseService: PackageReleaseService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
@@ -132,6 +141,16 @@ export class ListActiveDistributedPackagesBySpaceUseCase
       return [];
     }
 
+    /*
+     * Narrowed to the packages some destination is *pinned* to, rather than
+     * every package the space holds or even every package it distributes.
+     *
+     * Release state answers exactly one question — whether a pinned
+     * destination is behind — and `destinationStanding` never consults it for
+     * a destination tracking the live package. A space whose every
+     * `packmind.json` says `*` would pay four queries and three port calls for
+     * an answer nothing reads; this costs one pass over rows already in memory.
+     */
     const operationsByTarget = groupActiveOpsByTarget(activeOps);
     const outdatedByTargetId = indexOutdatedByTarget(outdatedByTarget);
     const standardsById = indexById(standards);
@@ -139,6 +158,12 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const skillsById = indexById(skills);
     const packagesById = indexById(packages);
     const gitRepoById = new Map(gitRepos.map((r) => [r.id, r]));
+
+    const pinnedPackageIds = pinnedPackagesOf(activeOps);
+    const releaseState = await this.readReleaseState(
+      packages.filter((pkg) => pinnedPackageIds.has(pkg.id)),
+      { commandsById, standardsById, skillsById },
+    );
 
     return targets.map((target): ActiveDistributedPackagesByTarget => {
       const outdated = outdatedByTargetId.get(target.id) ?? {
@@ -182,12 +207,113 @@ export class ListActiveDistributedPackagesBySpaceUseCase
               commandsById,
               standardsById,
               skillsById,
+              release: releaseState.get(row.packageId) ?? NEVER_RELEASED,
             }),
           )
           .filter((entry): entry is ActiveDistributedPackage => entry !== null),
       };
     });
   }
+
+  /**
+   * Where each package stands against its own newest release.
+   *
+   * One query however many packages are given, and no port call at all: the
+   * component versions the gate compares are read off the entities the space
+   * read already loaded. They used to be fetched a second time, by id, purely
+   * because the gate compared version ids and the list reads carry numbers.
+   */
+  private async readReleaseState(
+    packages: Package[],
+    componentVersions: ComponentVersionLookup,
+  ): Promise<Map<PackageId, PackageReleaseState>> {
+    if (packages.length === 0) return new Map();
+
+    const latestReleases =
+      await this.packageReleaseService.findLatestByPackageIds(
+        packages.map((pkg) => pkg.id),
+      );
+
+    const state = new Map<PackageId, PackageReleaseState>();
+    for (const pkg of packages) {
+      const latestRelease = latestReleases.get(pkg.id) ?? null;
+      state.set(pkg.id, {
+        latestReleaseVersion: latestRelease?.version ?? null,
+        /*
+         * The same gate the release panel reads, so the two cannot disagree
+         * about whether there is anything to cut. `no_components` is not an
+         * unreleased change: an empty package has nothing to release.
+         */
+        hasUnreleasedChanges:
+          evaluatePackageReleaseGate(
+            toGateSnapshot(pkg, componentVersions),
+            latestRelease,
+          ) === 'ready',
+      });
+    }
+
+    return state;
+  }
+}
+
+/**
+ * The live version number of every component of the space, by family.
+ *
+ * A component absent from its map has no version this read can see — it was
+ * deleted, or it never belonged to this space — which the gate reads as "no
+ * version", the same thing an unresolved component used to mean.
+ */
+type ComponentVersionLookup = {
+  commandsById: Map<string, Command>;
+  standardsById: Map<string, Standard>;
+  skillsById: Map<string, Skill>;
+};
+
+/** Where one package stands against its own newest release. */
+type PackageReleaseState = Pick<
+  ActiveDistributedPackage,
+  'latestReleaseVersion' | 'hasUnreleasedChanges'
+>;
+
+/**
+ * What a package whose release state was not read reports.
+ *
+ * Covers both the package no destination pins — whose state is deliberately
+ * never read — and the one that could not be resolved. Says "never released,
+ * nothing unreleased", which is the reading that offers neither `Update` nor a
+ * release: inventing either would send a reader after a button for a package
+ * this read knows nothing about. A wildcard destination ignores both fields
+ * anyway, measuring itself against the live package instead.
+ */
+const NEVER_RELEASED: PackageReleaseState = {
+  latestReleaseVersion: null,
+  hasUnreleasedChanges: false,
+};
+
+/** The package as the release gate sees it, at the versions the space read holds. */
+function toGateSnapshot(
+  pkg: Package,
+  versions: ComponentVersionLookup,
+): PackageGateSnapshot {
+  const component = (
+    byId: Map<string, { version: number }>,
+    id: string,
+  ): PackageComponentSnapshot => ({
+    id,
+    latestVersion: byId.get(id)?.version ?? null,
+  });
+
+  return {
+    name: pkg.name,
+    description: pkg.description,
+    recipes: (pkg.recipes ?? []).map((id) =>
+      component(versions.commandsById, id),
+    ),
+    standards: (pkg.standards ?? []).map((id) =>
+      component(versions.standardsById, id),
+    ),
+    skills: (pkg.skills ?? []).map((id) => component(versions.skillsById, id)),
+  };
 }
 
 function buildActivePackage(args: {
@@ -199,6 +325,7 @@ function buildActivePackage(args: {
   commandsById: Map<string, Command>;
   standardsById: Map<string, Standard>;
   skillsById: Map<string, Skill>;
+  release: PackageReleaseState;
 }): ActiveDistributedPackage | null {
   const {
     row,
@@ -209,6 +336,7 @@ function buildActivePackage(args: {
     commandsById,
     standardsById,
     skillsById,
+    release,
   } = args;
   if (!pkg) return null;
 
@@ -260,6 +388,9 @@ function buildActivePackage(args: {
     lastDistributionStatus: row.lastDistributionStatus,
     lastDistributedAt: row.lastDistributedAt,
     lastDistributionError: row.lastDistributionError,
+    versionSpec: row.versionSpec,
+    latestReleaseVersion: release.latestReleaseVersion,
+    hasUnreleasedChanges: release.hasUnreleasedChanges,
     deployedRecipes: packageDeployedCommands,
     // Same value under the command-named field the type also requires.
     deployedCommands: packageDeployedCommands,
@@ -271,6 +402,23 @@ function buildActivePackage(args: {
     pendingStandards,
     pendingSkills,
   };
+}
+
+/**
+ * The packages at least one destination is pinned to by an exact version.
+ *
+ * A package distributed to one pinned destination and ten wildcard ones is in
+ * the set: the pinned one still needs measuring. A package nothing pins is
+ * absent, and its release state is never read.
+ */
+function pinnedPackagesOf(rows: ActivePackageOperationRow[]): Set<PackageId> {
+  const pinned = new Set<PackageId>();
+  for (const row of rows) {
+    if (parsePackageVersionSpec(row.versionSpec)?.kind === 'exact') {
+      pinned.add(row.packageId);
+    }
+  }
+  return pinned;
 }
 
 function groupActiveOpsByTarget(

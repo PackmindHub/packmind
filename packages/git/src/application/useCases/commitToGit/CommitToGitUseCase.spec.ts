@@ -10,6 +10,7 @@ import {
   GitProviderNotFoundError,
   GitProviderVendor,
   GitProviderVendors,
+  NoChangesDetectedError,
   NoFilesToCommitError,
 } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
@@ -198,6 +199,41 @@ describe('CommitToGitUseCase', () => {
       await expect(
         commitToGit.commitToGit(mockGitRepo, [], ''),
       ).rejects.toBeInstanceOf(NoFilesToCommitError);
+    });
+
+    describe('when the provider reports no changes', () => {
+      const commit = () =>
+        commitToGit.commitToGit(
+          mockGitRepo,
+          [{ path: 'test/file1.txt', content: 'unchanged' }],
+          'Commit message',
+        );
+
+      beforeEach(() => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        mockGithubRepository.commitFiles.mockResolvedValue({
+          sha: 'no-changes',
+          message: 'Commit message',
+          author: 'test@example.com',
+          url: '',
+        });
+      });
+
+      it('throws NoChangesDetectedError', async () => {
+        await expect(commit()).rejects.toBeInstanceOf(NoChangesDetectedError);
+      });
+
+      it('names the no_changes_detected reason', async () => {
+        await expect(commit()).rejects.toMatchObject({
+          reason: 'no_changes_detected',
+        });
+      });
+
+      it('does not record a commit', async () => {
+        await commit().catch(() => undefined);
+
+        expect(mockGitCommitService.addCommit).not.toHaveBeenCalled();
+      });
     });
 
     describe('when deleteFiles parameter is provided', () => {

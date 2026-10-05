@@ -14,7 +14,7 @@ import {
   TargetId,
 } from '@packmind/types';
 import { useRemovePackageFromTargets } from '../../hooks';
-import { listActiveDistributions } from '../../utils/listActiveDistributions';
+import { useActiveDistributions } from '../../hooks/useActiveDistributions';
 import { RemovePackageFromTargetsBodyImpl } from './RemovePackageFromTargetsBody';
 import { RemovePackageFromTargetsCTAImpl } from './RemovePackageFromTargetsCTA';
 
@@ -62,9 +62,9 @@ const RemovePackageFromTargetsComponent: React.FC<
     useState<RemovePackageFromTargetsStep>('select');
 
   // Filter to only show targets where the package is currently deployed
-  const activeDistributions = useMemo(
-    () => listActiveDistributions(distributions, selectedPackage.id),
-    [distributions, selectedPackage.id],
+  const activeDistributions = useActiveDistributions(
+    distributions,
+    selectedPackage.id,
   );
 
   const canRemove = selectedTargetIds.length > 0 && !isRemoving;
@@ -83,8 +83,9 @@ const RemovePackageFromTargetsComponent: React.FC<
 
       onRemovalComplete?.(response.results);
     } catch (e: unknown) {
+      // The mutation's onError already told the user; rethrowing would only
+      // surface as an unhandled rejection from the button's onClick.
       console.error('Removal failed:', e);
-      throw e;
     }
   }, [
     canRemove,

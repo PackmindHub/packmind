@@ -225,11 +225,7 @@ export class PasswordResetTokenRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as PasswordResetToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'password_reset',
-        'encrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('password_reset', 'encrypt', error);
     }
   }
 
@@ -258,11 +254,7 @@ export class PasswordResetTokenRepository
 
       return decrypted as PasswordResetToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'password_reset',
-        'decrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('password_reset', 'decrypt', error);
     }
   }
 

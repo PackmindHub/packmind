@@ -14,7 +14,7 @@ import { SyncSurface } from './SyncSurface';
 import type { MarketplaceSyncTarget } from './SyncSurface';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import { STUB_PACKAGES, STUB_PROVIDER_OK } from '../stubPackages';
-import type { MarketplaceDrift } from '../types';
+import type { MarketplaceDrift, PackageDrift } from '../types';
 
 vi.mock('../../../api/queries/DeploymentsQueries', () => ({
   useDeployPackagesMutation: vi.fn(),
@@ -170,6 +170,176 @@ describe('SyncSurface', () => {
       );
 
       expect(onCancel).toHaveBeenCalled();
+    });
+  });
+
+  describe('when a destination is pinned to an older release', () => {
+    /*
+     * No late component anywhere on it — every one is exactly what its release
+     * pinned — and a distribution moves it to the newest release all the same.
+     * Selecting what to send by the late-component count made this screen read
+     * "Nothing to distribute" over a repository several releases behind.
+     */
+    const pinnedBehind: PackageDrift = {
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: false,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: 'aligned' as const,
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec: '0.1.0',
+      })),
+    };
+
+    const pinnedScope = {
+      kind: 'bulk' as const,
+      packageIds: [pinnedBehind.id],
+    };
+
+    it('offers the distribution rather than reading as nothing to do', async () => {
+      renderSurface({ packages: [pinnedBehind], scope: pinnedScope });
+
+      expect(
+        await screen.findByRole('button', { name: /^Distribute/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not say there is nothing to distribute', () => {
+      renderSurface({ packages: [pinnedBehind], scope: pinnedScope });
+
+      expect(
+        screen.queryByText('Nothing to distribute.'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('what the review says the distribution will do', () => {
+    const pinnedAt = (versionSpec: string | null): PackageDrift => ({
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: false,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: versionSpec === null ? install.driftReason : 'aligned',
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec,
+      })),
+    });
+
+    const review = (pkg: PackageDrift) =>
+      renderSurface({
+        packages: [pkg],
+        scope: { kind: 'bulk' as const, packageIds: [pkg.id] },
+      });
+
+    describe('for a destination pinned to an older release', () => {
+      it('names the release it is leaving and the one it arrives on', () => {
+        review(pinnedAt('0.1.0'));
+
+        expect(screen.getAllByText('0.1.0 → 0.3.0').length).toBeGreaterThan(0);
+      });
+
+      it('no longer counts components, which a pinned landing has none of', () => {
+        review(pinnedAt('0.1.0'));
+
+        expect(screen.queryByText(/0 components to update/)).toBeNull();
+      });
+    });
+
+    /*
+     * Two packages, because the line that names where a package is headed sits
+     * on the block header, and a batch of one takes that header off: its name
+     * is already the title of the screen.
+     */
+    describe('for a destination tracking the live package', () => {
+      it('names the live package rather than a version it is moving to', () => {
+        const tracksLive = pinnedAt(null);
+        renderSurface({
+          packages: [tracksLive, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [tracksLive.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        expect(screen.getAllByText(/live version/).length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('for a batch leaving several releases behind', () => {
+      it('lists them by version rather than as strings', () => {
+        const base = pinnedAt('0.9.0');
+        const twoPins: PackageDrift = {
+          ...base,
+          /* Newer than both pins, so both landings have somewhere to go. */
+          latestReleaseVersion: '0.11.0',
+          installLocations: base.installLocations.map((location, index) => ({
+            ...location,
+            versionSpec: index === 0 ? '0.10.0' : '0.9.0',
+          })),
+        };
+
+        renderSurface({
+          packages: [twoPins, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [twoPins.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        /* Lexically `0.10.0` sorts first, which is not an order of releases. */
+        expect(
+          screen.getAllByText(/0\.9\.0, 0\.10\.0 → 0\.11\.0/).length,
+        ).toBeGreaterThan(0);
+      });
+    });
+
+    describe('for a batch mixing a pinned destination with a live one', () => {
+      it('names both moves, so neither half of the batch is hidden', () => {
+        const base = pinnedAt('0.1.0');
+        /* One landing pinned, the rest left tracking the live package. */
+        const pinned: PackageDrift = {
+          ...base,
+          installLocations: base.installLocations.map((location, index) => ({
+            ...location,
+            versionSpec: index === 0 ? '0.1.0' : null,
+          })),
+          artifacts: base.artifacts.map((artifact) => ({
+            ...artifact,
+            installs: artifact.installs.map((install) => ({
+              ...install,
+              // The live-tracking landings need something late to be sent.
+              driftReason:
+                install.target.id === base.installLocations[0]?.target.id
+                  ? ('aligned' as const)
+                  : ('behind' as const),
+            })),
+          })),
+        };
+
+        renderSurface({
+          packages: [pinned, STUB_PACKAGES[1]],
+          scope: {
+            kind: 'bulk' as const,
+            packageIds: [pinned.id, STUB_PACKAGES[1].id],
+          },
+        });
+
+        expect(
+          screen.getAllByText(/0\.1\.0 → 0\.3\.0 · live version/).length,
+        ).toBeGreaterThan(0);
+      });
     });
   });
 
@@ -330,14 +500,14 @@ describe('SyncSurface', () => {
         ).toBeInTheDocument();
       });
 
-      it('no longer claims the distributions were updated', async () => {
+      it('no longer claims the destinations were updated', async () => {
         renderMixed();
 
         await distribute();
         await screen.findByRole('button', { name: 'Done' });
 
         expect(
-          screen.queryByText('Distributions updated'),
+          screen.queryByText('Destinations updated'),
         ).not.toBeInTheDocument();
       });
 
@@ -357,7 +527,7 @@ describe('SyncSurface', () => {
         await distribute();
 
         expect(
-          await screen.findByText(/Those distributions are now aligned/),
+          await screen.findByText(/Those destinations are now aligned/),
         ).toBeInTheDocument();
       });
     });
@@ -486,7 +656,7 @@ describe('SyncSurface', () => {
 
       expect(
         screen.getByRole('button', {
-          name: /^Distribute to \d+ distributions?$/,
+          name: /^Distribute to \d+ destinations?$/,
         }),
       ).toBeInTheDocument();
     });
@@ -501,7 +671,7 @@ describe('SyncSurface', () => {
 
       expect(
         screen.getByRole('button', {
-          name: 'Select at least one distribution',
+          name: 'Select at least one destination',
         }),
       ).toBeDisabled();
     });

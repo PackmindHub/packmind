@@ -234,6 +234,7 @@ jobs:
           name: docker-logs-cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}-${{ github.sha }}
           path: docker-logs-cli-e2e/
           if-no-files-found: ignore
+          retention-days: 10
 
       - name: Cleanup Docker containers
         if: always()
@@ -286,6 +287,7 @@ jobs:
           name: playwright-report-${{ github.run_number }}-${{ github.sha }}
           path: apps/e2e-tests/playwright-report/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Collect Docker container logs
         if: always()
@@ -309,6 +311,7 @@ jobs:
           name: docker-logs-${{ github.run_number }}-${{ github.sha }}
           path: docker-logs/
           if-no-files-found: ignore
+          retention-days: 10
 
       - name: Cleanup Docker containers
         if: always()

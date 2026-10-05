@@ -2,7 +2,8 @@ import { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { StandardVersion } from '../../standards/StandardVersion';
-import { createRuleId } from '../../standards/RuleId';
+import { createRuleId, RuleId } from '../../standards/RuleId';
+import { ChangeProposalConflictError } from './ChangeProposalConflictError';
 import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
 import { STANDARD_CHANGE_TYPES } from './types';
 
@@ -85,8 +86,24 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
+      const targetId = changeProposal.payload.targetId;
+
+      // A client reading standards from Markdown has no rule ids to send, so
+      // it names the rule by the content it is replacing instead.
+      let fallbackId: RuleId | undefined;
+      if (!rules.some((rule) => rule.id === targetId)) {
+        const matches = rules.filter(
+          (rule) =>
+            rule.content === this.getEffectivePayload(changeProposal).oldValue,
+        );
+        if (matches.length !== 1) {
+          throw new ChangeProposalConflictError(changeProposal.id);
+        }
+        fallbackId = matches[0].id;
+      }
+
       const updatedRules = rules.map((rule) => {
-        if (rule.id !== changeProposal.payload.targetId) {
+        if (rule.id !== targetId && rule.id !== fallbackId) {
           return rule;
         }
 
@@ -113,13 +130,27 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       )
     ) {
       const rules = source.rules || [];
-      const filteredRules = rules.filter(
-        (rule) => rule.id !== changeProposal.payload.targetId,
-      );
+      const targetId = changeProposal.payload.targetId;
+
+      if (rules.some((rule) => rule.id === targetId)) {
+        return {
+          ...source,
+          rules: rules.filter((rule) => rule.id !== targetId),
+        };
+      }
+
+      // Every copy goes: the standard is meant to be rid of that content, and
+      // copies hold no id to tell them apart.
+      const removed = this.getEffectivePayload(changeProposal).item.content;
+      const remaining = rules.filter((rule) => rule.content !== removed);
+
+      if (remaining.length === rules.length) {
+        throw new ChangeProposalConflictError(changeProposal.id);
+      }
 
       return {
         ...source,
-        rules: filteredRules,
+        rules: remaining,
       };
     }
 

@@ -3,8 +3,10 @@ import { IGitProviderGateway } from './IGitProviderGateway';
 import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
+  CheckProviderBranchExistsResponse,
   GitProviderId,
   GitProviderWithoutToken,
+  GitRepo,
   GitRepoId,
   IListAvailableReposUseCase,
   IListProvidersUseCase,
@@ -262,6 +264,37 @@ export class GitProviderGatewayApi
       `${this._endpoint}/${organizationId}/git/repositories/${repositoryId}/tracked-branch-exists`,
     );
     return response.exists;
+  }
+
+  async checkProviderBranchExists(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; branch: string },
+  ): Promise<CheckProviderBranchExistsResponse> {
+    const query = new URLSearchParams(params).toString();
+    return this._api.get<CheckProviderBranchExistsResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${gitProviderId}/branch-exists?${query}`,
+    );
+  }
+
+  async setTrackedRepository(
+    organizationId: OrganizationId,
+    data: { owner: string; repo: string; branch: string },
+  ): Promise<GitRepo> {
+    return this._api.post<GitRepo>(
+      `${this._endpoint}/${organizationId}/git/repositories/tracked-repository`,
+      { ...data, origin: 'track' },
+    );
+  }
+
+  async updateTrackedBranch(
+    organizationId: OrganizationId,
+    data: { owner: string; repo: string; branch: string },
+  ): Promise<GitRepo> {
+    return this._api.put<GitRepo>(
+      `${this._endpoint}/${organizationId}/git/repositories/tracked-repository`,
+      data,
+    );
   }
 
   async getAvailableRemoteDirectories(

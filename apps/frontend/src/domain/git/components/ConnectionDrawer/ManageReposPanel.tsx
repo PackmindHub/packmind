@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
@@ -7,18 +7,26 @@ import {
   PMIcon,
   PMInput,
   PMSkeleton,
+  PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuCheck, LuGitBranch, LuPlus, LuSearch } from 'react-icons/lu';
-import { GitRepoId } from '@packmind/types';
+import { LuCheck, LuGitBranch, LuSearch } from 'react-icons/lu';
+import { GitProviderId, GitRepoId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
+  useCheckProviderBranchExistsMutation,
+  useCheckTrackedBranchExistsQuery,
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
-import { ApplyProgress, RepoSelection, RepoTuple, tupleKey } from './types';
-import { useCheckTrackedBranchExistsQuery } from '../../api/queries';
+import {
+  ApplyProgress,
+  RepoSelection,
+  RepoTuple,
+  repoKey,
+  tupleKey,
+} from './types';
 import { DeletedBranchBadge } from '../../../../shared/components/DeletedBranchBadge';
 
 export interface ManageReposPanelProps {
@@ -36,6 +44,12 @@ type TrackedGroup = {
   fullName: string;
   defaultBranch: string;
   trackedBranches: string[];
+  /**
+   * The one branch a tracked repository is on: the branch switched to in this
+   * drawer, or else its saved tracked row. Absent for a legacy repository,
+   * which has several untracked branches and shows them all.
+   */
+  trackedBranch?: string;
   knownFromProvider: boolean;
   /**
    * Repository id per already-saved branch. A branch the user just added in
@@ -66,14 +80,27 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   const isLoading = tracked.isLoading || available.isLoading;
   const degraded = !available.isLoading && available.isError;
 
-  const { trackedGroups, untrackedRepos, repoCount, totalRepos } =
+  const { trackedGroups, untrackedRepos, repoCount, totalRepos, branchCount } =
     useMemo(() => {
       const q = filter.trim().toLowerCase();
 
+      const trackedBranchByRepo = new Map<string, string>();
+      for (const r of tracked.data ?? []) {
+        if (r.isTracked) trackedBranchByRepo.set(repoKey(r), r.branch);
+      }
+      for (const [key, branch] of selection.switches) {
+        trackedBranchByRepo.set(key, branch);
+      }
+
       const groupMap = new Map<string, TrackedGroup>();
-      const branchSets = new Map<string, Set<string>>();
       for (const t of selection.tuples) {
-        const key = `${t.owner}/${t.repo}`;
+        const key = repoKey(t);
+        const trackedBranch = trackedBranchByRepo.get(key);
+        // A tracked repository's untracked rows are kept, with their history,
+        // but hidden: the repository is on one branch only.
+        if (trackedBranch !== undefined && t.branch !== trackedBranch) {
+          continue;
+        }
         let group = groupMap.get(key);
         if (!group) {
           group = {
@@ -83,13 +110,12 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
             fullName: key,
             defaultBranch: t.branch,
             trackedBranches: [],
+            trackedBranch,
             knownFromProvider: false,
             savedRepoIdByBranch: new Map(),
           };
           groupMap.set(key, group);
-          branchSets.set(key, new Set());
         }
-        branchSets.get(key)?.add(t.branch);
         group.trackedBranches.push(t.branch);
       }
 
@@ -126,6 +152,10 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
 
       const totalRepos = groupMap.size + untrackedMap.size;
       const repoCount = groupMap.size;
+      const branchCount = Array.from(groupMap.values()).reduce(
+        (count, g) => count + g.trackedBranches.length,
+        0,
+      );
 
       const matchesGroup = (g: TrackedGroup) =>
         !q ||
@@ -144,8 +174,20 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         matchesRepo,
       );
 
-      return { trackedGroups, untrackedRepos, repoCount, totalRepos };
-    }, [available.data, tracked.data, selection.tuples, filter]);
+      return {
+        trackedGroups,
+        untrackedRepos,
+        repoCount,
+        totalRepos,
+        branchCount,
+      };
+    }, [
+      available.data,
+      tracked.data,
+      selection.tuples,
+      selection.switches,
+      filter,
+    ]);
 
   if (isLoading) {
     return (
@@ -175,20 +217,39 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   const addTuple = (t: RepoTuple) => {
     const target = tupleKey(t);
     if (selection.tuples.some((x) => tupleKey(x) === target)) return;
-    onSelectionChange({ tuples: [...selection.tuples, t] });
+    onSelectionChange({ ...selection, tuples: [...selection.tuples, t] });
   };
 
   const removeTuple = (t: RepoTuple) => {
     const target = tupleKey(t);
     onSelectionChange({
+      ...selection,
       tuples: selection.tuples.filter((x) => tupleKey(x) !== target),
+    });
+  };
+
+  // A tracked repository shows one branch, so unticking it unticks the repo.
+  const removeRepo = (key: string) => {
+    onSelectionChange({
+      ...selection,
+      tuples: selection.tuples.filter((x) => repoKey(x) !== key),
+    });
+  };
+
+  const switchBranch = (t: RepoTuple) => {
+    const key = repoKey(t);
+    const switches = new Map(selection.switches);
+    switches.set(key, t.branch);
+    onSelectionChange({
+      tuples: [...selection.tuples.filter((x) => repoKey(x) !== key), t],
+      switches,
     });
   };
 
   return (
     <PMVStack gap={3} align="stretch" flex={1} minH={0}>
       <Header
-        trackedCount={selection.tuples.length}
+        trackedCount={branchCount}
         repoCount={repoCount}
         totalRepos={totalRepos}
         unknownTotal={degraded}
@@ -282,12 +343,19 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
               <TrackedRepoSection
                 key={group.key}
                 group={group}
-                canAdd={!degraded || group.knownFromProvider}
-                onAdd={(branch) =>
-                  addTuple({ owner: group.owner, repo: group.repo, branch })
+                providerId={provider.id}
+                canChange={!degraded || group.knownFromProvider}
+                onSwitch={(branch) =>
+                  switchBranch({ owner: group.owner, repo: group.repo, branch })
                 }
                 onRemove={(branch) =>
-                  removeTuple({ owner: group.owner, repo: group.repo, branch })
+                  group.trackedBranch !== undefined
+                    ? removeRepo(group.key)
+                    : removeTuple({
+                        owner: group.owner,
+                        repo: group.repo,
+                        branch,
+                      })
                 }
               />
             ))}
@@ -443,33 +511,54 @@ const UntrackedRepoRow: React.FC<{
 
 const TrackedRepoSection: React.FC<{
   group: TrackedGroup;
-  canAdd: boolean;
-  onAdd: (branch: string) => void;
+  providerId: GitProviderId;
+  canChange: boolean;
+  onSwitch: (branch: string) => void;
   onRemove: (branch: string) => void;
-}> = ({ group, canAdd, onAdd, onRemove }) => {
+}> = ({ group, providerId, canChange, onSwitch, onRemove }) => {
+  const checkBranch = useCheckProviderBranchExistsMutation();
+  const errorId = useId();
   const [adding, setAdding] = useState(false);
-  const initialDraft = group.trackedBranches.includes(group.defaultBranch)
-    ? ''
-    : group.defaultBranch;
-  const [draft, setDraft] = useState(initialDraft);
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const currentBranch =
+    group.trackedBranch ??
+    (group.trackedBranches.length === 1 ? group.trackedBranches[0] : undefined);
 
   const startAdd = () => {
-    setDraft(
-      group.trackedBranches.includes(group.defaultBranch)
-        ? ''
-        : group.defaultBranch,
-    );
-    setAdding(true);
-  };
-  const commitAdd = () => {
-    const next = draft.trim();
-    if (next && !group.trackedBranches.includes(next)) onAdd(next);
-    setAdding(false);
     setDraft('');
+    setError(null);
+    setAdding(true);
   };
   const cancelAdd = () => {
     setAdding(false);
     setDraft('');
+    setError(null);
+  };
+  const commitSwitch = async () => {
+    const next = draft.trim();
+    if (!next || next === currentBranch) {
+      cancelAdd();
+      return;
+    }
+    setError(null);
+    try {
+      const { exists } = await checkBranch.mutateAsync({
+        providerId,
+        owner: group.owner,
+        repo: group.repo,
+        branch: next,
+      });
+      if (!exists) {
+        setError(`Branch ${next} not found in ${group.fullName}`);
+        return;
+      }
+      onSwitch(next);
+      cancelAdd();
+    } catch {
+      setError(`Couldn't verify branch ${next}. Try again.`);
+    }
   };
 
   const hasTracked = group.trackedBranches.length > 0;
@@ -493,7 +582,7 @@ const TrackedRepoSection: React.FC<{
         <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
           {group.fullName}
         </PMText>
-        {canAdd && !adding && (
+        {canChange && !adding && (
           <PMBox
             as="button"
             onClick={startAdd}
@@ -506,13 +595,13 @@ const TrackedRepoSection: React.FC<{
             cursor="pointer"
             color="text.secondary"
             _hover={{ color: 'branding.primary' }}
-            data-testid="manage-repos-add-branch"
+            data-testid="manage-repos-change-branch"
           >
             <PMIcon fontSize="2xs">
-              <LuPlus />
+              <LuGitBranch />
             </PMIcon>
             <PMText fontSize="xs" color="secondary" fontWeight="medium">
-              branch
+              change branch
             </PMText>
           </PMBox>
         )}
@@ -526,26 +615,62 @@ const TrackedRepoSection: React.FC<{
           borderColor="border.tertiary"
           bg="background.secondary"
         >
-          <PMInput
-            size="xs"
-            autoFocus
-            placeholder={group.defaultBranch}
-            value={draft}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setDraft(e.target.value)
-            }
-            onBlur={commitAdd}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                commitAdd();
-              } else if (e.key === 'Escape') {
-                e.preventDefault();
-                cancelAdd();
-              }
-            }}
-            data-testid="manage-repos-branch-input"
-          />
+          <PMHStack gap={2} align="center">
+            <PMInput
+              size="xs"
+              autoFocus
+              placeholder={group.defaultBranch}
+              value={draft}
+              disabled={checkBranch.isPending}
+              error={error ?? undefined}
+              aria-invalid={!!error || undefined}
+              aria-describedby={error ? errorId : undefined}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDraft(e.target.value);
+                setError(null);
+              }}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void commitSwitch();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  cancelAdd();
+                }
+              }}
+              data-testid="manage-repos-branch-input"
+            />
+            {checkBranch.isPending && <PMSpinner size="xs" />}
+            <PMButton
+              variant="primary"
+              size="xs"
+              onClick={() => void commitSwitch()}
+              disabled={checkBranch.isPending || !draft.trim()}
+              data-testid="manage-repos-branch-confirm"
+            >
+              Change
+            </PMButton>
+            <PMButton
+              variant="tertiary"
+              size="xs"
+              onClick={cancelAdd}
+              disabled={checkBranch.isPending}
+              data-testid="manage-repos-branch-cancel"
+            >
+              Cancel
+            </PMButton>
+          </PMHStack>
+          {error && (
+            <PMText
+              id={errorId}
+              fontSize="xs"
+              color="error"
+              marginTop={1}
+              data-testid="manage-repos-branch-error"
+            >
+              {error}
+            </PMText>
+          )}
         </PMBox>
       )}
 

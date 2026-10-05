@@ -37,7 +37,14 @@ import {
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { Link } from 'react-router';
-import type { GitProviderId, PackageId, TargetId } from '@packmind/types';
+import {
+  comparePackageReleaseVersions,
+  parsePackageReleaseVersion,
+  parsePackageVersionSpec,
+  type GitProviderId,
+  type PackageId,
+  type TargetId,
+} from '@packmind/types';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import {
   installDriftEntries,
@@ -592,9 +599,9 @@ export function SyncSurface({
               {titleForScope(scope, blocks, marketplaceTargets)}
             </PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Selected distributions receive a direct commit on their configured
+              Selected destinations receive a direct commit on their configured
               branch bringing every bundled component to its Packmind version.
-              Distributions without a connected provider are listed separately
+              Destinations without a connected provider are listed separately
               and must be updated via{' '}
               <PMText as="span" fontFamily="mono" fontSize="xs">
                 packmind install
@@ -788,7 +795,7 @@ export function SyncSurface({
                   : actionableAllLocked
                     ? 'Waiting on in-progress distributions'
                     : !hasPick
-                      ? 'Select at least one distribution'
+                      ? 'Select at least one destination'
                       : confirmLabel(stats, marketplaceStats)}
             </PMButton>
           </PMHStack>
@@ -800,11 +807,11 @@ export function SyncSurface({
 
 /** What the footer says while both halves are in flight. */
 function syncingLine(installCount: number, pluginCount: number): string {
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
   if (installCount === 0) return `Distributing ${plugins}…`;
-  if (pluginCount === 0) return `Distributing to ${distributions}…`;
-  return `Distributing to ${distributions}, and ${plugins}…`;
+  if (pluginCount === 0) return `Distributing to ${destinations}…`;
+  return `Distributing to ${destinations}, and ${plugins}…`;
 }
 
 /**
@@ -813,6 +820,11 @@ function syncingLine(installCount: number, pluginCount: number): string {
  * The mixed case drops the package count rather than stating four numbers in
  * one button: what the reader needs before clicking is how far this goes, and
  * the two destinations counts carry that.
+ *
+ * Destinations and not distributions, which is what this counted until a reader
+ * pointed out that you do not distribute to a distribution. The number is a set
+ * of repository-and-target pairs, deduplicated across the packages picked, and
+ * the list this button sits under has called those destinations all along.
  */
 function confirmLabel(
   stats: Readonly<{ installCount: number; packageCount: number }>,
@@ -823,7 +835,7 @@ function confirmLabel(
 ): string {
   const { installCount, packageCount } = stats;
   const { pluginCount, marketplaceCount } = marketplaceStats;
-  const distributions = `${installCount} distribution${installCount === 1 ? '' : 's'}`;
+  const destinations = `${installCount} destination${installCount === 1 ? '' : 's'}`;
   const plugins = `${pluginCount} plugin${pluginCount === 1 ? '' : 's'}`;
 
   if (pluginCount === 0) {
@@ -832,15 +844,15 @@ function confirmLabel(
      * already named it. Counting it here would put "1 package" in front of the
      * only number the reader is deciding on.
      */
-    if (packageCount <= 1) return `Distribute to ${distributions}`;
-    return `Distribute ${packageCount} packages to ${distributions}`;
+    if (packageCount <= 1) return `Distribute to ${destinations}`;
+    return `Distribute ${packageCount} packages to ${destinations}`;
   }
   if (installCount === 0) {
     return `Distribute ${plugins} to ${marketplaceCount} marketplace${
       marketplaceCount === 1 ? '' : 's'
     }`;
   }
-  return `Distribute to ${distributions} and ${plugins}`;
+  return `Distribute to ${destinations} and ${plugins}`;
 }
 
 function titleForScope(
@@ -889,7 +901,15 @@ function buildPackageBlocks(
     if (scope.kind === 'package' && pkg.id !== scope.packageId) continue;
     if (bulkAllowed && !bulkAllowed.has(pkg.id)) continue;
     const driftedEntries = installDriftEntries(pkg).filter((e) => {
-      if (e.behindArtifacts.length === 0) return false;
+      /*
+       * What a distribution would actually move, which the late-component count
+       * stopped answering once pins became real: a landing pinned to an older
+       * release has no late component — every one of them is what that release
+       * pinned — and a push moves it to the newest release all the same. Reading
+       * the count here is what made this screen say "Nothing to distribute" over
+       * a repository three releases behind.
+       */
+      if (e.standing.remedy !== 'update') return false;
       if (installFilter) {
         return installFilter.has(localInstallKey(e.repo.id, e.target.id));
       }
@@ -899,6 +919,82 @@ function buildPackageBlocks(
     out.push({ pkg, driftedEntries });
   }
   return out;
+}
+
+/**
+ * Release versions in order, oldest first.
+ *
+ * By the parsed triple and never by the string: `0.10.0` sorts below `0.9.0`
+ * lexically, which would print the versions a batch is leaving in an order that
+ * is not an order. A version that does not parse falls back to a locale compare
+ * rather than to the default sort, which is by UTF-16 code unit.
+ */
+function sortVersionsAscending(versions: string[]): string[] {
+  return [...versions].sort((a, b) => {
+    const parsedA = parsePackageReleaseVersion(a);
+    const parsedB = parsePackageReleaseVersion(b);
+    if (parsedA && parsedB) {
+      return comparePackageReleaseVersions(parsedA, parsedB);
+    }
+    return a.localeCompare(b);
+  });
+}
+
+/**
+ * Where a package is headed across the landings this batch picked, in one line.
+ *
+ * The versions it is leaving, which can be several: one repository pinned to
+ * 0.1.0 and another to 0.2.0 both move to the newest release, and a line naming
+ * only one of them would describe half the batch. Landings tracking the live
+ * package are named as such rather than by a number, since no number describes
+ * where they are going.
+ *
+ * Deliberately coarse. It says what kind of move this is and to what, and the
+ * rows below it say which landing is which; a line that tried to be exact about
+ * every landing would be the list it sits above.
+ */
+function packageMoveLine(block: PackageBlock): string {
+  const from = new Set<string>();
+  let tracksLive = false;
+
+  for (const entry of block.driftedEntries) {
+    const pin = parsePackageVersionSpec(entry.versionSpec);
+    if (pin?.kind === 'exact') from.add(pin.version);
+    else tracksLive = true;
+  }
+
+  const to = block.pkg.latestReleaseVersion;
+  const leaving = sortVersionsAscending([...from]).join(', ');
+  const pinned =
+    from.size > 0 ? `${leaving} → ${to ?? 'no release yet'}` : null;
+
+  if (pinned && tracksLive) return `${pinned} · live version`;
+  if (pinned) return pinned;
+  return 'live version';
+}
+
+/**
+ * What this distribution would do to one landing, in a few words.
+ *
+ * Two different answers, because the two kinds of destination move for
+ * different reasons. A landing tracking the live package moves component by
+ * component, and naming how many is the strongest thing that can be said about
+ * it. A pinned one moves as a whole, from the release it is on to the newest
+ * there is — and it has no late component at all, so the count it used to show
+ * read `0 components to update` over a repository three releases behind.
+ *
+ * `destinationStanding` has already decided that this landing is one a push
+ * moves; this only says what the move is.
+ */
+function entryMoveLine(entry: InstallDriftEntry, pkg: PackageDrift): string {
+  const pin = parsePackageVersionSpec(entry.versionSpec);
+  if (pin?.kind === 'exact' && pkg.latestReleaseVersion) {
+    return `${pin.version} → ${pkg.latestReleaseVersion}`;
+  }
+
+  return `${entry.behindArtifacts.length} component${
+    entry.behindArtifacts.length === 1 ? '' : 's'
+  } to update`;
 }
 
 type EntryWithLock = {
@@ -947,6 +1043,7 @@ function InstallSyncRows({
           <InstallSyncRow
             key={key}
             entry={entry}
+            pkg={block.pkg}
             showTarget={multiLandingRepos.has(entry.repo.id)}
             selected={selected.has(key)}
             lockReason={lock}
@@ -1098,6 +1195,15 @@ function PackageSyncBlock({
             flexShrink={0}
             fontVariantNumeric="tabular-nums"
           >
+            {/*
+              Where this package is going, beside how much of it was picked.
+              A batch can mix a repository pinned to 0.1.0 with one tracking the
+              live package, and without this the reader confirms a push whose
+              effect differs per destination with nothing on screen saying so.
+            */}
+            <PMText fontSize="xs" color="secondary">
+              {packageMoveLine(block)}
+            </PMText>
             <PMText fontSize="xs" color="faded">
               {selectedCount} of {total} selected
               {lockedInBlock > 0 && ` · ${lockedInBlock} locked`}
@@ -1366,6 +1472,8 @@ const LOCK_ROW_BADGE: Record<
 
 type InstallSyncRowProps = {
   entry: InstallDriftEntry;
+  /** The package this landing carries, which knows its newest release. */
+  pkg: PackageDrift;
   /** The repository holds more than one landing, so the row has to say which. */
   showTarget: boolean;
   selected: boolean;
@@ -1375,6 +1483,7 @@ type InstallSyncRowProps = {
 
 function InstallSyncRow({
   entry,
+  pkg,
   showTarget,
   selected,
   lockReason,
@@ -1531,8 +1640,7 @@ function InstallSyncRow({
             </PMBadge>
           )}
           <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            {entry.behindArtifacts.length} component
-            {entry.behindArtifacts.length === 1 ? '' : 's'} to update
+            {entryMoveLine(entry, pkg)}
           </PMText>
           {entry.mostRecentDeployedAt && (
             <PMHStack
@@ -1742,8 +1850,8 @@ function AllInProgressState({ count }: Readonly<{ count: number }>) {
       </PMText>
       <PMText fontSize="xs" color="secondary" textAlign="center" maxW="56ch">
         {count === 1
-          ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to distribute.'
-          : `All ${count} drifted distributions are currently in progress. Wait for them to finish, then come back to distribute.`}
+          ? 'The only drifted destination is currently in progress. Wait for it to finish, then come back to distribute.'
+          : `All ${count} drifted destinations are currently in progress. Wait for them to finish, then come back to distribute.`}
       </PMText>
     </PMVStack>
   );
@@ -1760,7 +1868,7 @@ function NoActionableNote() {
       bg="background.secondary"
     >
       <PMText fontSize="sm" color="secondary">
-        Nothing to distribute from the app — every drifted distribution lives on
+        Nothing to distribute from the app — every drifted destination lives on
         a provider without a connected token. Use the CLI section below.
       </PMText>
     </PMBox>
@@ -1769,7 +1877,7 @@ function NoActionableNote() {
 
 function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
   const [expanded, setExpanded] = useState(true);
-  const distributionsCount = cliBlocks.reduce(
+  const destinationsCount = cliBlocks.reduce(
     (acc, b) => acc + b.cliEntries.length,
     0,
   );
@@ -1825,8 +1933,8 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               <LuTerminal />
             </PMIcon>
             <PMText fontSize="sm" fontWeight="semibold" color="primary">
-              {distributionsCount} distribution
-              {distributionsCount === 1 ? '' : 's'} need{' '}
+              {destinationsCount} destination
+              {destinationsCount === 1 ? '' : 's'} need{' '}
               <PMText
                 as="span"
                 fontFamily="mono"
@@ -1935,9 +2043,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
                             fontVariantNumeric="tabular-nums"
                             marginLeft="auto"
                           >
-                            {entry.behindArtifacts.length} component
-                            {entry.behindArtifacts.length === 1 ? '' : 's'} to
-                            update
+                            {entryMoveLine(entry, block.pkg)}
                           </PMText>
                         </PMHStack>
                       ))}
@@ -1963,7 +2069,7 @@ function NothingToDistribute() {
         Nothing to distribute.
       </PMText>
       <PMText fontSize="xs" color="secondary">
-        Every component is on its latest version on every distribution.
+        Every component is on its latest version on every destination.
       </PMText>
     </PMVStack>
   );
@@ -2012,18 +2118,18 @@ function SuccessSurface({
             what is true of both as soon as a catalog is in the batch.
           */}
           <PMHeading level="h3">
-            {hadMarketplaces ? 'Distribution started' : 'Distributions updated'}
+            {hadMarketplaces ? 'Distribution started' : 'Destinations updated'}
           </PMHeading>
         </PMHStack>
         {hadRepositories && (
           <PMText fontSize="sm" color="secondary">
             {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-            distributed on {stats.installCount} distribution
+            distributed to {stats.installCount} destination
             {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
             component update{stats.artifactUpdateCount === 1 ? '' : 's'} in
-            total). Each distribution received a direct commit on its configured
+            total). Each destination received a direct commit on its configured
             branch bringing the bundled components to their Packmind version.
-            Those distributions are now aligned.
+            Those destinations are now aligned.
           </PMText>
         )}
         {/*

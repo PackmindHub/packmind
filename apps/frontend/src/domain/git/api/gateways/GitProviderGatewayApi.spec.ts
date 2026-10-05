@@ -29,6 +29,7 @@ describe('GitProviderGatewayApi', () => {
     gateway = new GitProviderGatewayApi();
     mockedApi.put.mockResolvedValue({} as never);
     mockedApi.get.mockResolvedValue({} as never);
+    mockedApi.post.mockResolvedValue({} as never);
   });
 
   afterEach(() => {
@@ -252,6 +253,63 @@ describe('GitProviderGatewayApi', () => {
           },
         );
       });
+    });
+  });
+
+  describe('checkProviderBranchExists', () => {
+    let result: { exists: boolean };
+
+    beforeEach(async () => {
+      mockedApi.get.mockResolvedValue({ exists: true } as never);
+      result = await gateway.checkProviderBranchExists(
+        organizationId,
+        providerId,
+        { owner: 'o', repo: 'r', branch: 'feat/x' },
+      );
+    });
+
+    it('requests the provider branch-exists endpoint with url-encoded params', () => {
+      expect(mockedApi.get).toHaveBeenCalledWith(
+        `/organizations/${organizationId}/git/providers/${providerId}/branch-exists?owner=o&repo=r&branch=feat%2Fx`,
+      );
+    });
+
+    it('returns the response', () => {
+      expect(result).toEqual({ exists: true });
+    });
+  });
+
+  describe('setTrackedRepository', () => {
+    beforeEach(async () => {
+      await gateway.setTrackedRepository(organizationId, {
+        owner: 'o',
+        repo: 'r',
+        branch: 'main',
+      });
+    });
+
+    it('posts the repository with a track origin', () => {
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        `/organizations/${organizationId}/git/repositories/tracked-repository`,
+        { owner: 'o', repo: 'r', branch: 'main', origin: 'track' },
+      );
+    });
+  });
+
+  describe('updateTrackedBranch', () => {
+    beforeEach(async () => {
+      await gateway.updateTrackedBranch(organizationId, {
+        owner: 'o',
+        repo: 'r',
+        branch: 'dev',
+      });
+    });
+
+    it('puts the new tracked branch', () => {
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        `/organizations/${organizationId}/git/repositories/tracked-repository`,
+        { owner: 'o', repo: 'r', branch: 'dev' },
+      );
     });
   });
 });

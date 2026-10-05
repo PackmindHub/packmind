@@ -21,19 +21,23 @@ import {
   DistributedPackageHistoryEntry,
   DistributionHistoryEntry,
   DistributionHistoryEntryOf,
+  PackageId,
   RenderMode,
   SkillDistributionHistoryEntry,
   StandardDistributionHistoryEntry,
+  TargetId,
 } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
+import { isOnLiveTarget } from '../../hooks/useLiveTargetIds';
 
 export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
 
 /** Paths that mean "the repository itself", which the target line leaves out. */
 const ROOT_TARGET_PATHS = new Set(['', '/', '.', './']);
+const UNKNOWN_REPOSITORY = 'Unknown repository';
 
 type DeploymentsHistoryProps = {
   entityId: string;
@@ -43,6 +47,10 @@ type DeploymentsHistoryProps = {
   title?: string;
   orgSlug?: string;
   spaceSlug?: string;
+  /** Packages absent from this set are shown unlinked; omit to link them all. */
+  livePackageIds?: ReadonlySet<PackageId>;
+  /** Rows on a target absent from this set are greyed out; omit to show all as live. */
+  liveTargetIds?: ReadonlySet<TargetId>;
   hidePackageColumn?: boolean;
   hideVersionColumn?: boolean;
 } & (
@@ -68,6 +76,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   title = 'Distribution History',
   orgSlug,
   spaceSlug,
+  livePackageIds,
+  liveTargetIds,
   hidePackageColumn = false,
   hideVersionColumn = false,
 }) => {
@@ -190,7 +200,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     if (!target) return 'No target specified';
     const place = target.gitRepo
       ? `${target.gitRepo.owner}/${target.gitRepo.repo}`
-      : `Repository ${target.gitRepoId}`;
+      : UNKNOWN_REPOSITORY;
     const isRoot = ROOT_TARGET_PATHS.has(target.path);
     const detail = [target.gitRepo?.branch, isRoot ? null : target.path]
       .filter(Boolean)
@@ -202,7 +212,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           variant="small"
           fontWeight="medium"
           truncate
-          title={place}
+          title={target.gitRepo ? place : `${place} (${target.gitRepoId})`}
           data-testid={DeploymentsHistoryDataTestId.DestinationRepository}
         >
           {place}
@@ -343,7 +353,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   ): React.ReactNode => {
     const packages = deployment.distributedPackages
       ?.map((dp) => dp.package)
-      .filter(Boolean);
+      .filter((pkg): pkg is NonNullable<typeof pkg> => Boolean(pkg));
 
     if (!packages || packages.length === 0) return '-';
 
@@ -351,19 +361,23 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     if (orgSlug && spaceSlug) {
       return (
         <PMBox display="flex" flexDirection="column" gap={1}>
-          {packages.map((pkg) => (
-            <PMLink asChild key={pkg!.id} variant="active">
-              <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg!.id)}>
-                {pkg!.name}
-              </Link>
-            </PMLink>
-          ))}
+          {packages.map((pkg) =>
+            !livePackageIds || livePackageIds.has(pkg.id) ? (
+              <PMLink asChild key={pkg.id} variant="active">
+                <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg.id)}>
+                  {pkg.name}
+                </Link>
+              </PMLink>
+            ) : (
+              <PMText key={pkg.id}>{pkg.name}</PMText>
+            ),
+          )}
         </PMBox>
       );
     }
 
     // Otherwise just show names
-    return packages.map((pkg) => pkg!.name).join(', ');
+    return packages.map((pkg) => pkg.name).join(', ');
   };
 
   const baseColumns: PMTableColumn[] = [
@@ -427,6 +441,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   }
 
+  const deletedRowKeys = new Set<string>(
+    rows
+      .filter(({ deployment }) => !isOnLiveTarget(deployment, liveTargetIds))
+      .map(({ deployment }) => deployment.id),
+  );
+
   const tableData: PMTableRow[] = rows.map(
     ({ deployment, version, removed }) => ({
       key: deployment.id,
@@ -465,6 +485,11 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           reading vertically.
         */
         tableProps={{ tableLayout: 'fixed', width: '100%' }}
+        getRowProps={(row) =>
+          deletedRowKeys.has(row.key as string)
+            ? { opacity: 0.55, cursor: 'not-allowed', 'aria-disabled': true }
+            : {}
+        }
       />
     </PMPageSection>
   );

@@ -38,6 +38,8 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* One retry in CI: a failing test reruns once, and that rerun records the video and trace */
+  retries: isCI ? 1 : 0,
   /* Reporter configuration - don't serve HTML report interactively in CI (blocks container) */
   reporter: [['html', { open: isCI ? 'never' : 'on-failure' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -46,7 +48,8 @@ export default defineConfig({
     storageState: currentNavigation,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    video: 'on',
+    /* Record only on the retry: recording every test filled the CI artifact quota and slowed runs */
+    video: 'on-first-retry',
   },
   projects: [
     {

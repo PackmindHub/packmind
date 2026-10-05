@@ -1,5 +1,6 @@
 import { ConsoleLogRemovalService } from './ConsoleLogRemovalService';
 import { ProgrammingLanguage } from '@packmind/types';
+import { LinterAstInternalError } from '../core/LinterAstInternalError';
 
 describe('ConsoleLogRemovalService', () => {
   let consoleLogRemovalService: ConsoleLogRemovalService;
@@ -17,9 +18,7 @@ describe('ConsoleLogRemovalService', () => {
           program,
           ProgrammingLanguage.TYPESCRIPT,
         ),
-      ).rejects.toThrow(
-        'ConsoleLogRemovalService only supports JAVASCRIPT, received: TYPESCRIPT',
-      );
+      ).rejects.toBeInstanceOf(LinterAstInternalError);
     });
 
     it('throws error for Python language', async () => {
@@ -30,9 +29,7 @@ describe('ConsoleLogRemovalService', () => {
           program,
           ProgrammingLanguage.PYTHON,
         ),
-      ).rejects.toThrow(
-        'ConsoleLogRemovalService only supports JAVASCRIPT, received: PYTHON',
-      );
+      ).rejects.toBeInstanceOf(LinterAstInternalError);
     });
   });
 

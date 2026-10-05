@@ -32,6 +32,7 @@ import {
   FileUpdates,
   CodingAgent,
   RenderMode,
+  NoChangesDetectedError,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { TargetService } from '../services/TargetService';
@@ -144,10 +145,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
             firstTargetData.fileUpdates.delete,
           );
         } catch (error) {
-          if (
-            error instanceof Error &&
-            error.message === 'NO_CHANGES_DETECTED'
-          ) {
+          if (error instanceof NoChangesDetectedError) {
             this.logger.info('No changes detected for package removal', {
               repositoryId,
               packageSlug: pkg.slug,
@@ -525,6 +523,8 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       recipeVersions: [],
       skillVersions: [],
       operation: 'remove',
+      // The package is leaving the destination; it asks for no version at all.
+      versionSpec: null,
     });
 
     if (removedStandardVersions.length > 0) {

@@ -12,6 +12,7 @@ import {
   createSkillId,
   createStandardId,
   createTargetId,
+  WILDCARD_VERSION_SPEC,
 } from '@packmind/types';
 import type {
   ArtifactDrift,
@@ -166,6 +167,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: TEN_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
       {
         repo: BACKEND,
@@ -174,6 +176,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: TWO_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
       {
         repo: MOBILE,
@@ -182,8 +185,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: THIRTY_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-auth'),
@@ -235,8 +241,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: THIRTY_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-onboarding'),
@@ -288,8 +297,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: TWO_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-payments'),
@@ -323,8 +335,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.in_progress,
         lastDistributedAt: NOW,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-mobile-dx'),
@@ -359,8 +374,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributedAt: TWO_DAYS_AGO,
         lastDistributionError:
           'Push rejected: branch protection on main requires a pull request',
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-design-system'),
@@ -428,6 +446,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: TWO_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
       {
         repo: LANDING,
@@ -436,8 +455,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.no_changes,
         lastDistributedAt: TWO_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
   {
     id: createPackageId('pkg-stub-legacy-lint'),
@@ -471,8 +493,11 @@ export const STUB_PACKAGES: PackageDrift[] = [
         lastDistributionStatus: DistributionStatus.success,
         lastDistributedAt: NINETY_DAYS_AGO,
         lastDistributionError: null,
+        versionSpec: WILDCARD_VERSION_SPEC,
       },
     ],
+    latestReleaseVersion: null,
+    hasUnreleasedChanges: false,
   },
 ];
 
@@ -525,6 +550,8 @@ function pivotPackagesIntoRepositories(
         description: pkg.description,
         artifacts: scopedArtifacts,
         installLocations: [scopedInstallLocation],
+        latestReleaseVersion: pkg.latestReleaseVersion,
+        hasUnreleasedChanges: pkg.hasUnreleasedChanges,
       });
     }
   }

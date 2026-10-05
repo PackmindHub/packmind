@@ -2,6 +2,7 @@ export * from './IAddGitProviderUseCase';
 export * from './IAddGitRepoUseCase';
 export * from './ICheckDirectoryExistenceUseCase';
 export * from './ICheckProviderAuthUseCase';
+export * from './ICheckProviderBranchExistsUseCase';
 export * from './ICheckTrackedBranchExistsUseCase';
 export * from './IDeleteGitProviderUseCase';
 export * from './IDeleteGitRepoUseCase';

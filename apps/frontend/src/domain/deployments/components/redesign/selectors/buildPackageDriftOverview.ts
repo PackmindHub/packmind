@@ -1,5 +1,6 @@
 import {
   DistributionStatus,
+  parsePackageVersionSpec,
   type ActiveDistributedPackage,
   type ActiveDistributedPackagesByTarget,
   type DeployedCommandTargetInfo,
@@ -13,7 +14,8 @@ import {
   type Target,
 } from '@packmind/types';
 
-import { isRootTargetPath } from './installDriftEntries';
+import { installDriftEntries, isRootTargetPath } from './installDriftEntries';
+import { needsAttention } from './destinationStanding';
 import type {
   ArtifactDrift,
   ArtifactId,
@@ -41,6 +43,8 @@ type PackageAccumulator = {
   description: string;
   artifacts: Map<string, ArtifactAccumulator>;
   installLocations: InstallLocation[];
+  latestReleaseVersion: string | null;
+  hasUnreleasedChanges: boolean;
 };
 
 function toRepoRef(gitRepo: GitRepo): RepoRef {
@@ -76,6 +80,13 @@ function ensurePackage(
     description: active.package.description,
     artifacts: new Map(),
     installLocations: [],
+    /*
+     * Taken from whichever destination of this package is seen first, and not
+     * merged across them: both are facts about the package itself, so every
+     * destination of it carries the same pair.
+     */
+    latestReleaseVersion: active.latestReleaseVersion,
+    hasUnreleasedChanges: active.hasUnreleasedChanges,
   };
   packages.set(active.packageId, created);
   return created;
@@ -112,11 +123,31 @@ function ensureArtifact(
   return created;
 }
 
+/**
+ * Whether this destination's lateness against the live package means anything.
+ *
+ * It does not, for a destination pinned to a release. Such a repository holds
+ * exactly what that release pinned: its components being older than the live
+ * ones, a component deleted since still sitting there, and a component added
+ * since being absent are all the pin working as asked, not drift. Reporting
+ * them is what made a pinned repository read as behind the moment anyone edited
+ * a component — including one sitting on the newest release there is.
+ *
+ * How far such a destination has fallen behind is a question about releases,
+ * and `destinationStanding` answers it from the pin and the package's release
+ * state instead.
+ */
+function measuresAgainstLivePackage(versionSpec: string | null): boolean {
+  return parsePackageVersionSpec(versionSpec)?.kind !== 'exact';
+}
+
 function deployedDriftReason(
   isDeleted: boolean,
   deployedVersion: number,
   packmindVersion: number,
+  measuresAgainstLive: boolean,
 ): RepoInstall['driftReason'] {
+  if (!measuresAgainstLive) return 'aligned';
   if (isDeleted) return 'needs-removal';
   if (deployedVersion < packmindVersion) return 'behind';
   return 'aligned';
@@ -128,6 +159,7 @@ function pushStandard(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
@@ -148,6 +180,7 @@ function pushStandard(
       isDeleted,
       info.deployedVersion.version,
       info.latestVersion.version,
+      measuresAgainstLive,
     ),
   });
 }
@@ -158,6 +191,7 @@ function pushCommand(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
@@ -178,6 +212,7 @@ function pushCommand(
       isDeleted,
       info.deployedVersion.version,
       info.latestVersion.version,
+      measuresAgainstLive,
     ),
   });
 }
@@ -188,6 +223,7 @@ function pushSkill(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
@@ -208,6 +244,7 @@ function pushSkill(
       isDeleted,
       info.deployedVersion.version,
       info.latestVersion.version,
+      measuresAgainstLive,
     ),
   });
 }
@@ -218,6 +255,7 @@ function pushPendingStandard(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const artifact = ensureArtifact(pkg, 'standard', info.id, info.name, 0, {
     isPending: true,
@@ -232,7 +270,7 @@ function pushPendingStandard(
     branch,
     deployedVersion: 0,
     lastDeployedAt: '',
-    driftReason: 'not-distributed',
+    driftReason: measuresAgainstLive ? 'not-distributed' : 'aligned',
   });
 }
 
@@ -242,6 +280,7 @@ function pushPendingCommand(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const artifact = ensureArtifact(pkg, 'command', info.id, info.name, 0, {
     isPending: true,
@@ -255,7 +294,7 @@ function pushPendingCommand(
     branch,
     deployedVersion: 0,
     lastDeployedAt: '',
-    driftReason: 'not-distributed',
+    driftReason: measuresAgainstLive ? 'not-distributed' : 'aligned',
   });
 }
 
@@ -265,6 +304,7 @@ function pushPendingSkill(
   repo: RepoRef,
   target: TargetRef,
   branch: string,
+  measuresAgainstLive: boolean,
 ): void {
   const artifact = ensureArtifact(pkg, 'skill', info.id, info.name, 0, {
     isPending: true,
@@ -278,7 +318,7 @@ function pushPendingSkill(
     branch,
     deployedVersion: 0,
     lastDeployedAt: '',
-    driftReason: 'not-distributed',
+    driftReason: measuresAgainstLive ? 'not-distributed' : 'aligned',
   });
 }
 
@@ -341,19 +381,44 @@ export function buildPackageDriftOverview(
         ),
         lastDistributedAt: toDistributionDate(active.lastDistributedAt),
         lastDistributionError: active.lastDistributionError ?? null,
+        versionSpec: active.versionSpec ?? null,
       });
+      const measuresAgainstLive = measuresAgainstLivePackage(
+        active.versionSpec ?? null,
+      );
       for (const s of active.deployedStandards)
-        pushStandard(pkg, s, repoRef, targetRef, branch);
+        pushStandard(pkg, s, repoRef, targetRef, branch, measuresAgainstLive);
       for (const r of active.deployedCommands)
-        pushCommand(pkg, r, repoRef, targetRef, branch);
+        pushCommand(pkg, r, repoRef, targetRef, branch, measuresAgainstLive);
       for (const k of active.deployedSkills)
-        pushSkill(pkg, k, repoRef, targetRef, branch);
+        pushSkill(pkg, k, repoRef, targetRef, branch, measuresAgainstLive);
       for (const s of active.pendingStandards)
-        pushPendingStandard(pkg, s, repoRef, targetRef, branch);
+        pushPendingStandard(
+          pkg,
+          s,
+          repoRef,
+          targetRef,
+          branch,
+          measuresAgainstLive,
+        );
       for (const r of active.pendingCommands)
-        pushPendingCommand(pkg, r, repoRef, targetRef, branch);
+        pushPendingCommand(
+          pkg,
+          r,
+          repoRef,
+          targetRef,
+          branch,
+          measuresAgainstLive,
+        );
       for (const k of active.pendingSkills)
-        pushPendingSkill(pkg, k, repoRef, targetRef, branch);
+        pushPendingSkill(
+          pkg,
+          k,
+          repoRef,
+          targetRef,
+          branch,
+          measuresAgainstLive,
+        );
     }
   }
 
@@ -373,12 +438,40 @@ export function buildPackageDriftOverview(
       })),
     ),
     installLocations: sortInstallLocations(p.installLocations),
+    latestReleaseVersion: p.latestReleaseVersion,
+    hasUnreleasedChanges: p.hasUnreleasedChanges,
   }));
 }
 
+/**
+ * Whether any destination of this package needs a hand.
+ *
+ * Read off each landing's standing rather than off its artifacts, because the
+ * two answers parted company once pins became real: a pinned destination
+ * waiting on a release has no late artifact at all — every one of them is
+ * exactly what its release pinned — and is still not where it should be.
+ *
+ * Not the same question as whether there is anything to send, which is what
+ * `packageHasSendableWork` answers. A destination that needs a release needs
+ * one from a person, not from this app.
+ */
 export function packageHasDrift(pkg: PackageDrift): boolean {
-  return pkg.artifacts.some((a) =>
-    a.installs.some((i) => i.driftReason !== 'aligned'),
+  return installDriftEntries(pkg).some((entry) =>
+    needsAttention(entry.standing),
+  );
+}
+
+/**
+ * Whether distributing this package would actually send something.
+ *
+ * What gates every gesture that pushes: a destination sitting on the newest
+ * release of a package that has moved past it reads behind and has nothing
+ * coming — the commit would be empty and the row would read behind afterwards.
+ * Offering the button there is the bug this split exists to end.
+ */
+export function packageHasSendableWork(pkg: PackageDrift): boolean {
+  return installDriftEntries(pkg).some(
+    (entry) => entry.standing.remedy === 'update',
   );
 }
 
@@ -402,14 +495,23 @@ export function packageRepositoryCount(pkg: PackageDrift): number {
 
 export function packageBehindInstallCount(pkg: PackageDrift): number {
   const behind = new Set<string>();
-  for (const a of pkg.artifacts) {
-    for (const i of a.installs) {
-      if (i.driftReason !== 'aligned') {
-        behind.add(destinationKey(i.repo.id, i.target.id));
-      }
+  for (const entry of installDriftEntries(pkg)) {
+    if (needsAttention(entry.standing)) {
+      behind.add(destinationKey(entry.repo.id, entry.target.id));
     }
   }
   return behind.size;
+}
+
+/** Destinations of this package a distribution would actually move forward. */
+export function packageSendableInstallCount(pkg: PackageDrift): number {
+  const sendable = new Set<string>();
+  for (const entry of installDriftEntries(pkg)) {
+    if (entry.standing.remedy === 'update') {
+      sendable.add(destinationKey(entry.repo.id, entry.target.id));
+    }
+  }
+  return sendable.size;
 }
 
 export function totalBehindInstallCount(packages: PackageDrift[]): number {
@@ -472,13 +574,9 @@ export function totalFailedInstallCount(packages: PackageDrift[]): number {
  */
 export function packageAttentionInstallCount(pkg: PackageDrift): number {
   const needingAttention = new Set<string>();
-  for (const artifact of pkg.artifacts) {
-    for (const install of artifact.installs) {
-      if (install.driftReason !== 'aligned') {
-        needingAttention.add(
-          destinationKey(install.repo.id, install.target.id),
-        );
-      }
+  for (const entry of installDriftEntries(pkg)) {
+    if (needsAttention(entry.standing)) {
+      needingAttention.add(destinationKey(entry.repo.id, entry.target.id));
     }
   }
   for (const loc of pkg.installLocations) {

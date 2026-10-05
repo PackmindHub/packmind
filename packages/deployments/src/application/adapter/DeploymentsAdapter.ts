@@ -498,6 +498,7 @@ export class DeploymentsAdapter
         this.commandsPort,
         this.skillsPort,
         this.gitPort,
+        this.deploymentsServices.getPackageReleaseService(),
       );
 
     this._listPackagesUseCase = new ListPackagesUseCase(

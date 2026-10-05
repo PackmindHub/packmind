@@ -1,4 +1,4 @@
-import { PackmindInternalError } from '@packmind/types';
+import { PackmindErrorOptions, PackmindInternalError } from '@packmind/types';
 
 import { ComponentFamily } from '../../application/services/packageReleaseResolution';
 
@@ -24,7 +24,6 @@ export type DeploymentsInternalErrorContext = {
   componentId?: string;
   family?: ComponentFamily;
   reverted?: boolean;
-  cause?: string;
   stage?: 'removal_data' | 'artifact_resolution';
   organizationId?: string;
   renderMode?: string;
@@ -48,8 +47,9 @@ export class DeploymentsInternalError extends PackmindInternalError {
     reason: DeploymentsInternalErrorReason,
     context: DeploymentsInternalErrorContext,
     message: string,
+    options?: PackmindErrorOptions,
   ) {
-    super(reason, context, message);
+    super(reason, context, message, options);
     this.name = 'DeploymentsInternalError';
   }
 }

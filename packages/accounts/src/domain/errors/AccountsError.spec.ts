@@ -18,6 +18,8 @@ import { CliLoginCodeUserNotFoundError } from './CliLoginCodeUserNotFoundError';
 import { CliLoginCodeMembershipNotFoundError } from './CliLoginCodeMembershipNotFoundError';
 import { CliLoginCodeOrganizationNotFoundError } from './CliLoginCodeOrganizationNotFoundError';
 import { CliLoginCodeApiKeyError } from './CliLoginCodeApiKeyError';
+import { InvalidEmailOrPasswordError } from './InvalidEmailOrPasswordError';
+import { TooManyLoginAttemptsError } from './TooManyLoginAttemptsError';
 
 describe('EmailAlreadyExistsError', () => {
   const error = new EmailAlreadyExistsError('test@example.com');
@@ -335,5 +337,75 @@ describe('CliLoginCodeApiKeyError', () => {
 
   it('is not a domain error, so a wiring fault is never a 4xx', () => {
     expect(isDomainError(error)).toBe(false);
+  });
+});
+
+describe('InvalidEmailOrPasswordError', () => {
+  const error = new InvalidEmailOrPasswordError();
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers unauthenticated', () => {
+    expect(error.kind).toBe('unauthenticated');
+  });
+
+  it('carries the invalid_credentials reason', () => {
+    expect(error.reason).toBe('invalid_credentials');
+  });
+
+  it('keeps an empty context, so the log never names the account', () => {
+    expect(error.context).toEqual({});
+  });
+});
+
+describe('TooManyLoginAttemptsError', () => {
+  const now = new Date('2026-04-15T12:00:00.000Z');
+  const bannedUntil = new Date('2026-04-15T12:30:00.000Z');
+  const error = new TooManyLoginAttemptsError(bannedUntil, now);
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers rate_limited', () => {
+    expect(error.kind).toBe('rate_limited');
+  });
+
+  it('carries the too_many_login_attempts reason', () => {
+    expect(error.reason).toBe('too_many_login_attempts');
+  });
+
+  it('keeps an empty context, so the log never names the account', () => {
+    expect(error.context).toEqual({});
+  });
+
+  it('keeps the ban end', () => {
+    expect(error.bannedUntil).toEqual(bannedUntil);
+  });
+
+  it('asks the caller to wait until the ban ends', () => {
+    expect(error.retryAfterSeconds).toBe(30 * 60);
+  });
+
+  describe('when the ban ends within a fraction of a second', () => {
+    it('rounds the wait up to a whole second', () => {
+      const almost = new TooManyLoginAttemptsError(
+        new Date(now.getTime() + 1500),
+        now,
+      );
+      expect(almost.retryAfterSeconds).toBe(2);
+    });
+  });
+
+  describe('when the ban has already ended', () => {
+    it('never asks for less than one second', () => {
+      const elapsed = new TooManyLoginAttemptsError(
+        new Date(now.getTime() - 5000),
+        now,
+      );
+      expect(elapsed.retryAfterSeconds).toBe(1);
+    });
   });
 });

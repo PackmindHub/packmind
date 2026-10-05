@@ -120,7 +120,7 @@ export class LoginRateLimiterService {
           bannedUntil: bannedUntil.toISOString(),
         });
 
-        throw new TooManyLoginAttemptsError(bannedUntil);
+        throw new TooManyLoginAttemptsError(bannedUntil, now);
       }
 
       if (validAttempts.length !== attemptsData.length) {

@@ -9,6 +9,7 @@ import {
   LinterExecutionViolation,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { LinterExecutionInternalError } from '../../domain/errors/LinterExecutionInternalError';
 
 const origin = 'ExecuteLinterProgramsUseCase';
 
@@ -160,7 +161,12 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
       );
       return func as (input: ASTNode | string) => unknown[] | number[];
     } catch (error) {
-      throw new Error(`Failed to parse program: ${this.normalizeError(error)}`);
+      throw new LinterExecutionInternalError(
+        'program_parse_failed',
+        {},
+        `Failed to parse program: ${this.normalizeError(error)}`,
+        { cause: error },
+      );
     }
   }
 

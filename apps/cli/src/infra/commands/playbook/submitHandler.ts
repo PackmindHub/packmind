@@ -18,7 +18,11 @@ import {
   duplicateNameKey,
 } from './submit/duplicateNameChecker';
 import { createTargetContextResolver } from './submit/targetContextResolver';
-import { buildProposals, ProposalItem } from './submit/proposalBuilder';
+import {
+  buildProposals,
+  ProposalSource,
+  SourcedProposalItem,
+} from './submit/proposalBuilder';
 import { validateProposalSkillDescriptions } from './submit/skillDescriptionValidator';
 import {
   fetchAvailablePackageSlugs,
@@ -68,6 +72,23 @@ function buildEditorPrefill(changes: PlaybookChangeEntry[]): string {
     ),
   ];
   return lines.join('\n');
+}
+
+function describeSource(source: ProposalSource): string {
+  return `${capitalize(source.artifactType)} "${source.artifactName}" (${source.filePath})`;
+}
+
+/**
+ * The server reports a failure by the proposal's position in the batch, and
+ * its messages name no artefact, so the position is what tells two identical
+ * failures apart.
+ */
+function describeBatchError(
+  error: { index: number; message: string },
+  proposals: SourcedProposalItem[],
+): string {
+  const source = proposals[error.index]?.source;
+  return source ? `${describeSource(source)}: ${error.message}` : error.message;
 }
 
 function stripCommentLines(text: string): string {
@@ -278,7 +299,7 @@ export async function playbookSubmitHandler(
   }
 
   // Group by spaceId
-  const proposalsBySpaceId = new Map<string, ProposalItem[]>();
+  const proposalsBySpaceId = new Map<string, SourcedProposalItem[]>();
   for (const proposal of allProposals) {
     const existing = proposalsBySpaceId.get(proposal.spaceId) ?? [];
     existing.push(proposal);
@@ -468,7 +489,7 @@ export async function playbookSubmitHandler(
       } else {
         failedSpaces.push({
           spaceId,
-          errors: response.errors.map((e) => e.message),
+          errors: response.errors.map((e) => describeBatchError(e, proposals)),
         });
       }
     } else {
@@ -502,7 +523,8 @@ export async function playbookSubmitHandler(
   if (failedSpaces.length > 0) {
     for (const { spaceId, errors } of failedSpaces) {
       logErrorConsole(
-        `Failed to submit to space '${displaySpace(spaceId)}': ${errors.join(', ')}`,
+        `Failed to submit to space '${displaySpace(spaceId)}':\n` +
+          errors.map((error) => `  - ${error}`).join('\n'),
       );
     }
     if (succeededSpaces.length > 0) {

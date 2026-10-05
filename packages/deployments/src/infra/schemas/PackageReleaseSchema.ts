@@ -3,6 +3,26 @@ import { PackageRelease } from '@packmind/types';
 import { uuidSchema, timestampsSchemas } from '@packmind/node-utils';
 
 /**
+ * The release as the table stores it: the entity, plus the version's triple
+ * split into three sortable integers.
+ *
+ * Deliberately not on `PackageRelease` itself. The triple is a persistence
+ * detail and nothing else — it carries no information `version` does not
+ * already carry, it exists so the database can order releases, and putting it
+ * on the domain type would make every factory and every hand-built release
+ * restate a value derivable from the string beside it.
+ *
+ * Nullable, because a version the parser refuses has no triple. That is the
+ * same row `findLatestByPackageIds` used to skip when picking the newest
+ * release in memory; now the skip is a `NOT NULL` in the where clause.
+ */
+export type PackageReleaseRow = PackageRelease & {
+  versionMajor: number | null;
+  versionMinor: number | null;
+  versionPatch: number | null;
+};
+
+/**
  * A release row plus the three join tables pinning its component versions.
  *
  * No soft-delete columns on purpose: a release is immutable and undeletable,
@@ -13,7 +33,7 @@ import { uuidSchema, timestampsSchemas } from '@packmind/node-utils';
  * and never run migrations — an index declared only in the migration would be
  * invisible to every test.
  */
-export const PackageReleaseSchema = new EntitySchema<PackageRelease>({
+export const PackageReleaseSchema = new EntitySchema<PackageReleaseRow>({
   name: 'PackageRelease',
   tableName: 'package_releases',
   columns: {
@@ -25,6 +45,21 @@ export const PackageReleaseSchema = new EntitySchema<PackageRelease>({
     version: {
       type: 'varchar',
       nullable: false,
+    },
+    versionMajor: {
+      name: 'version_major',
+      type: 'int',
+      nullable: true,
+    },
+    versionMinor: {
+      name: 'version_minor',
+      type: 'int',
+      nullable: true,
+    },
+    versionPatch: {
+      name: 'version_patch',
+      type: 'int',
+      nullable: true,
     },
     name: {
       type: 'varchar',
@@ -89,6 +124,15 @@ export const PackageReleaseSchema = new EntitySchema<PackageRelease>({
       name: 'idx_package_releases_unique',
       columns: ['packageId', 'version'],
       unique: true,
+    },
+    /*
+     * What lets the newest release of a package be read without reading its
+     * history: `DISTINCT ON (package_id)` walks this index in order and stops
+     * at the first row of each package.
+     */
+    {
+      name: 'idx_package_releases_latest',
+      columns: ['packageId', 'versionMajor', 'versionMinor', 'versionPatch'],
     },
   ],
 });

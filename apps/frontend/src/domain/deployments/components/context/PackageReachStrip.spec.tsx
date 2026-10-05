@@ -30,6 +30,7 @@ function destination(
     behindArtifacts: [],
     behindCount: 0,
     hasWorkToSend: false,
+    remedy: 'none' as const,
     installKey: 'repo-1::target-1',
     prUrl: null,
     failureReason: null,

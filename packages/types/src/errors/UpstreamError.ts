@@ -1,3 +1,5 @@
+import { attachCause, PackmindErrorOptions } from './ErrorCause';
+
 /**
  * A failure owned by neither party to the call: a third-party service we
  * depend on — GitHub, GitLab — refused us or did not answer. Sibling to
@@ -41,6 +43,8 @@ export interface UpstreamError {
   readonly context?: Record<string, unknown>;
   /** Seconds the caller should wait, when the provider told us. */
   readonly retryAfterSeconds?: number;
+  /** The failure this one wraps, when it wraps one. */
+  readonly cause?: unknown;
 }
 
 const VALID_KINDS = [
@@ -87,6 +91,7 @@ export class PackmindUpstreamError extends Error implements UpstreamError {
     context: Record<string, unknown>,
     message: string,
     retryAfterSeconds?: number,
+    options?: PackmindErrorOptions,
   ) {
     super(message);
     this.name = 'PackmindUpstreamError';
@@ -94,5 +99,6 @@ export class PackmindUpstreamError extends Error implements UpstreamError {
     this.reason = reason;
     this.context = context;
     this.retryAfterSeconds = retryAfterSeconds;
+    attachCause(this, options);
   }
 }

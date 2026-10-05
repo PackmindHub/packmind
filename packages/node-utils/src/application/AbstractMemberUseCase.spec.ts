@@ -11,6 +11,7 @@ import {
 } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
 import {
+  MembershipOrganizationNotFoundError,
   UserNotFoundError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
@@ -228,6 +229,38 @@ describe('AbstractMemberUseCase', () => {
 
     it('does not execute member logic', () => {
       expect(mockExecuteForMembers).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the membership exists but the organization is gone', () => {
+    beforeEach(() => {
+      mockGetUserById.mockResolvedValue(buildUser());
+      mockGetOrganizationById.mockResolvedValue(null);
+    });
+
+    it('throws MembershipOrganizationNotFoundError', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        MembershipOrganizationNotFoundError,
+      );
+    });
+
+    it('keeps the ids in the context', async () => {
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        kind: 'not_found',
+        context: { userId, organizationId },
+      });
+    });
+  });
+
+  describe('when the command names no organization', () => {
+    beforeEach(() => {
+      mockGetUserById.mockResolvedValue(buildUser());
+    });
+
+    it('throws UserNotInOrganizationError', async () => {
+      await expect(
+        useCase.execute({ userId, organizationId: '' }),
+      ).rejects.toBeInstanceOf(UserNotInOrganizationError);
     });
   });
 });

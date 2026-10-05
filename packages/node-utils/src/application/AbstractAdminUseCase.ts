@@ -8,6 +8,7 @@ import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
 import {
   OrganizationAdminRequiredError,
   UserAccessError,
+  UserAccessInternalError,
 } from './UserAccessErrors';
 
 const defaultOrigin = 'AbstractAdminUseCase';
@@ -34,7 +35,7 @@ export abstract class AbstractAdminUseCase<
   protected override handleValidationError(
     error: UserAccessError,
     command: Command,
-  ): Error | never {
+  ): UserAccessError {
     this.logger.error('Admin validation failed', {
       userId: command.userId,
       organizationId: command.organizationId,
@@ -44,7 +45,10 @@ export abstract class AbstractAdminUseCase<
     if (error.reason === 'user_not_an_admin') {
       const organizationId = error.context.organizationId;
       if (!organizationId) {
-        throw new Error(
+        // Unreachable: membership lookup has already failed without an id.
+        throw new UserAccessInternalError(
+          'organization_id_missing',
+          { userId: error.context.userId },
           'Organization ID is required for admin access operations',
         );
       }

@@ -112,11 +112,11 @@ const toGateSnapshot = (
     skills: [],
   };
 
-  // Add resolved components with their version IDs
+  // Add resolved components with their version numbers
   for (const component of resolution.resolved) {
     const entry = {
       id: component.componentId,
-      latestVersionId: component.versionId,
+      latestVersion: component.versionNumber,
     };
 
     if (component.family === 'recipe') {
@@ -128,11 +128,11 @@ const toGateSnapshot = (
     }
   }
 
-  // Add unresolved components with null version IDs
+  // Add unresolved components with no version at all
   for (const component of resolution.unresolved) {
     const entry = {
       id: component.componentId,
-      latestVersionId: null,
+      latestVersion: null,
     };
 
     if (component.family === 'recipe') {

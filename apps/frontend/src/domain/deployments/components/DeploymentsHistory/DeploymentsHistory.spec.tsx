@@ -13,6 +13,8 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  PackageId,
+  TargetId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
@@ -277,6 +279,28 @@ describe('DeploymentsHistory', () => {
     });
   });
 
+  describe('when the repository of the target can no longer be found', () => {
+    const base = distribution(1);
+    const orphan = distribution(1, {
+      target: {
+        ...base.target,
+        gitRepo: undefined,
+      } as DistributionHistoryEntry['target'],
+    });
+
+    it('names the repository unknown', () => {
+      renderHistory([orphan]);
+
+      expect(screen.getByText('Unknown repository')).toBeInTheDocument();
+    });
+
+    it('does not print the repository id in the row', () => {
+      renderHistory([orphan]);
+
+      expect(screen.queryByText(/repo-1/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('when a distribution took the package out of a target', () => {
     it('says so beside the place, having no column left to say it in', () => {
       renderHistory([distribution(1, {}, 'remove')]);
@@ -400,6 +424,96 @@ describe('DeploymentsHistory', () => {
       expect(await screen.findByRole('tooltip')).toHaveTextContent(LONG_ERROR);
     });
   });
+  describe('when a target was deleted since', () => {
+    const renderWithLiveTargets = (liveTargetIds?: ReadonlySet<TargetId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[distribution(1), distribution(2)]}
+              type="package"
+              entityId={packageId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              liveTargetIds={liveTargetIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    const bodyRows = () => screen.getAllByRole('row').slice(1);
+
+    it('greys out the row on the deleted target', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[1]).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('leaves the row on a live target as it is', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[0]).not.toHaveAttribute('aria-disabled');
+    });
+
+    it('greys out nothing while the live targets are not known yet', () => {
+      renderWithLiveTargets(undefined);
+
+      bodyRows().forEach((row) =>
+        expect(row).not.toHaveAttribute('aria-disabled'),
+      );
+    });
+  });
+
+  describe('the package a distribution went out in', () => {
+    const renderWithPackage = (livePackageIds?: ReadonlySet<PackageId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[
+                artifactDistribution([
+                  {
+                    ...withCommandVersion(1, 4),
+                    package: { id: packageId, name: 'Backend guidelines' },
+                  } as CommandDistributionHistoryEntry['distributedPackages'][number],
+                ]),
+              ]}
+              type="command"
+              entityId={commandId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              orgSlug="acme"
+              spaceSlug="global"
+              livePackageIds={livePackageIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    it('links to a package that still exists', () => {
+      renderWithPackage(new Set([packageId]));
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+
+    it('names a deleted package without linking to it', () => {
+      renderWithPackage(new Set());
+
+      expect(screen.getByText('Backend guidelines')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Backend guidelines' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('links while the live packages are not known yet', () => {
+      renderWithPackage(undefined);
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("a command's history", () => {
     it('shows the version of the command that was distributed', () => {
       renderCommandHistory([artifactDistribution([withCommandVersion(1, 4)])]);

@@ -116,7 +116,7 @@ import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQue
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
-import { listActiveDistributions } from '../../utils/listActiveDistributions';
+import { useActiveDistributions } from '../../hooks/useActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 /**
@@ -248,7 +248,7 @@ export function ContextPackagePane({
     pkg.id,
     pkg.spaceId,
   );
-  const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
+  const isInAnyTarget = useActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*

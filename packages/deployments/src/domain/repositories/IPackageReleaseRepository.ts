@@ -46,6 +46,19 @@ export interface IPackageReleaseRepository extends IRepository<PackageRelease> {
   ): Promise<PackageReleaseDetail | null>;
 
   /**
+   * The newest release of each named package, with its pins, keyed by package.
+   * Packages that have never been released are absent rather than null.
+   *
+   * Batched on purpose. The caller is the space-wide drift read, which needs
+   * this for every package it draws; asking per package would put two queries
+   * per package on a list view, which is the shape of cost that made drift
+   * measure against the live package in the first place.
+   */
+  findLatestByPackageIds(
+    packageIds: PackageId[],
+  ): Promise<Map<PackageId, PackageReleaseDetail>>;
+
+  /**
    * The release with its full component versions, soft-deleted ones
    * included, as needed to render it.
    */

@@ -475,13 +475,14 @@ export class PublishPackagesUseCase implements IPublishPackages {
 
     for (const distribution of distributions) {
       const resolved = resolvedByTarget.get(distribution.target.id);
-      const versionsByPackage = new Map(
-        (resolved ?? []).map((entry) => [entry.pkg.id, entry.versions]),
+      const resolvedByPackage = new Map(
+        (resolved ?? []).map((entry) => [entry.pkg.id, entry]),
       );
 
       for (const pkg of packages) {
-        const versions = versionsByPackage.get(pkg.id);
-        if (!versions) continue;
+        const entry = resolvedByPackage.get(pkg.id);
+        if (!entry) continue;
+        const versions = entry.versions;
 
         const distributedPackageId = createDistributedPackageId(uuidv4());
         await this.distributedPackageRepository.add({
@@ -492,6 +493,13 @@ export class PublishPackagesUseCase implements IPublishPackages {
           recipeVersions: [],
           skillVersions: [],
           operation: 'add',
+          /*
+           * The spec this very destination was resolved to, which is the one
+           * written into its `packmind.json` by the same publish: a batch over
+           * a pinned repository and a `*` one sends two different specs, and
+           * the row has to carry its own rather than the batch's.
+           */
+          versionSpec: entry.versionSpec,
         });
 
         if (versions.standardVersionIds.length > 0) {

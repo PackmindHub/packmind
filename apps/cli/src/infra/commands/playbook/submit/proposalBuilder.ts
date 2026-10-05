@@ -28,6 +28,14 @@ export type ProposalItem = {
   spaceId: string;
 };
 
+/** The staged change a proposal was built from, as the user would name it. */
+export type ProposalSource = Pick<
+  PlaybookChangeEntry,
+  'artifactType' | 'artifactName' | 'filePath'
+>;
+
+export type SourcedProposalItem = ProposalItem & { source: ProposalSource };
+
 export function resolveArtifactIdFromLockFile(
   filePath: string,
   lockFile: PackmindLockFile | null,
@@ -449,11 +457,23 @@ export async function buildProposals(
   changes: PlaybookChangeEntry[],
   getTargetContext: (entry: PlaybookChangeEntry) => Promise<TargetContext>,
 ): Promise<{
-  proposals: ProposalItem[];
+  proposals: SourcedProposalItem[];
   conflicts: ArtifactConflict[];
   skipped: SkippedEntry[];
 }> {
-  const proposals: ProposalItem[] = [];
+  const proposals: SourcedProposalItem[] = [];
+  // One change can yield several proposals; each keeps its change so a
+  // per-proposal error from the server can be traced back to it.
+  const addProposals = (entry: PlaybookChangeEntry, items: ProposalItem[]) => {
+    const source: ProposalSource = {
+      artifactType: entry.artifactType,
+      artifactName: entry.artifactName,
+      filePath: entry.filePath,
+    };
+    for (const item of items) {
+      proposals.push({ ...item, source });
+    }
+  };
   const skipped: SkippedEntry[] = [];
   const updateSources = new Map<
     string,
@@ -476,13 +496,13 @@ export async function buildProposals(
     if (entry.changeType === 'created') {
       switch (entry.artifactType) {
         case 'standard':
-          proposals.push(...buildCreatedStandardProposals(entry));
+          addProposals(entry, buildCreatedStandardProposals(entry));
           break;
         case 'command':
-          proposals.push(...buildCreatedCommandProposals(entry));
+          addProposals(entry, buildCreatedCommandProposals(entry));
           break;
         case 'skill':
-          proposals.push(...buildCreatedSkillProposals(entry));
+          addProposals(entry, buildCreatedSkillProposals(entry));
           break;
       }
     } else if (entry.changeType === 'removed') {
@@ -497,7 +517,10 @@ export async function buildProposals(
         skipped.push(toSkippedEntry(entry, 'artifact not found in lock file'));
         continue;
       }
-      proposals.push(...buildRemovedProposals(entry, artifactId, ctx.lockFile));
+      addProposals(
+        entry,
+        buildRemovedProposals(entry, artifactId, ctx.lockFile),
+      );
     } else {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
@@ -547,17 +570,15 @@ export async function buildProposals(
 
       switch (entry.artifactType) {
         case 'standard':
-          proposals.push(
-            ...buildUpdatedStandardProposals(
-              entry,
-              artifactId,
-              deployedContent,
-            ),
+          addProposals(
+            entry,
+            buildUpdatedStandardProposals(entry, artifactId, deployedContent),
           );
           break;
         case 'command':
-          proposals.push(
-            ...buildUpdatedCommandProposals(entry, artifactId, deployedContent),
+          addProposals(
+            entry,
+            buildUpdatedCommandProposals(entry, artifactId, deployedContent),
           );
           break;
         case 'skill': {
@@ -566,7 +587,7 @@ export async function buildProposals(
             artifactId,
             ctx.deployedFiles,
           );
-          proposals.push(...skillResult.proposals);
+          addProposals(entry, skillResult.proposals);
           if (skillResult.skippedReason) {
             skipped.push(toSkippedEntry(entry, skillResult.skippedReason));
           }
