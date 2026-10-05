@@ -26,11 +26,13 @@ import {
   SkillDistributionHistoryEntry,
   StandardDistributionHistoryEntry,
   TargetId,
+  WILDCARD_VERSION_SPEC,
 } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
 import { packageHref } from '../context/buildComponentDetail';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { isOnLiveTarget } from '../../hooks/useLiveTargetIds';
 
 export type DeploymentType = 'command' | 'standard' | 'skill' | 'package';
@@ -52,7 +54,6 @@ type DeploymentsHistoryProps = {
   /** Rows on a target absent from this set are greyed out; omit to show all as live. */
   liveTargetIds?: ReadonlySet<TargetId>;
   hidePackageColumn?: boolean;
-  hideVersionColumn?: boolean;
 } & (
   | { type: 'package'; deployments: DistributionHistoryEntry[] }
   | { type: 'command'; deployments: CommandDistributionHistoryEntry[] }
@@ -62,7 +63,7 @@ type DeploymentsHistoryProps = {
 
 type HistoryRow = {
   deployment: DistributionHistoryEntry;
-  version: string | number;
+  version: React.ReactNode;
   removed: boolean;
 };
 
@@ -79,7 +80,6 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   livePackageIds,
   liveTargetIds,
   hidePackageColumn = false,
-  hideVersionColumn = false,
 }) => {
   /*
    * Before the early returns below, which is not a style choice: this component
@@ -351,49 +351,51 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const getPackageInfo = (
     deployment: DistributionHistoryEntry,
   ): React.ReactNode => {
-    const packages = deployment.distributedPackages
-      ?.map((dp) => dp.package)
-      .filter((pkg): pkg is NonNullable<typeof pkg> => Boolean(pkg));
+    const distributedPackages = (deployment.distributedPackages ?? []).flatMap(
+      (dp) => (dp.package ? [{ ...dp, package: dp.package }] : []),
+    );
 
-    if (!packages || packages.length === 0) return '-';
+    if (distributedPackages.length === 0) return '-';
 
-    // If we have orgSlug and spaceSlug, render as links
-    if (orgSlug && spaceSlug) {
-      return (
-        <PMBox display="flex" flexDirection="column" gap={1}>
-          {packages.map((pkg) =>
-            !livePackageIds || livePackageIds.has(pkg.id) ? (
-              <PMLink asChild key={pkg.id} variant="active">
-                <Link to={packageHref(mode, { orgSlug, spaceSlug }, pkg.id)}>
-                  {pkg.name}
+    const isLinkable = (dp: (typeof distributedPackages)[number]) =>
+      Boolean(orgSlug && spaceSlug) &&
+      (!livePackageIds || livePackageIds.has(dp.packageId));
+
+    return (
+      <PMBox display="flex" flexDirection="column" gap={1} minW={0}>
+        {distributedPackages.map((dp) => (
+          <PMBox
+            key={dp.id}
+            display="flex"
+            alignItems="baseline"
+            gap={2}
+            minW={0}
+          >
+            {isLinkable(dp) && orgSlug && spaceSlug ? (
+              <PMLink asChild variant="active" truncate>
+                <Link
+                  to={packageHref(mode, { orgSlug, spaceSlug }, dp.packageId)}
+                >
+                  {dp.package.name}
                 </Link>
               </PMLink>
             ) : (
-              <PMText key={pkg.id}>{pkg.name}</PMText>
-            ),
-          )}
-        </PMBox>
-      );
-    }
-
-    // Otherwise just show names
-    return packages.map((pkg) => pkg.name).join(', ');
+              <PMText variant="small" truncate>
+                {dp.package.name}
+              </PMText>
+            )}
+            <PackageVersion distributedPackage={dp} layout="inline" />
+          </PMBox>
+        ))}
+      </PMBox>
+    );
   };
 
   const baseColumns: PMTableColumn[] = [
-    ...(hideVersionColumn
-      ? []
-      : [
-          {
-            key: 'version',
-            header: 'Version',
-            width: '80px',
-            align: 'center',
-          },
-        ]),
+    { key: 'version', header: 'Version', width: '130px', align: 'left' },
     ...(hidePackageColumn
       ? []
-      : [{ key: 'package', header: 'Package', width: '150px', align: 'left' }]),
+      : [{ key: 'package', header: 'Package', width: '180px', align: 'left' }]),
     { key: 'target', header: 'Target', width: '210px', align: 'left' },
     {
       key: 'renderModes',
@@ -414,13 +416,21 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   let rows: HistoryRow[];
   if (type === 'package') {
-    rows = deployments.map((deployment) => ({
-      deployment,
-      version: '-',
-      removed:
-        deployment.distributedPackages.find((dp) => dp.packageId === entityId)
-          ?.operation === 'remove',
-    }));
+    rows = deployments.map((deployment) => {
+      const distributedPackage = deployment.distributedPackages.find(
+        (dp) => dp.packageId === entityId,
+      );
+      return {
+        deployment,
+        version: (
+          <PackageVersion
+            distributedPackage={distributedPackage}
+            layout="stacked"
+          />
+        ),
+        removed: distributedPackage?.operation === 'remove',
+      };
+    });
   } else if (type === 'command') {
     rows = deployments.map((deployment) =>
       artifactHistoryRow(deployment, (dp) =>
@@ -547,6 +557,79 @@ const ClippedText: React.FunctionComponent<{ text: string }> = ({ text }) => {
     <PMTooltip label={text} placement="top">
       {line}
     </PMTooltip>
+  );
+};
+
+const PackageVersion: React.FunctionComponent<{
+  distributedPackage?: Pick<
+    DistributedPackageHistoryEntry,
+    'versionSpec' | 'latestReleaseVersion'
+  >;
+  layout: 'stacked' | 'inline';
+}> = ({ distributedPackage, layout }) => {
+  const versionSpec = distributedPackage?.versionSpec ?? null;
+
+  if (versionSpec === null) {
+    return (
+      <PMText
+        as="span"
+        variant="small"
+        color="faded"
+        flexShrink={0}
+        data-testid={DeploymentsHistoryDataTestId.PackageVersion}
+      >
+        -
+      </PMText>
+    );
+  }
+
+  if (versionSpec !== WILDCARD_VERSION_SPEC) {
+    return (
+      <PMText
+        as="span"
+        variant="small"
+        color="secondary"
+        flexShrink={0}
+        data-testid={DeploymentsHistoryDataTestId.PackageVersion}
+      >
+        v{versionSpec}
+      </PMText>
+    );
+  }
+
+  const base = distributedPackage?.latestReleaseVersion ?? null;
+
+  if (layout === 'inline') {
+    return (
+      <PMText
+        as="span"
+        variant="small"
+        color="secondary"
+        flexShrink={0}
+        whiteSpace="nowrap"
+        data-testid={DeploymentsHistoryDataTestId.PackageVersion}
+      >
+        {PACKAGE_MESSAGES.release.unreleasedBasedOn(base)}
+      </PMText>
+    );
+  }
+
+  return (
+    <PMBox
+      display="flex"
+      flexDirection="column"
+      alignItems="flex-start"
+      data-testid={DeploymentsHistoryDataTestId.PackageVersion}
+    >
+      <PMText as="span" variant="small" color="secondary">
+        {PACKAGE_MESSAGES.release.unreleased}
+      </PMText>
+      {base && (
+        <PMText as="span" fontSize="xs" color="faded">
+          {PACKAGE_MESSAGES.release.basedOn(base)}
+        </PMText>
+      )}
+    </PMBox>
   );
 };
 

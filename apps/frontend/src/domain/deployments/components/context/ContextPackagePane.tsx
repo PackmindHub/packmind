@@ -109,6 +109,7 @@ import {
   useDeletePackagesBatchMutation,
   useGetPackageReleaseQuery,
   useListPackageDeploymentsQuery,
+  useListPackageReleasesQuery,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
@@ -643,6 +644,12 @@ export function ContextPackagePane({
    * Read here as well as by the body below it, and answered from one request:
    * React Query keys this read by version, and both ask for the same one.
    */
+  const { data: releases } = useListPackageReleasesQuery(
+    organizationId,
+    spaceId,
+    canReadReleases ? pkg.id : undefined,
+  );
+
   const { data: readRelease } = useGetPackageReleaseQuery(
     organizationId,
     spaceId,
@@ -745,6 +752,7 @@ export function ContextPackagePane({
          * inside it.
          */
         packageVersions={{ [pkg.id]: readingVersion ?? '*' }}
+        latestRelease={releases?.readiness.currentVersion ?? null}
         cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
       />
     );

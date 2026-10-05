@@ -83,7 +83,6 @@ export const PackageDistributionList: React.FC<
       error={isError ? error?.message : undefined}
       title={title}
       hidePackageColumn
-      hideVersionColumn
       liveTargetIds={liveTargetIds}
     />
   );
