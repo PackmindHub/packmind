@@ -7,7 +7,6 @@ import {
   PackageReleaseEntry,
   PackageReleaseId,
   PinnedCommandVersion,
-  comparePackageReleaseVersions,
   parsePackageReleaseVersion,
   PinnedSkillVersion,
   PinnedStandardVersion,
@@ -62,6 +61,26 @@ function groupPins<T>(
   return byRelease;
 }
 
+/**
+ * The version's triple, as the three sortable columns store it.
+ *
+ * All three are null for a version the parser refuses, which is the only
+ * reading that keeps such a row out of `findLatestByPackageIds` — exactly where
+ * the in-memory pick used to drop it.
+ */
+function sortableVersionOf(version: string): {
+  versionMajor: number | null;
+  versionMinor: number | null;
+  versionPatch: number | null;
+} {
+  const parsed = parsePackageReleaseVersion(version);
+  return {
+    versionMajor: parsed?.major ?? null,
+    versionMinor: parsed?.minor ?? null,
+    versionPatch: parsed?.patch ?? null,
+  };
+}
+
 export class PackageReleaseRepository
   extends AbstractRepository<PackageRelease>
   implements IPackageReleaseRepository
@@ -97,7 +116,10 @@ export class PackageReleaseRepository
 
     try {
       await this.repository.manager.transaction(async (manager) => {
-        await manager.insert(PackageReleaseSchema, release);
+        await manager.insert(PackageReleaseSchema, {
+          ...release,
+          ...sortableVersionOf(release.version),
+        });
 
         await this.insertJoinRows(
           manager,
@@ -182,31 +204,35 @@ export class PackageReleaseRepository
     if (packageIds.length === 0) return new Map();
 
     try {
+      /*
+       * One row per package, not one per release.
+       *
+       * `DISTINCT ON (package_id)` keeps the first row of each package in the
+       * given order, and the order is the stored triple descending — never the
+       * version string, under which `0.10.0` sorts below `0.9.0`. Backed by
+       * `idx_package_releases_latest`, so a package with a long release history
+       * costs the same as one with a single release; reading every release in
+       * order to pick the newest made this read grow with the history of every
+       * package a space pins.
+       *
+       * The `NOT NULL` is the old in-memory `if (!parsed) continue`: a version
+       * the parser refuses has no triple, and still cannot be the newest
+       * release of anything.
+       */
       const releases = await this.repository
         .createQueryBuilder('packageRelease')
+        .distinctOn(['packageRelease.packageId'])
         .where('packageRelease.packageId IN (:...packageIds)', { packageIds })
+        .andWhere('packageRelease.versionMajor IS NOT NULL')
+        .orderBy('packageRelease.packageId', 'ASC')
+        .addOrderBy('packageRelease.versionMajor', 'DESC')
+        .addOrderBy('packageRelease.versionMinor', 'DESC')
+        .addOrderBy('packageRelease.versionPatch', 'DESC')
         .getMany();
 
-      /*
-       * Highest by parsed triple, never by the version string: `0.10.0` sorts
-       * below `0.9.0` lexically, and the whole point of this read is to name the
-       * release a destination would be moved to.
-       */
-      const latestByPackage = new Map<PackageId, PackageReleaseEntry>();
-      for (const release of releases) {
-        const parsed = parsePackageReleaseVersion(release.version);
-        if (!parsed) continue;
-        const best = latestByPackage.get(release.packageId);
-        const bestParsed = best
-          ? parsePackageReleaseVersion(best.version)
-          : null;
-        if (
-          !bestParsed ||
-          comparePackageReleaseVersions(parsed, bestParsed) > 0
-        ) {
-          latestByPackage.set(release.packageId, release);
-        }
-      }
+      const latestByPackage = new Map<PackageId, PackageReleaseEntry>(
+        releases.map((release) => [release.packageId, release]),
+      );
 
       /*
        * Three queries for every package of the space rather than three per

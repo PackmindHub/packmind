@@ -300,6 +300,25 @@ describe('PackageReleaseRepository', () => {
 
       expect(latest.size).toBe(0);
     });
+
+    /*
+     * Stored as a null triple rather than as 0.0.0, so it stays out of the
+     * ordering altogether — exactly where the in-memory pick used to drop it.
+     * A version nothing can parse cannot be the release a destination is moved
+     * to, and naming it would send the reader after a version that is not one.
+     */
+    it('never picks a version the pattern refuses', async () => {
+      const malformed = packageFactory({ spaceId: pkg.spaceId });
+      await fixture.datasource.getRepository(PackageSchema).save(malformed);
+      await repository.createWithVersions(
+        { ...releaseOf('not-a-version'), packageId: malformed.id },
+        pinnedVersions(),
+      );
+
+      const latest = await repository.findLatestByPackageIds([malformed.id]);
+
+      expect(latest.has(malformed.id)).toBe(false);
+    });
   });
 
   describe('when a package has no release', () => {
@@ -560,6 +579,31 @@ describe('PackageReleaseRepository', () => {
           fixture.queries.countMatching('"standardVersion"."description"'),
           fixture.queries.countMatching('"skillVersion"."prompt"'),
         ]).toEqual([0, 0, 0]);
+      });
+    });
+
+    describe('when reading the latest release of several packages', () => {
+      beforeEach(async () => {
+        await repository.createWithVersions(
+          releaseOf('5.0.1'),
+          pinnedVersions(),
+        );
+        fixture.queries.reset();
+
+        await repository.findLatestByPackageIds([pkg.id]);
+      });
+
+      /*
+       * What keeps this read flat in the size of a package's release history:
+       * the database returns one row per package instead of the whole history
+       * for the newest to be picked out of it in memory.
+       */
+      it('narrows to one release per package in the database', () => {
+        expect(fixture.queries.countMatching('DISTINCT ON')).toBe(1);
+      });
+
+      it('issues one statement per artefact family plus the release read', () => {
+        expect(fixture.queries.queries).toHaveLength(4);
       });
     });
 
