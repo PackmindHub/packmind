@@ -104,6 +104,17 @@ describe('buildRepoApplyPlan', () => {
     });
   });
 
+  describe('when a tracked repo with hidden untracked siblings is left unchanged', () => {
+    it('returns no operation', () => {
+      expect(
+        buildRepoApplyPlan(
+          [row('main', true), row('dev', false)],
+          sel(['main']),
+        ),
+      ).toEqual([]);
+    });
+  });
+
   describe('when a switch targets the branch already tracked', () => {
     it('returns no operation', () => {
       expect(

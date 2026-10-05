@@ -74,6 +74,10 @@ export function buildRepoApplyPlan(
       continue;
     }
 
+    // A tracked repo's untracked siblings are hidden from the drawer, so the
+    // selection never lists them: only a legacy repo can untick a branch.
+    if (tracked) continue;
+
     const kept = new Set(selected.map((t) => t.branch));
     removes.push(...rows.filter((r) => !kept.has(r.branch)).map(removeOf));
   }
