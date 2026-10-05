@@ -192,6 +192,43 @@ describe('ManageReposPanel', () => {
     });
   });
 
+  describe('when opening "change branch" on a repository not on its default branch', () => {
+    beforeEach(() => {
+      savedRows = [savedRow('row-feature', 'feature', true)];
+      renderPanelWith(selectionOf('feature'));
+      fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+    });
+
+    it('starts the input empty', () => {
+      expect(screen.getByTestId('manage-repos-branch-input')).toHaveValue('');
+    });
+
+    it('offers the default branch as the placeholder', () => {
+      expect(screen.getByTestId('manage-repos-branch-input')).toHaveAttribute(
+        'placeholder',
+        'main',
+      );
+    });
+
+    describe('and Enter is pressed right away', () => {
+      beforeEach(() => {
+        fireEvent.keyDown(screen.getByTestId('manage-repos-branch-input'), {
+          key: 'Enter',
+        });
+      });
+
+      it('does not check the provider', () => {
+        expect(checkBranchExists).not.toHaveBeenCalled();
+      });
+
+      it('closes the input', () => {
+        expect(
+          screen.queryByTestId('manage-repos-branch-input'),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe('when changing the branch of a tracked repository', () => {
     let onSelectionChange: ReturnType<typeof vi.fn>;
 

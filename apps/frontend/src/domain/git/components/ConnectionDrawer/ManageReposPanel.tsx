@@ -527,7 +527,7 @@ const TrackedRepoSection: React.FC<{
     (group.trackedBranches.length === 1 ? group.trackedBranches[0] : undefined);
 
   const startAdd = () => {
-    setDraft(currentBranch === group.defaultBranch ? '' : group.defaultBranch);
+    setDraft('');
     setError(null);
     setAdding(true);
   };
