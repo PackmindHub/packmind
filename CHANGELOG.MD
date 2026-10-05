@@ -30,6 +30,7 @@
 - Rule removals and edits submitted by a client that cannot know rule ids, such as the CLI reading standards from Markdown, are now matched by content instead of being dropped in silence
 - A rule removal or edit that matches no rule the standard holds now reports a conflict the client can resolve, instead of being accepted and applied to nothing
 - A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
+- Git connection panel: a repository now shows one branch. `change branch` replaces it, refuses a branch that doesn't exist, and switching back brings that branch's history back (#902)
 
 ## Removed
 
