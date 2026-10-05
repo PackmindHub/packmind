@@ -86,8 +86,9 @@ export class ConsoleLogRemovalService {
     } catch (error) {
       throw new LinterAstInternalError(
         'console_removal_parse_failed',
-        { language, cause: String(error) },
+        { language },
         `Can not parse JS CODE ${error}`,
+        { cause: error },
       );
     }
   }

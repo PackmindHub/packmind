@@ -161,11 +161,11 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
       );
       return func as (input: ASTNode | string) => unknown[] | number[];
     } catch (error) {
-      const cause = this.normalizeError(error);
       throw new LinterExecutionInternalError(
         'program_parse_failed',
-        { cause },
-        `Failed to parse program: ${cause}`,
+        {},
+        `Failed to parse program: ${this.normalizeError(error)}`,
+        { cause: error },
       );
     }
   }

@@ -1,4 +1,4 @@
-import { PackmindInternalError } from '@packmind/types';
+import { PackmindErrorOptions, PackmindInternalError } from '@packmind/types';
 
 export type LinterAstInternalErrorReason =
   | 'parser_not_available'
@@ -7,7 +7,6 @@ export type LinterAstInternalErrorReason =
 
 export type LinterAstInternalErrorContext = {
   language?: string;
-  cause?: string;
 };
 
 /**
@@ -19,8 +18,9 @@ export class LinterAstInternalError extends PackmindInternalError {
     reason: LinterAstInternalErrorReason,
     context: LinterAstInternalErrorContext,
     message: string,
+    options?: PackmindErrorOptions,
   ) {
-    super(reason, context, message);
+    super(reason, context, message, options);
     this.name = 'LinterAstInternalError';
   }
 }
