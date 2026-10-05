@@ -213,6 +213,95 @@ export const useRemoveRepositoryMutation = () => {
   });
 };
 
+/**
+ * Mutation, not query: the check runs once when the user commits a branch name,
+ * and a stale cached "exists" must never let a just-deleted branch through.
+ */
+export const useCheckProviderBranchExistsMutation = () => {
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async ({
+      providerId,
+      owner,
+      repo,
+      branch,
+    }: {
+      providerId: GitProviderId;
+      owner: string;
+      repo: string;
+      branch: string;
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to check a branch');
+      }
+      return gitProviderGateway.checkProviderBranchExists(
+        organization.id,
+        providerId,
+        { owner, repo, branch },
+      );
+    },
+  });
+};
+
+export const useSetTrackedRepositoryMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (data: {
+      owner: string;
+      repo: string;
+      branch: string;
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to track a repository');
+      }
+      return gitProviderGateway.setTrackedRepository(organization.id, data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, GIT_QUERY_SCOPE],
+      });
+
+      // The tracked branch decides which history deployment overviews show
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
+      });
+    },
+  });
+};
+
+export const useUpdateTrackedBranchMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (data: {
+      owner: string;
+      repo: string;
+      branch: string;
+    }) => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to change the tracked branch',
+        );
+      }
+      return gitProviderGateway.updateTrackedBranch(organization.id, data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, GIT_QUERY_SCOPE],
+      });
+
+      // The tracked branch decides which history deployment overviews show
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
+      });
+    },
+  });
+};
+
 // Available Targets Query
 export const useGetAvailableTargetsQuery = (
   repositoryId: GitRepoId,

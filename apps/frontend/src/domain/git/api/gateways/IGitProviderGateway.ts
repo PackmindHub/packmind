@@ -1,8 +1,10 @@
 import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
+  CheckProviderBranchExistsResponse,
   GitProviderId,
   GitProviderWithoutToken,
+  GitRepo,
   GitRepoId,
   IListAvailableReposUseCase,
   IListProvidersUseCase,
@@ -100,6 +102,34 @@ export interface IGitProviderGateway {
     organizationId: OrganizationId,
     repositoryId: GitRepoId,
   ): Promise<boolean>;
+
+  /**
+   * Whether a branch exists on the provider, for a repository that may not be
+   * connected yet — checked before a branch is tracked.
+   */
+  checkProviderBranchExists(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; branch: string },
+  ): Promise<CheckProviderBranchExistsResponse>;
+
+  // Tracking operations
+  /**
+   * Starts tracking a branch of a repository that has no tracked branch yet.
+   * Rejected by the API when another branch of that repository is tracked.
+   */
+  setTrackedRepository(
+    organizationId: OrganizationId,
+    data: { owner: string; repo: string; branch: string },
+  ): Promise<GitRepo>;
+  /**
+   * Same use case as `packmind git track --update`: the previously tracked
+   * branch keeps its row and history.
+   */
+  updateTrackedBranch(
+    organizationId: OrganizationId,
+    data: { owner: string; repo: string; branch: string },
+  ): Promise<GitRepo>;
 
   // Target operations
   getAvailableRemoteDirectories(
