@@ -24,6 +24,7 @@ import {
   ListActiveDistributedPackagesBySpaceResponse,
   Package,
   PackageId,
+  parsePackageVersionSpec,
   PendingCommandInfo,
   PendingSkillInfo,
   PendingStandardInfo,
@@ -141,13 +142,18 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     }
 
     /*
-     * Narrowed to the packages this space actually distributes, rather than
-     * every package it holds: a package nobody has pushed anywhere draws no
-     * destination, so its release state would be read and thrown away.
+     * Narrowed to the packages some destination is *pinned* to, rather than
+     * every package the space holds or even every package it distributes.
+     *
+     * Release state answers exactly one question — whether a pinned
+     * destination is behind — and `destinationStanding` never consults it for
+     * a destination tracking the live package. A space whose every
+     * `packmind.json` says `*` would pay four queries and three port calls for
+     * an answer nothing reads; this costs one pass over rows already in memory.
      */
-    const distributedPackageIds = new Set(activeOps.map((op) => op.packageId));
+    const pinnedPackageIds = pinnedPackagesOf(activeOps);
     const releaseState = await this.readReleaseState(
-      packages.filter((pkg) => distributedPackageIds.has(pkg.id)),
+      packages.filter((pkg) => pinnedPackageIds.has(pkg.id)),
     );
 
     const operationsByTarget = groupActiveOpsByTarget(activeOps);
@@ -279,11 +285,14 @@ type PackageReleaseState = Pick<
 >;
 
 /**
- * What a package whose release state could not be read reports.
+ * What a package whose release state was not read reports.
  *
- * Says "never released, nothing unreleased", which is the reading that offers
- * neither `Update` nor a release: inventing either would send a reader after a
- * button for a package this read knows nothing about.
+ * Covers both the package no destination pins — whose state is deliberately
+ * never read — and the one that could not be resolved. Says "never released,
+ * nothing unreleased", which is the reading that offers neither `Update` nor a
+ * release: inventing either would send a reader after a button for a package
+ * this read knows nothing about. A wildcard destination ignores both fields
+ * anyway, measuring itself against the live package instead.
  */
 const NEVER_RELEASED: PackageReleaseState = {
   latestReleaseVersion: null,
@@ -395,6 +404,23 @@ function buildActivePackage(args: {
     pendingStandards,
     pendingSkills,
   };
+}
+
+/**
+ * The packages at least one destination is pinned to by an exact version.
+ *
+ * A package distributed to one pinned destination and ten wildcard ones is in
+ * the set: the pinned one still needs measuring. A package nothing pins is
+ * absent, and its release state is never read.
+ */
+function pinnedPackagesOf(rows: ActivePackageOperationRow[]): Set<PackageId> {
+  const pinned = new Set<PackageId>();
+  for (const row of rows) {
+    if (parsePackageVersionSpec(row.versionSpec)?.kind === 'exact') {
+      pinned.add(row.packageId);
+    }
+  }
+  return pinned;
 }
 
 function groupActiveOpsByTarget(

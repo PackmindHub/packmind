@@ -415,11 +415,20 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         skillVersions: [],
       });
 
+      /** Pinned, since release state is read for pinned destinations only. */
       const list = async () => {
         const targetId = createTargetId(uuidv4());
 
         distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
-          [activeRow(targetId, pkg.id, DistributionStatus.success)],
+          [
+            activeRow(
+              targetId,
+              pkg.id,
+              DistributionStatus.success,
+              null,
+              '0.1.0',
+            ),
+          ],
         );
         targetRepository.findActiveInSpace.mockResolvedValue([
           buildTarget(targetId),
@@ -496,8 +505,56 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         });
       });
 
-      describe('and the space holds packages nobody distributes', () => {
-        it('reads the release state of only the distributed ones', async () => {
+      describe('and no destination is pinned', () => {
+        const unpinnedList = async (versionSpec: string | null) => {
+          const targetId = createTargetId(uuidv4());
+
+          distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+            [
+              activeRow(
+                targetId,
+                pkg.id,
+                DistributionStatus.success,
+                null,
+                versionSpec,
+              ),
+            ],
+          );
+          targetRepository.findActiveInSpace.mockResolvedValue([
+            buildTarget(targetId),
+          ]);
+          packageRepository.findBySpaceId.mockResolvedValue([pkg]);
+
+          await useCase.execute(command);
+        };
+
+        it('reads no release state for a wildcard destination', async () => {
+          await unpinnedList('*');
+
+          expect(
+            packageReleaseService.findLatestByPackageIds,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('reads no release state for a destination that recorded no spec', async () => {
+          await unpinnedList(null);
+
+          expect(
+            packageReleaseService.findLatestByPackageIds,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('resolves no component version', async () => {
+          await unpinnedList('*');
+
+          expect(
+            standardsPort.getLatestStandardVersions,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('and the space holds packages nobody pins', () => {
+        it('reads the release state of only the pinned ones', async () => {
           const undistributed = buildPackage();
           const targetId = createTargetId(uuidv4());
 
@@ -505,7 +562,15 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
             new Map(),
           );
           distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
-            [activeRow(targetId, pkg.id, DistributionStatus.success)],
+            [
+              activeRow(
+                targetId,
+                pkg.id,
+                DistributionStatus.success,
+                null,
+                '0.1.0',
+              ),
+            ],
           );
           targetRepository.findActiveInSpace.mockResolvedValue([
             buildTarget(targetId),
