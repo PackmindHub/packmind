@@ -6,9 +6,7 @@ export function encodeApiKey(payload: ApiKeyPayload): string {
     const jsonString = JSON.stringify(payload);
     return Buffer.from(jsonString).toString('base64');
   } catch (error) {
-    throw new ApiKeyEncodingFailedError(
-      error instanceof Error ? error.message : String(error),
-    );
+    throw new ApiKeyEncodingFailedError(error);
   }
 }
 

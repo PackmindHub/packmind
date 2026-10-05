@@ -1,4 +1,4 @@
-import { PackmindInternalError } from '@packmind/types';
+import { PackmindErrorOptions, PackmindInternalError } from '@packmind/types';
 
 export type AccountsInternalErrorReason =
   | 'organization_not_found'
@@ -21,7 +21,6 @@ export type AccountsInternalErrorContext = {
   userId?: string;
   membershipId?: string;
   invitationId?: string;
-  cause?: string;
   capability?: string;
   missingPorts?: string[];
   tokenType?: 'cli_login_code' | 'invitation' | 'password_reset';
@@ -45,8 +44,9 @@ export class AccountsInternalError extends PackmindInternalError {
     reason: AccountsInternalErrorReason,
     context: AccountsInternalErrorContext,
     message: string,
+    options?: PackmindErrorOptions,
   ) {
-    super(reason, context, message);
+    super(reason, context, message, options);
     this.name = 'AccountsInternalError';
   }
 }
