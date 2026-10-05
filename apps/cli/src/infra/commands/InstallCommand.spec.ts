@@ -14,6 +14,10 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
   statSync: jest.fn(),
   readdirSync: jest.fn().mockReturnValue([]),
+  readFileSync: jest.fn(
+    (...args: Parameters<typeof import('fs').readFileSync>) =>
+      jest.requireActual('fs').readFileSync(...args),
+  ),
 }));
 
 jest.mock('../../PackmindCliHexa', () => ({
@@ -1769,6 +1773,28 @@ describe('installCommand', () => {
 
       it('records the distribution', () => {
         expect(mockNotifyArtefactsDistribution).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when packmind.json records the installed package versions', () => {
+      beforeEach(async () => {
+        mockFs.readFileSync.mockImplementationOnce((() =>
+          JSON.stringify({ artifacts: {} })) as never);
+        mockFs.readFileSync.mockImplementationOnce((() =>
+          JSON.stringify({ packages: { '@my-space/ops': '1.2.0' } })) as never);
+        mockGetTrackedRepository.mockResolvedValue({
+          gitRepo: { branch: 'main' },
+        });
+        useHexaInGitRepo({ branch: 'main' });
+        await runInstall();
+      });
+
+      it('sends them with the distribution', () => {
+        expect(mockNotifyArtefactsDistribution).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageVersions: { '@my-space/ops': '1.2.0' },
+          }),
+        );
       });
     });
 

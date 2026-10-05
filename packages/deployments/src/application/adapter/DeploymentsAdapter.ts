@@ -628,6 +628,9 @@ export class DeploymentsAdapter
         this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
         ports.eventEmitterService,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.deploymentsServices.getPackageReleaseService(),
       );
 
     this._getLastDistributionDateByProvidersUseCase =

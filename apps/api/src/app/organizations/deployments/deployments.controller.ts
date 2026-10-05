@@ -511,6 +511,7 @@ export class DeploymentsController {
       gitBranch: string;
       relativePath: string;
       packmindLockFile: PackmindLockFile;
+      packageVersions?: Record<string, string>;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<NotifyArtefactsDistributionResponse> {
@@ -531,6 +532,7 @@ export class DeploymentsController {
       gitBranch: body.gitBranch,
       relativePath: body.relativePath,
       packmindLockFile: body.packmindLockFile,
+      packageVersions: body.packageVersions,
     };
 
     const response =

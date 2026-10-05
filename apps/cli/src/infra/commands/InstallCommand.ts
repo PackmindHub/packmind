@@ -16,7 +16,11 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { CodingAgent, PackmindLockFile } from '@packmind/types';
+import {
+  CodingAgent,
+  PackmindFileConfig,
+  PackmindLockFile,
+} from '@packmind/types';
 import {
   buildInstallSummary,
   buildIncapableArtifactsWarning,
@@ -331,6 +335,15 @@ async function computeDistributionTrackingDecision(
   return decision;
 }
 
+function readPackageVersions(dir: string): Record<string, string> | undefined {
+  try {
+    const content = fs.readFileSync(path.join(dir, 'packmind.json'), 'utf-8');
+    return (JSON.parse(content) as PackmindFileConfig).packages;
+  } catch {
+    return undefined;
+  }
+}
+
 async function notifyArtefactsDistributionIfInGitRepo(params: {
   packmindCliHexa: PackmindCliHexa;
   dir: string;
@@ -371,6 +384,7 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
       gitBranch,
       relativePath,
       packmindLockFile,
+      packageVersions: readPackageVersions(dir),
     });
   } catch {
     // Silently ignore all errors to not fail the install

@@ -145,6 +145,9 @@ export class DeploymentGateway implements IDeploymentGateway {
             gitBranch: command.gitBranch,
             relativePath: command.relativePath,
             packmindLockFile: command.packmindLockFile,
+            ...(command.packageVersions !== undefined && {
+              packageVersions: command.packageVersions,
+            }),
           },
         },
       );

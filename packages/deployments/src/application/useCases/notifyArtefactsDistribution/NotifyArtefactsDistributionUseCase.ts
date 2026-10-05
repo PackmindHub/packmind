@@ -21,6 +21,7 @@ import {
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
+  ISpacesPort,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
   OrganizationId,
@@ -30,9 +31,14 @@ import {
   RenderMode,
   SkillVersionId,
   StandardVersionId,
+  SpaceId,
   Target,
   UserId,
+  WILDCARD_VERSION_SPEC,
+  parsePackageVersionSpec,
 } from '@packmind/types';
+import { PackageService } from '../../services/PackageService';
+import { PackageReleaseService } from '../../services/PackageReleaseService';
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -40,6 +46,16 @@ import { IDistributionRepository } from '../../../domain/repositories/IDistribut
 import { TargetResolutionService } from '../../services/TargetResolutionService';
 
 const origin = 'NotifyArtefactsDistributionUseCase';
+
+type PackageVersionRecord = Pick<
+  DistributedPackage,
+  'versionSpec' | 'latestReleaseVersion'
+>;
+
+const UNRECORDED: PackageVersionRecord = {
+  versionSpec: null,
+  latestReleaseVersion: null,
+};
 
 type DistributedPackageWithVersionIds = DistributedPackage & {
   _standardVersionIds: StandardVersionId[];
@@ -64,6 +80,9 @@ export class NotifyArtefactsDistributionUseCase
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly targetResolutionService: TargetResolutionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly packageService: PackageService,
+    private readonly spacesPort: ISpacesPort,
+    private readonly packageReleaseService: PackageReleaseService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -109,6 +128,8 @@ export class NotifyArtefactsDistributionUseCase
         distributionId,
         lockFileArtifacts: packmindLockFile.artifacts,
         previouslyActivePackageIds,
+        organizationId,
+        packageVersions: command.packageVersions,
       },
     );
 
@@ -165,6 +186,8 @@ export class NotifyArtefactsDistributionUseCase
     distributionId: string;
     lockFileArtifacts: Record<string, PackmindLockFileEntry>;
     previouslyActivePackageIds: PackageId[];
+    organizationId: OrganizationId;
+    packageVersions?: Record<string, string>;
   }): Promise<DistributedPackageWithVersionIds[]> {
     const { distributionId, lockFileArtifacts, previouslyActivePackageIds } =
       params;
@@ -173,6 +196,11 @@ export class NotifyArtefactsDistributionUseCase
     const packageArtifactMap =
       this.groupArtifactsByPackageId(lockFileArtifacts);
     const currentPackageIds = new Set(packageArtifactMap.keys());
+    const versionRecords = await this.resolvePackageVersions(
+      [...currentPackageIds].map((id) => createPackageId(id)),
+      params.organizationId,
+      params.packageVersions,
+    );
 
     for (const [packageId, entries] of packageArtifactMap) {
       const standardVersionIds = await this.resolveStandardVersionIds(entries);
@@ -187,9 +215,7 @@ export class NotifyArtefactsDistributionUseCase
         recipeVersions: [],
         skillVersions: [],
         operation: 'add',
-        // A CLI install reports its lock file and never the packmind.json beside it.
-        versionSpec: null,
-        latestReleaseVersion: null,
+        ...(versionRecords.get(createPackageId(packageId)) ?? UNRECORDED),
         _standardVersionIds: standardVersionIds,
         _recipeVersionIds: recipeVersionIds,
         _skillVersionIds: skillVersionIds,
@@ -221,6 +247,68 @@ export class NotifyArtefactsDistributionUseCase
     }
 
     return distributedPackages;
+  }
+
+  private async resolvePackageVersions(
+    packageIds: PackageId[],
+    organizationId: OrganizationId,
+    packageVersions: Record<string, string> | undefined,
+  ): Promise<Map<PackageId, PackageVersionRecord>> {
+    const records = new Map<PackageId, PackageVersionRecord>();
+    if (!packageVersions || packageIds.length === 0) return records;
+
+    const packages = await this.packageService.getPackagesByIdsInOrganization(
+      packageIds,
+      organizationId,
+    );
+
+    const spaceSlugs = new Map<SpaceId, string | null>();
+    const wildcardPackageIds: PackageId[] = [];
+    for (const pkg of packages) {
+      const spaceId = pkg.spaceId as SpaceId;
+      if (!spaceSlugs.has(spaceId)) {
+        const space = await this.spacesPort.getSpaceById(spaceId);
+        spaceSlugs.set(spaceId, space?.slug ?? null);
+      }
+      const spaceSlug = spaceSlugs.get(spaceId);
+      const raw =
+        (spaceSlug
+          ? packageVersions[`@${spaceSlug}/${pkg.slug}`]
+          : undefined) ?? packageVersions[pkg.slug];
+      const spec = parsePackageVersionSpec(raw);
+      if (!spec) continue;
+
+      if (spec.kind === 'exact') {
+        records.set(pkg.id, {
+          versionSpec: spec.version,
+          latestReleaseVersion: null,
+        });
+      } else {
+        records.set(pkg.id, {
+          versionSpec: WILDCARD_VERSION_SPEC,
+          latestReleaseVersion: null,
+        });
+        wildcardPackageIds.push(pkg.id);
+      }
+    }
+
+    if (wildcardPackageIds.length > 0) {
+      const latest =
+        await this.packageReleaseService.findLatestByPackageIds(
+          wildcardPackageIds,
+        );
+      for (const packageId of wildcardPackageIds) {
+        const release = latest.get(packageId);
+        if (release) {
+          records.set(packageId, {
+            versionSpec: WILDCARD_VERSION_SPEC,
+            latestReleaseVersion: release.version,
+          });
+        }
+      }
+    }
+
+    return records;
   }
 
   private groupArtifactsByPackageId(

@@ -7,6 +7,7 @@ export type NotifyArtefactsDistributionCommand = PackmindCommand & {
   gitBranch: string;
   relativePath: string;
   packmindLockFile: PackmindLockFile;
+  packageVersions?: Record<string, string>;
 };
 
 export type NotifyArtefactsDistributionResponse = {

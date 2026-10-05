@@ -18,7 +18,9 @@ import {
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
+  ISpacesPort,
   NotifyArtefactsDistributionCommand,
+  PackageReleaseDetail,
   PackmindLockFile,
   CommandVersion,
   SkillVersion,
@@ -35,6 +37,10 @@ import { IDistributionRepository } from '../../../domain/repositories/IDistribut
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { TargetResolutionService } from '../../services/TargetResolutionService';
+import { PackageService } from '../../services/PackageService';
+import { PackageReleaseService } from '../../services/PackageReleaseService';
+import { packageFactory } from '../../../../test/packageFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { v4 as uuidv4 } from 'uuid';
 import { commandVersionFactory } from '@packmind/commands/test';
 import { standardVersionFactory } from '@packmind/standards/test';
@@ -51,6 +57,9 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockTargetResolutionService: jest.Mocked<TargetResolutionService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+  let mockPackageService: jest.Mocked<PackageService>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
+  let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
@@ -210,6 +219,19 @@ describe('NotifyArtefactsDistributionUseCase', () => {
 
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
+    mockPackageService = createMockInstance(PackageService);
+    mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
+      packageFactory({ id: packageId, spaceId, slug: 'my-package' }),
+    ]);
+    mockSpacesPort = mockInterface<ISpacesPort>();
+    mockSpacesPort.getSpaceById.mockResolvedValue(
+      spaceFactory({ id: spaceId, slug: 'my-space' }),
+    );
+    mockPackageReleaseService = createMockInstance(PackageReleaseService);
+    mockPackageReleaseService.findLatestByPackageIds.mockResolvedValue(
+      new Map(),
+    );
+
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,
       mockCommandsPort,
@@ -220,6 +242,9 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       mockRenderModeConfigurationService,
       mockTargetResolutionService,
       mockEventEmitterService,
+      mockPackageService,
+      mockSpacesPort,
+      mockPackageReleaseService,
       stubLogger(),
     );
   });
@@ -323,6 +348,89 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         expect(
           mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
         ).toHaveBeenCalledWith(['cursor', 'claude']);
+      });
+    });
+
+    describe('the package version the install recorded', () => {
+      const recordedRow = () =>
+        (mockDistributedPackageRepository.add as jest.Mock).mock.calls
+          .map(([row]) => row)
+          .find((row) => String(row.packageId) === String(packageId));
+
+      const install = (packageVersions?: Record<string, string>) =>
+        useCase.execute(buildCommand({ packageVersions }));
+
+      beforeEach(() => {
+        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
+        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
+        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
+      });
+
+      describe('when packmind.json pins a release', () => {
+        beforeEach(() => install({ '@my-space/my-package': '1.2.0' }));
+
+        it('records the release as the spec', () => {
+          expect(recordedRow()).toEqual(
+            expect.objectContaining({
+              versionSpec: '1.2.0',
+              latestReleaseVersion: null,
+            }),
+          );
+        });
+      });
+
+      describe('when packmind.json tracks the live package', () => {
+        beforeEach(async () => {
+          mockPackageReleaseService.findLatestByPackageIds.mockResolvedValue(
+            new Map([
+              [packageId, { version: '1.1.0' } as PackageReleaseDetail],
+            ]),
+          );
+          await install({ '@my-space/my-package': '*' });
+        });
+
+        it('records the release the live package was built on', () => {
+          expect(recordedRow()).toEqual(
+            expect.objectContaining({
+              versionSpec: '*',
+              latestReleaseVersion: '1.1.0',
+            }),
+          );
+        });
+      });
+
+      describe('when the live package was never released', () => {
+        beforeEach(() => install({ '@my-space/my-package': '*' }));
+
+        it('records the wildcard with no base release', () => {
+          expect(recordedRow()).toEqual(
+            expect.objectContaining({
+              versionSpec: '*',
+              latestReleaseVersion: null,
+            }),
+          );
+        });
+      });
+
+      describe('when packmind.json names the package by its bare slug', () => {
+        beforeEach(() => install({ 'my-package': '1.2.0' }));
+
+        it('still records its spec', () => {
+          expect(recordedRow()?.versionSpec).toBe('1.2.0');
+        });
+      });
+
+      describe('when the CLI sends no packmind.json', () => {
+        beforeEach(() => install(undefined));
+
+        it('records no spec', () => {
+          expect(recordedRow()).toEqual(
+            expect.objectContaining({
+              versionSpec: null,
+              latestReleaseVersion: null,
+            }),
+          );
+        });
       });
     });
 
