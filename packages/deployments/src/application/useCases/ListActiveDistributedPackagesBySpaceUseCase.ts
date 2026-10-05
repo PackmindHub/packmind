@@ -52,9 +52,9 @@ import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { PackageReleaseService } from '../services/PackageReleaseService';
 import {
   evaluatePackageReleaseGate,
+  type PackageComponentSnapshot,
   type PackageGateSnapshot,
 } from '../services/packageReleaseGateHelpers';
-import { resolveLatestComponentVersions } from '../services/packageReleaseResolution';
 
 const origin = 'ListActiveDistributedPackagesBySpaceUseCase';
 
@@ -151,11 +151,6 @@ export class ListActiveDistributedPackagesBySpaceUseCase
      * `packmind.json` says `*` would pay four queries and three port calls for
      * an answer nothing reads; this costs one pass over rows already in memory.
      */
-    const pinnedPackageIds = pinnedPackagesOf(activeOps);
-    const releaseState = await this.readReleaseState(
-      packages.filter((pkg) => pinnedPackageIds.has(pkg.id)),
-    );
-
     const operationsByTarget = groupActiveOpsByTarget(activeOps);
     const outdatedByTargetId = indexOutdatedByTarget(outdatedByTarget);
     const standardsById = indexById(standards);
@@ -163,6 +158,12 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const skillsById = indexById(skills);
     const packagesById = indexById(packages);
     const gitRepoById = new Map(gitRepos.map((r) => [r.id, r]));
+
+    const pinnedPackageIds = pinnedPackagesOf(activeOps);
+    const releaseState = await this.readReleaseState(
+      packages.filter((pkg) => pinnedPackageIds.has(pkg.id)),
+      { commandsById, standardsById, skillsById },
+    );
 
     return targets.map((target): ActiveDistributedPackagesByTarget => {
       const outdated = outdatedByTargetId.get(target.id) ?? {
@@ -217,44 +218,21 @@ export class ListActiveDistributedPackagesBySpaceUseCase
   /**
    * Where each package stands against its own newest release.
    *
-   * A fixed number of reads however many packages are given: one batched
-   * release lookup, and one resolution of every component of every package at
-   * once. Asking package by package would be two queries and three port calls
-   * each, on a read that draws a whole space.
+   * One query however many packages are given, and no port call at all: the
+   * component versions the gate compares are read off the entities the space
+   * read already loaded. They used to be fetched a second time, by id, purely
+   * because the gate compared version ids and the list reads carry numbers.
    */
   private async readReleaseState(
     packages: Package[],
+    componentVersions: ComponentVersionLookup,
   ): Promise<Map<PackageId, PackageReleaseState>> {
     if (packages.length === 0) return new Map();
 
-    const [latestReleases, resolution] = await Promise.all([
-      this.packageReleaseService.findLatestByPackageIds(
+    const latestReleases =
+      await this.packageReleaseService.findLatestByPackageIds(
         packages.map((pkg) => pkg.id),
-      ),
-      resolveLatestComponentVersions(
-        {
-          // Deduplicated: one component can belong to several packages.
-          recipeIds: [...new Set(packages.flatMap((pkg) => pkg.recipes ?? []))],
-          standardIds: [
-            ...new Set(packages.flatMap((pkg) => pkg.standards ?? [])),
-          ],
-          skillIds: [...new Set(packages.flatMap((pkg) => pkg.skills ?? []))],
-        },
-        {
-          commandsPort: this.commandsPort,
-          standardsPort: this.standardsPort,
-          skillsPort: this.skillsPort,
-        },
-      ),
-    ]);
-
-    const latestVersionIds = new Map<string, string>();
-    for (const component of resolution.resolved) {
-      latestVersionIds.set(
-        `${component.family}:${component.componentId}`,
-        component.versionId,
       );
-    }
 
     const state = new Map<PackageId, PackageReleaseState>();
     for (const pkg of packages) {
@@ -268,7 +246,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
          */
         hasUnreleasedChanges:
           evaluatePackageReleaseGate(
-            toGateSnapshot(pkg, latestVersionIds),
+            toGateSnapshot(pkg, componentVersions),
             latestRelease,
           ) === 'ready',
       });
@@ -277,6 +255,19 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     return state;
   }
 }
+
+/**
+ * The live version number of every component of the space, by family.
+ *
+ * A component absent from its map has no version this read can see — it was
+ * deleted, or it never belonged to this space — which the gate reads as "no
+ * version", the same thing an unresolved component used to mean.
+ */
+type ComponentVersionLookup = {
+  commandsById: Map<string, Command>;
+  standardsById: Map<string, Standard>;
+  skillsById: Map<string, Skill>;
+};
 
 /** Where one package stands against its own newest release. */
 type PackageReleaseState = Pick<
@@ -299,22 +290,29 @@ const NEVER_RELEASED: PackageReleaseState = {
   hasUnreleasedChanges: false,
 };
 
-/** The package as the release gate sees it, at the versions resolved above. */
+/** The package as the release gate sees it, at the versions the space read holds. */
 function toGateSnapshot(
   pkg: Package,
-  latestVersionIds: Map<string, string>,
+  versions: ComponentVersionLookup,
 ): PackageGateSnapshot {
-  const component = (family: string, id: string) => ({
+  const component = (
+    byId: Map<string, { version: number }>,
+    id: string,
+  ): PackageComponentSnapshot => ({
     id,
-    latestVersionId: latestVersionIds.get(`${family}:${id}`) ?? null,
+    latestVersion: byId.get(id)?.version ?? null,
   });
 
   return {
     name: pkg.name,
     description: pkg.description,
-    recipes: (pkg.recipes ?? []).map((id) => component('recipe', id)),
-    standards: (pkg.standards ?? []).map((id) => component('standard', id)),
-    skills: (pkg.skills ?? []).map((id) => component('skill', id)),
+    recipes: (pkg.recipes ?? []).map((id) =>
+      component(versions.commandsById, id),
+    ),
+    standards: (pkg.standards ?? []).map((id) =>
+      component(versions.standardsById, id),
+    ),
+    skills: (pkg.skills ?? []).map((id) => component(versions.skillsById, id)),
   };
 }
 

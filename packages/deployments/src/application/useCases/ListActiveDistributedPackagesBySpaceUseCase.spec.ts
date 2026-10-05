@@ -25,6 +25,7 @@ import {
   Command,
   Skill,
   Standard,
+  StandardId,
   Target,
   TargetId,
   UserSpaceRole,
@@ -398,11 +399,23 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
     describe('where a package stands against its own newest release', () => {
       const standardId = createStandardId(uuidv4());
+      const LIVE_STANDARD_VERSION = 2;
 
       let pkg: Package;
-      let latestStandardVersion: { id: string; standardId: string };
 
-      const releaseOf = (version: string, pinnedStandardVersionId: string) => ({
+      const buildStandard = (id: StandardId, version: number): Standard =>
+        ({
+          id,
+          name: 'std',
+          slug: 'std',
+          description: '',
+          version,
+          userId,
+          scope: null,
+          spaceId,
+        }) as Standard;
+
+      const releaseOf = (version: string, pinnedStandardVersion: number) => ({
         id: 'release-1',
         packageId: pkg.id,
         version,
@@ -410,7 +423,12 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         description: pkg.description,
         recipeVersions: [],
         standardVersions: [
-          { id: pinnedStandardVersionId, standardId, name: 'std', version: 1 },
+          {
+            id: `sv-${pinnedStandardVersion}`,
+            standardId,
+            name: 'std',
+            version: pinnedStandardVersion,
+          },
         ],
         skillVersions: [],
       });
@@ -439,19 +457,25 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         return result[0].packages[0];
       };
 
+      /*
+       * The live version comes off the space read, not from a second lookup by
+       * id: that read already carries every component's version number, which
+       * is the whole reason the gate compares numbers.
+       */
       beforeEach(() => {
         pkg = buildPackage({ standards: [standardId] });
-        latestStandardVersion = { id: 'sv-2', standardId };
 
-        standardsPort.getLatestStandardVersions.mockResolvedValue([
-          latestStandardVersion,
+        standardsPort.listStandardsBySpace.mockResolvedValue([
+          buildStandard(standardId, LIVE_STANDARD_VERSION),
         ] as never);
       });
 
       describe('when the package matches its newest release', () => {
         beforeEach(() => {
           packageReleaseService.findLatestByPackageIds.mockResolvedValue(
-            new Map([[pkg.id, releaseOf('0.2.0', 'sv-2')]]) as never,
+            new Map([
+              [pkg.id, releaseOf('0.2.0', LIVE_STANDARD_VERSION)],
+            ]) as never,
           );
         });
 
@@ -467,7 +491,9 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       describe('when a component has moved on since the newest release', () => {
         beforeEach(() => {
           packageReleaseService.findLatestByPackageIds.mockResolvedValue(
-            new Map([[pkg.id, releaseOf('0.2.0', 'sv-1')]]) as never,
+            new Map([
+              [pkg.id, releaseOf('0.2.0', LIVE_STANDARD_VERSION - 1)],
+            ]) as never,
           );
         });
 
@@ -541,14 +567,6 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
           expect(
             packageReleaseService.findLatestByPackageIds,
-          ).not.toHaveBeenCalled();
-        });
-
-        it('resolves no component version', async () => {
-          await unpinnedList('*');
-
-          expect(
-            standardsPort.getLatestStandardVersions,
           ).not.toHaveBeenCalled();
         });
       });
