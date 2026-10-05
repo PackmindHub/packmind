@@ -525,6 +525,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       operation: 'remove',
       // The package is leaving the destination; it asks for no version at all.
       versionSpec: null,
+      latestReleaseVersion: null,
     });
 
     if (removedStandardVersions.length > 0) {

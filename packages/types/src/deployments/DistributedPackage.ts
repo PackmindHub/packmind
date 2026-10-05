@@ -30,6 +30,7 @@ export type DistributedPackage = {
    * live package.
    */
   versionSpec: string | null;
+  latestReleaseVersion: string | null;
   package?: Package; // Optional - loaded via relation
   distribution?: Distribution; // Optional - inverse side of relation
 };

@@ -572,6 +572,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -698,6 +699,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -747,6 +749,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -954,6 +957,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -985,6 +989,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -1068,6 +1073,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const dist2OtherPackage: DistributedPackage = {
@@ -1089,6 +1095,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution1: Distribution = {
@@ -1177,6 +1184,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const addDistribution: Distribution = {
@@ -1221,6 +1229,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'remove',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const removeDistribution: Distribution = {
@@ -1284,6 +1293,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               ],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {

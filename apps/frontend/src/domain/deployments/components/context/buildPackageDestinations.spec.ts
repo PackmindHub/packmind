@@ -68,6 +68,7 @@ function install(
     behindArtifacts: [],
     alignedArtifactCount: 4,
     versionSpec: null,
+    latestReleaseVersion: null,
     ...rest,
     /*
      * Derived from the late components unless a test states it, which is what

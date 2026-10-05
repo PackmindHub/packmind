@@ -602,6 +602,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -654,6 +655,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv2],
               recipeVersions: [],
               skillVersions: [],
@@ -700,6 +702,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -761,6 +764,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [svOld],
               recipeVersions: [],
               skillVersions: [],
@@ -773,6 +777,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [svNew],
               recipeVersions: [],
               skillVersions: [],
@@ -913,6 +918,7 @@ describe('DistributionRepository', () => {
                 packageId: packageId1,
                 operation: 'add',
                 versionSpec: null,
+                latestReleaseVersion: null,
                 standardVersions: [sv1],
                 recipeVersions: [cv1],
                 skillVersions: [skv1],
@@ -1365,6 +1371,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1454,6 +1461,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1483,6 +1491,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'remove',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [],
               recipeVersions: [],
               skillVersions: [],
@@ -1500,6 +1509,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-2'),
@@ -1586,6 +1596,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1613,6 +1624,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1b'),

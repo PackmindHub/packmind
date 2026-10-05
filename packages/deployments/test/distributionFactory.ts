@@ -27,6 +27,7 @@ export const distributionFactory: Factory<Distribution> = (
         skillVersions: [],
         operation: 'add',
         versionSpec: null,
+        latestReleaseVersion: null,
       },
     ],
     createdAt: new Date().toISOString(),
