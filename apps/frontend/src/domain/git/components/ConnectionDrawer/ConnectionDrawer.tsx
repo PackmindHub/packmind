@@ -130,6 +130,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
         repo: r.repo,
         branch: r.branch,
       })),
+      switches: new Map(),
     };
   }, [trackedQuery.data]);
 

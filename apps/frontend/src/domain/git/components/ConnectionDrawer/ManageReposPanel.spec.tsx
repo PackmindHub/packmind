@@ -57,6 +57,7 @@ const renderPanel = () =>
             { owner: 'my-orga', repo: 'my-repo', branch: 'feature/login' },
             { owner: 'my-orga', repo: 'my-repo', branch: 'not-saved-yet' },
           ],
+          switches: new Map(),
         }}
         onSelectionChange={vi.fn()}
         progress={null}

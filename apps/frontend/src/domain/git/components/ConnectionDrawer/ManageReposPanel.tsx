@@ -175,12 +175,13 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   const addTuple = (t: RepoTuple) => {
     const target = tupleKey(t);
     if (selection.tuples.some((x) => tupleKey(x) === target)) return;
-    onSelectionChange({ tuples: [...selection.tuples, t] });
+    onSelectionChange({ ...selection, tuples: [...selection.tuples, t] });
   };
 
   const removeTuple = (t: RepoTuple) => {
     const target = tupleKey(t);
     onSelectionChange({
+      ...selection,
       tuples: selection.tuples.filter((x) => tupleKey(x) !== target),
     });
   };
