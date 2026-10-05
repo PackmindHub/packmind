@@ -19,18 +19,21 @@ class TestDomainError extends Error implements DomainError {
   readonly kind: DomainErrorKind;
   readonly reason: string;
   readonly context?: Record<string, unknown>;
+  readonly retryAfterSeconds?: number;
 
   constructor(
     kind: DomainErrorKind,
     reason: string,
     message: string,
     context?: Record<string, unknown>,
+    retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = 'TestDomainError';
     this.kind = kind;
     this.reason = reason;
     this.context = context;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -242,6 +245,58 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the exception is a rate_limited domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'rate_limited',
+          'too_many_login_attempts',
+          'Too many login attempts. Please try again later.',
+          {},
+          120,
+        ),
+        host,
+      );
+    });
+
+    it('responds with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+
+    it('returns the message and reason to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 429,
+        message: 'Too many login attempts. Please try again later.',
+        reason: 'too_many_login_attempts',
+      });
+    });
+
+    it('sets Retry-After from the delay the error carries', () => {
+      expect(setHeader).toHaveBeenCalledWith('Retry-After', '120');
+    });
+  });
+
+  describe('when a rate_limited domain error carries no delay', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'rate_limited',
+          'too_many_login_attempts',
+          'Too many login attempts. Please try again later.',
+        ),
+        host,
+      );
+    });
+
+    it('omits the Retry-After header', () => {
+      expect(setHeader).not.toHaveBeenCalled();
+    });
+
+    it('still answers with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+
   // The policy table, stated as behaviour: a new kind added to the union
   // without a row here fails to compile, and a row given the wrong status
   // fails here.
@@ -251,6 +306,7 @@ describe('DomainExceptionFilter', () => {
     ['invalid_input', HttpStatus.BAD_REQUEST],
     ['conflict', HttpStatus.CONFLICT],
     ['unauthenticated', HttpStatus.UNAUTHORIZED],
+    ['rate_limited', HttpStatus.TOO_MANY_REQUESTS],
   ] satisfies ReadonlyArray<[DomainErrorKind, number]>)(
     'when the domain error kind is %s',
     (kind, expectedStatus) => {
