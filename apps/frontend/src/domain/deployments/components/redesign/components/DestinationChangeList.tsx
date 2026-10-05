@@ -16,6 +16,7 @@ import {
 import type { IconType } from 'react-icons';
 import type { PackageId } from '@packmind/types';
 
+import { COMPONENT_TYPE_LABELS_SINGULAR } from '../../context/buildPackageContext';
 import { useAuthContext } from '../../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../../spaces/hooks/useCurrentSpace';
 import { useGetPackageReleaseQuery } from '../../../api/queries/DeploymentsQueries';
@@ -72,6 +73,15 @@ function ChangeRow({ change }: Readonly<{ change: ComponentChange }>) {
         truncate
       >
         {change.name}
+      </PMText>
+      {/*
+        The family in words, beside the icon rather than instead of it. Three
+        glyphs a reader has to have learnt is three glyphs they can read wrong,
+        and the one thing this list must never be ambiguous about is what a
+        named row actually is. Same pair the component rail shows.
+      */}
+      <PMText fontSize="2xs" color="faded" whiteSpace="nowrap">
+        {COMPONENT_TYPE_LABELS_SINGULAR[change.kind]}
       </PMText>
       {moves ? (
         <>

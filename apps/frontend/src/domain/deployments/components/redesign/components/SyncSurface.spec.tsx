@@ -770,6 +770,19 @@ describe('SyncSurface', () => {
         it('names it', () => {
           expect(screen.getByText('Naming conventions')).toBeInTheDocument();
         });
+
+        /*
+         * The icon alone asks the reader to have learnt three glyphs. The two
+         * rows of this group are a standard and a command, so a list drawing
+         * only the glyph leaves which is which to be guessed.
+         */
+        it('says in words that the standard is a standard', () => {
+          expect(screen.getByText('Standard')).toBeInTheDocument();
+        });
+
+        it('says in words that the command is a command', () => {
+          expect(screen.getByText('Command')).toBeInTheDocument();
+        });
       });
 
       describe('when a component of the package never landed there', () => {
