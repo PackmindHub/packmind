@@ -363,6 +363,36 @@ describe('ManageReposPanel', () => {
       });
     });
 
+    describe('and the user clicks Change instead of pressing Enter', () => {
+      beforeEach(async () => {
+        checkBranchExists.mockResolvedValue({ exists: true });
+        fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+        fireEvent.change(screen.getByTestId('manage-repos-branch-input'), {
+          target: { value: 'dev' },
+        });
+        fireEvent.click(screen.getByTestId('manage-repos-branch-confirm'));
+        await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
+      });
+
+      it('replaces the branch', () => {
+        expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
+          { owner: 'o', repo: 'r', branch: 'dev' },
+        ]);
+      });
+    });
+
+    describe('and no branch is typed yet', () => {
+      beforeEach(() => {
+        fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+      });
+
+      it('disables the Change button', () => {
+        expect(
+          screen.getByTestId('manage-repos-branch-confirm'),
+        ).toBeDisabled();
+      });
+    });
+
     describe('and the user clicks Cancel', () => {
       beforeEach(() => {
         fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
@@ -384,6 +414,12 @@ describe('ManageReposPanel', () => {
 
       it('disables the input', () => {
         expect(screen.getByTestId('manage-repos-branch-input')).toBeDisabled();
+      });
+
+      it('disables the Change button', () => {
+        expect(
+          screen.getByTestId('manage-repos-branch-confirm'),
+        ).toBeDisabled();
       });
     });
   });

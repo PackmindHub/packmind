@@ -642,6 +642,15 @@ const TrackedRepoSection: React.FC<{
             />
             {checkBranch.isPending && <PMSpinner size="xs" />}
             <PMButton
+              variant="secondary"
+              size="xs"
+              onClick={() => void commitSwitch()}
+              disabled={checkBranch.isPending || !draft.trim()}
+              data-testid="manage-repos-branch-confirm"
+            >
+              Change
+            </PMButton>
+            <PMButton
               variant="tertiary"
               size="xs"
               onClick={cancelAdd}
