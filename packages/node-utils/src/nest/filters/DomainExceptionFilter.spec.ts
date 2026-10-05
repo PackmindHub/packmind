@@ -437,6 +437,30 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the upstream error wraps a caught failure', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_unavailable',
+          'gitlab_unreachable',
+          { provider: 'gitlab' },
+          'GitLab did not answer, try again shortly.',
+          undefined,
+          { cause: new Error('connect ECONNREFUSED 10.0.0.1:443') },
+        ),
+        host,
+      );
+    });
+
+    it('keeps the cause out of the body', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 502,
+        message: 'GitLab did not answer, try again shortly.',
+        reason: 'gitlab_unreachable',
+      });
+    });
+  });
+
   // The upstream policy table, stated as behaviour: a new kind added to the
   // union without a row fails to compile, and a row given the wrong status
   // fails here.

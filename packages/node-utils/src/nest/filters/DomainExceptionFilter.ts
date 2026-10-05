@@ -163,6 +163,9 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         ...(exception.retryAfterSeconds !== undefined
           ? { retryAfterSeconds: exception.retryAfterSeconds }
           : {}),
+        ...(exception.cause !== undefined
+          ? { cause: describeCause(exception.cause) }
+          : {}),
       });
 
       const response = host.switchToHttp().getResponse<HttpResponse>();

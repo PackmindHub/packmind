@@ -43,6 +43,8 @@ export interface UpstreamError {
   readonly context?: Record<string, unknown>;
   /** Seconds the caller should wait, when the provider told us. */
   readonly retryAfterSeconds?: number;
+  /** The failure this one wraps, when it wraps one. */
+  readonly cause?: unknown;
 }
 
 const VALID_KINDS = [
