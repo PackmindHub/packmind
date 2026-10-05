@@ -36,12 +36,12 @@ window around the day it landed and render the small companion page:
 
 ```bash
 node tools/comment-ratio/daily.mjs --ref origin/main \
-  --around 2026-09-12 --days 11 --name daily-september.json
+  --from 2026-09-01 --to <today> --name daily-rule-window.json
 node tools/comment-ratio/render-window.mjs --mark 2026-09-22 \
   --label 'Instructions updated' --exclude 2026-09-18
 ```
 
-Re-run both to refresh it; `--days` widens the window as days accumulate.
+Re-run both to refresh it, moving `--to` to the current day.
 `--exclude` drops a day that measures something other than ordinary authoring
 (a bulk comment rewrite) from the chart and the figures, keeping it in the table.
 

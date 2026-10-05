@@ -3,7 +3,7 @@
  * Build a small standalone page for one day-by-day window around a change.
  *
  *   node tools/comment-ratio/render-window.mjs
- *     [--out <dir>] [--data daily-september.json] [--mark YYYY-MM-DD]
+ *     [--out <dir>] [--data daily-rule-window.json] [--mark YYYY-MM-DD]
  *     [--label "Instructions updated"] [--title "..."] [--name <file>]
  *     [--exclude YYYY-MM-DD,...] [--target artifact]
  *
@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const options = {
   out: path.join(here, 'output'),
-  data: 'daily-september.json',
+  data: 'daily-rule-window.json',
   mark: '2026-09-22',
   label: 'Instructions updated',
   title: 'Comment ratio since the instruction change',
