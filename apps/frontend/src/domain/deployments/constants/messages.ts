@@ -57,9 +57,9 @@ export const PACKAGE_MESSAGES = {
      * it is the part of the package that is not in any release.
      */
     unreleased: 'Unreleased',
-    basedOn: (version: string) => `based on v${version}`,
+    basedOn: (version: string) => `based on ${version}`,
     unreleasedBasedOn: (version: string | null) =>
-      version ? `Unreleased, based on v${version}` : 'Unreleased',
+      version ? `Unreleased, based on ${version}` : 'Unreleased',
     no_components: 'Add at least one component',
     not_greater: (currentVersion: string) =>
       `Version must be greater than ${currentVersion}`,

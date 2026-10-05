@@ -536,13 +536,13 @@ describe('DeploymentsHistory', () => {
     it('shows the release a pinned destination was sent', () => {
       renderHistory([distribution(1, {}, 'add', '1.2.0')]);
 
-      expect(version()).toHaveTextContent('v1.2.0');
+      expect(version()).toHaveTextContent('1.2.0');
     });
 
     it('shows the live package as unreleased, based on the release it was built on', () => {
       renderHistory([distribution(1, {}, 'add', '*', '1.1.0')]);
 
-      expect(version()).toHaveTextContent('based on v1.1.0');
+      expect(version()).toHaveTextContent('based on 1.1.0');
     });
 
     it('shows the live package as unreleased alone when it had no release yet', () => {
@@ -574,7 +574,7 @@ describe('DeploymentsHistory', () => {
         },
       ]);
 
-      expect(version()).toHaveTextContent('v1.2.0');
+      expect(version()).toHaveTextContent('1.2.0');
     });
   });
 
@@ -600,7 +600,7 @@ describe('DeploymentsHistory', () => {
         ]),
       ]);
 
-      expect(packageVersions()).toEqual(['v1.2.0']);
+      expect(packageVersions()).toEqual(['1.2.0']);
     });
 
     it('shows an unreleased package with its base release on one line', () => {
@@ -614,7 +614,7 @@ describe('DeploymentsHistory', () => {
         ]),
       ]);
 
-      expect(packageVersions()).toEqual(['Unreleased, based on v1.1.0']);
+      expect(packageVersions()).toEqual(['Unreleased, based on 1.1.0']);
     });
 
     it('shows a dash beside the name when no version was recorded', () => {

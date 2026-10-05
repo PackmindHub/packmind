@@ -232,7 +232,9 @@ export const versionLine = (
   const version = packageVersions?.[selectedPackages[0].id];
   if (!version) return null;
   return version === WILDCARD_VERSION_SPEC
-    ? PACKAGE_MESSAGES.release.unreleasedBasedOn(latestRelease)
+    ? PACKAGE_MESSAGES.release.unreleasedBasedOn(
+        latestRelease && `v${latestRelease}`,
+      )
     : `v${version}`;
 };
 

@@ -592,7 +592,7 @@ const PackageVersion: React.FunctionComponent<{
         flexShrink={0}
         data-testid={DeploymentsHistoryDataTestId.PackageVersion}
       >
-        v{versionSpec}
+        {versionSpec}
       </PMText>
     );
   }
