@@ -25,14 +25,18 @@ export class PackagePage
    * page is not.
    */
   async listDistributions(): Promise<DistributionLogEntry[]> {
-    const rows = this.page.locator(
-      '[id*="content-distributions"] table tbody tr',
-    );
+    const tab = this.page.locator('[id*="content-distributions"]');
+    const rows = tab.locator('table tbody tr');
+    const emptyState = tab.getByRole('heading', {
+      name: 'Nothing distributed yet',
+    });
     /*
      * The tab renders before its query answers, so without this the count is
      * taken on an empty body and the assertion reads as "nothing was stored".
+     * Waiting on the empty state too lets a log with nothing in it answer.
      */
-    await rows.first().waitFor();
+    await rows.first().or(emptyState).waitFor();
+    if (await emptyState.isVisible()) return [];
 
     const count = await rows.count();
     const result: DistributionLogEntry[] = [];

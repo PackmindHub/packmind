@@ -8,6 +8,7 @@ import {
   IUploadSkillUseCase,
   IListUserSpaces,
   IListSkillVersionsUseCase,
+  ISetTrackedRepositoryUseCase,
   SkillVersion,
   Standard,
 } from '@packmind/types';
@@ -150,6 +151,12 @@ export class PackmindApi implements IPackmindApi {
       `/spaces/${command.spaceId}/skills/${command.skillId}/versions`,
     );
     return { versions };
+  };
+
+  setTrackedRepository: Gateway<ISetTrackedRepositoryUseCase> = async (
+    command,
+  ) => {
+    return this.post('/git/repositories/tracked-repository', command, 201);
   };
 
   private async get<T>(url: string, expectedStatus = 200): Promise<T> {
