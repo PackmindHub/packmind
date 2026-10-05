@@ -1,5 +1,9 @@
 import { createGitRepoId } from '@packmind/types';
-import { buildRepoApplyPlan, SavedRow } from './repoApplyPlan';
+import {
+  buildRepoApplyPlan,
+  rowsShownInDrawer,
+  SavedRow,
+} from './repoApplyPlan';
 import { RepoSelection } from './types';
 
 const row = (branch: string, isTracked: boolean, id = branch): SavedRow => ({
@@ -150,6 +154,38 @@ describe('buildRepoApplyPlan', () => {
         { kind: 'update-tracked', owner: 'o', repo: 'a', branch: 'dev' },
         { kind: 'set-tracked', owner: 'o', repo: 'c', branch: 'main' },
       ]);
+    });
+  });
+});
+
+describe('rowsShownInDrawer', () => {
+  describe('when a repo is tracked on a branch', () => {
+    it('keeps only the tracked row', () => {
+      expect(
+        rowsShownInDrawer([row('main', true), row('old', false)]).map(
+          (r) => r.branch,
+        ),
+      ).toEqual(['main']);
+    });
+  });
+
+  describe('when a legacy repo has no tracked row', () => {
+    it('keeps every row', () => {
+      expect(
+        rowsShownInDrawer([row('main', false), row('feature', false)]).map(
+          (r) => r.branch,
+        ),
+      ).toEqual(['main', 'feature']);
+    });
+  });
+
+  describe('when only another repo is tracked', () => {
+    it('keeps the legacy repo rows', () => {
+      const other: SavedRow = { ...row('main', true, 'other'), repo: 'r2' };
+
+      expect(
+        rowsShownInDrawer([other, row('main', false), row('dev', false)]),
+      ).toHaveLength(3);
     });
   });
 });

@@ -85,6 +85,17 @@ export function buildRepoApplyPlan(
   return [...removes, ...adds, ...tracking];
 }
 
+/**
+ * The rows the drawer lists: a tracked repository's tracked row only, every
+ * row of a legacy repository. Hidden rows stay saved, with their history.
+ */
+export function rowsShownInDrawer<
+  T extends { owner: string; repo: string; isTracked: boolean },
+>(rows: T[]): T[] {
+  const trackedRepos = new Set(rows.filter((r) => r.isTracked).map(repoKey));
+  return rows.filter((r) => r.isTracked || !trackedRepos.has(repoKey(r)));
+}
+
 function groupBy<T>(items: T[], keyOf: (item: T) => string): Map<string, T[]> {
   const groups = new Map<string, T[]>();
   for (const item of items) {
