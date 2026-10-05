@@ -14,6 +14,7 @@ import {
   isUpstreamError,
   UpstreamErrorKind,
 } from '@packmind/types';
+import { describeCause } from './describeCause';
 
 const origin = 'DomainExceptionFilter';
 
@@ -181,6 +182,9 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         message: exception.message,
         stack: exception.stack,
         ...(exception.context ? { context: exception.context } : {}),
+        ...(exception.cause !== undefined
+          ? { cause: describeCause(exception.cause) }
+          : {}),
       });
     }
 

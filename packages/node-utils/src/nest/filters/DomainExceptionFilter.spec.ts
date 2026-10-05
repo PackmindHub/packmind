@@ -427,6 +427,31 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the internal error wraps a caught failure', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindInternalError(
+          'package_reload_failed',
+          { packageId: '9ff2d85e-d9e4-40ae-bd02-c24429ba0d20' },
+          'Failed to retrieve the updated package.',
+          { cause: new Error('connection reset') },
+        ),
+        host,
+      );
+    });
+
+    it('still responds with 500', () => {
+      expect(repliedStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    });
+
+    it("still keeps Nest's generic body, so the cause never reaches the caller", () => {
+      expect(repliedBody()).toEqual({
+        statusCode: 500,
+        message: 'Internal server error',
+      });
+    });
+  });
+
   describe('when the exception is an HttpException', () => {
     beforeEach(() => {
       filter.catch(new BadRequestException('Nope'), host);

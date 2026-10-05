@@ -90,3 +90,33 @@ describe('PackmindInternalError', () => {
     expect(error).toBeInstanceOf(Error);
   });
 });
+
+describe('when PackmindInternalError wraps a caught failure', () => {
+  const original = new Error('connection reset');
+  const error = new PackmindInternalError(
+    'package_reload_failed',
+    { packageId: 'abc' },
+    'Failed to retrieve the updated package.',
+    { cause: original },
+  );
+
+  it('keeps the original error as its cause', () => {
+    expect(error.cause).toBe(original);
+  });
+
+  it('keeps the cause out of its enumerable fields', () => {
+    expect(Object.keys(error)).not.toContain('cause');
+  });
+});
+
+describe('when PackmindInternalError is given no cause', () => {
+  it('leaves cause undefined', () => {
+    const error = new PackmindInternalError(
+      'package_reload_failed',
+      {},
+      'Failed to retrieve the updated package.',
+    );
+
+    expect(error.cause).toBeUndefined();
+  });
+});
