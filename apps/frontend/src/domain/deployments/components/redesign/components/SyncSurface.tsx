@@ -20,8 +20,6 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
-  LuArrowRight,
-  LuBookOpen,
   LuCheck,
   LuChevronDown,
   LuChevronRight,
@@ -32,10 +30,8 @@ import {
   LuStore,
   LuTerminal,
   LuTriangleAlert,
-  LuWandSparkles,
   LuX,
 } from 'react-icons/lu';
-import type { IconType } from 'react-icons';
 import { Link } from 'react-router';
 import {
   comparePackageReleaseVersions,
@@ -60,17 +56,15 @@ import {
 } from '../selectors/installLock';
 import { NO_GIT_CONNECTION_TOOLTIP } from '../../noGitConnection';
 import type {
-  ArtifactKind,
   MarketplaceDrift,
   MarketplacePluginDrift,
   PackageDrift,
 } from '../types';
-
-const KIND_ICON: Record<ArtifactKind, IconType> = {
-  standard: LuBookOpen,
-  command: LuTerminal,
-  skill: LuWandSparkles,
-};
+import {
+  DestinationChangeList,
+  PinnedDestinationChanges,
+} from './DestinationChangeList';
+import { liveDestinationChanges } from '../selectors/destinationChanges';
 
 /**
  * One marketplace of a batch, with the plugins that would go out to it.
@@ -987,14 +981,29 @@ function packageMoveLine(block: PackageBlock): string {
  * moves; this only says what the move is.
  */
 function entryMoveLine(entry: InstallDriftEntry, pkg: PackageDrift): string {
-  const pin = parsePackageVersionSpec(entry.versionSpec);
-  if (pin?.kind === 'exact' && pkg.latestReleaseVersion) {
-    return `${pin.version} → ${pkg.latestReleaseVersion}`;
-  }
+  const move = pinnedMove(entry, pkg);
+  if (move) return `${move.from} → ${move.to}`;
 
   return `${entry.behindArtifacts.length} component${
     entry.behindArtifacts.length === 1 ? '' : 's'
   } to update`;
+}
+
+/**
+ * The two releases a pinned destination moves between, null for one tracking
+ * the live package.
+ *
+ * Named once rather than tested twice, so the line a reader clicks and the list
+ * it opens can never disagree about which kind of move this is: the line reads
+ * `0.2.0 → 3.0.2` exactly when the list it opens is a diff of those two cuts.
+ */
+function pinnedMove(
+  entry: InstallDriftEntry,
+  pkg: PackageDrift,
+): { from: string; to: string } | null {
+  const pin = parsePackageVersionSpec(entry.versionSpec);
+  if (pin?.kind !== 'exact' || !pkg.latestReleaseVersion) return null;
+  return { from: pin.version, to: pkg.latestReleaseVersion };
 }
 
 type EntryWithLock = {
@@ -1491,7 +1500,7 @@ function InstallSyncRow({
 }: Readonly<InstallSyncRowProps>) {
   const [expanded, setExpanded] = useState(false);
   const locked = lockReason !== null;
-  const showArtifacts = selected && expanded;
+  const move = pinnedMove(entry, pkg);
   const checkbox = (
     /*
       The whole row toggles, so the click the label has already turned into a
@@ -1553,44 +1562,6 @@ function InstallSyncRow({
         ) : (
           checkbox
         )}
-        <PMBox
-          width="18px"
-          flexShrink={0}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {selected && (
-            <PMBox
-              as="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded((v) => !v);
-              }}
-              bg="transparent"
-              border="none"
-              cursor="pointer"
-              padding="2px"
-              display="inline-flex"
-              alignItems="center"
-              justifyContent="center"
-              color="text.secondary"
-              _hover={{ color: 'text.primary' }}
-              _focusVisible={{
-                outline: '2px solid',
-                outlineColor: 'branding.primary',
-                outlineOffset: '2px',
-                borderRadius: 'sm',
-              }}
-              aria-expanded={expanded}
-              aria-label={`${expanded ? 'Collapse' : 'Expand'} components to update`}
-            >
-              <PMIcon fontSize="sm">
-                {expanded ? <LuChevronDown /> : <LuChevronRight />}
-              </PMIcon>
-            </PMBox>
-          )}
-        </PMBox>
         <PMHStack gap={2} align="center" flex={1} minW={0} wrap="wrap">
           <PMText fontSize="sm" color="primary" truncate>
             {entry.repo.owner}/{entry.repo.name}
@@ -1639,9 +1610,43 @@ function InstallSyncRow({
               {LOCK_ROW_BADGE[lockReason].label}
             </PMBadge>
           )}
-          <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            {entryMoveLine(entry, pkg)}
-          </PMText>
+          {/*
+            The move line is the control, not a label beside one. The row
+            toggles the tick, so a click landing on this text used to select the
+            destination rather than open it — which is why the list of what a
+            push would change was unreachable until the row happened to be
+            ticked. It stops the click here and opens instead.
+          */}
+          <PMBox
+            as="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            display="inline-flex"
+            alignItems="center"
+            gap="2px"
+            color="text.faded"
+            _hover={{ color: 'text.primary' }}
+            _focusVisible={{
+              outline: '2px solid',
+              outlineColor: 'branding.primary',
+              outlineOffset: '2px',
+              borderRadius: 'sm',
+            }}
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Hide' : 'Show'} what ${entryMoveLine(entry, pkg)} changes on ${entry.repo.owner}/${entry.repo.name}`}
+          >
+            <PMText fontSize="xs" fontVariantNumeric="tabular-nums">
+              {entryMoveLine(entry, pkg)}
+            </PMText>
+            <PMIcon fontSize="xs">
+              {expanded ? <LuChevronDown /> : <LuChevronRight />}
+            </PMIcon>
+          </PMBox>
           {entry.mostRecentDeployedAt && (
             <PMHStack
               gap="4px"
@@ -1662,61 +1667,22 @@ function InstallSyncRow({
           )}
         </PMVStack>
       </PMHStack>
-      {showArtifacts && (
+      {expanded && (
         <PMBox
           paddingLeft="44px"
           paddingRight={4}
           paddingBottom={3}
           paddingTop={1}
         >
-          <PMVStack gap={0} align="stretch">
-            {entry.behindArtifacts.map((b) => {
-              const Icon = KIND_ICON[b.artifact.kind];
-              return (
-                <PMHStack
-                  key={b.artifact.id}
-                  gap={3}
-                  align="center"
-                  paddingY={1}
-                  paddingX={2}
-                >
-                  <PMIcon fontSize="sm" color="text.faded">
-                    <Icon />
-                  </PMIcon>
-                  <PMText
-                    fontSize="xs"
-                    color="secondary"
-                    fontFamily={
-                      b.artifact.kind === 'command' ? 'mono' : undefined
-                    }
-                    flex={1}
-                    minW={0}
-                    truncate
-                  >
-                    {b.artifact.name}
-                  </PMText>
-                  <PMText
-                    fontSize="xs"
-                    color="faded"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    v{b.deployedVersion}
-                  </PMText>
-                  <PMIcon fontSize="xs" color="text.faded">
-                    <LuArrowRight />
-                  </PMIcon>
-                  <PMText
-                    fontSize="xs"
-                    color="primary"
-                    fontWeight="medium"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    v{b.artifact.packmindVersion}
-                  </PMText>
-                </PMHStack>
-              );
-            })}
-          </PMVStack>
+          {move ? (
+            <PinnedDestinationChanges
+              packageId={pkg.id}
+              fromVersion={move.from}
+              toVersion={move.to}
+            />
+          ) : (
+            <DestinationChangeList changes={liveDestinationChanges(entry)} />
+          )}
         </PMBox>
       )}
     </PMVStack>

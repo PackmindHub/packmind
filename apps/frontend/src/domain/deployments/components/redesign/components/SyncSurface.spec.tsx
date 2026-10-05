@@ -717,5 +717,97 @@ describe('SyncSurface', () => {
         }),
       ).toBeInTheDocument();
     });
+
+    /*
+     * What a push would actually do to one repository, which the move line only
+     * summarises. The line is the control that opens it: the row itself toggles
+     * the tick, so a click landing on the text used to select the destination
+     * instead of opening it, and the list was unreachable.
+     */
+    describe('the change list behind a move line', () => {
+      /** A batch whose single destination arrives unticked. */
+      const unticked = {
+        kind: 'package' as const,
+        packageId: STUB_PACKAGES[0].id,
+        installKeys: [],
+      };
+
+      const open = async (pkg: PackageDrift) => {
+        const user = userEvent.setup();
+        await user.click(
+          screen.getByRole('button', { name: /^Show what .* changes on / }),
+        );
+        return pkg;
+      };
+
+      describe('when the destination is not selected', () => {
+        beforeEach(async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+        });
+
+        it('opens the list all the same', () => {
+          expect(screen.getByText('Updated · 2')).toBeInTheDocument();
+        });
+
+        it('leaves the destination unticked', () => {
+          expect(
+            screen.getByRole('checkbox', { name: /Select acme\/webapp/ }),
+          ).not.toBeChecked();
+        });
+      });
+
+      describe('when a component is late at the destination', () => {
+        beforeEach(async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+        });
+
+        it('groups it under Updated', () => {
+          expect(screen.getByText('Updated · 2')).toBeInTheDocument();
+        });
+
+        it('names it', () => {
+          expect(screen.getByText('Naming conventions')).toBeInTheDocument();
+        });
+      });
+
+      describe('when a component of the package never landed there', () => {
+        it('groups it under Added', async () => {
+          renderSurface({
+            packages: [STUB_PACKAGES[2]],
+            scope: { kind: 'package' as const, packageId: STUB_PACKAGES[2].id },
+          });
+          await open(STUB_PACKAGES[2]);
+
+          expect(screen.getByText('Added · 1')).toBeInTheDocument();
+        });
+      });
+
+      describe('when a component was deleted on Packmind', () => {
+        it('groups it under Removed', async () => {
+          renderSurface({
+            packages: [STUB_PACKAGES[1]],
+            scope: { kind: 'package' as const, packageId: STUB_PACKAGES[1].id },
+          });
+          await open(STUB_PACKAGES[1]);
+
+          expect(screen.getByText('Removed · 1')).toBeInTheDocument();
+        });
+      });
+
+      describe('when the list is open', () => {
+        it('closes again on a second click', async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+          const user = userEvent.setup();
+          await user.click(
+            screen.getByRole('button', { name: /^Hide what .* changes on / }),
+          );
+
+          expect(screen.queryByText('Updated · 2')).toBeNull();
+        });
+      });
+    });
   });
 });
