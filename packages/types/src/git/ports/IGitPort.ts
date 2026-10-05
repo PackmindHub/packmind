@@ -14,6 +14,8 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   FindOrCreateGitRepoCommand,
   FindOrCreateGitRepoResponse,
+  CheckProviderBranchExistsCommand,
+  CheckProviderBranchExistsResponse,
   CheckTrackedBranchExistsCommand,
   CheckTrackedBranchExistsResponse,
   GetAvailableRemoteDirectoriesCommand,
@@ -179,6 +181,14 @@ export interface IGitPort {
   checkTrackedBranchExists(
     command: CheckTrackedBranchExistsCommand,
   ): Promise<CheckTrackedBranchExistsResponse>;
+
+  /**
+   * Check whether a branch exists on one of the organization's providers, as
+   * typed by the user. Always asks the provider: the answer is never cached.
+   */
+  checkProviderBranchExists(
+    command: CheckProviderBranchExistsCommand,
+  ): Promise<CheckProviderBranchExistsResponse>;
 
   /**
    * Probe a git provider's stored credentials against the upstream API to

@@ -82,6 +82,7 @@ describe('GitProvidersController', () => {
       | 'completeGithubAppManifest'
       | 'getGithubAppStatus'
       | 'revokeGithubApp'
+      | 'checkProviderBranchExists'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -103,6 +104,7 @@ describe('GitProvidersController', () => {
       completeGithubAppManifest: jest.fn(),
       getGithubAppStatus: jest.fn(),
       revokeGithubApp: jest.fn(),
+      checkProviderBranchExists: jest.fn(),
     };
     logger = stubLogger();
 
@@ -796,6 +798,49 @@ describe('GitProvidersController', () => {
           controller.updateGitProvider(orgId, mockRequest, providerId, body),
         ).rejects.toBeInstanceOf(GitProviderDisplayNameNotEditableError);
       });
+    });
+  });
+
+  describe('checkProviderBranchExists', () => {
+    const providerId = createGitProviderId('provider-789');
+
+    beforeEach(() => {
+      mockService.checkProviderBranchExists.mockResolvedValue({
+        exists: true,
+      });
+    });
+
+    it('passes a branch holding a slash to the service untouched', async () => {
+      await controller.checkProviderBranchExists(
+        orgId,
+        providerId,
+        mockRequest,
+        'acme',
+        'website',
+        'feature/new-home',
+      );
+
+      expect(mockService.checkProviderBranchExists).toHaveBeenCalledWith({
+        userId,
+        organizationId: orgId,
+        gitProviderId: providerId,
+        owner: 'acme',
+        repo: 'website',
+        branch: 'feature/new-home',
+      });
+    });
+
+    it('returns the answer of the service', async () => {
+      const result = await controller.checkProviderBranchExists(
+        orgId,
+        providerId,
+        mockRequest,
+        'acme',
+        'website',
+        'main',
+      );
+
+      expect(result).toEqual({ exists: true });
     });
   });
 });

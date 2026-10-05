@@ -12,6 +12,8 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthCommand,
   CheckProviderAuthResponse,
+  CheckProviderBranchExistsCommand,
+  CheckProviderBranchExistsResponse,
   DeleteItem,
   FileModification,
   FetchFileContentInput,
@@ -66,6 +68,7 @@ import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/CheckBra
 import { CheckTrackedBranchExistsUseCase } from '../useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
 import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
+import { CheckProviderBranchExistsUseCase } from '../useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase';
 import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
 import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/DeleteGitProviderUseCase';
 import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/DeleteGitRepoUseCase';
@@ -105,6 +108,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _checkTrackedBranchExists!: CheckTrackedBranchExistsUseCase;
   private _commitToGit!: CommitToGitUseCase;
   private _getFileFromRepo!: GetFileFromRepoUseCase;
+  private _checkProviderBranchExists!: CheckProviderBranchExistsUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
   private _listRepos!: ListReposUseCase;
   private _listProviders!: ListProvidersUseCase;
@@ -229,6 +233,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._getFileFromRepo = new GetFileFromRepoUseCase(
       this.gitServices.getResolvedGitRepoService(),
+    );
+
+    this._checkProviderBranchExists = new CheckProviderBranchExistsUseCase(
+      this.gitServices.getGitProviderService(),
+      this._checkBranchExists,
+      this.accountsPort,
     );
 
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
@@ -428,6 +438,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     command: CheckTrackedBranchExistsCommand,
   ): Promise<CheckTrackedBranchExistsResponse> {
     return this._checkTrackedBranchExists.execute(command);
+  }
+
+  public checkProviderBranchExists(
+    command: CheckProviderBranchExistsCommand,
+  ): Promise<CheckProviderBranchExistsResponse> {
+    return this._checkProviderBranchExists.execute(command);
   }
 
   public commitToGit(
