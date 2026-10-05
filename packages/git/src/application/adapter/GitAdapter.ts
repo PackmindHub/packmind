@@ -224,7 +224,9 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._checkTrackedBranchExists = new CheckTrackedBranchExistsUseCase(
       this.gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
       this._checkBranchExists,
+      this.accountsPort,
     );
 
     this._commitToGit = new CommitToGitUseCase(
