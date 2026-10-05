@@ -21,6 +21,7 @@ const resultFactory = (
   packages: [],
   unattributedArtifacts: [],
   missingAccess: [],
+  agents: null,
   ...overrides,
 });
 
@@ -257,16 +258,101 @@ describe('checkUpgradesHandler', () => {
     });
   });
 
-  describe('when the user lacks access to a package', () => {
-    it('warns about it', async () => {
+  describe('when the user lacks access to packages', () => {
+    describe('and nothing else would change', () => {
+      beforeEach(async () => {
+        writeConfig(rootDir);
+        mockCheckUpgrades.mockResolvedValue(
+          resultFactory({ missingAccess: ['@a/b', '@c/d'] }),
+        );
+        await run();
+      });
+
+      it('says which packages could not be checked', () => {
+        expect(warnings).toEqual([
+          expect.stringContaining(
+            "Could not check 2 packages you don't have access to: @a/b, @c/d",
+          ),
+        ]);
+      });
+
+      it('does not print "Already up to date"', () => {
+        expect(output.join('\n')).not.toContain('Already up to date');
+      });
+
+      it('exits with code 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and upgrades are available', () => {
+      it('exits with code 1', async () => {
+        writeConfig(rootDir);
+        mockCheckUpgrades.mockResolvedValue({
+          ...upgradableResult,
+          missingAccess: ['@a/b'],
+        });
+
+        await run();
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  describe('when the coding agents change', () => {
+    beforeEach(async () => {
       writeConfig(rootDir);
       mockCheckUpgrades.mockResolvedValue(
-        resultFactory({ missingAccess: ['@private/pkg'] }),
+        resultFactory({
+          hasUpgrades: true,
+          agents: { from: ['claude'], to: ['claude', 'cursor'] },
+          packages: [
+            {
+              slug: '@space/infra',
+              from: '0.2.0',
+              to: '0.2.0',
+              artifacts: [
+                {
+                  type: 'standard',
+                  name: 'react',
+                  change: 'rerendered',
+                  fromVersion: 2,
+                  toVersion: 2,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await run();
+    });
+
+    it('prints the agents move before the packages', () => {
+      expect(output.slice(0, 2)).toEqual([
+        'Coding agents: claude → claude, cursor',
+        '@space/infra  0.2.0 · 1 component to update',
+      ]);
+    });
+
+    it('prints a rerendered artifact as a files change', () => {
+      expect(output).toContain('  ~ standard  react  (files change)');
+    });
+  });
+
+  describe('when every coding agent is removed', () => {
+    it('prints the empty list as none', async () => {
+      writeConfig(rootDir);
+      mockCheckUpgrades.mockResolvedValue(
+        resultFactory({
+          hasUpgrades: true,
+          agents: { from: ['claude'], to: [] },
+        }),
       );
 
       await run();
 
-      expect(warnings).toEqual([expect.stringContaining('@private/pkg')]);
+      expect(output[0]).toBe('Coding agents: claude → none');
     });
   });
 

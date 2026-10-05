@@ -38,6 +38,17 @@ const CHANGE_MARKERS: Record<CheckUpgradesArtifactChange['change'], string> = {
   added: '+',
   updated: '~',
   removed: '-',
+  rerendered: '~',
+};
+
+const ARTIFACT_CHANGE_DETAILS: Record<
+  CheckUpgradesArtifactChange['change'],
+  (artifact: CheckUpgradesArtifactChange) => string
+> = {
+  added: () => '(new)',
+  removed: () => '(removed)',
+  rerendered: () => '(files change)',
+  updated: (artifact) => `v${artifact.fromVersion} → v${artifact.toVersion}`,
 };
 
 const ARTIFACT_TYPE_WIDTH = 'standard'.length;
@@ -52,12 +63,7 @@ function formatArtifactLines(
   const nameWidth = Math.max(...artifacts.map((a) => a.name.length));
 
   return artifacts.map((artifact) => {
-    const detail =
-      artifact.change === 'added'
-        ? '(new)'
-        : artifact.change === 'removed'
-          ? '(removed)'
-          : `v${artifact.fromVersion} → v${artifact.toVersion}`;
+    const detail = ARTIFACT_CHANGE_DETAILS[artifact.change](artifact);
 
     return `  ${CHANGE_MARKERS[artifact.change]} ${artifact.type.padEnd(
       ARTIFACT_TYPE_WIDTH,
@@ -81,10 +87,26 @@ function formatPackageMoveLine(pkg: CheckUpgradesPackage): string {
   return `${pkg.from} ${formatLabel(`· ${status}`)}`;
 }
 
+function formatAgentList(agents: string[]): string {
+  return agents.length > 0 ? agents.join(', ') : 'none';
+}
+
+function formatAgentsMoveLine(
+  agents: NonNullable<ICheckUpgradesResult['agents']>,
+): string {
+  return `Coding agents: ${formatAgentList(agents.from)} → ${formatBold(
+    formatAgentList(agents.to),
+  )}`;
+}
+
 export function formatCheckUpgradesResult(
   result: ICheckUpgradesResult,
 ): string[] {
   const lines: string[] = [];
+
+  if (result.agents) {
+    lines.push(formatAgentsMoveLine(result.agents));
+  }
 
   for (const pkg of result.packages) {
     lines.push(`${formatSlug(pkg.slug)}  ${formatPackageMoveLine(pkg)}`);
@@ -164,10 +186,12 @@ export async function checkUpgradesHandler(
     }
   }
 
-  if (missingAccess.size > 0) {
+  const incomplete = missingAccess.size > 0;
+  if (incomplete) {
     logWarningConsole(
-      `You don't have access to the following packages, so they were not checked:\n` +
-        [...missingAccess].map((slug) => `  - ${slug}`).join('\n'),
+      `Could not check ${pluralize(missingAccess.size, 'package')} you don't have access to: ${[
+        ...missingAccess,
+      ].join(', ')}`,
     );
   }
 
@@ -183,6 +207,11 @@ export async function checkUpgradesHandler(
       : `${EXEC_NAME} install --upgrade`;
     if (!multiDir) logConsole('');
     logConsole(`Run ${formatCommand(upgradeCommand)} to apply these changes.`);
+    exit(1);
+    return;
+  }
+
+  if (incomplete) {
     exit(1);
     return;
   }

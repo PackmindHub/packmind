@@ -458,16 +458,203 @@ describe('CheckUpgradesUseCase', () => {
       mockConfigFileRepository.readConfig.mockResolvedValue({ packages: {} });
     });
 
-    it('reports no upgrade', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.hasUpgrades).toBe(false);
-    });
-
     it('does not call the server', async () => {
       await useCase.execute(command);
 
       expect(mockGateway.deployment.install).not.toHaveBeenCalled();
+    });
+
+    describe('and the lock file records installed artifacts', () => {
+      let result: Awaited<ReturnType<CheckUpgradesUseCase['execute']>>;
+
+      beforeEach(async () => {
+        mockLockFileRepository.read.mockResolvedValue(
+          lockFileFactory({
+            ...unchangedLockFile.artifacts,
+            'default:skill:packmind-onboard': lockEntry({
+              type: 'skill',
+              source: 'default',
+              packageIds: [],
+            }),
+          }),
+        );
+
+        result = await useCase.execute(command);
+      });
+
+      it('reports an upgrade', () => {
+        expect(result.hasUpgrades).toBe(true);
+      });
+
+      it('lists every user artifact as removed and unattributed', () => {
+        expect(result.unattributedArtifacts).toEqual([
+          {
+            type: 'standard',
+            name: 'ts-good-practices',
+            change: 'removed',
+            fromVersion: 2,
+          },
+          {
+            type: 'skill',
+            name: 'review',
+            change: 'removed',
+            fromVersion: 1,
+          },
+        ]);
+      });
+    });
+
+    describe('and there is no lock file', () => {
+      it('reports no upgrade', async () => {
+        mockLockFileRepository.read.mockResolvedValue(null);
+
+        const result = await useCase.execute(command);
+
+        expect(result.hasUpgrades).toBe(false);
+      });
+    });
+
+    describe('and the lock file only records default skills', () => {
+      it('reports no upgrade', async () => {
+        mockLockFileRepository.read.mockResolvedValue(
+          lockFileFactory({
+            'default:skill:packmind-onboard': lockEntry({
+              type: 'skill',
+              source: 'default',
+              packageIds: [],
+            }),
+          }),
+        );
+
+        const result = await useCase.execute(command);
+
+        expect(result.hasUpgrades).toBe(false);
+      });
+    });
+  });
+
+  describe('when the coding agents change', () => {
+    let result: Awaited<ReturnType<CheckUpgradesUseCase['execute']>>;
+
+    beforeEach(async () => {
+      mockLockFileRepository.read.mockResolvedValue({
+        ...lockFileFactory({
+          'user:standard:ts-good-practices': lockEntry({
+            type: 'standard',
+            version: 2,
+            files: [{ path: 'CLAUDE.md', agent: 'claude' }],
+          }),
+        }),
+        agents: ['claude'],
+      });
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          serverLockFile: {
+            ...lockFileFactory({
+              'user:standard:ts-good-practices': lockEntry({
+                type: 'standard',
+                version: 2,
+                files: [
+                  { path: 'CLAUDE.md', agent: 'claude' },
+                  {
+                    path: '.cursor/rules/packmind/ts-good-practices.mdc',
+                    agent: 'cursor',
+                  },
+                ],
+              }),
+            }),
+            agents: ['cursor', 'claude'],
+          },
+        }),
+      );
+
+      result = await useCase.execute(command);
+    });
+
+    it('reports an upgrade', () => {
+      expect(result.hasUpgrades).toBe(true);
+    });
+
+    it('reports the agents move', () => {
+      expect(result.agents).toEqual({
+        from: ['claude'],
+        to: ['claude', 'cursor'],
+      });
+    });
+
+    it('lists the artifacts written to other files as rerendered', () => {
+      expect(result.packages[0].artifacts).toEqual([
+        {
+          type: 'standard',
+          name: 'ts-good-practices',
+          change: 'rerendered',
+          fromVersion: 2,
+          toVersion: 2,
+        },
+      ]);
+    });
+  });
+
+  describe('when the coding agents and file paths stay the same', () => {
+    let result: Awaited<ReturnType<CheckUpgradesUseCase['execute']>>;
+
+    beforeEach(async () => {
+      const lockFile: PackmindLockFile = {
+        ...lockFileFactory({
+          'user:standard:ts-good-practices': lockEntry({
+            type: 'standard',
+            version: 2,
+            files: [
+              { path: 'CLAUDE.md', agent: 'claude' },
+              { path: '.cursor/rules/packmind/ts.mdc', agent: 'cursor' },
+            ],
+          }),
+        }),
+        agents: ['claude', 'cursor'],
+      };
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          serverLockFile: {
+            ...lockFile,
+            agents: ['cursor', 'claude'],
+            artifacts: {
+              'user:standard:ts-good-practices': {
+                ...lockFile.artifacts['user:standard:ts-good-practices'],
+                files: [
+                  { path: '.cursor/rules/packmind/ts.mdc', agent: 'cursor' },
+                  { path: 'CLAUDE.md', agent: 'claude' },
+                ],
+              },
+            },
+          },
+        }),
+      );
+
+      result = await useCase.execute(command);
+    });
+
+    it('reports no upgrade', () => {
+      expect(result.hasUpgrades).toBe(false);
+    });
+
+    it('reports no agents move', () => {
+      expect(result.agents).toBeNull();
+    });
+  });
+
+  describe('when there is no local lock file', () => {
+    it('reports no agents move', async () => {
+      mockLockFileRepository.read.mockResolvedValue(null);
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          serverLockFile: { ...unchangedLockFile, agents: ['claude'] },
+        }),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result.agents).toBeNull();
     });
   });
 

@@ -1,4 +1,5 @@
 import {
+  CodingAgent,
   PackmindLockFile,
   PackmindLockFileEntry,
   parsePackageVersionSpec,
@@ -56,13 +57,11 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
     const { slugs: configSlugs, versions: configVersions } =
       await normalizeConfigPackages(config.packages, this.spaceService);
 
+    const existingLockFile = await this.lockFileRepository.read(baseDirectory);
+    const localLockFile = existingLockFile ?? this.emptyLockFile();
+
     if (configSlugs.length === 0) {
-      return {
-        hasUpgrades: false,
-        packages: [],
-        unattributedArtifacts: [],
-        missingAccess: [],
-      };
+      return this.checkFullRemoval(localLockFile);
     }
 
     const { packagesSlugs, packageVersions } = resolveInstallPackageVersions({
@@ -70,15 +69,6 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
       configVersions,
       upgrade: true,
     });
-
-    const localLockFile = (await this.lockFileRepository.read(
-      baseDirectory,
-    )) ?? {
-      lockfileVersion: 1,
-      packageSlugs: [],
-      agents: [],
-      artifacts: {},
-    };
 
     const response = await this.packmindGateway.deployment.install({
       packagesSlugs,
@@ -124,7 +114,13 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
       .filter((diff) => !attributed.has(diff))
       .map((diff) => diff.change);
 
+    const agents =
+      existingLockFile && serverLockFile?.agents
+        ? this.diffAgents(existingLockFile.agents, serverLockFile.agents)
+        : null;
+
     const hasUpgrades =
+      agents !== null ||
       unattributedArtifacts.length > 0 ||
       packages.some(
         (pkg) =>
@@ -136,7 +132,48 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
       packages,
       unattributedArtifacts,
       missingAccess: response.missingAccess,
+      agents,
     };
+  }
+
+  /**
+   * With no package left in packmind.json, install deletes every file the lock
+   * file references and the lock file itself, without asking the server.
+   * Default skills are left out: install deleting them is a known bug.
+   */
+  private checkFullRemoval(
+    localLockFile: PackmindLockFile,
+  ): ICheckUpgradesResult {
+    const unattributedArtifacts = this.diffLockFiles(
+      localLockFile,
+      this.emptyLockFile(),
+    ).map((diff) => diff.change);
+
+    return {
+      hasUpgrades: unattributedArtifacts.length > 0,
+      packages: [],
+      unattributedArtifacts,
+      missingAccess: [],
+      agents: null,
+    };
+  }
+
+  private emptyLockFile(): PackmindLockFile {
+    return {
+      lockfileVersion: 1,
+      packageSlugs: [],
+      agents: [],
+      artifacts: {},
+    };
+  }
+
+  private diffAgents(
+    local: CodingAgent[] | undefined,
+    server: CodingAgent[],
+  ): ICheckUpgradesResult['agents'] {
+    const from = [...(local ?? [])].sort();
+    const to = [...server].sort();
+    return from.join(',') === to.join(',') ? null : { from, to };
   }
 
   private resolveTargetVersion(
@@ -190,6 +227,17 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
           },
           packageIds: entry.packageIds,
         });
+      } else if (this.filesSignature(before) !== this.filesSignature(entry)) {
+        diffs.push({
+          change: {
+            type: entry.type,
+            name: this.displayNameOf(key, entry),
+            change: 'rerendered',
+            fromVersion: entry.version,
+            toVersion: entry.version,
+          },
+          packageIds: entry.packageIds,
+        });
       }
     }
 
@@ -208,6 +256,13 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
     }
 
     return diffs;
+  }
+
+  private filesSignature(entry: PackmindLockFileEntry): string {
+    return (entry.files ?? [])
+      .map((file) => `${file.agent ?? ''}:${file.path}`)
+      .sort()
+      .join('\n');
   }
 
   private userEntries(

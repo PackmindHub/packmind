@@ -708,7 +708,14 @@ For each package in `packmind.json`, you see:
 - **Packages tracking `*`** — how many of their commands, standards, and skills have changed since your last install
 - **What changes underneath** — every command, standard, and skill that would be added (`+`), updated (`~`, with its version move), or removed (`-`)
 
+A few other changes show up too:
+
+- **Coding agents changed in `packmind.json`** — a `Coding agents: claude → claude, cursor` line comes first, and the commands, standards, and skills that would be written to different files are marked `(files change)`
+- **No packages left in `packmind.json`** — every installed command, standard, and skill is listed as removed, since installing would delete their files
+
 When there is nothing to upgrade, the command prints `Already up to date`.
+
+If you don't have access to some packages, the command lists them (`Could not check 2 packages you don't have access to: …`) and exits with code `1`, so an incomplete check never passes as up to date.
 
 Nothing in your repository changes: `packmind.json`, your lock file, and your installed files stay exactly as they were, and the check is not recorded as an install in Packmind. Run `packmind install --upgrade` when you are ready to apply the changes.
 

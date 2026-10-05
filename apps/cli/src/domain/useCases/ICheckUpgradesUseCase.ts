@@ -1,4 +1,4 @@
-import { ArtifactType, IPublicUseCase } from '@packmind/types';
+import { ArtifactType, CodingAgent, IPublicUseCase } from '@packmind/types';
 
 export type ICheckUpgradesCommand = {
   /** The directory holding the packmind.json to check. */
@@ -11,7 +11,11 @@ export type CheckUpgradesArtifactChange = {
   type: ArtifactType;
   /** The artifact slug, as it appears in the lock file key. */
   name: string;
-  change: 'added' | 'updated' | 'removed';
+  /**
+   * `rerendered`: same version, but an upgrade would write it to other files,
+   * e.g. because the coding agents changed.
+   */
+  change: 'added' | 'updated' | 'removed' | 'rerendered';
   /** The version the repo has today; absent for an added artifact. */
   fromVersion?: number;
   /** The version an upgrade would install; absent for a removed artifact. */
@@ -40,7 +44,13 @@ export type ICheckUpgradesResult = {
    * packmind.json, e.g. leftovers of a package the file no longer lists.
    */
   unattributedArtifacts: CheckUpgradesArtifactChange[];
+  /**
+   * Packages the server would not resolve for lack of access. They are left
+   * out of `packages`, so `hasUpgrades` says nothing about them.
+   */
   missingAccess: string[];
+  /** Set when an upgrade would render for other coding agents than the lock file records. */
+  agents: { from: CodingAgent[]; to: CodingAgent[] } | null;
 };
 
 /**
