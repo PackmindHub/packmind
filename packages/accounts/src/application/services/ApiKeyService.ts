@@ -127,11 +127,7 @@ export class ApiKeyService {
 
       return apiKey;
     } catch (error) {
-      throw new ApiKeyGenerationFailedError(
-        user.id,
-        organization.id,
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new ApiKeyGenerationFailedError(user.id, organization.id, error);
     }
   }
 

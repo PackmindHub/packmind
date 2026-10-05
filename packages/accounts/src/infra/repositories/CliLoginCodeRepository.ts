@@ -116,11 +116,7 @@ export class CliLoginCodeRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as CliLoginCodeToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'cli_login_code',
-        'encrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('cli_login_code', 'encrypt', error);
     }
   }
 
@@ -149,11 +145,7 @@ export class CliLoginCodeRepository
 
       return decrypted as CliLoginCodeToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'cli_login_code',
-        'decrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('cli_login_code', 'decrypt', error);
     }
   }
 
