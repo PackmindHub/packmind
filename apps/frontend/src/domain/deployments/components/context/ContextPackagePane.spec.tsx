@@ -399,7 +399,7 @@ describe('ContextPackagePane', () => {
     ).toBeInTheDocument();
   });
 
-  it('offers no release action when the package holds no components', async () => {
+  it('greys the release action when the package holds no components', async () => {
     await renderPane({
       currentVersion: null,
       verdict: 'no_components',
@@ -407,9 +407,7 @@ describe('ContextPackagePane', () => {
       outdatedComponents: [],
     });
 
-    expect(
-      screen.queryByRole('button', { name: /release/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Release' })).toBeDisabled();
   });
 
   it("asks for this package's releases, in this space and organization", async () => {
@@ -518,6 +516,10 @@ describe('ContextPackagePane', () => {
     it('sends that release when distributing from under it', async () => {
       await renderPane(released, { releases, address, groups: ONE_GROUP });
 
+      // The control lives on the tab strip now, so the tab has to be open.
+      await userEvent.click(screen.getByRole('tab', { name: /Distribution/ }));
+      await screen.findByTestId('distribution-tab');
+
       expect(distributeProps).toHaveBeenLastCalledWith({
         [packageId]: '1.1.0',
       });
@@ -533,7 +535,13 @@ describe('ContextPackagePane', () => {
         });
       });
 
-      it('drops the push that would send the working copy instead', async () => {
+      /*
+       * The corrective push left the header for the Distribution tab's own
+       * selection bar, where the rows it acts on are on screen and a subset can
+       * be picked. These two assert the header does not keep a copy of it in
+       * either reading — the one it used to drop, and the one it used to offer.
+       */
+      it('leaves the push to the tab that lists what is behind', async () => {
         await renderPane(released, { releases, address, groups: ONE_GROUP });
 
         expect(
@@ -541,12 +549,12 @@ describe('ContextPackagePane', () => {
         ).not.toBeInTheDocument();
       });
 
-      it('keeps offering it on the working copy', async () => {
+      it('leaves it to that tab on the working copy too', async () => {
         await renderPane(released, { releases, groups: ONE_GROUP });
 
         expect(
-          screen.getByRole('button', { name: /Update 1 distribution/ }),
-        ).toBeInTheDocument();
+          screen.queryByRole('button', { name: /Update/ }),
+        ).not.toBeInTheDocument();
       });
     });
 

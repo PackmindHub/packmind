@@ -10,6 +10,12 @@
 export enum PackageVersionBarDataTestId {
   /** What the bar says is on screen: the ref control, or the sentence that replaces it. */
   Reading = 'PackageVersionBarDataTestId.Reading',
+  /**
+   * The act that adds to the list the ref control offers. Named now that it
+   * stays on the header and greys instead of leaving, so the suite can read a
+   * state it could previously only infer from the control's absence.
+   */
+  Release = 'PackageVersionBarDataTestId.Release',
   /** One component of a release being read, with the version it was frozen at. */
   PinnedComponent = 'PackageVersionBarDataTestId.PinnedComponent',
 }

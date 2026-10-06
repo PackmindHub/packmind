@@ -61,6 +61,21 @@ export const PACKAGE_MESSAGES = {
     unreleasedBasedOn: (version: string | null) =>
       version ? `Unreleased, based on ${version}` : 'Unreleased',
     no_components: 'Add at least one component',
+    /**
+     * Why the header's `Release` is dead, for a package whose components have
+     * not moved since the last cut. The verdict had no sentence of its own
+     * while the action was absent in this state and absence was the whole
+     * explanation; it needs one now that the action stays and greys.
+     */
+    no_change: (currentVersion: string) =>
+      `Nothing has changed since ${currentVersion}`,
+    /**
+     * Why it is dead under a release. A cut is taken from the package as it
+     * stands, never from a version, so offering it under a bar reading 1.1.0
+     * would read as cutting from there.
+     */
+    readingRelease: (version: string) =>
+      `You are reading ${version}. Switch to Unreleased to create a release`,
     not_greater: (currentVersion: string) =>
       `Version must be greater than ${currentVersion}`,
     malformed: 'Version must follow X.Y.Z',
