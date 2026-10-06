@@ -6,6 +6,7 @@ import {
   PMCombobox,
   PMHStack,
   PMIcon,
+  PMIconButton,
   PMInput,
   PMSkeleton,
   PMSpinner,
@@ -13,7 +14,14 @@ import {
   PMVStack,
   pmCreateListCollection,
 } from '@packmind/ui';
-import { LuCheck, LuGitBranch, LuSearch } from 'react-icons/lu';
+import {
+  LuCheck,
+  LuCircleAlert,
+  LuGitBranch,
+  LuSearch,
+  LuSearchX,
+  LuX,
+} from 'react-icons/lu';
 import { GitProviderId, GitRepoId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
@@ -598,6 +606,11 @@ const TrackedRepoSection: React.FC<{
     }
   };
 
+  const pickSuggestion = (branch: string) => {
+    onSwitch(branch);
+    cancelAdd();
+  };
+
   const hasTracked = group.trackedBranches.length > 0;
 
   return (
@@ -652,54 +665,38 @@ const TrackedRepoSection: React.FC<{
           borderColor="border.tertiary"
           bg="background.secondary"
         >
-          <PMHStack gap={2} align="center">
-            <BranchNameCombobox
-              providerId={providerId}
-              owner={group.owner}
-              repo={group.repo}
-              currentBranch={currentBranch}
-              placeholder={group.defaultBranch}
-              value={draft}
-              disabled={checkBranch.isPending}
-              invalid={!!error}
-              describedBy={error ? errorId : undefined}
-              onChange={(value) => {
-                setDraft(value);
-                setError(null);
-              }}
-              onConfirm={() => void commitSwitch()}
-              onCancel={cancelAdd}
-            />
-            {checkBranch.isPending && <PMSpinner size="xs" />}
-            <PMButton
-              variant="primary"
-              size="xs"
-              onClick={() => void commitSwitch()}
-              disabled={checkBranch.isPending || !draft.trim()}
-              data-testid="manage-repos-branch-confirm"
-            >
-              Change
-            </PMButton>
-            <PMButton
-              variant="tertiary"
-              size="xs"
-              onClick={cancelAdd}
-              disabled={checkBranch.isPending}
-              data-testid="manage-repos-branch-cancel"
-            >
-              Cancel
-            </PMButton>
-          </PMHStack>
+          <BranchNameCombobox
+            providerId={providerId}
+            owner={group.owner}
+            repo={group.repo}
+            currentBranch={currentBranch}
+            placeholder={group.defaultBranch}
+            value={draft}
+            checking={checkBranch.isPending}
+            invalid={!!error}
+            describedBy={error ? errorId : undefined}
+            onChange={(value) => {
+              setDraft(value);
+              setError(null);
+            }}
+            onConfirm={() => void commitSwitch()}
+            onPick={pickSuggestion}
+            onCancel={cancelAdd}
+          />
           {error && (
-            <PMText
-              id={errorId}
-              fontSize="xs"
-              color="error"
-              marginTop={1}
-              data-testid="manage-repos-branch-error"
-            >
-              {error}
-            </PMText>
+            <PMHStack gap={1.5} align="center" marginTop={1.5}>
+              <PMIcon fontSize="xs" color="text.error" flexShrink={0}>
+                <LuCircleAlert />
+              </PMIcon>
+              <PMText
+                id={errorId}
+                fontSize="xs"
+                color="error"
+                data-testid="manage-repos-branch-error"
+              >
+                {error}
+              </PMText>
+            </PMHStack>
           )}
         </PMBox>
       )}
@@ -728,8 +725,8 @@ const BRANCH_SEARCH_DEBOUNCE_MS = 250;
 
 /**
  * Branch name input suggesting the repository's branches as the user types.
- * Any name can still be typed: suggestions only help, the caller checks the
- * branch exists on confirm.
+ * A suggestion switches right away, since the provider has just listed it; a
+ * typed name is confirmed with Enter and checked by the caller.
  */
 const BranchNameCombobox: React.FC<{
   providerId: GitProviderId;
@@ -738,11 +735,12 @@ const BranchNameCombobox: React.FC<{
   currentBranch?: string;
   placeholder: string;
   value: string;
-  disabled: boolean;
+  checking: boolean;
   invalid: boolean;
   describedBy?: string;
   onChange: (value: string) => void;
   onConfirm: () => void;
+  onPick: (branch: string) => void;
   onCancel: () => void;
 }> = ({
   providerId,
@@ -751,16 +749,18 @@ const BranchNameCombobox: React.FC<{
   currentBranch,
   placeholder,
   value,
-  disabled,
+  checking,
   invalid,
   describedBy,
   onChange,
   onConfirm,
+  onPick,
   onCancel,
 }) => {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState<string | null>(null);
-  const search = useDebouncedValue(value.trim(), BRANCH_SEARCH_DEBOUNCE_MS);
+  const typed = value.trim();
+  const search = useDebouncedValue(typed, BRANCH_SEARCH_DEBOUNCE_MS);
   // Mounted only while the branch input is open, so it searches only then.
   const branches = useSearchProviderBranchesQuery({
     providerId,
@@ -793,6 +793,10 @@ const BranchNameCombobox: React.FC<{
         onInputValueChange={(e: { inputValue: string }) =>
           onChange(e.inputValue)
         }
+        onValueChange={(e: { value: string[] }) => {
+          const [picked] = e.value;
+          if (picked) onPick(picked);
+        }}
         open={open}
         lazyMount
         unmountOnExit
@@ -800,15 +804,51 @@ const BranchNameCombobox: React.FC<{
         onHighlightChange={(e: { highlightedValue: string | null }) =>
           setHighlighted(e.highlightedValue)
         }
-        disabled={disabled}
+        disabled={checking}
         invalid={invalid}
         placeholder={placeholder}
         // The drawer clips its body: fixed positioning lets the list overflow it.
-        positioning={{ strategy: 'fixed' }}
+        positioning={{ strategy: 'fixed', gutter: 4 }}
       >
-        <PMCombobox.Control>
+        <PMCombobox.Control
+          display="flex"
+          alignItems="center"
+          gap={2}
+          height={8}
+          paddingLeft={2.5}
+          paddingRight={1}
+          borderWidth="1px"
+          borderColor="border.tertiary"
+          borderRadius="md"
+          bg="background.primary"
+          transition="border-color 120ms ease-out, box-shadow 120ms ease-out"
+          _focusWithin={{
+            borderColor: 'branding.primary',
+            boxShadow: '0 0 0 1px {colors.branding.primary}',
+          }}
+          _invalid={{
+            borderColor: 'text.error',
+            _focusWithin: {
+              borderColor: 'text.error',
+              boxShadow: '0 0 0 1px {colors.text.error}',
+            },
+          }}
+        >
+          <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+            <LuGitBranch />
+          </PMIcon>
           <PMCombobox.Input
             aria-describedby={describedBy}
+            flex={1}
+            minWidth={0}
+            height="auto"
+            paddingX={0}
+            border="none"
+            bg="transparent"
+            fontSize="sm"
+            color="text.primary"
+            focusRing="none"
+            _placeholder={{ color: 'text.faded' }}
             onKeyDown={(e: React.KeyboardEvent) => {
               // One key, two meanings: with the list open, Enter picks the
               // highlighted suggestion (the combobox does it) and Escape only
@@ -824,26 +864,92 @@ const BranchNameCombobox: React.FC<{
             }}
             data-testid="manage-repos-branch-input"
           />
+          {checking ? (
+            <PMSpinner
+              size="xs"
+              color="text.faded"
+              data-testid="manage-repos-branch-checking"
+            />
+          ) : (
+            typed && (
+              <KeyCap data-testid="manage-repos-branch-enter-hint">↵</KeyCap>
+            )
+          )}
+          <PMIconButton
+            variant="ghost"
+            size="2xs"
+            aria-label="Cancel"
+            color="text.faded"
+            _hover={{ color: 'text.primary', bg: 'background.tertiary' }}
+            onClick={onCancel}
+            disabled={checking}
+            data-testid="manage-repos-branch-cancel"
+          >
+            <LuX />
+          </PMIconButton>
         </PMCombobox.Control>
         {!branches.isError && (
           <PMCombobox.Positioner>
-            <PMCombobox.Content>
+            <PMCombobox.Content
+              bg="background.tertiary"
+              borderWidth="1px"
+              borderColor="border.secondary"
+              borderRadius="md"
+              boxShadow="lg"
+              padding={1}
+            >
               {branches.isLoading ? (
-                <PMText fontSize="xs" color="faded" paddingX={2} paddingY={1}>
+                <PMText fontSize="xs" color="faded" paddingX={2} paddingY={1.5}>
                   Searching…
                 </PMText>
               ) : (
-                <PMCombobox.Empty>No branch matches</PMCombobox.Empty>
+                <PMCombobox.Empty paddingX={2} paddingY={1.5}>
+                  <PMHStack gap={2} align="center">
+                    <PMIcon fontSize="xs" color="text.faded">
+                      <LuSearchX />
+                    </PMIcon>
+                    <PMText fontSize="xs" color="faded">
+                      {search
+                        ? `No branch matches “${search}”`
+                        : 'No other branch'}
+                    </PMText>
+                  </PMHStack>
+                </PMCombobox.Empty>
               )}
               {collection.items.map((item) => (
                 <PMCombobox.Item
                   item={item}
                   key={item.value}
+                  gap={2}
+                  paddingX={2}
+                  paddingY={1.5}
+                  borderRadius="sm"
+                  cursor="pointer"
+                  _highlighted={{ bg: 'blue.subtle' }}
                   data-testid="manage-repos-branch-option"
                 >
-                  <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                  <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+                    <LuGitBranch />
+                  </PMIcon>
+                  <PMCombobox.ItemText fontSize="sm" color="text.secondary">
+                    <BranchNameMatch branch={item.label} typed={typed} />
+                  </PMCombobox.ItemText>
                 </PMCombobox.Item>
               ))}
+              <PMText
+                aria-hidden
+                marginTop={1}
+                paddingX={2}
+                paddingTop={1.5}
+                paddingBottom={0.5}
+                borderTop="1px solid"
+                borderColor="border.secondary"
+                fontSize="0.6875rem"
+                color="faded"
+                data-testid="manage-repos-branch-hints"
+              >
+                ↑↓ navigate · ↵ switch · esc cancel
+              </PMText>
             </PMCombobox.Content>
           </PMCombobox.Positioner>
         )}
@@ -859,6 +965,52 @@ const BranchNameCombobox: React.FC<{
         </PMText>
       )}
     </PMBox>
+  );
+};
+
+const KeyCap: React.FC<{
+  children: React.ReactNode;
+  'data-testid'?: string;
+}> = ({ children, 'data-testid': testId }) => (
+  <PMBox
+    as="kbd"
+    aria-hidden
+    flexShrink={0}
+    paddingX={1}
+    lineHeight="1.4"
+    borderWidth="1px"
+    borderColor="border.secondary"
+    borderRadius="sm"
+    fontFamily="inherit"
+    fontSize="0.6875rem"
+    color="text.faded"
+    data-testid={testId}
+  >
+    {children}
+  </PMBox>
+);
+
+const BranchNameMatch: React.FC<{ branch: string; typed: string }> = ({
+  branch,
+  typed,
+}) => {
+  const start = typed ? branch.toLowerCase().indexOf(typed.toLowerCase()) : -1;
+  if (start < 0) return <>{branch}</>;
+  const end = start + typed.length;
+  return (
+    <>
+      {branch.slice(0, start)}
+      <PMBox
+        as="mark"
+        bg="transparent"
+        color="branding.primary"
+        fontWeight="medium"
+        data-testid="manage-repos-branch-option-match"
+      >
+        {branch.slice(start, end)}
+      </PMBox>
+      {branch.slice(end)}
+    </>
   );
 };
 

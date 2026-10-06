@@ -210,7 +210,7 @@ export class GitSettings
         hasText: new RegExp(`^${suggestion}$`),
       })
       .click();
-    await group.locator('[data-testid="manage-repos-branch-confirm"]').click();
+    // A suggestion switches at once: the provider has just listed it.
     await input.waitFor({ state: 'detached' });
   }
 

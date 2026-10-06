@@ -447,57 +447,61 @@ describe('ManageReposPanel', () => {
         expect(suggestedBranches()).toEqual(['dev', 'develop']);
       });
 
+      it('emphasises the typed text in each suggestion', () => {
+        expect(
+          within(optionFor('develop')).getByTestId(
+            'manage-repos-branch-option-match',
+          ),
+        ).toHaveTextContent(/^de$/);
+      });
+
+      it('shows the keyboard hints under the suggestions', () => {
+        expect(
+          screen.getByTestId('manage-repos-branch-hints'),
+        ).toHaveTextContent('↑↓ navigate · ↵ switch · esc cancel');
+      });
+
       describe('and picks a suggestion', () => {
-        beforeEach(() => {
+        beforeEach(async () => {
           fireEvent.click(optionFor('develop'));
+          await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
         });
 
-        it('fills the input with the branch', () => {
-          expect(screen.getByTestId('manage-repos-branch-input')).toHaveValue(
-            'develop',
-          );
+        it('switches to the picked branch', () => {
+          expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
+            { owner: 'o', repo: 'r', branch: 'develop' },
+          ]);
         });
 
-        it('does not check the provider yet', () => {
+        // The provider has just listed it: there is nothing left to verify.
+        it('does not check the provider', () => {
           expect(checkBranchExists).not.toHaveBeenCalled();
         });
 
-        describe('and clicks Change', () => {
-          beforeEach(async () => {
-            checkBranchExists.mockResolvedValue({ exists: true });
-            fireEvent.click(screen.getByTestId('manage-repos-branch-confirm'));
-            await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
-          });
+        it('closes the input', () => {
+          expect(
+            screen.queryByTestId('manage-repos-branch-input'),
+          ).not.toBeInTheDocument();
+        });
 
-          it('checks the picked branch on the provider', () => {
-            expect(checkBranchExists).toHaveBeenCalledWith({
-              providerId: provider.id,
-              owner: 'o',
-              repo: 'r',
-              branch: 'develop',
-            });
-          });
-
-          it('switches to the picked branch', () => {
-            expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
-              { owner: 'o', repo: 'r', branch: 'develop' },
-            ]);
-          });
+        it('tells the drawer the branch is no longer being edited', async () => {
+          await waitFor(() => expect(lastEditingState()).toBe(false));
         });
       });
 
       describe('and highlights a suggestion and presses Enter', () => {
         beforeEach(async () => {
           await userEvent.keyboard('{ArrowDown}{Enter}');
+          await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
         });
 
-        it('fills the input with the highlighted branch', () => {
-          expect(screen.getByTestId('manage-repos-branch-input')).toHaveValue(
-            'dev',
-          );
+        it('switches to the highlighted branch', () => {
+          expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
+            { owner: 'o', repo: 'r', branch: 'dev' },
+          ]);
         });
 
-        it('does not check the provider yet', () => {
+        it('does not check the provider', () => {
           expect(checkBranchExists).not.toHaveBeenCalled();
         });
       });
@@ -545,9 +549,9 @@ describe('ManageReposPanel', () => {
         await enterText(openBranchInput(), 'zzz');
       });
 
-      it('says no branch matches', async () => {
+      it('says no branch matches the typed text', async () => {
         expect(
-          await screen.findByText('No branch matches'),
+          await screen.findByText('No branch matches “zzz”'),
         ).toBeInTheDocument();
       });
     });
@@ -606,31 +610,27 @@ describe('ManageReposPanel', () => {
       });
     });
 
-    describe('and the user clicks Change instead of pressing Enter', () => {
-      beforeEach(async () => {
-        checkBranchExists.mockResolvedValue({ exists: true });
-        fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
-        await enterText(screen.getByTestId('manage-repos-branch-input'), 'dev');
-        fireEvent.click(screen.getByTestId('manage-repos-branch-confirm'));
-        await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
+    describe('and no branch is typed yet', () => {
+      beforeEach(() => {
+        openBranchInput();
       });
 
-      it('replaces the branch', () => {
-        expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
-          { owner: 'o', repo: 'r', branch: 'dev' },
-        ]);
+      it('does not offer Enter to confirm', () => {
+        expect(
+          screen.queryByTestId('manage-repos-branch-enter-hint'),
+        ).not.toBeInTheDocument();
       });
     });
 
-    describe('and no branch is typed yet', () => {
-      beforeEach(() => {
-        fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+    describe('and a branch name is typed', () => {
+      beforeEach(async () => {
+        await enterText(openBranchInput(), 'dev');
       });
 
-      it('disables the Change button', () => {
+      it('offers Enter to confirm', () => {
         expect(
-          screen.getByTestId('manage-repos-branch-confirm'),
-        ).toBeDisabled();
+          screen.getByTestId('manage-repos-branch-enter-hint'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -651,6 +651,18 @@ describe('ManageReposPanel', () => {
       });
     });
 
+    describe('when the branch input is open', () => {
+      beforeEach(() => {
+        openBranchInput();
+      });
+
+      it('names the cancel button for assistive technologies', () => {
+        expect(
+          screen.getByTestId('manage-repos-branch-cancel'),
+        ).toHaveAccessibleName('Cancel');
+      });
+    });
+
     describe('while the branch is being checked', () => {
       beforeEach(() => {
         checkBranchPending = true;
@@ -661,10 +673,14 @@ describe('ManageReposPanel', () => {
         expect(screen.getByTestId('manage-repos-branch-input')).toBeDisabled();
       });
 
-      it('disables the Change button', () => {
+      it('shows the check in progress', () => {
         expect(
-          screen.getByTestId('manage-repos-branch-confirm'),
-        ).toBeDisabled();
+          screen.getByTestId('manage-repos-branch-checking'),
+        ).toBeInTheDocument();
+      });
+
+      it('disables the cancel button', () => {
+        expect(screen.getByTestId('manage-repos-branch-cancel')).toBeDisabled();
       });
     });
   });

@@ -158,7 +158,8 @@ testWithApi.describe('changing a repository branch from the drawer', () => {
 
   testWithApi.describe('when picking a suggested branch', () => {
     testWithApi.beforeEach(async ({ page, dashboardPage }) => {
-      await stubProviderCalls(page, true);
+      // Answered "not found" to show a suggestion is switched to unchecked.
+      await stubProviderCalls(page, false);
       const gitSettingsPage = await openRepositoryEditor(dashboardPage);
       await gitSettingsPage.changeBranchFromSuggestions(
         fullName,
