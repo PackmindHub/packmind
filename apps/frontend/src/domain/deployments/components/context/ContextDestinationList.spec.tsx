@@ -74,14 +74,18 @@ function destination(
 function renderList(
   destinations: PackageDestination[],
   onUpdate?: (destinations: readonly PackageDestination[]) => void,
-  { onCreateRelease }: { onCreateRelease?: () => void } = {},
+  {
+    onReleaseAndUpdate,
+  }: {
+    onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
+  } = {},
 ) {
   return render(
     <UIProvider>
       <ContextDestinationList
         destinations={destinations}
         onUpdate={onUpdate}
-        onCreateRelease={onCreateRelease}
+        onReleaseAndUpdate={onReleaseAndUpdate}
       />
     </UIProvider>,
   );
@@ -686,11 +690,15 @@ describe('ContextDestinationList', () => {
   });
 
   describe('what a row pinned to a release says', () => {
-    const pinned = (remedy: 'update' | 'release') =>
+    const pinned = (
+      remedy: 'update' | 'release',
+      canReleaseAndUpdate = false,
+    ) =>
       destination({
         state: 'behind',
         behindCount: 0,
         remedy,
+        canReleaseAndUpdate,
         hasWorkToSend: remedy === 'update',
       });
 
@@ -702,11 +710,82 @@ describe('ContextDestinationList', () => {
           screen.getByText('A newer release is available'),
         ).toBeInTheDocument();
       });
+
+      describe('and the package has nothing left to release', () => {
+        it('offers the update', () => {
+          renderList([pinned('update')], vi.fn(), {
+            onReleaseAndUpdate: vi.fn(),
+          });
+
+          expect(
+            screen.getByRole('button', { name: 'Update' }),
+          ).toBeInTheDocument();
+        });
+
+        it('offers no release, which would add nothing', () => {
+          renderList([pinned('update')], vi.fn(), {
+            onReleaseAndUpdate: vi.fn(),
+          });
+
+          expect(
+            screen.queryByRole('button', { name: 'Release & Update' }),
+          ).not.toBeInTheDocument();
+        });
+      });
+
+      describe('and the package has moved on since', () => {
+        it('offers the update, which sends the release that exists', () => {
+          renderList([pinned('update', true)], vi.fn(), {
+            onReleaseAndUpdate: vi.fn(),
+          });
+
+          expect(
+            screen.getByRole('button', { name: 'Update' }),
+          ).toBeInTheDocument();
+        });
+
+        it('offers the cut beside it, which sends the work done since', () => {
+          renderList([pinned('update', true)], vi.fn(), {
+            onReleaseAndUpdate: vi.fn(),
+          });
+
+          expect(
+            screen.getByRole('button', { name: 'Release & Update' }),
+          ).toBeInTheDocument();
+        });
+
+        it('draws the update last, so it lands on the row edge', () => {
+          renderList([pinned('update', true)], vi.fn(), {
+            onReleaseAndUpdate: vi.fn(),
+          });
+
+          const actions = screen
+            .getAllByRole('button')
+            .map((button) => button.textContent)
+            .filter((label) =>
+              ['Update', 'Release & Update'].includes(label ?? ''),
+            );
+
+          expect(actions).toEqual(['Release & Update', 'Update']);
+        });
+
+        it('hands the row to the release when that one is pressed', async () => {
+          const onReleaseAndUpdate = vi.fn();
+          const row = pinned('update', true);
+          renderList([row], vi.fn(), { onReleaseAndUpdate });
+
+          await userEvent.click(
+            screen.getByRole('button', { name: 'Release & Update' }),
+          );
+
+          expect(onReleaseAndUpdate).toHaveBeenCalledWith([row]);
+        });
+      });
     });
 
     describe('when it sits on the newest release there is', () => {
       it('says the package has changes left to release', () => {
-        renderList([pinned('release')]);
+        renderList([pinned('release', true)]);
 
         expect(
           screen.getByText(
@@ -716,7 +795,9 @@ describe('ContextDestinationList', () => {
       });
 
       it('offers no update, which would commit nothing', () => {
-        renderList([pinned('release')], vi.fn());
+        renderList([pinned('release', true)], vi.fn(), {
+          onReleaseAndUpdate: vi.fn(),
+        });
 
         expect(
           screen.queryByRole('button', { name: /^Update/ }),
@@ -724,23 +805,69 @@ describe('ContextDestinationList', () => {
       });
 
       it('offers the release instead, where the update would have been', () => {
-        const onCreateRelease = vi.fn();
-        renderList([pinned('release')], vi.fn(), { onCreateRelease });
+        renderList([pinned('release', true)], vi.fn(), {
+          onReleaseAndUpdate: vi.fn(),
+        });
 
         expect(
-          screen.getByRole('button', { name: 'Create a release' }),
+          screen.getByRole('button', { name: 'Release & Update' }),
         ).toBeInTheDocument();
       });
 
-      it('opens the release drawer when it is pressed', async () => {
-        const onCreateRelease = vi.fn();
-        renderList([pinned('release')], vi.fn(), { onCreateRelease });
+      it('hands the row over when it is pressed', async () => {
+        const onReleaseAndUpdate = vi.fn();
+        const row = pinned('release', true);
+        renderList([row], vi.fn(), { onReleaseAndUpdate });
 
         await userEvent.click(
-          screen.getByRole('button', { name: 'Create a release' }),
+          screen.getByRole('button', { name: 'Release & Update' }),
         );
 
-        expect(onCreateRelease).toHaveBeenCalled();
+        expect(onReleaseAndUpdate).toHaveBeenCalledWith([row]);
+      });
+
+      it('offers nothing at all to a reader who cannot cut one', () => {
+        renderList([pinned('release', true)], vi.fn());
+
+        expect(
+          screen.queryByRole('button', { name: 'Release & Update' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when a distribution is already on its way', () => {
+      it('offers no release, since the push it ends in cannot run', () => {
+        renderList(
+          [
+            destination({
+              state: 'waiting',
+              behindCount: 0,
+              remedy: 'release',
+              canReleaseAndUpdate: true,
+              hasWorkToSend: false,
+            }),
+          ],
+          vi.fn(),
+          { onReleaseAndUpdate: vi.fn() },
+        );
+
+        expect(
+          screen.queryByRole('button', { name: 'Release & Update' }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when the row tracks the live package', () => {
+      it('offers the update alone, because a cut would reach nothing', () => {
+        renderList(
+          [destination({ state: 'drifted', behindCount: 2 })],
+          vi.fn(),
+          { onReleaseAndUpdate: vi.fn() },
+        );
+
+        expect(
+          screen.queryByRole('button', { name: 'Release & Update' }),
+        ).not.toBeInTheDocument();
       });
     });
   });

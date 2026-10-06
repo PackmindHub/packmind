@@ -235,7 +235,7 @@ export function ContextPackageDistribution({
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);
             }}
-            onCreateRelease={
+            onReleaseAndUpdate={
               releaseReadiness ? () => setReleaseOpen(true) : undefined
             }
           />

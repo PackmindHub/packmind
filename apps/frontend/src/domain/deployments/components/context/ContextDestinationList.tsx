@@ -54,7 +54,7 @@ export function ContextDestinationList({
   destinations,
   headerAction,
   onUpdate,
-  onCreateRelease,
+  onReleaseAndUpdate,
   onOpenHistory,
 }: Readonly<{
   destinations: readonly PackageDestination[];
@@ -74,7 +74,19 @@ export function ContextDestinationList({
    * the buttons off the list at once.
    */
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
+  /**
+   * Cutting a release and sending it to a set of landings, as one gesture.
+   *
+   * It takes the destinations for the same reason `onUpdate` does: the release
+   * is only half of what the reader asked for, and the other half is a push to
+   * the rows they pressed it on. The old callback took nothing because it only
+   * ever opened the release drawer and left the distribution to be noticed and
+   * started by hand.
+   *
+   * Absent for a reader who cannot cut one, which takes the button off every
+   * row at once.
+   */
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
   /**
    * Showing the distribution events, for a failed row whose message was not
    * the whole answer.
@@ -210,7 +222,7 @@ export function ContextDestinationList({
            */
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
+          onReleaseAndUpdate={onReleaseAndUpdate}
           onOpenHistory={onOpenHistory}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
@@ -223,7 +235,7 @@ export function ContextDestinationList({
           rows={pending}
           total={isSearching ? undefined : destinations.length}
           onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
+          onReleaseAndUpdate={onReleaseAndUpdate}
           onOpenHistory={onOpenHistory}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
@@ -362,7 +374,7 @@ function Band({
   total,
   isFirst,
   onUpdate,
-  onCreateRelease,
+  onReleaseAndUpdate,
   onOpenHistory,
   selection,
 }: Readonly<{
@@ -376,7 +388,7 @@ function Band({
   total?: number;
   isFirst: boolean;
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
   onOpenHistory?: () => void;
   selection?: RowSelection;
 }>) {
@@ -421,7 +433,7 @@ function Band({
           key={row.key}
           destination={row}
           onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
+          onReleaseAndUpdate={onReleaseAndUpdate}
           onOpenHistory={onOpenHistory}
           selection={selection}
         />
@@ -534,13 +546,13 @@ function UpToDateBand({
 function DestinationRow({
   destination,
   onUpdate,
-  onCreateRelease,
+  onReleaseAndUpdate,
   onOpenHistory,
   selection,
 }: Readonly<{
   destination: PackageDestination;
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
   onOpenHistory?: () => void;
   selection?: RowSelection;
 }>) {
@@ -718,7 +730,7 @@ function DestinationRow({
         <RowAction
           destination={destination}
           onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
+          onReleaseAndUpdate={onReleaseAndUpdate}
         />
       </PMHStack>
 
@@ -1009,11 +1021,11 @@ function behindNames(destination: PackageDestination): string {
 function RowAction({
   destination,
   onUpdate,
-  onCreateRelease,
+  onReleaseAndUpdate,
 }: Readonly<{
   destination: PackageDestination;
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
 }>): ReactNode {
   /*
    * The pull request first, whatever else the row could offer. A publication
@@ -1035,42 +1047,98 @@ function RowAction({
   }
 
   /*
-   * The row that only a release can move forward offers the way to cut one, in
-   * the column the push button would have used. The same action lives on the
-   * package's version bar above, and this is not a second way to do a different
-   * thing: it is the one thing this row needs, where the reader is looking when
-   * they read why it is behind.
+   * Two moves, and a row may have both.
+   *
+   * `Update` sends what Packmind already holds for this destination: the live
+   * package where it tracks `*`, the newest release where it is pinned. It is
+   * offered whenever that would move the row, and withheld where it would not —
+   * a landing already on the newest release would receive the release it has,
+   * commit nothing, and read behind afterwards, which is what let a reader
+   * press that button all afternoon.
+   *
+   * `Release & Update` cuts a version from the work done since the last one and
+   * sends that. It is offered wherever a cut would reach this destination,
+   * which is only ever a pinned one: a row tracking the live package already
+   * gets that work from `Update`, so a release there is a version number and no
+   * change in what lands.
+   *
+   * So the pair is the general case rather than a special one, and `Update`
+   * alone and `Release & Update` alone are both states this falls into. They
+   * were alternatives before, and a reader whose row offered the release had no
+   * way to see that distributing was also available to them.
    */
-  if (destination.remedy === 'release') {
-    return onCreateRelease ? (
-      <PMButton
-        variant="tertiary"
-        size="xs"
-        flexShrink={0}
-        onClick={onCreateRelease}
-      >
-        Create a release
-      </PMButton>
-    ) : null;
-  }
+  const canUpdate = Boolean(onUpdate) && canPush(destination);
+  /*
+   * `state !== 'waiting'` on both halves, for the reason `canPush` has it: a
+   * destination with a distribution already in flight cannot take a second one,
+   * and `Release & Update` ends in exactly the push `Update` is being withheld
+   * for. The cut itself would be fine; what follows it would not.
+   */
+  const canRelease =
+    Boolean(onReleaseAndUpdate) &&
+    destination.canReleaseAndUpdate &&
+    destination.state !== 'waiting';
 
-  if (!onUpdate || !canPush(destination)) return null;
+  if (!canUpdate && !canRelease) return null;
 
+  /*
+   * The cut first and the push last, which puts `Update` against the right edge
+   * of every row that has one.
+   *
+   * It reads as the wrong order — the cheap move before the expensive one — and
+   * it is the right one on a list. `Update` is the button nearly every row
+   * carries and `Release & Update` the one a few do, so leading with the common
+   * one leaves it stepping left and right down the column as rows gain and lose
+   * their second button. Pinning the common button to the edge is what lets the
+   * eye run down the list and find the same control in the same place.
+   */
   return (
-    <PMButton
-      variant="tertiary"
-      size="xs"
-      flexShrink={0}
-      onClick={() => onUpdate([destination])}
-    >
-      {/*
-        The verb of the channel, because the two are not the same act: a
-        repository is written to and the work is done when the call returns, a
-        catalog is republished through a pull request someone then merges. The
-        bar above says `Update` over a mixed pick, which is the one word that
-        covers both without promising either.
-      */}
-      {destination.kind === 'marketplace' ? 'Republish' : 'Update'}
-    </PMButton>
+    <PMHStack gap={2} flexShrink={0}>
+      {canRelease && (
+        <PMButton
+          /*
+           * The weight the release action already carries on the version bar
+           * above, and the weight of whatever this row's one move is. It never
+           * changes: wherever a cut is offered at all it is the move the row is
+           * really about, since the alternative beside it is catching up to a
+           * release the package has already moved past.
+           */
+          variant="secondary"
+          size="xs"
+          flexShrink={0}
+          onClick={() => onReleaseAndUpdate?.([destination])}
+        >
+          Release &amp; Update
+        </PMButton>
+      )}
+      {canUpdate && (
+        <PMButton
+          /*
+           * The row's one move when it is the only one, and subordinate to the
+           * cut when both are offered.
+           *
+           * So the weight belongs to the slot rather than to the verb: whatever
+           * a row's leading action is wears `secondary`, and a second action
+           * standing beside it steps back to `tertiary`. A reader running down
+           * the column finds the thing to do drawn the same way on every row,
+           * which it would not be if `Update` kept one appearance and simply
+           * happened to be the only button on most rows.
+           */
+          variant={canRelease ? 'tertiary' : 'secondary'}
+          size="xs"
+          flexShrink={0}
+          onClick={() => onUpdate?.([destination])}
+        >
+          {/*
+            The verb of the channel, because the two are not the same act: a
+            repository is written to and the work is done when the call returns,
+            a catalog is republished through a pull request someone then merges.
+            The bar above says `Update` over a mixed pick, which is the one word
+            that covers both without promising either.
+          */}
+          {destination.kind === 'marketplace' ? 'Republish' : 'Update'}
+        </PMButton>
+      )}
+    </PMHStack>
   );
 }
