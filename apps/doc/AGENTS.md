@@ -17,7 +17,7 @@ Mintlify-based end-user documentation for Packmind.
 ## Configuration
 
 - **Config File**: `docs.json` in app root
-- **Navigation**: Defined in `docs.json`
+- **Navigation**: Defined in `navigation.json`, referenced from `docs.json` via `$ref`
 - **Theming**: Packmind brand colors and styling
 - **Search**: Automatically indexed by Mintlify
 

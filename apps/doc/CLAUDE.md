@@ -8,14 +8,14 @@ Mintlify basics (local preview, deployment to Mintlify Cloud) are in `README.md`
 
 ## The step the skill omits: register the page
 
-A new `.mdx` file is unreachable until it is listed in `docs.json` under
-`navigation.groups[].pages[]`. The skill does not mention this, so do it yourself. Current groups:
+A new `.mdx` file is unreachable until it is listed in `navigation.json` under
+`groups[].pages[]`. The skill does not mention this, so do it yourself. Current groups:
 Getting Started, Concepts, Playbook Maintenance, Tools & Integrations, Governance, Linter,
 Administration, Security & Privacy — matching the directories, except `home.mdx` and `index.mdx`
 which sit at the root.
 
 Note the skill lists the content directories but omits `playbook-maintenance/`, which does exist and
-is referenced throughout `docs.json`.
+is referenced throughout `navigation.json`.
 
 ## Commands
 
@@ -25,7 +25,9 @@ is referenced throughout `docs.json`.
 
 ## Configuration
 
-- `docs.json` holds both configuration and navigation.
+- `docs.json` holds the site configuration. Its `navigation` key is only a `$ref` to
+  `navigation.json`, which holds the page tree — edit pages there, and leave the `$ref` line in
+  `docs.json` untouched.
 - Theme is Mintlify's stock `mint` preset with indigo colours (`primary: #6366f1`) — not a bespoke
   Packmind palette. Note Mintlify's `theme` key selects a *layout* preset, not colours.
 - Search is indexed automatically; there is no index to maintain.
