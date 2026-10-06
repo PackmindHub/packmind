@@ -72,9 +72,13 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
   onDelete,
 }) => {
   const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(false);
 
   useEffect(() => {
-    if (!connection) setEditingDisplayName(false);
+    if (!connection) {
+      setEditingDisplayName(false);
+      setEditingBranch(false);
+    }
   }, [connection]);
 
   return (
@@ -85,7 +89,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
       }}
       placement="end"
       size="md"
-      closeOnEscape={!editingDisplayName}
+      closeOnEscape={!editingDisplayName && !editingBranch}
     >
       <PMPortal>
         <PMDrawer.Backdrop />
@@ -98,6 +102,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
                 onDelete={onDelete}
                 onClose={onClose}
                 onEditingDisplayNameChange={setEditingDisplayName}
+                onEditingBranchChange={setEditingBranch}
               />
             )}
             <PMDrawer.CloseTrigger asChild>
@@ -116,6 +121,7 @@ interface DrawerBodyProps {
   onDelete: (provider: GitProviderUI) => void;
   onClose: () => void;
   onEditingDisplayNameChange: (editing: boolean) => void;
+  onEditingBranchChange: (editing: boolean) => void;
 }
 
 const DrawerBody: React.FC<DrawerBodyProps> = ({
@@ -124,6 +130,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   onDelete,
   onClose,
   onEditingDisplayNameChange,
+  onEditingBranchChange,
 }) => {
   const [mode, setMode] = useState<DrawerMode>('view');
   const trackedQuery = useGetRepositoriesByProviderQuery(connection.id);
@@ -369,6 +376,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               onSelectionChange={setSelection}
               progress={progress}
               onRequestReauth={() => setMode('reauth')}
+              onEditingBranchChange={onEditingBranchChange}
             />
           )}
 

@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
@@ -35,6 +35,11 @@ export interface ManageReposPanelProps {
   onSelectionChange: (next: RepoSelection) => void;
   progress: ApplyProgress | null;
   onRequestReauth: () => void;
+  /**
+   * Whether a branch name is being typed. The drawer closes on Escape, which
+   * would otherwise swallow the Escape meant to cancel the branch input.
+   */
+  onEditingBranchChange?: (editing: boolean) => void;
 }
 
 type TrackedGroup = {
@@ -72,8 +77,21 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   onSelectionChange,
   progress,
   onRequestReauth,
+  onEditingBranchChange,
 }) => {
   const tracked = useGetRepositoriesByProviderQuery(provider.id);
+  const [branchEditors, setBranchEditors] = useState(0);
+  const trackBranchEditing = useCallback(
+    (editing: boolean) => setBranchEditors((n) => n + (editing ? 1 : -1)),
+    [],
+  );
+  useEffect(() => {
+    onEditingBranchChange?.(branchEditors > 0);
+  }, [branchEditors, onEditingBranchChange]);
+  useEffect(
+    () => () => onEditingBranchChange?.(false),
+    [onEditingBranchChange],
+  );
   const available = useGetAvailableRepositoriesQuery(provider.id);
   const [filter, setFilter] = useState('');
 
@@ -345,6 +363,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
                 group={group}
                 providerId={provider.id}
                 canChange={!degraded || group.knownFromProvider}
+                onEditingChange={trackBranchEditing}
                 onSwitch={(branch) =>
                   switchBranch({ owner: group.owner, repo: group.repo, branch })
                 }
@@ -515,10 +534,24 @@ const TrackedRepoSection: React.FC<{
   canChange: boolean;
   onSwitch: (branch: string) => void;
   onRemove: (branch: string) => void;
-}> = ({ group, providerId, canChange, onSwitch, onRemove }) => {
+  onEditingChange: (editing: boolean) => void;
+}> = ({
+  group,
+  providerId,
+  canChange,
+  onSwitch,
+  onRemove,
+  onEditingChange,
+}) => {
   const checkBranch = useCheckProviderBranchExistsMutation();
   const errorId = useId();
   const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    if (!adding) return;
+    onEditingChange(true);
+    return () => onEditingChange(false);
+  }, [adding, onEditingChange]);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 

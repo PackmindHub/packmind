@@ -110,6 +110,8 @@ const savedRow = (
   providerId: createGitProviderId('provider-1'),
 });
 
+const onEditingBranchChange = vi.fn();
+
 const renderPanelWith = (selection: RepoSelection) => {
   const onSelectionChange = vi.fn();
   render(
@@ -120,11 +122,14 @@ const renderPanelWith = (selection: RepoSelection) => {
         onSelectionChange={onSelectionChange}
         progress={null}
         onRequestReauth={vi.fn()}
+        onEditingBranchChange={onEditingBranchChange}
       />
     </UIProvider>,
   );
   return onSelectionChange;
 };
+
+const lastEditingState = () => onEditingBranchChange.mock.lastCall?.[0];
 
 const selectionOf = (...branches: string[]): RepoSelection => ({
   tuples: branches.map((branch) => ({ owner: 'o', repo: 'r', branch })),
@@ -347,9 +352,24 @@ describe('ManageReposPanel', () => {
       });
     });
 
+    describe('when the branch input opens', () => {
+      beforeEach(() => {
+        fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+      });
+
+      // The drawer would otherwise take the same Escape and close itself.
+      it('tells the drawer a branch is being edited', () => {
+        expect(lastEditingState()).toBe(true);
+      });
+    });
+
     describe('and the user presses Escape', () => {
       beforeEach(() => {
         typeBranch('dev', 'Escape');
+      });
+
+      it('tells the drawer the branch is no longer being edited', () => {
+        expect(lastEditingState()).toBe(false);
       });
 
       it('does not check the provider', () => {
@@ -403,6 +423,10 @@ describe('ManageReposPanel', () => {
         expect(
           screen.queryByTestId('manage-repos-branch-input'),
         ).not.toBeInTheDocument();
+      });
+
+      it('tells the drawer the branch is no longer being edited', () => {
+        expect(lastEditingState()).toBe(false);
       });
     });
 
