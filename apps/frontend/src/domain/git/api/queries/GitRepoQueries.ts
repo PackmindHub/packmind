@@ -1,4 +1,6 @@
 import {
+  keepPreviousData,
+  queryOptions,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -14,6 +16,7 @@ import {
   GET_AVAILABLE_REPOSITORIES_KEY,
   GET_AVAILABLE_TARGETS_KEY,
   CHECK_TRACKED_BRANCH_EXISTS_KEY,
+  SEARCH_PROVIDER_BRANCHES_KEY,
   GIT_QUERY_SCOPE,
 } from '../queryKeys';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
@@ -241,6 +244,54 @@ export const useCheckProviderBranchExistsMutation = () => {
         { owner, repo, branch },
       );
     },
+  });
+};
+
+type SearchProviderBranchesParams = {
+  providerId: GitProviderId;
+  owner: string;
+  repo: string;
+  search: string;
+};
+
+export const searchProviderBranchesOptions = (
+  organizationId: OrganizationId | undefined,
+  { providerId, owner, repo, search }: SearchProviderBranchesParams,
+) =>
+  queryOptions({
+    queryKey: [
+      ...SEARCH_PROVIDER_BRANCHES_KEY,
+      organizationId,
+      providerId,
+      owner,
+      repo,
+      search,
+    ],
+    queryFn: () => {
+      if (!organizationId) {
+        throw new Error('Organization ID is required to search branches');
+      }
+      return gitProviderGateway.searchProviderBranches(
+        organizationId,
+        providerId,
+        { owner, repo, search },
+      );
+    },
+    // Keeps the previous suggestions on screen while the next search loads, so
+    // the list does not flash empty on every keystroke.
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+  });
+
+export const useSearchProviderBranchesQuery = (
+  params: SearchProviderBranchesParams,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    ...searchProviderBranchesOptions(organization?.id, params),
+    enabled: enabled && !!organization?.id,
   });
 };
 

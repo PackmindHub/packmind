@@ -2,6 +2,7 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesResponse,
   GitProviderId,
   GitProviderWithoutToken,
   GitRepo,
@@ -112,6 +113,16 @@ export interface IGitProviderGateway {
     gitProviderId: GitProviderId,
     params: { owner: string; repo: string; branch: string },
   ): Promise<CheckProviderBranchExistsResponse>;
+
+  /**
+   * Branch names of a provider repository containing the search text, at most
+   * 20 in alphabetical order; an empty search returns the first 20.
+   */
+  searchProviderBranches(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; search: string },
+  ): Promise<SearchProviderBranchesResponse>;
 
   // Tracking operations
   /**

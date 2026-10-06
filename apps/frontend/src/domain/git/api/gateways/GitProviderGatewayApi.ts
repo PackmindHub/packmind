@@ -4,6 +4,7 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesResponse,
   GitProviderId,
   GitProviderWithoutToken,
   GitRepo,
@@ -274,6 +275,17 @@ export class GitProviderGatewayApi
     const query = new URLSearchParams(params).toString();
     return this._api.get<CheckProviderBranchExistsResponse>(
       `${this._endpoint}/${organizationId}/git/providers/${gitProviderId}/branch-exists?${query}`,
+    );
+  }
+
+  async searchProviderBranches(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; search: string },
+  ): Promise<SearchProviderBranchesResponse> {
+    const query = new URLSearchParams(params).toString();
+    return this._api.get<SearchProviderBranchesResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${gitProviderId}/branches?${query}`,
     );
   }
 
