@@ -295,6 +295,27 @@ describe('DeploymentsHistory', () => {
 
       expect(headers()).toContain('Message');
     });
+
+    // A narrow table cut its pixel-wide columns' neighbours down to a letter.
+    it('sizes every column as a share of the table', () => {
+      const { container } = renderHistory([distribution(1)]);
+
+      const widths = Array.from(container.querySelectorAll('col')).map((col) =>
+        col.getAttribute('width'),
+      );
+      expect(widths.every((width) => width?.endsWith('%'))).toBe(true);
+    });
+
+    it('names a header in full when its column cuts it', async () => {
+      stubLayout(400, 60);
+      renderHistory([distribution(1)]);
+
+      await userEvent.hover(screen.getByText('Distributed At'));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Distributed At',
+      );
+    });
   });
 
   describe('when the repository of the target can no longer be found', () => {

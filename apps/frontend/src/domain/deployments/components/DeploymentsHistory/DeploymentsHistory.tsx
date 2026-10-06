@@ -391,27 +391,60 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
+  /*
+   * Shares of the table rather than pixels. The pixel widths added up to more
+   * than a narrow table has, and with a fixed layout the columns left without
+   * a width, Git Commits and Message, shrank until their headers stacked one
+   * letter per line.
+   */
   const baseColumns: PMTableColumn[] = [
-    { key: 'version', header: 'Version', width: '130px', align: 'left' },
+    {
+      key: 'version',
+      header: columnHeader('Version'),
+      width: '8%',
+      align: 'left',
+    },
     ...(hidePackageColumn
       ? []
-      : [{ key: 'package', header: 'Package', width: '180px', align: 'left' }]),
-    { key: 'target', header: 'Target', width: '210px', align: 'left' },
+      : [
+          {
+            key: 'package',
+            header: columnHeader('Package'),
+            width: '13%',
+            align: 'left',
+          },
+        ]),
+    {
+      key: 'target',
+      header: columnHeader('Target'),
+      width: '17%',
+      align: 'left',
+    },
     {
       key: 'renderModes',
-      header: 'Rendered for',
-      width: '130px',
+      header: columnHeader('Rendered for'),
+      width: '11%',
       align: 'left',
     },
-    { key: 'commits', header: 'Git Commits', width: '18%' },
+    { key: 'commits', header: columnHeader('Git Commits'), width: '14%' },
     {
       key: 'createdAt',
-      header: 'Distributed At',
-      width: '135px',
+      header: columnHeader('Distributed At'),
+      width: '12%',
       align: 'left',
     },
-    { key: 'status', header: 'Status', width: '86px', align: 'center' },
-    { key: 'message', header: 'Message', grow: true, align: 'left' },
+    {
+      key: 'status',
+      header: columnHeader('Status'),
+      width: '8%',
+      align: 'center',
+    },
+    {
+      key: 'message',
+      header: columnHeader('Message'),
+      grow: true,
+      align: 'left',
+    },
   ] as PMTableColumn[];
 
   let rows: HistoryRow[];
@@ -505,6 +538,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   );
 };
 
+/** A header cut to its column, named in full on hover. */
+const columnHeader = (label: string) => <ClippedText text={label} keepFont />;
+
 /**
  * One line of text, with a tooltip only when the line is actually cut.
  *
@@ -517,7 +553,11 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
  * It is a tooltip rather than a `title` because a `title` cannot be reached
  * from the keyboard, cannot be styled, and waits a second before appearing.
  */
-const ClippedText: React.FunctionComponent<{ text: string }> = ({ text }) => {
+const ClippedText: React.FunctionComponent<{
+  text: string;
+  /** Keep the surrounding font, as a column header does. */
+  keepFont?: boolean;
+}> = ({ text, keepFont = false }) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [isClipped, setIsClipped] = React.useState(false);
 
@@ -546,9 +586,13 @@ const ClippedText: React.FunctionComponent<{ text: string }> = ({ text }) => {
         cursor: isClipped ? 'help' : undefined,
       }}
     >
-      <PMText as="span" variant="small">
-        {text}
-      </PMText>
+      {keepFont ? (
+        text
+      ) : (
+        <PMText as="span" variant="small">
+          {text}
+        </PMText>
+      )}
     </div>
   );
 
