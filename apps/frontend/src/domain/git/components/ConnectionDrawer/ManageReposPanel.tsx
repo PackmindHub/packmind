@@ -3,6 +3,7 @@ import {
   PMAlert,
   PMBox,
   PMButton,
+  PMCombobox,
   PMHStack,
   PMIcon,
   PMInput,
@@ -10,6 +11,7 @@ import {
   PMSpinner,
   PMText,
   PMVStack,
+  pmCreateListCollection,
 } from '@packmind/ui';
 import { LuCheck, LuGitBranch, LuSearch } from 'react-icons/lu';
 import { GitProviderId, GitRepoId } from '@packmind/types';
@@ -17,6 +19,7 @@ import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useCheckProviderBranchExistsMutation,
   useCheckTrackedBranchExistsQuery,
+  useSearchProviderBranchesQuery,
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
@@ -28,6 +31,7 @@ import {
   tupleKey,
 } from './types';
 import { DeletedBranchBadge } from '../../../../shared/components/DeletedBranchBadge';
+import { useDebouncedValue } from '../../../../shared/hooks';
 
 export interface ManageReposPanelProps {
   provider: GitProviderUI;
@@ -649,29 +653,22 @@ const TrackedRepoSection: React.FC<{
           bg="background.secondary"
         >
           <PMHStack gap={2} align="center">
-            <PMInput
-              size="xs"
-              autoFocus
+            <BranchNameCombobox
+              providerId={providerId}
+              owner={group.owner}
+              repo={group.repo}
+              currentBranch={currentBranch}
               placeholder={group.defaultBranch}
               value={draft}
               disabled={checkBranch.isPending}
-              error={error ?? undefined}
-              aria-invalid={!!error || undefined}
-              aria-describedby={error ? errorId : undefined}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setDraft(e.target.value);
+              invalid={!!error}
+              describedBy={error ? errorId : undefined}
+              onChange={(value) => {
+                setDraft(value);
                 setError(null);
               }}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  void commitSwitch();
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  cancelAdd();
-                }
-              }}
-              data-testid="manage-repos-branch-input"
+              onConfirm={() => void commitSwitch()}
+              onCancel={cancelAdd}
             />
             {checkBranch.isPending && <PMSpinner size="xs" />}
             <PMButton
@@ -723,6 +720,144 @@ const TrackedRepoSection: React.FC<{
           onRemove={() => onRemove(branch)}
         />
       ))}
+    </PMBox>
+  );
+};
+
+const BRANCH_SEARCH_DEBOUNCE_MS = 250;
+
+/**
+ * Branch name input suggesting the repository's branches as the user types.
+ * Any name can still be typed: suggestions only help, the caller checks the
+ * branch exists on confirm.
+ */
+const BranchNameCombobox: React.FC<{
+  providerId: GitProviderId;
+  owner: string;
+  repo: string;
+  currentBranch?: string;
+  placeholder: string;
+  value: string;
+  disabled: boolean;
+  invalid: boolean;
+  describedBy?: string;
+  onChange: (value: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({
+  providerId,
+  owner,
+  repo,
+  currentBranch,
+  placeholder,
+  value,
+  disabled,
+  invalid,
+  describedBy,
+  onChange,
+  onConfirm,
+  onCancel,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState<string | null>(null);
+  const search = useDebouncedValue(value.trim(), BRANCH_SEARCH_DEBOUNCE_MS);
+  // Mounted only while the branch input is open, so it searches only then.
+  const branches = useSearchProviderBranchesQuery({
+    providerId,
+    owner,
+    repo,
+    search,
+  });
+
+  const collection = useMemo(
+    () =>
+      pmCreateListCollection({
+        items: (branches.data?.branches ?? [])
+          .filter((branch) => branch !== currentBranch)
+          .map((branch) => ({ label: branch, value: branch })),
+      }),
+    [branches.data, currentBranch],
+  );
+  const suggestionsShown = open && !branches.isError;
+
+  return (
+    <PMBox flex="1" minWidth={0}>
+      <PMCombobox.Root
+        collection={collection}
+        size="xs"
+        allowCustomValue
+        openOnClick
+        // Focused by the combobox itself so it sees the focus and reacts to typing.
+        autoFocus
+        // Left uncontrolled: feeding the text back in drops fast keystrokes.
+        onInputValueChange={(e: { inputValue: string }) =>
+          onChange(e.inputValue)
+        }
+        open={open}
+        lazyMount
+        unmountOnExit
+        onOpenChange={(e: { open: boolean }) => setOpen(e.open)}
+        onHighlightChange={(e: { highlightedValue: string | null }) =>
+          setHighlighted(e.highlightedValue)
+        }
+        disabled={disabled}
+        invalid={invalid}
+        placeholder={placeholder}
+        // The drawer clips its body: fixed positioning lets the list overflow it.
+        positioning={{ strategy: 'fixed' }}
+      >
+        <PMCombobox.Control>
+          <PMCombobox.Input
+            aria-describedby={describedBy}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              // One key, two meanings: with the list open, Enter picks the
+              // highlighted suggestion (the combobox does it) and Escape only
+              // closes the list; otherwise they confirm or cancel the input.
+              if (e.key === 'Enter') {
+                if (open && highlighted !== null) return;
+                e.preventDefault();
+                onConfirm();
+              } else if (e.key === 'Escape') {
+                if (suggestionsShown) setOpen(false);
+                else onCancel();
+              }
+            }}
+            data-testid="manage-repos-branch-input"
+          />
+        </PMCombobox.Control>
+        {!branches.isError && (
+          <PMCombobox.Positioner>
+            <PMCombobox.Content>
+              {branches.isLoading ? (
+                <PMText fontSize="xs" color="faded" paddingX={2} paddingY={1}>
+                  Searching…
+                </PMText>
+              ) : (
+                <PMCombobox.Empty>No branch matches</PMCombobox.Empty>
+              )}
+              {collection.items.map((item) => (
+                <PMCombobox.Item
+                  item={item}
+                  key={item.value}
+                  data-testid="manage-repos-branch-option"
+                >
+                  <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                </PMCombobox.Item>
+              ))}
+            </PMCombobox.Content>
+          </PMCombobox.Positioner>
+        )}
+      </PMCombobox.Root>
+      {branches.isError && (
+        <PMText
+          fontSize="xs"
+          color="faded"
+          marginTop={1}
+          data-testid="manage-repos-branch-search-error"
+        >
+          Couldn't load branches — you can still type a name
+        </PMText>
+      )}
     </PMBox>
   );
 };

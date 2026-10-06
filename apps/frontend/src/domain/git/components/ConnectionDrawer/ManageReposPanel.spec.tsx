@@ -7,6 +7,7 @@ import {
   within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import userEvent from '@testing-library/user-event';
 import { UIProvider } from '@packmind/ui';
 import { createGitProviderId, createGitRepoId } from '@packmind/types';
 import { ManageReposPanel } from './ManageReposPanel';
@@ -15,6 +16,7 @@ import { RepoSelection } from './types';
 
 const trackedBranchProbe = vi.fn();
 const checkBranchExists = vi.fn();
+const searchBranches = vi.fn();
 let checkBranchPending = false;
 
 type SavedRowFixture = {
@@ -66,6 +68,8 @@ vi.mock('../../api/queries', () => ({
   }),
   useCheckTrackedBranchExistsQuery: (...args: [unknown]) =>
     trackedBranchProbe(...args),
+  useSearchProviderBranchesQuery: (...args: [unknown]) =>
+    searchBranches(...args),
   useCheckProviderBranchExistsMutation: () => ({
     mutateAsync: checkBranchExists,
     isPending: checkBranchPending,
@@ -136,12 +140,41 @@ const selectionOf = (...branches: string[]): RepoSelection => ({
   switches: new Map(),
 });
 
-const typeBranch = (branch: string, key = 'Enter') => {
+// The combobox reacts only to real user input, so text goes through userEvent.
+// Pasted rather than typed: typing loses keystrokes when the combobox writes
+// the value back, which only userEvent's simulated caret trips over.
+const enterText = async (input: HTMLElement, text: string) => {
+  await userEvent.click(input);
+  await userEvent.paste(text);
+};
+
+const typeBranch = async (branch: string, key = 'Enter') => {
   fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
   const input = screen.getByTestId('manage-repos-branch-input');
-  fireEvent.change(input, { target: { value: branch } });
+  await enterText(input, branch);
   fireEvent.keyDown(input, { key });
 };
+
+const branchSearchResult = (branches: string[]) => ({
+  data: { branches },
+  isLoading: false,
+  isError: false,
+});
+
+const openBranchInput = () => {
+  fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
+  return screen.getByTestId('manage-repos-branch-input') as HTMLInputElement;
+};
+
+const suggestedBranches = () =>
+  screen
+    .queryAllByTestId('manage-repos-branch-option')
+    .map((option) => option.textContent);
+
+const optionFor = (branch: string) =>
+  screen
+    .getAllByTestId('manage-repos-branch-option')
+    .find((option) => option.textContent === branch) as HTMLElement;
 
 const rowFor = (branch: string) =>
   screen
@@ -151,6 +184,7 @@ const rowFor = (branch: string) =>
 describe('ManageReposPanel', () => {
   beforeEach(() => {
     trackedBranchProbe.mockReturnValue({ data: true });
+    searchBranches.mockReturnValue(branchSearchResult([]));
   });
 
   afterEach(() => {
@@ -251,7 +285,7 @@ describe('ManageReposPanel', () => {
     describe('and the branch exists on the provider', () => {
       beforeEach(async () => {
         checkBranchExists.mockResolvedValue({ exists: true });
-        typeBranch('dev');
+        await typeBranch('dev');
         await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
       });
 
@@ -286,7 +320,7 @@ describe('ManageReposPanel', () => {
     describe('and the branch does not exist on the provider', () => {
       beforeEach(async () => {
         checkBranchExists.mockResolvedValue({ exists: false });
-        typeBranch('dev');
+        await typeBranch('dev');
         await screen.findByTestId('manage-repos-branch-error');
       });
 
@@ -318,7 +352,7 @@ describe('ManageReposPanel', () => {
     describe('and the provider cannot be reached', () => {
       beforeEach(async () => {
         checkBranchExists.mockRejectedValue(new Error('boom'));
-        typeBranch('dev');
+        await typeBranch('dev');
         await screen.findByTestId('manage-repos-branch-error');
       });
 
@@ -337,8 +371,8 @@ describe('ManageReposPanel', () => {
       ['the current branch', 'main'],
       ['an empty branch', '   '],
     ])('and the user enters %s', (_label, branch) => {
-      beforeEach(() => {
-        typeBranch(branch);
+      beforeEach(async () => {
+        await typeBranch(branch);
       });
 
       it('does not check the provider', () => {
@@ -363,9 +397,9 @@ describe('ManageReposPanel', () => {
       });
     });
 
-    describe('and the user presses Escape', () => {
+    describe('and the user presses Escape while no suggestions are shown', () => {
       beforeEach(() => {
-        typeBranch('dev', 'Escape');
+        fireEvent.keyDown(openBranchInput(), { key: 'Escape' });
       });
 
       it('tells the drawer the branch is no longer being edited', () => {
@@ -383,13 +417,200 @@ describe('ManageReposPanel', () => {
       });
     });
 
+    describe('while the branch input is closed', () => {
+      it('does not search branches', () => {
+        expect(searchBranches).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('and the user types part of a branch name', () => {
+      beforeEach(async () => {
+        searchBranches.mockReturnValue(
+          branchSearchResult(['dev', 'develop', 'main']),
+        );
+        await enterText(openBranchInput(), 'de');
+        await screen.findAllByTestId('manage-repos-branch-option');
+      });
+
+      it('searches the repository branches with the typed text once typing pauses', async () => {
+        await waitFor(() =>
+          expect(searchBranches).toHaveBeenCalledWith({
+            providerId: provider.id,
+            owner: 'o',
+            repo: 'r',
+            search: 'de',
+          }),
+        );
+      });
+
+      it('suggests the matching branches except the current one', () => {
+        expect(suggestedBranches()).toEqual(['dev', 'develop']);
+      });
+
+      describe('and picks a suggestion', () => {
+        beforeEach(() => {
+          fireEvent.click(optionFor('develop'));
+        });
+
+        it('fills the input with the branch', () => {
+          expect(screen.getByTestId('manage-repos-branch-input')).toHaveValue(
+            'develop',
+          );
+        });
+
+        it('does not check the provider yet', () => {
+          expect(checkBranchExists).not.toHaveBeenCalled();
+        });
+
+        describe('and clicks Change', () => {
+          beforeEach(async () => {
+            checkBranchExists.mockResolvedValue({ exists: true });
+            fireEvent.click(screen.getByTestId('manage-repos-branch-confirm'));
+            await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
+          });
+
+          it('checks the picked branch on the provider', () => {
+            expect(checkBranchExists).toHaveBeenCalledWith({
+              providerId: provider.id,
+              owner: 'o',
+              repo: 'r',
+              branch: 'develop',
+            });
+          });
+
+          it('switches to the picked branch', () => {
+            expect(onSelectionChange.mock.calls[0][0].tuples).toEqual([
+              { owner: 'o', repo: 'r', branch: 'develop' },
+            ]);
+          });
+        });
+      });
+
+      describe('and highlights a suggestion and presses Enter', () => {
+        beforeEach(async () => {
+          await userEvent.keyboard('{ArrowDown}{Enter}');
+        });
+
+        it('fills the input with the highlighted branch', () => {
+          expect(screen.getByTestId('manage-repos-branch-input')).toHaveValue(
+            'dev',
+          );
+        });
+
+        it('does not check the provider yet', () => {
+          expect(checkBranchExists).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('and presses Escape', () => {
+        beforeEach(async () => {
+          await userEvent.keyboard('{Escape}');
+        });
+
+        it('hides the suggestions', async () => {
+          await waitFor(() => expect(suggestedBranches()).toEqual([]));
+        });
+
+        it('keeps the input open', () => {
+          expect(
+            screen.getByTestId('manage-repos-branch-input'),
+          ).toBeInTheDocument();
+        });
+
+        it('still tells the drawer a branch is being edited', () => {
+          expect(lastEditingState()).toBe(true);
+        });
+
+        describe('and presses Escape again', () => {
+          beforeEach(async () => {
+            await waitFor(() => expect(suggestedBranches()).toEqual([]));
+            await userEvent.keyboard('{Escape}');
+          });
+
+          it('closes the input', () => {
+            expect(
+              screen.queryByTestId('manage-repos-branch-input'),
+            ).not.toBeInTheDocument();
+          });
+
+          it('tells the drawer the branch is no longer being edited', () => {
+            expect(lastEditingState()).toBe(false);
+          });
+        });
+      });
+    });
+
+    describe('and no branch matches the typed text', () => {
+      beforeEach(async () => {
+        await enterText(openBranchInput(), 'zzz');
+      });
+
+      it('says no branch matches', async () => {
+        expect(
+          await screen.findByText('No branch matches'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('while the branches are loading', () => {
+      beforeEach(async () => {
+        searchBranches.mockReturnValue({
+          data: undefined,
+          isLoading: true,
+          isError: false,
+        });
+        await enterText(openBranchInput(), 'de');
+      });
+
+      it('says the branches are being searched', async () => {
+        expect(await screen.findByText('Searching…')).toBeInTheDocument();
+      });
+    });
+
+    describe('and the branch search fails', () => {
+      beforeEach(async () => {
+        searchBranches.mockReturnValue({
+          data: undefined,
+          isLoading: false,
+          isError: true,
+        });
+        await enterText(openBranchInput(), 'de');
+      });
+
+      it('says the branches could not be loaded', () => {
+        expect(
+          screen.getByTestId('manage-repos-branch-search-error'),
+        ).toHaveTextContent(
+          "Couldn't load branches — you can still type a name",
+        );
+      });
+
+      it('suggests no branch', () => {
+        expect(suggestedBranches()).toEqual([]);
+      });
+
+      describe('and the user confirms the typed name', () => {
+        beforeEach(async () => {
+          checkBranchExists.mockResolvedValue({ exists: true });
+          fireEvent.keyDown(screen.getByTestId('manage-repos-branch-input'), {
+            key: 'Enter',
+          });
+          await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
+        });
+
+        it('checks the typed branch on the provider', () => {
+          expect(checkBranchExists).toHaveBeenCalledWith(
+            expect.objectContaining({ branch: 'de' }),
+          );
+        });
+      });
+    });
+
     describe('and the user clicks Change instead of pressing Enter', () => {
       beforeEach(async () => {
         checkBranchExists.mockResolvedValue({ exists: true });
         fireEvent.click(screen.getByTestId('manage-repos-change-branch'));
-        fireEvent.change(screen.getByTestId('manage-repos-branch-input'), {
-          target: { value: 'dev' },
-        });
+        await enterText(screen.getByTestId('manage-repos-branch-input'), 'dev');
         fireEvent.click(screen.getByTestId('manage-repos-branch-confirm'));
         await waitFor(() => expect(onSelectionChange).toHaveBeenCalled());
       });
