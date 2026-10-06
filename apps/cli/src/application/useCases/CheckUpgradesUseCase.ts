@@ -171,9 +171,16 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
     local: CodingAgent[] | undefined,
     server: CodingAgent[],
   ): ICheckUpgradesResult['agents'] {
-    const from = [...(local ?? [])].sort((a, b) => a.localeCompare(b));
-    const to = [...server].sort((a, b) => a.localeCompare(b));
+    const from = this.configurableAgents(local ?? []);
+    const to = this.configurableAgents(server);
     return from.join(',') === to.join(',') ? null : { from, to };
+  }
+
+  /** `packmind` renders the `.packmind/` mirror; nobody lists it in packmind.json. */
+  private configurableAgents(agents: CodingAgent[]): CodingAgent[] {
+    return agents
+      .filter((agent) => agent !== 'packmind')
+      .sort((a, b) => a.localeCompare(b));
   }
 
   private resolveTargetVersion(

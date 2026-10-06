@@ -545,7 +545,7 @@ describe('CheckUpgradesUseCase', () => {
             files: [{ path: 'CLAUDE.md', agent: 'claude' }],
           }),
         }),
-        agents: ['claude'],
+        agents: ['claude', 'packmind'],
       });
       mockGateway.deployment.install.mockResolvedValue(
         installResponseFactory({
@@ -563,7 +563,7 @@ describe('CheckUpgradesUseCase', () => {
                 ],
               }),
             }),
-            agents: ['cursor', 'claude'],
+            agents: ['cursor', 'claude', 'packmind'],
           },
         }),
       );
@@ -575,7 +575,7 @@ describe('CheckUpgradesUseCase', () => {
       expect(result.hasUpgrades).toBe(true);
     });
 
-    it('reports the agents move', () => {
+    it('reports the agents move without the internal packmind agent', () => {
       expect(result.agents).toEqual({
         from: ['claude'],
         to: ['claude', 'cursor'],
