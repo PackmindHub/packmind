@@ -33,11 +33,29 @@ describe('destinationStanding', () => {
         expect(standing(pinnedWithNewerRelease).remedy).toBe('update');
       });
 
-      it('offers the release even when the package has moved on again', () => {
-        expect(
-          standing({ ...pinnedWithNewerRelease, hasUnreleasedChanges: true })
-            .remedy,
-        ).toBe('update');
+      describe('and the package has moved on since that release', () => {
+        it('still offers to distribute it', () => {
+          expect(
+            standing({ ...pinnedWithNewerRelease, hasUnreleasedChanges: true })
+              .remedy,
+          ).toBe('update');
+        });
+
+        it('offers to cut a release first as well', () => {
+          expect(
+            standing({ ...pinnedWithNewerRelease, hasUnreleasedChanges: true })
+              .canReleaseAndUpdate,
+          ).toBe(true);
+        });
+      });
+
+      describe('and that release is the whole of the package', () => {
+        it('offers nothing a release would add', () => {
+          expect(
+            standing({ ...pinnedWithNewerRelease, hasUnreleasedChanges: false })
+              .canReleaseAndUpdate,
+          ).toBe(false);
+        });
       });
 
       it('compares releases by triple rather than by string', () => {
@@ -76,6 +94,13 @@ describe('destinationStanding', () => {
             standing({ ...pinnedToNewest, hasUnreleasedChanges: true }).remedy,
           ).toBe('release');
         });
+
+        it('offers that release', () => {
+          expect(
+            standing({ ...pinnedToNewest, hasUnreleasedChanges: true })
+              .canReleaseAndUpdate,
+          ).toBe(true);
+        });
       });
 
       describe('and the package has not moved since', () => {
@@ -89,6 +114,13 @@ describe('destinationStanding', () => {
           expect(
             standing({ ...pinnedToNewest, hasUnreleasedChanges: false }).remedy,
           ).toBe('none');
+        });
+
+        it('offers no release either', () => {
+          expect(
+            standing({ ...pinnedToNewest, hasUnreleasedChanges: false })
+              .canReleaseAndUpdate,
+          ).toBe(false);
         });
       });
     });
@@ -115,6 +147,15 @@ describe('destinationStanding', () => {
 
       it('offers to distribute the live content', () => {
         expect(standing({ behindArtifactCount: 1 }).remedy).toBe('update');
+      });
+    });
+
+    describe('and the package has unreleased changes', () => {
+      it('offers no release, because a cut moves nothing there', () => {
+        expect(
+          standing({ behindArtifactCount: 1, hasUnreleasedChanges: true })
+            .canReleaseAndUpdate,
+        ).toBe(false);
       });
     });
 
@@ -169,16 +210,32 @@ describe('destinationStanding', () => {
 
 describe('needsAttention', () => {
   it('is false for an up-to-date destination', () => {
-    expect(needsAttention({ status: 'up-to-date', remedy: 'none' })).toBe(
-      false,
-    );
+    expect(
+      needsAttention({
+        status: 'up-to-date',
+        remedy: 'none',
+        canReleaseAndUpdate: false,
+      }),
+    ).toBe(false);
   });
 
   it('is true for a drifted one', () => {
-    expect(needsAttention({ status: 'drifted', remedy: 'update' })).toBe(true);
+    expect(
+      needsAttention({
+        status: 'drifted',
+        remedy: 'update',
+        canReleaseAndUpdate: false,
+      }),
+    ).toBe(true);
   });
 
   it('is true for one waiting on a release', () => {
-    expect(needsAttention({ status: 'behind', remedy: 'release' })).toBe(true);
+    expect(
+      needsAttention({
+        status: 'behind',
+        remedy: 'release',
+        canReleaseAndUpdate: true,
+      }),
+    ).toBe(true);
   });
 });

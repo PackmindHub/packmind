@@ -79,8 +79,12 @@ function install(
     standing:
       rest.standing ??
       ((rest.behindArtifacts ?? []).length > 0
-        ? { status: 'drifted', remedy: 'update' }
-        : { status: 'up-to-date', remedy: 'none' }),
+        ? { status: 'drifted', remedy: 'update', canReleaseAndUpdate: false }
+        : {
+            status: 'up-to-date',
+            remedy: 'none',
+            canReleaseAndUpdate: false,
+          }),
   } as InstallDriftEntry;
 }
 

@@ -104,7 +104,11 @@ function emptyEntry(location: InstallLocation): InstallDriftEntry {
     lastDistributionError: location.lastDistributionError,
     versionSpec: location.versionSpec,
     // Replaced below, once this landing's artifacts have been counted.
-    standing: { status: 'up-to-date', remedy: 'none' },
+    standing: {
+      status: 'up-to-date',
+      remedy: 'none',
+      canReleaseAndUpdate: false,
+    },
     behindArtifacts: [],
     alignedArtifactCount: 0,
   };

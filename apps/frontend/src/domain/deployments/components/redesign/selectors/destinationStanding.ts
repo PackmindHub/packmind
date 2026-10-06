@@ -36,20 +36,53 @@ export type DestinationRemedy = 'update' | 'release' | 'none';
 export type DestinationStanding = {
   status: DestinationStandingStatus;
   remedy: DestinationRemedy;
+  /**
+   * Whether cutting a release is also something this destination could take.
+   *
+   * `remedy` names the one thing that would close the gap, and for a pinned
+   * destination a release behind the newest one that is itself behind the live
+   * package there are two: distributing the release that exists, and cutting
+   * the one that does not yet. A single verb has to pick, and picking `update`
+   * hides the second move behind a push the reader then has to notice did not
+   * go far enough.
+   *
+   * So this is a second fact rather than a fourth remedy. Every reader of
+   * `remedy` goes on meaning what it meant — a destination that can be pushed
+   * still answers `update` — and the row that wants to offer both reads this
+   * as well.
+   *
+   * False for a destination tracking the live package, whatever the package's
+   * release state: `*` is a standing instruction to ignore releases, and a cut
+   * moves nothing there.
+   */
+  canReleaseAndUpdate: boolean;
 };
 
 const UP_TO_DATE: DestinationStanding = {
   status: 'up-to-date',
   remedy: 'none',
+  canReleaseAndUpdate: false,
 };
-const DRIFTED: DestinationStanding = { status: 'drifted', remedy: 'update' };
+const DRIFTED: DestinationStanding = {
+  status: 'drifted',
+  remedy: 'update',
+  canReleaseAndUpdate: false,
+};
 const BEHIND_WITH_RELEASE: DestinationStanding = {
   status: 'behind',
   remedy: 'update',
+  canReleaseAndUpdate: false,
+};
+/** Behind a release it can take, and behind the live package on top of that. */
+const BEHIND_WITH_RELEASE_AND_CHANGES: DestinationStanding = {
+  status: 'behind',
+  remedy: 'update',
+  canReleaseAndUpdate: true,
 };
 const BEHIND_NEEDS_RELEASE: DestinationStanding = {
   status: 'behind',
   remedy: 'release',
+  canReleaseAndUpdate: true,
 };
 
 export type DestinationStandingInput = {
@@ -111,7 +144,17 @@ export function destinationStanding({
    * destination to the newest release is the whole of "bring this up to date"
    * for a repository that deliberately stepped off the live package.
    */
-  if (isNewerThan(latestReleaseVersion, pin)) return BEHIND_WITH_RELEASE;
+  if (isNewerThan(latestReleaseVersion, pin)) {
+    /*
+     * Both moves are real here, so the row offers both. Distributing the newest
+     * release is the cheap one and stays the remedy; cutting first is for the
+     * reader who wants the work done since that release to land in the same
+     * gesture, rather than catching up to a version that is already stale.
+     */
+    return hasUnreleasedChanges
+      ? BEHIND_WITH_RELEASE_AND_CHANGES
+      : BEHIND_WITH_RELEASE;
+  }
 
   // On the newest release there is, and the package has moved past it.
   if (hasUnreleasedChanges) return BEHIND_NEEDS_RELEASE;
