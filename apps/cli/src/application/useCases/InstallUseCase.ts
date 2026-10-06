@@ -13,6 +13,7 @@ import {
   PackmindLockFile,
   PackmindLockFileEntry,
   SpaceType,
+  WILDCARD_VERSION_SPEC,
 } from '@packmind/types';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
@@ -28,7 +29,6 @@ import {
 import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
 import { stripFullStandardLinkFooter } from '../../infra/utils/stripFullStandardLinkFooter';
 import { displayableParsedPackageSlug } from '../../domain/entities/PackageSlug';
-import { WILDCARD_VERSION_SPEC } from '@packmind/types';
 import assert from 'assert';
 import { EXEC_NAME } from '../../infra/utils/execName';
 import { resolveInstallPackageVersions } from '../services/resolveInstallPackageVersions';

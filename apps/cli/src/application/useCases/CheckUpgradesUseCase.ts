@@ -171,8 +171,8 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
     local: CodingAgent[] | undefined,
     server: CodingAgent[],
   ): ICheckUpgradesResult['agents'] {
-    const from = [...(local ?? [])].sort();
-    const to = [...server].sort();
+    const from = [...(local ?? [])].sort((a, b) => a.localeCompare(b));
+    const to = [...server].sort((a, b) => a.localeCompare(b));
     return from.join(',') === to.join(',') ? null : { from, to };
   }
 
@@ -261,7 +261,7 @@ export class CheckUpgradesUseCase implements ICheckUpgradesUseCase {
   private filesSignature(entry: PackmindLockFileEntry): string {
     return (entry.files ?? [])
       .map((file) => `${file.agent ?? ''}:${file.path}`)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .join('\n');
   }
 

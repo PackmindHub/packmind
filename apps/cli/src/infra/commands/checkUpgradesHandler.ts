@@ -77,14 +77,14 @@ function formatPackageMoveLine(pkg: CheckUpgradesPackage): string {
     return `${pkg.from} → ${formatBold(pkg.to)}`;
   }
 
-  const status =
-    pkg.artifacts.length > 0
-      ? `${pluralize(pkg.artifacts.length, 'component')} to update`
-      : pkg.to === null
-        ? 'up to date'
-        : 'already on the newest release';
+  return `${pkg.from} ${formatLabel('· ' + packageStatus(pkg))}`;
+}
 
-  return `${pkg.from} ${formatLabel(`· ${status}`)}`;
+function packageStatus(pkg: CheckUpgradesPackage): string {
+  if (pkg.artifacts.length > 0) {
+    return `${pluralize(pkg.artifacts.length, 'component')} to update`;
+  }
+  return pkg.to === null ? 'up to date' : 'already on the newest release';
 }
 
 function formatAgentList(agents: string[]): string {
@@ -109,13 +109,17 @@ export function formatCheckUpgradesResult(
   }
 
   for (const pkg of result.packages) {
-    lines.push(`${formatSlug(pkg.slug)}  ${formatPackageMoveLine(pkg)}`);
-    lines.push(...formatArtifactLines(pkg.artifacts));
+    lines.push(
+      `${formatSlug(pkg.slug)}  ${formatPackageMoveLine(pkg)}`,
+      ...formatArtifactLines(pkg.artifacts),
+    );
   }
 
   if (result.unattributedArtifacts.length > 0) {
-    lines.push('Not from any package of packmind.json');
-    lines.push(...formatArtifactLines(result.unattributedArtifacts));
+    lines.push(
+      'Not from any package of packmind.json',
+      ...formatArtifactLines(result.unattributedArtifacts),
+    );
   }
 
   return lines;
@@ -156,10 +160,34 @@ export async function checkUpgradesHandler(
     return;
   }
 
+  const outcome = await checkDirectories(
+    targetDirs,
+    cwd,
+    cliVersion,
+    packmindCliHexa,
+  );
+  exit(reportOutcome(outcome, installPath, targetDirs.length > 1));
+}
+
+type CheckOutcome = {
+  hasUpgrades: boolean;
+  missingAccess: Set<string>;
+  errors: string[];
+};
+
+/** Checks each directory in turn so its output stays in order. */
+async function checkDirectories(
+  targetDirs: string[],
+  cwd: string,
+  cliVersion: string,
+  packmindCliHexa: PackmindCliHexa,
+): Promise<CheckOutcome> {
   const multiDir = targetDirs.length > 1;
-  const missingAccess = new Set<string>();
-  const errors: string[] = [];
-  let hasUpgrades = false;
+  const outcome: CheckOutcome = {
+    hasUpgrades: false,
+    missingAccess: new Set<string>(),
+    errors: [],
+  };
 
   for (const dir of targetDirs) {
     const configPath = path.relative(cwd, path.join(dir, 'packmind.json'));
@@ -170,15 +198,15 @@ export async function checkUpgradesHandler(
         cliVersion,
       });
 
-      hasUpgrades ||= result.hasUpgrades;
-      result.missingAccess.forEach((slug) => missingAccess.add(slug));
+      outcome.hasUpgrades ||= result.hasUpgrades;
+      result.missingAccess.forEach((slug) => outcome.missingAccess.add(slug));
 
       if (multiDir) logConsole(formatHeader(configPath));
       formatCheckUpgradesResult(result).forEach((line) => logConsole(line));
       if (multiDir) logConsole('');
     } catch (error) {
       const message = describeError(error);
-      errors.push(
+      outcome.errors.push(
         multiDir
           ? `[${configPath}] check failed: ${message}`
           : `check failed: ${message}`,
@@ -186,6 +214,15 @@ export async function checkUpgradesHandler(
     }
   }
 
+  return outcome;
+}
+
+/** Prints the closing lines and returns the exit code. */
+function reportOutcome(
+  { hasUpgrades, missingAccess, errors }: CheckOutcome,
+  installPath: string,
+  multiDir: boolean,
+): number {
   const incomplete = missingAccess.size > 0;
   if (incomplete) {
     logWarningConsole(
@@ -197,8 +234,7 @@ export async function checkUpgradesHandler(
 
   if (errors.length > 0) {
     errors.forEach((err) => logErrorConsole(err));
-    exit(1);
-    return;
+    return 1;
   }
 
   if (hasUpgrades) {
@@ -207,15 +243,11 @@ export async function checkUpgradesHandler(
       : `${EXEC_NAME} install --upgrade`;
     if (!multiDir) logConsole('');
     logConsole(`Run ${formatCommand(upgradeCommand)} to apply these changes.`);
-    exit(1);
-    return;
+    return 1;
   }
 
-  if (incomplete) {
-    exit(1);
-    return;
-  }
+  if (incomplete) return 1;
 
   logSuccessConsole('Already up to date');
-  exit(0);
+  return 0;
 }
