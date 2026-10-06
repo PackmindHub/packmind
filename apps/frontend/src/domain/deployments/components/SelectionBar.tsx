@@ -18,6 +18,17 @@ import { LuEllipsisVertical } from 'react-icons/lu';
 export type SelectionAction = {
   label: string;
   /**
+   * How loudly this one is drawn, when the bar carries more than one and they
+   * are not peers.
+   *
+   * Absent is the default and the common case: two gestures that are each a
+   * reasonable answer sit at the same weight, and picking one for the reader
+   * would be the bar having an opinion it has not earned. It is set where one
+   * action subsumes the other, so that the quieter one reads as the narrower
+   * thing it is rather than as a second, equal choice.
+   */
+  emphasis?: 'primary';
+  /**
    * The same glyph the gesture wears wherever else it is offered, taken from
    * `COMPONENT_ACTION_ICONS`. Required rather than optional: the bar carries
    * more than one action now, and one bare button beside an iconed one reads as
@@ -175,7 +186,7 @@ export function SelectionBar({
         {actions.map((action) => (
           <PMButton
             key={action.label}
-            variant="secondary"
+            variant={action.emphasis === 'primary' ? 'primary' : 'secondary'}
             size="xs"
             onClick={action.onAct}
           >

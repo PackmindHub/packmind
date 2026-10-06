@@ -710,77 +710,6 @@ describe('ContextDestinationList', () => {
           screen.getByText('A newer release is available'),
         ).toBeInTheDocument();
       });
-
-      describe('and the package has nothing left to release', () => {
-        it('offers the update', () => {
-          renderList([pinned('update')], vi.fn(), {
-            onReleaseAndUpdate: vi.fn(),
-          });
-
-          expect(
-            screen.getByRole('button', { name: 'Update' }),
-          ).toBeInTheDocument();
-        });
-
-        it('offers no release, which would add nothing', () => {
-          renderList([pinned('update')], vi.fn(), {
-            onReleaseAndUpdate: vi.fn(),
-          });
-
-          expect(
-            screen.queryByRole('button', { name: 'Release & Update' }),
-          ).not.toBeInTheDocument();
-        });
-      });
-
-      describe('and the package has moved on since', () => {
-        it('offers the update, which sends the release that exists', () => {
-          renderList([pinned('update', true)], vi.fn(), {
-            onReleaseAndUpdate: vi.fn(),
-          });
-
-          expect(
-            screen.getByRole('button', { name: 'Update' }),
-          ).toBeInTheDocument();
-        });
-
-        it('offers the cut beside it, which sends the work done since', () => {
-          renderList([pinned('update', true)], vi.fn(), {
-            onReleaseAndUpdate: vi.fn(),
-          });
-
-          expect(
-            screen.getByRole('button', { name: 'Release & Update' }),
-          ).toBeInTheDocument();
-        });
-
-        it('draws the update last, so it lands on the row edge', () => {
-          renderList([pinned('update', true)], vi.fn(), {
-            onReleaseAndUpdate: vi.fn(),
-          });
-
-          const actions = screen
-            .getAllByRole('button')
-            .map((button) => button.textContent)
-            .filter((label) =>
-              ['Update', 'Release & Update'].includes(label ?? ''),
-            );
-
-          expect(actions).toEqual(['Release & Update', 'Update']);
-        });
-
-        it('hands the row to the release when that one is pressed', async () => {
-          const onReleaseAndUpdate = vi.fn();
-          const row = pinned('update', true);
-          renderList([row], vi.fn(), { onReleaseAndUpdate });
-
-          await userEvent.click(
-            screen.getByRole('button', { name: 'Release & Update' }),
-          );
-
-          expect(onReleaseAndUpdate).toHaveBeenCalledWith([row]);
-        });
-      });
     });
 
     describe('when it sits on the newest release there is', () => {
@@ -794,79 +723,28 @@ describe('ContextDestinationList', () => {
         ).toBeInTheDocument();
       });
 
-      it('offers no update, which would commit nothing', () => {
-        renderList([pinned('release', true)], vi.fn(), {
-          onReleaseAndUpdate: vi.fn(),
-        });
-
-        expect(
-          screen.queryByRole('button', { name: /^Update/ }),
-        ).not.toBeInTheDocument();
-      });
-
-      it('offers the release instead, where the update would have been', () => {
-        renderList([pinned('release', true)], vi.fn(), {
-          onReleaseAndUpdate: vi.fn(),
-        });
-
-        expect(
-          screen.getByRole('button', { name: 'Release & Update' }),
-        ).toBeInTheDocument();
-      });
-
-      it('hands the row over when it is pressed', async () => {
-        const onReleaseAndUpdate = vi.fn();
-        const row = pinned('release', true);
-        renderList([row], vi.fn(), { onReleaseAndUpdate });
-
-        await userEvent.click(
-          screen.getByRole('button', { name: 'Release & Update' }),
-        );
-
-        expect(onReleaseAndUpdate).toHaveBeenCalledWith([row]);
-      });
-
-      it('offers nothing at all to a reader who cannot cut one', () => {
+      /*
+       * It could not be ticked while `hasWorkToSend` alone decided that, so it
+       * never reached the bar and the bar never had a reason to offer the cut.
+       * These are the rows that gesture exists for.
+       */
+      it('can be ticked, so the bar can offer the cut for it', () => {
         renderList([pinned('release', true)], vi.fn());
 
         expect(
-          screen.queryByRole('button', { name: 'Release & Update' }),
-        ).not.toBeInTheDocument();
+          screen.getByRole('checkbox', {
+            name: 'Select PackmindHub/packmind',
+          }),
+        ).toBeInTheDocument();
       });
     });
 
-    describe('when a distribution is already on its way', () => {
-      it('offers no release, since the push it ends in cannot run', () => {
-        renderList(
-          [
-            destination({
-              state: 'waiting',
-              behindCount: 0,
-              remedy: 'release',
-              canReleaseAndUpdate: true,
-              hasWorkToSend: false,
-            }),
-          ],
-          vi.fn(),
-          { onReleaseAndUpdate: vi.fn() },
-        );
+    describe('wherever it stands', () => {
+      it('offers no action of its own', () => {
+        renderList([pinned('release', true)], vi.fn());
 
         expect(
-          screen.queryByRole('button', { name: 'Release & Update' }),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('when the row tracks the live package', () => {
-      it('offers the update alone, because a cut would reach nothing', () => {
-        renderList(
-          [destination({ state: 'drifted', behindCount: 2 })],
-          vi.fn(),
-          { onReleaseAndUpdate: vi.fn() },
-        );
-
-        expect(
-          screen.queryByRole('button', { name: 'Release & Update' }),
+          screen.queryByRole('button', { name: /Update/ }),
         ).not.toBeInTheDocument();
       });
     });
@@ -1046,9 +924,12 @@ describe('ContextDestinationList', () => {
     });
   });
 
-  describe('the action on a row', () => {
-    it('pushes this landing again, and hands back the row it was asked from', async () => {
-      const onUpdate = vi.fn();
+  describe('what a row offers on its own', () => {
+    /*
+     * Nothing, since the gestures moved to the bar. The row still says what is
+     * wrong with it; acting on that is a pick away.
+     */
+    it('offers no push, however far behind it is', () => {
       renderList(
         [
           destination({
@@ -1057,120 +938,58 @@ describe('ContextDestinationList', () => {
             behindArtifacts: [behind('a', 2)],
           }),
         ],
-        onUpdate,
+        vi.fn(),
       );
-
-      await userEvent.click(screen.getByRole('button', { name: 'Update' }));
-
-      expect(onUpdate).toHaveBeenCalledWith([
-        expect.objectContaining({ installKey: 'repo-1::target-1' }),
-      ]);
-    });
-
-    describe('when the last push failed and left components behind', () => {
-      it('says what the failure left', () => {
-        renderList([
-          destination({
-            state: 'failed',
-            behindCount: 4,
-            behindArtifacts: [behind('a', 2)],
-          }),
-        ]);
-
-        expect(
-          screen.getByText(
-            'The last distribution failed, 4 components still behind',
-          ),
-        ).toBeInTheDocument();
-      });
-
-      it('offers the push that retries it, rather than the package-wide one', () => {
-        renderList(
-          [
-            destination({
-              state: 'failed',
-              behindCount: 1,
-              behindArtifacts: [behind('a', 2)],
-            }),
-          ],
-          vi.fn(),
-        );
-
-        expect(
-          screen.getByRole('button', { name: 'Update' }),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when a failure left nothing outstanding', () => {
-      it('offers no push, since there would be nothing to send', () => {
-        renderList([destination({ state: 'failed' })], vi.fn());
-
-        expect(
-          screen.queryByRole('button', { name: 'Update' }),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    it('offers nothing on a row that is up to date', () => {
-      renderList([destination()], vi.fn());
 
       expect(
         screen.queryByRole('button', { name: 'Update' }),
       ).not.toBeInTheDocument();
     });
 
-    describe('when a published copy has been overtaken', () => {
-      const outdated = () =>
-        destination({
-          key: 'm:mkt-1',
-          kind: 'marketplace',
-          name: 'acme-marketplace',
-          details: [],
-          state: 'drifted',
-          installKey: null,
-          hasWorkToSend: true,
-        });
+    it('offers no republish on an overtaken published copy', () => {
+      renderList(
+        [
+          destination({
+            key: 'm:mkt-1',
+            kind: 'marketplace',
+            name: 'acme-marketplace',
+            details: [],
+            state: 'drifted',
+            installKey: null,
+            hasWorkToSend: true,
+          }),
+        ],
+        vi.fn(),
+      );
 
-      it('offers to republish it, which is the verb of that channel', () => {
-        renderList([outdated()], vi.fn());
-
-        expect(
-          screen.getByRole('button', { name: 'Republish' }),
-        ).toBeInTheDocument();
-      });
-
-      it('can be put in a batch with the landings', async () => {
-        const onUpdate = vi.fn();
-        renderList(
-          [
-            outdated(),
-            destination({
-              key: 'r:repo-1',
-              state: 'drifted',
-              behindCount: 1,
-              behindArtifacts: [behind('a', 2)],
-            }),
-          ],
-          onUpdate,
-        );
-
-        await userEvent.click(
-          screen.getByRole('checkbox', { name: 'Select acme-marketplace' }),
-        );
-        await userEvent.click(
-          screen.getByRole('button', { name: 'Select all 2' }),
-        );
-        await userEvent.click(
-          screen.getByRole('button', { name: /Update 2 destinations/ }),
-        );
-
-        expect(onUpdate.mock.calls[0][0]).toHaveLength(2);
-      });
+      expect(
+        screen.queryByRole('button', { name: 'Republish' }),
+      ).not.toBeInTheDocument();
     });
 
+    it('still says what a failure left behind', () => {
+      renderList([
+        destination({
+          state: 'failed',
+          behindCount: 4,
+          behindArtifacts: [behind('a', 2)],
+        }),
+      ]);
+
+      expect(
+        screen.getByText(
+          'The last distribution failed, 4 components still behind',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    /*
+     * The one thing that stays, because it is not a gesture on the package: a
+     * publication waiting on a merge can take nothing, and the page where
+     * someone finishes it is navigation.
+     */
     describe('when a publication waits on a merge', () => {
-      it('offers the pull request rather than a second publish', () => {
+      it('offers the pull request', () => {
         renderList([
           destination({
             key: 'm:mkt-1',
@@ -1187,9 +1006,169 @@ describe('ContextDestinationList', () => {
           'href',
           'https://github.com/acme/marketplace/pull/12',
         );
+      });
+    });
+  });
+
+  describe('the way into a gesture', () => {
+    /*
+     * The rows carry no controls, so the checkbox is the only thing on screen
+     * saying anything can be done to a destination at all. Revealed on hover,
+     * as the other lists reveal theirs, it would be a feature nobody finds.
+     */
+    it('shows the checkbox before anything is picked', () => {
+      renderList(
+        [
+          destination({
+            name: 'acme/one',
+            state: 'drifted',
+            behindCount: 1,
+            behindArtifacts: [behind('a', 2)],
+          }),
+        ],
+        vi.fn(),
+      );
+
+      expect(
+        screen.getByRole('checkbox', { name: 'Select acme/one' }),
+      ).toBeVisible();
+    });
+
+    it('shows none on a row no gesture could move', () => {
+      renderList([destination({ name: 'acme/fine' })], vi.fn());
+
+      expect(
+        screen.queryByRole('checkbox', { name: 'Select acme/fine' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('what the bar offers over a pick', () => {
+    const drifted = (key: string, name: string) =>
+      destination({
+        key,
+        name,
+        installKey: `${key}::t1`,
+        state: 'drifted',
+        behindCount: 1,
+        behindArtifacts: [behind('a', 2)],
+      });
+
+    const needsARelease = (key: string, name: string) =>
+      destination({
+        key,
+        name,
+        installKey: `${key}::t1`,
+        state: 'behind',
+        behindCount: 0,
+        remedy: 'release',
+        canReleaseAndUpdate: true,
+        hasWorkToSend: false,
+      });
+
+    const pick = async (name: string) =>
+      userEvent.click(screen.getByRole('checkbox', { name: `Select ${name}` }));
+
+    describe('when nothing picked would take a cut', () => {
+      it('offers the counted push alone', async () => {
+        renderList([drifted('a', 'acme/one')], vi.fn(), {
+          onReleaseAndUpdate: vi.fn(),
+        });
+
+        await pick('acme/one');
+
         expect(
-          screen.queryByRole('button', { name: 'Update' }),
+          screen.getByRole('button', { name: /Update 1 destination/ }),
+        ).toBeInTheDocument();
+      });
+
+      it('offers no cut, which would be a version number for its own sake', async () => {
+        renderList([drifted('a', 'acme/one')], vi.fn(), {
+          onReleaseAndUpdate: vi.fn(),
+        });
+
+        await pick('acme/one');
+
+        expect(
+          screen.queryByRole('button', { name: 'Release & Update' }),
         ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when one picked destination would take a cut', () => {
+      const mixed = () => [
+        drifted('a', 'acme/one'),
+        needsARelease('b', 'acme/two'),
+      ];
+
+      it('offers the cut', async () => {
+        renderList(mixed(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+        await pick('acme/two');
+
+        expect(
+          screen.getByRole('button', { name: 'Release & Update' }),
+        ).toBeInTheDocument();
+      });
+
+      it('offers the plain push beside it', async () => {
+        renderList(mixed(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+        await pick('acme/two');
+
+        expect(
+          screen.getByRole('button', { name: 'Update' }),
+        ).toBeInTheDocument();
+      });
+
+      it('leads with the cut, which is the one that makes the pick current', async () => {
+        renderList(mixed(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+        await pick('acme/two');
+
+        const actions = screen
+          .getAllByRole('button')
+          .map((button) => button.textContent)
+          .filter((label) =>
+            ['Update', 'Release & Update'].includes(label ?? ''),
+          );
+
+        expect(actions).toEqual(['Release & Update', 'Update']);
+      });
+
+      it('hands the whole pick to the cut, not only the rows that need one', async () => {
+        const onReleaseAndUpdate = vi.fn();
+        renderList(mixed(), vi.fn(), { onReleaseAndUpdate });
+
+        await pick('acme/one');
+        await pick('acme/two');
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Release & Update' }),
+        );
+
+        expect(onReleaseAndUpdate.mock.calls[0][0]).toHaveLength(2);
+      });
+
+      it('still sends what exists when the plain push is chosen', async () => {
+        const onUpdate = vi.fn();
+        renderList(mixed(), onUpdate, { onReleaseAndUpdate: vi.fn() });
+
+        await pick('acme/two');
+        await userEvent.click(screen.getByRole('button', { name: 'Update' }));
+
+        expect(onUpdate.mock.calls[0][0]).toHaveLength(1);
+      });
+    });
+
+    describe('when the caller cannot cut a release', () => {
+      it('offers the counted push alone, whatever is picked', async () => {
+        renderList([needsARelease('b', 'acme/two')], vi.fn());
+
+        await pick('acme/two');
+
+        expect(
+          screen.getByRole('button', { name: /Update 1 destination/ }),
+        ).toBeInTheDocument();
       });
     });
   });
