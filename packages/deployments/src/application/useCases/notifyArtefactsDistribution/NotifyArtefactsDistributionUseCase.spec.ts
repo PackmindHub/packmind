@@ -1,250 +1,90 @@
 import { NotifyArtefactsDistributionUseCase } from './NotifyArtefactsDistributionUseCase';
 import {
-  RenderMode,
-  createOrganizationId,
-  createPackageId,
+  createDistributionId,
   createGitRepoId,
-  createCommandId,
-  createCommandVersionId,
-  createSkillId,
-  createSkillVersionId,
-  createSpaceId,
-  createStandardId,
-  createStandardVersionId,
+  createOrganizationId,
   createTargetId,
   createUserId,
-  DistributionRecordedEvent,
   IAccountsPort,
-  ICommandsPort,
-  ISkillsPort,
-  IStandardsPort,
-  ISpacesPort,
   NotifyArtefactsDistributionCommand,
-  PackageReleaseDetail,
+  NotifyArtefactsDistributionResponse,
   PackmindLockFile,
-  CommandVersion,
-  SkillVersion,
-  StandardVersion,
   Target,
 } from '@packmind/types';
 import {
+  createMockInstance,
   mockInterface,
   stubLogger,
-  createMockInstance,
 } from '@packmind/test-utils';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
-import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
-import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
-import { TargetResolutionService } from '../../services/TargetResolutionService';
-import { PackageService } from '../../services/PackageService';
-import { PackageReleaseService } from '../../services/PackageReleaseService';
-import { packageFactory } from '../../../../test/packageFactory';
-import { spaceFactory } from '@packmind/spaces/test';
 import { v4 as uuidv4 } from 'uuid';
-import { commandVersionFactory } from '@packmind/commands/test';
-import { standardVersionFactory } from '@packmind/standards/test';
-import { skillVersionFactory } from '@packmind/skills/test';
+import { TargetResolutionService } from '../../services/TargetResolutionService';
+import { LockFileDistributionRecorder } from '../../services/LockFileDistributionRecorder';
 
 describe('NotifyArtefactsDistributionUseCase', () => {
   let useCase: NotifyArtefactsDistributionUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockCommandsPort: jest.Mocked<ICommandsPort>;
-  let mockStandardsPort: jest.Mocked<IStandardsPort>;
-  let mockSkillsPort: jest.Mocked<ISkillsPort>;
-  let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
-  let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
-  let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockTargetResolutionService: jest.Mocked<TargetResolutionService>;
-  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
-  let mockPackageService: jest.Mocked<PackageService>;
-  let mockSpacesPort: jest.Mocked<ISpacesPort>;
-  let mockPackageReleaseService: jest.Mocked<PackageReleaseService>;
+  let mockRecorder: jest.Mocked<LockFileDistributionRecorder>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
-  const packageId = createPackageId(uuidv4());
-  const secondPackageId = createPackageId(uuidv4());
-  const gitRepoId = createGitRepoId(uuidv4());
-  const targetId = createTargetId(uuidv4());
-  const recipeId = createCommandId(uuidv4());
-  const standardId = createStandardId(uuidv4());
-  const skillId = createSkillId(uuidv4());
-  const spaceId = createSpaceId(uuidv4());
-
-  const buildUser = () => ({
-    id: userId,
-    email: 'test@example.com',
-    displayName: null,
-    passwordHash: 'hash',
-    active: true,
-    memberships: [{ userId, organizationId, role: 'member' as const }],
-  });
-
-  const buildOrganization = () => ({
-    id: organizationId,
-    name: 'Test Organization',
-    slug: 'test-org',
-  });
-
-  const buildTarget = (): Target => ({
-    id: targetId,
+  const distributionId = createDistributionId(uuidv4());
+  const target: Target = {
+    id: createTargetId(uuidv4()),
     name: 'Default',
     path: '/',
-    gitRepoId,
-  });
+    gitRepoId: createGitRepoId(uuidv4()),
+  };
+  const lockFile: PackmindLockFile = {
+    lockfileVersion: 2,
+    packageSlugs: ['@my-space/ops'],
+    packages: { '@my-space/ops': '1.3.0' },
+    agents: ['claude'],
+    artifacts: {},
+  };
 
-  const buildStandardVersion = (): StandardVersion =>
-    standardVersionFactory({
-      id: createStandardVersionId(uuidv4()),
-      standardId,
-      version: 1,
-      description: 'Test standard description',
-      name: 'Test Standard',
-      rules: [],
-      slug: 'test-standard',
-      scope: null,
-    });
-
-  const buildCommandVersion = (): CommandVersion =>
-    commandVersionFactory({
-      id: createCommandVersionId(uuidv4()),
-      recipeId,
-      version: 1,
-      name: 'Test Recipe',
-      slug: 'test-recipe',
-      content: 'Test step',
-      userId,
-    });
-
-  const buildSkillVersion = (): SkillVersion =>
-    skillVersionFactory({
-      id: createSkillVersionId(uuidv4()),
-      skillId,
-      version: 1,
-      name: 'Test Skill',
-      slug: 'test-skill',
-      description: 'Test skill description',
-      prompt: 'Test prompt',
-      userId,
-    });
-
-  const buildLockFile = (
-    overrides: Partial<PackmindLockFile> = {},
-  ): PackmindLockFile => ({
-    lockfileVersion: 1,
-    packageSlugs: ['@my-space/my-package'],
-    agents: ['cursor'],
-    targetId: String(targetId),
-    artifacts: {
-      [`standard:test-standard`]: {
-        name: 'Test Standard',
-        type: 'standard',
-        id: String(standardId),
-        version: 1,
-        spaceId: String(spaceId),
-        packageIds: [String(packageId)],
-        files: [],
-        source: 'user',
-      },
-      [`command:test-recipe`]: {
-        name: 'Test Recipe',
-        type: 'command',
-        id: String(recipeId),
-        version: 1,
-        spaceId: String(spaceId),
-        packageIds: [String(packageId)],
-        files: [],
-        source: 'user',
-      },
-      [`skill:test-skill`]: {
-        name: 'Test Skill',
-        type: 'skill',
-        id: String(skillId),
-        version: 1,
-        spaceId: String(spaceId),
-        packageIds: [String(packageId)],
-        files: [],
-        source: 'user',
-      },
-    },
-    ...overrides,
-  });
-
-  const buildCommand = (
-    overrides: Partial<NotifyArtefactsDistributionCommand> = {},
-  ): NotifyArtefactsDistributionCommand => ({
+  const command: NotifyArtefactsDistributionCommand = {
     userId,
     organizationId,
-    gitRemoteUrl: 'https://github.com/org/repo.git',
+    gitRemoteUrl: 'https://github.com/acme/ops.git',
     gitBranch: 'main',
-    relativePath: '.',
-    packmindLockFile: buildLockFile(),
-    ...overrides,
-  });
+    relativePath: '/',
+    packmindLockFile: lockFile,
+    packageVersions: { '@my-space/ops': '1.3.0', '@my-space/ui': '*' },
+  };
 
   beforeEach(() => {
     mockAccountsPort = mockInterface<IAccountsPort>();
-    mockAccountsPort.getUserById.mockResolvedValue(buildUser());
-    mockAccountsPort.getOrganizationById.mockResolvedValue(buildOrganization());
-
-    mockCommandsPort = mockInterface<ICommandsPort>();
-
-    mockStandardsPort = mockInterface<IStandardsPort>();
-
-    mockSkillsPort = mockInterface<ISkillsPort>();
-
-    mockDistributionRepository = mockInterface<IDistributionRepository>();
-    mockDistributionRepository.add.mockImplementation((d) =>
-      Promise.resolve(d),
-    );
-    mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
-      [],
-    );
-
-    mockDistributedPackageRepository =
-      mockInterface<IDistributedPackageRepository>();
-
-    mockRenderModeConfigurationService = createMockInstance(
-      RenderModeConfigurationService,
-    );
-    mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
-      [RenderMode.CURSOR],
-    );
+    mockAccountsPort.getUserById.mockResolvedValue({
+      id: userId,
+      email: 'test@example.com',
+      displayName: null,
+      passwordHash: 'hash',
+      active: true,
+      memberships: [{ userId, organizationId, role: 'member' as const }],
+    });
+    mockAccountsPort.getOrganizationById.mockResolvedValue({
+      id: organizationId,
+      name: 'Test Organization',
+      slug: 'test-org',
+    });
 
     mockTargetResolutionService = createMockInstance(TargetResolutionService);
     mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
-      buildTarget(),
+      target,
     );
 
-    mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
-
-    mockPackageService = createMockInstance(PackageService);
-    mockPackageService.getPackagesByIdsInOrganization.mockResolvedValue([
-      packageFactory({ id: packageId, spaceId, slug: 'my-package' }),
-    ]);
-    mockSpacesPort = mockInterface<ISpacesPort>();
-    mockSpacesPort.getSpaceById.mockResolvedValue(
-      spaceFactory({ id: spaceId, slug: 'my-space' }),
-    );
-    mockPackageReleaseService = createMockInstance(PackageReleaseService);
-    mockPackageReleaseService.findLatestByPackageIds.mockResolvedValue(
-      new Map(),
-    );
+    mockRecorder = createMockInstance(LockFileDistributionRecorder);
+    mockRecorder.record.mockResolvedValue({
+      deploymentId: distributionId,
+      status: 'updated',
+      warnings: [],
+    });
 
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,
-      mockCommandsPort,
-      mockStandardsPort,
-      mockSkillsPort,
-      mockDistributionRepository,
-      mockDistributedPackageRepository,
-      mockRenderModeConfigurationService,
       mockTargetResolutionService,
-      mockEventEmitterService,
-      mockPackageService,
-      mockSpacesPort,
-      mockPackageReleaseService,
+      mockRecorder,
       stubLogger(),
     );
   });
@@ -253,315 +93,42 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('execute', () => {
-    describe('with a lock file containing standards, recipes, and skills', () => {
-      let standardVersion: StandardVersion;
-      let recipeVersion: CommandVersion;
-      let skillVersion: SkillVersion;
+  describe('when the CLI notifies a distribution', () => {
+    let response: NotifyArtefactsDistributionResponse;
 
-      beforeEach(async () => {
-        standardVersion = buildStandardVersion();
-        recipeVersion = buildCommandVersion();
-        skillVersion = buildSkillVersion();
+    beforeEach(async () => {
+      response = await useCase.execute(command);
+    });
 
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
-          standardVersion,
-        );
-        mockCommandsPort.getCommandVersion.mockResolvedValue(recipeVersion);
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(skillVersion);
+    it('resolves the target from the git information', () => {
+      expect(
+        mockTargetResolutionService.findOrCreateTargetFromGitInfo,
+      ).toHaveBeenCalledWith(
+        organizationId,
+        userId,
+        'https://github.com/acme/ops.git',
+        'main',
+        '/',
+      );
+    });
 
-        await useCase.execute(buildCommand());
-      });
-
-      it('resolves the standard version from the lock file version number', () => {
-        expect(
-          mockStandardsPort.getStandardVersionByNumber,
-        ).toHaveBeenCalledWith(standardId, 1, [spaceId]);
-      });
-
-      it('resolves the recipe version from the lock file version number', () => {
-        expect(mockCommandsPort.getCommandVersion).toHaveBeenCalledWith(
-          recipeId,
-          1,
-          [spaceId],
-        );
-      });
-
-      it('resolves the skill version from the lock file version number', () => {
-        expect(mockSkillsPort.getSkillVersionByNumber).toHaveBeenCalledWith(
-          skillId,
-          1,
-          [spaceId],
-        );
-      });
-
-      it('creates a distribution record', () => {
-        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            organizationId,
-            status: 'success',
-            source: 'cli',
-          }),
-        );
-      });
-
-      it('saves the distributed package with the resolved standard version ID', () => {
-        expect(
-          mockDistributedPackageRepository.addStandardVersions,
-        ).toHaveBeenCalledWith(expect.anything(), [standardVersion.id]);
-      });
-
-      it('saves the distributed package with the resolved recipe version ID', () => {
-        expect(
-          mockDistributedPackageRepository.addCommandVersions,
-        ).toHaveBeenCalledWith(expect.anything(), [recipeVersion.id]);
-      });
-
-      it('saves the distributed package with the resolved skill version ID', () => {
-        expect(
-          mockDistributedPackageRepository.addSkillVersions,
-        ).toHaveBeenCalledWith(expect.anything(), [skillVersion.id]);
-      });
-
-      it('returns a deployment ID', async () => {
-        const result = await useCase.execute(buildCommand());
-        expect(result).toHaveProperty('deploymentId');
+    it('records the lock on that target as coming from the CLI', () => {
+      expect(mockRecorder.record).toHaveBeenCalledWith({
+        target,
+        lockFile,
+        organizationId,
+        userId,
+        source: 'cli',
+        branch: 'main',
+        packageVersions: { '@my-space/ops': '1.3.0', '@my-space/ui': '*' },
       });
     });
 
-    describe('with a lock file that uses agents for render modes', () => {
-      beforeEach(async () => {
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
-
-        await useCase.execute(
-          buildCommand({
-            packmindLockFile: buildLockFile({
-              agents: ['cursor', 'claude'],
-            }),
-          }),
-        );
-      });
-
-      it('maps lock file agents to render modes', () => {
-        expect(
-          mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
-        ).toHaveBeenCalledWith(['cursor', 'claude']);
-      });
-    });
-
-    describe('the package version the install recorded', () => {
-      const recordedRow = () =>
-        (mockDistributedPackageRepository.add as jest.Mock).mock.calls
-          .map(([row]) => row)
-          .find((row) => String(row.packageId) === String(packageId));
-
-      const install = (packageVersions?: Record<string, string>) =>
-        useCase.execute(buildCommand({ packageVersions }));
-
-      beforeEach(() => {
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
-      });
-
-      describe('when packmind.json pins a release', () => {
-        beforeEach(() => install({ '@my-space/my-package': '1.2.0' }));
-
-        it('records the release as the spec', () => {
-          expect(recordedRow()).toEqual(
-            expect.objectContaining({
-              versionSpec: '1.2.0',
-              latestReleaseVersion: null,
-            }),
-          );
-        });
-      });
-
-      describe('when packmind.json tracks the live package', () => {
-        beforeEach(async () => {
-          mockPackageReleaseService.findLatestByPackageIds.mockResolvedValue(
-            new Map([
-              [packageId, { version: '1.1.0' } as PackageReleaseDetail],
-            ]),
-          );
-          await install({ '@my-space/my-package': '*' });
-        });
-
-        it('records the release the live package was built on', () => {
-          expect(recordedRow()).toEqual(
-            expect.objectContaining({
-              versionSpec: '*',
-              latestReleaseVersion: '1.1.0',
-            }),
-          );
-        });
-      });
-
-      describe('when the live package was never released', () => {
-        beforeEach(() => install({ '@my-space/my-package': '*' }));
-
-        it('records the wildcard with no base release', () => {
-          expect(recordedRow()).toEqual(
-            expect.objectContaining({
-              versionSpec: '*',
-              latestReleaseVersion: null,
-            }),
-          );
-        });
-      });
-
-      describe('when packmind.json names the package by its bare slug', () => {
-        beforeEach(() => install({ 'my-package': '1.2.0' }));
-
-        it('still records its spec', () => {
-          expect(recordedRow()?.versionSpec).toBe('1.2.0');
-        });
-      });
-
-      describe('when the CLI sends no packmind.json', () => {
-        beforeEach(() => install(undefined));
-
-        it('records no spec', () => {
-          expect(recordedRow()).toEqual(
-            expect.objectContaining({
-              versionSpec: null,
-              latestReleaseVersion: null,
-            }),
-          );
-        });
-      });
-    });
-
-    describe('when a package was previously active but is absent from the lock file', () => {
-      beforeEach(async () => {
-        mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
-          [secondPackageId],
-        );
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
-
-        await useCase.execute(buildCommand());
-      });
-
-      it('creates a remove entry for the absent package', () => {
-        expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            packageId: secondPackageId,
-            operation: 'remove',
-          }),
-        );
-      });
-    });
-
-    describe('when a package was previously active and is still in the lock file', () => {
-      beforeEach(async () => {
-        mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
-          [packageId],
-        );
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
-          buildStandardVersion(),
-        );
-        mockCommandsPort.getCommandVersion.mockResolvedValue(
-          buildCommandVersion(),
-        );
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(
-          buildSkillVersion(),
-        );
-
-        await useCase.execute(buildCommand());
-      });
-
-      it('creates only an add entry for the package without a remove', () => {
-        const addCalls = (
-          mockDistributedPackageRepository.add as jest.Mock
-        ).mock.calls.filter(
-          ([pkg]) => String(pkg.packageId) === String(packageId),
-        );
-        expect(addCalls).toEqual([
-          [expect.objectContaining({ packageId, operation: 'add' })],
-        ]);
-      });
-    });
-
-    describe('when the lock file contains artifacts from multiple packages', () => {
-      beforeEach(async () => {
-        mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
-          buildStandardVersion(),
-        );
-        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
-        mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
-
-        const lockFileWithTwoPackages = buildLockFile({
-          artifacts: {
-            'standard:test-standard': {
-              name: 'Test Standard',
-              type: 'standard',
-              id: String(standardId),
-              version: 1,
-              spaceId: String(spaceId),
-              packageIds: [String(packageId), String(secondPackageId)],
-              files: [],
-              source: 'user',
-            },
-          },
-        });
-
-        await useCase.execute(
-          buildCommand({ packmindLockFile: lockFileWithTwoPackages }),
-        );
-      });
-
-      it('creates an add entry for each package', () => {
-        const packageIds = (
-          mockDistributedPackageRepository.add as jest.Mock
-        ).mock.calls.map(([pkg]) => String(pkg.packageId));
-        expect(packageIds).toEqual(
-          expect.arrayContaining([String(packageId), String(secondPackageId)]),
-        );
-      });
-    });
-  });
-
-  describe('distribution_recorded domain event', () => {
-    beforeEach(() => {
-      mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-      mockCommandsPort.getCommandVersion.mockResolvedValue(null);
-      mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
-    });
-
-    describe('when a distribution is recorded', () => {
-      beforeEach(async () => {
-        await useCase.execute(buildCommand({ gitBranch: 'main' }));
-      });
-
-      it('emits a DistributionRecordedEvent with the repository and branch', () => {
-        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            payload: {
-              userId,
-              organizationId,
-              source: 'cli',
-              repositoryId: gitRepoId,
-              branch: 'main',
-            },
-          }),
-        );
-      });
-    });
-
-    describe('when checking the emitted event type', () => {
-      let emitted: unknown;
-
-      beforeEach(async () => {
-        await useCase.execute(buildCommand());
-        emitted = mockEventEmitterService.emit.mock.calls[0][0];
-      });
-
-      it('emits an instance of DistributionRecordedEvent', () => {
-        expect(emitted).toBeInstanceOf(DistributionRecordedEvent);
+    it('returns what the recording did', () => {
+      expect(response).toEqual({
+        deploymentId: distributionId,
+        status: 'updated',
+        warnings: [],
       });
     });
   });

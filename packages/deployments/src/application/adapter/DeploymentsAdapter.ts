@@ -150,6 +150,7 @@ import { ListDistributionsByCommandUseCase } from '../useCases/ListDistributions
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUseCase } from '../useCases/listPackages/ListPackagesUseCase';
+import { LockFileDistributionRecorder } from '../services/LockFileDistributionRecorder';
 import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/NotifyDistributionUseCase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
@@ -604,6 +605,19 @@ export class DeploymentsAdapter
         spaceContentNotifier,
       );
 
+    const lockFileDistributionRecorder = new LockFileDistributionRecorder(
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.spacesPort,
+      this.distributionRepository,
+      this.distributedPackageRepository,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.deploymentsServices.getPackageService(),
+      this.deploymentsServices.getPackageReleaseService(),
+      ports.eventEmitterService,
+    );
+
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
       this.commandsPort,
@@ -620,17 +634,8 @@ export class DeploymentsAdapter
     this._notifyArtefactsDistributionUseCase =
       new NotifyArtefactsDistributionUseCase(
         this.accountsPort,
-        this.commandsPort,
-        this.standardsPort,
-        this.skillsPort,
-        this.distributionRepository,
-        this.distributedPackageRepository,
-        this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
-        ports.eventEmitterService,
-        this.deploymentsServices.getPackageService(),
-        this.spacesPort,
-        this.deploymentsServices.getPackageReleaseService(),
+        lockFileDistributionRecorder,
       );
 
     this._getLastDistributionDateByProvidersUseCase =

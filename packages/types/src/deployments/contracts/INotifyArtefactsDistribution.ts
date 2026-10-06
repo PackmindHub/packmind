@@ -1,6 +1,10 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { DistributionId } from '../DistributionId';
-import { PackmindLockFile } from '../PackmindLockFile';
+import {
+  LockFileSyncStatus,
+  LockFileSyncWarning,
+  PackmindLockFile,
+} from '../PackmindLockFile';
 
 export type NotifyArtefactsDistributionCommand = PackmindCommand & {
   gitRemoteUrl: string;
@@ -11,7 +15,9 @@ export type NotifyArtefactsDistributionCommand = PackmindCommand & {
 };
 
 export type NotifyArtefactsDistributionResponse = {
-  deploymentId: DistributionId;
+  deploymentId: DistributionId | null;
+  status: Exclude<LockFileSyncStatus, 'ignored'>;
+  warnings: LockFileSyncWarning[];
 };
 
 export type INotifyArtefactsDistribution = IUseCase<

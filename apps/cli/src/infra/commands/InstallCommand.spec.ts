@@ -1789,7 +1789,11 @@ describe('installCommand', () => {
       });
 
     beforeEach(() => {
-      mockNotifyArtefactsDistribution = jest.fn().mockResolvedValue(undefined);
+      mockNotifyArtefactsDistribution = jest.fn().mockResolvedValue({
+        deploymentId: null,
+        status: 'unchanged',
+        warnings: [],
+      });
       mockGetTrackedRepository = jest.fn();
       mockFs.existsSync.mockReturnValue(true);
       mockFs.statSync.mockReturnValue({ isDirectory: () => true } as fs.Stats);
@@ -1917,6 +1921,31 @@ describe('installCommand', () => {
           expect.objectContaining({
             packageVersions: { '@my-space/ops': '1.2.0' },
           }),
+        );
+      });
+    });
+
+    describe('when the lock lists a package Packmind does not know', () => {
+      beforeEach(async () => {
+        mockNotifyArtefactsDistribution.mockResolvedValue({
+          deploymentId: null,
+          status: 'updated',
+          warnings: [
+            { type: 'unknown_package', packageSlug: '@my-space/legacy' },
+          ],
+        });
+        mockGetTrackedRepository.mockResolvedValue({
+          gitRepo: { branch: 'main' },
+        });
+        useHexaInGitRepo({ branch: 'main' });
+        await runInstall();
+      });
+
+      it('warns that the package was not recorded', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "'@my-space/legacy' is not a package of your organization",
+          ),
         );
       });
     });

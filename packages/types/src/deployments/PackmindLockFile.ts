@@ -62,3 +62,19 @@ export type PackmindLockFile = {
 };
 
 export const PACKMIND_LOCK_FILE_NAME = 'packmind-lock.json';
+
+export function hasRecordedPackageVersions(
+  lockFile: PackmindLockFile,
+): lockFile is PackmindLockFile & { packages: Record<string, string> } {
+  return (
+    typeof lockFile.packages === 'object' &&
+    lockFile.packages !== null &&
+    !Array.isArray(lockFile.packages)
+  );
+}
+
+export type LockFileSyncWarning =
+  | { type: 'lock_from_older_cli' }
+  | { type: 'unknown_package'; packageSlug: string };
+
+export type LockFileSyncStatus = 'updated' | 'unchanged' | 'ignored';

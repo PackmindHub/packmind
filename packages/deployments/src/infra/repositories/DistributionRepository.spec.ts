@@ -1310,6 +1310,62 @@ describe('DistributionRepository', () => {
     });
   });
 
+  describe('findActiveDistributedPackagesByTarget', () => {
+    let result: Awaited<
+      ReturnType<typeof repository.findActiveDistributedPackagesByTarget>
+    >;
+
+    beforeEach(async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        {
+          targetId,
+          distributionId: 'dist-1',
+          distributedPackageId: 'dp-1',
+          packageId: packageId1,
+          operation: 'add',
+          versionSpec: '1.2.3',
+          latestReleaseVersion: null,
+          renderModes: [],
+          distributedAt: '2024-01-01T00:00:00Z',
+        },
+      ]);
+      mockQueryBuilder.getMany.mockResolvedValue([
+        {
+          id: createDistributionId('dist-1'),
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              standardVersions: [{ id: createStandardVersionId('sv-1') }],
+              recipeVersions: [{ id: createCommandVersionId('rv-1') }],
+              skillVersions: [{ id: createSkillVersionId('skv-1') }],
+            },
+          ],
+        } as never,
+      ]);
+
+      result = await repository.findActiveDistributedPackagesByTarget(
+        organizationId,
+        targetId,
+      );
+    });
+
+    it('returns each active package with its spec and artifact versions', () => {
+      expect(result).toEqual([
+        {
+          id: 'dp-1',
+          distributionId: 'dist-1',
+          packageId: packageId1,
+          operation: 'add',
+          versionSpec: '1.2.3',
+          latestReleaseVersion: null,
+          standardVersions: [{ id: 'sv-1' }],
+          recipeVersions: [{ id: 'rv-1' }],
+          skillVersions: [{ id: 'skv-1' }],
+        },
+      ]);
+    });
+  });
+
   describe('findActiveRenderModesByTarget', () => {
     const activeRow = (
       distributedPackageId: string,

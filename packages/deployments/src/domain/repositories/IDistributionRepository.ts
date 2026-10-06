@@ -1,5 +1,6 @@
 import {
   Distribution,
+  DistributedPackage,
   CommandDistributionHistoryEntry,
   DistributionHistoryEntry,
   SkillDistributionHistoryEntry,
@@ -106,6 +107,11 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
   ): Promise<PackageId[]>;
+
+  findActiveDistributedPackagesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<DistributedPackage[]>;
 
   /**
    * Render modes of the latest successful distribution of each package still

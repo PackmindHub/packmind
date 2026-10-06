@@ -18,6 +18,7 @@ import {
 } from './installPackagesHandler';
 import {
   CodingAgent,
+  LockFileSyncWarning,
   PackmindFileConfig,
   PackmindLockFile,
 } from '@packmind/types';
@@ -355,15 +356,29 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
     const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
     const relativePath = toRepoRelativePath(dir, gitRoot);
 
-    await packmindCliHexa.notifyArtefactsDistribution({
+    const { warnings } = await packmindCliHexa.notifyArtefactsDistribution({
       gitRemoteUrl,
       gitBranch,
       relativePath,
       packmindLockFile,
       packageVersions: readPackageVersions(dir),
     });
+    reportLockFileWarnings(warnings ?? [], relativePath);
   } catch {
     // Silently ignore all errors to not fail the install
+  }
+}
+
+function reportLockFileWarnings(
+  warnings: LockFileSyncWarning[],
+  relativePath: string,
+): void {
+  for (const warning of warnings) {
+    if (warning.type === 'unknown_package') {
+      logWarningConsole(
+        `Distribution in ${relativePath}: '${warning.packageSlug}' is not a package of your organization, it was not recorded.`,
+      );
+    }
   }
 }
 
