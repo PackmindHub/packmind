@@ -334,6 +334,35 @@ describe('buildPackageDestinations', () => {
     });
   });
 
+  describe('whether a release is also on offer', () => {
+    it('carries the standing of a landing that could take one', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            standing: {
+              status: 'behind',
+              remedy: 'update',
+              canReleaseAndUpdate: true,
+            },
+          }),
+        ],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(true);
+    });
+
+    it('is false on a published copy, which tracks the live package', () => {
+      const rows = buildPackageDestinations({
+        installs: [],
+        publications: [publication({ isOutdated: true })],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(false);
+    });
+  });
+
   describe('the order of the list', () => {
     it('puts the worst first and the aligned last, interleaving the two kinds', () => {
       const rows = buildPackageDestinations({

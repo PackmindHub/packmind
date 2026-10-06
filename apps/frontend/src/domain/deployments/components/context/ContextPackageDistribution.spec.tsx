@@ -66,6 +66,7 @@ const failedDestination: PackageDestination = {
   behindCount: 0,
   hasWorkToSend: false,
   remedy: 'none' as const,
+  canReleaseAndUpdate: false,
   installKey: 'repo-1::target-1',
   prUrl: null,
   failureReason: REASON,
