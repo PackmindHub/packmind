@@ -497,7 +497,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         tableProps={{ tableLayout: 'fixed', width: '100%' }}
         getRowProps={(row) =>
           deletedRowKeys.has(row.key as string)
-            ? { opacity: 0.55, cursor: 'not-allowed', 'aria-disabled': true }
+            ? { opacity: 0.55, 'aria-disabled': true }
             : {}
         }
       />
