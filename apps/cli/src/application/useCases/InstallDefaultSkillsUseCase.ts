@@ -183,6 +183,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
         lockfileVersion: 2,
         cliVersion,
         packageSlugs: [],
+        packages: {},
         agents: [],
         artifacts: { ...lockFileSlice },
       };

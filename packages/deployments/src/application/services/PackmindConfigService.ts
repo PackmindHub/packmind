@@ -43,13 +43,17 @@ export class PackmindConfigService {
     existingAgents?: CodingAgent[],
     versionsBySlug?: { [slug: string]: string },
   ): FileModification {
-    const config = this.generateConfigContent(
-      packagesSlugs,
-      existingPackages,
-      existingAgents,
-      versionsBySlug,
+    return this.toFileModification(
+      this.generateConfigContent(
+        packagesSlugs,
+        existingPackages,
+        existingAgents,
+        versionsBySlug,
+      ),
     );
+  }
 
+  toFileModification(config: PackmindFileConfig): FileModification {
     return {
       path: 'packmind.json',
       content: JSON.stringify(config, null, 2) + '\n',

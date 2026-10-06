@@ -149,8 +149,11 @@ describe('PullContentUseCase', () => {
     packageReleaseService.findContentByVersion.mockResolvedValue(null);
 
     packmindConfigService = createMockInstance(PackmindConfigService);
+    packmindConfigService.generateConfigContent.mockReturnValue({
+      packages: {},
+    });
 
-    packmindConfigService.createConfigFileModification.mockReturnValue({
+    packmindConfigService.toFileModification.mockReturnValue({
       path: 'packmind.json',
       content: '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
     });
@@ -758,7 +761,7 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packmindConfigService.createConfigFileModification,
+          packmindConfigService.generateConfigContent,
         ).toHaveBeenCalledWith(
           [`@${defaultSpace.slug}/test-package`],
           undefined,
@@ -779,7 +782,7 @@ describe('PullContentUseCase', () => {
           await useCase.execute(command);
 
           expect(
-            packmindConfigService.createConfigFileModification,
+            packmindConfigService.generateConfigContent,
           ).toHaveBeenCalledWith(
             [`@${defaultSpace.slug}/test-package`],
             undefined,
@@ -2369,7 +2372,7 @@ describe('PullContentUseCase', () => {
       });
 
       it('calls config service with empty package list', async () => {
-        packmindConfigService.createConfigFileModification.mockReturnValue({
+        packmindConfigService.toFileModification.mockReturnValue({
           path: 'packmind.json',
           content: '{\n  "packages": {}\n}\n',
         });
@@ -2377,12 +2380,12 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packmindConfigService.createConfigFileModification,
+          packmindConfigService.generateConfigContent,
         ).toHaveBeenCalledWith([], undefined, undefined, {});
       });
 
       it('includes packmind.json in createOrUpdate', async () => {
-        packmindConfigService.createConfigFileModification.mockReturnValue({
+        packmindConfigService.toFileModification.mockReturnValue({
           path: 'packmind.json',
           content: '{\n  "packages": {}\n}\n',
         });

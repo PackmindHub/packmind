@@ -219,13 +219,15 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       }
     }
 
-    const configFile = this.packmindConfigService.createConfigFileModification(
+    const config = this.packmindConfigService.generateConfigContent(
       configSlugs,
       undefined,
       command.agents,
       configVersions,
     );
-    mergedFileUpdates.createOrUpdate.push(configFile);
+    mergedFileUpdates.createOrUpdate.push(
+      this.packmindConfigService.toFileModification(config),
+    );
 
     if (artifactMetadata) {
       enrichFileModificationsWithMetadata(
@@ -247,6 +249,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       skillVersions,
       codingAgents,
       packageSlugs: command.packagesSlugs,
+      packageVersions: config.packages,
       artifactSpaceIds,
       artifactPackageIds,
     });

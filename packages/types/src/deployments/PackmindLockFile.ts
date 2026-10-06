@@ -55,7 +55,10 @@ export type PackmindLockFile = {
    */
   cliVersion?: string;
   packageSlugs: string[];
+  packages?: Record<string, string>;
   agents: CodingAgent[];
   targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };
+
+export const PACKMIND_LOCK_FILE_NAME = 'packmind-lock.json';

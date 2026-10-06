@@ -188,7 +188,10 @@ describe('InstallPackagesUseCase', () => {
     packageReleaseService.findContentByVersion.mockResolvedValue(null);
 
     packmindConfigService = createMockInstance(PackmindConfigService);
-    packmindConfigService.createConfigFileModification.mockReturnValue({
+    packmindConfigService.generateConfigContent.mockReturnValue({
+      packages: {},
+    });
+    packmindConfigService.toFileModification.mockReturnValue({
       path: 'packmind.json',
       content: '{}',
     });

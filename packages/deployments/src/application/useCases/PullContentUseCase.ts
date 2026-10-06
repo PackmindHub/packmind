@@ -483,14 +483,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         normalizedCurrentSlugs.length > 0
           ? normalizedCurrentSlugs
           : command.packagesSlugs;
-      const configFile =
-        this.packmindConfigService.createConfigFileModification(
-          configSlugs,
-          undefined, // existingPackages: configSlugs already lists every package
-          command.agents,
-          resolvedPackageVersions,
-        );
-      mergedFileUpdates.createOrUpdate.push(configFile);
+      const config = this.packmindConfigService.generateConfigContent(
+        configSlugs,
+        undefined, // existingPackages: configSlugs already lists every package
+        command.agents,
+        resolvedPackageVersions,
+      );
+      mergedFileUpdates.createOrUpdate.push(
+        this.packmindConfigService.toFileModification(config),
+      );
 
       if (artifactMetadata) {
         enrichFileModificationsWithMetadata(
@@ -512,6 +513,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         skillVersions,
         codingAgents,
         packageSlugs: command.packagesSlugs ?? [],
+        packageVersions: config.packages,
         targetId: resolvedTargetId,
         artifactSpaceIds,
         artifactPackageIds,

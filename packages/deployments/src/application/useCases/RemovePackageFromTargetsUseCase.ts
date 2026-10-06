@@ -29,6 +29,8 @@ import {
   IGitPort,
   ICodingAgentPort,
   PackmindFileConfig,
+  PackmindLockFile,
+  PACKMIND_LOCK_FILE_NAME,
   FileUpdates,
   CodingAgent,
   RenderMode,
@@ -41,6 +43,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
@@ -74,6 +77,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
+    private readonly lockFileService: PackmindLockFileService = new PackmindLockFileService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -352,6 +356,26 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
+      const existingLockFile = await this.fetchExistingLockFile(
+        gitRepo,
+        target,
+      );
+      if (existingLockFile) {
+        baseFileUpdates.createOrUpdate.push(
+          this.lockFileService.createLockFileModification(
+            this.lockFileService.removePackageFromLockFile(
+              existingLockFile,
+              packageSlugToRemove,
+              [
+                ...removedCommandVersions.map((v) => String(v.recipeId)),
+                ...removedStandardVersions.map((v) => String(v.standardId)),
+                ...removedSkillVersions.map((v) => String(v.skillId)),
+              ],
+            ),
+          ),
+        );
+      }
+
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(
         baseFileUpdates,
         target,
@@ -376,6 +400,26 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     }
 
     return removalDataPerTarget;
+  }
+
+  private async fetchExistingLockFile(
+    gitRepo: GitRepo,
+    target: Target,
+  ): Promise<PackmindLockFile | null> {
+    const lockFilePath = getTargetPrefixedPath(PACKMIND_LOCK_FILE_NAME, target);
+
+    try {
+      const fileData = await this.gitPort.getFileFromRepo(
+        gitRepo,
+        lockFilePath,
+      );
+      if (!fileData) {
+        return null;
+      }
+      return JSON.parse(fileData.content) as PackmindLockFile;
+    } catch {
+      return null;
+    }
   }
 
   private async fetchExistingPackmindJson(
