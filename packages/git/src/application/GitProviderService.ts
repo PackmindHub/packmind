@@ -190,6 +190,25 @@ export class GitProviderService {
     return providerInstance.checkBranchExists(owner, repo, branch);
   }
 
+  async searchBranches(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ): Promise<string[]> {
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitProviderId);
+    }
+
+    const providerInstance =
+      await this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.searchBranches(owner, repo, search, limit);
+  }
+
   async createBranchFromBase(
     gitProviderId: GitProviderId,
     owner: string,

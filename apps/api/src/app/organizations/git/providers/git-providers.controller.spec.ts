@@ -83,6 +83,7 @@ describe('GitProvidersController', () => {
       | 'getGithubAppStatus'
       | 'revokeGithubApp'
       | 'checkProviderBranchExists'
+      | 'searchProviderBranches'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -105,6 +106,7 @@ describe('GitProvidersController', () => {
       getGithubAppStatus: jest.fn(),
       revokeGithubApp: jest.fn(),
       checkProviderBranchExists: jest.fn(),
+      searchProviderBranches: jest.fn(),
     };
     logger = stubLogger();
 
@@ -841,6 +843,66 @@ describe('GitProvidersController', () => {
       );
 
       expect(result).toEqual({ exists: true });
+    });
+  });
+
+  describe('searchProviderBranches', () => {
+    const providerId = createGitProviderId('provider-789');
+
+    beforeEach(() => {
+      mockService.searchProviderBranches.mockResolvedValue({
+        branches: ['feature/new-home'],
+      });
+    });
+
+    it('passes a search holding a slash to the service untouched', async () => {
+      await controller.searchProviderBranches(
+        orgId,
+        providerId,
+        mockRequest,
+        'acme',
+        'website',
+        'feature/new',
+      );
+
+      expect(mockService.searchProviderBranches).toHaveBeenCalledWith({
+        userId,
+        organizationId: orgId,
+        gitProviderId: providerId,
+        owner: 'acme',
+        repo: 'website',
+        search: 'feature/new',
+      });
+    });
+
+    it('returns the answer of the service', async () => {
+      const result = await controller.searchProviderBranches(
+        orgId,
+        providerId,
+        mockRequest,
+        'acme',
+        'website',
+        'feature',
+      );
+
+      expect(result).toEqual({ branches: ['feature/new-home'] });
+    });
+
+    describe('when no search is given', () => {
+      it('searches for an empty string', async () => {
+        await controller.searchProviderBranches(
+          orgId,
+          providerId,
+          mockRequest,
+          'acme',
+          'website',
+          undefined,
+        );
+
+        expect(mockService.searchProviderBranches).toHaveBeenCalledWith(
+          expect.objectContaining({ search: '' }),
+        );
+      });
     });
   });
 });

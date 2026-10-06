@@ -16,6 +16,8 @@ import {
   FindOrCreateGitRepoResponse,
   CheckProviderBranchExistsCommand,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesCommand,
+  SearchProviderBranchesResponse,
   CheckTrackedBranchExistsCommand,
   CheckTrackedBranchExistsResponse,
   GetAvailableRemoteDirectoriesCommand,
@@ -189,6 +191,15 @@ export interface IGitPort {
   checkProviderBranchExists(
     command: CheckProviderBranchExistsCommand,
   ): Promise<CheckProviderBranchExistsResponse>;
+
+  /**
+   * Search the branches of a repository on one of the organization's
+   * providers, by substring of their name. An empty search lists the first
+   * branches. Always asks the provider: the answer is never cached.
+   */
+  searchProviderBranches(
+    command: SearchProviderBranchesCommand,
+  ): Promise<SearchProviderBranchesResponse>;
 
   /**
    * Probe a git provider's stored credentials against the upstream API to

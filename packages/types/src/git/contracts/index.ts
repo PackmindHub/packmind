@@ -14,6 +14,7 @@ export * from './IGetTrackedRepositoryUseCase';
 export * from './IListAvailableReposUseCase';
 export * from './IListProvidersUseCase';
 export * from './IRemoveTrackedRepositoryUseCase';
+export * from './ISearchProviderBranchesUseCase';
 export * from './ISetTrackedRepositoryUseCase';
 export * from './IUpdateGitProviderUseCase';
 export * from './IUpdateTrackedBranchUseCase';

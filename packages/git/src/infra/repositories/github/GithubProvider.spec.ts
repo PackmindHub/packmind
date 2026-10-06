@@ -4,6 +4,7 @@ import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenR
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  GithubApiOperationFailedError,
   GithubAvailableRepositoriesFailedError,
   GithubRateLimitedError,
 } from '../../../domain/errors';
@@ -50,6 +51,7 @@ describe('GithubProvider', () => {
 
     mockAxiosInstance = {
       get: jest.fn(),
+      post: jest.fn(),
       interceptors: {
         request: { use: jest.fn() },
         response: { use: jest.fn() },
@@ -905,6 +907,150 @@ describe('GithubProvider', () => {
       ).rejects.toThrow(
         `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: String error`,
       );
+    });
+  });
+
+  describe('searchBranches', () => {
+    const owner = 'test-owner';
+    const repo = 'test-repo';
+
+    describe('when GitHub answers', () => {
+      let result: string[];
+
+      beforeEach(async () => {
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            data: {
+              repository: {
+                refs: {
+                  nodes: [{ name: 'feature/home' }, { name: 'feature/login' }],
+                },
+              },
+            },
+          },
+        });
+
+        result = await githubProvider.searchBranches(
+          owner,
+          repo,
+          'feature',
+          20,
+        );
+      });
+
+      it('posts the refs query to the GraphQL endpoint', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/graphql',
+          expect.objectContaining({
+            query: expect.stringContaining('refPrefix: "refs/heads/"'),
+          }),
+        );
+      });
+
+      it('passes the repository, search and limit as variables', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/graphql',
+          expect.objectContaining({
+            variables: { owner, name: repo, q: 'feature', first: 20 },
+          }),
+        );
+      });
+
+      it('returns the branch names', () => {
+        expect(result).toEqual(['feature/home', 'feature/login']);
+      });
+    });
+
+    describe('when the search is empty', () => {
+      it('queries with an empty search', async () => {
+        mockAxiosInstance.post.mockResolvedValue({
+          data: { data: { repository: { refs: { nodes: [] } } } },
+        });
+
+        await githubProvider.searchBranches(owner, repo, '', 20);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/graphql',
+          expect.objectContaining({
+            variables: { owner, name: repo, q: '', first: 20 },
+          }),
+        );
+      });
+    });
+
+    describe('when GraphQL reports errors', () => {
+      beforeEach(() => {
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            data: { repository: null },
+            errors: [{ message: 'Could not resolve to a Repository' }],
+          },
+        });
+      });
+
+      it('throws a GitHub operation error', async () => {
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(GithubApiOperationFailedError);
+      });
+
+      it('carries the GraphQL message', async () => {
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toThrow('Could not resolve to a Repository');
+      });
+    });
+
+    describe('when the repository is missing without errors', () => {
+      it('throws a GitHub operation error', async () => {
+        mockAxiosInstance.post.mockResolvedValue({
+          data: { data: { repository: null } },
+        });
+
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(GithubApiOperationFailedError);
+      });
+    });
+
+    describe('when GitHub is rate limiting us', () => {
+      it('throws a rate limit error', async () => {
+        mockAxiosInstance.post.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(GithubRateLimitedError);
+      });
+    });
+
+    describe('when GitHub refuses access (plain 403)', () => {
+      it('throws a forbidden domain error', async () => {
+        mockAxiosInstance.post.mockRejectedValue(buildAxiosError(403));
+
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+    });
+
+    describe('when GitHub rejects the credentials (401)', () => {
+      it('throws an invalid credentials domain error', async () => {
+        mockAxiosInstance.post.mockRejectedValue(buildAxiosError(401));
+
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
+    });
+
+    describe('when the call fails otherwise', () => {
+      it('throws a GitHub operation error', async () => {
+        mockAxiosInstance.post.mockRejectedValue(buildAxiosError(500));
+
+        await expect(
+          githubProvider.searchBranches(owner, repo, 'feature', 20),
+        ).rejects.toBeInstanceOf(GithubApiOperationFailedError);
+      });
     });
   });
 });
