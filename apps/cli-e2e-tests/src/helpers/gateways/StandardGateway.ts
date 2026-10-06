@@ -2,6 +2,7 @@ import {
   Gateway,
   ICreateStandardUseCase,
   IListStandardsBySpaceUseCase,
+  IUpdateStandardUseCase,
   Standard,
 } from '@packmind/types';
 import { IStandardGateway } from '../IPackmindGateway';
@@ -24,6 +25,19 @@ export class StandardGateway implements IStandardGateway {
     const standard = await this.httpClient.request<Standard>(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/standards`,
       { method: 'POST', body: command },
+    );
+
+    return { standard };
+  };
+
+  update: Gateway<IUpdateStandardUseCase> = async (command) => {
+    const organizationId = this.httpClient.getOrganizationId();
+    const { spaceId, standardId, name, description, rules, scope } = command;
+
+    // Same as create: the API answers with the bare standard.
+    const standard = await this.httpClient.request<Standard>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}`,
+      { method: 'POST', body: { name, description, rules, scope } },
     );
 
     return { standard };

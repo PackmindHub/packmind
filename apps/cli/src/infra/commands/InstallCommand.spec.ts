@@ -64,6 +64,11 @@ jest.mock('../repositories/ConfigFileRepository', () => ({
   })),
 }));
 
+jest.mock('./checkUpgradesHandler', () => ({
+  ...jest.requireActual('./checkUpgradesHandler'),
+  checkUpgradesHandler: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('../../application/services/AgentArtifactDetectionService', () => ({
   AgentArtifactDetectionService: jest.fn().mockImplementation(() => ({})),
 }));
@@ -80,6 +85,7 @@ import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
+import { checkUpgradesHandler } from './checkUpgradesHandler';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
@@ -341,6 +347,123 @@ describe('installCommand', () => {
         expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ upgrade: undefined }),
         );
+      });
+    });
+  });
+
+  describe('--check-upgrades', () => {
+    const mockCheckUpgradesHandler =
+      checkUpgradesHandler as jest.MockedFunction<typeof checkUpgradesHandler>;
+
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    describe('when the flag is passed alone', () => {
+      beforeEach(async () => {
+        await handler({
+          installPath: '',
+          packages: [],
+          status: false,
+          checkUpgrades: true,
+        });
+      });
+
+      it('routes to the check-upgrades handler', () => {
+        expect(mockCheckUpgradesHandler).toHaveBeenCalledWith(
+          expect.objectContaining({ cwd: process.cwd(), installPath: '' }),
+          expect.objectContaining({ exit: process.exit }),
+        );
+      });
+
+      it('does not install', () => {
+        expect(mockInstall).not.toHaveBeenCalled();
+      });
+
+      it('does not bootstrap packmind.json', () => {
+        expect(mockBootstrap).not.toHaveBeenCalled();
+      });
+
+      it('does not run the CLI version check, which writes the lock file', () => {
+        expect(mockEnsureCliVersion).not.toHaveBeenCalled();
+      });
+
+      it('does not install default skills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the path is given', () => {
+      it('passes the resolved directory to the check-upgrades handler', async () => {
+        const appsDir = path.resolve(process.cwd(), 'apps/frontend');
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.statSync.mockReturnValue({
+          isDirectory: () => true,
+        } as fs.Stats);
+
+        await handler({
+          installPath: 'apps/frontend',
+          packages: [],
+          status: false,
+          checkUpgrades: true,
+        });
+
+        expect(mockCheckUpgradesHandler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            cwd: appsDir,
+            installPath: 'apps/frontend',
+          }),
+          expect.anything(),
+        );
+      });
+    });
+
+    describe.each([
+      {
+        combination: '--upgrade',
+        args: { upgrade: true },
+        message: '--check-upgrades cannot be combined with --upgrade.',
+      },
+      {
+        combination: '--status',
+        args: { status: true },
+        message: '--check-upgrades cannot be combined with --status.',
+      },
+      {
+        combination: 'package names',
+        args: { packages: [parsePackageSlug('@space/ops')] },
+        message:
+          '--check-upgrades checks the packages of packmind.json and takes no package names.',
+      },
+    ])('when combined with $combination', ({ args, message }) => {
+      beforeEach(async () => {
+        await handler({
+          installPath: '',
+          packages: [],
+          status: false,
+          checkUpgrades: true,
+          ...args,
+        });
+      });
+
+      it('logs an error', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(message);
+      });
+
+      it('exits with code 1', () => {
+        expect(processExitSpy).toHaveBeenCalledWith(1);
+      });
+
+      it('checks nothing', () => {
+        expect(mockCheckUpgradesHandler).not.toHaveBeenCalled();
+      });
+
+      it('installs nothing', () => {
+        expect(mockInstall).not.toHaveBeenCalled();
       });
     });
   });

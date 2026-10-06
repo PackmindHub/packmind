@@ -39,38 +39,14 @@ import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
 import { ParsedPackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
+import { resolveInstallTargetDirectories } from './installTargetDirectories';
+import {
+  checkUpgradesHandler,
+  findCheckUpgradesConflict,
+} from './checkUpgradesHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
-
-function findSubDirectoriesWithPackmindJson(
-  dirPath: string,
-  recursive: boolean,
-): string[] {
-  const result: string[] = [];
-
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(dirPath, { withFileTypes: true });
-  } catch {
-    return result;
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const subDir = path.join(dirPath, entry.name);
-
-    if (fs.existsSync(path.join(subDir, 'packmind.json'))) {
-      result.push(subDir);
-    }
-
-    if (recursive) {
-      result.push(...findSubDirectoriesWithPackmindJson(subDir, true));
-    }
-  }
-
-  return result;
-}
 
 export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   const merged: IInstallResult = {
@@ -461,13 +437,24 @@ export async function installHandler({
   packages,
   status,
   upgrade,
+  checkUpgrades,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
   status: boolean;
   /** Optional so the many call sites that never upgrade stay as they are. */
   upgrade?: boolean;
+  checkUpgrades?: boolean;
 }): Promise<void> {
+  if (checkUpgrades) {
+    const conflict = findCheckUpgradesConflict({ packages, status, upgrade });
+    if (conflict) {
+      logErrorConsole(conflict);
+      process.exit(1);
+      return;
+    }
+  }
+
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -500,6 +487,15 @@ export async function installHandler({
     }
   }
 
+  // Before the CLI version check and the bootstrap, which both write.
+  if (checkUpgrades) {
+    await checkUpgradesHandler(
+      { cwd, installPath, cliVersion: CLI_VERSION },
+      { packmindCliHexa, exit: process.exit },
+    );
+    return;
+  }
+
   try {
     const ensureOutcome = await packmindCliHexa.ensureCliVersion({
       baseDirectory: cwd,
@@ -526,28 +522,11 @@ export async function installHandler({
     homeAgent: cwdHomeAgent,
   });
 
-  // Determine target directories
-  let targetDirs: string[];
-
-  if (installPath) {
-    // With -p: target cwd itself when it has packmind.json or explicit packages
-    // were passed, plus any direct sub-directories with packmind.json.
-    targetDirs = [];
-    if (fs.existsSync(path.join(cwd, 'packmind.json')) || packages.length > 0) {
-      targetDirs.push(cwd);
-    }
-    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, false));
-  } else if (packages.length > 0) {
-    // With explicit packages: only update the cwd's packmind.json
-    targetDirs = [cwd];
-  } else {
-    // Without -p and without explicit packages: include root if it has packmind.json, then recursively find sub-directories
-    targetDirs = [];
-    if (fs.existsSync(path.join(cwd, 'packmind.json'))) {
-      targetDirs.push(cwd);
-    }
-    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, true));
-  }
+  const targetDirs = resolveInstallTargetDirectories({
+    cwd,
+    installPath,
+    hasExplicitPackages: packages.length > 0,
+  });
 
   if (targetDirs.length === 0) {
     if (bootstrap.warned) {
@@ -679,6 +658,11 @@ export const installCommand = command({
       long: 'upgrade',
       description:
         "Move every package pinned to a version in packmind.json to that package's latest release. Packages tracking * are left tracking it.",
+    }),
+    checkUpgrades: flag({
+      long: 'check-upgrades',
+      description:
+        'Show what --upgrade would change, without installing anything. Exits 1 when upgrades are available.',
     }),
   },
   handler: installHandler,

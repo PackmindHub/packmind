@@ -124,6 +124,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     let normalizedAccessibleSlugs: string[] = [];
     let artifactMetadata: ArtifactMetadataMap | null = null;
     const resolvedPackageVersions: Record<string, string> = {};
+    const resolvedPackageIds: Record<string, string> = {};
 
     if (accessibleSlugs.length > 0) {
       const resolution = await this.resolvePackagesBySlugs(
@@ -161,6 +162,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       for (const entry of resolution.entries) {
         resolvedPackageVersions[entry.normalizedSlug] =
           content.resolvedVersions.get(entry.pkg.id) ?? WILDCARD_VERSION_SPEC;
+        resolvedPackageIds[entry.normalizedSlug] = entry.pkg.id;
       }
 
       const artifactFileUpdates =
@@ -296,23 +298,29 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       this.lockFileService.createLockFileModification(lockFile),
     );
 
-    this.logger.info('Successfully installed packages', {
-      organizationId: command.organizationId,
-      totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
-      missingAccessCount: inaccessibleSlugs.length,
-    });
-
-    this.eventEmitterService.emit(
-      new ArtifactsPulledEvent({
-        userId: createUserId(command.userId),
-        organizationId: createOrganizationId(command.organizationId),
-        packageSlugs: accessibleSlugs,
-        recipeCount: recipeVersions.length,
-        standardCount: standardVersions.length,
-        skillCount: skillVersions.length,
-        source,
-      }),
+    this.logger.info(
+      command.preview ? 'Previewed install' : 'Successfully installed packages',
+      {
+        organizationId: command.organizationId,
+        totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
+        missingAccessCount: inaccessibleSlugs.length,
+      },
     );
+
+    // A preview only shows what an install would change, so it is not a pull.
+    if (!command.preview) {
+      this.eventEmitterService.emit(
+        new ArtifactsPulledEvent({
+          userId: createUserId(command.userId),
+          organizationId: createOrganizationId(command.organizationId),
+          packageSlugs: accessibleSlugs,
+          recipeCount: recipeVersions.length,
+          standardCount: standardVersions.length,
+          skillCount: skillVersions.length,
+          source,
+        }),
+      );
+    }
 
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
@@ -337,6 +345,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       missingAccess: inaccessibleSlugs,
       skillFolders: Array.from(new Set(skillFolders)),
       resolvedPackageVersions,
+      resolvedPackageIds,
       sourceArtifacts,
     };
   }
