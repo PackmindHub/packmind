@@ -4,6 +4,7 @@ import {
   CheckProviderBranchExistsResponse,
   SearchProviderBranchesResponse,
   GitProviderId,
+  GitProviderVendor,
   GitProviderWithoutToken,
   GitRepo,
   GitRepoId,
@@ -131,7 +132,13 @@ export interface IGitProviderGateway {
    */
   setTrackedRepository(
     organizationId: OrganizationId,
-    data: { owner: string; repo: string; branch: string },
+    data: {
+      owner: string;
+      repo: string;
+      branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
+    },
   ): Promise<GitRepo>;
   /**
    * Same use case as `packmind git track --update`: the previously tracked

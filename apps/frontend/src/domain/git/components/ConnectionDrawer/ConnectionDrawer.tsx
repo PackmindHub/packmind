@@ -192,10 +192,14 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
             data: { owner: op.owner, name: op.repo, branch: op.branch },
           });
         case 'set-tracked':
+          // Without them the API cannot tell which provider hosts the
+          // repository, and refuses to track it.
           return setTrackedMutation.mutateAsync({
             owner: op.owner,
             repo: op.repo,
             branch: op.branch,
+            providerVendor: connection.source,
+            gitRemoteUrl: connection.url ?? undefined,
           });
         case 'update-tracked':
           return updateTrackedMutation.mutateAsync({

@@ -6,6 +6,7 @@ import {
   CheckProviderBranchExistsResponse,
   SearchProviderBranchesResponse,
   GitProviderId,
+  GitProviderVendor,
   GitProviderWithoutToken,
   GitRepo,
   GitRepoId,
@@ -291,7 +292,13 @@ export class GitProviderGatewayApi
 
   async setTrackedRepository(
     organizationId: OrganizationId,
-    data: { owner: string; repo: string; branch: string },
+    data: {
+      owner: string;
+      repo: string;
+      branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
+    },
   ): Promise<GitRepo> {
     return this._api.post<GitRepo>(
       `${this._endpoint}/${organizationId}/git/repositories/tracked-repository`,

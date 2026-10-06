@@ -312,13 +312,22 @@ describe('GitProviderGatewayApi', () => {
         owner: 'o',
         repo: 'r',
         branch: 'main',
+        providerVendor: 'gitlab',
+        gitRemoteUrl: 'https://gitlab.example.com',
       });
     });
 
-    it('posts the repository with a track origin', () => {
+    it('posts the repository and its provider with a track origin', () => {
       expect(mockedApi.post).toHaveBeenCalledWith(
         `/organizations/${organizationId}/git/repositories/tracked-repository`,
-        { owner: 'o', repo: 'r', branch: 'main', origin: 'track' },
+        {
+          owner: 'o',
+          repo: 'r',
+          branch: 'main',
+          providerVendor: 'gitlab',
+          gitRemoteUrl: 'https://gitlab.example.com',
+          origin: 'track',
+        },
       );
     });
   });

@@ -7,7 +7,12 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
-import { GitProviderId, GitRepoId, OrganizationId } from '@packmind/types';
+import {
+  GitProviderId,
+  GitProviderVendor,
+  GitRepoId,
+  OrganizationId,
+} from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
 import { CheckDirectoryExistenceResult } from '@packmind/types';
 import {
@@ -307,6 +312,8 @@ export const useSetTrackedRepositoryMutation = () => {
       owner: string;
       repo: string;
       branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
     }) => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to track a repository');
