@@ -280,7 +280,10 @@ export const searchProviderBranchesOptions = (
     // Keeps the previous suggestions on screen while the next search loads, so
     // the list does not flash empty on every keystroke.
     placeholderData: keepPreviousData,
-    staleTime: 30 * 1000,
+    // Not cached past the open input: reopening it would replay a list that
+    // still holds branches deleted on the provider since.
+    staleTime: 0,
+    gcTime: 0,
   });
 
 export const useSearchProviderBranchesQuery = (
