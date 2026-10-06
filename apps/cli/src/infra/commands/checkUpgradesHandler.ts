@@ -20,6 +20,7 @@ import {
 } from '../utils/consoleLogger';
 import { EXEC_NAME } from '../utils/execName';
 import { resolveInstallTargetDirectories } from './installTargetDirectories';
+import { ParsedPackageSlug } from '../../domain/entities/PackageSlug';
 
 export type CheckUpgradesHandlerArgs = {
   /** The directory the install runs from, already resolved and validated. */
@@ -133,6 +134,24 @@ function describeError(error: unknown): string {
     return 'packmind.json could not be parsed. Please fix the JSON syntax errors and try again.';
   }
   return error instanceof Error ? error.message : String(error);
+}
+
+/** The reason `--check-upgrades` cannot run with these other install arguments, if any. */
+export function findCheckUpgradesConflict({
+  packages,
+  status,
+  upgrade,
+}: {
+  packages: ParsedPackageSlug[];
+  status: boolean;
+  upgrade?: boolean;
+}): string | null {
+  if (upgrade) return '--check-upgrades cannot be combined with --upgrade.';
+  if (status) return '--check-upgrades cannot be combined with --status.';
+  if (packages.length > 0) {
+    return '--check-upgrades checks the packages of packmind.json and takes no package names.';
+  }
+  return null;
 }
 
 /**

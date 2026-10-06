@@ -4,7 +4,10 @@ import * as path from 'path';
 import type { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ICheckUpgradesResult } from '../../domain/useCases/ICheckUpgradesUseCase';
 import { PackmindConfigInvalidError } from '../../domain/errors/PackmindConfigInvalidError';
-import { checkUpgradesHandler } from './checkUpgradesHandler';
+import {
+  checkUpgradesHandler,
+  findCheckUpgradesConflict,
+} from './checkUpgradesHandler';
 import { EXEC_NAME } from '../utils/execName';
 
 jest.mock('../utils/errorLog', () => ({
@@ -416,6 +419,49 @@ describe('checkUpgradesHandler', () => {
 
     it('exits with code 1', () => {
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+});
+
+describe('findCheckUpgradesConflict', () => {
+  describe('when combined with --upgrade', () => {
+    it('explains the conflict', () => {
+      expect(
+        findCheckUpgradesConflict({
+          packages: [],
+          status: false,
+          upgrade: true,
+        }),
+      ).toBe('--check-upgrades cannot be combined with --upgrade.');
+    });
+  });
+
+  describe('when combined with --status', () => {
+    it('explains the conflict', () => {
+      expect(findCheckUpgradesConflict({ packages: [], status: true })).toBe(
+        '--check-upgrades cannot be combined with --status.',
+      );
+    });
+  });
+
+  describe('when package names are given', () => {
+    it('explains that it takes none', () => {
+      expect(
+        findCheckUpgradesConflict({
+          packages: [{ spaceSlug: 'space', packageSlug: 'pkg' }],
+          status: false,
+        }),
+      ).toBe(
+        '--check-upgrades checks the packages of packmind.json and takes no package names.',
+      );
+    });
+  });
+
+  describe('when used alone', () => {
+    it('finds no conflict', () => {
+      expect(
+        findCheckUpgradesConflict({ packages: [], status: false }),
+      ).toBeNull();
     });
   });
 });

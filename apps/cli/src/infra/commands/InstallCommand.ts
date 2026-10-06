@@ -36,7 +36,10 @@ import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
 import { ParsedPackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
 import { resolveInstallTargetDirectories } from './installTargetDirectories';
-import { checkUpgradesHandler } from './checkUpgradesHandler';
+import {
+  checkUpgradesHandler,
+  findCheckUpgradesConflict,
+} from './checkUpgradesHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -413,23 +416,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
   }
-}
-
-function findCheckUpgradesConflict({
-  packages,
-  status,
-  upgrade,
-}: {
-  packages: ParsedPackageSlug[];
-  status: boolean;
-  upgrade?: boolean;
-}): string | null {
-  if (upgrade) return '--check-upgrades cannot be combined with --upgrade.';
-  if (status) return '--check-upgrades cannot be combined with --status.';
-  if (packages.length > 0) {
-    return '--check-upgrades checks the packages of packmind.json and takes no package names.';
-  }
-  return null;
 }
 
 export async function installHandler({

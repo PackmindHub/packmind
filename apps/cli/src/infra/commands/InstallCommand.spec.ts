@@ -61,6 +61,7 @@ jest.mock('../repositories/ConfigFileRepository', () => ({
 }));
 
 jest.mock('./checkUpgradesHandler', () => ({
+  ...jest.requireActual('./checkUpgradesHandler'),
   checkUpgradesHandler: jest.fn().mockResolvedValue(undefined),
 }));
 
