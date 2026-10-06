@@ -52,6 +52,7 @@ export function CreatePackageReleaseDrawer({
   componentsCount,
   open,
   onOpenChange,
+  onReleased,
 }: Readonly<{
   packageId: PackageId;
   spaceId: SpaceId;
@@ -60,6 +61,20 @@ export function CreatePackageReleaseDrawer({
   componentsCount: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * The cut landed, for a caller that has something to do next with it.
+   *
+   * Called after the drawer has closed and after the mutation's own
+   * invalidations have settled, so a caller reading the drift straight away
+   * reads it with this release in it. That ordering is the whole reason this is
+   * a callback rather than the caller watching `open` go false: a release that
+   * is distributed before the drift has caught up is distributed against the
+   * version it replaced.
+   *
+   * Never called when the server refuses, which is what separates "a release
+   * exists now" from "the reader is finished with this form".
+   */
+  onReleased?: (version: string) => void;
 }>) {
   /**
    * The patch increment, except on a first release where it is the minor.
@@ -203,6 +218,7 @@ export function CreatePackageReleaseDrawer({
         title: `Released ${version}`,
       });
       onOpenChange(false);
+      onReleased?.(version);
     } catch (error) {
       const serverRefusal = readPackageReleaseRefusal(error);
 
