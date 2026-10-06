@@ -138,6 +138,7 @@ describe('DistributionRepository', () => {
     mockTypeOrmRepository = {
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       save: jest.fn(),
+      update: jest.fn(),
     } as unknown as jest.Mocked<Repository<Distribution>>;
 
     repository = new DistributionRepository(mockTypeOrmRepository, logger);
@@ -145,6 +146,77 @@ describe('DistributionRepository', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('updateStatus', () => {
+    const distributionId = createDistributionId('dist-1');
+
+    describe('when the distribution exists', () => {
+      beforeEach(async () => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 1,
+          raw: [],
+          generatedMaps: [],
+        });
+
+        await repository.updateStatus(
+          distributionId,
+          DistributionStatus.success,
+          { id: 'commit-1', sha: 'abc' } as never,
+        );
+      });
+
+      it('updates the status and git commit columns only', () => {
+        expect(mockTypeOrmRepository.update).toHaveBeenCalledWith(
+          { id: distributionId },
+          { status: DistributionStatus.success, gitCommit: { id: 'commit-1' } },
+        );
+      });
+
+      it('does not hydrate the distribution graph', () => {
+        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when an error is given', () => {
+      beforeEach(async () => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 1,
+          raw: [],
+          generatedMaps: [],
+        });
+
+        await repository.updateStatus(
+          distributionId,
+          DistributionStatus.failure,
+          undefined,
+          'push rejected',
+        );
+      });
+
+      it('records it alongside the status', () => {
+        expect(mockTypeOrmRepository.update).toHaveBeenCalledWith(
+          { id: distributionId },
+          { status: DistributionStatus.failure, error: 'push rejected' },
+        );
+      });
+    });
+
+    describe('when the distribution does not exist', () => {
+      beforeEach(() => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 0,
+          raw: [],
+          generatedMaps: [],
+        });
+      });
+
+      it('throws', async () => {
+        await expect(
+          repository.updateStatus(distributionId, DistributionStatus.success),
+        ).rejects.toThrow('Distribution not found: dist-1');
+      });
+    });
   });
 
   describe('listByOrganizationIdWithStatus', () => {

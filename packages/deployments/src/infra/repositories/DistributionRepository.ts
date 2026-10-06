@@ -1217,7 +1217,7 @@ export class DistributionRepository implements IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
-  ): Promise<Distribution> {
+  ): Promise<void> {
     this.logger.info('Updating distribution status', {
       distributionId: id,
       status,
@@ -1226,33 +1226,26 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distribution = await this.findById(id);
+      const result = await this.repository.update(
+        { id },
+        {
+          status,
+          ...(gitCommit && { gitCommit: { id: gitCommit.id } }),
+          ...(error && { error }),
+        },
+      );
 
-      if (!distribution) {
+      if (!result.affected) {
         this.logger.error('Distribution not found for status update', {
           distributionId: id,
         });
         throw new Error(`Distribution not found: ${id}`);
       }
 
-      distribution.status = status;
-
-      if (gitCommit) {
-        distribution.gitCommit = gitCommit;
-      }
-
-      if (error) {
-        distribution.error = error;
-      }
-
-      const updatedDistribution = await this.repository.save(distribution);
-
       this.logger.info('Distribution status updated successfully', {
         distributionId: id,
         status,
       });
-
-      return updatedDistribution;
     } catch (error) {
       this.logger.error('Failed to update distribution status', {
         distributionId: id,

@@ -125,7 +125,7 @@ export interface IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
-  ): Promise<Distribution>;
+  ): Promise<void>;
 
   /**
    * Count distinct artifact IDs that are currently deployed (appear in the
