@@ -72,6 +72,10 @@ async function stubProviderCalls(
     (route) => route.fulfill({ json: { exists: true } }),
   );
 
+  await page.route('**/organizations/*/git/providers/*/branches*', (route) =>
+    route.fulfill({ json: { branches: ['dev', 'develop'] } }),
+  );
+
   await page.route(
     '**/organizations/*/git/providers/*/branch-exists*',
     (route) => route.fulfill({ json: { exists: branchExists } }),
@@ -149,6 +153,28 @@ testWithApi.describe('changing a repository branch from the drawer', () => {
     testWithApi('leaves nothing to apply', async () => {
       // eslint-disable-next-line playwright/no-standalone-expect
       expect(await gitSettingsPage.canApplyRepoChanges()).toBe(false);
+    });
+  });
+
+  testWithApi.describe('when picking a suggested branch', () => {
+    testWithApi.beforeEach(async ({ page, dashboardPage }) => {
+      await stubProviderCalls(page, true);
+      const gitSettingsPage = await openRepositoryEditor(dashboardPage);
+      await gitSettingsPage.changeBranchFromSuggestions(
+        fullName,
+        'dev',
+        'develop',
+      );
+      await gitSettingsPage.applyRepoChanges();
+    });
+
+    testWithApi('shows the picked branch only', async ({ dashboardPage }) => {
+      const gitSettingsPage = await openRepositoryEditor(dashboardPage);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await gitSettingsPage.listBranchesOf(fullName)).toEqual([
+        'develop',
+      ]);
     });
   });
 

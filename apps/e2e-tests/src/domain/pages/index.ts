@@ -177,6 +177,15 @@ export interface IGitSettingsPage extends IPackmindAppPage {
    * then waits for the check to settle: the input closes, or an error shows.
    */
   changeBranch(fullName: string, branch: string): Promise<void>;
+  /**
+   * Types `typed` into `owner/repo`'s change-branch input, picks `suggestion`
+   * from the branches suggested, and commits it with the Change button.
+   */
+  changeBranchFromSuggestions(
+    fullName: string,
+    typed: string,
+    suggestion: string,
+  ): Promise<void>;
   /** The error under the change-branch input, or null when there is none. */
   branchError(): Promise<string | null>;
   canApplyRepoChanges(): Promise<boolean>;

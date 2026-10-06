@@ -195,6 +195,25 @@ export class GitSettings
     ]);
   }
 
+  async changeBranchFromSuggestions(
+    fullName: string,
+    typed: string,
+    suggestion: string,
+  ): Promise<void> {
+    const group = this.repoGroup(fullName);
+    await group.locator('[data-testid="manage-repos-change-branch"]').click();
+    const input = group.locator('[data-testid="manage-repos-branch-input"]');
+    // Key by key, as a user types: suggestions follow each keystroke.
+    await input.pressSequentially(typed);
+    await this.page
+      .locator('[data-testid="manage-repos-branch-option"]', {
+        hasText: new RegExp(`^${suggestion}$`),
+      })
+      .click();
+    await group.locator('[data-testid="manage-repos-branch-confirm"]').click();
+    await input.waitFor({ state: 'detached' });
+  }
+
   async branchError(): Promise<string | null> {
     const error = this.page.locator(
       '[data-testid="manage-repos-branch-error"]',
