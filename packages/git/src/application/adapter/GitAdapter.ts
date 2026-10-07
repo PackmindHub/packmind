@@ -529,6 +529,16 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       .compareBranches(repo, base, head);
   }
 
+  public async listFilesNamedInRepo(
+    repo: GitRepo,
+    fileName: string,
+    branch?: string,
+  ): Promise<string[]> {
+    return this.gitServices
+      .getGitProviderService()
+      .listFilesNamed(repo, fileName, branch ?? repo.branch);
+  }
+
   public async checkMarketplaceRepoExists(repo: GitRepo): Promise<{
     exists: boolean;
     reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';

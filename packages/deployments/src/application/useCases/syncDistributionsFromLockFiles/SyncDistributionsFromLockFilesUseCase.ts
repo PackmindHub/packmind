@@ -17,7 +17,9 @@ import {
 } from '@packmind/types';
 import { GitRepositoryNotFoundError } from '../../../domain/errors/GitRepositoryNotFoundError';
 import { LockFileDistributionRecorder } from '../../services/LockFileDistributionRecorder';
+import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { TargetService } from '../../services/TargetService';
+import { normalizeRelativePath } from '../../services/gitInfoHelpers';
 
 const origin = 'SyncDistributionsFromLockFilesUseCase';
 
@@ -32,6 +34,7 @@ export class SyncDistributionsFromLockFilesUseCase
     accountsPort: IAccountsPort,
     private readonly gitPort: IGitPort,
     private readonly targetService: TargetService,
+    private readonly targetResolutionService: TargetResolutionService,
     private readonly lockFileDistributionRecorder: LockFileDistributionRecorder,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -61,11 +64,21 @@ export class SyncDistributionsFromLockFilesUseCase
       throw new NoTrackedRepositoryError(requested.owner, requested.repo);
     }
 
+    const lockFilePaths = await this.gitPort.listFilesNamedInRepo(
+      gitRepo,
+      PACKMIND_LOCK_FILE_NAME,
+    );
     const targets = await this.targetService.getTargetsByGitRepoId(gitRepo.id);
 
     const results: LockFileTargetSyncResult[] = [];
-    for (const target of targets) {
-      const result = await this.syncTarget(gitRepo, target, command);
+    for (const lockFilePath of lockFilePaths) {
+      const targetPath = targetPathOfLockFile(lockFilePath);
+      const result = await this.syncTarget(
+        gitRepo,
+        targetPath,
+        targets.find((target) => target.path === targetPath),
+        command,
+      );
       if (result) {
         results.push(result);
       }
@@ -73,7 +86,7 @@ export class SyncDistributionsFromLockFilesUseCase
 
     this.logger.info('Synced distribution state from lock files', {
       gitRepoId: gitRepo.id,
-      targetCount: targets.length,
+      lockFileCount: lockFilePaths.length,
       updatedCount: results.filter((r) => r.status === 'updated').length,
     });
 
@@ -82,12 +95,13 @@ export class SyncDistributionsFromLockFilesUseCase
 
   private async syncTarget(
     gitRepo: GitRepo,
-    target: Target,
+    targetPath: string,
+    existingTarget: Target | undefined,
     command: SyncDistributionsFromLockFilesCommand & MemberContext,
   ): Promise<LockFileTargetSyncResult | null> {
     const lockFile = await this.readJsonFile(
       gitRepo,
-      target,
+      targetPath,
       PACKMIND_LOCK_FILE_NAME,
       isPackmindLockFile,
     );
@@ -96,17 +110,26 @@ export class SyncDistributionsFromLockFilesUseCase
     }
 
     if (!hasRecordedPackageVersions(lockFile)) {
-      return {
-        targetId: target.id,
-        path: target.path,
-        status: 'ignored',
-        warnings: [{ type: 'lock_from_older_cli' }],
-      };
+      return existingTarget
+        ? {
+            targetId: existingTarget.id,
+            path: existingTarget.path,
+            status: 'ignored',
+            warnings: [{ type: 'lock_from_older_cli' }],
+          }
+        : null;
     }
+
+    const target =
+      existingTarget ??
+      (await this.targetResolutionService.findOrCreateTarget({
+        gitRepoId: gitRepo.id,
+        relativePath: targetPath,
+      }));
 
     const packmindJson = await this.readJsonFile(
       gitRepo,
-      target,
+      targetPath,
       'packmind.json',
       isPackmindFileConfig,
     );
@@ -128,13 +151,13 @@ export class SyncDistributionsFromLockFilesUseCase
 
   private async readJsonFile<T>(
     gitRepo: GitRepo,
-    target: Target,
+    targetPath: string,
     fileName: string,
     isExpectedShape: (value: unknown) => value is T,
   ): Promise<T | null> {
     const file = await this.gitPort.getFileFromRepo(
       gitRepo,
-      `${target.path.slice(1)}${fileName}`,
+      `${targetPath.slice(1)}${fileName}`,
     );
     if (!file) {
       return null;
@@ -147,6 +170,12 @@ export class SyncDistributionsFromLockFilesUseCase
       return null;
     }
   }
+}
+
+function targetPathOfLockFile(lockFilePath: string): string {
+  return normalizeRelativePath(
+    lockFilePath.slice(0, -PACKMIND_LOCK_FILE_NAME.length),
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

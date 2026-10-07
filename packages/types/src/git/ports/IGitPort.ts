@@ -61,6 +61,12 @@ export interface IGitPort {
     deleteFiles?: DeleteItem[],
   ): Promise<GitCommit>;
 
+  listFilesNamedInRepo(
+    gitRepo: GitRepo,
+    fileName: string,
+    branch?: string,
+  ): Promise<string[]>;
+
   /** `branch` defaults to the GitRepo's own `branch` when omitted. */
   getFileFromRepo(
     gitRepo: GitRepo,

@@ -351,6 +351,28 @@ export class GitProviderService {
     return gitRepoInstance.compareBranches(base, head);
   }
 
+  async listFilesNamed(
+    gitRepo: GitRepo,
+    fileName: string,
+    branch: string,
+  ): Promise<string[]> {
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitRepo.providerId);
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
+    }
+
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
+
+    return gitRepoInstance.listFilesNamed(fileName, branch);
+  }
+
   async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{
     exists: boolean;
     reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';

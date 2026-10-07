@@ -647,6 +647,7 @@ export class DeploymentsAdapter
         this.accountsPort,
         this.gitPort,
         this.deploymentsServices.getTargetService(),
+        targetResolutionService,
         lockFileDistributionRecorder,
       );
 

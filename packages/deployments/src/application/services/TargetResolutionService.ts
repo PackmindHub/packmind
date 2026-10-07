@@ -199,7 +199,7 @@ export class TargetResolutionService {
     }
   }
 
-  private async findOrCreateTarget(params: {
+  async findOrCreateTarget(params: {
     gitRepoId: ReturnType<typeof createGitRepoId>;
     relativePath: string;
   }): Promise<Target> {

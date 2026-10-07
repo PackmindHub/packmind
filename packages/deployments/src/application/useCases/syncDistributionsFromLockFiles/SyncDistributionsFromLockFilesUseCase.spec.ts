@@ -20,6 +20,7 @@ import {
 import { gitRepoFactory } from '@packmind/git/test';
 import { v4 as uuidv4 } from 'uuid';
 import { TargetService } from '../../services/TargetService';
+import { TargetResolutionService } from '../../services/TargetResolutionService';
 import { LockFileDistributionRecorder } from '../../services/LockFileDistributionRecorder';
 import { GitRepositoryNotFoundError } from '../../../domain/errors/GitRepositoryNotFoundError';
 
@@ -28,6 +29,7 @@ describe('SyncDistributionsFromLockFilesUseCase', () => {
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockTargetService: jest.Mocked<TargetService>;
+  let mockTargetResolutionService: jest.Mocked<TargetResolutionService>;
   let mockRecorder: jest.Mocked<LockFileDistributionRecorder>;
   let repoFiles: Record<string, unknown>;
 
@@ -97,12 +99,27 @@ describe('SyncDistributionsFromLockFilesUseCase', () => {
           }
         : null,
     );
+    mockGitPort.listFilesNamedInRepo.mockImplementation(async (_repo, name) =>
+      Object.keys(repoFiles).filter(
+        (path) => path === name || path.endsWith(`/${name}`),
+      ),
+    );
 
     mockTargetService = createMockInstance(TargetService);
     mockTargetService.getTargetsByGitRepoId.mockResolvedValue([
       rootTarget,
       frontendTarget,
     ]);
+
+    mockTargetResolutionService = createMockInstance(TargetResolutionService);
+    mockTargetResolutionService.findOrCreateTarget.mockImplementation(
+      async ({ gitRepoId, relativePath }) => ({
+        id: createTargetId(uuidv4()),
+        name: 'tools',
+        path: relativePath,
+        gitRepoId,
+      }),
+    );
 
     mockRecorder = createMockInstance(LockFileDistributionRecorder);
     mockRecorder.record.mockResolvedValue({
@@ -115,6 +132,7 @@ describe('SyncDistributionsFromLockFilesUseCase', () => {
       mockAccountsPort,
       mockGitPort,
       mockTargetService,
+      mockTargetResolutionService,
       mockRecorder,
       stubLogger(),
     );
@@ -245,6 +263,64 @@ describe('SyncDistributionsFromLockFilesUseCase', () => {
 
     it('reports only the targets that have one', () => {
       expect(response.targets.map((target) => target.path)).toEqual(['/']);
+    });
+  });
+
+  describe('when a lock sits in a folder with no target', () => {
+    let response: SyncDistributionsFromLockFilesResponse;
+
+    beforeEach(async () => {
+      repoFiles = {
+        'tools/packmind-lock.json': lockWithPackages({ '@space/ops': '1.3.0' }),
+      };
+
+      response = await useCase.execute(command);
+    });
+
+    it('creates the target for that folder', () => {
+      expect(
+        mockTargetResolutionService.findOrCreateTarget,
+      ).toHaveBeenCalledWith({
+        gitRepoId: gitRepo.id,
+        relativePath: '/tools/',
+      });
+    });
+
+    it('records the lock on the new target', () => {
+      expect(recordedTargets()).toEqual(['/tools/']);
+    });
+
+    it('reports the new target', () => {
+      expect(response.targets.map((target) => target.path)).toEqual([
+        '/tools/',
+      ]);
+    });
+  });
+
+  describe('when a lock from an older CLI sits in a folder with no target', () => {
+    let response: SyncDistributionsFromLockFilesResponse;
+
+    beforeEach(async () => {
+      repoFiles = {
+        'tools/packmind-lock.json': {
+          lockfileVersion: 2,
+          packageSlugs: ['@space/ops'],
+          agents: ['claude'],
+          artifacts: {},
+        },
+      };
+
+      response = await useCase.execute(command);
+    });
+
+    it('creates no target', () => {
+      expect(
+        mockTargetResolutionService.findOrCreateTarget,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('reports nothing', () => {
+      expect(response.targets).toEqual([]);
     });
   });
 
