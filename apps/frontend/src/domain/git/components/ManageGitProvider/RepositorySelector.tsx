@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { LuGitBranch } from 'react-icons/lu';
 import {
+  PMAutocomplete,
   PMBox,
   PMVStack,
   PMHStack,
@@ -17,6 +19,7 @@ import {
 import {
   useGetAvailableRepositoriesQuery,
   useAddRepositoryMutation,
+  useSearchProviderBranchesQuery,
 } from '../../api/queries';
 import {
   GitProviderUI,
@@ -25,6 +28,9 @@ import {
 } from '../../types/GitProviderTypes';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { GIT_MESSAGES } from '../../constants/messages';
+import { useDebouncedValue } from '../../../../shared/hooks';
+
+const BRANCH_SEARCH_DEBOUNCE_MS = 250;
 
 interface RepositorySelectorProps {
   provider: GitProviderUI;
@@ -238,17 +244,20 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                 </PMHStack>
 
                 {branchOption === 'custom' && (
-                  <PMBox>
-                    <PMInput
-                      placeholder="Enter branch name (e.g., main, feature/branch-name)"
+                  <PMBox width="sm">
+                    <CustomBranchAutocomplete
+                      provider={provider}
+                      repository={selectedRepo}
                       value={customBranch}
-                      onChange={(e: {
-                        target: { value: React.SetStateAction<string> };
-                      }) => setCustomBranch(e.target.value)}
-                      disabled={addRepositoryMutation.isPending}
-                      size={'xs'}
-                      width="sm"
-                      maxLength={100}
+                      busy={addRepositoryMutation.isPending}
+                      onChange={setCustomBranch}
+                      onConfirm={() => {
+                        if (customBranch.trim()) void handleAddRepository();
+                      }}
+                      onCancel={() => {
+                        setBranchOption('default');
+                        setCustomBranch('');
+                      }}
                     />
                   </PMBox>
                 )}
@@ -287,5 +296,46 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
         </PMGridItem>
       )}
     </PMGrid>
+  );
+};
+
+/** Mounted only while a custom branch is chosen, so it searches only then. */
+const CustomBranchAutocomplete: React.FC<{
+  provider: GitProviderUI;
+  repository: AvailableRepository;
+  value: string;
+  busy: boolean;
+  onChange: (value: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({ provider, repository, value, busy, onChange, onConfirm, onCancel }) => {
+  const search = useDebouncedValue(value.trim(), BRANCH_SEARCH_DEBOUNCE_MS);
+  const branches = useSearchProviderBranchesQuery({
+    providerId: provider.id,
+    owner: repository.owner,
+    repo: repository.name,
+    search,
+  });
+
+  return (
+    <PMAutocomplete
+      items={branches.data?.branches ?? []}
+      onInputChange={onChange}
+      onPick={onChange}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      placeholder={repository.defaultBranch}
+      icon={<LuGitBranch />}
+      loading={branches.isLoading}
+      errorText={
+        branches.isError
+          ? "Couldn't load branches — you can still type a name"
+          : undefined
+      }
+      emptyText={search ? `No branch matches “${search}”` : 'No branch'}
+      footer="↑↓ navigate · ↵ select · esc cancel"
+      busy={busy}
+      testIdPrefix="repository-selector-branch"
+    />
   );
 };
