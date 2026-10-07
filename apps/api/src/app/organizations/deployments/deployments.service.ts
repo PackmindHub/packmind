@@ -34,6 +34,8 @@ import {
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   NotifyArtefactsDistributionCommand,
+  SyncDistributionsFromLockFilesCommand,
+  SyncDistributionsFromLockFilesResponse,
   NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
@@ -176,6 +178,12 @@ export class DeploymentsService {
     command: NotifyArtefactsDistributionCommand,
   ): Promise<NotifyArtefactsDistributionResponse> {
     return this.deploymentAdapter.notifyArtefactsDistribution(command);
+  }
+
+  async syncDistributionsFromLockFiles(
+    command: SyncDistributionsFromLockFilesCommand,
+  ): Promise<SyncDistributionsFromLockFilesResponse> {
+    return this.deploymentAdapter.syncDistributionsFromLockFiles(command);
   }
 
   async removePackageFromTargets(

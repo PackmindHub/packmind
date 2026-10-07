@@ -13,6 +13,7 @@ export enum DeploymentQueryKeys {
   GET_PACKAGE_BY_ID = 'get-package-by-id',
   UPDATE_PACKAGE = 'update-package',
   REMOVE_PACKAGE_FROM_TARGETS = 'remove-package-from-targets',
+  SYNC_REPOSITORY_FROM_LOCK_FILES = 'sync-repository-from-lock-files',
   GET_TARGETS_BY_GIT_REPO = 'get-targets-by-git-repo',
   GET_TARGETS_BY_REPOSITORY = 'get-targets-by-repository',
   GET_TARGETS_BY_ORGANIZATION = 'get-targets-by-organization',
@@ -106,6 +107,12 @@ export const REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.REMOVE_PACKAGE_FROM_TARGETS,
+] as const;
+
+export const SYNC_REPOSITORY_FROM_LOCK_FILES_MUTATION_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.SYNC_REPOSITORY_FROM_LOCK_FILES,
 ] as const;
 
 export const GET_DASHBOARD_KPI_KEY = [

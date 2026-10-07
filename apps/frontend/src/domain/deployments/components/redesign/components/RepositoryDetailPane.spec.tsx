@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -16,6 +16,25 @@ import {
 
 import { RepositoryDetailPane } from './RepositoryDetailPane';
 import type { PackageDrift, RepoInstall, RepositoryDrift } from '../types';
+
+const mockSyncMutate = vi.fn();
+let mockAuthProbe: {
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  data?: { ok: true } | { ok: false; reason: 'unauthorized' };
+};
+
+vi.mock('../../../../git/api/queries/GitProviderQueries', () => ({
+  useCheckProviderAuthQuery: () => mockAuthProbe,
+}));
+
+vi.mock('../../../api/queries/DeploymentsQueries', () => ({
+  useSyncRepositoryFromLockFilesMutation: () => ({
+    mutate: mockSyncMutate,
+    isPending: false,
+  }),
+}));
 
 const providerId = createGitProviderId('provider-1');
 const repoId = createGitRepoId('repo-1');
@@ -174,6 +193,106 @@ function rowCheckbox() {
 const segment = (name: RegExp) => screen.getByRole('tab', { name });
 
 describe('RepositoryDetailPane', () => {
+  beforeEach(() => {
+    mockAuthProbe = {
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      data: { ok: true },
+    };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('syncing from the repository', () => {
+    const syncButton = () =>
+      screen.getByRole('button', { name: /Sync from repository/ });
+    const findWarningsBanner = async () =>
+      (await screen.findByText("Some lock files weren't fully recorded"))
+        .parentElement as HTMLElement;
+
+    describe('when the Git connection works', () => {
+      it('reads the lock files of this repository', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(mockSyncMutate).toHaveBeenCalledWith(
+          { gitRepoId: repoId },
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('when the Git token was rejected', () => {
+      beforeEach(() => {
+        mockAuthProbe = {
+          ...mockAuthProbe,
+          data: { ok: false, reason: 'unauthorized' },
+        };
+      });
+
+      it('cannot be started', () => {
+        renderPane();
+
+        expect(syncButton()).toBeDisabled();
+      });
+    });
+
+    describe('when Packmind has no Git connection to the repository', () => {
+      it('cannot be started', () => {
+        renderPane(vi.fn(), repo, DISCONNECTED);
+
+        expect(syncButton()).toBeDisabled();
+      });
+    });
+
+    describe('when a lock lists a package unknown to the organization', () => {
+      beforeEach(() => {
+        mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+          onSuccess({
+            targets: [
+              {
+                targetId,
+                path: '/',
+                status: 'updated',
+                warnings: [
+                  { type: 'unknown_package', packageSlug: 'legacy' },
+                  { type: 'unknown_package', packageSlug: 'archived' },
+                ],
+              },
+            ],
+          }),
+        );
+      });
+
+      it('names the target the way the pane does', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getByText('Repository root'),
+        ).toBeInTheDocument();
+      });
+
+      it('lists every unknown package of that target in one message', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getByText(
+            "Not packages of this organization, so they weren't recorded:",
+            { exact: false },
+          ),
+        ).toHaveTextContent('legacy, archived');
+      });
+    });
+  });
+
   /*
    * The segment beside the rail's band, which had the same hole: `Drift`
    * counted the rows being distributed and headed them with a mark only the

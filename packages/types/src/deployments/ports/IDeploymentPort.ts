@@ -65,6 +65,8 @@ import {
   ListPackagesResponse,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
+  SyncDistributionsFromLockFilesCommand,
+  SyncDistributionsFromLockFilesResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PublishArtifactsCommand,
@@ -354,6 +356,10 @@ export interface IDeploymentPort {
   notifyArtefactsDistribution(
     command: NotifyArtefactsDistributionCommand,
   ): Promise<NotifyArtefactsDistributionResponse>;
+
+  syncDistributionsFromLockFiles(
+    command: SyncDistributionsFromLockFilesCommand,
+  ): Promise<SyncDistributionsFromLockFilesResponse>;
 
   /**
    * Artefacts exclusive to the package are deleted from each target; those

@@ -97,6 +97,8 @@ import {
   ListPackagesBySpaceResponse,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
+  SyncDistributionsFromLockFilesCommand,
+  SyncDistributionsFromLockFilesResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackagesDeployment,
@@ -152,6 +154,7 @@ import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBy
 import { ListPackagesUseCase } from '../useCases/listPackages/ListPackagesUseCase';
 import { LockFileDistributionRecorder } from '../services/LockFileDistributionRecorder';
 import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase';
+import { SyncDistributionsFromLockFilesUseCase } from '../useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/NotifyDistributionUseCase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
 import { ListPackagesBySpaceUseCase } from '../useCases/listPackagesBySpace/ListPackagesBySpaceUseCase';
@@ -222,6 +225,7 @@ export class DeploymentsAdapter
   private _moveArtefactsToPackageUseCase!: MoveArtefactsToPackageUseCase;
   private _removeArtefactsFromPackageUseCase!: RemoveArtefactsFromPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
+  private _syncDistributionsFromLockFilesUseCase!: SyncDistributionsFromLockFilesUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
@@ -638,6 +642,14 @@ export class DeploymentsAdapter
         lockFileDistributionRecorder,
       );
 
+    this._syncDistributionsFromLockFilesUseCase =
+      new SyncDistributionsFromLockFilesUseCase(
+        this.accountsPort,
+        this.gitPort,
+        this.deploymentsServices.getTargetService(),
+        lockFileDistributionRecorder,
+      );
+
     this._getLastDistributionDateByProvidersUseCase =
       new GetLastDistributionDateByProvidersUseCase(
         this.accountsPort,
@@ -942,6 +954,12 @@ export class DeploymentsAdapter
     command: NotifyArtefactsDistributionCommand,
   ): Promise<NotifyArtefactsDistributionResponse> {
     return this._notifyArtefactsDistributionUseCase.execute(command);
+  }
+
+  async syncDistributionsFromLockFiles(
+    command: SyncDistributionsFromLockFilesCommand,
+  ): Promise<SyncDistributionsFromLockFilesResponse> {
+    return this._syncDistributionsFromLockFilesUseCase.execute(command);
   }
 
   async removePackageFromTargets(

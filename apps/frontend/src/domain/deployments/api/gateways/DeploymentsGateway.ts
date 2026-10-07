@@ -25,6 +25,7 @@ import {
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
   IRemovePackageFromTargetsUseCase,
+  ISyncDistributionsFromLockFilesUseCase,
   IGetDashboardKpi,
   IGetDashboardNonLive,
   IListPackageReleasesUseCase,
@@ -332,6 +333,14 @@ export class DeploymentsGatewayApi
       return this._api.delete(
         `${this._endpoint}/${organizationId}/deployments/packages/${packageId}/distributions`,
         { data: { targetIds } },
+      );
+    };
+
+  syncDistributionsFromLockFiles: NewGateway<ISyncDistributionsFromLockFilesUseCase> =
+    async ({ organizationId, gitRepoId }) => {
+      return this._api.post(
+        `${this._endpoint}/${organizationId}/deployments/repositories/${gitRepoId}/sync`,
+        {},
       );
     };
 

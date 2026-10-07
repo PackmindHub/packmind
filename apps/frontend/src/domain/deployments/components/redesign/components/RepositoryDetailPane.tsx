@@ -59,6 +59,11 @@ import {
 import type { PackageDrift, RepositoryDrift, TargetDrift } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
 import {
+  LockFileSyncWarnings,
+  SyncFromRepositoryButton,
+  useRepositoryLockFileSync,
+} from './RepositoryLockFileSync';
+import {
   ADD_GIT_CONNECTION_LABEL,
   NO_GIT_CONNECTION_BODY,
   NO_GIT_CONNECTION_TITLE,
@@ -139,6 +144,7 @@ export function RepositoryDetailPane({
     providersWithToken,
     isProvidersLoading,
   );
+  const lockFileSync = useRepositoryLockFileSync(repo, providersWithToken);
   const hasDrift = repositoryHasDrift(repo);
   const hasFailure = repositoryHasFailedDistribution(repo);
   const driftedPackages = repositoryDriftedPackageCount(repo);
@@ -374,22 +380,30 @@ export function RepositoryDetailPane({
                 </PMButton>
               </PMHStack>
             ) : (
-              hasDrift && (
-                <PMTooltip label={headerLockTooltip} placement="top">
-                  <PMButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onSyncRepository(repo.id)}
-                    disabled={repoSyncDisabled}
-                    title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
-                  >
-                    <PMIcon fontSize="sm">
-                      <LuRotateCw />
-                    </PMIcon>
-                    Distribute repository
-                  </PMButton>
-                </PMTooltip>
-              )
+              <PMHStack gap={2} align="center" flexShrink={0}>
+                <SyncFromRepositoryButton
+                  branch={repo.branch}
+                  sync={lockFileSync.sync}
+                  isSyncing={lockFileSync.isSyncing}
+                  disabledReason={lockFileSync.disabledReason}
+                />
+                {hasDrift && (
+                  <PMTooltip label={headerLockTooltip} placement="top">
+                    <PMButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onSyncRepository(repo.id)}
+                      disabled={repoSyncDisabled}
+                      title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
+                    >
+                      <PMIcon fontSize="sm">
+                        <LuRotateCw />
+                      </PMIcon>
+                      Distribute repository
+                    </PMButton>
+                  </PMTooltip>
+                )}
+              </PMHStack>
             )}
           </PMHStack>
           <PMHStack gap={5} align="center" wrap="wrap">
@@ -432,6 +446,10 @@ export function RepositoryDetailPane({
             understand before it is a state to fix, and the fix belongs to an
             admin who may not be the person reading.
           */}
+          <LockFileSyncWarnings
+            report={lockFileSync.report}
+            targets={repo.targets.map((target) => target.target)}
+          />
           {lockProfile === 'all-no-app-token' && (
             <PMAlert.Root status="warning">
               <PMAlert.Indicator>
