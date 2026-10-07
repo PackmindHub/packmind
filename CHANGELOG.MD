@@ -31,6 +31,7 @@
 - A rule removal or edit that matches no rule the standard holds now reports a conflict the client can resolve, instead of being accepted and applied to nothing
 - A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
 - Git connection panel: a repository now shows one branch. `change branch` replaces it, refuses a branch that doesn't exist, and switching back brings that branch's history back (#902)
+- Applying a change that conflicts with the current content now says so instead of failing with a server error
 
 ## Removed
 
