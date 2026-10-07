@@ -3,25 +3,15 @@ import {
   PMAlert,
   PMBox,
   PMButton,
-  PMCombobox,
+  PMAutocomplete,
   PMHStack,
   PMIcon,
-  PMIconButton,
   PMInput,
   PMSkeleton,
-  PMSpinner,
   PMText,
   PMVStack,
-  pmCreateListCollection,
 } from '@packmind/ui';
-import {
-  LuCheck,
-  LuCircleAlert,
-  LuGitBranch,
-  LuSearch,
-  LuSearchX,
-  LuX,
-} from 'react-icons/lu';
+import { LuCheck, LuCircleAlert, LuGitBranch, LuSearch } from 'react-icons/lu';
 import { GitProviderId, GitRepoId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
@@ -757,10 +747,7 @@ const BranchNameCombobox: React.FC<{
   onPick,
   onCancel,
 }) => {
-  const [open, setOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState<string | null>(null);
-  const typed = value.trim();
-  const search = useDebouncedValue(typed, BRANCH_SEARCH_DEBOUNCE_MS);
+  const search = useDebouncedValue(value.trim(), BRANCH_SEARCH_DEBOUNCE_MS);
   // Mounted only while the branch input is open, so it searches only then.
   const branches = useSearchProviderBranchesQuery({
     providerId,
@@ -769,248 +756,36 @@ const BranchNameCombobox: React.FC<{
     search,
   });
 
-  const collection = useMemo(
+  const items = useMemo(
     () =>
-      pmCreateListCollection({
-        items: (branches.data?.branches ?? [])
-          .filter((branch) => branch !== currentBranch)
-          .map((branch) => ({ label: branch, value: branch })),
-      }),
+      (branches.data?.branches ?? []).filter(
+        (branch) => branch !== currentBranch,
+      ),
     [branches.data, currentBranch],
   );
-  const suggestionsShown = open && !branches.isError;
 
   return (
-    <PMBox flex="1" minWidth={0}>
-      <PMCombobox.Root
-        collection={collection}
-        size="xs"
-        allowCustomValue
-        openOnClick
-        // Focused by the combobox itself so it sees the focus and reacts to typing.
-        autoFocus
-        // Left uncontrolled: feeding the text back in drops fast keystrokes.
-        onInputValueChange={(e: { inputValue: string }) =>
-          onChange(e.inputValue)
-        }
-        onValueChange={(e: { value: string[] }) => {
-          const [picked] = e.value;
-          if (picked) onPick(picked);
-        }}
-        open={open}
-        lazyMount
-        unmountOnExit
-        onOpenChange={(e: { open: boolean }) => setOpen(e.open)}
-        onHighlightChange={(e: { highlightedValue: string | null }) =>
-          setHighlighted(e.highlightedValue)
-        }
-        disabled={checking}
-        invalid={invalid}
-        placeholder={placeholder}
-        // The drawer clips its body: fixed positioning lets the list overflow it.
-        positioning={{ strategy: 'fixed', gutter: 4 }}
-      >
-        <PMCombobox.Control
-          display="flex"
-          alignItems="center"
-          gap={2}
-          height={8}
-          paddingLeft={2.5}
-          paddingRight={1}
-          borderWidth="1px"
-          borderColor="border.tertiary"
-          borderRadius="md"
-          bg="background.primary"
-          transition="border-color 120ms ease-out, box-shadow 120ms ease-out"
-          _focusWithin={{
-            borderColor: 'branding.primary',
-            boxShadow: '0 0 0 1px {colors.branding.primary}',
-          }}
-          _invalid={{
-            borderColor: 'text.error',
-            _focusWithin: {
-              borderColor: 'text.error',
-              boxShadow: '0 0 0 1px {colors.text.error}',
-            },
-          }}
-        >
-          <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-            <LuGitBranch />
-          </PMIcon>
-          <PMCombobox.Input
-            aria-describedby={describedBy}
-            flex={1}
-            minWidth={0}
-            height="auto"
-            paddingX={0}
-            border="none"
-            bg="transparent"
-            fontSize="sm"
-            color="text.primary"
-            focusRing="none"
-            _placeholder={{ color: 'text.faded' }}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              // One key, two meanings: with the list open, Enter picks the
-              // highlighted suggestion (the combobox does it) and Escape only
-              // closes the list; otherwise they confirm or cancel the input.
-              if (e.key === 'Enter') {
-                if (open && highlighted !== null) return;
-                e.preventDefault();
-                onConfirm();
-              } else if (e.key === 'Escape') {
-                if (suggestionsShown) setOpen(false);
-                else onCancel();
-              }
-            }}
-            data-testid="manage-repos-branch-input"
-          />
-          {checking ? (
-            <PMSpinner
-              size="xs"
-              color="text.faded"
-              data-testid="manage-repos-branch-checking"
-            />
-          ) : (
-            typed && (
-              <KeyCap data-testid="manage-repos-branch-enter-hint">↵</KeyCap>
-            )
-          )}
-          <PMIconButton
-            variant="ghost"
-            size="2xs"
-            aria-label="Cancel"
-            color="text.faded"
-            _hover={{ color: 'text.primary', bg: 'background.tertiary' }}
-            onClick={onCancel}
-            disabled={checking}
-            data-testid="manage-repos-branch-cancel"
-          >
-            <LuX />
-          </PMIconButton>
-        </PMCombobox.Control>
-        {!branches.isError && (
-          <PMCombobox.Positioner>
-            <PMCombobox.Content
-              bg="background.tertiary"
-              borderWidth="1px"
-              borderColor="border.secondary"
-              borderRadius="md"
-              boxShadow="lg"
-              padding={1}
-            >
-              {branches.isLoading ? (
-                <PMText fontSize="xs" color="faded" paddingX={2} paddingY={1.5}>
-                  Searching…
-                </PMText>
-              ) : (
-                <PMCombobox.Empty paddingX={2} paddingY={1.5}>
-                  <PMHStack gap={2} align="center">
-                    <PMIcon fontSize="xs" color="text.faded">
-                      <LuSearchX />
-                    </PMIcon>
-                    <PMText fontSize="xs" color="faded">
-                      {search
-                        ? `No branch matches “${search}”`
-                        : 'No other branch'}
-                    </PMText>
-                  </PMHStack>
-                </PMCombobox.Empty>
-              )}
-              {collection.items.map((item) => (
-                <PMCombobox.Item
-                  item={item}
-                  key={item.value}
-                  gap={2}
-                  paddingX={2}
-                  paddingY={1.5}
-                  borderRadius="sm"
-                  cursor="pointer"
-                  _highlighted={{ bg: 'blue.subtle' }}
-                  data-testid="manage-repos-branch-option"
-                >
-                  <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-                    <LuGitBranch />
-                  </PMIcon>
-                  <PMCombobox.ItemText fontSize="sm" color="text.secondary">
-                    <BranchNameMatch branch={item.label} typed={typed} />
-                  </PMCombobox.ItemText>
-                </PMCombobox.Item>
-              ))}
-              <PMText
-                aria-hidden
-                marginTop={1}
-                paddingX={2}
-                paddingTop={1.5}
-                paddingBottom={0.5}
-                borderTop="1px solid"
-                borderColor="border.secondary"
-                fontSize="0.6875rem"
-                color="faded"
-                data-testid="manage-repos-branch-hints"
-              >
-                ↑↓ navigate · ↵ switch · esc cancel
-              </PMText>
-            </PMCombobox.Content>
-          </PMCombobox.Positioner>
-        )}
-      </PMCombobox.Root>
-      {branches.isError && (
-        <PMText
-          fontSize="xs"
-          color="faded"
-          marginTop={1}
-          data-testid="manage-repos-branch-search-error"
-        >
-          Couldn't load branches — you can still type a name
-        </PMText>
-      )}
-    </PMBox>
-  );
-};
-
-const KeyCap: React.FC<{
-  children: React.ReactNode;
-  'data-testid'?: string;
-}> = ({ children, 'data-testid': testId }) => (
-  <PMBox
-    as="kbd"
-    aria-hidden
-    flexShrink={0}
-    paddingX={1}
-    lineHeight="1.4"
-    borderWidth="1px"
-    borderColor="border.secondary"
-    borderRadius="sm"
-    fontFamily="inherit"
-    fontSize="0.6875rem"
-    color="text.faded"
-    data-testid={testId}
-  >
-    {children}
-  </PMBox>
-);
-
-const BranchNameMatch: React.FC<{ branch: string; typed: string }> = ({
-  branch,
-  typed,
-}) => {
-  const start = typed ? branch.toLowerCase().indexOf(typed.toLowerCase()) : -1;
-  if (start < 0) return <>{branch}</>;
-  const end = start + typed.length;
-  return (
-    <>
-      {branch.slice(0, start)}
-      <PMBox
-        as="mark"
-        bg="transparent"
-        color="branding.primary"
-        fontWeight="medium"
-        data-testid="manage-repos-branch-option-match"
-      >
-        {branch.slice(start, end)}
-      </PMBox>
-      {branch.slice(end)}
-    </>
+    <PMAutocomplete
+      items={items}
+      onInputChange={onChange}
+      onPick={onPick}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      placeholder={placeholder}
+      icon={<LuGitBranch />}
+      loading={branches.isLoading}
+      errorText={
+        branches.isError
+          ? "Couldn't load branches — you can still type a name"
+          : undefined
+      }
+      emptyText={search ? `No branch matches “${search}”` : 'No other branch'}
+      footer="↑↓ navigate · ↵ switch · esc cancel"
+      busy={checking}
+      invalid={invalid}
+      aria-describedby={describedBy}
+      testIdPrefix="manage-repos-branch"
+    />
   );
 };
 
