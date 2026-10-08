@@ -2,6 +2,8 @@
 
 ## Added
 
+- A package can be released under a version: an immutable snapshot of the exact standard, command and skill versions it holds, with its name and description
+- The bar above the package's tabs shows its current version or `Not released yet`, cuts the next release, and lists past ones to read what each pinned
 - A package's Distribution now sends the version the page is read at: the release named in the bar above the tabs, or the package as it stands
 - Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
 - Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
