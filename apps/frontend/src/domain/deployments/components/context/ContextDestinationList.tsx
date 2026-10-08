@@ -263,12 +263,11 @@ export function ContextDestinationList({
  * Here instead, where a pick of any size is already the subject, and where
  * there is room for two labels side by side.
  *
- * `Release & Update` appears when any picked destination is one a cut would
- * move, and it leads: it is the gesture that makes every row in the pick
- * current, where `Update` sends only what Packmind already holds and leaves
- * those rows where they are. When nothing in the pick needs a cut, offering it
- * would be offering a version number for its own sake, so the bar goes back to
- * the single counted button it has always had.
+ * `Release & Update` leads whenever the caller can cut one: it is the gesture
+ * that makes every row in the pick current, where `Update` sends only what
+ * Packmind already holds. It stays on the bar, greyed, while nothing picked
+ * needs a cut, so the two buttons do not appear and vanish under the pointer
+ * as rows are ticked.
  */
 export function selectionActions({
   picked,
@@ -279,9 +278,6 @@ export function selectionActions({
   onUpdate: (destinations: readonly PackageDestination[]) => void;
   onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
 }>): SelectionAction[] {
-  const wouldTakeARelease =
-    onReleaseAndUpdate !== undefined &&
-    picked.some((destination) => destination.canReleaseAndUpdate);
   /*
    * One row already on the newest release is enough to refuse the whole pick:
    * `Update` would send it nothing, and pushing the rest while it stays behind
@@ -293,7 +289,7 @@ export function selectionActions({
     ? UPDATE_NEEDS_A_RELEASE
     : undefined;
 
-  if (!wouldTakeARelease) {
+  if (onReleaseAndUpdate === undefined) {
     return [
       {
         label: `Update ${picked.length} destination${
@@ -323,6 +319,11 @@ export function selectionActions({
        * to know; the brand accent is not.
        */
       emphasis: 'primary',
+      disabledReason: picked.some(
+        (destination) => destination.canReleaseAndUpdate,
+      )
+        ? undefined
+        : RELEASE_AND_UPDATE_HAS_NOTHING_TO_CUT,
     },
     {
       label: 'Update',
@@ -332,6 +333,9 @@ export function selectionActions({
     },
   ];
 }
+
+export const RELEASE_AND_UPDATE_HAS_NOTHING_TO_CUT =
+  'None of the selected destinations is waiting on a release.';
 
 export const UPDATE_NEEDS_A_RELEASE =
   'Some selected destinations already have the latest release. Cut a release to update them.';

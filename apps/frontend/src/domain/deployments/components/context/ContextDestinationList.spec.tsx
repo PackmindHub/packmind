@@ -1088,7 +1088,7 @@ describe('ContextDestinationList', () => {
       userEvent.click(screen.getByRole('checkbox', { name: `Select ${name}` }));
 
     describe('when nothing picked would take a cut', () => {
-      it('offers the counted push alone', async () => {
+      it('still draws the cut, greyed, so the bar keeps its shape', async () => {
         renderList([drifted('a', 'acme/one')], vi.fn(), {
           onReleaseAndUpdate: vi.fn(),
         });
@@ -1096,20 +1096,20 @@ describe('ContextDestinationList', () => {
         await pick('acme/one');
 
         expect(
-          screen.getByRole('button', { name: /Update 1 destination/ }),
-        ).toBeInTheDocument();
+          screen.getByRole('button', { name: 'Release & Update' }),
+        ).toBeDisabled();
       });
 
-      it('offers no cut, which would be a version number for its own sake', async () => {
-        renderList([drifted('a', 'acme/one')], vi.fn(), {
+      it('offers the plain push beside it', async () => {
+        const onUpdate = vi.fn();
+        renderList([drifted('a', 'acme/one')], onUpdate, {
           onReleaseAndUpdate: vi.fn(),
         });
 
         await pick('acme/one');
+        await userEvent.click(screen.getByRole('button', { name: 'Update' }));
 
-        expect(
-          screen.queryByRole('button', { name: 'Release & Update' }),
-        ).not.toBeInTheDocument();
+        expect(onUpdate.mock.calls[0][0]).toHaveLength(1);
       });
     });
 
@@ -1126,7 +1126,7 @@ describe('ContextDestinationList', () => {
 
         expect(
           screen.getByRole('button', { name: 'Release & Update' }),
-        ).toBeInTheDocument();
+        ).toBeEnabled();
       });
 
       it('offers the plain push beside it', async () => {
