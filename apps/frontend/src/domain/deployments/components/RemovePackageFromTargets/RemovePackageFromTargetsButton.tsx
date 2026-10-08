@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { PMButton, PMTooltip, PMSpinner } from '@packmind/ui';
 import { DistributionHistoryEntry, Package } from '@packmind/types';
 import { RemovePackageFromTargetsDialog } from './RemovePackageFromTargetsDialog';
-import { listActiveDistributions } from '../../utils/listActiveDistributions';
+import { useActiveDistributions } from '../../hooks/useActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 export interface RemovePackageFromTargetsButtonProps {
@@ -20,9 +20,9 @@ export const RemovePackageFromTargetsButton: React.FC<
   distributionsLoading = false,
   size = 'md',
 }) => {
-  const activeDistributions = useMemo(
-    () => listActiveDistributions(distributions, selectedPackage.id),
-    [distributions, selectedPackage.id],
+  const activeDistributions = useActiveDistributions(
+    distributions,
+    selectedPackage.id,
   );
   const hasActiveDistributions = activeDistributions.length > 0;
   const isDisabled = !hasActiveDistributions || distributionsLoading;

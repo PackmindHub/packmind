@@ -261,6 +261,9 @@ export class NotifyDistributionUseCase
         recipeVersions: [],
         skillVersions: [],
         operation: 'add',
+        // A CLI install reports its lock file and never the packmind.json beside it.
+        versionSpec: null,
+        latestReleaseVersion: null,
         _standardVersionIds: standardVersionIds,
         _recipeVersionIds: recipeVersionIds,
         _skillVersionIds: skillVersionIds,
@@ -282,6 +285,9 @@ export class NotifyDistributionUseCase
           recipeVersions: [],
           skillVersions: [],
           operation: 'remove',
+          // The package is leaving the destination; it asks for no version at all.
+          versionSpec: null,
+          latestReleaseVersion: null,
           _standardVersionIds: [],
           _recipeVersionIds: [],
           _skillVersionIds: [],

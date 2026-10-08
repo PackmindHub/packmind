@@ -16,7 +16,15 @@ import {
 } from '@packmind/types';
 import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
+import { ownerReadingsOf, sameGitHost } from '@packmind/node-utils';
+import { providerHostUrl } from './services/providerHostUrl';
 import { v4 as uuidv4 } from 'uuid';
+
+export type OwnerReading = {
+  owner: string;
+  // The only provider whose repositories the reading names, null for any.
+  providerId: GitProviderId | null;
+};
 
 export class GitProviderService {
   constructor(
@@ -64,6 +72,48 @@ export class GitProviderService {
 
   async deleteGitProvider(id: GitProviderId, userId: UserId): Promise<void> {
     return this.gitProviderRepository.deleteById(id, userId);
+  }
+
+  /**
+   * The owners a remote's group may be recorded under. With the remote, only
+   * the providers of its host are read; without it, the owner as given names
+   * a repository of any provider, and a group read without an installation
+   * path prefix only one of the provider installed under that prefix.
+   */
+  async ownerReadings(
+    organizationId: OrganizationId,
+    owner: string,
+    gitRemoteUrl?: string,
+  ): Promise<OwnerReading[]> {
+    const providers =
+      await this.gitProviderRepository.findByOrganizationId(organizationId);
+    if (gitRemoteUrl) {
+      return providers
+        .filter((provider) =>
+          sameGitHost(providerHostUrl(provider), gitRemoteUrl),
+        )
+        .flatMap((provider) =>
+          ownerReadingsOf(owner, provider.url, gitRemoteUrl).map((reading) => ({
+            owner: reading,
+            providerId: provider.id,
+          })),
+        );
+    }
+    return [
+      { owner, providerId: null },
+      ...providers.flatMap((provider) =>
+        ownerReadingsOf(owner, provider.url)
+          .filter((reading) => reading !== owner)
+          .map((reading) => ({ owner: reading, providerId: provider.id })),
+      ),
+    ];
+  }
+
+  async deleteGitProviderIfEmpty(
+    id: GitProviderId,
+    userId: UserId,
+  ): Promise<boolean> {
+    return this.gitProviderRepository.deleteIfHoldsNoRepository(id, userId);
   }
 
   async getAvailableRepos(
@@ -138,6 +188,25 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.checkBranchExists(owner, repo, branch);
+  }
+
+  async searchBranches(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ): Promise<string[]> {
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitProviderId);
+    }
+
+    const providerInstance =
+      await this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.searchBranches(owner, repo, search, limit);
   }
 
   async createBranchFromBase(
@@ -280,6 +349,28 @@ export class GitProviderService {
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.compareBranches(base, head);
+  }
+
+  async listFilesNamed(
+    gitRepo: GitRepo,
+    fileName: string,
+    branch: string,
+  ): Promise<string[]> {
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitRepo.providerId);
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
+    }
+
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
+
+    return gitRepoInstance.listFilesNamed(fileName, branch);
   }
 
   async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{

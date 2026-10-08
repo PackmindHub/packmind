@@ -680,6 +680,64 @@ Asking for a version that was never released stops the install and lists the ver
 
 Each `packmind.json` carries its own versions, so two folders in the same repository can sit on two different releases of the same package.
 
+### Check Upgrades Before Installing
+
+See what `packmind install --upgrade` would change before running it:
+
+```bash
+packmind install --check-upgrades
+```
+
+**Example output:**
+
+```
+@my-space/ops  0.1.0 → 0.2.0
+  ~ standard  Backend conventions  v3 → v4
+  + skill     Release notes        (new)
+  - command   Old deploy           (removed)
+@my-space/frontend  * · 2 components to update
+  ~ standard  React components  v5 → v6
+  ~ skill     Storybook         v1 → v2
+
+Run packmind install --upgrade to apply these changes.
+```
+
+For each package in `packmind.json`, you see:
+
+- **Pinned packages** — the version the package would move from and to (here `0.1.0 → 0.2.0`)
+- **Packages tracking `*`** — how many of their commands, standards, and skills have changed since your last install
+- **What changes underneath** — every command, standard, and skill that would be added (`+`), updated (`~`, with its version move), or removed (`-`)
+
+A few other changes show up too:
+
+- **Coding agents changed in `packmind.json`** — a `Coding agents: claude → claude, cursor` line comes first, and the commands, standards, and skills that would be written to different files are marked `(files change)`
+- **No packages left in `packmind.json`** — every installed command, standard, and skill is listed as removed, since installing would delete their files
+
+When there is nothing to upgrade, the command prints `Already up to date`.
+
+If you don't have access to some packages, the command lists them (`Could not check 2 packages you don't have access to: …`) and exits with code `1`, so an incomplete check never passes as up to date.
+
+Nothing in your repository changes: `packmind.json`, your lock file, and your installed files stay exactly as they were, and the check is not recorded as an install in Packmind. Run `packmind install --upgrade` when you are ready to apply the changes.
+
+The command exits with code `1` when upgrades are available, and code `0` when everything is up to date — handy for flagging an outdated playbook in CI:
+
+```bash
+if ! packmind install --check-upgrades; then
+  echo "Packmind packages have new releases. Run 'packmind install --upgrade'."
+fi
+```
+
+In a monorepo, the check covers the same `packmind.json` files as `packmind install`. Use `--path` to scope it to a specific directory:
+
+```bash
+packmind install --check-upgrades --path apps/api
+```
+
+<Note>
+  `--check-upgrades` checks the packages already listed in `packmind.json`. It
+  cannot be combined with `--upgrade`, `--status`, or package names.
+</Note>
+
 ### Upgrade to the Latest Releases
 
 Move every pinned package to its latest release:
@@ -689,6 +747,8 @@ packmind install --upgrade
 ```
 
 This rewrites `packmind.json` with the version each package landed on, so you can see exactly what moved in your diff before committing it.
+
+To preview what would move first, without changing anything, run `packmind install --check-upgrades` (see [Check Upgrades Before Installing](#check-upgrades-before-installing)).
 
 Packages tracking `*` keep tracking it — their line in `packmind.json` is left alone — and their files are refreshed like any install.
 

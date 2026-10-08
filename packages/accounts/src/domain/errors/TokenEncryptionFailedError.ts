@@ -8,19 +8,19 @@ export type TokenEncryptionOperation = 'encrypt' | 'decrypt';
 
 /**
  * Encrypting or decrypting a stored token threw: a key or stored-data
- * invariant of ours. `cause` carries the crypto error message, never the
- * token itself.
+ * invariant of ours. `cause` is the crypto error, never the token itself.
  */
 export class TokenEncryptionFailedError extends AccountsInternalError {
   constructor(
     tokenType: EncryptedTokenType,
     operation: TokenEncryptionOperation,
-    cause: string,
+    cause: unknown,
   ) {
     super(
       'token_encryption_failed',
-      { tokenType, operation, cause },
+      { tokenType, operation },
       `Failed to ${operation} ${tokenType} token`,
+      { cause },
     );
     this.name = 'TokenEncryptionFailedError';
   }

@@ -22,7 +22,9 @@ import {
   useGetRepositoriesByProviderQuery,
   useGithubAppInstallUrlMutation,
   useRemoveRepositoryMutation,
+  useSetTrackedRepositoryMutation,
   useUpdateGitProviderMutation,
+  useUpdateTrackedBranchMutation,
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { redirectTo } from '../../../../shared/utils/navigation';
@@ -42,9 +44,13 @@ import {
   DrawerMode,
   ReauthDraft,
   RepoSelection,
-  RepoTuple,
-  tupleKey,
+  repoKey,
 } from './types';
+import {
+  buildRepoApplyPlan,
+  RepoOperation,
+  rowsShownInDrawer,
+} from './repoApplyPlan';
 
 export interface ConnectionDrawerProps {
   organizationId: OrganizationId;
@@ -66,9 +72,13 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
   onDelete,
 }) => {
   const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(false);
 
   useEffect(() => {
-    if (!connection) setEditingDisplayName(false);
+    if (!connection) {
+      setEditingDisplayName(false);
+      setEditingBranch(false);
+    }
   }, [connection]);
 
   return (
@@ -79,7 +89,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
       }}
       placement="end"
       size="md"
-      closeOnEscape={!editingDisplayName}
+      closeOnEscape={!editingDisplayName && !editingBranch}
     >
       <PMPortal>
         <PMDrawer.Backdrop />
@@ -92,6 +102,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
                 onDelete={onDelete}
                 onClose={onClose}
                 onEditingDisplayNameChange={setEditingDisplayName}
+                onEditingBranchChange={setEditingBranch}
               />
             )}
             <PMDrawer.CloseTrigger asChild>
@@ -110,6 +121,7 @@ interface DrawerBodyProps {
   onDelete: (provider: GitProviderUI) => void;
   onClose: () => void;
   onEditingDisplayNameChange: (editing: boolean) => void;
+  onEditingBranchChange: (editing: boolean) => void;
 }
 
 const DrawerBody: React.FC<DrawerBodyProps> = ({
@@ -118,18 +130,19 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   onDelete,
   onClose,
   onEditingDisplayNameChange,
+  onEditingBranchChange,
 }) => {
   const [mode, setMode] = useState<DrawerMode>('view');
   const trackedQuery = useGetRepositoriesByProviderQuery(connection.id);
 
   const initialSelection = useMemo<RepoSelection>(() => {
-    const tracked = trackedQuery.data ?? [];
     return {
-      tuples: tracked.map((r) => ({
+      tuples: rowsShownInDrawer(trackedQuery.data ?? []).map((r) => ({
         owner: r.owner,
         repo: r.repo,
         branch: r.branch,
       })),
+      switches: new Map(),
     };
   }, [trackedQuery.data]);
 
@@ -152,106 +165,66 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   const updateMutation = useUpdateGitProviderMutation();
   const installUrlMutation = useGithubAppInstallUrlMutation();
 
-  const diff = useMemo(() => {
-    const before = new Set(initialSelection.tuples.map(tupleKey));
-    const after = new Set(selection.tuples.map(tupleKey));
-    const adds: RepoTuple[] = [];
-    const removes: RepoTuple[] = [];
-    for (const t of selection.tuples) {
-      if (!before.has(tupleKey(t))) adds.push(t);
-    }
-    for (const t of initialSelection.tuples) {
-      if (!after.has(tupleKey(t))) removes.push(t);
-    }
-    return { adds, removes };
-  }, [initialSelection.tuples, selection.tuples]);
+  const setTrackedMutation = useSetTrackedRepositoryMutation();
+  const updateTrackedMutation = useUpdateTrackedBranchMutation();
 
-  const hasDiff = diff.adds.length > 0 || diff.removes.length > 0;
+  const plan = useMemo(
+    () => buildRepoApplyPlan(trackedQuery.data ?? [], selection),
+    [trackedQuery.data, selection],
+  );
 
-  const applyDiff = useCallback(async () => {
-    const total = diff.adds.length + diff.removes.length;
+  const hasDiff = plan.length > 0;
+
+  const applyPlan = useCallback(async () => {
+    const total = plan.length;
     if (total === 0) return;
 
-    const tracked = trackedQuery.data ?? [];
-    const findTracked = (t: RepoTuple) =>
-      tracked.find(
-        (r) =>
-          r.owner === t.owner && r.repo === t.repo && r.branch === t.branch,
-      );
-
-    const formatTuple = (t: RepoTuple) => `${t.owner}/${t.repo} · ${t.branch}`;
-
-    let current = 0;
-    setProgress({ phase: 'running', current, total, label: '' });
-
-    const doRemove = async (t: RepoTuple): Promise<boolean> => {
-      const repo = findTracked(t);
-      if (!repo) {
-        current++;
-        return true;
+    const run = async (op: RepoOperation) => {
+      switch (op.kind) {
+        case 'remove':
+          return removeMutation.mutateAsync({
+            providerId: connection.id,
+            repoId: op.repoId,
+          });
+        case 'add':
+          return addMutation.mutateAsync({
+            providerId: connection.id,
+            data: { owner: op.owner, name: op.repo, branch: op.branch },
+          });
+        case 'set-tracked':
+          // Without them the API cannot tell which provider hosts the
+          // repository, and refuses to track it.
+          return setTrackedMutation.mutateAsync({
+            owner: op.owner,
+            repo: op.repo,
+            branch: op.branch,
+            providerVendor: connection.source,
+            gitRemoteUrl: connection.url ?? undefined,
+          });
+        case 'update-tracked':
+          return updateTrackedMutation.mutateAsync({
+            owner: op.owner,
+            repo: op.repo,
+            branch: op.branch,
+          });
       }
-      setProgress({
-        phase: 'running',
-        current,
-        total,
-        label: `removing ${formatTuple(t)}`,
-      });
+    };
+
+    for (const [current, op] of plan.entries()) {
+      const label = operationLabel(op);
+      setProgress({ phase: 'running', current, total, label });
       try {
-        await removeMutation.mutateAsync({
-          providerId: connection.id,
-          repoId: repo.id,
-        });
+        await run(op);
       } catch (err) {
         setProgress({
           phase: 'error',
           current,
           total,
-          label: formatTuple(t),
-          errorMessage: extractErrorMessage(
-            err,
-            `Failed to remove ${formatTuple(t)}.`,
-          ),
+          label,
+          errorMessage: extractErrorMessage(err, `Failed while ${label}.`),
         });
-        return false;
+        return;
       }
-      current++;
-      return true;
-    };
-
-    const doAdd = async (t: RepoTuple): Promise<boolean> => {
-      setProgress({
-        phase: 'running',
-        current,
-        total,
-        label: `adding ${formatTuple(t)}`,
-      });
-      try {
-        await addMutation.mutateAsync({
-          providerId: connection.id,
-          data: { owner: t.owner, name: t.repo, branch: t.branch },
-        });
-      } catch (err) {
-        setProgress({
-          phase: 'error',
-          current,
-          total,
-          label: formatTuple(t),
-          errorMessage: extractErrorMessage(
-            err,
-            `Failed to add ${formatTuple(t)}.`,
-          ),
-        });
-        return false;
-      }
-      current++;
-      return true;
-    };
-
-    for (const t of diff.removes) {
-      if (!(await doRemove(t))) return;
-    }
-    for (const t of diff.adds) {
-      if (!(await doAdd(t))) return;
     }
 
     setProgress(null);
@@ -259,15 +232,15 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
     pmToaster.create({
       type: 'success',
       title: 'Repositories updated',
-      description: diffSummary(diff.adds.length, diff.removes.length),
+      description: diffSummary(plan),
     });
   }, [
     addMutation,
     connection.id,
-    diff.adds,
-    diff.removes,
+    plan,
     removeMutation,
-    trackedQuery.data,
+    setTrackedMutation,
+    updateTrackedMutation,
   ]);
 
   const submitPatReauth = useCallback(async () => {
@@ -407,6 +380,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               onSelectionChange={setSelection}
               progress={progress}
               onRequestReauth={() => setMode('reauth')}
+              onEditingBranchChange={onEditingBranchChange}
             />
           )}
 
@@ -474,7 +448,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
             <PMHStack gap={3} align="center">
               {hasDiff && (
                 <PMText fontSize="xs" color="faded">
-                  {diffSummary(diff.adds.length, diff.removes.length)}
+                  {diffSummary(plan)}
                 </PMText>
               )}
               <PMButton
@@ -482,7 +456,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
                 size="sm"
                 disabled={!hasDiff || applying}
                 loading={applying}
-                onClick={applyDiff}
+                onClick={applyPlan}
                 data-testid="manage-repos-apply"
               >
                 Apply changes
@@ -699,7 +673,10 @@ const RepositoriesPreview: React.FC<{
   repoCount: number;
 }> = ({ connection, repoCount }) => {
   const tracked = useGetRepositoriesByProviderQuery(connection.id);
-  const rows = tracked.data ?? [];
+  const rows = useMemo(
+    () => rowsShownInDrawer(tracked.data ?? []),
+    [tracked.data],
+  );
 
   const groups = useMemo(() => {
     // Each branch keeps its repository id: this list is what the drawer opens
@@ -791,10 +768,40 @@ const RepositoriesPreview: React.FC<{
   );
 };
 
-function diffSummary(adds: number, removes: number): string {
+function operationLabel(op: RepoOperation): string {
+  switch (op.kind) {
+    case 'remove':
+      return `removing ${op.label}`;
+    case 'add':
+      return `adding ${op.owner}/${op.repo} · ${op.branch}`;
+    case 'set-tracked':
+      return `tracking ${op.owner}/${op.repo} · ${op.branch}`;
+    case 'update-tracked':
+      return `switching ${op.owner}/${op.repo} to ${op.branch}`;
+  }
+}
+
+function diffSummary(plan: RepoOperation[]): string {
+  // An added repository is tracked right after: that is one add, not a switch.
+  const added = new Set(
+    plan.filter((op) => op.kind === 'add').map((op) => repoKey(op)),
+  );
+  const adds = added.size;
+  const removes = plan.filter((op) => op.kind === 'remove').length;
+  const switches = plan.filter(
+    (op) =>
+      (op.kind === 'set-tracked' || op.kind === 'update-tracked') &&
+      !added.has(repoKey(op)),
+  ).length;
+
   const parts: string[] = [];
   if (adds > 0) parts.push(`${adds} added`);
   if (removes > 0) parts.push(`${removes} removed`);
+  if (switches > 0) {
+    parts.push(
+      `${switches} ${switches === 1 ? 'branch' : 'branches'} switched`,
+    );
+  }
   return parts.join(', ');
 }
 

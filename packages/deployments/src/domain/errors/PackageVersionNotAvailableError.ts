@@ -9,6 +9,10 @@ import { DeploymentsError } from '@packmind/types';
  * they could have typed instead. Ordered newest first, unannounced — the one
  * they most likely want is the one they read first, and saying so in the
  * sentence spends a clause on something the list already shows.
+ *
+ * A package with no release at all is pointed at the plain install command,
+ * not at `*`: an install with no version falls back to the live package, and
+ * `:*` typed unquoted in zsh is a glob that fails before the CLI even runs.
  */
 export class PackageVersionNotAvailableError extends DeploymentsError {
   constructor(
@@ -22,7 +26,7 @@ export class PackageVersionNotAvailableError extends DeploymentsError {
       { packageSlug, version: requestedVersion },
       availableVersions.length > 0
         ? `Package ${packageSlug} has no version ${requestedVersion}. Available versions: ${availableVersions.join(', ')}`
-        : `Package ${packageSlug} has no version ${requestedVersion}. It has never been released — use "*" to track its current state.`,
+        : `Package ${packageSlug} has no version ${requestedVersion}. It has never been released — run 'packmind install ${packageSlug}' to install its current state.`,
     );
     this.name = 'PackageVersionNotAvailableError';
   }

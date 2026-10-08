@@ -247,11 +247,7 @@ export class InvitationRepository
       const authTag = cipher.getAuthTag().toString('base64');
       return `${iv.toString('base64')}:${encrypted}:${authTag}` as InvitationToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'invitation',
-        'encrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('invitation', 'encrypt', error);
     }
   }
 
@@ -278,11 +274,7 @@ export class InvitationRepository
 
       return decrypted as InvitationToken;
     } catch (error) {
-      throw new TokenEncryptionFailedError(
-        'invitation',
-        'decrypt',
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new TokenEncryptionFailedError('invitation', 'decrypt', error);
     }
   }
 

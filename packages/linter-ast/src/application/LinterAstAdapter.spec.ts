@@ -102,5 +102,14 @@ describe('LinterAstAdapter', () => {
         adapter.parseSourceCode('code', 'GENERIC' as ProgrammingLanguage),
       ).rejects.toThrow(ParserNotAvailableError);
     });
+
+    it('throws an internal error', async () => {
+      await expect(
+        adapter.parseSourceCode('code', 'GENERIC' as ProgrammingLanguage),
+      ).rejects.toMatchObject({
+        kind: 'internal',
+        reason: 'parser_not_available',
+      });
+    });
   });
 });

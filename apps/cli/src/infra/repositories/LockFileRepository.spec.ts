@@ -262,6 +262,27 @@ describe('LockFileRepository', () => {
       });
     });
 
+    describe('when a lock file records package versions', () => {
+      const lockFileContent: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: ['@team/ops'],
+        packages: { '@team/ops': '1.2.3' },
+        agents: ['claude'],
+        artifacts: {},
+      };
+      let result: PackmindLockFile | null;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockResolvedValue(JSON.stringify(lockFileContent));
+
+        result = await repository.read('/project');
+      });
+
+      it('returns the lock file with its package versions', () => {
+        expect(result).toEqual(lockFileContent);
+      });
+    });
+
     describe('when lock file does not exist', () => {
       let result: PackmindLockFile | null;
 
@@ -293,6 +314,10 @@ describe('LockFileRepository', () => {
         [
           'missing artifacts',
           '{"lockfileVersion":2,"packageSlugs":[],"agents":[]}',
+        ],
+        [
+          'packages is an array',
+          '{"lockfileVersion":2,"packageSlugs":[],"packages":[],"agents":[],"artifacts":{}}',
         ],
         [
           'artifacts is an array',

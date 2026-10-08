@@ -36,6 +36,26 @@ the whole repo and flags the mis-cased `Usecase` in:
 Only PascalCase-style `Usecase` (capital "U", lowercase "c") is flagged; the
 all-lowercase legacy `usecase` file suffix is handled by `use-case-filename`.
 
+### `packmind/throw-kind-carrying-error` — type-aware
+
+Every value thrown from a package's `src/domain/` or `src/application/`, and
+from anywhere in `packages/types/src/` (which has no such layers, yet holds
+errors and helpers that use cases throw through), must pass the guards `DomainExceptionFilter` uses (`isDomainError`, `isInternalError`,
+`isUpstreamError`): a required, known `kind`, a required string `reason`, and —
+for internal and upstream kinds — an `Error` instance. Anything else answers 500.
+The rule reads the thrown value's type, so it follows `kind` through base
+classes declared in other files — which is why it needs type information
+(`parserOptions.projectService`) and is scoped to those files only. Specs and
+tests are out of scope everywhere.
+
+Not flagged: rethrown values typed `any`/`unknown` (a bare `catch (error)`
+rethrow), since their type is decided where they were first thrown. Out of
+scope: `application/jobs/` and `application/listeners/`, which run outside the
+HTTP scope.
+
+Runs at `error`: every in-scope throw site carries a kind, so a new kindless
+throw fails lint.
+
 ## Wiring
 
 The plugin is registered in the root `eslint.config.mjs`:

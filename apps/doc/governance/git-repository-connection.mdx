@@ -85,6 +85,8 @@ GitLab connections use a personal access token:
 2. Create a new token with the `api` scope (full API access).
 3. Copy your token (it starts with `glpat-`) and paste it into Packmind.
 
+For a self-managed GitLab, enter your instance URL (for example `https://gitlab.acme.io`). Packmind matches repositories to the connection by host, so a clone over HTTPS or SSH reaches the same connection.
+
 ## Managing Repository Access
 
 To change which repositories a GitHub App connection can reach, open the connection from the **Connections** tab and use **View Packmind on GitHub**. This opens the Packmind app's page on GitHub, where you can add or remove repositories. The new access takes effect in Packmind without reconnecting.
@@ -94,6 +96,24 @@ To change which repositories a GitHub App connection can reach, open the connect
 Once you've added your providers, **add repositories** for each provider.
 
 When you add a Git repository, Packmind automatically creates a default target with the root path "/" for that repository. This allows you to immediately start distributing standards and commands to the entire repository. You can later create additional targets for specific paths within the repository if needed.
+
+A repository the CLI already distributed to keeps its history when you add it: it moves under the connection with its existing targets instead of being created again, and the CLI-created entry for that host disappears once it holds no repository.
+
+A repository you add from the Git connection panel is tracked on its default branch.
+
+## Changing a Repository's Branch
+
+Each repository is distributed to and tracked on one branch. To move it to another branch:
+
+1. Open the connection from the **Connections** tab and click **Manage**.
+2. Next to the repository, click **change branch** and type the branch name, then press Enter.
+3. Click **Apply changes**.
+
+The new branch replaces the current one rather than being added next to it. Packmind checks the branch with your Git provider first: a branch that doesn't exist is refused with an error under the field, and if the provider can't be reached nothing changes and you are asked to try again.
+
+Changing the branch never deletes history. Distributions recorded on the branch you leave are kept, and switching back shows that branch's history again — see [Moving the Tracked Branch Is Reversible](/governance/distribution#moving-the-tracked-branch-is-reversible).
+
+A repository added before branches were tracked may still list several branches. The first time you change its branch, Packmind starts tracking the one you chose and shows only that branch from then on.
 
 ## Distribution Targets
 

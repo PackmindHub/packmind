@@ -110,6 +110,8 @@ When you distribute packages using the CLI, Packmind automatically creates a Git
   Connection](/governance/git-repository-connection) for the full setup.
 </Warning>
 
+Connecting a provider later does not lose what the CLI recorded. Once a connection exists for the same host — github.com, gitlab.com or your self-managed instance — the CLI records new repositories under it, and adding a repository the CLI already recorded moves it there with its targets and distribution history. The CLI-created entry disappears from your Git settings once it holds no repository.
+
 ### When to Use CLI Distribution
 
 The CLI approach is ideal for:
@@ -117,7 +119,7 @@ The CLI approach is ideal for:
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
 - **Monorepos** - Use `packmind install` to install packages for all `packmind.json` files in the repository
-- **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
+- **Repositories without a connection** - Distribute to repositories that aren't connected to the app
 
 ## Distribution History and the Tracked Branch
 
@@ -169,8 +171,10 @@ So a team that tracks `main`, moves to `dev` for a while, then returns to `main`
 <Note>
   **Only one branch at a time** — Packmind shows the tracked branch's history
   rather than several branches side by side. To see another branch's history,
-  ask an organization admin to move tracking to it with `packmind git track
-  --update`.
+  ask an organization admin to move tracking to it, either with **change
+  branch** in the Git connection panel (see [Changing a Repository's
+  Branch](/governance/git-repository-connection#changing-a-repositorys-branch))
+  or with `packmind git track --update`.
 </Note>
 
 ### Removing Tracking

@@ -22,7 +22,8 @@ export type GitErrorReason =
   | 'git_repo_already_linked_as_standard'
   | 'invalid_install_state'
   | 'git_remote_access_forbidden'
-  | 'git_remote_repository_not_found';
+  | 'git_remote_repository_not_found'
+  | 'no_changes_detected';
 
 export type GitErrorContext = {
   organizationId?: string;

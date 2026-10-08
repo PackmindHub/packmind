@@ -18,7 +18,9 @@ export type AccountsErrorReason =
   | 'user_cannot_change_own_role'
   | 'cannot_demote_last_admin'
   | 'invalid_authentication_type'
-  | 'user_creation_fields_required';
+  | 'user_creation_fields_required'
+  | 'invalid_credentials'
+  | 'too_many_login_attempts';
 
 export type AccountsErrorContext = {
   organizationId?: string;

@@ -7,7 +7,7 @@ import { PackageId } from '../../deployments/Package';
  * Emitted by the publish job after a successful publish (or a no-op short
  * circuit). `wasNoop=true` indicates the publish converged without a new git
  * commit — either via the content-hash idempotency check or via the git
- * provider's `NO_CHANGES_DETECTED` signal.
+ * provider reporting nothing to commit (`NoChangesDetectedError`).
  */
 export interface PluginPublishedPayload {
   marketplaceDistributionId: MarketplaceDistributionId;

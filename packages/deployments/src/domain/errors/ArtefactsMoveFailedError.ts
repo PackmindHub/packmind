@@ -18,14 +18,11 @@ export class ArtefactsMoveFailedError extends DeploymentsInternalError {
   ) {
     super(
       'artefacts_move_failed',
-      {
-        packageId,
-        reverted,
-        cause: cause instanceof Error ? cause.message : String(cause),
-      },
+      { packageId, reverted },
       `Artefacts could not be moved to package ${packageId}; the move was ${
         reverted ? 'rolled back' : 'left partially applied'
       }.`,
+      { cause },
     );
     this.name = 'ArtefactsMoveFailedError';
   }

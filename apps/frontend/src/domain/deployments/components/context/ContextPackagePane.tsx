@@ -27,13 +27,10 @@ import {
   LuPackageMinus,
   LuPencil,
   LuPlus,
-  LuRotateCw,
   LuTrash2,
 } from 'react-icons/lu';
 import type {
-  GitProviderId,
   OrganizationId,
-  PackageId,
   PackageResponse,
   Rule,
   SkillFile,
@@ -53,7 +50,6 @@ import {
 } from './buildPackageContext';
 import { countAddableComponents } from './buildAddableComponents';
 import type { PackageAttention } from './buildPackageAttention';
-import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
   COMPONENTS_TAB,
@@ -74,7 +70,7 @@ import {
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextPackageDescription } from './ContextPackageDescription';
 import { packageActivity } from './packageActivity';
-import { PackageVersionBar } from './PackageVersionBar';
+import { PackageReleaseControls } from './PackageReleaseControls';
 import {
   PackageReleaseContents,
   pinnedComponentCount,
@@ -94,11 +90,8 @@ import { usePackageDestinations } from './usePackageDestinations';
 import { ContextChip } from './ContextChip';
 import { ContextSearchField } from './ContextSearchField';
 import { filterPackageGroups } from './filterPackageGroups';
-import { SPLIT_BUTTON_SEAM, splitButtonHalf } from '../splitButton';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
-import { packageLockProfile } from '../redesign/selectors/installLock';
-import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import { SelectionBar } from '../SelectionBar';
 import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
@@ -109,14 +102,14 @@ import {
   useDeletePackagesBatchMutation,
   useGetPackageReleaseQuery,
   useListPackageDeploymentsQuery,
+  useListPackageReleasesQuery,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
-import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
-import { listActiveDistributions } from '../../utils/listActiveDistributions';
+import { useActiveDistributions } from '../../hooks/useActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 /**
@@ -248,7 +241,7 @@ export function ContextPackagePane({
     pkg.id,
     pkg.spaceId,
   );
-  const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
+  const isInAnyTarget = useActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*
@@ -406,17 +399,6 @@ export function ContextPackagePane({
   );
 
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
-
-  /*
-   * `installKeys` left undefined means every drifted destination, which is what
-   * `SyncSurface` already reads it as. The caller decides which of the two it
-   * is asking for; this only carries the answer.
-   */
-  const startSync = useCallback(
-    (packageId: PackageId, installKeys?: string[]) =>
-      setSyncScope({ kind: 'package', packageId, installKeys }),
-    [],
-  );
 
   const closeSync = useCallback(() => setSyncScope(null), []);
 
@@ -643,6 +625,12 @@ export function ContextPackagePane({
    * Read here as well as by the body below it, and answered from one request:
    * React Query keys this read by version, and both ask for the same one.
    */
+  const { data: releases } = useListPackageReleasesQuery(
+    organizationId,
+    spaceId,
+    canReadReleases ? pkg.id : undefined,
+  );
+
   const { data: readRelease } = useGetPackageReleaseQuery(
     organizationId,
     spaceId,
@@ -675,45 +663,6 @@ export function ContextPackagePane({
   const lateness = useMemo(() => componentLateness(drift), [drift]);
 
   /*
-   * Read here for the header's own push. React Query answers this and the
-   * identical call inside the Distribution tab from one request, so the two
-   * cannot disagree about which providers can be written to.
-   */
-  const { data: providersResponse, isLoading: isProvidersLoading } =
-    useGetGitProvidersQuery();
-  const providersWithToken = useMemo<Set<GitProviderId>>(
-    () => providersWithTokenSet(providersResponse),
-    [providersResponse],
-  );
-
-  /*
-   * The two package-wide controls, decided together rather than each on its
-   * own: which of them is loud is the whole question, and two conditions
-   * written apart is how both ended up primary in the first place.
-   *
-   * The same lock reading the rail uses, so a package the rail flags as stuck
-   * does not offer a live button here.
-   */
-  const headerActions = buildPackageHeaderActions({
-    drift,
-    isResolved: !isLoading && !isError,
-    lockProfile: drift
-      ? packageLockProfile(drift, providersWithToken, isProvidersLoading)
-      : 'none',
-  });
-
-  /*
-   * The push is asked for from a header that sits above both tabs, and it is
-   * answered on one of them, so the tab comes along. Scoped to nothing, which
-   * `SyncSurface` reads as every drifted destination: the header's count is the
-   * whole of them, and the list is where a subset gets picked.
-   */
-  const updateDriftedDestinations = () => {
-    showTab(DISTRIBUTION_TAB);
-    startSync(pkg.id);
-  };
-
-  /*
    * Every way the package leaves Packmind, under one control: the repositories
    * it writes to, the marketplaces it publishes to, and the command a developer
    * runs in their own checkout. One menu and not one button per channel,
@@ -726,28 +675,38 @@ export function ContextPackagePane({
    * put the loudest control on the screen on the one thing that cannot be done
    * yet.
    *
-   * Written once and asked for in two shapes, because the two call sites below
-   * differ by the one prop and everything else about them has to stay the same.
+   * Standalone, and only ever that. It was asked for in two shapes while the
+   * header drew it as the chevron half of a split control beside the corrective
+   * push; the push has gone to the Distribution tab's selection bar, and this
+   * is a button again.
+   *
+   * Secondary in every state, which is the weight `Add components` carries on
+   * the other end of the same strip. It used to be drawn loud or quiet from the
+   * drift — primary on a package that had never left Packmind or had something
+   * to catch up. That reading was worth making while the control sat in the
+   * header above both tabs and had to compete for a reader who had not chosen a
+   * half yet. Down here it is one of two controls that swap places as the tabs
+   * change, and a pair that swaps weight as well as label reads as the toolbar
+   * rearranging itself rather than as one slot serving the open tab.
    */
-  const distributeControl = (trigger: 'standalone' | 'split') =>
-    isEmpty ? null : (
-      <DeployPackageButton
-        label="Distribute"
-        trigger={trigger}
-        size="sm"
-        variant={headerActions.distributeVariant}
-        selectedPackages={[pkg]}
-        /*
-         * What the bar above says is on screen. Distributing from under a bar
-         * that reads 0.2.0 sends 0.2.0, and the repo's packmind.json records
-         * it; reading the package as it stands sends that, under `*`. The two
-         * cannot disagree, because it is one reading and this control is
-         * inside it.
-         */
-        packageVersions={{ [pkg.id]: readingVersion ?? '*' }}
-        cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
-      />
-    );
+  const distributeControl = isEmpty ? null : (
+    <DeployPackageButton
+      label="Distribute"
+      trigger="standalone"
+      size="sm"
+      variant="secondary"
+      selectedPackages={[pkg]}
+      /*
+       * What the header says is on screen. Distributing while it reads 0.2.0
+       * sends 0.2.0, and the repo's packmind.json records it; reading the
+       * package as it stands sends that, under `*`. The two cannot disagree,
+       * because it is one reading and this control is inside it.
+       */
+      packageVersions={{ [pkg.id]: readingVersion ?? '*' }}
+      latestRelease={releases?.readiness.currentVersion ?? null}
+      cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
+    />
+  );
 
   /*
    * Built once and rendered by whichever half is on screen. The drawer has to
@@ -915,65 +874,34 @@ export function ContextPackagePane({
               />
             )}
           </PMBox>
-          <PMHStack flexShrink={0} gap={2}>
+          <PMHStack flexShrink={0} gap={2} align="center">
             {/*
-              One send control, whatever the state. Catching up where the
-              package already is and reaching somewhere new are two questions,
-              and the header used to ask both out loud, side by side: a
-              `Distribute` menu and a primary `Update N distributions`. Two
-              buttons, one verb as far as the reader is concerned, and no room
-              up here to explain which one is theirs.
+              The version on screen and the one act that adds to the list.
 
-              So they join. The corrective push takes the wide half, since it is
-              the one thing the state is asking for, and the open ended one
-              keeps the chevron it already had. The seam is a hairline of the
-              page showing between two halves of the same colour, which is what
-              makes them read as one object rather than as two buttons that
-              touch.
+              This slot used to hold the sending: a `Distribute` menu joined to
+              a primary `Update N distributions`, the two halves of one send
+              control. Both are verbs about where the package has got to, and
+              the tab below answers exactly that question — so they go down to
+              it, Distribute onto the tab strip where `Add components` already
+              waits for the other half, and the corrective push onto the list's
+              own selection bar, which could always scope it better than a
+              header count could.
 
-              Behind a chevron is a real cost for someone who came to add a
-              destination while the package happens to be drifting. It is paid
-              because the Distribution tab below keeps its own way to every
-              destination, and because a second primary in the header is what
-              sent us here.
-
-              Disabled only when every drifted destination is stuck, where the
-              tooltip is the answer. Absent when nothing is behind: there is
-              nothing to catch up, and a greyed control saying so is a sentence
-              written as a button.
+              What is left up here is the act that belongs to neither tab. The
+              cut is the hinge between them: it freezes what the components half
+              holds so the distribution half has something to send, and it is
+              the only package-wide thing neither tab can own. It reads with the
+              menu beside it, which names what a cut would be taken from.
             */}
-            {/*
-              The corrective half goes when a release is on screen. Drift is a
-              statement about the package as it stands — how far each
-              destination is behind the live components — so under a bar
-              reading 0.1.0 it counts something the reader is not looking at,
-              and the loudest control on the surface would push live content
-              out of a pane showing a frozen version. Distribute stays, and
-              sends what the bar says.
-            */}
-            {headerActions.update && readingVersion === null ? (
-              <PMHStack gap={SPLIT_BUTTON_SEAM}>
-                <PMTooltip
-                  label={headerActions.update.lockTooltip}
-                  placement="top"
-                >
-                  <PMButton
-                    variant="primary"
-                    size="sm"
-                    disabled={headerActions.update.lockTooltip !== null}
-                    onClick={updateDriftedDestinations}
-                    {...(isEmpty ? {} : splitButtonHalf('leading'))}
-                  >
-                    <PMIcon fontSize="xs">
-                      <LuRotateCw />
-                    </PMIcon>
-                    {headerActions.update.label}
-                  </PMButton>
-                </PMTooltip>
-                {distributeControl('split')}
-              </PMHStack>
-            ) : (
-              distributeControl('standalone')
+            {canReadReleases && (
+              <PackageReleaseControls
+                packageId={pkg.id}
+                spaceId={spaceId}
+                organizationId={organizationId}
+                componentsCount={total}
+                readingVersion={readingVersion}
+                onReadVersion={readVersion}
+              />
             )}
             {/*
               Deleting the package, behind a menu rather than beside the two
@@ -1053,35 +981,6 @@ export function ContextPackagePane({
             </PMMenu.Root>
           </PMHStack>
         </PMHStack>
-
-        {/*
-          Which version of the package is on screen, across the whole pane
-          rather than inside the block that names it.
-
-          It used to sit under the package name, beside the dates, where it read
-          as one more property of the package and put a verb in the one corner
-          of the header that holds none: every other thing that acts on this
-          package is in the cluster on the right, and a lone action on the left
-          made two action zones out of one row. Its explanations went there too,
-          a readiness sentence and a column of components that had moved, in a
-          header that cannot grow without pushing the component list off the
-          pane.
-
-          Here it frames what is under it instead. The tab strip is the next
-          thing down, and both tabs are read at the version this names.
-        */}
-        {canReadReleases && (
-          <PMBox paddingTop={4}>
-            <PackageVersionBar
-              packageId={pkg.id}
-              spaceId={spaceId}
-              organizationId={organizationId}
-              componentsCount={total}
-              readingVersion={readingVersion}
-              onReadVersion={readVersion}
-            />
-          </PMBox>
-        )}
 
         <PMBox paddingTop={5}>
           {/*
@@ -1202,6 +1101,17 @@ export function ContextPackagePane({
                 Add components
               </PMButton>
             )}
+            {/*
+              And the sending rides the other half of the same strip, for the
+              reason adding rides this one: the control belongs to the row it
+              sits on, and leaves when the other tab is what is being read.
+
+              It keeps the variant the header gave it, so a package that has
+              never been distributed still meets the reader with one loud thing
+              to do — one tab away now rather than above both, which is the
+              price of the verb sitting next to the list it acts on.
+            */}
+            {tab === DISTRIBUTION_TAB && distributeControl}
           </PMHStack>
         </PMBox>
       </PMBox>

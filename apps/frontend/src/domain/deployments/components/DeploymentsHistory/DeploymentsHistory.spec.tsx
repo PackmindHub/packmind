@@ -13,6 +13,8 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  PackageId,
+  TargetId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
@@ -40,6 +42,8 @@ const distribution = (
   index: number,
   overrides: Partial<DistributionHistoryEntry> = {},
   operation: DistributionOperation = 'add',
+  versionSpec: string | null = null,
+  latestReleaseVersion: string | null = null,
 ): DistributionHistoryEntry => ({
   id: createDistributionId(`distribution-${index}`),
   createdAt: '2026-08-31T10:56:00.000Z',
@@ -70,6 +74,8 @@ const distribution = (
       distributionId: createDistributionId(`distribution-${index}`),
       packageId,
       operation,
+      versionSpec,
+      latestReleaseVersion,
     },
   ],
   ...overrides,
@@ -109,11 +115,14 @@ const artifactDistribution = <DP extends DistributedPackageHistoryEntry>(
 const distributedPackage = (
   index: number,
   operation: DistributionOperation = 'add',
+  versionSpec: string | null = null,
 ) => ({
   id: createDistributedPackageId(`distributed-${index}`),
   distributionId: createDistributionId('distribution-1'),
   packageId,
   operation,
+  versionSpec,
+  latestReleaseVersion: null,
 });
 
 const withCommandVersion = (
@@ -249,8 +258,13 @@ describe('DeploymentsHistory', () => {
   const headers = () =>
     screen.getAllByRole('columnheader').map((cell) => cell.textContent);
 
-  /** The Version column, which leads every row that is not a package history. */
+  /** The Version column, which leads every row. */
   const version = () => screen.getAllByRole('cell')[0];
+
+  const packageVersions = () =>
+    screen
+      .getAllByTestId(DeploymentsHistoryDataTestId.PackageVersion)
+      .map((cell) => cell.textContent);
 
   /*
    * Two columns printed the same value on nearly every row of the log, and
@@ -270,10 +284,59 @@ describe('DeploymentsHistory', () => {
       expect(headers()).not.toContain('Author');
     });
 
+    it('puts the version first', () => {
+      renderHistory([distribution(1)]);
+
+      expect(headers()[0]).toBe('Version');
+    });
+
     it('keeps the message, which is the one that runs out of room', () => {
       renderHistory([distribution(1)]);
 
       expect(headers()).toContain('Message');
+    });
+
+    // A narrow table cut its pixel-wide columns' neighbours down to a letter.
+    it('sizes every column as a share of the table', () => {
+      const { container } = renderHistory([distribution(1)]);
+
+      const widths = Array.from(container.querySelectorAll('col')).map((col) =>
+        col.getAttribute('width'),
+      );
+      expect(widths.every((width) => width?.endsWith('%'))).toBe(true);
+    });
+
+    it('names a header in full when its column cuts it', async () => {
+      stubLayout(400, 60);
+      renderHistory([distribution(1)]);
+
+      await userEvent.hover(screen.getByText('Distributed At'));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Distributed At',
+      );
+    });
+  });
+
+  describe('when the repository of the target can no longer be found', () => {
+    const base = distribution(1);
+    const orphan = distribution(1, {
+      target: {
+        ...base.target,
+        gitRepo: undefined,
+      } as DistributionHistoryEntry['target'],
+    });
+
+    it('names the repository unknown', () => {
+      renderHistory([orphan]);
+
+      expect(screen.getByText('Unknown repository')).toBeInTheDocument();
+    });
+
+    it('does not print the repository id in the row', () => {
+      renderHistory([orphan]);
+
+      expect(screen.queryByText(/repo-1/)).not.toBeInTheDocument();
     });
   });
 
@@ -400,6 +463,190 @@ describe('DeploymentsHistory', () => {
       expect(await screen.findByRole('tooltip')).toHaveTextContent(LONG_ERROR);
     });
   });
+  describe('when a target was deleted since', () => {
+    const renderWithLiveTargets = (liveTargetIds?: ReadonlySet<TargetId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[distribution(1), distribution(2)]}
+              type="package"
+              entityId={packageId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              liveTargetIds={liveTargetIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    const bodyRows = () => screen.getAllByRole('row').slice(1);
+
+    it('greys out the row on the deleted target', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[1]).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('leaves the row on a live target as it is', () => {
+      renderWithLiveTargets(new Set([createTargetId('target-1')]));
+
+      expect(bodyRows()[0]).not.toHaveAttribute('aria-disabled');
+    });
+
+    it('greys out nothing while the live targets are not known yet', () => {
+      renderWithLiveTargets(undefined);
+
+      bodyRows().forEach((row) =>
+        expect(row).not.toHaveAttribute('aria-disabled'),
+      );
+    });
+  });
+
+  describe('the package a distribution went out in', () => {
+    const renderWithPackage = (livePackageIds?: ReadonlySet<PackageId>) =>
+      render(
+        <MemoryRouter>
+          <UIProvider>
+            <DeploymentsHistory
+              deployments={[
+                artifactDistribution([
+                  {
+                    ...withCommandVersion(1, 4),
+                    package: { id: packageId, name: 'Backend guidelines' },
+                  } as CommandDistributionHistoryEntry['distributedPackages'][number],
+                ]),
+              ]}
+              type="command"
+              entityId={commandId}
+              usersMap={{ [authorId]: 'joan.racenet' }}
+              orgSlug="acme"
+              spaceSlug="global"
+              livePackageIds={livePackageIds}
+            />
+          </UIProvider>
+        </MemoryRouter>,
+      );
+
+    it('links to a package that still exists', () => {
+      renderWithPackage(new Set([packageId]));
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+
+    it('names a deleted package without linking to it', () => {
+      renderWithPackage(new Set());
+
+      expect(screen.getByText('Backend guidelines')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Backend guidelines' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('links while the live packages are not known yet', () => {
+      renderWithPackage(undefined);
+
+      expect(
+        screen.getByRole('link', { name: 'Backend guidelines' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("a package's history", () => {
+    it('shows the release a pinned destination was sent', () => {
+      renderHistory([distribution(1, {}, 'add', '1.2.0')]);
+
+      expect(version()).toHaveTextContent('1.2.0');
+    });
+
+    it('shows the live package as unreleased, based on the release it was built on', () => {
+      renderHistory([distribution(1, {}, 'add', '*', '1.1.0')]);
+
+      expect(version()).toHaveTextContent('based on 1.1.0');
+    });
+
+    it('shows the live package as unreleased alone when it had no release yet', () => {
+      renderHistory([distribution(1, {}, 'add', '*', null)]);
+
+      expect(version()?.textContent).toBe('Unreleased');
+    });
+
+    it('shows a dash when the distribution recorded no version', () => {
+      renderHistory([distribution(1)]);
+
+      expect(version()).toHaveTextContent('-');
+    });
+
+    it('reads the version off this package, not another one sent with it', () => {
+      const base = distribution(1, {}, 'add', '1.2.0');
+      renderHistory([
+        {
+          ...base,
+          distributedPackages: [
+            {
+              ...base.distributedPackages[0],
+              id: createDistributedPackageId('distributed-other'),
+              packageId: createPackageId('package-other'),
+              versionSpec: '9.9.9',
+            },
+            ...base.distributedPackages,
+          ],
+        },
+      ]);
+
+      expect(version()).toHaveTextContent('1.2.0');
+    });
+  });
+
+  describe('the package column of an artifact history', () => {
+    const withPackage = <DP extends { packageId: typeof packageId }>(
+      dp: DP,
+    ) => ({
+      ...dp,
+      package: {
+        id: dp.packageId,
+        name: 'Backend package',
+        slug: 'backend-package',
+      } as DistributedPackageHistoryEntry['package'],
+    });
+
+    it('shows the package version beside the package name', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withPackage({
+            ...withCommandVersion(1, 4),
+            versionSpec: '1.2.0',
+          }),
+        ]),
+      ]);
+
+      expect(packageVersions()).toEqual(['1.2.0']);
+    });
+
+    it('shows an unreleased package with its base release on one line', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withPackage({
+            ...withCommandVersion(1, 4),
+            versionSpec: '*',
+            latestReleaseVersion: '1.1.0',
+          }),
+        ]),
+      ]);
+
+      expect(packageVersions()).toEqual(['Unreleased, based on 1.1.0']);
+    });
+
+    it('shows a dash beside the name when no version was recorded', () => {
+      renderStandardHistory([
+        artifactDistribution([withPackage(withStandardVersion(1, 7))]),
+      ]);
+
+      expect(packageVersions()).toEqual(['-']);
+    });
+  });
+
   describe("a command's history", () => {
     it('shows the version of the command that was distributed', () => {
       renderCommandHistory([artifactDistribution([withCommandVersion(1, 4)])]);

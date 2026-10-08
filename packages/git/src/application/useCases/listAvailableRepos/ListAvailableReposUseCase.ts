@@ -1,7 +1,10 @@
+import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { GitProviderService } from '../../GitProviderService';
 import {
-  GitProviderNotFoundError,
+  GitProviderOrganizationMismatchError,
   GitProviderTokenNotConfiguredError,
+  IAccountsPort,
   IListAvailableReposUseCase,
   ListAvailableReposCommand,
   ListAvailableReposResponse,
@@ -9,13 +12,27 @@ import {
 } from '@packmind/types';
 import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
 
-export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
-  constructor(private readonly gitProviderService: GitProviderService) {}
+const origin = 'ListAvailableReposUseCase';
 
-  async execute(
-    command: ListAvailableReposCommand,
+export class ListAvailableReposUseCase
+  extends AbstractMemberUseCase<
+    ListAvailableReposCommand,
+    ListAvailableReposResponse
+  >
+  implements IListAvailableReposUseCase
+{
+  constructor(
+    private readonly gitProviderService: GitProviderService,
+    accountsAdapter: IAccountsPort,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsAdapter, logger);
+  }
+
+  protected async executeForMembers(
+    command: ListAvailableReposCommand & MemberContext,
   ): Promise<ListAvailableReposResponse> {
-    const { gitProviderId, page } = command;
+    const { gitProviderId, page, organization, userId } = command;
 
     if (!gitProviderId) {
       throw new MissingGitInputError('Git provider ID');
@@ -23,8 +40,20 @@ export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
 
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
-    if (!gitProvider) {
-      throw new GitProviderNotFoundError(gitProviderId);
+
+    // A provider that does not exist and one owned by another organization are
+    // the same answer by design, so they are the same branch.
+    if (!gitProvider || gitProvider.organizationId !== organization.id) {
+      this.logger.error('Git provider not found in organization', {
+        gitProviderId,
+        providerOrganizationId: gitProvider?.organizationId ?? null,
+        requestedOrganizationId: organization.id,
+        userId,
+      });
+      throw new GitProviderOrganizationMismatchError(
+        gitProviderId,
+        organization.id,
+      );
     }
 
     // App-auth providers carry no token on the row: the installation token is

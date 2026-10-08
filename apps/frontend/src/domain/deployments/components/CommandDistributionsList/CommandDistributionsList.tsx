@@ -3,6 +3,8 @@ import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/
 import { useListCommandDistributionsQuery } from '../../api/queries/DeploymentsQueries';
 import { CommandId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
+import { useLivePackageIds } from '../../hooks/useLivePackageIds';
+import { useLiveTargetIds } from '../../hooks/useLiveTargetIds';
 
 interface CommandDistributionsListProps {
   recipeId: CommandId;
@@ -22,6 +24,8 @@ export const CommandDistributionsList: React.FC<
 
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
+  const livePackageIds = useLivePackageIds();
+  const liveTargetIds = useLiveTargetIds();
 
   const buildUserMap = (
     data: { users: Array<{ userId: string; displayName: string }> } | undefined,
@@ -46,6 +50,8 @@ export const CommandDistributionsList: React.FC<
       title="Distributions history"
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
+      livePackageIds={livePackageIds}
+      liveTargetIds={liveTargetIds}
     />
   );
 };

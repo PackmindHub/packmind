@@ -12,9 +12,10 @@ builds swap the aliases to real implementations.
 `tsconfig.base.effective.json`. Most projects need it before they type check or test, but not all —
 check the project you are in rather than assuming:
 
-- **typecheck**: 25 of the 31 `tsconfig.json` files extend the generated config and fail until it
+- **typecheck**: 25 of the 32 `tsconfig.json` files extend the generated config and fail until it
   exists. The six that extend the plain `tsconfig.base.json` instead need no setup: `linter-ast`,
-  `linter-execution`, `llm`, `logger`, `test-utils` and `apps/cli-e2e-tests`.
+  `linter-execution`, `llm`, `logger`, `test-utils` and `apps/cli-e2e-tests`. The last one is a
+  standalone lint-rule fixture under `eslint-rules/` that extends nothing.
 - **test**: 13 of the 26 `jest.config.ts` files `require` the generated config and feed its `paths`
   to `pathsToModuleNameMapper`; `deployments` reads the plain `tsconfig.base.json`; the other twelve
   declare no path mapping at all and run without either.
@@ -53,7 +54,8 @@ hexas — add a plugin hexa there rather than wiring it into the API directly.
 
 ## Constraints
 
-- Tagged `env:shared`, so nothing `env:node`-only may be imported here.
+- Tagged `env:shared`, so it may import `env:shared` and `env:node` packages (it already uses
+  `@packmind/node-utils` and `@packmind/logger`) but never `env:browser` ones (`ui`, `frontend`).
 - Every new module must be re-exported from `src/index.ts`, otherwise the aliased specifier above
   resolves to a barrel that does not expose it.
 

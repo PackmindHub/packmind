@@ -1,9 +1,19 @@
 import { PackageReleaseDetail } from '@packmind/types';
 
-/** One component of a package, resolved to its current latest version. */
+/**
+ * One component of a package, resolved to its current latest version.
+ *
+ * The version *number*, not the version id. Both identify a revision just as
+ * precisely — a number is unique within its component, which is the only scope
+ * this is ever compared in — but the number is already on the entity every
+ * space-wide read loads, where the id costs a second read of the same
+ * components purely to learn it.
+ *
+ * Null when the component has no version at all, which never matches a pin.
+ */
 export type PackageComponentSnapshot = {
   id: string;
-  latestVersionId: string | null;
+  latestVersion: number | null;
 };
 
 /**
@@ -72,7 +82,8 @@ export const componentListMatches = (
 };
 
 /**
- * Compares each component's latest version id against the id the release pinned.
+ * Compares each component's latest version number against the one the release
+ * pinned for it.
  *
  * May assume it is only meaningful when component lists already match; still,
  * does not throw when they do not (a component present on one side and absent
@@ -82,57 +93,28 @@ export const pinnedVersionsMatch = (
   pkg: PackageGateSnapshot,
   release: PackageReleaseDetail,
 ): boolean => {
-  // Build maps of component id to pinned version id from the release
-  const releasePinnedVersions = new Map<string, string>();
+  const pinnedVersions = new Map<string, number>();
 
   release.recipeVersions.forEach((v) => {
-    releasePinnedVersions.set(`recipe:${v.recipeId}`, v.id);
+    pinnedVersions.set(`recipe:${v.recipeId}`, v.version);
   });
   release.standardVersions.forEach((v) => {
-    releasePinnedVersions.set(`standard:${v.standardId}`, v.id);
+    pinnedVersions.set(`standard:${v.standardId}`, v.version);
   });
   release.skillVersions.forEach((v) => {
-    releasePinnedVersions.set(`skill:${v.skillId}`, v.id);
+    pinnedVersions.set(`skill:${v.skillId}`, v.version);
   });
 
-  // Check if every current component has the same latest version id as what was pinned
-  for (const recipe of pkg.recipes) {
-    // A component with no version (null) never matches a pinned version
-    if (recipe.latestVersionId === null) {
-      return false;
-    }
-    const key = `recipe:${recipe.id}`;
-    const pinnedId = releasePinnedVersions.get(key);
-    if (pinnedId !== recipe.latestVersionId) {
-      return false;
-    }
-  }
+  const matches = (family: string, component: PackageComponentSnapshot) =>
+    // A component with no version (null) never matches a pinned version.
+    component.latestVersion !== null &&
+    pinnedVersions.get(`${family}:${component.id}`) === component.latestVersion;
 
-  for (const standard of pkg.standards) {
-    // A component with no version (null) never matches a pinned version
-    if (standard.latestVersionId === null) {
-      return false;
-    }
-    const key = `standard:${standard.id}`;
-    const pinnedId = releasePinnedVersions.get(key);
-    if (pinnedId !== standard.latestVersionId) {
-      return false;
-    }
-  }
-
-  for (const skill of pkg.skills) {
-    // A component with no version (null) never matches a pinned version
-    if (skill.latestVersionId === null) {
-      return false;
-    }
-    const key = `skill:${skill.id}`;
-    const pinnedId = releasePinnedVersions.get(key);
-    if (pinnedId !== skill.latestVersionId) {
-      return false;
-    }
-  }
-
-  return true;
+  return (
+    pkg.recipes.every((recipe) => matches('recipe', recipe)) &&
+    pkg.standards.every((standard) => matches('standard', standard)) &&
+    pkg.skills.every((skill) => matches('skill', skill))
+  );
 };
 
 /**

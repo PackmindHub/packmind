@@ -35,5 +35,14 @@ export interface IGitProvider {
     branch: string,
   ) => Promise<boolean>;
 
+  // Substring match on the branch name; an empty search lists the first
+  // `limit` branches. Names only.
+  searchBranches: (
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ) => Promise<string[]>;
+
   checkAuth: () => Promise<CheckAuthResult>;
 }

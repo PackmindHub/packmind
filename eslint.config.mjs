@@ -1,6 +1,28 @@
 import nx from '@nx/eslint-plugin';
 import tseslint from 'typescript-eslint';
+import path from 'node:path';
 import packmind from './eslint-rules/index.js';
+
+// Type-aware rules only run on packages' domain and application layers, since
+// parsing with type information is what costs the time — plus all of
+// `packages/types`, which has no such layers but holds errors use cases throw.
+// `nx lint` runs ESLint from the project dir; the legacy `@nx/eslint:lint`
+// executor from the root.
+const lintedDir = path.relative(import.meta.dirname, process.cwd());
+const domainLayerFiles =
+  lintedDir === ''
+    ? [
+        'packages/*/src/domain/**/*.ts',
+        'packages/*/src/application/**/*.ts',
+        'packages/types/src/**/*.ts',
+      ]
+    : /^packages[\\/][^\\/]+$/.test(lintedDir)
+      ? [
+          '**/src/domain/**/*.ts',
+          '**/src/application/**/*.ts',
+          ...(path.basename(lintedDir) === 'types' ? ['src/**/*.ts'] : []),
+        ]
+      : [];
 
 export default [
   ...nx.configs['flat/base'],
@@ -28,6 +50,29 @@ export default [
     files: ['**/*.ts', '**/*.tsx'],
     rules: { 'packmind/usecase-casing': 'error' },
   },
+  ...(domainLayerFiles.length > 0
+    ? [
+        {
+          // Every error thrown from a domain or application layer must carry
+          // a `kind`, or DomainExceptionFilter answers 500. Jobs and listeners
+          // run outside the HTTP scope, so the filter never sees their errors.
+          files: domainLayerFiles,
+          ignores: [
+            '**/*.spec.ts',
+            '**/*.test.ts',
+            '**/application/jobs/**',
+            '**/application/listeners/**',
+          ],
+          languageOptions: {
+            parserOptions: {
+              projectService: true,
+              tsconfigRootDir: process.cwd(),
+            },
+          },
+          rules: { 'packmind/throw-kind-carrying-error': 'error' },
+        },
+      ]
+    : []),
   {
     files: ['**/*.json'],
     // Override or add rules here

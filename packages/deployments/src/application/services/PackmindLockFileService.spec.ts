@@ -104,6 +104,7 @@ describe('PackmindLockFileService', () => {
           skillVersions,
           codingAgents: ['claude'],
           packageSlugs: ['my-package'],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {
             [String(recipeId)]: 'space-A',
@@ -189,6 +190,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -213,6 +215,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -240,6 +243,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -273,6 +277,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude', 'cursor'],
           packageSlugs: ['pkg-a'],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: { [String(recipeId)]: 'space-A' },
           artifactPackageIds: { [String(recipeId)]: ['pkg-1'] },
@@ -312,6 +317,7 @@ describe('PackmindLockFileService', () => {
           skillVersions,
           codingAgents: ['claude'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: { [String(skillId)]: 'space-C' },
           artifactPackageIds: { [String(skillId)]: ['pkg-3'] },
@@ -351,6 +357,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: [],
           packageSlugs: ['zebra', 'alpha', 'mango'],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -367,6 +374,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['cursor', 'claude', 'copilot'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -385,6 +393,7 @@ describe('PackmindLockFileService', () => {
           skillVersions,
           codingAgents: ['cursor', 'claude'],
           packageSlugs: ['pkg-b', 'pkg-a'],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {
             [String(recipeId)]: 'space-A',
@@ -470,6 +479,7 @@ describe('PackmindLockFileService', () => {
           skillVersions,
           codingAgents: ['claude'],
           packageSlugs: ['my-package'],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -488,6 +498,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude'],
           packageSlugs: ['my-package'],
+          packageVersions: {},
           artifactSpaceIds: {},
           artifactPackageIds: {},
         });
@@ -516,6 +527,7 @@ describe('PackmindLockFileService', () => {
           skillVersions: [],
           codingAgents: ['claude'],
           packageSlugs: [],
+          packageVersions: {},
           targetId: 'target-1',
           artifactSpaceIds: {},
           artifactPackageIds: {},
@@ -554,6 +566,7 @@ describe('PackmindLockFileService', () => {
             skillVersions,
             codingAgents: ['claude'],
             packageSlugs: [],
+            packageVersions: {},
             artifactSpaceIds: {},
             artifactPackageIds: {},
           });
@@ -583,6 +596,7 @@ describe('PackmindLockFileService', () => {
             skillVersions,
             codingAgents: ['claude'],
             packageSlugs: [],
+            packageVersions: {},
             artifactSpaceIds: {},
             artifactPackageIds: {},
           });
@@ -616,6 +630,7 @@ describe('PackmindLockFileService', () => {
             skillVersions,
             codingAgents: ['claude', 'cursor'],
             packageSlugs: [],
+            packageVersions: {},
             artifactSpaceIds: {},
             artifactPackageIds: {},
           });
@@ -638,6 +653,81 @@ describe('PackmindLockFileService', () => {
           expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
         });
       });
+    });
+  });
+
+  describe('when package versions are given', () => {
+    let result: PackmindLockFile;
+
+    beforeEach(() => {
+      result = service.buildLockFile({
+        fileModifications: [],
+        recipeVersions: [],
+        standardVersions: [],
+        skillVersions: [],
+        codingAgents: [],
+        packageSlugs: ['@team/zebra', '@team/alpha'],
+        packageVersions: { '@team/zebra': '*', '@team/alpha': '1.2.3' },
+        artifactSpaceIds: {},
+        artifactPackageIds: {},
+      });
+    });
+
+    it('records them sorted by slug', () => {
+      expect(Object.entries(result.packages ?? {})).toEqual([
+        ['@team/alpha', '1.2.3'],
+        ['@team/zebra', '*'],
+      ]);
+    });
+  });
+
+  describe('removePackageFromLockFile', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 2,
+      packageSlugs: ['@team/ops', '@team/ui'],
+      packages: { '@team/ops': '1.2.3', '@team/ui': '2.0.0' },
+      agents: ['claude'],
+      artifacts: {
+        'user:standard:ops-standard': {
+          name: 'Ops Standard',
+          type: 'standard',
+          id: 'std-ops',
+          version: 1,
+          spaceId: 'space-1',
+          packageIds: ['pkg-ops'],
+          source: 'user',
+          files: [],
+        },
+        'user:standard:ui-standard': {
+          name: 'UI Standard',
+          type: 'standard',
+          id: 'std-ui',
+          version: 1,
+          spaceId: 'space-1',
+          packageIds: ['pkg-ui'],
+          source: 'user',
+          files: [],
+        },
+      },
+    };
+    let result: PackmindLockFile;
+
+    beforeEach(() => {
+      result = service.removePackageFromLockFile(lockFile, 'ops', ['std-ops']);
+    });
+
+    it('drops the scoped slug from packageSlugs', () => {
+      expect(result.packageSlugs).toEqual(['@team/ui']);
+    });
+
+    it('drops the package version', () => {
+      expect(result.packages).toEqual({ '@team/ui': '2.0.0' });
+    });
+
+    it('drops the artifacts only that package brought', () => {
+      expect(Object.keys(result.artifacts)).toEqual([
+        'user:standard:ui-standard',
+      ]);
     });
   });
 
@@ -941,6 +1031,24 @@ describe('PackmindLockFileService', () => {
           'user:standard:accessible-standard',
           'user:standard:zzz-preserved',
         ]);
+      });
+    });
+
+    describe('when both lock files record package versions', () => {
+      it('keeps the existing versions and lets the new ones win', () => {
+        const result = service.mergeWithExistingLockFile(
+          { ...newLockFile, packages: { '@team-a/pkg-a': '1.3.0' } },
+          {
+            ...newLockFile,
+            packages: { '@team-a/pkg-a': '1.2.3', '@team-b/pkg-b': '*' },
+          },
+          ['pkg-a'],
+        );
+
+        expect(result.packages).toEqual({
+          '@team-a/pkg-a': '1.3.0',
+          '@team-b/pkg-b': '*',
+        });
       });
     });
 

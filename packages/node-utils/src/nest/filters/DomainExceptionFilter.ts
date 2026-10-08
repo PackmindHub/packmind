@@ -14,6 +14,7 @@ import {
   isUpstreamError,
   UpstreamErrorKind,
 } from '@packmind/types';
+import { describeCause } from './describeCause';
 
 const origin = 'DomainExceptionFilter';
 
@@ -40,6 +41,8 @@ const KIND_POLICY: Record<DomainErrorKind, KindPolicy> = {
   not_found: { status: HttpStatus.NOT_FOUND, logLevel: 'warn' },
   invalid_input: { status: HttpStatus.BAD_REQUEST, logLevel: 'warn' },
   conflict: { status: HttpStatus.CONFLICT, logLevel: 'warn' },
+  unauthenticated: { status: HttpStatus.UNAUTHORIZED, logLevel: 'warn' },
+  rate_limited: { status: HttpStatus.TOO_MANY_REQUESTS, logLevel: 'warn' },
 };
 
 /**
@@ -125,13 +128,21 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         kind: exception.kind,
         reason: exception.reason,
         ...(hasContext(exception) ? { context: exception.context } : {}),
+        ...(typeof exception.retryAfterSeconds === 'number'
+          ? { retryAfterSeconds: exception.retryAfterSeconds }
+          : {}),
       });
 
-      host
-        .switchToHttp()
-        .getResponse<HttpResponse>()
-        .status(statusCode)
-        .json(body);
+      const response = host.switchToHttp().getResponse<HttpResponse>();
+
+      if (typeof exception.retryAfterSeconds === 'number') {
+        response.setHeader?.(
+          'Retry-After',
+          String(exception.retryAfterSeconds),
+        );
+      }
+
+      response.status(statusCode).json(body);
       return;
     }
 
@@ -151,6 +162,9 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         ...(hasContext(exception) ? { context: exception.context } : {}),
         ...(exception.retryAfterSeconds !== undefined
           ? { retryAfterSeconds: exception.retryAfterSeconds }
+          : {}),
+        ...(exception.cause !== undefined
+          ? { cause: describeCause(exception.cause) }
           : {}),
       });
 
@@ -180,6 +194,9 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
         message: exception.message,
         stack: exception.stack,
         ...(exception.context ? { context: exception.context } : {}),
+        ...(exception.cause !== undefined
+          ? { cause: describeCause(exception.cause) }
+          : {}),
       });
     }
 

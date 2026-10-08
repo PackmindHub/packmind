@@ -13,6 +13,8 @@ import {
 } from '@packmind/ui';
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
+import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { PackageDistributionList } from '../PackageDistributionList';
@@ -23,6 +25,7 @@ import {
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import type { PackageDrift } from '../redesign/types';
 import { ContextDestinationList } from './ContextDestinationList';
+import type { PackageDestination } from './buildPackageDestinations';
 import { buildPackageSyncScope } from './buildPackageSyncScope';
 import { usePackageDestinations } from './usePackageDestinations';
 
@@ -108,6 +111,41 @@ export function ContextPackageDistribution({
     [providersResponse],
   );
   const [isHistoryOpen, setHistoryOpen] = useState(false);
+  /*
+   * The release drawer, reached from the row that raised the question. The
+   * package's version bar above the tabs owns one too, and the readiness both
+   * read is the same cached query rather than a second fetch: what differs is
+   * only where the reader was standing when they asked for it.
+   */
+  const [isReleaseOpen, setReleaseOpen] = useState(false);
+  /*
+   * The rows a `Release & Update` was pressed on, held while the drawer is up.
+   *
+   * The destinations rather than the scope they build into: the scope is read
+   * against the drift, and the whole point of the wait is that the drift is
+   * about to change. Built on the way out instead, from the release that now
+   * exists.
+   *
+   * Null is "no push is waiting on this drawer", which is also what the version
+   * bar's own release button leaves it as — cutting from there is a release and
+   * nothing more.
+   */
+  const [pendingRelease, setPendingRelease] = useState<
+    readonly PackageDestination[] | null
+  >(null);
+
+  const { data: releases } = useListPackageReleasesQuery(
+    organization?.id,
+    pkg.spaceId,
+    pkg.id,
+  );
+  /*
+   * Withheld until it is known, so the row offers nothing rather than a button
+   * that opens an empty form: the drawer is built from this, and a reader who
+   * clicked before it arrived would be looking at a release with no versions to
+   * choose from.
+   */
+  const releaseReadiness = releases?.readiness ?? null;
 
   const {
     destinations,
@@ -213,8 +251,56 @@ export function ContextPackageDistribution({
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);
             }}
+            onReleaseAndUpdate={
+              releaseReadiness
+                ? (picked) => {
+                    setPendingRelease(picked);
+                    setReleaseOpen(true);
+                  }
+                : undefined
+            }
           />
         </PMBox>
+      )}
+
+      {organization && releaseReadiness && (
+        <CreatePackageReleaseDrawer
+          packageId={pkg.id}
+          spaceId={pkg.spaceId}
+          organizationId={organization.id}
+          readiness={releaseReadiness}
+          componentsCount={
+            pkg.recipes.length + pkg.standards.length + pkg.skills.length
+          }
+          open={isReleaseOpen}
+          onOpenChange={(next) => {
+            setReleaseOpen(next);
+            /*
+             * Cancelling the form cancels the push it was the first half of.
+             * Leaving it set would make the next release cut from anywhere —
+             * the version bar above included — distribute to rows the reader
+             * picked for a gesture they then abandoned.
+             */
+            if (!next) setPendingRelease(null);
+          }}
+          onReleased={() => {
+            if (!pendingRelease) return;
+            setPendingRelease(null);
+            /*
+             * Against the release that was just cut, which is what the drift
+             * now reads: the mutation refreshes it before resolving, so these
+             * landings have moved from "on the newest release" to "a release
+             * behind" by the time this runs, and that is precisely the standing
+             * the confirmation can send.
+             */
+            const scope = buildPackageSyncScope(
+              pendingRelease,
+              pkg.id,
+              marketplaces,
+            );
+            if (scope) onStartSync(scope);
+          }}
+        />
       )}
 
       {/*

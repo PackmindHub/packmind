@@ -112,6 +112,51 @@ describe('TargetResolutionService', () => {
       });
     });
 
+    describe('when the remote is on an instance installed under a path prefix', () => {
+      const prefixedProvider: GitProviderListItem = {
+        ...githubProvider,
+        id: createGitProviderId(uuidv4()),
+        source: GitProviderVendors.gitlab,
+        url: 'https://devtools.acme.io/gitlab',
+      };
+      const otherHostProvider: GitProviderListItem = {
+        ...githubProvider,
+        id: createGitProviderId(uuidv4()),
+        source: GitProviderVendors.gitlab,
+        url: 'https://gitlab.com',
+      };
+      const otherHostRepoId = createGitRepoId(uuidv4());
+
+      beforeEach(() => {
+        gitPort.listProviders.mockResolvedValue({
+          providers: [otherHostProvider, prefixedProvider],
+        });
+        gitPort.listRepos.mockImplementation(async (id) => [
+          gitRepoFactory({
+            id: id === prefixedProvider.id ? gitRepoId : otherHostRepoId,
+            owner: 'team',
+            repo: 'app',
+            branch: 'main',
+          }),
+        ]);
+        targetService.getTargetsByGitRepoId.mockImplementation(async (id) =>
+          id === gitRepoId ? [target] : [],
+        );
+      });
+
+      it('returns the target of the repository of that instance', async () => {
+        const result = await service.findTargetFromGitInfo(
+          organizationId,
+          userId,
+          'https://devtools.acme.io/gitlab/team/app.git',
+          gitBranch,
+          '/',
+        );
+
+        expect(result).toEqual(target);
+      });
+    });
+
     describe('when no matching repo exists', () => {
       beforeEach(() => {
         gitPort.listProviders.mockResolvedValue({

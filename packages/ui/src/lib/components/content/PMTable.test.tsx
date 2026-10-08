@@ -1100,4 +1100,18 @@ describe('PMTable', () => {
       });
     });
   });
+  describe('getRowProps', () => {
+    it('applies the props to the matching body row', () => {
+      renderPMTable({
+        columns: mockColumns,
+        data: mockData,
+        getRowProps: (row) =>
+          (row as PMTableRow).id === 'user-2' ? { 'aria-disabled': true } : {},
+      });
+
+      const rows = screen.getAllByRole('row').slice(1);
+      expect(rows[1]).toHaveAttribute('aria-disabled', 'true');
+      expect(rows[0]).not.toHaveAttribute('aria-disabled');
+    });
+  });
 });

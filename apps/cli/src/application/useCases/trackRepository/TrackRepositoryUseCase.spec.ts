@@ -82,7 +82,6 @@ describe('TrackRepositoryUseCase', () => {
         repo: 'my-repo',
         branch: 'dev',
         origin: 'track',
-        providerVendor: 'github',
         gitRemoteUrl: REMOTE_URL,
       });
     });

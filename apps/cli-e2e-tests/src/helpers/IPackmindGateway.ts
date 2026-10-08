@@ -18,6 +18,7 @@ import {
   ISignUpWithOrganizationUseCase,
   IUpdateCommandFromUIUseCase,
   IUpdatePackageUseCase,
+  IUpdateStandardUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IUploadSkillUseCase,
   IListSkillsBySpaceUseCase,
@@ -58,6 +59,7 @@ export interface IPackageGateway {
 
 export interface IStandardGateway {
   create: Gateway<ICreateStandardUseCase>;
+  update: Gateway<IUpdateStandardUseCase>;
   list: Gateway<IListStandardsBySpaceUseCase>;
 }
 

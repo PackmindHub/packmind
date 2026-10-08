@@ -403,6 +403,30 @@ describe('Tracked branch distribution history integration', () => {
     });
   });
 
+  describe('when a branch left behind has its repository soft-deleted', () => {
+    beforeEach(async () => {
+      const mainRepo = await setTracked('main');
+      await distributeTo(mainRepo);
+
+      const devRepo = await findOrCreateRepo(
+        OWNER,
+        REPO,
+        'dev',
+        GIT_REMOTE_URL,
+      );
+      await distributeTo(devRepo);
+      await fixture.datasource
+        .getRepository(GitRepoSchema)
+        .softDelete({ id: devRepo.id });
+    });
+
+    it('keeps the deleted branch in the history, still named', async () => {
+      await expect(displayedBranches()).resolves.toEqual(
+        expect.arrayContaining(['main', 'dev']),
+      );
+    });
+  });
+
   describe('when a repository has never been tracked', () => {
     beforeEach(async () => {
       const legacyMain = await findOrCreateRepo(

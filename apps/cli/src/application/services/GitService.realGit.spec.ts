@@ -19,9 +19,18 @@ describe('GitService against real git', () => {
   let repoPath: string;
   let service: GitService;
 
+  // A git hook exports GIT_DIR and friends; inherited, they point every git
+  // call here at the repository running the hook instead of the temp repo
+  // (`init --bare` then flips its core.bare). Jest sandboxes process.env, so
+  // the clean env has to be passed to each call.
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
+  );
+
   const git = (args: string, cwd: string = repoPath) =>
     execSync(`git ${args}`, {
       cwd,
+      env,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -33,6 +42,7 @@ describe('GitService against real git', () => {
     root = mkdtempSync(path.join(tmpdir(), 'packmind-git-service-'));
     repoPath = path.join(root, 'repo');
     execSync(`git init -q -b main "${repoPath}"`, {
+      env,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     git('config user.email test@packmind.com');
@@ -41,7 +51,14 @@ describe('GitService against real git', () => {
     git('commit -q --allow-empty -m "initial commit"');
     git('branch feature');
 
-    service = new GitService();
+    service = new GitService(undefined, (cmd, opts) => ({
+      stdout: execSync(`git ${cmd}`, {
+        ...opts,
+        env,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }),
+    }));
   });
 
   afterEach(() => {
@@ -93,6 +110,7 @@ describe('GitService against real git', () => {
     it('reports the branch exists', () => {
       const remotePath = path.join(root, 'origin.git');
       execSync(`git init -q --bare "${remotePath}"`, {
+        env,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       git(`remote add origin "${remotePath}"`);

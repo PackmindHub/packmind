@@ -354,22 +354,10 @@ describe('AuthController', () => {
         );
       });
 
-      it('throws an HttpException', async () => {
+      it('rethrows the domain error for the filter to answer 401', async () => {
         await expect(
           controller.signIn(signInRequest, mockResponse),
-        ).rejects.toThrow(HttpException);
-      });
-
-      it('maps the error to HTTP 401', async () => {
-        await expect(
-          controller.signIn(signInRequest, mockResponse),
-        ).rejects.toMatchObject({ status: HttpStatus.UNAUTHORIZED });
-      });
-
-      it('exposes the domain error message', async () => {
-        await expect(
-          controller.signIn(signInRequest, mockResponse),
-        ).rejects.toThrow('Invalid email or password');
+        ).rejects.toBeInstanceOf(InvalidEmailOrPasswordError);
       });
 
       it('calls authService.signIn with the request', async () => {
@@ -396,26 +384,10 @@ describe('AuthController', () => {
         );
       });
 
-      it('throws an HttpException', async () => {
+      it('rethrows the domain error for the filter to answer 429', async () => {
         await expect(
           controller.signIn(signInRequest, mockResponse),
-        ).rejects.toThrow(HttpException);
-      });
-
-      it('maps the error to HTTP 429', async () => {
-        await expect(
-          controller.signIn(signInRequest, mockResponse),
-        ).rejects.toMatchObject({ status: HttpStatus.TOO_MANY_REQUESTS });
-      });
-
-      it('includes the bannedUntil timestamp in the response body', async () => {
-        await expect(
-          controller.signIn(signInRequest, mockResponse),
-        ).rejects.toMatchObject({
-          response: expect.objectContaining({
-            bannedUntil: bannedUntil.toISOString(),
-          }),
-        });
+        ).rejects.toBeInstanceOf(TooManyLoginAttemptsError);
       });
 
       it('does not set the auth cookie', async () => {

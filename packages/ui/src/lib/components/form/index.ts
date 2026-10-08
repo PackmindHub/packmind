@@ -9,6 +9,10 @@ export { PMFileUpload } from './PMFileUpload/PMFileUpload';
 export * from './PMButton/PMButton';
 export * from './PMCheckbox/PMCheckbox';
 export { PMCombobox } from './PMCombobox/PMCombobox';
+export {
+  PMAutocomplete,
+  type PMAutocompleteProps,
+} from './PMAutocomplete/PMAutocomplete';
 export * from './PMCheckboxCard/PMCheckboxCard';
 export * from './PMCheckboxGroup/PMCheckboxGroup';
 export * from './PMRadioCard/PMRadioCard';

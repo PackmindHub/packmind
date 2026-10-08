@@ -6,6 +6,7 @@ import {
   type DriftArtifactEntry,
   type InstallDriftEntry,
 } from '../redesign/selectors/installDriftEntries';
+import type { DestinationRemedy } from '../redesign/selectors/destinationStanding';
 
 /**
  * Where a package has got to, as one list.
@@ -37,14 +38,16 @@ import {
 export type PackageDestinationState =
   | 'failed'
   | 'waiting'
+  | 'drifted'
   | 'behind'
   | 'aligned';
 
 const STATE_RANK: Record<PackageDestinationState, number> = {
   failed: 0,
   waiting: 1,
-  behind: 2,
-  aligned: 3,
+  drifted: 2,
+  behind: 3,
+  aligned: 4,
 };
 
 /**
@@ -54,6 +57,13 @@ const STATE_RANK: Record<PackageDestinationState, number> = {
 export const STATE_TONE: Record<PackageDestinationState, string> = {
   failed: 'red.300',
   waiting: 'blue.300',
+  /*
+   * One orange for both. They are different facts — a `*` landing whose content
+   * has been overtaken, and a pinned one a release would move forward — and the
+   * row says which in words. A second warning hue would ask the eye to tell
+   * apart two things that need the same amount of attention.
+   */
+  drifted: 'orange.500',
   behind: 'orange.500',
   aligned: 'green.500',
 };
@@ -248,6 +258,27 @@ export type PackageDestination = {
    */
   hasWorkToSend: boolean;
   /**
+   * What would actually close the gap here.
+   *
+   * `release` is the one `Update` cannot: the landing holds the newest release
+   * there is and the package has moved past it, so the row offers a way to cut
+   * one instead of a button that would commit nothing. Always `update` for a
+   * marketplace that is outdated, which is republished rather than released.
+   */
+  remedy: DestinationRemedy;
+  /**
+   * Whether cutting a release and sending it is also on offer here.
+   *
+   * Beside `remedy` rather than folded into it, because the two are not
+   * exclusive: a landing pinned to a release that has been overtaken can take
+   * the release that exists *and* can take one cut from the work done since.
+   * Collapsing that into one verb is what made the second move invisible.
+   *
+   * Always false for a marketplace, which tracks the live package: a cut moves
+   * nothing a republish would not already send.
+   */
+  canReleaseAndUpdate: boolean;
+  /**
    * The key the redistribute flow works in, `repoId::targetId`. Null for a
    * marketplace, which is republished rather than pushed to.
    */
@@ -354,7 +385,15 @@ function repositoryRow(
     state,
     behindArtifacts: entry.behindArtifacts,
     behindCount: entry.behindArtifacts.length,
-    hasWorkToSend: entry.behindArtifacts.length > 0,
+    /*
+     * The standing's remedy, not the component count: a landing on the newest
+     * release of a package that has moved past it reads behind and has nothing
+     * to receive — the push would commit nothing and the row would read behind
+     * afterwards. What it needs is a release, which `remedy` names.
+     */
+    hasWorkToSend: entry.standing.remedy === 'update',
+    remedy: entry.standing.remedy,
+    canReleaseAndUpdate: entry.standing.canReleaseAndUpdate,
     installKey: `${entry.repo.id}::${entry.target.id}`,
     prUrl: null,
     /*
@@ -384,7 +423,15 @@ function repositoryState(entry: InstallDriftEntry): PackageDestinationState {
   if (entry.lastDistributionStatus === DistributionStatus.in_progress) {
     return 'waiting';
   }
-  return entry.behindArtifacts.length > 0 ? 'behind' : 'aligned';
+  /*
+   * Taken from the landing's standing rather than from its late components,
+   * which no longer answer the question on their own: a pinned landing has none
+   * — every component is exactly what its release pinned — and can still be a
+   * release behind where it should be.
+   */
+  if (entry.standing.status === 'drifted') return 'drifted';
+  if (entry.standing.status === 'behind') return 'behind';
+  return 'aligned';
 }
 
 function marketplaceRow(publication: PackagePublication): PackageDestination {
@@ -399,7 +446,7 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
         : publication.lastAttempt === 'waiting'
           ? 'waiting'
           : publication.isOutdated
-            ? 'behind'
+            ? 'drifted'
             : 'aligned',
     behindArtifacts: [],
     behindCount: 0,
@@ -411,6 +458,8 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
      * one is retried.
      */
     hasWorkToSend: publication.isOutdated,
+    remedy: publication.isOutdated ? 'update' : 'none',
+    canReleaseAndUpdate: false,
     installKey: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,

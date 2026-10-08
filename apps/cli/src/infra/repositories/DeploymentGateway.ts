@@ -80,6 +80,7 @@ export class DeploymentGateway implements IDeploymentGateway {
           packmindLockFile: command.packmindLockFile,
           ...(command.relativePath && { relativePath: command.relativePath }),
           ...(command.agents !== undefined && { agents: command.agents }),
+          ...(command.preview && { preview: true }),
         },
       },
     );
@@ -145,6 +146,9 @@ export class DeploymentGateway implements IDeploymentGateway {
             gitBranch: command.gitBranch,
             relativePath: command.relativePath,
             packmindLockFile: command.packmindLockFile,
+            ...(command.packageVersions !== undefined && {
+              packageVersions: command.packageVersions,
+            }),
           },
         },
       );

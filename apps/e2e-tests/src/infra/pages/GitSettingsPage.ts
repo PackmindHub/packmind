@@ -1,3 +1,4 @@
+import { Locator } from '@playwright/test';
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 import { IGitSettingsPage } from '../../domain/pages';
 
@@ -156,6 +157,86 @@ export class GitSettings
     await this.page
       .getByText('Token accepted.')
       .waitFor({ state: 'visible', timeout: 5000 });
+  }
+
+  async openManageRepos(): Promise<void> {
+    await this.page
+      .locator('[data-testid="connection-drawer-manage-repos"]')
+      .click();
+    await this.page
+      .locator('[data-testid="manage-repos-list"]')
+      .waitFor({ state: 'visible' });
+  }
+
+  async listBranchesOf(fullName: string): Promise<string[]> {
+    const rows = this.repoGroup(fullName).locator(
+      '[data-testid="manage-repos-row"][data-branch]',
+    );
+    await rows.first().waitFor({ state: 'visible' });
+    const branches: string[] = [];
+    for (const row of await rows.all()) {
+      branches.push((await row.getAttribute('data-branch')) ?? '');
+    }
+    return branches;
+  }
+
+  async changeBranch(fullName: string, branch: string): Promise<void> {
+    const group = this.repoGroup(fullName);
+    await group.locator('[data-testid="manage-repos-change-branch"]').click();
+    const input = group.locator('[data-testid="manage-repos-branch-input"]');
+    await input.fill(branch);
+    await input.press('Enter');
+    // The check settles one of two ways: the input closes on a branch that
+    // exists, or stays open with an error under it.
+    const error = group.locator('[data-testid="manage-repos-branch-error"]');
+    await Promise.race([
+      input.waitFor({ state: 'detached' }),
+      error.waitFor({ state: 'visible' }),
+    ]);
+  }
+
+  async changeBranchFromSuggestions(
+    fullName: string,
+    typed: string,
+    suggestion: string,
+  ): Promise<void> {
+    const group = this.repoGroup(fullName);
+    await group.locator('[data-testid="manage-repos-change-branch"]').click();
+    const input = group.locator('[data-testid="manage-repos-branch-input"]');
+    // Key by key, as a user types: suggestions follow each keystroke.
+    await input.pressSequentially(typed);
+    await this.page
+      .locator('[data-testid="manage-repos-branch-option"]', {
+        hasText: new RegExp(`^${suggestion}$`),
+      })
+      .click();
+    // A suggestion switches at once: the provider has just listed it.
+    await input.waitFor({ state: 'detached' });
+  }
+
+  async branchError(): Promise<string | null> {
+    const error = this.page.locator(
+      '[data-testid="manage-repos-branch-error"]',
+    );
+    if (!(await error.isVisible())) return null;
+    return (await error.innerText()).trim();
+  }
+
+  async canApplyRepoChanges(): Promise<boolean> {
+    return this.page.locator('[data-testid="manage-repos-apply"]').isEnabled();
+  }
+
+  async applyRepoChanges(): Promise<void> {
+    await this.page.locator('[data-testid="manage-repos-apply"]').click();
+    await this.page
+      .locator('[data-testid="manage-repos-list"]')
+      .waitFor({ state: 'detached' });
+  }
+
+  private repoGroup(fullName: string): Locator {
+    return this.page.locator(
+      `[data-testid="manage-repos-group"][data-repo-key="${fullName}"]`,
+    );
   }
 
   expectedUrl(): string | RegExp {

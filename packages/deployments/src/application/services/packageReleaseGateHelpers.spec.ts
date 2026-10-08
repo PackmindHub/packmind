@@ -36,19 +36,19 @@ describe('packageReleaseGate', () => {
     recipes: [
       {
         id: cmdId as unknown as string,
-        latestVersionId: cmdVersionId as unknown as string,
+        latestVersion: 1,
       },
     ],
     standards: [
       {
         id: stdId as unknown as string,
-        latestVersionId: stdVersionId as unknown as string,
+        latestVersion: 1,
       },
     ],
     skills: [
       {
         id: skillId as unknown as string,
-        latestVersionId: skillVersionId as unknown as string,
+        latestVersion: 1,
       },
     ],
   });
@@ -196,23 +196,23 @@ describe('packageReleaseGate', () => {
           recipes: [
             {
               id: cmdId2 as unknown as string,
-              latestVersionId: cmdVersionId2 as unknown as string,
+              latestVersion: 1,
             },
             {
               id: cmdId as unknown as string,
-              latestVersionId: cmdVersionId as unknown as string,
+              latestVersion: 1,
             },
           ],
           standards: [
             {
               id: stdId as unknown as string,
-              latestVersionId: stdVersionId as unknown as string,
+              latestVersion: 1,
             },
           ],
           skills: [
             {
               id: skillId as unknown as string,
-              latestVersionId: skillVersionId as unknown as string,
+              latestVersion: 1,
             },
           ],
         };
@@ -272,11 +272,11 @@ describe('packageReleaseGate', () => {
         const pkg: PackageGateSnapshot = {
           ...fp(),
           recipes: [
-            { id: 'cmd-1', latestVersionId: 'cmd-ver-1' },
-            { id: 'cmd-2', latestVersionId: 'cmd-ver-2' },
+            { id: 'cmd-1', latestVersion: 1 },
+            { id: 'cmd-2', latestVersion: 2 },
           ],
-          standards: [{ id: 'std-1', latestVersionId: 'std-ver-1' }],
-          skills: [{ id: 'skill-1', latestVersionId: 'skill-ver-1' }],
+          standards: [{ id: 'std-1', latestVersion: 1 }],
+          skills: [{ id: 'skill-1', latestVersion: 1 }],
         };
 
         const release = releaseBuilder();
@@ -290,8 +290,8 @@ describe('packageReleaseGate', () => {
         const pkg: PackageGateSnapshot = {
           ...fp(),
           recipes: [],
-          standards: [{ id: 'std-1', latestVersionId: 'std-ver-1' }],
-          skills: [{ id: 'skill-1', latestVersionId: 'skill-ver-1' }],
+          standards: [{ id: 'std-1', latestVersion: 1 }],
+          skills: [{ id: 'skill-1', latestVersion: 1 }],
         };
 
         const release = releaseBuilder();
@@ -311,13 +311,13 @@ describe('packageReleaseGate', () => {
       });
     });
 
-    describe('when one component has a newer version id', () => {
+    describe('when one component has a newer version', () => {
       it('does not match', () => {
         const pkg: PackageGateSnapshot = {
           ...fp(),
-          recipes: [{ id: 'cmd-1', latestVersionId: 'cmd-ver-2' }],
-          standards: [{ id: 'std-1', latestVersionId: 'std-ver-1' }],
-          skills: [{ id: 'skill-1', latestVersionId: 'skill-ver-1' }],
+          recipes: [{ id: 'cmd-1', latestVersion: 2 }],
+          standards: [{ id: 'std-1', latestVersion: 1 }],
+          skills: [{ id: 'skill-1', latestVersion: 1 }],
         };
 
         const release = releaseBuilder();
@@ -329,7 +329,7 @@ describe('packageReleaseGate', () => {
     describe('when the component lists do not match', () => {
       const pkg: PackageGateSnapshot = {
         ...fp(),
-        recipes: [{ id: 'cmd-2', latestVersionId: 'cmd-ver-2' }],
+        recipes: [{ id: 'cmd-2', latestVersion: 2 }],
       };
 
       it('does not throw', () => {
@@ -438,8 +438,8 @@ describe('packageReleaseGate', () => {
           const pkg: PackageGateSnapshot = {
             ...fp(),
             recipes: [
-              { id: 'cmd-1', latestVersionId: 'cmd-ver-1' },
-              { id: 'cmd-2', latestVersionId: 'cmd-ver-2' },
+              { id: 'cmd-1', latestVersion: 1 },
+              { id: 'cmd-2', latestVersion: 2 },
             ],
           };
 
@@ -474,7 +474,7 @@ describe('packageReleaseGate', () => {
         it('is ready', () => {
           const pkg: PackageGateSnapshot = {
             ...fp(),
-            recipes: [{ id: 'cmd-1', latestVersionId: 'cmd-ver-2' }],
+            recipes: [{ id: 'cmd-1', latestVersion: 2 }],
           };
 
           expect(evaluatePackageReleaseGate(pkg, releaseBuilder())).toBe(
@@ -499,7 +499,7 @@ describe('packageReleaseGate', () => {
             ...fp(),
             recipes: [
               ...fp().recipes,
-              { id: 'cmd-no-version', latestVersionId: null },
+              { id: 'cmd-no-version', latestVersion: null },
             ],
           };
 
@@ -515,7 +515,7 @@ describe('packageReleaseGate', () => {
         const pkg: PackageGateSnapshot = {
           name: 'Package with unresolved component',
           description: 'A package with one unresolved component',
-          recipes: [{ id: 'cmd-no-version', latestVersionId: null }],
+          recipes: [{ id: 'cmd-no-version', latestVersion: null }],
           standards: [],
           skills: [],
         };

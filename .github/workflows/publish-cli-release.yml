@@ -30,7 +30,7 @@ env:
 
 jobs:
   sign-macos-cli:
-    runs-on: ${{ vars.MACOS_ACTION_RUNNER_TAG || 'macos-15' }}depot-macos-15
+    runs-on: ${{ vars.MACOS_ACTION_RUNNER_TAG || 'macos-15' }}
     timeout-minutes: 30
     outputs:
       version: ${{ steps.get-version.outputs.version }}
@@ -131,6 +131,7 @@ jobs:
         with:
           name: cli-macos-arm64-signed-${{ steps.get-version.outputs.version }}
           path: cli-executables/packmind-cli-macos-arm64-${{ steps.get-version.outputs.version }}
+          retention-days: 10
 
   publish-npm:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}

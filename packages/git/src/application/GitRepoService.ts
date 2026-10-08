@@ -88,11 +88,13 @@ export class GitRepoService {
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     return this.gitRepoRepository.findTrackedByOwnerRepoInOrganization(
       organizationId,
       owner,
       repo,
+      opts,
     );
   }
 
@@ -115,13 +117,18 @@ export class GitRepoService {
     gitRepo: GitRepo,
     providerId: GitProviderId,
     organizationId: OrganizationId,
+    owner: string = gitRepo.owner,
   ): Promise<GitRepo> {
     await this.gitRepoRepository.clearTrackingRemoved(
       gitRepo.owner,
       gitRepo.repo,
       organizationId,
     );
-    return this.gitRepoRepository.reassignProvider(gitRepo.id, providerId);
+    return this.gitRepoRepository.reassignProvider(
+      gitRepo.id,
+      providerId,
+      owner,
+    );
   }
 
   /**
@@ -132,11 +139,13 @@ export class GitRepoService {
     owner: string,
     repo: string,
     organizationId: OrganizationId,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     return this.gitRepoRepository.findByOwnerAndRepoInOrganization(
       owner,
       repo,
       organizationId,
+      opts,
     );
   }
 

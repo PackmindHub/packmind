@@ -7,6 +7,7 @@ import { GET_RULES_BY_STANDARD_ID_KEY } from '../../standards/api/queryKeys';
 import {
   GET_PACKAGE_BY_ID_KEY,
   GET_PACKAGE_RELEASE_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGE_RELEASES_KEY,
 } from '../api/queryKeys';
@@ -156,6 +157,18 @@ describe('SpaceContentSubscription', () => {
         queryKey: [...GET_PACKAGE_RELEASE_KEY, SPACE_ID],
       });
     });
+
+    /*
+     * Every landing carries whether the package has moved past the release it
+     * is pinned to, and a component joining the package is what moves it. Left
+     * cached, the Distribution tab calls a repository up to date beneath a
+     * release bar offering the release that would fix it.
+     */
+    it('drops where the space packages are standing', () => {
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY, SPACE_ID],
+      });
+    });
   });
 
   // Importing a folder of skills announces one event per skill.
@@ -169,7 +182,7 @@ describe('SpaceContentSubscription', () => {
     });
 
     it('refreshes once for the whole burst', () => {
-      expect(invalidateQueries).toHaveBeenCalledTimes(6);
+      expect(invalidateQueries).toHaveBeenCalledTimes(7);
     });
   });
 

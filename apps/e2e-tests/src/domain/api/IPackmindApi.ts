@@ -7,6 +7,7 @@ import {
   IUploadSkillUseCase,
   IListUserSpaces,
   IListSkillVersionsUseCase,
+  ISetTrackedRepositoryUseCase,
 } from '@packmind/types';
 
 export interface IPackmindApi {
@@ -18,4 +19,6 @@ export interface IPackmindApi {
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   listSkillVersions: Gateway<IListSkillVersionsUseCase>;
+  /** Tracks a repository on a branch, as `packmind-cli git track` does. */
+  setTrackedRepository: Gateway<ISetTrackedRepositoryUseCase>;
 }

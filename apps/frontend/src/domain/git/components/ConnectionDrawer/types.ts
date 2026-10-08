@@ -12,7 +12,17 @@ export const tupleKey = (t: RepoTuple): string =>
 
 export type RepoSelection = {
   tuples: RepoTuple[];
+  /**
+   * Repos whose branch was changed with "change branch", keyed by
+   * `owner/repo`. Kept apart from `tuples` because unticking one of a legacy
+   * repo's several branches and switching to the branch that remains end in
+   * the same tuples but must not do the same thing.
+   */
+  switches: Map<string, string>;
 };
+
+export const repoKey = (t: { owner: string; repo: string }): string =>
+  `${t.owner}/${t.repo}`;
 
 export type ApplyProgressPhase = 'running' | 'error';
 

@@ -92,6 +92,7 @@ export type DistributionLogEntry = {
 
 export interface IPackagePage extends IPackmindAppPage {
   openDistributionsTab(): Promise<void>;
+  /** Empty when the log shows its empty state. */
   listDistributions(): Promise<DistributionLogEntry[]>;
   isPackageEmpty(): Promise<boolean>;
   listStandardsInPackage(): Promise<{ name: string }[]>;
@@ -167,6 +168,29 @@ export interface IGitSettingsPage extends IPackmindAppPage {
   openReauthFromDrawer(): Promise<void>;
   submitReauthToken(token: string): Promise<void>;
   waitForReauthAccepted(): Promise<void>;
+  /** Opens the repository editor of the open connection drawer. */
+  openManageRepos(): Promise<void>;
+  /** The branches shown under `owner/repo` in the repository editor. */
+  listBranchesOf(fullName: string): Promise<string[]>;
+  /**
+   * Types a branch into `owner/repo`'s change-branch input and commits it,
+   * then waits for the check to settle: the input closes, or an error shows.
+   */
+  changeBranch(fullName: string, branch: string): Promise<void>;
+  /**
+   * Types `typed` into `owner/repo`'s change-branch input, picks `suggestion`
+   * from the branches suggested, and commits it with the Change button.
+   */
+  changeBranchFromSuggestions(
+    fullName: string,
+    typed: string,
+    suggestion: string,
+  ): Promise<void>;
+  /** The error under the change-branch input, or null when there is none. */
+  branchError(): Promise<string | null>;
+  canApplyRepoChanges(): Promise<boolean>;
+  /** Applies the repository editor's changes and waits for it to close. */
+  applyRepoChanges(): Promise<void>;
 }
 
 export interface ICliSetupPage extends IPackmindAppPage {

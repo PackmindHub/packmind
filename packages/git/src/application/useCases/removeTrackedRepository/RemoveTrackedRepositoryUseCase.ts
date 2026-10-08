@@ -13,7 +13,9 @@ import {
   RepositoryNotTrackableError,
   RepositoryTrackingRemovedEvent,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { findByOwnerReadings } from '../shared/findByOwnerReadings';
 
 const origin = 'RemoveTrackedRepositoryUseCase';
 
@@ -31,6 +33,7 @@ export class RemoveTrackedRepositoryUseCase
 {
   constructor(
     private readonly gitRepoService: GitRepoService,
+    private readonly gitProviderService: GitProviderService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -42,24 +45,37 @@ export class RemoveTrackedRepositoryUseCase
     command: RemoveTrackedRepositoryCommand & AdminContext,
   ): Promise<RemoveTrackedRepositoryResponse> {
     const { owner, repo, organization, userId } = command;
-
-    const existingTracked =
-      await this.gitRepoService.findTrackedByOwnerRepoInOrganization(
-        organization.id,
-        owner,
-        repo,
-      );
+    // A remote cloned from an instance installed under a path prefix carries
+    // that prefix before the group; its repository may be recorded without it.
+    const ownerReadings = await this.gitProviderService.ownerReadings(
+      organization.id,
+      owner,
+    );
+    const existingTracked = await findByOwnerReadings(
+      ownerReadings,
+      (ownerReading, opts) =>
+        this.gitRepoService.findTrackedByOwnerRepoInOrganization(
+          organization.id,
+          ownerReading,
+          repo,
+          opts,
+        ),
+    );
 
     if (!existingTracked) {
       // Nothing tracked. Distinguish "connected but not governed" — a warning
       // the caller can ignore, and safe to repeat — from a repository Packmind
       // has never seen, which is a mistake worth failing on.
-      const knownRepo =
-        await this.gitRepoService.findByOwnerAndRepoInOrganization(
-          owner,
-          repo,
-          organization.id,
-        );
+      const knownRepo = await findByOwnerReadings(
+        ownerReadings,
+        (ownerReading, opts) =>
+          this.gitRepoService.findByOwnerAndRepoInOrganization(
+            ownerReading,
+            repo,
+            organization.id,
+            opts,
+          ),
+      );
 
       if (!knownRepo) {
         this.logger.warn('Tracking removal targets an unknown repository', {

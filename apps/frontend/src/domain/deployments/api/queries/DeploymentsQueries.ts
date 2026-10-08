@@ -22,6 +22,7 @@ import {
   CreatePackageReleaseCommand,
   ListPackageReleasesCommand,
   GetPackageReleaseCommand,
+  GitRepoId,
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -49,6 +50,7 @@ import {
   LIST_STANDARD_DISTRIBUTIONS_KEY,
   LIST_SKILL_DISTRIBUTIONS_KEY,
   REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
+  SYNC_REPOSITORY_FROM_LOCK_FILES_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
   getDashboardKpiKey,
   getDashboardNonLiveKey,
@@ -821,6 +823,20 @@ export const useCreatePackageReleaseMutation = () => {
           variables.packageId,
         ),
       });
+      /*
+       * A cut moves every pinned destination of this package: one sitting on
+       * what was the newest release is now a release behind, and what it needs
+       * changes from cutting a release to distributing it. Drift reads the
+       * newest release and whether the package has moved past it, so leaving
+       * this key alone leaves the rows offering `Create a release` after the
+       * release has been created.
+       *
+       * Nothing needed this before releases reached drift, which is why the cut
+       * only ever refreshed its own list.
+       */
+      await queryClient.invalidateQueries({
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+      });
     },
     onError: (error) => {
       console.error('Error creating package release:', error);
@@ -837,16 +853,28 @@ export const useCreatePackageReleaseMutation = () => {
  * pane without navigation; arriving at or returning to the pane refetches via the
  * query's `refetchOnMount: 'always'` setting.
  *
+ * The drift key alongside it, because the Distribution tab runs that same gate:
+ * `hasUnreleasedChanges` on every landing is the gate's verdict, and a pinned
+ * destination sitting on the newest release reads `up to date` until it flips.
+ * Refreshing only the readiness left the release bar offering a release and the
+ * tab below it still calling the repository up to date — one pane, two answers,
+ * until the page was reloaded.
+ *
  * Invalidated by prefix rather than per package: one package pane is mounted
  * at a time, so this refetches exactly the one on screen and marks the rest
  * stale without a request.
  */
-function invalidatePackageReleaseReadiness(
+function invalidatePackageReleaseState(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
-  return queryClient.invalidateQueries({
-    queryKey: LIST_PACKAGE_RELEASES_KEY,
-  });
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: LIST_PACKAGE_RELEASES_KEY,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+    }),
+  ]);
 }
 
 function invalidateChangeProposalQueries(
@@ -878,7 +906,7 @@ export const useUpdatePackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
       await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
@@ -946,7 +974,7 @@ export const useAddArtefactsToPackagesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
@@ -997,7 +1025,7 @@ export const useMoveArtefactsToPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_PACKAGE_BY_ID_KEY,
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
@@ -1044,7 +1072,7 @@ export const useRemoveArtefactsFromPackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
       });
-      await invalidatePackageReleaseReadiness(queryClient);
+      await invalidatePackageReleaseState(queryClient);
     },
   });
 };
@@ -1109,6 +1137,52 @@ export const useRemovePackageFromTargetsMutation = () => {
     },
     onError: (error) => {
       console.error('Error removing package from targets:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to Remove Package',
+        description: isPackmindError(error)
+          ? error.message
+          : 'An unexpected error occurred while removing the package.',
+      });
+    },
+  });
+};
+
+export const useSyncRepositoryFromLockFilesMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: SYNC_REPOSITORY_FROM_LOCK_FILES_MUTATION_KEY,
+    mutationFn: async ({ gitRepoId }: { gitRepoId: GitRepoId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required');
+      }
+      return deploymentsGateways.syncDistributionsFromLockFiles({
+        organizationId: organization.id,
+        gitRepoId,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+      });
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
+      });
+    },
+    onError: (error) => {
+      pmToaster.create({
+        type: 'error',
+        title: "Couldn't sync from the repository",
+        description: !isPackmindError(error)
+          ? 'Packmind could not read the lock files. Try again in a moment.'
+          : error.serverError.data.reason === 'no_tracked_repository'
+            ? 'No branch of this repository is tracked. Track one from Manage repositories in its Git connection, then sync again.'
+            : error.message,
+      });
     },
   });
 };

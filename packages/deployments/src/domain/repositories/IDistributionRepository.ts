@@ -1,5 +1,6 @@
 import {
   Distribution,
+  DistributedPackage,
   CommandDistributionHistoryEntry,
   DistributionHistoryEntry,
   SkillDistributionHistoryEntry,
@@ -107,6 +108,11 @@ export interface IDistributionRepository {
     targetId: TargetId,
   ): Promise<PackageId[]>;
 
+  findActiveDistributedPackagesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<DistributedPackage[]>;
+
   /**
    * Render modes of the latest successful distribution of each package still
    * active on the target, aggregated.
@@ -125,7 +131,7 @@ export interface IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
-  ): Promise<Distribution>;
+  ): Promise<void>;
 
   /**
    * Count distinct artifact IDs that are currently deployed (appear in the
@@ -198,6 +204,16 @@ export type ActivePackageOperationRow = {
    * stands now.
    */
   lastDistributionError: string | null;
+  /**
+   * The `packmind.json` spec this destination was left on by that same
+   * distribution: `*` when it tracks the live package, an exact `X.Y.Z` when it
+   * is pinned to a release, and null when the row records none.
+   *
+   * Read off the very distribution the status beside it belongs to, for the
+   * same reason: the question is where this destination stands now, and an
+   * older row's spec would answer about where it used to.
+   */
+  versionSpec: string | null;
 };
 
 export type OutdatedDeployment<TArtifactId extends string> = {

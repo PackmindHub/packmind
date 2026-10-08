@@ -2,13 +2,16 @@ import {
   createOrganizationId,
   createUserId,
   isDomainError,
+  isInternalError,
 } from '@packmind/types';
 import { SpaceAdminRequiredError } from './AbstractSpaceAdminUseCase';
 import { SpaceMembershipRequiredError } from './AbstractSpaceMemberUseCase';
 import {
+  MembershipOrganizationNotFoundError,
   OrganizationAdminRequiredError,
   UserAccessError,
   UserNotFoundError,
+  UserAccessInternalError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
 
@@ -53,6 +56,45 @@ describe('UserAccessError kinds', () => {
 
     it('satisfies the DomainError guard', () => {
       expect(isDomainError(error)).toBe(true);
+    });
+  });
+
+  describe('when a MembershipOrganizationNotFoundError is constructed', () => {
+    const error = new MembershipOrganizationNotFoundError({
+      userId,
+      organizationId,
+    });
+
+    it('exposes the not_found kind', () => {
+      expect(error.kind).toBe('not_found');
+    });
+
+    it('exposes its reason', () => {
+      expect(error.reason).toBe('organization_not_found');
+    });
+
+    it('keeps the organization id out of the message', () => {
+      expect(error.message).not.toContain(organizationId);
+    });
+
+    it('satisfies the DomainError guard', () => {
+      expect(isDomainError(error)).toBe(true);
+    });
+  });
+
+  describe('when a UserAccessInternalError is constructed', () => {
+    const error = new UserAccessInternalError(
+      'organization_id_missing',
+      { userId },
+      'Organization ID is required for admin access operations',
+    );
+
+    it('satisfies the InternalError guard', () => {
+      expect(isInternalError(error)).toBe(true);
+    });
+
+    it('is not a domain error', () => {
+      expect(isDomainError(error)).toBe(false);
     });
   });
 

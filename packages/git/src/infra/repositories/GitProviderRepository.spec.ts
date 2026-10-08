@@ -15,10 +15,15 @@ import {
   createUserId,
   GitProvider,
   GitProviderNotFoundError,
+  GitRepo,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration, EncryptionService } from '@packmind/node-utils';
-import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
+import {
+  gitProviderFactory,
+  gitlabProviderFactory,
+  gitRepoFactory,
+} from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
 
@@ -685,6 +690,115 @@ describe('GitProviderRepository', () => {
 
     it('stores defined token value in database', async () => {
       expect(rawProvider?.token).toBeDefined();
+    });
+  });
+  describe('deleteIfHoldsNoRepository', () => {
+    let provider: GitProvider;
+    const deletedBy = createUserId(uuidv4());
+
+    const saveRepo = (overrides: Partial<GitRepo> = {}) =>
+      fixture.datasource.getRepository(GitRepoSchema).save(
+        gitRepoFactory({
+          providerId: createGitProviderId(provider.id),
+          ...overrides,
+        }),
+      );
+
+    beforeEach(async () => {
+      provider = await gitProviderRepository.add(
+        gitProviderFactory({
+          organizationId: testOrganization.id,
+          token: null,
+        }),
+      );
+    });
+
+    describe('when the provider holds no repository', () => {
+      let deleted: boolean;
+
+      beforeEach(async () => {
+        deleted = await gitProviderRepository.deleteIfHoldsNoRepository(
+          createGitProviderId(provider.id),
+          deletedBy,
+        );
+      });
+
+      it('resolves true', () => {
+        expect(deleted).toBe(true);
+      });
+
+      it('soft-deletes the provider', async () => {
+        expect(
+          await gitProviderRepository.findById(
+            createGitProviderId(provider.id),
+          ),
+        ).toBeNull();
+      });
+
+      it('records who deleted it', async () => {
+        const row = await fixture.datasource
+          .getRepository(GitProviderSchema)
+          .findOne({ where: { id: provider.id }, withDeleted: true });
+
+        expect(row).toMatchObject({ deletedBy });
+      });
+    });
+
+    describe('when the provider still holds a repository', () => {
+      let deleted: boolean;
+
+      beforeEach(async () => {
+        await saveRepo({ type: 'marketplace' });
+
+        deleted = await gitProviderRepository.deleteIfHoldsNoRepository(
+          createGitProviderId(provider.id),
+          deletedBy,
+        );
+      });
+
+      it('resolves false', () => {
+        expect(deleted).toBe(false);
+      });
+
+      it('keeps the provider', async () => {
+        expect(
+          await gitProviderRepository.findById(
+            createGitProviderId(provider.id),
+          ),
+        ).not.toBeNull();
+      });
+    });
+
+    describe('when its only repository was deleted', () => {
+      it('deletes the provider', async () => {
+        const repo = await saveRepo();
+        await fixture.datasource.getRepository(GitRepoSchema).softDelete({
+          id: repo.id,
+        });
+
+        expect(
+          await gitProviderRepository.deleteIfHoldsNoRepository(
+            createGitProviderId(provider.id),
+            deletedBy,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when the provider is already deleted', () => {
+      it('resolves false', async () => {
+        await gitProviderRepository.deleteById(
+          createGitProviderId(provider.id),
+          deletedBy,
+        );
+
+        expect(
+          await gitProviderRepository.deleteIfHoldsNoRepository(
+            createGitProviderId(provider.id),
+            deletedBy,
+          ),
+        ).toBe(false);
+      });
     });
   });
 });

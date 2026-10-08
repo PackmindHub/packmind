@@ -19,18 +19,21 @@ class TestDomainError extends Error implements DomainError {
   readonly kind: DomainErrorKind;
   readonly reason: string;
   readonly context?: Record<string, unknown>;
+  readonly retryAfterSeconds?: number;
 
   constructor(
     kind: DomainErrorKind,
     reason: string,
     message: string,
     context?: Record<string, unknown>,
+    retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = 'TestDomainError';
     this.kind = kind;
     this.reason = reason;
     this.context = context;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -217,6 +220,83 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the exception is an unauthenticated domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'unauthenticated',
+          'invalid_credentials',
+          'Invalid email or password',
+        ),
+        host,
+      );
+    });
+
+    it('responds with 401', () => {
+      expect(capturedStatus()).toBe(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('returns the message and reason to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 401,
+        message: 'Invalid email or password',
+        reason: 'invalid_credentials',
+      });
+    });
+  });
+
+  describe('when the exception is a rate_limited domain error', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'rate_limited',
+          'too_many_login_attempts',
+          'Too many login attempts. Please try again later.',
+          {},
+          120,
+        ),
+        host,
+      );
+    });
+
+    it('responds with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+
+    it('returns the message and reason to the caller', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 429,
+        message: 'Too many login attempts. Please try again later.',
+        reason: 'too_many_login_attempts',
+      });
+    });
+
+    it('sets Retry-After from the delay the error carries', () => {
+      expect(setHeader).toHaveBeenCalledWith('Retry-After', '120');
+    });
+  });
+
+  describe('when a rate_limited domain error carries no delay', () => {
+    beforeEach(() => {
+      filter.catch(
+        new TestDomainError(
+          'rate_limited',
+          'too_many_login_attempts',
+          'Too many login attempts. Please try again later.',
+        ),
+        host,
+      );
+    });
+
+    it('omits the Retry-After header', () => {
+      expect(setHeader).not.toHaveBeenCalled();
+    });
+
+    it('still answers with 429', () => {
+      expect(capturedStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+
   // The policy table, stated as behaviour: a new kind added to the union
   // without a row here fails to compile, and a row given the wrong status
   // fails here.
@@ -225,6 +305,8 @@ describe('DomainExceptionFilter', () => {
     ['not_found', HttpStatus.NOT_FOUND],
     ['invalid_input', HttpStatus.BAD_REQUEST],
     ['conflict', HttpStatus.CONFLICT],
+    ['unauthenticated', HttpStatus.UNAUTHORIZED],
+    ['rate_limited', HttpStatus.TOO_MANY_REQUESTS],
   ] satisfies ReadonlyArray<[DomainErrorKind, number]>)(
     'when the domain error kind is %s',
     (kind, expectedStatus) => {
@@ -355,6 +437,30 @@ describe('DomainExceptionFilter', () => {
     });
   });
 
+  describe('when the upstream error wraps a caught failure', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindUpstreamError(
+          'upstream_unavailable',
+          'gitlab_unreachable',
+          { provider: 'gitlab' },
+          'GitLab did not answer, try again shortly.',
+          undefined,
+          { cause: new Error('connect ECONNREFUSED 10.0.0.1:443') },
+        ),
+        host,
+      );
+    });
+
+    it('keeps the cause out of the body', () => {
+      expect(capturedBody()).toEqual({
+        statusCode: 502,
+        message: 'GitLab did not answer, try again shortly.',
+        reason: 'gitlab_unreachable',
+      });
+    });
+  });
+
   // The upstream policy table, stated as behaviour: a new kind added to the
   // union without a row fails to compile, and a row given the wrong status
   // fails here.
@@ -394,6 +500,31 @@ describe('DomainExceptionFilter', () => {
     });
 
     it("keeps Nest's generic body, so the message never reaches the caller", () => {
+      expect(repliedBody()).toEqual({
+        statusCode: 500,
+        message: 'Internal server error',
+      });
+    });
+  });
+
+  describe('when the internal error wraps a caught failure', () => {
+    beforeEach(() => {
+      filter.catch(
+        new PackmindInternalError(
+          'package_reload_failed',
+          { packageId: '9ff2d85e-d9e4-40ae-bd02-c24429ba0d20' },
+          'Failed to retrieve the updated package.',
+          { cause: new Error('connection reset') },
+        ),
+        host,
+      );
+    });
+
+    it('still responds with 500', () => {
+      expect(repliedStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    });
+
+    it("still keeps Nest's generic body, so the cause never reaches the caller", () => {
       expect(repliedBody()).toEqual({
         statusCode: 500,
         message: 'Internal server error',

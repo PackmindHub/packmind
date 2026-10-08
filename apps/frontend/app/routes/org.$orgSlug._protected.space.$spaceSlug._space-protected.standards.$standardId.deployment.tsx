@@ -12,6 +12,7 @@ import {
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
 import { StandardDistributionsList } from '../../src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList';
 import { useListStandardDistributionsQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
+import { useCountOnLiveTargets } from '../../src/domain/deployments/hooks/useLiveTargetIds';
 
 export default function StandardDetailDeploymentRouteModule() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -22,7 +23,7 @@ export default function StandardDetailDeploymentRouteModule() {
     useOutletContext<StandardDetailsOutletContext>();
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListStandardDistributionsQuery(standard.id);
-  const hasDistributions = distributions && distributions.length > 0;
+  const hasDistributions = (useCountOnLiveTargets(distributions) ?? 0) > 0;
 
   if (isLoadingDistributions) {
     return (

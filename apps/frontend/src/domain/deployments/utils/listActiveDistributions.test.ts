@@ -35,6 +35,8 @@ const createDistributedPackage = (
   standardVersions: [],
   skillVersions: [],
   operation: 'add',
+  versionSpec: null,
+  latestReleaseVersion: null,
   ...overrides,
 });
 

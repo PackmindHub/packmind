@@ -34,6 +34,15 @@ vi.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: vi.fn(),
 }));
 
+/*
+ * The readiness behind the row's `Create a release`. Nothing ready by default,
+ * so the rows this suite is about are unchanged: the button only appears on a
+ * landing that has nowhere left to be distributed to.
+ */
+vi.mock('../../api/queries/DeploymentsQueries', () => ({
+  useListPackageReleasesQuery: () => ({ data: undefined }),
+}));
+
 vi.mock(
   '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution',
   () => ({ useMarketplaceBatchDistribution: () => vi.fn() }),
@@ -56,6 +65,8 @@ const failedDestination: PackageDestination = {
   behindArtifacts: [],
   behindCount: 0,
   hasWorkToSend: false,
+  remedy: 'none' as const,
+  canReleaseAndUpdate: false,
   installKey: 'repo-1::target-1',
   prUrl: null,
   failureReason: REASON,

@@ -1323,6 +1323,77 @@ describe('PublishPackagesUseCase', () => {
       });
     });
 
+    describe('and the rows recording what each destination received', () => {
+      const rowFor = (target: ReturnType<typeof createTargetId>) =>
+        mockDistributedPackageRepository.add.mock.calls
+          .map(([row]) => row)
+          .find((row) => row.distributionId === distributionFor(target).id);
+
+      const distributions = new Map<string, Distribution>();
+      const distributionFor = (target: ReturnType<typeof createTargetId>) => {
+        const distribution = distributions.get(target as string);
+        if (!distribution) throw new Error('no distribution for that target');
+        return distribution;
+      };
+
+      beforeEach(async () => {
+        distributions.clear();
+        for (const target of [pinnedTargetId, wildcardTargetId]) {
+          distributions.set(
+            target as string,
+            createMockDistribution({ target: targetFactory({ id: target }) }),
+          );
+        }
+
+        command = {
+          ...command,
+          targetIds: [pinnedTargetId, wildcardTargetId],
+        };
+        mockConfigReader.read.mockImplementation(async (targetId) =>
+          targetId === pinnedTargetId
+            ? configPinning('0.0.1')
+            : configPinning('*'),
+        );
+        mockDeploymentPort.publishArtifacts.mockResolvedValue({
+          distributions: [...distributions.values()],
+        });
+        mockDistributedPackageRepository.add.mockImplementation(
+          async (row) => row,
+        );
+
+        await useCase.execute(command);
+      });
+
+      it('records the release the pinned destination was moved to', () => {
+        expect(rowFor(pinnedTargetId)?.versionSpec).toBe('0.1.0');
+      });
+
+      it('records the wildcard the other destination kept', () => {
+        expect(rowFor(wildcardTargetId)?.versionSpec).toBe('*');
+      });
+
+      it('records the release the live package was built on', () => {
+        expect(rowFor(wildcardTargetId)?.latestReleaseVersion).toBe('0.1.0');
+      });
+
+      it('records no base release for the pinned destination', () => {
+        expect(rowFor(pinnedTargetId)?.latestReleaseVersion).toBeNull();
+      });
+
+      describe('and the package was never released', () => {
+        beforeEach(async () => {
+          mockDistributedPackageRepository.add.mockClear();
+          mockPackageReleaseService.listReleases.mockResolvedValue([]);
+
+          await useCase.execute({ ...command, targetIds: [wildcardTargetId] });
+        });
+
+        it('records no base release for the live package', () => {
+          expect(rowFor(wildcardTargetId)?.latestReleaseVersion).toBeNull();
+        });
+      });
+    });
+
     describe('and the caller named a version after all', () => {
       beforeEach(() => {
         command = {

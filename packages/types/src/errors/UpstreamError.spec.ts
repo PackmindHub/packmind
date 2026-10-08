@@ -171,3 +171,19 @@ describe('when no retry delay is given', () => {
     expect(error.retryAfterSeconds).toBeUndefined();
   });
 });
+
+describe('when PackmindUpstreamError wraps a caught failure', () => {
+  it('keeps the original error as its cause', () => {
+    const original = new Error('ECONNRESET');
+    const error = new PackmindUpstreamError(
+      'upstream_unavailable',
+      'gitlab_unreachable',
+      {},
+      'GitLab did not answer.',
+      undefined,
+      { cause: original },
+    );
+
+    expect(error.cause).toBe(original);
+  });
+});

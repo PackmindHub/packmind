@@ -38,11 +38,13 @@ import {
 import {
   packageHasDrift,
   packageHasFailedDistribution,
+  packageHasSendableWork,
   packageIsWaiting,
 } from '../selectors/buildPackageDriftOverview';
 import {
   formatRelativeDate,
   installDriftEntries,
+  type InstallDriftEntry,
 } from '../selectors/installDriftEntries';
 import {
   repositoryBehindInstallCount,
@@ -56,6 +58,11 @@ import {
 } from '../selectors/buildRepositoryDriftOverview';
 import type { PackageDrift, RepositoryDrift, TargetDrift } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
+import {
+  LockFileSyncWarnings,
+  SyncFromRepositoryButton,
+  useRepositoryLockFileSync,
+} from './RepositoryLockFileSync';
 import {
   ADD_GIT_CONNECTION_LABEL,
   NO_GIT_CONNECTION_BODY,
@@ -84,6 +91,8 @@ type RepositoryDetailPaneProps = {
   onSyncRepository: (repoId: GitRepoId) => void;
   /** Link to a single package's distribution history, used to surface error logs. */
   packageHistoryHref: (packageId: PackageId) => string | null;
+  /** The package's own page, where a release is cut. */
+  packageReleaseHref: (packageId: PackageId) => string | null;
   /**
    * Where a reader goes to connect this repository's provider, so the banner
    * that says the app cannot write here can also offer the way out.
@@ -127,6 +136,7 @@ export function RepositoryDetailPane({
   onSyncPackageOnTarget,
   onSyncRepository,
   packageHistoryHref,
+  packageReleaseHref,
   gitSettingsHref,
 }: Readonly<RepositoryDetailPaneProps>) {
   const lockProfile = repositoryLockProfile(
@@ -134,6 +144,7 @@ export function RepositoryDetailPane({
     providersWithToken,
     isProvidersLoading,
   );
+  const lockFileSync = useRepositoryLockFileSync(repo, providersWithToken);
   const hasDrift = repositoryHasDrift(repo);
   const hasFailure = repositoryHasFailedDistribution(repo);
   const driftedPackages = repositoryDriftedPackageCount(repo);
@@ -218,7 +229,7 @@ export function RepositoryDetailPane({
     const keys: PackageRowKey[] = [];
     for (const t of repo.targets) {
       for (const p of t.packages) {
-        if (packageHasDrift(p)) keys.push(packageRowKey(t.id, p.id));
+        if (packageHasSendableWork(p)) keys.push(packageRowKey(t.id, p.id));
       }
     }
     return keys;
@@ -369,22 +380,30 @@ export function RepositoryDetailPane({
                 </PMButton>
               </PMHStack>
             ) : (
-              hasDrift && (
-                <PMTooltip label={headerLockTooltip} placement="top">
-                  <PMButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onSyncRepository(repo.id)}
-                    disabled={repoSyncDisabled}
-                    title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
-                  >
-                    <PMIcon fontSize="sm">
-                      <LuRotateCw />
-                    </PMIcon>
-                    Distribute repository
-                  </PMButton>
-                </PMTooltip>
-              )
+              <PMHStack gap={2} align="center" flexShrink={0}>
+                <SyncFromRepositoryButton
+                  branch={repo.branch}
+                  sync={lockFileSync.sync}
+                  isSyncing={lockFileSync.isSyncing}
+                  disabledReason={lockFileSync.disabledReason}
+                />
+                {hasDrift && (
+                  <PMTooltip label={headerLockTooltip} placement="top">
+                    <PMButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onSyncRepository(repo.id)}
+                      disabled={repoSyncDisabled}
+                      title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
+                    >
+                      <PMIcon fontSize="sm">
+                        <LuRotateCw />
+                      </PMIcon>
+                      Distribute repository
+                    </PMButton>
+                  </PMTooltip>
+                )}
+              </PMHStack>
             )}
           </PMHStack>
           <PMHStack gap={5} align="center" wrap="wrap">
@@ -427,6 +446,10 @@ export function RepositoryDetailPane({
             understand before it is a state to fix, and the fix belongs to an
             admin who may not be the person reading.
           */}
+          <LockFileSyncWarnings
+            report={lockFileSync.report}
+            targets={repo.targets.map((target) => target.target)}
+          />
           {lockProfile === 'all-no-app-token' && (
             <PMAlert.Root status="warning">
               <PMAlert.Indicator>
@@ -545,6 +568,7 @@ export function RepositoryDetailPane({
                   onSyncPackageOnTarget(packageId, repo.id, t.id)
                 }
                 packageHistoryHref={packageHistoryHref}
+                packageReleaseHref={packageReleaseHref}
               />
             ))}
           </PMVStack>
@@ -568,6 +592,8 @@ type TargetSectionProps = {
   onToggleRow: (key: PackageRowKey) => void;
   onSyncPackageOnTarget: (packageId: PackageId) => void;
   packageHistoryHref: (packageId: PackageId) => string | null;
+  /** The package's own page, where a release is cut. */
+  packageReleaseHref: (packageId: PackageId) => string | null;
 };
 
 function TargetSection({
@@ -579,6 +605,7 @@ function TargetSection({
   onToggleRow,
   onSyncPackageOnTarget,
   packageHistoryHref,
+  packageReleaseHref,
 }: Readonly<TargetSectionProps>) {
   const drifted = targetDriftedPackageCount(target);
   const failed = targetFailedPackageCount(target);
@@ -646,6 +673,7 @@ function TargetSection({
             onToggle={() => onToggleRow(packageRowKey(target.id, p.id))}
             onSync={() => onSyncPackageOnTarget(p.id)}
             historyHref={packageHistoryHref(p.id)}
+            releaseHref={packageReleaseHref(p.id)}
           />
         ))}
       </PMVStack>
@@ -654,6 +682,8 @@ function TargetSection({
 }
 
 type PackageOnTargetRowProps = {
+  /** The package's own page, where a release is cut. Null when unresolved. */
+  releaseHref: string | null;
   pkg: PackageDrift;
   rowKey: PackageRowKey;
   selected: boolean;
@@ -677,9 +707,17 @@ function PackageOnTargetRow({
   onToggle,
   onSync,
   historyHref,
+  releaseHref,
 }: Readonly<PackageOnTargetRowProps>) {
   const [expanded, setExpanded] = useState(false);
   const hasDrift = packageHasDrift(pkg);
+  /*
+   * What the row may offer to push, which is not the same as what it reports.
+   * A landing on the newest release of a package that has moved past it reads
+   * as needing a hand and has nothing coming: the commit would be empty and the
+   * row would say the same thing afterwards. Only a release moves it.
+   */
+  const hasSendableWork = packageHasSendableWork(pkg);
   const hasFailure = packageHasFailedDistribution(pkg);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
@@ -700,8 +738,8 @@ function PackageOnTargetRow({
     return null;
   })();
 
-  const checkboxDisabled = lockReason !== null || !hasDrift;
-  const syncDisabled = !hasDrift || lockReason !== null;
+  const checkboxDisabled = lockReason !== null || !hasSendableWork;
+  const syncDisabled = !hasSendableWork || lockReason !== null;
 
   return (
     <PMBox
@@ -738,7 +776,7 @@ function PackageOnTargetRow({
           /* And the row's own padding, so the rows tile the column exactly. */
           marginY="-6px"
         >
-          {hasDrift && (
+          {hasSendableWork && (
             <PMTooltip
               label={lockReason ? LOCK_TOOLTIP[lockReason] : null}
               placement="top"
@@ -854,12 +892,27 @@ function PackageOnTargetRow({
           )}
         </PMHStack>
 
-        <PMTooltip
-          label={lockReason ? LOCK_TOOLTIP[lockReason] : null}
-          placement="top"
-        >
-          <PMBox display="inline-flex">
-            {/*
+        {entry?.standing.remedy === 'release' && releaseHref ? (
+          /*
+           * In the slot the push button would take, not beside it: the two are
+           * alternatives, and a row offering both would be offering a gesture
+           * that commits nothing next to the one that works.
+           */
+          <PMLink
+            href={releaseHref}
+            fontSize="xs"
+            whiteSpace="nowrap"
+            title={`Release ${pkg.name} so this target can move forward`}
+          >
+            Create a release
+          </PMLink>
+        ) : (
+          <PMTooltip
+            label={lockReason ? LOCK_TOOLTIP[lockReason] : null}
+            placement="top"
+          >
+            <PMBox display="inline-flex">
+              {/*
               The per-row action at the size the Context component list gives
               its own, which is what let this row reach 44px: a `sm` button is
               36px tall, eight more than everything else in the row, so it set
@@ -867,17 +920,18 @@ function PackageOnTargetRow({
               it. Still a tile rather than a ghost icon, because this one
               commits to a repository.
             */}
-            <PMIconButton
-              variant="tertiary"
-              size="xs"
-              disabled={syncDisabled}
-              onClick={onSync}
-              aria-label={`Distribute ${pkg.name} on this target`}
-            >
-              <LuRotateCw />
-            </PMIconButton>
-          </PMBox>
-        </PMTooltip>
+              <PMIconButton
+                variant="tertiary"
+                size="xs"
+                disabled={syncDisabled}
+                onClick={onSync}
+                aria-label={`Distribute ${pkg.name} on this target`}
+              >
+                <LuRotateCw />
+              </PMIconButton>
+            </PMBox>
+          </PMTooltip>
+        )}
       </PMHStack>
 
       {expanded && hasDrift && entry && (
@@ -953,8 +1007,7 @@ function PackageRowStateLine({
             color="warning"
             fontVariantNumeric="tabular-nums"
           >
-            {behindCount} of {totalArtifactsOnInstall} component
-            {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
+            {standingLine(entry, behindCount, totalArtifactsOnInstall)}
           </PMText>
         )}
       </PMHStack>
@@ -972,8 +1025,7 @@ function PackageRowStateLine({
           aria-hidden
         />
         <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
-          {behindCount} of {totalArtifactsOnInstall} component
-          {totalArtifactsOnInstall === 1 ? '' : 's'} drifted
+          {standingLine(entry, behindCount, totalArtifactsOnInstall)}
         </PMText>
       </PMHStack>
     );
@@ -993,6 +1045,30 @@ function PackageRowStateLine({
       </PMText>
     </PMHStack>
   );
+}
+
+/**
+ * What a landing that needs a hand says about itself, in one line.
+ *
+ * A landing tracking the live package counts its late components, which is what
+ * this row has always shown. A pinned one counts none — every component it
+ * holds is exactly what its release pinned — so it names the release gap
+ * instead, and says which of the two things would close it.
+ */
+function standingLine(
+  entry: InstallDriftEntry | undefined,
+  behindCount: number,
+  totalArtifactsOnInstall: number,
+): string {
+  if (entry?.standing.status === 'behind') {
+    return entry.standing.remedy === 'release'
+      ? 'On the newest release, package has unreleased changes'
+      : 'A newer release is available';
+  }
+
+  return `${behindCount} of ${totalArtifactsOnInstall} component${
+    totalArtifactsOnInstall === 1 ? '' : 's'
+  } drifted`;
 }
 
 function PackageRowEventLine({

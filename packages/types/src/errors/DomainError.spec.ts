@@ -2,15 +2,19 @@ import { isDomainError } from './DomainError';
 
 describe('isDomainError', () => {
   describe('when the value has a valid kind and reason string', () => {
-    describe.each(['forbidden', 'not_found', 'invalid_input', 'conflict'])(
-      'and the kind is %s',
-      (kind) => {
-        it('returns true', () => {
-          const value = { kind, reason: 'example reason' };
-          expect(isDomainError(value)).toBe(true);
-        });
-      },
-    );
+    describe.each([
+      'forbidden',
+      'not_found',
+      'invalid_input',
+      'conflict',
+      'unauthenticated',
+      'rate_limited',
+    ])('and the kind is %s', (kind) => {
+      it('returns true', () => {
+        const value = { kind, reason: 'example reason' };
+        expect(isDomainError(value)).toBe(true);
+      });
+    });
   });
 
   describe('when the value is null', () => {

@@ -1607,6 +1607,64 @@ describe('playbookSubmitHandler', () => {
       });
     });
 
+    describe('when two changes fail with the same message', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            artifactName: 'First Standard',
+            filePath: '.packmind/standards/first.md',
+          }),
+          makeEntry({
+            artifactName: 'Second Standard',
+            filePath: '.packmind/standards/second.md',
+          }),
+        ]);
+        mockGateway.changeProposals.batchCreate.mockResolvedValue({
+          created: 0,
+          skipped: 0,
+          errors: [
+            { index: 1, message: 'The artefact could not be found.' },
+            { index: 0, message: 'The artefact could not be found.' },
+          ],
+        });
+      });
+
+      it('names each failed change by the position the server reported', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          "Failed to submit to space 'space-123':\n" +
+            '  - Standard "Second Standard" (.packmind/standards/second.md): The artefact could not be found.\n' +
+            '  - Standard "First Standard" (.packmind/standards/first.md): The artefact could not be found.',
+        );
+      });
+
+      it('exits 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when the server reports a position outside the batch', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
+        mockGateway.changeProposals.batchCreate.mockResolvedValue({
+          created: 0,
+          skipped: 0,
+          errors: [{ index: 5, message: 'Server error' }],
+        });
+      });
+
+      it('still reports the message', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          "Failed to submit to space 'space-123':\n  - Server error",
+        );
+      });
+    });
+
     describe('updated standard without deployed content', () => {
       const LOCAL_STANDARD_CONTENT = [
         '# New Standard Name',

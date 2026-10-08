@@ -67,7 +67,24 @@ function install(
     lastDistributedAt: daysAgo(3),
     behindArtifacts: [],
     alignedArtifactCount: 4,
+    versionSpec: null,
+    latestReleaseVersion: null,
     ...rest,
+    /*
+     * Derived from the late components unless a test states it, which is what
+     * `installDriftEntries` does for a landing tracking the live package. A
+     * pinned one is the case worth stating, since its standing comes from the
+     * releases rather than from anything in this fixture.
+     */
+    standing:
+      rest.standing ??
+      ((rest.behindArtifacts ?? []).length > 0
+        ? { status: 'drifted', remedy: 'update', canReleaseAndUpdate: false }
+        : {
+            status: 'up-to-date',
+            remedy: 'none',
+            canReleaseAndUpdate: false,
+          }),
   } as InstallDriftEntry;
 }
 
@@ -139,7 +156,7 @@ describe('buildPackageDestinations', () => {
   });
 
   describe('the state of a row', () => {
-    it('is behind when components are late there', () => {
+    it('is drifted when components are late there', () => {
       const rows = buildPackageDestinations({
         installs: [
           install({
@@ -150,7 +167,7 @@ describe('buildPackageDestinations', () => {
         ],
       });
 
-      expect(rows[0].state).toBe('behind');
+      expect(rows[0].state).toBe('drifted');
       expect(rows[0].behindCount).toBe(1);
     });
 
@@ -250,13 +267,13 @@ describe('buildPackageDestinations', () => {
       });
     });
 
-    it('is behind when the published copy has been overtaken and nothing is pending', () => {
+    it('is drifted when the published copy has been overtaken and nothing is pending', () => {
       const rows = buildPackageDestinations({
         installs: [],
         publications: [publication({ isOutdated: true })],
       });
 
-      expect(rows[0].state).toBe('behind');
+      expect(rows[0].state).toBe('drifted');
       /*
        * Zero, because the plugin drift says the copy was overtaken and not by
        * which components, and a row must not print "0 components behind".
@@ -317,6 +334,35 @@ describe('buildPackageDestinations', () => {
     });
   });
 
+  describe('whether a release is also on offer', () => {
+    it('carries the standing of a landing that could take one', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            standing: {
+              status: 'behind',
+              remedy: 'update',
+              canReleaseAndUpdate: true,
+            },
+          }),
+        ],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(true);
+    });
+
+    it('is false on a published copy, which tracks the live package', () => {
+      const rows = buildPackageDestinations({
+        installs: [],
+        publications: [publication({ isOutdated: true })],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(false);
+    });
+  });
+
   describe('the order of the list', () => {
     it('puts the worst first and the aligned last, interleaving the two kinds', () => {
       const rows = buildPackageDestinations({
@@ -342,7 +388,7 @@ describe('buildPackageDestinations', () => {
       expect(rows.map((row) => row.state)).toEqual([
         'failed',
         'waiting',
-        'behind',
+        'drifted',
         'aligned',
         'aligned',
       ]);
@@ -616,7 +662,7 @@ describe('the age of a report', () => {
           ],
         });
 
-        expect(rows.map((row) => row.state)).toEqual(['behind', 'aligned']);
+        expect(rows.map((row) => row.state)).toEqual(['drifted', 'aligned']);
       });
     });
   });

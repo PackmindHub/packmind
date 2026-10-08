@@ -198,6 +198,26 @@ export function SpaceDistributionSurface() {
     [organization, spaceSlug, mode],
   );
 
+  /**
+   * The package's own page, which is where a release is cut.
+   *
+   * The sibling above it asks for the half that says where the package landed;
+   * this one asks for the package itself, because a destination sitting on the
+   * newest release has nothing to distribute and the only thing that moves it
+   * forward lives there.
+   */
+  const packageReleaseHref = useCallback(
+    (packageId: PackageId) =>
+      organization && spaceSlug
+        ? packageHref(
+            mode,
+            { orgSlug: organization.slug, spaceSlug },
+            packageId,
+          )
+        : null,
+    [organization, spaceSlug, mode],
+  );
+
   const handleSyncPackageOnTarget = useCallback(
     (packageId: PackageId, repoId: GitRepoId, targetId: TargetId) => {
       setSyncScope({
@@ -359,6 +379,7 @@ export function SpaceDistributionSurface() {
                 organizationSlug={organization?.slug ?? null}
                 organizationId={organization?.id ?? null}
                 packageHistoryHref={packageHistoryHref}
+                packageReleaseHref={packageReleaseHref}
                 onSyncPackageOnTarget={handleSyncPackageOnTarget}
                 onSyncRepository={handleSyncRepository}
               />
@@ -397,6 +418,7 @@ function DestinationPane({
   organizationSlug,
   organizationId,
   packageHistoryHref,
+  packageReleaseHref,
   onSyncPackageOnTarget,
   onSyncRepository,
 }: Readonly<{
@@ -406,6 +428,7 @@ function DestinationPane({
   organizationSlug: string | null;
   organizationId: string | null;
   packageHistoryHref: (packageId: PackageId) => string | null;
+  packageReleaseHref: (packageId: PackageId) => string | null;
   onSyncPackageOnTarget: (
     packageId: PackageId,
     repoId: GitRepoId,
@@ -439,6 +462,7 @@ function DestinationPane({
       onSyncPackageOnTarget={onSyncPackageOnTarget}
       onSyncRepository={onSyncRepository}
       packageHistoryHref={packageHistoryHref}
+      packageReleaseHref={packageReleaseHref}
       gitSettingsHref={
         organizationSlug ? routes.org.toSettingsGit(organizationSlug) : null
       }

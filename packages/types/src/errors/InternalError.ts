@@ -1,3 +1,5 @@
+import { attachCause, PackmindErrorOptions } from './ErrorCause';
+
 /**
  * A broken invariant: something the caller could not have caused and cannot
  * correct. Sibling to `DomainError` rather than a fifth `DomainErrorKind`,
@@ -19,6 +21,8 @@ export interface InternalError {
   readonly kind: InternalErrorKind;
   readonly reason: string;
   readonly context?: Record<string, unknown>;
+  /** The failure this one wraps, when it wraps one. */
+  readonly cause?: unknown;
 }
 
 export function isInternalError(
@@ -44,6 +48,9 @@ export function isInternalError(
  *
  * The message is for the log and the developer reading it, never for the
  * client — the filter answers with Nest's generic 500 body.
+ *
+ * Pass the caught failure as `options.cause` when wrapping one, so its stack
+ * reaches the log instead of a stringified message in `context`.
  */
 export class PackmindInternalError extends Error implements InternalError {
   readonly kind: InternalErrorKind = 'internal';
@@ -54,10 +61,12 @@ export class PackmindInternalError extends Error implements InternalError {
     reason: string,
     context: Record<string, unknown>,
     message: string,
+    options?: PackmindErrorOptions,
   ) {
     super(message);
     this.name = 'PackmindInternalError';
     this.reason = reason;
     this.context = context;
+    attachCause(this, options);
   }
 }

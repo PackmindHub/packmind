@@ -1,15 +1,18 @@
 import {
   GitProvider,
   GitProviderId,
-  GitProviderNotFoundError,
+  IAccountsPort,
+  GitProviderOrganizationMismatchError,
   GitProviderTokenNotConfiguredError,
   ListAvailableReposResponse,
   MissingGitInputError,
   createGitProviderId,
   createOrganizationId,
+  createUserId,
 } from '@packmind/types';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { GitProviderSourceNotConfiguredError } from '../../../domain/errors';
-import { invalidInput, mockInterface } from '@packmind/test-utils';
+import { invalidInput, mockInterface, stubLogger } from '@packmind/test-utils';
 import { GitProviderService } from '../../GitProviderService';
 import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
 
@@ -24,8 +27,10 @@ describe('ListAvailableReposUseCase', () => {
     '19fe905e-ccc6-45ab-b484-d08dd991f9c0',
   );
 
+  const userId = createUserId('7f2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d');
+
   const baseCommand = {
-    userId: 'user-1',
+    userId,
     organizationId,
   };
 
@@ -59,7 +64,22 @@ describe('ListAvailableReposUseCase', () => {
   beforeEach(() => {
     mockGitProviderService = mockInterface<GitProviderService>();
 
-    useCase = new ListAvailableReposUseCase(mockGitProviderService);
+    const mockAccountsAdapter = mockInterface<IAccountsPort>();
+    mockAccountsAdapter.getUserById.mockResolvedValue(
+      userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'member' }],
+      }),
+    );
+    mockAccountsAdapter.getOrganizationById.mockResolvedValue(
+      organizationFactory({ id: organizationId }),
+    );
+
+    useCase = new ListAvailableReposUseCase(
+      mockGitProviderService,
+      mockAccountsAdapter,
+      stubLogger(),
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -191,7 +211,31 @@ describe('ListAvailableReposUseCase', () => {
 
         await expect(
           useCase.execute({ ...baseCommand, gitProviderId: providerId }),
-        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
+        ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
+      });
+    });
+
+    describe('when the provider belongs to another organization', () => {
+      beforeEach(() => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue({
+          ...tokenProvider,
+          organizationId: createOrganizationId(
+            'a5c6f1e2-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+          ),
+        });
+      });
+
+      it('rejects as not found in the organization', async () => {
+        await expect(
+          useCase.execute({ ...baseCommand, gitProviderId: providerId }),
+        ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
+      });
+
+      it('does not call getAvailableRepos', async () => {
+        await useCase
+          .execute({ ...baseCommand, gitProviderId: providerId })
+          .catch(() => undefined);
+        expect(mockGitProviderService.getAvailableRepos).not.toHaveBeenCalled();
       });
     });
 

@@ -20,10 +20,19 @@ import type { MockedFunction } from 'vitest';
 
 import { RemovePackageFromTargetsDialog } from './RemovePackageFromTargetsDialog';
 import { useRemovePackageFromTargets } from '../../hooks';
+import { useGetTargetsByOrganizationQuery } from '../../api/queries/DeploymentsQueries';
 
 vi.mock('../../hooks', () => ({
   useRemovePackageFromTargets: vi.fn(),
 }));
+
+vi.mock('../../api/queries/DeploymentsQueries', () => ({
+  useGetTargetsByOrganizationQuery: vi.fn(),
+}));
+
+const mockUseGetTargets = useGetTargetsByOrganizationQuery as MockedFunction<
+  typeof useGetTargetsByOrganizationQuery
+>;
 
 const mockUseRemovePackageFromTargets =
   useRemovePackageFromTargets as MockedFunction<
@@ -70,6 +79,8 @@ const distributionTo = (
       standardVersions: [],
       skillVersions: [],
       operation: 'add',
+      versionSpec: null,
+      latestReleaseVersion: null,
     },
   ],
   createdAt: '2026-08-01T10:00:00.000Z',
@@ -124,10 +135,30 @@ const renderDialog = (props?: {
 
 describe('RemovePackageFromTargetsDialog', () => {
   beforeEach(() => {
+    mockUseGetTargets.mockReturnValue({
+      data: undefined,
+    } as unknown as ReturnType<typeof useGetTargetsByOrganizationQuery>);
     mockUseRemovePackageFromTargets.mockReturnValue({
       removePackageFromTargets: vi.fn(),
       isRemoving: false,
     } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
+  });
+
+  describe('when a target was deleted since it received the package', () => {
+    beforeEach(() => {
+      mockUseGetTargets.mockReturnValue({
+        data: [{ ...AT_MONOREPO_ROOT.target, repository: MONOREPO }],
+      } as unknown as ReturnType<typeof useGetTargetsByOrganizationQuery>);
+      renderDialog({ distributions: [AT_WEBAPP_ROOT, AT_MONOREPO_ROOT] });
+    });
+
+    it('offers only the targets that still exist', () => {
+      expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    });
+
+    it('does not name the deleted target', () => {
+      expect(screen.queryByText(/webapp/)).not.toBeInTheDocument();
+    });
   });
 
   it('names the destinations it takes the package out of', () => {
@@ -202,6 +233,47 @@ describe('RemovePackageFromTargetsDialog', () => {
           ),
         ).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('when the removal is rejected', () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    let removePackageFromTargets: ReturnType<typeof vi.fn>;
+    let onOpenChange: MockedFunction<(open: boolean) => void>;
+
+    beforeEach(async () => {
+      unhandled.length = 0;
+      process.on('unhandledRejection', onUnhandled);
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      removePackageFromTargets = vi
+        .fn()
+        .mockRejectedValue(new Error('Target not found'));
+      mockUseRemovePackageFromTargets.mockReturnValue({
+        removePackageFromTargets,
+        isRemoving: false,
+      } as unknown as ReturnType<typeof useRemovePackageFromTargets>);
+      onOpenChange = vi.fn();
+      renderDialog({ onOpenChange });
+
+      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('button', { name: /^Remove \(/ }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove' }));
+      await waitFor(() => expect(removePackageFromTargets).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    afterEach(() => {
+      process.off('unhandledRejection', onUnhandled);
+      vi.restoreAllMocks();
+    });
+
+    it('leaves no unhandled rejection behind', () => {
+      expect(unhandled).toEqual([]);
+    });
+
+    it('keeps the dialog open', () => {
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
     });
   });
 

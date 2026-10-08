@@ -285,10 +285,20 @@ export class PublishPackagesUseCase implements IPublishPackages {
       artifactPackageIds,
     } as PublishArtifactsCommand);
 
+    const latestReleaseByPackage = new Map<PackageId, string | null>();
+    for (const entry of everyResolved) {
+      if (entry.versionSpec !== WILDCARD_VERSION_SPEC) continue;
+      latestReleaseByPackage.set(
+        entry.pkg.id,
+        await this.latestRelease(entry.pkg.id, latestReleaseCache),
+      );
+    }
+
     await this.storeDistributedPackages(
       packages,
       resolvedByTarget,
       distributions,
+      latestReleaseByPackage,
     );
 
     // PackagesDeployment is this use case's response shape, one per distribution.
@@ -337,18 +347,24 @@ export class PublishPackagesUseCase implements IPublishPackages {
       return WILDCARD_VERSION_SPEC;
     }
 
-    if (!latestReleaseCache.has(pkg.id)) {
-      const releases = await this.packageReleaseService.listReleases(pkg.id);
-      latestReleaseCache.set(pkg.id, highestVersionOf(releases));
-    }
-
     /*
      * The pin itself when nothing can be read back, rather than `*`: a repo
      * that cannot be moved forward must not be silently unpinned instead. The
      * content resolution below then refuses on the version that is missing,
      * which is the honest answer.
      */
-    return latestReleaseCache.get(pkg.id) ?? pinned;
+    return (await this.latestRelease(pkg.id, latestReleaseCache)) ?? pinned;
+  }
+
+  private async latestRelease(
+    packageId: PackageId,
+    latestReleaseCache: Map<PackageId, string | null>,
+  ): Promise<string | null> {
+    if (!latestReleaseCache.has(packageId)) {
+      const releases = await this.packageReleaseService.listReleases(packageId);
+      latestReleaseCache.set(packageId, highestVersionOf(releases));
+    }
+    return latestReleaseCache.get(packageId) ?? null;
   }
 
   /** The three version-id lists each package contributes, at its version. */
@@ -462,6 +478,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     packages: Package[],
     resolvedByTarget: Map<TargetId, ResolvedPackagePublish[]>,
     distributions: Distribution[],
+    latestReleaseByPackage: Map<PackageId, string | null>,
   ): Promise<void> {
     if (distributions.length === 0) {
       this.logger.info('No distributions to store distributed packages for');
@@ -475,13 +492,14 @@ export class PublishPackagesUseCase implements IPublishPackages {
 
     for (const distribution of distributions) {
       const resolved = resolvedByTarget.get(distribution.target.id);
-      const versionsByPackage = new Map(
-        (resolved ?? []).map((entry) => [entry.pkg.id, entry.versions]),
+      const resolvedByPackage = new Map(
+        (resolved ?? []).map((entry) => [entry.pkg.id, entry]),
       );
 
       for (const pkg of packages) {
-        const versions = versionsByPackage.get(pkg.id);
-        if (!versions) continue;
+        const entry = resolvedByPackage.get(pkg.id);
+        if (!entry) continue;
+        const versions = entry.versions;
 
         const distributedPackageId = createDistributedPackageId(uuidv4());
         await this.distributedPackageRepository.add({
@@ -492,6 +510,17 @@ export class PublishPackagesUseCase implements IPublishPackages {
           recipeVersions: [],
           skillVersions: [],
           operation: 'add',
+          /*
+           * The spec this very destination was resolved to, which is the one
+           * written into its `packmind.json` by the same publish: a batch over
+           * a pinned repository and a `*` one sends two different specs, and
+           * the row has to carry its own rather than the batch's.
+           */
+          versionSpec: entry.versionSpec,
+          latestReleaseVersion:
+            entry.versionSpec === WILDCARD_VERSION_SPEC
+              ? (latestReleaseByPackage.get(pkg.id) ?? null)
+              : null,
         });
 
         if (versions.standardVersionIds.length > 0) {

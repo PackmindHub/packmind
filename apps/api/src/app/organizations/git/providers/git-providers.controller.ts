@@ -17,9 +17,11 @@ import {
 import { GitProvidersService } from './git-providers.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
+  CheckProviderBranchExistsResponse,
   GitProvider,
   GitProviderId,
   GitProviderWithoutToken,
+  SearchProviderBranchesResponse,
   GitRepo,
   GitRepoId,
   ListAvailableReposResponse,
@@ -327,6 +329,58 @@ export class GitProvidersController {
     );
 
     return response;
+  }
+
+  // The branch is a query parameter: nginx decodes %2F in path segments, which
+  // would split a branch such as feature/x across two segments.
+  @Get(':id/branch-exists')
+  async checkProviderBranchExists(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') gitProviderId: GitProviderId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('branch') branch: string,
+  ): Promise<CheckProviderBranchExistsResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/branch-exists - Checking branch',
+      { organizationId, gitProviderId, owner, repo, branch },
+    );
+
+    return this.gitProvidersService.checkProviderBranchExists({
+      userId: req.user.userId,
+      organizationId,
+      gitProviderId,
+      owner,
+      repo,
+      branch,
+    });
+  }
+
+  // Query parameters for the same reason as branch-exists: a search such as
+  // feature/x would be split by nginx if it travelled in the path.
+  @Get(':id/branches')
+  async searchProviderBranches(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') gitProviderId: GitProviderId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('search') search: string | undefined,
+  ): Promise<SearchProviderBranchesResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/branches - Searching branches',
+      { organizationId, gitProviderId, owner, repo, search },
+    );
+
+    return this.gitProvidersService.searchProviderBranches({
+      userId: req.user.userId,
+      organizationId,
+      gitProviderId,
+      owner,
+      repo,
+      search: search ?? '',
+    });
   }
 
   @Get(':id/check-auth')

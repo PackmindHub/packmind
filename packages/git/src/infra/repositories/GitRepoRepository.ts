@@ -167,6 +167,7 @@ export class GitRepoRepository
     organizationId: OrganizationId,
     owner: string,
     repo: string,
+    opts?: { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     this.logger.info('Finding tracked git repo by owner, repo, organization', {
       organizationId,
@@ -175,20 +176,29 @@ export class GitRepoRepository
     });
 
     try {
-      const gitRepo = await this.repository
+      const queryBuilder = this.repository
         .createQueryBuilder('gitRepo')
         .innerJoin(
           GitProviderSchema.options.name,
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        // Hosts treat owner and repo case-insensitively, and an adoption
+        // records the owner as the provider spells it.
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('gitRepo.isTracked = :isTracked', { isTracked: true })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,
-        })
-        .getOne();
+        });
+
+      if (opts?.providerId) {
+        queryBuilder.andWhere('gitRepo.providerId = :providerId', {
+          providerId: opts.providerId,
+        });
+      }
+
+      const gitRepo = await queryBuilder.getOne();
 
       this.logger.info('Tracked git repo lookup completed', {
         organizationId,
@@ -282,6 +292,7 @@ export class GitRepoRepository
   async reassignProvider(
     gitRepoId: GitRepoId,
     providerId: GitProviderId,
+    owner?: string,
   ): Promise<GitRepo> {
     this.logger.info('Reassigning git repo provider', {
       gitRepoId,
@@ -297,7 +308,11 @@ export class GitRepoRepository
         throw new GitRepoNotFoundError(gitRepoId);
       }
 
-      const updated = await this.repository.save({ ...gitRepo, providerId });
+      const updated = await this.repository.save({
+        ...gitRepo,
+        providerId,
+        owner: owner ?? gitRepo.owner,
+      });
 
       this.logger.info('Git repo provider reassigned', {
         gitRepoId,
@@ -392,8 +407,8 @@ export class GitRepoRepository
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('gitRepo.owner = :owner', { owner })
-        .andWhere('gitRepo.repo = :repo', { repo })
+        .where('LOWER(gitRepo.owner) = LOWER(:owner)', { owner })
+        .andWhere('LOWER(gitRepo.repo) = LOWER(:repo)', { repo })
         .andWhere('provider.organizationId = :organizationId', {
           organizationId,
         });

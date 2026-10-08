@@ -35,6 +35,12 @@ function makeEntry(
     lastDistributionStatus: null,
     lastDistributedAt: null,
     lastDistributionError: null,
+    versionSpec: null,
+    standing: {
+      status: 'up-to-date' as const,
+      remedy: 'none' as const,
+      canReleaseAndUpdate: false,
+    },
     behindArtifacts: [],
     alignedArtifactCount: 0,
     ...overrides,
@@ -107,12 +113,15 @@ describe('packageLockProfile', () => {
       lastDistributionStatus: i.status ?? null,
       lastDistributedAt: null,
       lastDistributionError: null,
+      versionSpec: null,
     }));
     return {
       id: createPackageId(`pkg-${label}`),
       name: label,
       description: '',
       installLocations,
+      latestReleaseVersion: null,
+      hasUnreleasedChanges: false,
       artifacts: [
         {
           id: artifactId,

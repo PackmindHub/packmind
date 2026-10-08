@@ -180,7 +180,9 @@ export function PackageDetailPane({
   const driftedKeys = useMemo(
     () =>
       entries
-        .filter((e) => e.behindArtifacts.length > 0)
+        // What a push would move, not what is late: a pinned landing has
+        // nothing late and a release to receive all the same.
+        .filter((e) => e.standing.remedy === 'update')
         .map((e) => installKey(e.repo.id, e.target.id)),
     [entries],
   );

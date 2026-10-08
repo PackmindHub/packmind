@@ -25,14 +25,25 @@ const pkg = (
       {
         installs: [
           {
-            repo: { id: createGitRepoId(repoId) },
-            target: { id: createTargetId(targetId) },
+            repo: { id: createGitRepoId(repoId), owner: 'acme', name: repoId },
+            target: { id: createTargetId(targetId), name: targetId },
             driftReason: behind ? 'behind' : 'aligned',
           },
         ],
       },
     ],
-    installLocations: [],
+    /*
+     * One per landing, as `buildPackageDriftOverview` writes them: the drift
+     * selectors read the landings from here, so a package with artifact
+     * installs and no location reads as landing nowhere.
+     */
+    installLocations: [
+      {
+        repo: { id: createGitRepoId(repoId), owner: 'acme', name: repoId },
+        target: { id: createTargetId(targetId), name: targetId },
+        lastDistributionStatus: null,
+      },
+    ],
   }) as unknown as PackageDrift;
 
 const repository = (

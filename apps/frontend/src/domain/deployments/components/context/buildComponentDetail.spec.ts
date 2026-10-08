@@ -35,6 +35,7 @@ import {
   componentFileHref,
   componentRuleHref,
   contextComponentHref,
+  contextCreatePackageHref,
   contextPackageHref,
   packageHref,
   packageDetailHref,
@@ -319,6 +320,14 @@ describe('packageDetailHref', () => {
         PACKAGE,
       ),
     ).toBe('?tab=distribution&package=pkg-1');
+  });
+});
+
+describe('contextCreatePackageHref', () => {
+  it('opens package creation on the surface', () => {
+    expect(contextCreatePackageHref(TARGET)).toBe(
+      '/org/acme/space/core/context?create=package',
+    );
   });
 });
 

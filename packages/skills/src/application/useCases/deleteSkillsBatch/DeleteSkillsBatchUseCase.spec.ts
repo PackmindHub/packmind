@@ -6,6 +6,7 @@ import {
   SpaceMembershipRequiredError,
   UserNotFoundError,
   UserNotInOrganizationError,
+  MembershipOrganizationNotFoundError,
 } from '@packmind/node-utils';
 import {
   mockInterface,
@@ -498,7 +499,7 @@ describe('DeleteSkillsBatchUseCase', () => {
 
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
-          `Organization ${organizationId} not found`,
+          MembershipOrganizationNotFoundError,
         );
       });
 

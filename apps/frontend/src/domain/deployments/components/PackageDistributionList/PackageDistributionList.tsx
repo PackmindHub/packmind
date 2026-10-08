@@ -3,6 +3,7 @@ import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/
 import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
 import { PackageId, SpaceId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
+import { useLiveTargetIds } from '../../hooks/useLiveTargetIds';
 import { PMEmptyState, PMBox, PMSpinner, PMText } from '@packmind/ui';
 
 interface PackageDistributionListProps {
@@ -28,6 +29,7 @@ export const PackageDistributionList: React.FC<
 
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
+  const liveTargetIds = useLiveTargetIds();
 
   const buildUserMap = (
     data: { users: Array<{ userId: string; displayName: string }> } | undefined,
@@ -81,7 +83,7 @@ export const PackageDistributionList: React.FC<
       error={isError ? error?.message : undefined}
       title={title}
       hidePackageColumn
-      hideVersionColumn
+      liveTargetIds={liveTargetIds}
     />
   );
 };

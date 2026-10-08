@@ -124,7 +124,7 @@ testWithApi.describe('package release', () => {
       await contextPage.createRelease('0.1.0');
 
       // The readiness is recomputed server-side and re-read when the mutation's
-      // invalidation lands, so poll until the action goes.
+      // invalidation lands, so poll until the action greys.
       // eslint-disable-next-line playwright/no-standalone-expect
       await expect.poll(() => contextPage.canCreateRelease()).toBe(false);
     },

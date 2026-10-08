@@ -29,6 +29,11 @@ export interface IPMTableProps<T extends object = object> {
   selectedRows?: Set<string>;
   onSelectionChange?: (selectedRows: Set<string>) => void;
   getRowId?: (row: T, index: number) => string;
+  /** Extra props for one body row, e.g. to style a row that is no longer live. */
+  getRowProps?: (
+    row: T,
+    index: number,
+  ) => React.ComponentPropsWithoutRef<typeof Table.Row>;
   selectAllLabel?: string;
   onSort?: (columnKey: string) => void;
   /**
@@ -53,6 +58,7 @@ export function PMTable<T extends object = object>({
   selectedRows: controlledSelectedRows,
   onSelectionChange,
   getRowId,
+  getRowProps,
   onSort,
   selectAllLabel = 'Select All',
   stickyHeader = false,
@@ -270,7 +276,7 @@ export function PMTable<T extends object = object>({
         {data.map((row, index) => {
           const rowId = getRowId ? getRowId(row, index) : String(index);
           return (
-            <Table.Row key={rowId}>
+            <Table.Row key={rowId} {...getRowProps?.(row, index)}>
               {selectable && (
                 <Table.Cell textAlign="center">
                   <PMCheckbox

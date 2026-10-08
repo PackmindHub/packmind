@@ -7,7 +7,12 @@ import {
   SSEEventPublisher,
   WorkerListeners,
 } from '@packmind/node-utils';
-import { DistributionStatus, GitCommit, IGitPort } from '@packmind/types';
+import {
+  DistributionStatus,
+  GitCommit,
+  IGitPort,
+  NoChangesDetectedError,
+} from '@packmind/types';
 import { Job } from 'bullmq';
 import {
   distributionIdsOf,
@@ -91,7 +96,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         filesDeleted: input.fileUpdates.delete.length,
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'NO_CHANGES_DETECTED') {
+      if (error instanceof NoChangesDetectedError) {
         this.logger.info(
           `[${this.origin}] No changes detected for distributions ${distributionIds.join(', ')}`,
         );

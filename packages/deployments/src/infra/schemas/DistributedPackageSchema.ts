@@ -19,6 +19,16 @@ export const DistributedPackageSchema = new EntitySchema<DistributedPackage>({
       nullable: false,
       default: 'add',
     },
+    versionSpec: {
+      name: 'version_spec',
+      type: 'varchar',
+      nullable: true,
+    },
+    latestReleaseVersion: {
+      name: 'latest_release_version',
+      type: 'varchar',
+      nullable: true,
+    },
     ...uuidSchema,
   },
   relations: {

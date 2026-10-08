@@ -6,11 +6,12 @@ import { AccountsInternalError } from './AccountsInternalError';
  * avoided it.
  */
 export class ApiKeyGenerationFailedError extends AccountsInternalError {
-  constructor(userId: string, organizationId: string, cause: string) {
+  constructor(userId: string, organizationId: string, cause: unknown) {
     super(
       'api_key_generation_failed',
-      { userId, organizationId, cause },
+      { userId, organizationId },
       'Failed to generate API key',
+      { cause },
     );
     this.name = 'ApiKeyGenerationFailedError';
   }

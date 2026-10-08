@@ -27,6 +27,7 @@ import {
 } from '../api/queries/CommandsQueries';
 import { CommandDistributionsList } from '../../deployments/components/CommandDistributionsList/CommandDistributionsList';
 import { useListCommandDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { useCountOnLiveTargets } from '../../deployments/hooks/useLiveTargetIds';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { ChangeProposalStatus, CommandId } from '@packmind/types';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -68,7 +69,7 @@ export const CommandDetails = ({ id, orgSlug }: CommandDetailsProps) => {
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListCommandDistributionsQuery(id);
   const { data: changeProposals } = useListChangeProposalsByCommandQuery(id);
-  const hasDistributions = distributions && distributions.length > 0;
+  const hasDistributions = (useCountOnLiveTargets(distributions) ?? 0) > 0;
   const pendingCount =
     changeProposals?.changeProposals?.filter(
       (p: { status: string }) => p.status === ChangeProposalStatus.pending,

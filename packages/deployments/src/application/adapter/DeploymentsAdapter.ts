@@ -97,6 +97,8 @@ import {
   ListPackagesBySpaceResponse,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
+  SyncDistributionsFromLockFilesCommand,
+  SyncDistributionsFromLockFilesResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackagesDeployment,
@@ -150,7 +152,9 @@ import { ListDistributionsByCommandUseCase } from '../useCases/ListDistributions
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUseCase } from '../useCases/listPackages/ListPackagesUseCase';
+import { LockFileDistributionRecorder } from '../services/LockFileDistributionRecorder';
 import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase';
+import { SyncDistributionsFromLockFilesUseCase } from '../useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/NotifyDistributionUseCase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
 import { ListPackagesBySpaceUseCase } from '../useCases/listPackagesBySpace/ListPackagesBySpaceUseCase';
@@ -221,6 +225,7 @@ export class DeploymentsAdapter
   private _moveArtefactsToPackageUseCase!: MoveArtefactsToPackageUseCase;
   private _removeArtefactsFromPackageUseCase!: RemoveArtefactsFromPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
+  private _syncDistributionsFromLockFilesUseCase!: SyncDistributionsFromLockFilesUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
@@ -498,6 +503,7 @@ export class DeploymentsAdapter
         this.commandsPort,
         this.skillsPort,
         this.gitPort,
+        this.deploymentsServices.getPackageReleaseService(),
       );
 
     this._listPackagesUseCase = new ListPackagesUseCase(
@@ -603,6 +609,19 @@ export class DeploymentsAdapter
         spaceContentNotifier,
       );
 
+    const lockFileDistributionRecorder = new LockFileDistributionRecorder(
+      this.commandsPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.spacesPort,
+      this.distributionRepository,
+      this.distributedPackageRepository,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.deploymentsServices.getPackageService(),
+      this.deploymentsServices.getPackageReleaseService(),
+      ports.eventEmitterService,
+    );
+
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
       this.commandsPort,
@@ -619,14 +638,17 @@ export class DeploymentsAdapter
     this._notifyArtefactsDistributionUseCase =
       new NotifyArtefactsDistributionUseCase(
         this.accountsPort,
-        this.commandsPort,
-        this.standardsPort,
-        this.skillsPort,
-        this.distributionRepository,
-        this.distributedPackageRepository,
-        this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
-        ports.eventEmitterService,
+        lockFileDistributionRecorder,
+      );
+
+    this._syncDistributionsFromLockFilesUseCase =
+      new SyncDistributionsFromLockFilesUseCase(
+        this.accountsPort,
+        this.gitPort,
+        this.deploymentsServices.getTargetService(),
+        targetResolutionService,
+        lockFileDistributionRecorder,
       );
 
     this._getLastDistributionDateByProvidersUseCase =
@@ -933,6 +955,12 @@ export class DeploymentsAdapter
     command: NotifyArtefactsDistributionCommand,
   ): Promise<NotifyArtefactsDistributionResponse> {
     return this._notifyArtefactsDistributionUseCase.execute(command);
+  }
+
+  async syncDistributionsFromLockFiles(
+    command: SyncDistributionsFromLockFilesCommand,
+  ): Promise<SyncDistributionsFromLockFilesResponse> {
+    return this._syncDistributionsFromLockFilesUseCase.execute(command);
   }
 
   async removePackageFromTargets(

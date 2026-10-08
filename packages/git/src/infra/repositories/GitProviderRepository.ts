@@ -1,7 +1,9 @@
 import { GitProvider, GitProviderId } from '@packmind/types';
 import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
+import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
@@ -247,5 +249,37 @@ export class GitProviderRepository
       });
       throw error;
     }
+  }
+
+  async deleteIfHoldsNoRepository(
+    id: GitProviderId,
+    deletedBy: string,
+  ): Promise<boolean> {
+    const liveRepository = this.repository.manager
+      .createQueryBuilder()
+      .subQuery()
+      .select('1')
+      .from(GitRepoSchema, 'gitRepo')
+      .where('gitRepo.providerId = :id', { id })
+      .andWhere('gitRepo.deletedAt IS NULL')
+      .getQuery();
+    const result = await this.repository
+      .createQueryBuilder()
+      .update()
+      // The soft-delete columns are not part of the domain type.
+      .set({
+        deletedAt: () => 'CURRENT_TIMESTAMP',
+        deletedBy,
+      } as QueryDeepPartialEntity<GitProvider>)
+      .where('id = :id', { id })
+      .andWhere('deleted_at IS NULL')
+      .andWhere(`NOT EXISTS ${liveRepository}`)
+      .execute();
+    const deleted = (result.affected ?? 0) > 0;
+    this.logger.info('Deleted git provider holding no repository', {
+      id,
+      deleted,
+    });
+    return deleted;
   }
 }

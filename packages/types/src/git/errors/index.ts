@@ -14,6 +14,7 @@ export * from './GitRemoteAccessForbiddenError';
 export * from './GitRemoteRepositoryNotFoundError';
 export * from './InvalidGitProviderCredentialsError';
 export * from './MissingGitInputError';
+export * from './NoChangesDetectedError';
 export * from './NoFilesToCommitError';
 export * from './NoTrackedRepositoryError';
 export * from './RepositoryAlreadyTrackedError';

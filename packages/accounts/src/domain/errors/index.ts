@@ -1,6 +1,5 @@
 export { AccountsError } from './AccountsError';
 export { AccountsInternalError } from './AccountsInternalError';
-export { ExpectedAuthError } from './ExpectedAuthError';
 export { EmailAlreadyExistsError } from './EmailAlreadyExistsError';
 export { OrganizationSlugConflictError } from './OrganizationNameConflictError';
 export { OrganizationNotFoundError } from './OrganizationNotFoundError';

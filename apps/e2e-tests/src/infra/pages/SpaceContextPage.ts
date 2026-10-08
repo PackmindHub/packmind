@@ -121,14 +121,15 @@ export class SpaceContextPage
   }
 
   /**
-   * Whether the release action is offered.
+   * Whether the release action can be pressed.
    *
-   * Presence and not `isDisabled`: the bar drops the action when the package is
-   * identical to its last release or holds nothing, on the same rule the rest
-   * of this header follows.
+   * Enablement and not presence: the control stays on the header in every
+   * state now, greyed with the reason in its tooltip when the package is
+   * identical to its last release, holds nothing, or is being read at a past
+   * version. It used to leave, and presence was the whole of the answer.
    */
   async canCreateRelease(): Promise<boolean> {
-    return (await this.releaseAction().count()) > 0;
+    return this.releaseAction().isEnabled();
   }
 
   /** Opens the list of readings, and waits for it to be on screen. */
@@ -145,14 +146,11 @@ export class SpaceContextPage
   }
 
   /**
-   * `Create a release` is also the drawer's heading, so the trigger is taken by
-   * role rather than by text. Its label names the first cut when there is no
-   * release behind the package.
+   * By test id rather than by label: the header's one verb now reads `Release`
+   * in every state, which is a word the drawer it opens uses throughout.
    */
   private releaseAction(): Locator {
-    return this.page.getByRole('button', {
-      name: /^Create (a|the first) release$/,
-    });
+    return this.page.getByTestId(PackageVersionBarDataTestId.Release);
   }
 
   expectedUrl(): RegExp {

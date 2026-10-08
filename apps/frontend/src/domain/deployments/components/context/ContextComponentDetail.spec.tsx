@@ -27,6 +27,7 @@ import {
 } from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import {
+  useGetTargetsByOrganizationQuery,
   useListCommandDistributionsQuery,
   useListSkillDistributionsQuery,
   useListStandardDistributionsQuery,
@@ -58,6 +59,7 @@ vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListCommandDistributionsQuery: vi.fn(),
   useListStandardDistributionsQuery: vi.fn(),
   useListSkillDistributionsQuery: vi.fn(),
+  useGetTargetsByOrganizationQuery: vi.fn(),
 }));
 
 vi.mock('../../../commands/api/queries/CommandsQueries', () => ({
@@ -330,6 +332,9 @@ function resetToEmpty() {
     data: undefined,
   });
   (useListSkillDistributionsQuery as Mock).mockReturnValue({ data: undefined });
+  (useGetTargetsByOrganizationQuery as Mock).mockReturnValue({
+    data: undefined,
+  });
   (useGetCommandByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetStandardByIdQuery as Mock).mockReturnValue({ data: undefined });
   (useGetSkillWithFilesByIdQuery as Mock).mockReturnValue({ data: undefined });
@@ -423,6 +428,23 @@ describe('ContextComponentDetail', () => {
       expect(
         screen.getByRole('tab', { name: /distribution/i }),
       ).toHaveTextContent('2');
+    });
+
+    it('leaves out the places whose target was deleted since', async () => {
+      (useGetTargetsByOrganizationQuery as Mock).mockReturnValue({
+        data: [{ id: 'live-target' }],
+      });
+      (useListCommandDistributionsQuery as Mock).mockReturnValue({
+        data: [
+          { id: 'a', target: { id: 'live-target' } },
+          { id: 'b', target: { id: 'deleted-target' } },
+        ],
+      });
+      await renderDetail(componentOfType('command', COMMAND_ID));
+
+      expect(
+        screen.getByRole('tab', { name: /distribution/i }),
+      ).toHaveTextContent('1');
     });
   });
 

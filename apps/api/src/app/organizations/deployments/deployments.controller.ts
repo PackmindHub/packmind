@@ -43,6 +43,8 @@ import {
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackmindLockFile,
+  GitRepoId,
+  SyncDistributionsFromLockFilesResponse,
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
   CodingAgent,
@@ -511,6 +513,7 @@ export class DeploymentsController {
       gitBranch: string;
       relativePath: string;
       packmindLockFile: PackmindLockFile;
+      packageVersions?: Record<string, string>;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<NotifyArtefactsDistributionResponse> {
@@ -531,6 +534,7 @@ export class DeploymentsController {
       gitBranch: body.gitBranch,
       relativePath: body.relativePath,
       packmindLockFile: body.packmindLockFile,
+      packageVersions: body.packageVersions,
     };
 
     const response =
@@ -545,6 +549,24 @@ export class DeploymentsController {
     );
 
     return response;
+  }
+
+  @Post('repositories/:gitRepoId/sync')
+  async syncDistributionsFromLockFiles(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('gitRepoId') gitRepoId: GitRepoId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SyncDistributionsFromLockFilesResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/repositories/:gitRepoId/sync - Syncing distribution state from lock files',
+      { organizationId, gitRepoId },
+    );
+
+    return this.deploymentsService.syncDistributionsFromLockFiles({
+      userId: request.user.userId,
+      organizationId,
+      gitRepoId,
+    });
   }
 
   @Get('dashboard/kpi')

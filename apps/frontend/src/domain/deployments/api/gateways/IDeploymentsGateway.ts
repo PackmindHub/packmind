@@ -27,6 +27,7 @@ import {
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IRemovePackageFromTargetsUseCase,
+  ISyncDistributionsFromLockFilesUseCase,
   IGetDashboardKpi,
   IGetDashboardNonLive,
   IListPackageReleasesUseCase,
@@ -66,6 +67,7 @@ export interface IDeploymentsGateway {
   getRenderModeConfiguration: NewGateway<IGetRenderModeConfigurationUseCase>;
   updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
   removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase>;
+  syncDistributionsFromLockFiles: NewGateway<ISyncDistributionsFromLockFilesUseCase>;
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;

@@ -309,6 +309,9 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       recipeVersions: [],
       skillVersions: [],
       operation: 'add',
+      // A plugin answers to a marketplace, not to a repository's packmind.json.
+      versionSpec: null,
+      latestReleaseVersion: null,
     };
 
     const distribution: Distribution = {
