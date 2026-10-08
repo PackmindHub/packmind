@@ -1,4 +1,4 @@
-# [Unreleased]
+# [1.19.0] - 2026-10-08
 
 ## Added
 
@@ -34,8 +34,6 @@
 - A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
 - Git connection panel: a repository now shows one branch. `change branch` replaces it, refuses a branch that doesn't exist, and switching back brings that branch's history back (#902)
 - Applying a change that conflicts with the current content now says so instead of failing with a server error
-
-## Removed
 
 # [1.18.1] - 2026-09-25
 
@@ -479,7 +477,7 @@ Hotfix release.
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...HEAD
+[1.19.0]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...release/1.19.0
 [1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0
