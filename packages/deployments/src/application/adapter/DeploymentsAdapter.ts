@@ -345,11 +345,6 @@ export class DeploymentsAdapter
       this.distributionRepository,
     );
 
-    this._addTargetUseCase = new AddTargetUseCase(
-      this.deploymentsServices.getTargetService(),
-      this.gitPort,
-    );
-
     this._getTargetByIdUseCase = new GetTargetByIdUseCase(
       this.deploymentsServices.getTargetService(),
     );
@@ -364,11 +359,6 @@ export class DeploymentsAdapter
     );
 
     this._getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
-      this.deploymentsServices.getTargetService(),
-      this.gitPort,
-    );
-
-    this._updateTargetUseCase = new UpdateTargetUseCase(
       this.deploymentsServices.getTargetService(),
       this.gitPort,
     );
@@ -650,6 +640,18 @@ export class DeploymentsAdapter
         targetResolutionService,
         lockFileDistributionRecorder,
       );
+
+    this._addTargetUseCase = new AddTargetUseCase(
+      this.deploymentsServices.getTargetService(),
+      this.gitPort,
+      this._syncDistributionsFromLockFilesUseCase,
+    );
+
+    this._updateTargetUseCase = new UpdateTargetUseCase(
+      this.deploymentsServices.getTargetService(),
+      this.gitPort,
+      this._syncDistributionsFromLockFilesUseCase,
+    );
 
     this._getLastDistributionDateByProvidersUseCase =
       new GetLastDistributionDateByProvidersUseCase(

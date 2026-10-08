@@ -324,6 +324,27 @@ describe('SyncDistributionsFromLockFilesUseCase', () => {
     });
   });
 
+  describe('when given target paths', () => {
+    beforeEach(async () => {
+      repoFiles = {
+        'packmind-lock.json': lockWithPackages({ '@space/ops': '1.3.0' }),
+        'app/frontend/packmind-lock.json': lockWithPackages({
+          '@space/ops': '1.2.3',
+        }),
+      };
+
+      await useCase.execute({ ...command, targetPaths: ['app/frontend'] });
+    });
+
+    it('does not scan the branch', () => {
+      expect(mockGitPort.listFilesNamedInRepo).not.toHaveBeenCalled();
+    });
+
+    it('reads only the locks at those paths', () => {
+      expect(recordedTargets()).toEqual(['/app/frontend/']);
+    });
+  });
+
   describe('when a lock was written by an older CLI', () => {
     let response: SyncDistributionsFromLockFilesResponse;
 

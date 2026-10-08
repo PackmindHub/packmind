@@ -64,15 +64,18 @@ export class SyncDistributionsFromLockFilesUseCase
       throw new NoTrackedRepositoryError(requested.owner, requested.repo);
     }
 
-    const lockFilePaths = await this.gitPort.listFilesNamedInRepo(
-      gitRepo,
-      PACKMIND_LOCK_FILE_NAME,
-    );
+    const targetPaths =
+      command.targetPaths?.map(normalizeRelativePath) ??
+      (
+        await this.gitPort.listFilesNamedInRepo(
+          gitRepo,
+          PACKMIND_LOCK_FILE_NAME,
+        )
+      ).map(targetPathOfLockFile);
     const targets = await this.targetService.getTargetsByGitRepoId(gitRepo.id);
 
     const results: LockFileTargetSyncResult[] = [];
-    for (const lockFilePath of lockFilePaths) {
-      const targetPath = targetPathOfLockFile(lockFilePath);
+    for (const targetPath of targetPaths) {
       const result = await this.syncTarget(
         gitRepo,
         targetPath,
@@ -86,7 +89,7 @@ export class SyncDistributionsFromLockFilesUseCase
 
     this.logger.info('Synced distribution state from lock files', {
       gitRepoId: gitRepo.id,
-      lockFileCount: lockFilePaths.length,
+      lockFileCount: targetPaths.length,
       updatedCount: results.filter((r) => r.status === 'updated').length,
     });
 

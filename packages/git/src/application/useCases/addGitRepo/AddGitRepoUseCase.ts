@@ -165,6 +165,23 @@ export class AddGitRepoUseCase
           holdingProvider.id,
           createUserId(userId),
         );
+        if (adoptedRepo.isTracked) {
+          try {
+            await this.deploymentsAdapter.syncDistributionsFromLockFiles({
+              userId: createUserId(userId),
+              organizationId: organization.id,
+              gitRepoId: adoptedRepo.id,
+            });
+          } catch (error) {
+            this.logger.warn(
+              'Could not sync distribution state from lock files',
+              {
+                gitRepoId: adoptedRepo.id,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+          }
+        }
         return adoptedRepo;
       }
 

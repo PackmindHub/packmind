@@ -12,6 +12,7 @@ import {
   GitProviderVendors,
   GitRepo,
   IAccountsPort,
+  IDeploymentPort,
   IFindOrCreateGitRepoUseCase,
   NoTrackedRepositoryError,
   Organization,
@@ -34,6 +35,7 @@ describe('UpdateTrackedBranchUseCase', () => {
   let mockFindOrCreate: jest.Mocked<IFindOrCreateGitRepoUseCase>;
   let mockEventEmitter: jest.Mocked<PackmindEventEmitterService>;
   let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
+  let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
 
   const organizationId = createOrganizationId(uuidv4());
   const userId = createUserId(uuidv4());
@@ -83,6 +85,7 @@ describe('UpdateTrackedBranchUseCase', () => {
       mockFindOrCreate,
       mockEventEmitter,
       mockAccountsAdapter,
+      mockDeploymentPort,
       stubLogger(),
     );
 
@@ -106,6 +109,10 @@ describe('UpdateTrackedBranchUseCase', () => {
     } as jest.Mocked<IFindOrCreateGitRepoUseCase>;
 
     mockEventEmitter = mockInterface<PackmindEventEmitterService>();
+    mockDeploymentPort = mockInterface<IDeploymentPort>();
+    mockDeploymentPort.syncDistributionsFromLockFiles.mockResolvedValue({
+      targets: [],
+    });
 
     setupAccounts('admin');
     useCase = buildUseCase();
@@ -229,6 +236,32 @@ describe('UpdateTrackedBranchUseCase', () => {
           origin: 'track',
         }),
       );
+    });
+
+    it('syncs the distribution state of the newly tracked branch', () => {
+      expect(
+        mockDeploymentPort.syncDistributionsFromLockFiles,
+      ).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        gitRepoId: trackedRepo.id,
+      });
+    });
+
+    describe('when the lock files cannot be read', () => {
+      beforeEach(() => {
+        mockDeploymentPort.syncDistributionsFromLockFiles.mockRejectedValue(
+          new Error('Bad credentials'),
+        );
+      });
+
+      it('still tracks the branch', async () => {
+        mockGitRepoService.updateTracked
+          .mockResolvedValueOnce({ ...oldRepo, isTracked: false })
+          .mockResolvedValueOnce(trackedRepo);
+
+        await expect(useCase.execute(command)).resolves.toEqual(trackedRepo);
+      });
     });
   });
 

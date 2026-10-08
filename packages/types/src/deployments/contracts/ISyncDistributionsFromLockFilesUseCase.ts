@@ -12,6 +12,7 @@ export type LockFileTargetSyncResult = {
 
 export type SyncDistributionsFromLockFilesCommand = PackmindCommand & {
   gitRepoId: GitRepoId;
+  targetPaths?: string[];
 };
 
 export type SyncDistributionsFromLockFilesResponse = {
