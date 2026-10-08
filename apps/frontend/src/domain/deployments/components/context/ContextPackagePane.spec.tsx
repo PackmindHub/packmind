@@ -31,7 +31,6 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponents } from './useDeleteContextComponents';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 /*
  * Every query the pane and the version area reach for is mocked at its module
@@ -82,16 +81,6 @@ vi.mock(
 vi.mock('../../../git/api/queries/GitProviderQueries', () => ({
   useGetGitProvidersQuery: vi.fn(),
 }));
-
-/*
- * The pane mounts no auth provider here, and the version area is behind a
- * feature flag read from the signed-in user's email. Most tests are that user.
- */
-vi.mock('../../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: vi.fn(),
-}));
-
-const STAFF_EMAIL = 'someone@packmind.com';
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
@@ -183,7 +172,6 @@ const READY_NEVER_RELEASED: PackageReleaseReadiness = {
 };
 
 function resetHooks() {
-  (useAuthContext as Mock).mockReturnValue({ user: { email: STAFF_EMAIL } });
   (useListPackageDeploymentsQuery as Mock).mockReturnValue({ data: [] });
   (useDeletePackagesBatchMutation as Mock).mockReturnValue({
     mutateAsync: vi.fn(),
@@ -376,16 +364,6 @@ describe('ContextPackagePane', () => {
     expect(screen.getByText('Not released yet')).toBeInTheDocument();
   });
 
-  it('hides the version bar from a user outside the flag audience', async () => {
-    (useAuthContext as Mock).mockReturnValue({
-      user: { email: 'someone@example.com' },
-    });
-
-    await renderPane(READY_NEVER_RELEASED);
-
-    expect(screen.queryByText('Not released yet')).not.toBeInTheDocument();
-  });
-
   it('names the reading the pane is on once the package has releases', async () => {
     await renderPane({
       currentVersion: '1.2.0',
@@ -556,16 +534,6 @@ describe('ContextPackagePane', () => {
           screen.queryByRole('button', { name: /Update/ }),
         ).not.toBeInTheDocument();
       });
-    });
-
-    it('leaves a reader outside the flag audience on the working copy', async () => {
-      (useAuthContext as Mock).mockReturnValue({
-        user: { email: 'someone@example.com' },
-      });
-
-      await renderPane(released, { releases, address });
-
-      expect(screen.queryByText('Naming')).not.toBeInTheDocument();
     });
   });
 

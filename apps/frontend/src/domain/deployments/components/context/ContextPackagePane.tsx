@@ -18,11 +18,6 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  PACKAGE_RELEASES_FEATURE_KEY,
-  isFeatureFlagEnabled,
-} from '@packmind/feature-flags';
-import {
   LuEllipsisVertical,
   LuPackageMinus,
   LuPencil,
@@ -75,7 +70,6 @@ import {
   PackageReleaseContents,
   pinnedComponentCount,
 } from './PackageReleaseContents';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { RelativeDate } from '../RelativeDate';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextRuleDetail } from './ContextRuleDetail';
@@ -189,7 +183,6 @@ export function ContextPackagePane({
   onDeleted: () => void;
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuthContext();
   /*
    * What is being moved, held here rather than in the row: the drawer has to
    * outlive the list it was opened from, because the move rebuilds that list
@@ -578,18 +571,6 @@ export function ContextPackagePane({
   };
 
   /*
-   * Whether this reader is offered versions at all. Evaluated here rather than
-   * wrapped around the bar, because the address can name a release and a reader
-   * without the flag has to be handed the working copy instead of a read-only
-   * pane with no control on it to leave.
-   */
-  const canReadReleases = isFeatureFlagEnabled({
-    featureKeys: [PACKAGE_RELEASES_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: user?.email,
-  });
-
-  /*
    * Which version of the package is being read, or null for the working copy.
    *
    * In the URL for the reason the package, the component and the tab are: "this
@@ -597,9 +578,7 @@ export function ContextPackagePane({
    * survive being pasted. Absence means the working copy, so the editable
    * package keeps one address.
    */
-  const readingVersion = canReadReleases
-    ? searchParams.get(RELEASE_PARAM)
-    : null;
+  const readingVersion = searchParams.get(RELEASE_PARAM);
 
   const readVersion = (version: string | null) => {
     setSearchParams(
@@ -628,7 +607,7 @@ export function ContextPackagePane({
   const { data: releases } = useListPackageReleasesQuery(
     organizationId,
     spaceId,
-    canReadReleases ? pkg.id : undefined,
+    pkg.id,
   );
 
   const { data: readRelease } = useGetPackageReleaseQuery(
@@ -893,16 +872,14 @@ export function ContextPackagePane({
               the only package-wide thing neither tab can own. It reads with the
               menu beside it, which names what a cut would be taken from.
             */}
-            {canReadReleases && (
-              <PackageReleaseControls
-                packageId={pkg.id}
-                spaceId={spaceId}
-                organizationId={organizationId}
-                componentsCount={total}
-                readingVersion={readingVersion}
-                onReadVersion={readVersion}
-              />
-            )}
+            <PackageReleaseControls
+              packageId={pkg.id}
+              spaceId={spaceId}
+              organizationId={organizationId}
+              componentsCount={total}
+              readingVersion={readingVersion}
+              onReadVersion={readVersion}
+            />
             {/*
               Deleting the package, behind a menu rather than beside the two
               buttons: the plugin-first navigation has no packages list, so this
