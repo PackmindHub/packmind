@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@frontend/react"
   ],
+  "packages": {
+    "@frontend/react": "*"
+  },
   "agents": [
     "agents_md",
     "claude",
