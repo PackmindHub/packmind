@@ -282,6 +282,16 @@ export function selectionActions({
   const wouldTakeARelease =
     onReleaseAndUpdate !== undefined &&
     picked.some((destination) => destination.canReleaseAndUpdate);
+  /*
+   * One row already on the newest release is enough to refuse the whole pick:
+   * `Update` would send it nothing, and pushing the rest while it stays behind
+   * is a batch that silently does less than it was asked to.
+   */
+  const updateDisabledReason = picked.some(
+    (destination) => !destination.hasWorkToSend,
+  )
+    ? UPDATE_NEEDS_A_RELEASE
+    : undefined;
 
   if (!wouldTakeARelease) {
     return [
@@ -291,6 +301,7 @@ export function selectionActions({
         }`,
         icon: <LuRefreshCw />,
         onAct: () => onUpdate(picked),
+        disabledReason: updateDisabledReason,
       },
     ];
   }
@@ -317,9 +328,13 @@ export function selectionActions({
       label: 'Update',
       icon: <LuRefreshCw />,
       onAct: () => onUpdate(picked),
+      disabledReason: updateDisabledReason,
     },
   ];
 }
+
+export const UPDATE_NEEDS_A_RELEASE =
+  'Some selected destinations already have the latest release. Cut a release to update them.';
 
 /**
  * The five readings of the list, as one row.

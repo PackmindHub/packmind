@@ -4,7 +4,10 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import type { DriftArtifactEntry } from '../redesign/selectors/installDriftEntries';
 import type { ArtifactDrift } from '../redesign/types';
-import { ContextDestinationList } from './ContextDestinationList';
+import {
+  ContextDestinationList,
+  UPDATE_NEEDS_A_RELEASE,
+} from './ContextDestinationList';
 import type { PackageDestination } from './buildPackageDestinations';
 
 function behind(name: string, version: number): DriftArtifactEntry {
@@ -1052,6 +1055,21 @@ describe('ContextDestinationList', () => {
         state: 'drifted',
         behindCount: 1,
         behindArtifacts: [behind('a', 2)],
+        hasWorkToSend: true,
+        remedy: 'update',
+      });
+
+    /** Pinned to a release that has been overtaken, with work done since. */
+    const releaseBehind = (key: string, name: string) =>
+      destination({
+        key,
+        name,
+        installKey: `${key}::t1`,
+        state: 'behind',
+        behindCount: 0,
+        remedy: 'update',
+        canReleaseAndUpdate: true,
+        hasWorkToSend: true,
       });
 
     const needsARelease = (key: string, name: string) =>
@@ -1148,27 +1166,92 @@ describe('ContextDestinationList', () => {
 
         expect(onReleaseAndUpdate.mock.calls[0][0]).toHaveLength(2);
       });
+    });
 
-      it('still sends what exists when the plain push is chosen', async () => {
-        const onUpdate = vi.fn();
-        renderList(mixed(), onUpdate, { onReleaseAndUpdate: vi.fn() });
+    /*
+     * Releases 0.1.0 and 0.1.1, with work done since: `/` sits on 0.1.0 and
+     * can take 0.1.1 or a new cut, `/app/` sits on 0.1.1 and only a cut moves it.
+     */
+    describe('a package whose newest release is itself behind', () => {
+      const landings = () => [
+        releaseBehind('root', 'acme/root'),
+        needsARelease('app', 'acme/app'),
+      ];
 
-        await pick('acme/two');
-        await userEvent.click(screen.getByRole('button', { name: 'Update' }));
+      describe('picking the destination on the newest release', () => {
+        it('disables the plain push, which would send it nothing', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
 
-        expect(onUpdate.mock.calls[0][0]).toHaveLength(1);
+          await pick('acme/app');
+
+          expect(screen.getByRole('button', { name: 'Update' })).toBeDisabled();
+        });
+
+        it('keeps the cut available', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+          await pick('acme/app');
+
+          expect(
+            screen.getByRole('button', { name: 'Release & Update' }),
+          ).toBeEnabled();
+        });
+
+        it('explains on hover that a release has to be cut first', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+          await pick('acme/app');
+          await userEvent.hover(
+            screen.getByRole('button', { name: 'Update' }).parentElement!,
+          );
+
+          expect(
+            await screen.findByText(UPDATE_NEEDS_A_RELEASE),
+          ).toBeInTheDocument();
+        });
+      });
+
+      describe('picking the destination on an older release', () => {
+        it('enables the plain push', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+          await pick('acme/root');
+
+          expect(screen.getByRole('button', { name: 'Update' })).toBeEnabled();
+        });
+
+        it('enables the cut', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+          await pick('acme/root');
+
+          expect(
+            screen.getByRole('button', { name: 'Release & Update' }),
+          ).toBeEnabled();
+        });
+      });
+
+      describe('picking both', () => {
+        it('disables the plain push', async () => {
+          renderList(landings(), vi.fn(), { onReleaseAndUpdate: vi.fn() });
+
+          await pick('acme/root');
+          await pick('acme/app');
+
+          expect(screen.getByRole('button', { name: 'Update' })).toBeDisabled();
+        });
       });
     });
 
     describe('when the caller cannot cut a release', () => {
-      it('offers the counted push alone, whatever is picked', async () => {
+      it('disables the counted push for a destination only a cut would move', async () => {
         renderList([needsARelease('b', 'acme/two')], vi.fn());
 
         await pick('acme/two');
 
         expect(
           screen.getByRole('button', { name: /Update 1 destination/ }),
-        ).toBeInTheDocument();
+        ).toBeDisabled();
       });
     });
   });
