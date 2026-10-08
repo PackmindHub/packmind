@@ -94,6 +94,15 @@ export type MarketplaceDistributionResult = {
   failed: number;
 };
 
+/** What a confirmed distribution sent, for a caller that reports it itself. */
+export type SyncOutcome = {
+  /** Destinations that received a commit. */
+  installCount: number;
+  /** Plugins whose pull request was opened, and which land on merge. */
+  pluginsStarted: number;
+  pluginsRefused: number;
+};
+
 export type SyncScope =
   | {
       kind: 'bulk';
@@ -209,7 +218,7 @@ type SyncSurfaceProps = {
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: (outcome: SyncOutcome) => void;
   /**
    * Where to set up scheduled updates, offered once the distribution has
    * succeeded.
@@ -572,12 +581,18 @@ export function SyncSurface({
       return;
     }
 
+    let outcome: MarketplaceDistributionResult | null = null;
     if (pickedMarketplaces.length > 0 && onDistributeMarketplaces) {
-      setMarketplaceOutcome(await onDistributeMarketplaces(pickedMarketplaces));
+      outcome = await onDistributeMarketplaces(pickedMarketplaces);
+      setMarketplaceOutcome(outcome);
     }
 
     setStep('success');
-    onConfirm();
+    onConfirm({
+      installCount: stats.installCount,
+      pluginsStarted: outcome?.accepted ?? 0,
+      pluginsRefused: outcome?.failed ?? 0,
+    });
   }, [
     deployPackages,
     hasPick,
@@ -586,6 +601,7 @@ export function SyncSurface({
     pickedMarketplaces,
     release,
     selectionByPackage,
+    stats.installCount,
   ]);
 
   useEffect(() => {

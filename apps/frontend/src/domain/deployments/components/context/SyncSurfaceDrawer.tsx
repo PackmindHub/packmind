@@ -1,13 +1,16 @@
 import type { ComponentProps } from 'react';
-import { PMDrawer, PMPortal } from '@packmind/ui';
-import { SyncSurface } from '../redesign/components/SyncSurface';
+import { PMDrawer, PMPortal, pmToaster } from '@packmind/ui';
+import {
+  SyncSurface,
+  type SyncOutcome,
+} from '../redesign/components/SyncSurface';
 
 /**
  * The distribution review, over the list it was started from rather than in
  * place of it.
  *
- * The receipt stays up until the reader dismisses it, so `onConfirm` is left
- * to the review: closing is `onClose`, whichever way the flow ended.
+ * It closes itself once the distribution is sent and reports the outcome in a
+ * toast, so the reader lands back on the list that will show it.
  */
 export function SyncSurfaceDrawer({
   open,
@@ -52,7 +55,10 @@ export function SyncSurfaceDrawer({
                   scope={scope}
                   bare
                   onCancel={onClose}
-                  onConfirm={() => undefined}
+                  onConfirm={(outcome) => {
+                    pmToaster.create(outcomeToast(outcome));
+                    onClose();
+                  }}
                 />
               )}
             </PMDrawer.Body>
@@ -61,4 +67,47 @@ export function SyncSurfaceDrawer({
       </PMPortal>
     </PMDrawer.Root>
   );
+}
+
+const plural = (count: number, noun: string) =>
+  `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+export function outcomeToast({
+  installCount,
+  pluginsStarted,
+  pluginsRefused,
+}: SyncOutcome): {
+  type: 'success' | 'error';
+  title: string;
+  description: string;
+} {
+  const sentences: string[] = [];
+  if (installCount > 0) {
+    sentences.push(`${plural(installCount, 'destination')} updated.`);
+  }
+  /*
+   * Said apart from the destinations: a plugin's pull request still has to be
+   * merged before the catalog changes, so it is started rather than done.
+   */
+  if (pluginsStarted > 0) {
+    sentences.push(
+      `${plural(pluginsStarted, 'plugin')} sent for review on the marketplace.`,
+    );
+  }
+  if (pluginsRefused > 0) {
+    sentences.push(
+      `${plural(pluginsRefused, 'plugin')} refused by the marketplace.`,
+    );
+  }
+
+  return {
+    type: pluginsRefused > 0 ? 'error' : 'success',
+    title:
+      pluginsRefused > 0
+        ? 'Distribution partly failed'
+        : installCount > 0
+          ? 'Distribution done'
+          : 'Distribution started',
+    description: sentences.join(' '),
+  };
 }
