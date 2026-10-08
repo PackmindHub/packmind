@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@cli/implementation"
   ],
+  "packages": {
+    "@cli/implementation": "*"
+  },
   "agents": [
     "agents_md",
     "claude",

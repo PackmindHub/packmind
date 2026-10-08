@@ -4,6 +4,10 @@
     "@backend/backend",
     "@backend/backend-hexagonal-architecture-standards"
   ],
+  "packages": {
+    "@backend/backend": "*",
+    "@backend/backend-hexagonal-architecture-standards": "*"
+  },
   "agents": [
     "agents_md",
     "claude",

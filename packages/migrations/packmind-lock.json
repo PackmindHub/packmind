@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@backend/migrations"
   ],
+  "packages": {
+    "@backend/migrations": "*"
+  },
   "agents": [
     "agents_md",
     "claude",

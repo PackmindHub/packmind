@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@testing/integration-tests"
   ],
+  "packages": {
+    "@testing/integration-tests": "*"
+  },
   "agents": [
     "agents_md",
     "claude",

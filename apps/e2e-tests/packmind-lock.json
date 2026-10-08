@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@testing/e2e"
   ],
+  "packages": {
+    "@testing/e2e": "*"
+  },
   "agents": [
     "agents_md",
     "claude",

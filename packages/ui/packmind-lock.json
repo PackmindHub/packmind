@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@frontend/ui-components"
   ],
+  "packages": {
+    "@frontend/ui-components": "*"
+  },
   "agents": [
     "agents_md",
     "claude",
