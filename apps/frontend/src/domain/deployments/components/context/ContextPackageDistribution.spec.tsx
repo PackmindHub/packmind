@@ -15,6 +15,7 @@ import type { PackageDestination } from './buildPackageDestinations';
 import { usePackageDestinations } from './usePackageDestinations';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import type { SyncScope } from '../redesign/components/SyncSurface';
 
 /*
  * Every hook this tab reaches for is mocked at its module path, so no query
@@ -41,6 +42,7 @@ vi.mock('../../../accounts/hooks/useAuthContext', () => ({
  */
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageReleasesQuery: () => ({ data: undefined }),
+  useDeployPackagesMutation: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock(
@@ -80,7 +82,7 @@ const pkg = {
   spaceId: createSpaceId('space-1'),
 } as unknown as PackageResponse;
 
-function renderTab() {
+function renderTab(syncScope: SyncScope | null = null) {
   return render(
     <UIProvider>
       <ContextPackageDistribution
@@ -89,7 +91,7 @@ function renderTab() {
         packages={[]}
         isLoading={false}
         isError={false}
-        syncScope={null}
+        syncScope={syncScope}
         onStartSync={vi.fn()}
         onSyncClose={vi.fn()}
       />
@@ -142,6 +144,24 @@ describe('ContextPackageDistribution', () => {
       );
 
       expect(screen.getByTestId('distribution-history')).toBeInTheDocument();
+    });
+  });
+
+  describe('while an update is being reviewed', () => {
+    const scope: SyncScope = { kind: 'package', packageId: pkg.id };
+
+    it('opens the review in a drawer', async () => {
+      renderTab(scope);
+
+      expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('keeps the destinations on screen behind it', async () => {
+      renderTab(scope);
+
+      await screen.findByRole('dialog');
+
+      expect(screen.getByText('optimetriks/smala-native')).toBeInTheDocument();
     });
   });
 });

@@ -1,18 +1,17 @@
-import { PMDrawer, PMPortal } from '@packmind/ui';
 import type {
   GitProviderId,
   OrganizationId,
   PackageReleaseReadiness,
   PackageResponse,
 } from '@packmind/types';
-import {
-  SyncSurface,
-  type MarketplaceDistributionResult,
-  type MarketplaceSyncTarget,
-  type SyncScope,
+import type {
+  MarketplaceDistributionResult,
+  MarketplaceSyncTarget,
+  SyncScope,
 } from '../redesign/components/SyncSurface';
 import type { PackageDrift } from '../redesign/types';
 import { PackageReleaseVersionField } from './PackageReleaseVersionField';
+import { SyncSurfaceDrawer } from './SyncSurfaceDrawer';
 import { usePackageReleaseVersion } from './usePackageReleaseVersion';
 
 const VERSION_FIELD_ID = 'release-and-update-version';
@@ -62,53 +61,25 @@ export function ReleaseAndUpdateDrawer({
   });
 
   return (
-    <PMDrawer.Root
+    <SyncSurfaceDrawer
       open={open}
-      onOpenChange={(details) => {
-        if (!details.open) onClose();
+      onClose={onClose}
+      packages={packages}
+      scope={scope}
+      providersWithToken={providersWithToken}
+      isProvidersLoading={isProvidersLoading}
+      onDistributeMarketplaces={onDistributeMarketplaces}
+      release={{
+        version: release.version,
+        renderField: (locked) => (
+          <PackageReleaseVersionField
+            id={VERSION_FIELD_ID}
+            release={release}
+            disabled={locked || release.isPending}
+          />
+        ),
+        cut: async () => (await release.release()) !== null,
       }}
-      /*
-       * The review owns Escape and ignores it while a push is in flight; the
-       * drawer closing on its own would cut that short.
-       */
-      closeOnEscape={false}
-      closeOnInteractOutside={false}
-      placement="end"
-      size="lg"
-    >
-      <PMPortal>
-        <PMDrawer.Backdrop />
-        <PMDrawer.Positioner>
-          <PMDrawer.Content>
-            <PMDrawer.Body padding={0}>
-              {open && scope && (
-                <SyncSurface
-                  bare
-                  packages={packages}
-                  scope={scope}
-                  providersWithToken={providersWithToken}
-                  isProvidersLoading={isProvidersLoading}
-                  onDistributeMarketplaces={onDistributeMarketplaces}
-                  onCancel={onClose}
-                  // The receipt stays up until the reader dismisses it.
-                  onConfirm={() => undefined}
-                  release={{
-                    version: release.version,
-                    renderField: (locked) => (
-                      <PackageReleaseVersionField
-                        id={VERSION_FIELD_ID}
-                        release={release}
-                        disabled={locked || release.isPending}
-                      />
-                    ),
-                    cut: async () => (await release.release()) !== null,
-                  }}
-                />
-              )}
-            </PMDrawer.Body>
-          </PMDrawer.Content>
-        </PMDrawer.Positioner>
-      </PMPortal>
-    </PMDrawer.Root>
+    />
   );
 }

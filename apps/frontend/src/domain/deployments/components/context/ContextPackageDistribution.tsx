@@ -17,14 +17,12 @@ import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQuerie
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { PackageDistributionList } from '../PackageDistributionList';
-import {
-  SyncSurface,
-  type SyncScope,
-} from '../redesign/components/SyncSurface';
+import type { SyncScope } from '../redesign/components/SyncSurface';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import type { PackageDrift } from '../redesign/types';
 import { ContextDestinationList } from './ContextDestinationList';
 import { ReleaseAndUpdateDrawer } from './ReleaseAndUpdateDrawer';
+import { SyncSurfaceDrawer } from './SyncSurfaceDrawer';
 import { buildPackageSyncScope } from './buildPackageSyncScope';
 import { usePackageDestinations } from './usePackageDestinations';
 
@@ -116,6 +114,14 @@ export function ContextPackageDistribution({
    * so the drawer does not empty itself while it slides out.
    */
   const [releaseScope, setReleaseScope] = useState<SyncScope | null>(null);
+  /*
+   * The last flow started, kept after it ends for the same reason: `syncScope`
+   * goes null the moment the drawer is asked to close.
+   */
+  const [shownSyncScope, setShownSyncScope] = useState(syncScope);
+  if (syncScope !== null && syncScope !== shownSyncScope) {
+    setShownSyncScope(syncScope);
+  }
 
   const { data: releases } = useListPackageReleasesQuery(
     organization?.id,
@@ -145,29 +151,6 @@ export function ContextPackageDistribution({
   const distributeMarketplaces = useMarketplaceBatchDistribution(
     organization?.id ?? null,
   );
-
-  /*
-   * The redistribute flow takes over the pane and leaves the rail alone: the
-   * package it is about is named in the header just above, and cancelling has to
-   * come back to the same place it started from.
-   */
-  if (syncScope !== null) {
-    return (
-      <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
-        <SyncSurface
-          packages={packages}
-          scope={syncScope}
-          providersWithToken={providersWithToken}
-          isProvidersLoading={isProvidersLoading}
-          onDistributeMarketplaces={
-            organization ? distributeMarketplaces : undefined
-          }
-          onCancel={onSyncClose}
-          onConfirm={onSyncClose}
-        />
-      </PMBox>
-    );
-  }
 
   return (
     <PMVStack align="stretch" gap={0} flex="1" minH={0}>
@@ -251,6 +234,18 @@ export function ContextPackageDistribution({
           />
         </PMBox>
       )}
+
+      <SyncSurfaceDrawer
+        open={syncScope !== null}
+        onClose={onSyncClose}
+        packages={packages}
+        scope={shownSyncScope}
+        providersWithToken={providersWithToken}
+        isProvidersLoading={isProvidersLoading}
+        onDistributeMarketplaces={
+          organization ? distributeMarketplaces : undefined
+        }
+      />
 
       {organization && releaseReadiness && (
         <ReleaseAndUpdateDrawer
