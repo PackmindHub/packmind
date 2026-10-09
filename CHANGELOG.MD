@@ -2,6 +2,18 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.19.0] - 2026-10-08
+
+## Added
+
+- A package can be released under a version: an immutable snapshot of the exact standard, command and skill versions it holds, with its name and description
+- The bar above the package's tabs shows its current version or `Not released yet`, cuts the next release, and lists past ones to read what each pinned
 - A package's Distribution now sends the version the page is read at: the release named in the bar above the tabs, or the package as it stands
 - Distributing a release sends the components it froze, deleted ones included, and writes that version into the repository's `packmind.json` instead of the wildcard
 - Reading the package as it stands still sends what it holds now, under `*`, which is what every distribution did before
@@ -32,8 +44,6 @@
 - A GitLab repository in a subgroup keeps its full path (`group/subgroup/repo`) when tracked from the CLI, so a token or app connection links it instead of duplicating it
 - Git connection panel: a repository now shows one branch. `change branch` replaces it, refuses a branch that doesn't exist, and switching back brings that branch's history back (#902)
 - Applying a change that conflicts with the current content now says so instead of failing with a server error
-
-## Removed
 
 # [1.18.1] - 2026-09-25
 
@@ -477,7 +487,8 @@ Hotfix release.
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.19.0...HEAD
+[1.19.0]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...release/1.19.0
 [1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
 [1.17.0]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...release/1.17.0

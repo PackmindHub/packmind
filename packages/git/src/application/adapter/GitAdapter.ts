@@ -312,6 +312,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this._findOrCreateGitRepo,
       this.eventEmitterService,
       this.accountsPort,
+      this.deploymentsPort,
     );
 
     this._updateTrackedBranch = new UpdateTrackedBranchUseCase(
@@ -320,6 +321,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this._findOrCreateGitRepo,
       this.eventEmitterService,
       this.accountsPort,
+      this.deploymentsPort,
     );
 
     this._removeTrackedRepositoryUseCase = new RemoveTrackedRepositoryUseCase(

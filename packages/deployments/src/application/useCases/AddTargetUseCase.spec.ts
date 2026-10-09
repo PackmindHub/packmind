@@ -1,7 +1,12 @@
-import { mockInterface, createMockInstance } from '@packmind/test-utils';
+import {
+  mockInterface,
+  createMockInstance,
+  stubLogger,
+} from '@packmind/test-utils';
 import { AddTargetUseCase } from './AddTargetUseCase';
 import {
   AddTargetCommand,
+  ISyncDistributionsFromLockFilesUseCase,
   IGitPort,
   GitProviderMissingTokenError,
   GitProviderListItem,
@@ -23,6 +28,7 @@ describe('AddTargetUseCase', () => {
   let useCase: AddTargetUseCase;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockGitPort: jest.Mocked<IGitPort>;
+  let mockSyncDistributions: jest.Mocked<ISyncDistributionsFromLockFilesUseCase>;
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-123');
@@ -64,7 +70,18 @@ describe('AddTargetUseCase', () => {
 
     mockGitPort = mockInterface<IGitPort>();
 
-    useCase = new AddTargetUseCase(mockTargetService, mockGitPort);
+    mockSyncDistributions =
+      mockInterface<ISyncDistributionsFromLockFilesUseCase>();
+    mockSyncDistributions.execute.mockResolvedValue({
+      targets: [],
+    });
+
+    useCase = new AddTargetUseCase(
+      mockTargetService,
+      mockGitPort,
+      mockSyncDistributions,
+      stubLogger(),
+    );
   });
 
   afterEach(() => {
@@ -113,6 +130,61 @@ describe('AddTargetUseCase', () => {
 
       it('returns the created target', () => {
         expect(result).toEqual(expectedTarget);
+      });
+
+      it('does not sync an untracked repository', () => {
+        expect(mockSyncDistributions.execute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the repository is tracked', () => {
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'frontend',
+        path: '/app/frontend/',
+        gitRepoId,
+      };
+      const addedTarget: Target = {
+        id: createTargetId('target-456'),
+        name: 'frontend',
+        path: '/app/frontend/',
+        gitRepoId,
+      };
+
+      beforeEach(() => {
+        mockGitPort.getRepositoryById.mockResolvedValue({
+          ...mockRepo,
+          isTracked: true,
+        });
+        mockTargetService.addTarget.mockResolvedValue(addedTarget);
+      });
+
+      describe('when the lock at the target path can be read', () => {
+        beforeEach(async () => {
+          await useCase.execute(command);
+        });
+
+        it('syncs the distribution state from the lock at that path only', () => {
+          expect(mockSyncDistributions.execute).toHaveBeenCalledWith({
+            userId,
+            organizationId,
+            gitRepoId,
+            targetPaths: ['/app/frontend/'],
+          });
+        });
+      });
+
+      describe('when the lock cannot be read', () => {
+        beforeEach(() => {
+          mockSyncDistributions.execute.mockRejectedValue(
+            new Error('Bad credentials'),
+          );
+        });
+
+        it('still returns the created target', async () => {
+          await expect(useCase.execute(command)).resolves.toEqual(addedTarget);
+        });
       });
     });
 

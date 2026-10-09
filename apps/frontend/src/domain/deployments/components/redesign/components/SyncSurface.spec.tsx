@@ -219,6 +219,131 @@ describe('SyncSurface', () => {
     });
   });
 
+  describe('when a release is cut in the same gesture', () => {
+    /*
+     * On the newest release there is, with work done since: only a cut can
+     * move it, so `Update` alone leaves it out.
+     */
+    const onNewestRelease: PackageDrift = {
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: true,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: 'aligned' as const,
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec: '0.3.0',
+      })),
+    };
+
+    const releaseScope = {
+      kind: 'bulk' as const,
+      packageIds: [onNewestRelease.id],
+    };
+
+    const releaseOf = (cut: () => Promise<boolean>) => ({
+      version: '0.4.0',
+      renderField: () => <input aria-label="Version" />,
+      cut: vi.fn(cut),
+    });
+
+    const confirmButton = () =>
+      screen.findByRole('button', { name: /^Release 0\.4\.0 and update \d+$/ });
+
+    it('lists the destinations only a release can move', () => {
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => true),
+      });
+
+      expect(screen.getAllByText('0.3.0 → 0.4.0').length).toBeGreaterThan(0);
+    });
+
+    it('names the cut on the confirm button', async () => {
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => true),
+      });
+
+      expect(await confirmButton()).toBeEnabled();
+    });
+
+    it('cuts the release before distributing it', async () => {
+      const calls: string[] = [];
+      mockedUseDeployPackagesMutation.mockReturnValue({
+        mutateAsync: vi.fn(async () => {
+          calls.push('deploy');
+          return {};
+        }),
+      } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => {
+          calls.push('cut');
+          return true;
+        }),
+      });
+
+      await userEvent.setup().click(await confirmButton());
+
+      expect(calls).toEqual(['cut', 'deploy']);
+    });
+
+    it('distributes nothing when the release is not cut', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockedUseDeployPackagesMutation.mockReturnValue({
+        mutateAsync,
+      } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => false),
+      });
+
+      await userEvent.setup().click(await confirmButton());
+
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    describe('when the distribution fails after the cut', () => {
+      it('does not cut a second release on retry', async () => {
+        mockedUseDeployPackagesMutation.mockReturnValue({
+          mutateAsync: vi.fn().mockRejectedValue(new Error('boom')),
+        } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+        const release = releaseOf(async () => true);
+        renderSurface({
+          packages: [onNewestRelease],
+          scope: releaseScope,
+          release,
+        });
+        const user = userEvent.setup();
+
+        await user.click(await confirmButton());
+        await user.click(
+          await screen.findByRole('button', { name: /^Distribute/ }),
+        );
+
+        expect(release.cut).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('without a release', () => {
+      it('leaves those destinations out', () => {
+        renderSurface({ packages: [onNewestRelease], scope: releaseScope });
+
+        expect(screen.getByText('Nothing to distribute.')).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('what the review says the distribution will do', () => {
     const pinnedAt = (versionSpec: string | null): PackageDrift => ({
       ...STUB_PACKAGES[0],
