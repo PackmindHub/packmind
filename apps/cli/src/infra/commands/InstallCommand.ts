@@ -18,7 +18,6 @@ import {
 } from './installPackagesHandler';
 import {
   CodingAgent,
-  LockFileSyncWarning,
   PackmindFileConfig,
   PackmindLockFile,
 } from '@packmind/types';
@@ -45,6 +44,13 @@ import {
   checkUpgradesHandler,
   findCheckUpgradesConflict,
 } from './checkUpgradesHandler';
+import {
+  decideDistributionTracking,
+  DistributionTrackingDecision,
+  reportLockFileWarnings,
+  resolveTrackingLookup,
+  toRepoRelativePath,
+} from './distributionTracking';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -131,78 +137,7 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   return merged;
 }
 
-type TrackingLookup =
-  | { status: 'tracking-unsupported' }
-  | { status: 'resolved'; trackedGitRepo: { branch: string } | null }
-  | { status: 'unavailable' };
-
-export type DistributionTrackingDecision =
-  | { action: 'record' }
-  | { action: 'record-legacy' }
-  | { action: 'skip'; reason: 'repo_not_tracked' }
-  | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
-  | { action: 'skip'; reason: 'tracked_branch_gone'; trackedBranch: string }
-  | { action: 'skip'; reason: 'detached_head'; trackedBranch: string }
-  | { action: 'inform' };
-
-export function decideDistributionTracking(params: {
-  lookup: TrackingLookup;
-  currentBranch: string;
-  /**
-   * Asked only about a tracked branch we are not on, so the git call is skipped
-   * in the common cases. Answering `true` when it cannot tell keeps the plain
-   * wrong-branch message, which is never actively wrong.
-   */
-  branchExists: (branch: string) => boolean;
-  /** True when HEAD is not on a branch — a rebase, or a CI job on a merge ref. */
-  detached: boolean;
-}): DistributionTrackingDecision {
-  const { lookup, currentBranch, branchExists, detached } = params;
-
-  switch (lookup.status) {
-    case 'tracking-unsupported':
-      return { action: 'record-legacy' };
-    case 'unavailable':
-      return { action: 'inform' };
-    case 'resolved': {
-      const tracked = lookup.trackedGitRepo;
-      if (!tracked) {
-        return { action: 'skip', reason: 'repo_not_tracked' };
-      }
-      if (tracked.branch !== currentBranch) {
-        // Worst cause first: a tracked branch that is gone records nothing for
-        // anybody, and a detached HEAD is not "being on the wrong branch" —
-        // git reports the branch as `HEAD`, which names no branch at all.
-        if (!branchExists(tracked.branch)) {
-          return {
-            action: 'skip',
-            reason: 'tracked_branch_gone',
-            trackedBranch: tracked.branch,
-          };
-        }
-        return {
-          action: 'skip',
-          reason: detached ? 'detached_head' : 'wrong_branch',
-          trackedBranch: tracked.branch,
-        };
-      }
-      return { action: 'record' };
-    }
-  }
-}
-
 const NO_GIT_REPO_CACHE_KEY = '<no-git-repo>';
-
-function toRepoRelativePath(dir: string, gitRoot: string): string {
-  let relativePath = dir.startsWith(gitRoot) ? dir.slice(gitRoot.length) : '/';
-  if (!relativePath.startsWith('/')) {
-    relativePath = '/' + relativePath;
-  }
-  if (!relativePath.endsWith('/')) {
-    relativePath = relativePath + '/';
-  }
-  return relativePath;
-}
 
 function reportDistributionTrackingDecision(
   decision: DistributionTrackingDecision,
@@ -237,31 +172,6 @@ function reportDistributionTrackingDecision(
         `This folder is not tracked — distribution not recorded in Packmind.`,
       );
       break;
-  }
-}
-
-async function resolveTrackingLookup(
-  packmindCliHexa: PackmindCliHexa,
-  owner: string,
-  repo: string,
-): Promise<TrackingLookup> {
-  try {
-    const { gitRepo } = await packmindCliHexa.getTrackedRepository({
-      owner,
-      repo,
-    });
-    return { status: 'resolved', trackedGitRepo: gitRepo };
-  } catch (error) {
-    const statusCode = (error as { statusCode?: number })?.statusCode;
-    if (statusCode === 404) {
-      // Not a feature flag, whatever this branch used to claim: none gates
-      // this route. A server that has it answers `gitRepo: null` for an
-      // untracked repo and maps refusals to 409 or 403, so a 404 means the
-      // route is absent — the server predates repository tracking. Keep
-      // recording rather than dropping the distribution.
-      return { status: 'tracking-unsupported' };
-    }
-    return { status: 'unavailable' };
   }
 }
 
@@ -366,19 +276,6 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
     reportLockFileWarnings(warnings ?? [], relativePath);
   } catch {
     // Silently ignore all errors to not fail the install
-  }
-}
-
-function reportLockFileWarnings(
-  warnings: LockFileSyncWarning[],
-  relativePath: string,
-): void {
-  for (const warning of warnings) {
-    if (warning.type === 'unknown_package') {
-      logWarningConsole(
-        `Distribution in ${relativePath}: '${warning.packageSlug}' is not a package of your organization, it was not recorded.`,
-      );
-    }
   }
 }
 

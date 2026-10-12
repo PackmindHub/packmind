@@ -53,6 +53,7 @@ export interface IGitService {
    * Returns absolute file paths.
    */
   getUntrackedFiles(repoPath: string): string[];
+  listFilesNamed(directory: string, fileName: string): string[];
 
   /**
    * Gets line-level diff information for modified files.

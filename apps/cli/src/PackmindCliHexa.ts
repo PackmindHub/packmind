@@ -281,6 +281,13 @@ export class PackmindCliHexa {
     );
   }
 
+  public listFilesNamed(directory: string, fileName: string): string[] {
+    return this.hexa.services.gitRemoteUrlService.listFilesNamed(
+      directory,
+      fileName,
+    );
+  }
+
   public getGitRemoteUrlFromPath(repoPath: string): string {
     return this.hexa.services.gitRemoteUrlService.getGitRemoteUrl(repoPath)
       .gitRemoteUrl;

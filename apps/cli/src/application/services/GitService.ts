@@ -292,6 +292,19 @@ export class GitService implements IGitService {
       .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
   }
 
+  listFilesNamed(directory: string, fileName: string): string[] {
+    const stdout = this.runGit(
+      `ls-files --cached --others --exclude-standard -- "*${fileName}"`,
+      directory,
+      'Failed to list repository files',
+    );
+
+    return stdout
+      .split('\n')
+      .filter((relativePath) => path.basename(relativePath) === fileName)
+      .map((relativePath) => path.join(directory, relativePath));
+  }
+
   /**
    * Gets line-level diff information for modified files.
    * For untracked files, all lines are considered modified (new file).
