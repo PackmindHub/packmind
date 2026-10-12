@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "{{CRON}}"
   workflow_dispatch:
+    inputs:
+      upgrade:
+        description: 'Upgrade installed Packmind packages to their latest versions'
+        type: boolean
+        default: false
 
 jobs:
   update:
@@ -22,6 +27,7 @@ jobs:
       - uses: packmind/update-packmind-artifacts@v1.2.0
         with:
           api-key: \${{ secrets.PACKMIND_API_KEY }}
+          upgrade: \${{ inputs.upgrade || false }}
 `;
 
 const GITLAB_TEMPLATE = `stages:

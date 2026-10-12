@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 2 * * 1-5' # Every weeknight at 02:00 UTC (Mon–Fri)
   workflow_dispatch:
+    inputs:
+      upgrade:
+        description: 'Upgrade installed Packmind packages to their latest versions'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -30,3 +35,4 @@ jobs:
         uses: PackmindHub/update-packmind-artifacts@v1.2.0
         with:
           packmind-api-key: ${{ secrets.PACKMIND_API_KEY }}
+          upgrade: ${{ inputs.upgrade || false }}
