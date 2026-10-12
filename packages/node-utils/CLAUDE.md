@@ -48,6 +48,11 @@ These are the ones most often reimplemented by hand:
 - `src/skillMd/`: `parseSkillMd`, `parseSkillMdContent` — SKILL.md frontmatter + body parsing
 - `src/git/`: `parseGitRepoInfo`, `parseGitProviderVendor`, `extractBaseUrl` — remote-URL and
   owner/repo parsing. This, not `packages/git`, is where that logic lives
-- `src/errors/`: the shared error types
+- `src/errors/`: only `getErrorMessage` (message from an `unknown`). The shared access errors
+  (`UserAccessError`, `UserNotFoundError`, `UserNotInOrganizationError`, …) live in
+  `src/application/UserAccessErrors.ts`
+
+`DomainExceptionFilter` (`src/nest/filters/`) is the one export **not** in the main barrel — it is
+imported from the separate subpath `@packmind/node-utils/filters`.
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
