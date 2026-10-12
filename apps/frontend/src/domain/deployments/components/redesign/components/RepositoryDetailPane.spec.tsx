@@ -249,7 +249,7 @@ describe('RepositoryDetailPane', () => {
       });
     });
 
-    describe('when a lock lists a package unknown to the organization', () => {
+    describe('when locks list packages unknown to the organization', () => {
       beforeEach(() => {
         mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
           onSuccess({
@@ -263,32 +263,76 @@ describe('RepositoryDetailPane', () => {
                   { type: 'unknown_package', packageSlug: 'archived' },
                 ],
               },
+              {
+                targetId: 'target-api',
+                path: '/apps/api/',
+                status: 'updated',
+                warnings: [{ type: 'unknown_package', packageSlug: 'legacy' }],
+              },
             ],
           }),
         );
       });
 
-      it('names the target the way the pane does', async () => {
+      const unknownPackageLine = async (slug: string) =>
+        within(await findWarningsBanner())
+          .getAllByRole('listitem')
+          .find((item) => item.textContent?.startsWith(slug));
+
+      it('shows each unknown package once', async () => {
         renderPane();
 
         await userEvent.click(syncButton());
 
         expect(
-          within(await findWarningsBanner()).getByText('Repository root'),
-        ).toBeInTheDocument();
+          within(await findWarningsBanner()).getAllByRole('listitem'),
+        ).toHaveLength(2);
       });
 
-      it('lists every unknown package of that target in one message', async () => {
+      it('lists the targets whose lock names the package', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(await unknownPackageLine('legacy')).toHaveTextContent(
+          'legacy, listed in Repository root, /apps/api/',
+        );
+      });
+    });
+
+    describe('when several locks were written by an older CLI', () => {
+      beforeEach(() => {
+        mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+          onSuccess({
+            targets: [
+              {
+                targetId,
+                path: '/',
+                status: 'ignored',
+                warnings: [{ type: 'lock_from_older_cli' }],
+              },
+              {
+                targetId: 'target-api',
+                path: '/apps/api/',
+                status: 'ignored',
+                warnings: [{ type: 'lock_from_older_cli' }],
+              },
+            ],
+          }),
+        );
+      });
+
+      it('lists those targets in one message', async () => {
         renderPane();
 
         await userEvent.click(syncButton());
 
         expect(
           within(await findWarningsBanner()).getByText(
-            "Not packages of this organization, so they weren't recorded:",
+            'Locks written by an older CLI',
             { exact: false },
           ),
-        ).toHaveTextContent('legacy, archived');
+        ).toHaveTextContent('Repository root, /apps/api/');
       });
     });
   });

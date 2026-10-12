@@ -17,8 +17,10 @@ export const syncedToastDescription = (updatedTargetCount: number) =>
 
 export const SYNC_WARNINGS_TITLE = "Some lock files weren't fully recorded";
 
-export const OLDER_CLI_LOCK_MESSAGE =
-  'Written by an older CLI, so its package versions were ignored. Distribute to this target again to refresh its lock file.';
+export const olderCliLocksMessage = (count: number) =>
+  count === 1
+    ? 'Lock written by an older CLI, so its package versions were ignored. Distribute to this target again to refresh it:'
+    : 'Locks written by an older CLI, so their package versions were ignored. Distribute to these targets again to refresh them:';
 
 export const unknownPackagesMessage = (count: number) =>
   count === 1

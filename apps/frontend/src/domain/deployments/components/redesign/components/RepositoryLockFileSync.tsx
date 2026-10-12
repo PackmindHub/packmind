@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, ReactNode, useEffect, useState } from 'react';
 import {
   PMAlert,
   PMBox,
@@ -24,7 +24,7 @@ import {
   SYNC_WARNINGS_TITLE,
   syncedToastDescription,
   syncedToastTitle,
-  OLDER_CLI_LOCK_MESSAGE,
+  olderCliLocksMessage,
   syncFromRepositoryTooltip,
   unknownPackagesMessage,
 } from '../../lockFileSync';
@@ -122,8 +122,25 @@ export function LockFileSyncWarnings({
   report: LockFileTargetSyncResult[];
   targets: TargetRef[];
 }>) {
-  const flagged = report.filter((result) => result.warnings.length > 0);
-  if (flagged.length === 0) return null;
+  const targetOf = (result: LockFileTargetSyncResult) =>
+    targets.find((target) => target.id === result.targetId);
+  const fromOlderCli = report.filter((result) =>
+    result.warnings.some((warning) => warning.type === 'lock_from_older_cli'),
+  );
+  const unknownPackages = new Map<string, LockFileTargetSyncResult[]>();
+  for (const result of report) {
+    for (const warning of result.warnings) {
+      if (warning.type === 'unknown_package') {
+        unknownPackages.set(warning.packageSlug, [
+          ...(unknownPackages.get(warning.packageSlug) ?? []),
+          result,
+        ]);
+      }
+    }
+  }
+  if (fromOlderCli.length === 0 && unknownPackages.size === 0) {
+    return null;
+  }
 
   return (
     <PMAlert.Root status="warning">
@@ -135,20 +152,54 @@ export function LockFileSyncWarnings({
       <PMAlert.Content>
         <PMAlert.Title>{SYNC_WARNINGS_TITLE}</PMAlert.Title>
         <PMVStack gap={3} align="start" marginTop={2}>
-          {flagged.map((result) => (
-            <TargetWarnings
-              key={result.targetId}
-              result={result}
-              target={targets.find((target) => target.id === result.targetId)}
-            />
-          ))}
+          {fromOlderCli.length > 0 && (
+            <PMAlert.Description>
+              {olderCliLocksMessage(fromOlderCli.length)}{' '}
+              <InlineList
+                items={fromOlderCli.map((result) => ({
+                  key: result.targetId,
+                  node: (
+                    <TargetLabel result={result} target={targetOf(result)} />
+                  ),
+                }))}
+              />
+            </PMAlert.Description>
+          )}
+          {unknownPackages.size > 0 && (
+            <PMVStack gap={1} align="start">
+              <PMAlert.Description>
+                {unknownPackagesMessage(unknownPackages.size)}
+              </PMAlert.Description>
+              <PMVStack as="ul" gap={1} align="start" paddingLeft={4}>
+                {[...unknownPackages].map(([slug, results]) => (
+                  <PMAlert.Description as="li" key={slug}>
+                    <PMText as="span" fontFamily="mono">
+                      {slug}
+                    </PMText>
+                    , listed in{' '}
+                    <InlineList
+                      items={results.map((result) => ({
+                        key: result.targetId,
+                        node: (
+                          <TargetLabel
+                            result={result}
+                            target={targetOf(result)}
+                          />
+                        ),
+                      }))}
+                    />
+                  </PMAlert.Description>
+                ))}
+              </PMVStack>
+            </PMVStack>
+          )}
         </PMVStack>
       </PMAlert.Content>
     </PMAlert.Root>
   );
 }
 
-function TargetWarnings({
+function TargetLabel({
   result,
   target,
 }: Readonly<{
@@ -156,38 +207,25 @@ function TargetWarnings({
   target: TargetRef | undefined;
 }>) {
   const isRoot = target ? !!target.isDefault : result.path === '/';
-  const unknownSlugs = result.warnings.flatMap((warning) =>
-    warning.type === 'unknown_package' ? [warning.packageSlug] : [],
-  );
-  const fromOlderCli = result.warnings.some(
-    (warning) => warning.type === 'lock_from_older_cli',
-  );
-
+  if (isRoot) return ROOT_TARGET_LABEL;
   return (
-    <PMVStack gap={1} align="start" as="section">
-      <PMText
-        fontSize="sm"
-        fontWeight="medium"
-        fontFamily={isRoot ? undefined : 'mono'}
-      >
-        {isRoot ? ROOT_TARGET_LABEL : (target?.name ?? result.path)}
-      </PMText>
-      {fromOlderCli && (
-        <PMAlert.Description>{OLDER_CLI_LOCK_MESSAGE}</PMAlert.Description>
-      )}
-      {unknownSlugs.length > 0 && (
-        <PMAlert.Description>
-          {unknownPackagesMessage(unknownSlugs.length)}{' '}
-          {unknownSlugs.map((slug, index) => (
-            <Fragment key={slug}>
-              {index > 0 && ', '}
-              <PMText as="span" fontFamily="mono">
-                {slug}
-              </PMText>
-            </Fragment>
-          ))}
-        </PMAlert.Description>
-      )}
-    </PMVStack>
+    <PMText as="span" fontFamily="mono">
+      {target?.name ?? result.path}
+    </PMText>
+  );
+}
+
+function InlineList({
+  items,
+}: Readonly<{ items: { key: string; node: ReactNode }[] }>) {
+  return (
+    <>
+      {items.map(({ key, node }, index) => (
+        <Fragment key={key}>
+          {index > 0 && ', '}
+          {node}
+        </Fragment>
+      ))}
+    </>
   );
 }
