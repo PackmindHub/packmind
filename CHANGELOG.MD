@@ -2,6 +2,13 @@
 
 ## Added
 
+- `packmind-lock.json` is now the source of truth for a repository's distribution state: the Distribution page shows the package versions each target's lock lists
+- Tracking a repository, switching its tracked branch, and adding a target or changing its path read the lock files of the tracked branch
+- `Sync from repository` on a repository's distribution page reads its lock files on demand, after a lock was edited by hand for instance. It is unavailable while the Git connection fails
+- A lock found in a folder no target declares creates that target, as the CLI does
+- A package missing from a lock stays distributed while the `packmind.json` beside it still lists it
+- Distributing from the app writes the version of each package into `packmind-lock.json`, and removing a package from a target removes it from the lock too
+
 ## Changed
 
 ## Fixed

@@ -2,6 +2,10 @@
 
 ## Added
 
+- `packmind distribution record` sends the `packmind-lock.json` files in and below the current directory to Packmind, as what each target runs. It records only on the tracked branch
+- It finds the locks through git, so ignored folders are skipped and uncommitted locks are included. It fails when no lock below the current directory records package versions
+- `packmind install` writes the version of each package it distributed into `packmind-lock.json`, under `packages`
+
 ## Changed
 
 ## Fixed

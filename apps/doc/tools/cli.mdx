@@ -25,6 +25,7 @@ The Packmind CLI provides the following commands:
 - **`whoami`** - Show current authentication status
 - **`install`** - Download packages locally
 - **`uninstall`** - Remove packages from your project
+- **`distribution record`** - Send your local `packmind-lock.json` files to Packmind as what each target runs
 - **`lint`** - Run detection programs (Enterprise only)
 - **`playbook diff`** - Show differences between local files and Packmind artefacts
 - **`playbook add`** - Stage a change between local files and Packmind artefacts
@@ -760,7 +761,15 @@ packmind install @my-space/ops:0.2.0
 
 ### Lock File (`packmind-lock.json`)
 
-When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts.
+When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts, and under `packages` the version of each package the folder receives:
+
+```json
+{
+  "packages": { "@my-space/ops": "1.2.3" }
+}
+```
+
+Packmind treats this file as the source of truth for what each target runs. See [Keep the Distribution State in Sync with Your Repository](/governance/distribution#keep-the-distribution-state-in-sync-with-your-repository).
 
 ### Recursive Install (Monorepos)
 
@@ -851,6 +860,37 @@ packmind install <package-slug>
   right choice for project-specific standards that should be shared with
   teammates and committed to source control.
 </Tip>
+
+## Distribution Command
+
+### Distribution Record
+
+Tell Packmind what the `packmind-lock.json` files in your working copy say each target runs — useful after editing a lock by hand:
+
+```bash
+packmind distribution record
+```
+
+- **From the repository root** — every target in the repository is recorded.
+- **From a sub-folder** — only the targets at or below that folder are recorded.
+
+The lock files are found through Git: folders your `.gitignore` excludes are skipped, and lock files you have not committed yet are included. Only the targets that changed are listed in the output.
+
+Run it on the tracked branch (see [Git Track](#git-track)). Your lock edits do not need to be pushed, but a later **Sync from repository** in the app reads the locks on the remote branch and shows that state again — push your changes to keep them. See [Keep the Distribution State in Sync with Your Repository](/governance/distribution#keep-the-distribution-state-in-sync-with-your-repository).
+
+#### Troubleshooting
+
+- **Problem**: `The current directory is not managed by Packmind: no packmind-lock.json here or below records package versions.`
+- **Solution**: Run `packmind install` to create the lock files, or move to a folder that contains them.
+
+- **Problem**: `Nothing recorded: the tracked branch is 'main', and you are on 'dev'.`
+- **Solution**: Switch to the tracked branch and run the command again.
+
+- **Problem**: `Nothing recorded: the current directory is not in a Git repository.`
+- **Solution**: Run the command from inside the repository's working copy.
+
+- **Problem**: A package is reported as not a package of your organization.
+- **Solution**: That package is not recorded. Check its slug in the lock file, or remove it with `packmind uninstall`.
 
 ## Lint Command
 
