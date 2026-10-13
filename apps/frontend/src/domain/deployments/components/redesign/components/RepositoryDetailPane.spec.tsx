@@ -239,6 +239,25 @@ describe('RepositoryDetailPane', () => {
 
         expect(syncButton()).toBeDisabled();
       });
+
+      it('says the connection is broken, and why', () => {
+        renderPane();
+
+        expect(screen.getByText('Git connection broken')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'Token rejected by the provider. Re-authenticate to restore access.',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('does not say it was installed with the CLI', () => {
+        renderPane();
+
+        expect(
+          screen.queryByText('Installed with the CLI'),
+        ).not.toBeInTheDocument();
+      });
     });
 
     describe('when Packmind has no Git connection to the repository', () => {
@@ -246,6 +265,14 @@ describe('RepositoryDetailPane', () => {
         renderPane(vi.fn(), repo, DISCONNECTED);
 
         expect(syncButton()).toBeDisabled();
+      });
+
+      it('does not say the connection is broken', () => {
+        renderPane(vi.fn(), repo, DISCONNECTED);
+
+        expect(
+          screen.queryByText('Git connection broken'),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -306,7 +333,7 @@ describe('RepositoryDetailPane', () => {
 
         expect(
           within(await findWarningsBanner()).getByText(
-            'Fix or remove them in packmind.json, then run packmind install and push.',
+            'Fix or remove them in packmind.json, run packmind install, then push.',
           ),
         ).toBeInTheDocument();
       });
@@ -341,7 +368,7 @@ describe('RepositoryDetailPane', () => {
 
         expect(
           within(await findWarningsBanner()).getByText(
-            'Locks written by an older CLI',
+            'Written by an older CLI',
             { exact: false },
           ),
         ).toHaveTextContent('Repository root, /apps/api/');
@@ -588,9 +615,7 @@ describe('RepositoryDetailPane', () => {
     it('says what Packmind cannot do rather than the mechanism behind it', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
-      expect(
-        screen.getByText('Packmind cannot push to this repository'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Installed with the CLI')).toBeInTheDocument();
     });
 
     it('says nothing about tokens', () => {
@@ -599,7 +624,7 @@ describe('RepositoryDetailPane', () => {
       expect(screen.queryByText(/token/i)).not.toBeInTheDocument();
     });
 
-    it('says what a checkout does about it', () => {
+    it('says what to run on your machine', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       expect(screen.getByText(/packmind install/)).toBeInTheDocument();
@@ -609,11 +634,11 @@ describe('RepositoryDetailPane', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       await userEvent.hover(
-        screen.getByRole('button', { name: 'Why Packmind cannot push here' }),
+        screen.getByRole('button', { name: "Why Packmind can't push here" }),
       );
 
       expect(
-        await screen.findByText(/holds no credentials for this repository/),
+        await screen.findByText(/has no Git connection for it/),
       ).toBeInTheDocument();
     });
 
@@ -621,7 +646,7 @@ describe('RepositoryDetailPane', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       expect(
-        screen.queryByText(/holds no credentials for this repository/),
+        screen.queryByText(/has no Git connection for it/),
       ).not.toBeInTheDocument();
     });
 
@@ -637,9 +662,7 @@ describe('RepositoryDetailPane', () => {
       it('keeps the explanation', () => {
         renderPane(vi.fn(), repo, { ...DISCONNECTED, gitSettingsHref: null });
 
-        expect(
-          screen.getByText('Packmind cannot push to this repository'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('Installed with the CLI')).toBeInTheDocument();
       });
 
       it('drops the offer', () => {
@@ -657,7 +680,7 @@ describe('RepositoryDetailPane', () => {
       renderPane();
 
       expect(
-        screen.queryByText('Packmind cannot push to this repository'),
+        screen.queryByText('Installed with the CLI'),
       ).not.toBeInTheDocument();
     });
   });

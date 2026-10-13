@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   PMBox,
   PMCloseButton,
@@ -11,7 +11,12 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { GitProviderId, PackageResponse } from '@packmind/types';
+import type {
+  GitProviderId,
+  GitRepoId,
+  LockFileTargetSyncResult,
+  PackageResponse,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
@@ -19,7 +24,11 @@ import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/
 import { PackageDistributionList } from '../PackageDistributionList';
 import type { SyncScope } from '../redesign/components/SyncSurface';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
-import type { PackageDrift } from '../redesign/types';
+import type { PackageDrift, RepoRef } from '../redesign/types';
+import {
+  LockFileSyncWarnings,
+  SyncRepositoryIconButton,
+} from '../redesign/components/RepositoryLockFileSync';
 import { ContextDestinationList } from './ContextDestinationList';
 import { ReleaseAndUpdateDrawer } from './ReleaseAndUpdateDrawer';
 import { SyncSurfaceDrawer } from './SyncSurfaceDrawer';
@@ -119,6 +128,23 @@ export function ContextPackageDistribution({
    * goes null the moment the drawer is asked to close.
    */
   const [shownSyncScope, setShownSyncScope] = useState(syncScope);
+  const [syncReports, setSyncReports] = useState<
+    ReadonlyMap<
+      GitRepoId,
+      { repo: RepoRef; report: LockFileTargetSyncResult[] }
+    >
+  >(new Map());
+  useEffect(() => {
+    setSyncReports(new Map());
+  }, [pkg.id]);
+  const syncResults = [...syncReports.values()].flatMap(({ report }) => report);
+  const repoNameByTargetId = new Map(
+    [...syncReports.values()].flatMap(({ repo, report }) =>
+      report.map(
+        (result) => [result.targetId, `${repo.owner}/${repo.name}`] as const,
+      ),
+    ),
+  );
   if (syncScope !== null && syncScope !== shownSyncScope) {
     setShownSyncScope(syncScope);
   }
@@ -182,6 +208,19 @@ export function ContextPackageDistribution({
         </PMBox>
       ) : (
         <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
+          {syncResults.length > 0 && (
+            <PMBox paddingBottom={4}>
+              <LockFileSyncWarnings
+                report={syncResults}
+                targets={
+                  drift?.installLocations.map(({ target }) => target) ?? []
+                }
+                repoNameOf={(result) =>
+                  repoNameByTargetId.get(result.targetId) ?? ''
+                }
+              />
+            </PMBox>
+          )}
           <ContextDestinationList
             destinations={destinations}
             /*
@@ -213,6 +252,23 @@ export function ContextPackageDistribution({
               list to find the same panel is a detour through nothing.
             */
             onOpenHistory={() => setHistoryOpen(true)}
+            renderRowSync={({ landing }) =>
+              landing && (
+                <SyncRepositoryIconButton
+                  repo={landing.repo}
+                  branch={landing.branch}
+                  providersWithToken={providersWithToken}
+                  onSynced={(report) =>
+                    setSyncReports((previous) =>
+                      new Map(previous).set(landing.repo.id, {
+                        repo: landing.repo,
+                        report,
+                      }),
+                    )
+                  }
+                />
+              )
+            }
             onUpdate={(picked) => {
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);

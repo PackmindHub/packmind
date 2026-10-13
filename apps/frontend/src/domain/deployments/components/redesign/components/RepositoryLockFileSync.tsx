@@ -4,12 +4,13 @@ import {
   PMBox,
   PMButton,
   PMIcon,
+  PMIconButton,
   PMText,
   PMTooltip,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuFolderSync, LuTriangleAlert } from 'react-icons/lu';
+import { LuFolderSync, LuTriangleAlert, LuUnplug } from 'react-icons/lu';
 import type { GitProviderId, LockFileTargetSyncResult } from '@packmind/types';
 import { useCheckProviderAuthQuery } from '../../../../git/api/queries/GitProviderQueries';
 import {
@@ -20,25 +21,29 @@ import { useSyncRepositoryFromLockFilesMutation } from '../../../api/queries/Dep
 import {
   SYNC_CHECKING_GIT_CONNECTION,
   SYNC_FROM_REPOSITORY_LABEL,
-  SYNC_NEEDS_GIT_CONNECTION,
+  SYNC_CLI_ONLY,
   SYNC_WARNINGS_TITLE,
   syncedToastDescription,
+  syncBrokenConnection,
   syncedToastTitle,
   olderCliLocksMessage,
   syncFromRepositoryTooltip,
+  syncRepositoryLabel,
+  syncRepositoryTooltip,
   unknownPackagesFix,
   unknownPackagesMessage,
 } from '../../lockFileSync';
 import { ROOT_TARGET_LABEL } from '../selectors/installDriftEntries';
-import type { RepositoryDrift, TargetRef } from '../types';
+import type { RepoRef, TargetRef } from '../types';
 
 export function useRepositoryLockFileSync(
-  repo: RepositoryDrift,
+  { repo, branch }: { repo: RepoRef; branch: string },
   providersWithToken: Set<GitProviderId>,
+  onSynced?: (report: LockFileTargetSyncResult[]) => void,
 ) {
   const [report, setReport] = useState<LockFileTargetSyncResult[]>([]);
-  const hasAuth = providersWithToken.has(repo.repo.providerId);
-  const probe = useCheckProviderAuthQuery(repo.repo.providerId, {
+  const hasAuth = providersWithToken.has(repo.providerId);
+  const probe = useCheckProviderAuthQuery(repo.providerId, {
     enabled: hasAuth,
   });
   const connection = deriveConnectionStatus(probe, { hasAuth });
@@ -48,12 +53,14 @@ export function useRepositoryLockFileSync(
     setReport([]);
   }, [repo.id]);
 
+  const brokenReason =
+    connection.kind === 'failing'
+      ? PROBE_FAILURE_DESCRIPTIONS[connection.reason]
+      : null;
   const disabledReason = (() => {
-    if (connection.kind === 'no_auth') return SYNC_NEEDS_GIT_CONNECTION;
+    if (connection.kind === 'no_auth') return SYNC_CLI_ONLY;
     if (connection.kind === 'checking') return SYNC_CHECKING_GIT_CONNECTION;
-    if (connection.kind === 'failing') {
-      return `${SYNC_NEEDS_GIT_CONNECTION} ${PROBE_FAILURE_DESCRIPTIONS[connection.reason]}`;
-    }
+    if (brokenReason) return syncBrokenConnection(brokenReason);
     return null;
   })();
 
@@ -63,9 +70,10 @@ export function useRepositoryLockFileSync(
       {
         onSuccess: ({ targets }) => {
           setReport(targets);
+          onSynced?.(targets);
           pmToaster.create({
             type: 'success',
-            title: syncedToastTitle(repo.branch),
+            title: syncedToastTitle(branch),
             description: syncedToastDescription(
               targets.filter((target) => target.status === 'updated').length,
             ),
@@ -78,6 +86,7 @@ export function useRepositoryLockFileSync(
     sync,
     isSyncing: mutation.isPending,
     disabledReason,
+    brokenReason,
     report,
   };
 }
@@ -116,12 +125,52 @@ export function SyncFromRepositoryButton({
   );
 }
 
+export function SyncRepositoryIconButton({
+  repo,
+  branch,
+  providersWithToken,
+  onSynced,
+}: Readonly<{
+  repo: RepoRef;
+  branch: string;
+  providersWithToken: Set<GitProviderId>;
+  onSynced: (report: LockFileTargetSyncResult[]) => void;
+}>) {
+  const { sync, isSyncing, disabledReason, brokenReason } =
+    useRepositoryLockFileSync({ repo, branch }, providersWithToken, onSynced);
+  const repoName = `${repo.owner}/${repo.name}`;
+
+  return (
+    <PMTooltip
+      label={disabledReason ?? syncRepositoryTooltip(repoName, branch)}
+      placement="top"
+    >
+      <PMBox display="inline-flex">
+        <PMIconButton
+          aria-label={syncRepositoryLabel(repoName)}
+          variant="ghost"
+          size="2xs"
+          color={brokenReason ? 'warning' : 'text.faded'}
+          _hover={{ color: brokenReason ? 'warning' : 'text.primary' }}
+          onClick={sync}
+          disabled={disabledReason !== null || isSyncing}
+          loading={isSyncing}
+        >
+          {brokenReason ? <LuUnplug /> : <LuFolderSync />}
+        </PMIconButton>
+      </PMBox>
+    </PMTooltip>
+  );
+}
+
 export function LockFileSyncWarnings({
   report,
   targets,
+  repoNameOf,
 }: Readonly<{
   report: LockFileTargetSyncResult[];
   targets: TargetRef[];
+  repoNameOf?: (result: LockFileTargetSyncResult) => string;
 }>) {
   const targetOf = (result: LockFileTargetSyncResult) =>
     targets.find((target) => target.id === result.targetId);
@@ -160,7 +209,11 @@ export function LockFileSyncWarnings({
                 items={fromOlderCli.map((result) => ({
                   key: result.targetId,
                   node: (
-                    <TargetLabel result={result} target={targetOf(result)} />
+                    <TargetLabel
+                      result={result}
+                      target={targetOf(result)}
+                      repoName={repoNameOf?.(result)}
+                    />
                   ),
                 }))}
               />
@@ -185,6 +238,7 @@ export function LockFileSyncWarnings({
                           <TargetLabel
                             result={result}
                             target={targetOf(result)}
+                            repoName={repoNameOf?.(result)}
                           />
                         ),
                       }))}
@@ -206,16 +260,25 @@ export function LockFileSyncWarnings({
 function TargetLabel({
   result,
   target,
+  repoName,
 }: Readonly<{
   result: LockFileTargetSyncResult;
   target: TargetRef | undefined;
+  repoName?: string;
 }>) {
   const isRoot = target ? !!target.isDefault : result.path === '/';
-  if (isRoot) return ROOT_TARGET_LABEL;
-  return (
+  const label = isRoot ? (
+    ROOT_TARGET_LABEL
+  ) : (
     <PMText as="span" fontFamily="mono">
       {target?.name ?? result.path}
     </PMText>
+  );
+  if (!repoName) return label;
+  return (
+    <>
+      {repoName} · {label}
+    </>
   );
 }
 

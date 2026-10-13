@@ -57,6 +57,7 @@ export function ContextDestinationList({
   onUpdate,
   onReleaseAndUpdate,
   onOpenHistory,
+  renderRowSync,
 }: Readonly<{
   destinations: readonly PackageDestination[];
   /**
@@ -98,6 +99,8 @@ export function ContextDestinationList({
    * the row that raised the question rather than from the top of the list.
    */
   onOpenHistory?: () => void;
+  /** The control that syncs a landing's repository from its lock files. */
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
 }>) {
   const [filter, setFilter] = useState<PackageDestinationFilter>('all');
   const [query, setQuery] = useState('');
@@ -219,6 +222,7 @@ export function ContextDestinationList({
            */
           total={isSearching ? undefined : destinations.length}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -230,6 +234,7 @@ export function ContextDestinationList({
           rows={pending}
           total={isSearching ? undefined : destinations.length}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -237,6 +242,7 @@ export function ContextDestinationList({
         />
         <UpToDateBand
           rows={aligned}
+          renderRowSync={renderRowSync}
           isFirst={failed.length === 0 && pending.length === 0}
           /*
            * Asked for by name, so they are the list rather than the line under
@@ -465,6 +471,7 @@ function Band({
   total,
   isFirst,
   onOpenHistory,
+  renderRowSync,
   selection,
 }: Readonly<{
   label: string;
@@ -477,6 +484,7 @@ function Band({
   total?: number;
   isFirst: boolean;
   onOpenHistory?: () => void;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   selection?: RowSelection;
 }>) {
   if (rows.length === 0) return null;
@@ -520,6 +528,7 @@ function Band({
           key={row.key}
           destination={row}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={selection}
         />
       ))}
@@ -538,9 +547,11 @@ function UpToDateBand({
   rows,
   isFirst,
   forceOpen = false,
+  renderRowSync,
 }: Readonly<{
   rows: readonly PackageDestination[];
   isFirst: boolean;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   /**
    * These rows are what was asked for, so they are shown and the fold is not
    * offered. Kept out of the state below rather than pushed into it: a filter
@@ -623,7 +634,13 @@ function UpToDateBand({
         )}
       </PMHStack>
       {open &&
-        rows.map((row) => <DestinationRow key={row.key} destination={row} />)}
+        rows.map((row) => (
+          <DestinationRow
+            key={row.key}
+            destination={row}
+            renderRowSync={renderRowSync}
+          />
+        ))}
     </>
   );
 }
@@ -631,10 +648,12 @@ function UpToDateBand({
 function DestinationRow({
   destination,
   onOpenHistory,
+  renderRowSync,
   selection,
 }: Readonly<{
   destination: PackageDestination;
   onOpenHistory?: () => void;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   selection?: RowSelection;
 }>) {
   const [expanded, setExpanded] = useState(false);
@@ -827,6 +846,9 @@ function DestinationRow({
           </PMHStack>
         </PMBox>
         <RowAction destination={destination} />
+        {renderRowSync && destination.kind === 'repository' && (
+          <PMBox flexShrink={0}>{renderRowSync(destination)}</PMBox>
+        )}
       </PMHStack>
 
       {expanded && (

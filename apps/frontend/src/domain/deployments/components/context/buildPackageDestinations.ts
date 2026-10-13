@@ -7,6 +7,7 @@ import {
   type InstallDriftEntry,
 } from '../redesign/selectors/installDriftEntries';
 import type { DestinationRemedy } from '../redesign/selectors/destinationStanding';
+import type { RepoRef } from '../redesign/types';
 
 /**
  * Where a package has got to, as one list.
@@ -283,6 +284,8 @@ export type PackageDestination = {
    * marketplace, which is republished rather than pushed to.
    */
   installKey: string | null;
+  /** The repository and branch a landing sits on. Null for a marketplace. */
+  landing: { repo: RepoRef; branch: string } | null;
   prUrl: string | null;
   lastActivityAt: string | null;
   /**
@@ -395,6 +398,7 @@ function repositoryRow(
     remedy: entry.standing.remedy,
     canReleaseAndUpdate: entry.standing.canReleaseAndUpdate,
     installKey: `${entry.repo.id}::${entry.target.id}`,
+    landing: { repo: entry.repo, branch: entry.branch },
     prUrl: null,
     /*
      * Gated on the state and not merely copied across: the install carries the
@@ -461,6 +465,7 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
     remedy: publication.isOutdated ? 'update' : 'none',
     canReleaseAndUpdate: false,
     installKey: null,
+    landing: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,
     /*

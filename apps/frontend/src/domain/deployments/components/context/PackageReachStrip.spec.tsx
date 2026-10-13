@@ -33,6 +33,7 @@ function destination(
     remedy: 'none' as const,
     canReleaseAndUpdate: false,
     installKey: 'repo-1::target-1',
+    landing: null,
     prUrl: null,
     failureReason: null,
     lastActivityAt: '2026-09-01T10:00:00.000Z',

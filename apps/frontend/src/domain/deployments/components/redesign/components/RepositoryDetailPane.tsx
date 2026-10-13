@@ -27,6 +27,7 @@ import {
   LuRotateCw,
   LuSearch,
   LuTriangleAlert,
+  LuUnplug,
 } from 'react-icons/lu';
 import {
   DistributionStatus,
@@ -65,6 +66,8 @@ import {
 } from './RepositoryLockFileSync';
 import {
   ADD_GIT_CONNECTION_LABEL,
+  BROKEN_GIT_CONNECTION_TITLE,
+  FIX_GIT_CONNECTION_LABEL,
   NO_GIT_CONNECTION_BODY,
   NO_GIT_CONNECTION_TITLE,
   NO_GIT_CONNECTION_TOOLTIP,
@@ -144,7 +147,10 @@ export function RepositoryDetailPane({
     providersWithToken,
     isProvidersLoading,
   );
-  const lockFileSync = useRepositoryLockFileSync(repo, providersWithToken);
+  const lockFileSync = useRepositoryLockFileSync(
+    { repo: repo.repo, branch: repo.branch },
+    providersWithToken,
+  );
   const hasDrift = repositoryHasDrift(repo);
   const hasFailure = repositoryHasFailedDistribution(repo);
   const driftedPackages = repositoryDriftedPackageCount(repo);
@@ -491,6 +497,30 @@ export function RepositoryDetailPane({
                     <PMButton variant="secondary" size="xs" asChild>
                       <Link to={gitSettingsHref}>
                         {ADD_GIT_CONNECTION_LABEL}
+                      </Link>
+                    </PMButton>
+                  </PMBox>
+                )}
+              </PMAlert.Content>
+            </PMAlert.Root>
+          )}
+          {lockFileSync.brokenReason && (
+            <PMAlert.Root status="warning">
+              <PMAlert.Indicator>
+                <PMIcon>
+                  <LuUnplug />
+                </PMIcon>
+              </PMAlert.Indicator>
+              <PMAlert.Content>
+                <PMAlert.Title>{BROKEN_GIT_CONNECTION_TITLE}</PMAlert.Title>
+                <PMAlert.Description>
+                  {lockFileSync.brokenReason}
+                </PMAlert.Description>
+                {gitSettingsHref && (
+                  <PMBox paddingTop={2}>
+                    <PMButton variant="secondary" size="xs" asChild>
+                      <Link to={gitSettingsHref}>
+                        {FIX_GIT_CONNECTION_LABEL}
                       </Link>
                     </PMButton>
                   </PMBox>

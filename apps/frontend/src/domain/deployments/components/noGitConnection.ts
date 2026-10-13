@@ -4,7 +4,7 @@
  * A repository is reachable from the app only while Packmind holds credentials
  * for its provider, either a token or a live app installation. Without them the
  * distribution surfaces still list it, still know it has drifted, and can do
- * nothing about it: the catch-up has to happen in a checkout, where the
+ * nothing about it: the catch-up has to happen in a local copy of the repository, where the
  * developer's own credentials are.
  *
  * Five surfaces said so by naming the mechanism that failed, "this provider has
@@ -26,12 +26,16 @@
  */
 
 /** The refusal, as the heading of the repository-level banner. */
-export const NO_GIT_CONNECTION_TITLE =
-  'Packmind cannot push to this repository';
+export const NO_GIT_CONNECTION_TITLE = 'Installed with the CLI';
 
 /** What to do about it. */
 export const NO_GIT_CONNECTION_BODY =
-  'Run `packmind install` in a checkout to update its distributions.';
+  'Run `packmind install` in this repository to update it.';
+
+/** A connection Packmind holds credentials for, which the provider now refuses. */
+export const BROKEN_GIT_CONNECTION_TITLE = 'Git connection broken';
+
+export const FIX_GIT_CONNECTION_LABEL = 'Fix the connection';
 
 /** The other way out, and the label of the link that offers it. */
 export const ADD_GIT_CONNECTION_LABEL = 'Add a Git connection';
@@ -51,12 +55,10 @@ export const ADD_GIT_CONNECTION_LABEL = 'Add a Git connection';
  * question the feedback actually asked gets a full answer.
  */
 export const NO_GIT_CONNECTION_WHY =
-  "Packmind holds no credentials for this repository's Git host, so it cannot " +
-  'write there. Your checkout does. A repository is in this state because the ' +
-  'CLI reported it, or because its Git connection was revoked.';
+  "The CLI added this repository. Packmind has no Git connection for it, so it can't push there.";
 
 /** What the affordance is called, for a reader who cannot hover one. */
-export const NO_GIT_CONNECTION_WHY_LABEL = 'Why Packmind cannot push here';
+export const NO_GIT_CONNECTION_WHY_LABEL = "Why Packmind can't push here";
 
 /**
  * Why a locked control will not act, for the rows and the repository-wide
@@ -71,7 +73,7 @@ export const NO_GIT_CONNECTION_WHY_LABEL = 'Why Packmind cannot push here';
  * tooltip hangs off already says.
  */
 export const NO_GIT_CONNECTION_TOOLTIP =
-  'Packmind cannot push here. Run `packmind install` in a checkout.';
+  "Packmind can't push here. Run `packmind install` in this repository.";
 
 /**
  * The same, for a control that acts on every drifted destination at once and is
@@ -81,5 +83,4 @@ export const NO_GIT_CONNECTION_TOOLTIP =
  * tooltip that says how many would read as the answer to how many are left.
  */
 export const NO_GIT_CONNECTION_ALL_TOOLTIP =
-  'Packmind cannot push to any drifted destination. Run `packmind install` in ' +
-  'a checkout.';
+  "Packmind can't push to any of these. Run `packmind install` in each repository.";

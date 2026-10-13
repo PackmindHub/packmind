@@ -3,9 +3,12 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import {
+  createGitProviderId,
+  createGitRepoId,
   createOrganizationId,
   createPackageId,
   createSpaceId,
+  createTargetId,
 } from '@packmind/types';
 import type { PackageResponse } from '@packmind/types';
 import type { Mock } from 'vitest';
@@ -27,9 +30,14 @@ vi.mock('./usePackageDestinations', () => ({
   usePackageDestinations: vi.fn(),
 }));
 
+const mockAuthProbe = vi.fn();
+
 vi.mock('../../../git/api/queries/GitProviderQueries', () => ({
   useGetGitProvidersQuery: vi.fn(),
+  useCheckProviderAuthQuery: () => mockAuthProbe(),
 }));
+
+const mockSyncMutate = vi.fn();
 
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: vi.fn(),
@@ -43,6 +51,10 @@ vi.mock('../../../accounts/hooks/useAuthContext', () => ({
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackageReleasesQuery: () => ({ data: undefined }),
   useDeployPackagesMutation: () => ({ mutateAsync: vi.fn() }),
+  useSyncRepositoryFromLockFilesMutation: () => ({
+    mutate: mockSyncMutate,
+    isPending: false,
+  }),
 }));
 
 vi.mock(
@@ -58,6 +70,14 @@ vi.mock('../PackageDistributionList', () => ({
 const REASON =
   'Push rejected: branch protection on main requires a pull request';
 
+const providerId = createGitProviderId('provider-1');
+const repo = {
+  id: createGitRepoId('repo-1'),
+  owner: 'optimetriks',
+  name: 'smala-native',
+  providerId,
+};
+
 const failedDestination: PackageDestination = {
   key: 'r:repo-1::target-1',
   kind: 'repository',
@@ -70,6 +90,7 @@ const failedDestination: PackageDestination = {
   remedy: 'none' as const,
   canReleaseAndUpdate: false,
   installKey: 'repo-1::target-1',
+  landing: { repo, branch: 'v4staging' },
   prUrl: null,
   failureReason: REASON,
   lastActivityAt: null,
@@ -107,11 +128,17 @@ describe('ContextPackageDistribution', () => {
       isLoading: false,
     });
     (useGetGitProvidersQuery as Mock).mockReturnValue({
-      data: { providers: [] },
+      data: { providers: [{ id: providerId, hasAuth: true }] },
       isLoading: false,
     });
     (useAuthContext as Mock).mockReturnValue({
       organization: { id: createOrganizationId('org-1') },
+    });
+    mockAuthProbe.mockReturnValue({
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      data: { ok: true },
     });
   });
 
@@ -144,6 +171,99 @@ describe('ContextPackageDistribution', () => {
       );
 
       expect(screen.getByTestId('distribution-history')).toBeInTheDocument();
+    });
+  });
+
+  describe('syncing a repository from its row', () => {
+    const syncButton = () =>
+      screen.getByRole('button', {
+        name: 'Sync optimetriks/smala-native',
+      });
+
+    it('syncs that repository', async () => {
+      renderTab();
+
+      await userEvent.click(syncButton());
+
+      expect(mockSyncMutate).toHaveBeenCalledWith(
+        { gitRepoId: repo.id },
+        expect.anything(),
+      );
+    });
+
+    describe('when the Git connection is broken', () => {
+      beforeEach(() => {
+        mockAuthProbe.mockReturnValue({
+          isLoading: false,
+          isFetching: false,
+          isError: false,
+          data: { ok: false, reason: 'unauthorized' },
+        });
+      });
+
+      it('cannot be started', () => {
+        renderTab();
+
+        expect(syncButton()).toBeDisabled();
+      });
+
+      it('says the connection is broken, and why', async () => {
+        renderTab();
+
+        await userEvent.hover(syncButton().parentElement as HTMLElement);
+
+        expect(
+          await screen.findByText(
+            'Git connection broken. Token rejected by the provider. Re-authenticate to restore access.',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when the repository was installed with the CLI', () => {
+      beforeEach(() => {
+        (useGetGitProvidersQuery as Mock).mockReturnValue({
+          data: { providers: [{ id: providerId, hasAuth: false }] },
+          isLoading: false,
+        });
+      });
+
+      it('says so', async () => {
+        renderTab();
+
+        await userEvent.hover(syncButton().parentElement as HTMLElement);
+
+        expect(
+          await screen.findByText(/^Installed with the CLI/),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when its lock names an unknown package', () => {
+      beforeEach(() => {
+        mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+          onSuccess({
+            targets: [
+              {
+                targetId: createTargetId('target-1'),
+                path: '/',
+                status: 'updated',
+                warnings: [{ type: 'unknown_package', packageSlug: 'legacy' }],
+              },
+            ],
+          }),
+        );
+      });
+
+      it('names the repository beside the target', async () => {
+        renderTab();
+
+        await userEvent.click(syncButton());
+
+        expect(await screen.findByRole('listitem')).toHaveTextContent(
+          'legacy, listed in optimetriks/smala-native · Repository root',
+        );
+      });
     });
   });
 

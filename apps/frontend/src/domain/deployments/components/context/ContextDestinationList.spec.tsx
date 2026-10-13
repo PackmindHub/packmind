@@ -48,6 +48,7 @@ function destination(
     remedy: 'none' as const,
     canReleaseAndUpdate: false,
     installKey: 'repo-1::target-1',
+    landing: null,
     prUrl: null,
     failureReason: null,
     lastActivityAt: '2026-09-01T10:00:00.000Z',
@@ -1010,6 +1011,44 @@ describe('ContextDestinationList', () => {
           'https://github.com/acme/marketplace/pull/12',
         );
       });
+    });
+  });
+
+  describe("the sync of a row's repository", () => {
+    const renderWithSync = (rows: PackageDestination[]) =>
+      render(
+        <UIProvider>
+          <ContextDestinationList
+            destinations={rows}
+            renderRowSync={(row) => <button>Sync {row.name}</button>}
+          />
+        </UIProvider>,
+      );
+
+    it('is offered on a repository row', () => {
+      renderWithSync([destination({ state: 'drifted' })]);
+
+      expect(
+        screen.getByRole('button', { name: 'Sync PackmindHub/packmind' }),
+      ).toBeInTheDocument();
+    });
+
+    it('is not offered on a marketplace row', () => {
+      renderWithSync([
+        destination({
+          key: 'm:mkt-1',
+          kind: 'marketplace',
+          name: 'packmind-marketplace',
+          details: [],
+          state: 'drifted',
+          hasWorkToSend: true,
+          installKey: null,
+        }),
+      ]);
+
+      expect(
+        screen.queryByRole('button', { name: 'Sync packmind-marketplace' }),
+      ).not.toBeInTheDocument();
     });
   });
 
