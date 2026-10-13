@@ -298,6 +298,18 @@ describe('RepositoryDetailPane', () => {
           'legacy, listed in Repository root, /apps/api/',
         );
       });
+
+      it('tells how to fix the packages', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getByText(
+            'Fix or remove them in packmind.json, then run packmind install and push.',
+          ),
+        ).toBeInTheDocument();
+      });
     });
 
     describe('when several locks were written by an older CLI', () => {

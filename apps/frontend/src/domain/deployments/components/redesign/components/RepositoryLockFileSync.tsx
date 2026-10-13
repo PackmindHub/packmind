@@ -9,7 +9,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuFileLock, LuTriangleAlert } from 'react-icons/lu';
+import { LuFolderSync, LuTriangleAlert } from 'react-icons/lu';
 import type { GitProviderId, LockFileTargetSyncResult } from '@packmind/types';
 import { useCheckProviderAuthQuery } from '../../../../git/api/queries/GitProviderQueries';
 import {
@@ -26,6 +26,7 @@ import {
   syncedToastTitle,
   olderCliLocksMessage,
   syncFromRepositoryTooltip,
+  unknownPackagesFix,
   unknownPackagesMessage,
 } from '../../lockFileSync';
 import { ROOT_TARGET_LABEL } from '../selectors/installDriftEntries';
@@ -106,7 +107,7 @@ export function SyncFromRepositoryButton({
           loading={isSyncing}
         >
           <PMIcon fontSize="sm">
-            <LuFileLock />
+            <LuFolderSync />
           </PMIcon>
           {SYNC_FROM_REPOSITORY_LABEL}
         </PMButton>
@@ -191,6 +192,9 @@ export function LockFileSyncWarnings({
                   </PMAlert.Description>
                 ))}
               </PMVStack>
+              <PMAlert.Description>
+                {unknownPackagesFix(unknownPackages.size)}
+              </PMAlert.Description>
             </PMVStack>
           )}
         </PMVStack>

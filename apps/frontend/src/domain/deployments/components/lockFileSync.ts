@@ -24,5 +24,8 @@ export const olderCliLocksMessage = (count: number) =>
 
 export const unknownPackagesMessage = (count: number) =>
   count === 1
-    ? "Not a package of this organization, so it wasn't recorded:"
-    : "Not packages of this organization, so they weren't recorded:";
+    ? "Packmind has no package with this name. It was renamed or deleted, or it's in a space you can't access:"
+    : "Packmind has no packages with these names. They were renamed or deleted, or they're in a space you can't access:";
+
+export const unknownPackagesFix = (count: number) =>
+  `Fix or remove ${count === 1 ? 'it' : 'them'} in packmind.json, then run packmind install and push.`;
