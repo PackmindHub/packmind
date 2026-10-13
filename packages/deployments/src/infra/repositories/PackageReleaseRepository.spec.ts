@@ -391,12 +391,14 @@ describe('PackageReleaseRepository', () => {
           fixture.datasource.getRepository(PackageReleaseSchema) as never,
         );
 
-      const defaulted = new PackageReleaseRepository();
-      const releases = await defaulted.findByPackageId(pkg.id);
+      try {
+        const defaulted = new PackageReleaseRepository();
+        const releases = await defaulted.findByPackageId(pkg.id);
 
-      expect(releases).toEqual([]);
-
-      getRepository.mockRestore();
+        expect(releases).toEqual([]);
+      } finally {
+        getRepository.mockRestore();
+      }
     });
   });
 
@@ -409,11 +411,13 @@ describe('PackageReleaseRepository', () => {
         )
         .mockRejectedValueOnce('storage offline');
 
-      await expect(
-        repository.createWithVersions(releaseOf('3.1.0'), pinnedVersions()),
-      ).rejects.toBe('storage offline');
-
-      transaction.mockRestore();
+      try {
+        await expect(
+          repository.createWithVersions(releaseOf('3.1.0'), pinnedVersions()),
+        ).rejects.toBe('storage offline');
+      } finally {
+        transaction.mockRestore();
+      }
     });
   });
 
