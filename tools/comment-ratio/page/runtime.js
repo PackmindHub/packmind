@@ -444,6 +444,10 @@
     // commits: spacing them by the data makes the axis look arbitrary. The
     // grid is anchored on the marked date so the reference line lands on one.
     var step = (config.tickDays || 7) * 864e5;
+    // A window that grows a day at a time eventually runs its labels together.
+    // Multiplying the step keeps the anchor and the even spacing, where
+    // dropping every other label from a fixed grid would lose one or both.
+    while (x(t0 + step) - x(t0) < 48 && step < t1 - t0) step *= 2;
     var anchor = config.tickAnchor || t0;
     var first = anchor - Math.ceil((anchor - t0) / step) * step;
     for (var t = first; t <= t1; t += step) {
