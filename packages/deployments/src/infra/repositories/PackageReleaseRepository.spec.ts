@@ -1,4 +1,10 @@
+// AI_DISCLAIMER v1.0
+// This file has been created (totally or partially) with the assistance of artificial intelligence tools.
+// All content has been generated under the direct supervision of a named individual,
+// and under the AI.Backbone Orchestrator Compliance framework
+
 import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
+import { localDataSource } from '@packmind/node-utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Command,
@@ -7,6 +13,7 @@ import {
   createSkillVersionId,
   Package,
   PackageReleaseEntry,
+  Rule,
   Skill,
   SkillVersion,
   Standard,
@@ -26,11 +33,13 @@ import {
 import {
   StandardSchema,
   StandardVersionSchema,
+  RuleSchema,
   standardsSchemas,
 } from '@packmind/standards';
 import { commandFactory, commandVersionFactory } from '@packmind/commands/test';
 import { skillFactory, skillVersionFactory } from '@packmind/skills/test';
 import {
+  ruleFactory,
   standardFactory,
   standardVersionFactory,
 } from '@packmind/standards/test';
@@ -79,6 +88,7 @@ describe('PackageReleaseRepository', () => {
   let command: Command;
   let standard: Standard;
   let skill: Skill;
+  let rule: Rule;
 
   const releaseOf = (version: string) => ({
     id: createPackageReleaseId(uuidv4()),
@@ -112,6 +122,12 @@ describe('PackageReleaseRepository', () => {
     standardVersion = await fixture.datasource
       .getRepository(StandardVersionSchema)
       .save(standardVersionFactory({ standardId: standard.id, version: 2 }));
+    rule = await fixture.datasource.getRepository(RuleSchema).save(
+      ruleFactory({
+        standardVersionId: standardVersion.id,
+        content: 'Use the pinned standard rule',
+      }),
+    );
     skillVersion = await fixture.datasource
       .getRepository(SkillVersionSchema)
       .save(skillVersionFactory({ skillId: skill.id, version: 5 }));
@@ -367,6 +383,44 @@ describe('PackageReleaseRepository', () => {
     });
   });
 
+  describe('when the repository is constructed with default dependencies', () => {
+    it('reads through the local datasource repository', async () => {
+      const getRepository = jest
+        .spyOn(localDataSource, 'getRepository')
+        .mockReturnValue(
+          fixture.datasource.getRepository(PackageReleaseSchema) as never,
+        );
+
+      try {
+        const defaulted = new PackageReleaseRepository();
+        const releases = await defaulted.findByPackageId(pkg.id);
+
+        expect(releases).toEqual([]);
+      } finally {
+        getRepository.mockRestore();
+      }
+    });
+  });
+
+  describe('when persistence rejects with a non-Error value', () => {
+    it('rethrows the original rejection', async () => {
+      const transaction = jest
+        .spyOn(
+          fixture.datasource.getRepository(PackageReleaseSchema).manager,
+          'transaction',
+        )
+        .mockRejectedValueOnce('storage offline');
+
+      try {
+        await expect(
+          repository.createWithVersions(releaseOf('3.1.0'), pinnedVersions()),
+        ).rejects.toBe('storage offline');
+      } finally {
+        transaction.mockRestore();
+      }
+    });
+  });
+
   describe('when a pinned component version has been deleted', () => {
     beforeEach(async () => {
       await repository.createWithVersions(releaseOf('2.0.0'), pinnedVersions());
@@ -441,9 +495,45 @@ describe('PackageReleaseRepository', () => {
         '5.0.0',
       );
 
-      expect(found?.standardVersions.map((version) => version.id)).toEqual([
-        standardVersion.id,
+      expect(
+        found?.standardVersions.map((version) => ({
+          id: version.id,
+          rules: version.rules?.map(({ id, content }) => ({ id, content })),
+        })),
+      ).toEqual([
+        {
+          id: standardVersion.id,
+          rules: [{ id: rule.id, content: rule.content }],
+        },
       ]);
+    });
+
+    describe('when a release pins several command versions', () => {
+      let secondCommandVersion: CommandVersion;
+
+      beforeEach(async () => {
+        secondCommandVersion = await fixture.datasource
+          .getRepository(CommandVersionSchema)
+          .save(commandVersionFactory({ recipeId: command.id, version: 4 }));
+
+        await repository.createWithVersions(releaseOf('5.0.1'), {
+          recipeVersionIds: [commandVersion.id, secondCommandVersion.id],
+          standardVersionIds: [standardVersion.id],
+          skillVersionIds: [skillVersion.id],
+        });
+      });
+
+      it('keeps both command pins on the content read', async () => {
+        const found = await repository.findContentByPackageIdAndVersion(
+          pkg.id,
+          '5.0.1',
+        );
+
+        expect(found?.recipeVersions.map((version) => version.id)).toEqual([
+          commandVersion.id,
+          secondCommandVersion.id,
+        ]);
+      });
     });
 
     describe('when a pinned command version has been deleted since', () => {
@@ -645,6 +735,40 @@ describe('PackageReleaseRepository', () => {
         found?.standardVersions.map((version) => version.id),
         found?.skillVersions.map((version) => version.id),
       ]).toEqual([[standardVersion.id], [skillVersion.id]]);
+    });
+  });
+
+  describe('when a release pins only commands', () => {
+    beforeEach(async () => {
+      await repository.createWithVersions(releaseOf('6.1.0'), {
+        recipeVersionIds: [commandVersion.id],
+        standardVersionIds: [],
+        skillVersionIds: [],
+      });
+    });
+
+    it('carries empty standard and skill families on the version read', async () => {
+      const found = await repository.findByPackageIdAndVersion(pkg.id, '6.1.0');
+
+      expect([found?.standardVersions, found?.skillVersions]).toEqual([[], []]);
+    });
+
+    it('carries empty standard and skill families on the content read', async () => {
+      const found = await repository.findContentByPackageIdAndVersion(
+        pkg.id,
+        '6.1.0',
+      );
+
+      expect([found?.standardVersions, found?.skillVersions]).toEqual([[], []]);
+    });
+
+    it('treats the missing standard and skill families as empty on the latest read', async () => {
+      const latest = await repository.findLatestByPackageIds([pkg.id]);
+
+      expect([
+        latest.get(pkg.id)?.standardVersions,
+        latest.get(pkg.id)?.skillVersions,
+      ]).toEqual([[], []]);
     });
   });
 });
