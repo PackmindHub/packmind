@@ -574,6 +574,32 @@ describe('GitService', () => {
     });
   });
 
+  describe('listFilesNamed', () => {
+    let result: string[];
+
+    beforeEach(() => {
+      gitRunner.mockReturnValueOnce({
+        stdout:
+          'packmind-lock.json\napp/packmind-lock.json\napp/old-packmind-lock.json\n',
+      });
+      result = service.listFilesNamed('/repo', 'packmind-lock.json');
+    });
+
+    it('asks git for tracked and untracked files, skipping ignored ones', () => {
+      expect(gitRunner).toHaveBeenCalledWith(
+        'ls-files --cached --others --exclude-standard -- "*packmind-lock.json"',
+        { cwd: '/repo' },
+      );
+    });
+
+    it('returns the files with that exact name', () => {
+      expect(result).toEqual([
+        '/repo/packmind-lock.json',
+        '/repo/app/packmind-lock.json',
+      ]);
+    });
+  });
+
   describe('getUntrackedFiles', () => {
     describe('when there are no untracked files', () => {
       let result: ReturnType<typeof service.getUntrackedFiles>;

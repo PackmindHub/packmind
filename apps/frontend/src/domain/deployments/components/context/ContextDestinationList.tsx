@@ -16,9 +16,10 @@ import {
   LuFolderGit2,
   LuRefreshCw,
   LuStore,
+  LuTag,
 } from 'react-icons/lu';
 import { DriftArtifactRow } from '../redesign/components/DriftArtifactRow';
-import { SelectionBar } from '../SelectionBar';
+import { SelectionBar, type SelectionAction } from '../SelectionBar';
 import { ContextChip } from './ContextChip';
 import { ContextPickBox } from './ContextPickBox';
 import { ContextSearchField } from './ContextSearchField';
@@ -54,8 +55,9 @@ export function ContextDestinationList({
   destinations,
   headerAction,
   onUpdate,
-  onCreateRelease,
+  onReleaseAndUpdate,
   onOpenHistory,
+  renderRowSync,
 }: Readonly<{
   destinations: readonly PackageDestination[];
   /**
@@ -74,7 +76,19 @@ export function ContextDestinationList({
    * the buttons off the list at once.
    */
   onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
+  /**
+   * Cutting a release and sending it to a set of landings, as one gesture.
+   *
+   * It takes the destinations for the same reason `onUpdate` does: the release
+   * is only half of what the reader asked for, and the other half is a push to
+   * the rows they pressed it on. The old callback took nothing because it only
+   * ever opened the release drawer and left the distribution to be noticed and
+   * started by hand.
+   *
+   * Absent for a reader who cannot cut one, which takes the button off every
+   * row at once.
+   */
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
   /**
    * Showing the distribution events, for a failed row whose message was not
    * the whole answer.
@@ -85,6 +99,8 @@ export function ContextDestinationList({
    * the row that raised the question rather than from the top of the list.
    */
   onOpenHistory?: () => void;
+  /** The control that syncs a landing's repository from its lock files. */
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
 }>) {
   const [filter, setFilter] = useState<PackageDestinationFilter>('all');
   const [query, setQuery] = useState('');
@@ -168,15 +184,11 @@ export function ContextDestinationList({
             onSelectAll={() =>
               setSelectedKeys(new Set(pickable.map((row) => row.key)))
             }
-            actions={[
-              {
-                label: `Update ${picked.length} destination${
-                  picked.length === 1 ? '' : 's'
-                }`,
-                icon: <LuRefreshCw />,
-                onAct: () => onUpdate(picked),
-              },
-            ]}
+            actions={selectionActions({
+              picked,
+              onUpdate,
+              onReleaseAndUpdate,
+            })}
             onClear={() => setSelectedKeys(new Set())}
           />
         </PMBox>
@@ -209,9 +221,8 @@ export function ContextDestinationList({
            * already states that ratio in the terms it belongs to.
            */
           total={isSearching ? undefined : destinations.length}
-          onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -222,9 +233,8 @@ export function ContextDestinationList({
           tone="orange.500"
           rows={pending}
           total={isSearching ? undefined : destinations.length}
-          onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={
             onUpdate ? { selectedKeys, isSelecting, toggle } : undefined
           }
@@ -232,6 +242,7 @@ export function ContextDestinationList({
         />
         <UpToDateBand
           rows={aligned}
+          renderRowSync={renderRowSync}
           isFirst={failed.length === 0 && pending.length === 0}
           /*
            * Asked for by name, so they are the list rather than the line under
@@ -244,6 +255,96 @@ export function ContextDestinationList({
     </>
   );
 }
+
+/**
+ * What the bar offers over a pick, which depends on what is in it.
+ *
+ * The two gestures used to sit on the rows, one or two per row depending on
+ * what that row could take. Down a list of forty that was six different
+ * right-hand treatments and the same `Update` changing weight between adjacent
+ * rows, and a reader could not tell from the column whether two buttons a few
+ * rows apart were the same button. It also meant the cut had no bulk form at
+ * all: twelve repositories needing one release was twelve separate trips.
+ *
+ * Here instead, where a pick of any size is already the subject, and where
+ * there is room for two labels side by side.
+ *
+ * `Release & Update` leads whenever the caller can cut one: it is the gesture
+ * that makes every row in the pick current, where `Update` sends only what
+ * Packmind already holds. It stays on the bar, greyed, while nothing picked
+ * needs a cut, so the two buttons do not appear and vanish under the pointer
+ * as rows are ticked.
+ */
+export function selectionActions({
+  picked,
+  onUpdate,
+  onReleaseAndUpdate,
+}: Readonly<{
+  picked: readonly PackageDestination[];
+  onUpdate: (destinations: readonly PackageDestination[]) => void;
+  onReleaseAndUpdate?: (destinations: readonly PackageDestination[]) => void;
+}>): SelectionAction[] {
+  /*
+   * One row already on the newest release is enough to refuse the whole pick:
+   * `Update` would send it nothing, and pushing the rest while it stays behind
+   * is a batch that silently does less than it was asked to.
+   */
+  const updateDisabledReason = picked.some(
+    (destination) => !destination.hasWorkToSend,
+  )
+    ? UPDATE_NEEDS_A_RELEASE
+    : undefined;
+
+  if (onReleaseAndUpdate === undefined) {
+    return [
+      {
+        label: `Update ${picked.length} destination${
+          picked.length === 1 ? '' : 's'
+        }`,
+        icon: <LuRefreshCw />,
+        onAct: () => onUpdate(picked),
+        disabledReason: updateDisabledReason,
+      },
+    ];
+  }
+
+  return [
+    {
+      /*
+       * Uncounted, both of them, where the single button counts. The count is
+       * on the left of the bar already, and beside a second label two counted
+       * ones read as two different sizes of batch rather than as two things to
+       * do with one.
+       */
+      label: 'Release & Update',
+      icon: <LuTag />,
+      onAct: () => onReleaseAndUpdate(picked),
+      /*
+       * The loud one, which is the whole of "more important than the other".
+       * Order says it too, and order alone would be a convention the reader has
+       * to know; the brand accent is not.
+       */
+      emphasis: 'primary',
+      disabledReason: picked.some(
+        (destination) => destination.canReleaseAndUpdate,
+      )
+        ? undefined
+        : RELEASE_AND_UPDATE_HAS_NOTHING_TO_CUT,
+    },
+    {
+      label: 'Update',
+      icon: <LuRefreshCw />,
+      onAct: () => onUpdate(picked),
+      disabledReason: updateDisabledReason,
+    },
+  ];
+}
+
+export const RELEASE_AND_UPDATE_HAS_NOTHING_TO_CUT =
+  'None of the selected destinations is waiting on a release.';
+
+export const UPDATE_NEEDS_A_RELEASE =
+  'Some selected destinations already have the latest release. Cut a release to update them.';
 
 /**
  * The five readings of the list, as one row.
@@ -329,20 +430,28 @@ function FilterRow({
 }
 
 /**
- * Whether this row can be sent again.
+ * Whether this row can be moved forward at all, by either of the bar's two
+ * gestures.
  *
- * One rule for the checkbox and for the button, because the two offer the same
- * gesture and a row that can be ticked but not pushed would put work into a
- * batch that then silently drops it.
+ * One rule for the checkbox and for what the bar then offers, because a row
+ * that can be ticked but not acted on would put work into a batch that
+ * silently drops it.
  *
- * Something outstanding is what it takes, not a particular state: a landing
- * whose push was rejected is repaired by pushing again, and so is a publish
- * that failed, and both of those are `failed` rows. What it excludes is work
- * already on its way, which would be started twice, and a row with nothing to
- * send, where the gesture would write nothing anywhere.
+ * `hasWorkToSend` on its own is what this was, and it hid half the problem: a
+ * landing pinned to the newest release of a package that has moved past it
+ * answers false there, since no release exists yet for it to receive. Such a
+ * row could not be ticked, so it never reached the bar, so the bar never had a
+ * reason to offer a cut. Those are precisely the rows `Release & Update` is
+ * for.
+ *
+ * What it still excludes is work already on its way, which would be started
+ * twice, and a row with nothing any gesture could do for it.
  */
 function canPush(destination: PackageDestination): boolean {
-  return destination.hasWorkToSend && destination.state !== 'waiting';
+  return (
+    (destination.hasWorkToSend || destination.canReleaseAndUpdate) &&
+    destination.state !== 'waiting'
+  );
 }
 
 /**
@@ -361,9 +470,8 @@ function Band({
   rows,
   total,
   isFirst,
-  onUpdate,
-  onCreateRelease,
   onOpenHistory,
+  renderRowSync,
   selection,
 }: Readonly<{
   label: string;
@@ -375,9 +483,8 @@ function Band({
    */
   total?: number;
   isFirst: boolean;
-  onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
   onOpenHistory?: () => void;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   selection?: RowSelection;
 }>) {
   if (rows.length === 0) return null;
@@ -420,9 +527,8 @@ function Band({
         <DestinationRow
           key={row.key}
           destination={row}
-          onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
           onOpenHistory={onOpenHistory}
+          renderRowSync={renderRowSync}
           selection={selection}
         />
       ))}
@@ -441,9 +547,11 @@ function UpToDateBand({
   rows,
   isFirst,
   forceOpen = false,
+  renderRowSync,
 }: Readonly<{
   rows: readonly PackageDestination[];
   isFirst: boolean;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   /**
    * These rows are what was asked for, so they are shown and the fold is not
    * offered. Kept out of the state below rather than pushed into it: a filter
@@ -526,22 +634,26 @@ function UpToDateBand({
         )}
       </PMHStack>
       {open &&
-        rows.map((row) => <DestinationRow key={row.key} destination={row} />)}
+        rows.map((row) => (
+          <DestinationRow
+            key={row.key}
+            destination={row}
+            renderRowSync={renderRowSync}
+          />
+        ))}
     </>
   );
 }
 
 function DestinationRow({
   destination,
-  onUpdate,
-  onCreateRelease,
   onOpenHistory,
+  renderRowSync,
   selection,
 }: Readonly<{
   destination: PackageDestination;
-  onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
   onOpenHistory?: () => void;
+  renderRowSync?: (destination: PackageDestination) => ReactNode;
   selection?: RowSelection;
 }>) {
   const [expanded, setExpanded] = useState(false);
@@ -590,8 +702,26 @@ function DestinationRow({
             flexShrink={0}
             display="flex"
           >
+            {/*
+              Always drawn here, where the other lists reveal theirs on hover
+              and on the first tick.
+
+              Those lists put a control on every row, so the checkbox is a
+              second way to reach a gesture that is already visible, and a
+              hundred empty boxes down the left of a list people mostly read is
+              a cost with no return. This list has no row controls at all: the
+              tick is how anything gets done to a destination, so a checkbox
+              that waits to be discovered is the whole feature waiting to be
+              discovered. A reader who does not hover finds a list of problems
+              and no way to act on any of them.
+
+              Only on the rows a gesture could move, which is the gutter's own
+              rule and worth keeping: a column of boxes that includes the rows
+              nothing can be done to would promise more than the bar can
+              deliver.
+            */}
             {canPush(destination) && (
-              <ContextPickBox shown={isPicked || selection.isSelecting}>
+              <ContextPickBox shown>
                 <PMCheckbox
                   size="sm"
                   checked={isPicked}
@@ -715,11 +845,10 @@ function DestinationRow({
             </PMBox>
           </PMHStack>
         </PMBox>
-        <RowAction
-          destination={destination}
-          onUpdate={onUpdate}
-          onCreateRelease={onCreateRelease}
-        />
+        <RowAction destination={destination} />
+        {renderRowSync && destination.kind === 'repository' && (
+          <PMBox flexShrink={0}>{renderRowSync(destination)}</PMBox>
+        )}
       </PMHStack>
 
       {expanded && (
@@ -1006,20 +1135,26 @@ function behindNames(destination: PackageDestination): string {
   return hidden > 0 ? `${shown.join(', ')}, +${hidden}` : shown.join(', ');
 }
 
+/**
+ * What a row offers on its own, which is a way out and never a way to act.
+ *
+ * The buttons used to live here, one or two of them depending on what the row
+ * could take, and the column they made could not be read: six different
+ * right-hand treatments down a list of forty, where the same `Update` changed
+ * weight between adjacent rows because one of them had a sibling and the next
+ * did not. The gestures moved to the bar above, which acts on a pick of any
+ * size and has room to say what it will do.
+ *
+ * The pull request stays, because it is not one of those gestures. A
+ * publication waiting on a merge has had its work done and nothing can be sent
+ * to it; the one useful thing left is the page where someone finishes it, and
+ * that is navigation rather than an act on the package.
+ */
 function RowAction({
   destination,
-  onUpdate,
-  onCreateRelease,
 }: Readonly<{
   destination: PackageDestination;
-  onUpdate?: (destinations: readonly PackageDestination[]) => void;
-  onCreateRelease?: () => void;
 }>): ReactNode {
-  /*
-   * The pull request first, whatever else the row could offer. A publication
-   * waiting on a merge has had its work done, and the one useful thing left is
-   * the page where someone can finish it.
-   */
   if (destination.state === 'waiting' && destination.prUrl) {
     return (
       <PMLink
@@ -1034,43 +1169,5 @@ function RowAction({
     );
   }
 
-  /*
-   * The row that only a release can move forward offers the way to cut one, in
-   * the column the push button would have used. The same action lives on the
-   * package's version bar above, and this is not a second way to do a different
-   * thing: it is the one thing this row needs, where the reader is looking when
-   * they read why it is behind.
-   */
-  if (destination.remedy === 'release') {
-    return onCreateRelease ? (
-      <PMButton
-        variant="tertiary"
-        size="xs"
-        flexShrink={0}
-        onClick={onCreateRelease}
-      >
-        Create a release
-      </PMButton>
-    ) : null;
-  }
-
-  if (!onUpdate || !canPush(destination)) return null;
-
-  return (
-    <PMButton
-      variant="tertiary"
-      size="xs"
-      flexShrink={0}
-      onClick={() => onUpdate([destination])}
-    >
-      {/*
-        The verb of the channel, because the two are not the same act: a
-        repository is written to and the work is done when the call returns, a
-        catalog is republished through a pull request someone then merges. The
-        bar above says `Update` over a mixed pick, which is the one word that
-        covers both without promising either.
-      */}
-      {destination.kind === 'marketplace' ? 'Republish' : 'Update'}
-    </PMButton>
-  );
+  return null;
 }

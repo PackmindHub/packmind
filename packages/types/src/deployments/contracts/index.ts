@@ -30,6 +30,7 @@ export * from './IAddArtefactsToPackageUseCase';
 export * from './IMoveArtefactsToPackageUseCase';
 export * from './IRemoveArtefactsFromPackageUseCase';
 export * from './INotifyArtefactsDistribution';
+export * from './ISyncDistributionsFromLockFilesUseCase';
 export * from './INotifyDistributionUseCase';
 export * from './IRemovePackageFromTargetsUseCase';
 export * from './IDeployDefaultSkillsUseCase';

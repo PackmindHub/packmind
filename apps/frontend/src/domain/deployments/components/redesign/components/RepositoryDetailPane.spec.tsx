@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -16,6 +16,25 @@ import {
 
 import { RepositoryDetailPane } from './RepositoryDetailPane';
 import type { PackageDrift, RepoInstall, RepositoryDrift } from '../types';
+
+const mockSyncMutate = vi.fn();
+let mockAuthProbe: {
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  data?: { ok: true } | { ok: false; reason: 'unauthorized' };
+};
+
+vi.mock('../../../../git/api/queries/GitProviderQueries', () => ({
+  useCheckProviderAuthQuery: () => mockAuthProbe,
+}));
+
+vi.mock('../../../api/queries/DeploymentsQueries', () => ({
+  useSyncRepositoryFromLockFilesMutation: () => ({
+    mutate: mockSyncMutate,
+    isPending: false,
+  }),
+}));
 
 const providerId = createGitProviderId('provider-1');
 const repoId = createGitRepoId('repo-1');
@@ -174,6 +193,189 @@ function rowCheckbox() {
 const segment = (name: RegExp) => screen.getByRole('tab', { name });
 
 describe('RepositoryDetailPane', () => {
+  beforeEach(() => {
+    mockAuthProbe = {
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      data: { ok: true },
+    };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('syncing from the repository', () => {
+    const syncButton = () =>
+      screen.getByRole('button', { name: /Sync from repository/ });
+    const findWarningsBanner = async () =>
+      (await screen.findByText("Some lock files weren't fully recorded"))
+        .parentElement as HTMLElement;
+
+    describe('when the Git connection works', () => {
+      it('reads the lock files of this repository', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(mockSyncMutate).toHaveBeenCalledWith(
+          { gitRepoId: repoId },
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('when the Git token was rejected', () => {
+      beforeEach(() => {
+        mockAuthProbe = {
+          ...mockAuthProbe,
+          data: { ok: false, reason: 'unauthorized' },
+        };
+      });
+
+      it('cannot be started', () => {
+        renderPane();
+
+        expect(syncButton()).toBeDisabled();
+      });
+
+      it('says the connection is broken, and why', () => {
+        renderPane();
+
+        expect(screen.getByText('Git connection broken')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'Token rejected by the provider. Re-authenticate to restore access.',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('does not say it was installed with the CLI', () => {
+        renderPane();
+
+        expect(
+          screen.queryByText('Installed with the CLI'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when Packmind has no Git connection to the repository', () => {
+      it('cannot be started', () => {
+        renderPane(vi.fn(), repo, DISCONNECTED);
+
+        expect(syncButton()).toBeDisabled();
+      });
+
+      it('does not say the connection is broken', () => {
+        renderPane(vi.fn(), repo, DISCONNECTED);
+
+        expect(
+          screen.queryByText('Git connection broken'),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe('when locks list packages unknown to the organization', () => {
+      beforeEach(() => {
+        mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+          onSuccess({
+            targets: [
+              {
+                targetId,
+                path: '/',
+                status: 'updated',
+                warnings: [
+                  { type: 'unknown_package', packageSlug: 'legacy' },
+                  { type: 'unknown_package', packageSlug: 'archived' },
+                ],
+              },
+              {
+                targetId: 'target-api',
+                path: '/apps/api/',
+                status: 'updated',
+                warnings: [{ type: 'unknown_package', packageSlug: 'legacy' }],
+              },
+            ],
+          }),
+        );
+      });
+
+      const unknownPackageLine = async (slug: string) =>
+        within(await findWarningsBanner())
+          .getAllByRole('listitem')
+          .find((item) => item.textContent?.startsWith(slug));
+
+      it('shows each unknown package once', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getAllByRole('listitem'),
+        ).toHaveLength(2);
+      });
+
+      it('lists the targets whose lock names the package', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(await unknownPackageLine('legacy')).toHaveTextContent(
+          'legacy, listed in Repository root, /apps/api/',
+        );
+      });
+
+      it('tells how to fix the packages', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getByText(
+            'Fix or remove them in packmind.json, run packmind install, then push.',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when several locks were written by an older CLI', () => {
+      beforeEach(() => {
+        mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+          onSuccess({
+            targets: [
+              {
+                targetId,
+                path: '/',
+                status: 'ignored',
+                warnings: [{ type: 'lock_from_older_cli' }],
+              },
+              {
+                targetId: 'target-api',
+                path: '/apps/api/',
+                status: 'ignored',
+                warnings: [{ type: 'lock_from_older_cli' }],
+              },
+            ],
+          }),
+        );
+      });
+
+      it('lists those targets in one message', async () => {
+        renderPane();
+
+        await userEvent.click(syncButton());
+
+        expect(
+          within(await findWarningsBanner()).getByText(
+            'Written by an older CLI',
+            { exact: false },
+          ),
+        ).toHaveTextContent('Repository root, /apps/api/');
+      });
+    });
+  });
+
   /*
    * The segment beside the rail's band, which had the same hole: `Drift`
    * counted the rows being distributed and headed them with a mark only the
@@ -413,9 +615,7 @@ describe('RepositoryDetailPane', () => {
     it('says what Packmind cannot do rather than the mechanism behind it', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
-      expect(
-        screen.getByText('Packmind cannot push to this repository'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Installed with the CLI')).toBeInTheDocument();
     });
 
     it('says nothing about tokens', () => {
@@ -424,7 +624,7 @@ describe('RepositoryDetailPane', () => {
       expect(screen.queryByText(/token/i)).not.toBeInTheDocument();
     });
 
-    it('says what a checkout does about it', () => {
+    it('says what to run on your machine', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       expect(screen.getByText(/packmind install/)).toBeInTheDocument();
@@ -434,11 +634,11 @@ describe('RepositoryDetailPane', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       await userEvent.hover(
-        screen.getByRole('button', { name: 'Why Packmind cannot push here' }),
+        screen.getByRole('button', { name: "Why Packmind can't push here" }),
       );
 
       expect(
-        await screen.findByText(/holds no credentials for this repository/),
+        await screen.findByText(/has no Git connection for it/),
       ).toBeInTheDocument();
     });
 
@@ -446,7 +646,7 @@ describe('RepositoryDetailPane', () => {
       renderPane(vi.fn(), repo, DISCONNECTED);
 
       expect(
-        screen.queryByText(/holds no credentials for this repository/),
+        screen.queryByText(/has no Git connection for it/),
       ).not.toBeInTheDocument();
     });
 
@@ -462,9 +662,7 @@ describe('RepositoryDetailPane', () => {
       it('keeps the explanation', () => {
         renderPane(vi.fn(), repo, { ...DISCONNECTED, gitSettingsHref: null });
 
-        expect(
-          screen.getByText('Packmind cannot push to this repository'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('Installed with the CLI')).toBeInTheDocument();
       });
 
       it('drops the offer', () => {
@@ -482,7 +680,7 @@ describe('RepositoryDetailPane', () => {
       renderPane();
 
       expect(
-        screen.queryByText('Packmind cannot push to this repository'),
+        screen.queryByText('Installed with the CLI'),
       ).not.toBeInTheDocument();
     });
   });

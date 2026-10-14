@@ -279,19 +279,55 @@ describe('GitProviderGatewayApi', () => {
     });
   });
 
+  describe('searchProviderBranches', () => {
+    let result: { branches: string[] };
+
+    beforeEach(async () => {
+      mockedApi.get.mockResolvedValue({ branches: ['feat/x'] } as never);
+      result = await gateway.searchProviderBranches(
+        organizationId,
+        providerId,
+        {
+          owner: 'o',
+          repo: 'r',
+          search: 'feat/x',
+        },
+      );
+    });
+
+    it('requests the provider branches endpoint with url-encoded params', () => {
+      expect(mockedApi.get).toHaveBeenCalledWith(
+        `/organizations/${organizationId}/git/providers/${providerId}/branches?owner=o&repo=r&search=feat%2Fx`,
+      );
+    });
+
+    it('returns the response', () => {
+      expect(result).toEqual({ branches: ['feat/x'] });
+    });
+  });
+
   describe('setTrackedRepository', () => {
     beforeEach(async () => {
       await gateway.setTrackedRepository(organizationId, {
         owner: 'o',
         repo: 'r',
         branch: 'main',
+        providerVendor: 'gitlab',
+        gitRemoteUrl: 'https://gitlab.example.com',
       });
     });
 
-    it('posts the repository with a track origin', () => {
+    it('posts the repository and its provider with a track origin', () => {
       expect(mockedApi.post).toHaveBeenCalledWith(
         `/organizations/${organizationId}/git/repositories/tracked-repository`,
-        { owner: 'o', repo: 'r', branch: 'main', origin: 'track' },
+        {
+          owner: 'o',
+          repo: 'r',
+          branch: 'main',
+          providerVendor: 'gitlab',
+          gitRemoteUrl: 'https://gitlab.example.com',
+          origin: 'track',
+        },
       );
     });
   });

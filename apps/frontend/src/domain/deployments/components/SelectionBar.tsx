@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import {
+  PMBox,
   PMButton,
   PMHStack,
   PMIcon,
@@ -7,6 +8,7 @@ import {
   PMMenu,
   PMPortal,
   PMText,
+  PMTooltip,
 } from '@packmind/ui';
 import { LuEllipsisVertical } from 'react-icons/lu';
 
@@ -18,6 +20,17 @@ import { LuEllipsisVertical } from 'react-icons/lu';
 export type SelectionAction = {
   label: string;
   /**
+   * How loudly this one is drawn, when the bar carries more than one and they
+   * are not peers.
+   *
+   * Absent is the default and the common case: two gestures that are each a
+   * reasonable answer sit at the same weight, and picking one for the reader
+   * would be the bar having an opinion it has not earned. It is set where one
+   * action subsumes the other, so that the quieter one reads as the narrower
+   * thing it is rather than as a second, equal choice.
+   */
+  emphasis?: 'primary';
+  /**
    * The same glyph the gesture wears wherever else it is offered, taken from
    * `COMPONENT_ACTION_ICONS`. Required rather than optional: the bar carries
    * more than one action now, and one bare button beside an iconed one reads as
@@ -25,6 +38,12 @@ export type SelectionAction = {
    */
   icon: ReactNode;
   onAct: () => void;
+  /**
+   * Why the action cannot run on this pick. Set, it greys the button out and
+   * says so on hover, rather than dropping it: a button that comes and goes
+   * with the pick leaves the reader wondering where it went.
+   */
+  disabledReason?: string;
 };
 
 /**
@@ -172,17 +191,34 @@ export function SelectionBar({
         </PMButton>
       </PMHStack>
       <PMHStack gap={2}>
-        {actions.map((action) => (
-          <PMButton
-            key={action.label}
-            variant="secondary"
-            size="xs"
-            onClick={action.onAct}
-          >
-            <PMIcon fontSize="xs">{action.icon}</PMIcon>
-            {action.label}
-          </PMButton>
-        ))}
+        {actions.map((action) => {
+          const button = (
+            <PMButton
+              variant={action.emphasis === 'primary' ? 'primary' : 'secondary'}
+              size="xs"
+              onClick={action.onAct}
+              disabled={action.disabledReason !== undefined}
+            >
+              <PMIcon fontSize="xs">{action.icon}</PMIcon>
+              {action.label}
+            </PMButton>
+          );
+          if (action.disabledReason === undefined) {
+            return <Fragment key={action.label}>{button}</Fragment>;
+          }
+          return (
+            <PMTooltip
+              key={action.label}
+              label={action.disabledReason}
+              placement="top"
+            >
+              {/* A disabled button emits no pointer events for the tooltip. */}
+              <PMBox as="span" display="inline-flex">
+                {button}
+              </PMBox>
+            </PMTooltip>
+          );
+        })}
         {overflow !== undefined && overflow.length > 0 && (
           <PMMenu.Root>
             <PMMenu.Trigger asChild>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   PMBox,
   PMCloseButton,
@@ -11,20 +11,27 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { GitProviderId, PackageResponse } from '@packmind/types';
+import type {
+  GitProviderId,
+  GitRepoId,
+  LockFileTargetSyncResult,
+  PackageResponse,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
-import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useMarketplaceBatchDistribution } from '@packmind/proprietary/frontend/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution';
 import { PackageDistributionList } from '../PackageDistributionList';
-import {
-  SyncSurface,
-  type SyncScope,
-} from '../redesign/components/SyncSurface';
+import type { SyncScope } from '../redesign/components/SyncSurface';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
-import type { PackageDrift } from '../redesign/types';
+import type { PackageDrift, RepoRef } from '../redesign/types';
+import {
+  LockFileSyncWarnings,
+  SyncRepositoryIconButton,
+} from '../redesign/components/RepositoryLockFileSync';
 import { ContextDestinationList } from './ContextDestinationList';
+import { ReleaseAndUpdateDrawer } from './ReleaseAndUpdateDrawer';
+import { SyncSurfaceDrawer } from './SyncSurfaceDrawer';
 import { buildPackageSyncScope } from './buildPackageSyncScope';
 import { usePackageDestinations } from './usePackageDestinations';
 
@@ -110,13 +117,37 @@ export function ContextPackageDistribution({
     [providersResponse],
   );
   const [isHistoryOpen, setHistoryOpen] = useState(false);
-  /*
-   * The release drawer, reached from the row that raised the question. The
-   * package's version bar above the tabs owns one too, and the readiness both
-   * read is the same cached query rather than a second fetch: what differs is
-   * only where the reader was standing when they asked for it.
-   */
   const [isReleaseOpen, setReleaseOpen] = useState(false);
+  /*
+   * Built when `Release & Update` is pressed and kept after the drawer closes,
+   * so the drawer does not empty itself while it slides out.
+   */
+  const [releaseScope, setReleaseScope] = useState<SyncScope | null>(null);
+  /*
+   * The last flow started, kept after it ends for the same reason: `syncScope`
+   * goes null the moment the drawer is asked to close.
+   */
+  const [shownSyncScope, setShownSyncScope] = useState(syncScope);
+  const [syncReports, setSyncReports] = useState<
+    ReadonlyMap<
+      GitRepoId,
+      { repo: RepoRef; report: LockFileTargetSyncResult[] }
+    >
+  >(new Map());
+  useEffect(() => {
+    setSyncReports(new Map());
+  }, [pkg.id]);
+  const syncResults = [...syncReports.values()].flatMap(({ report }) => report);
+  const repoNameByTargetId = new Map(
+    [...syncReports.values()].flatMap(({ repo, report }) =>
+      report.map(
+        (result) => [result.targetId, `${repo.owner}/${repo.name}`] as const,
+      ),
+    ),
+  );
+  if (syncScope !== null && syncScope !== shownSyncScope) {
+    setShownSyncScope(syncScope);
+  }
 
   const { data: releases } = useListPackageReleasesQuery(
     organization?.id,
@@ -146,29 +177,6 @@ export function ContextPackageDistribution({
   const distributeMarketplaces = useMarketplaceBatchDistribution(
     organization?.id ?? null,
   );
-
-  /*
-   * The redistribute flow takes over the pane and leaves the rail alone: the
-   * package it is about is named in the header just above, and cancelling has to
-   * come back to the same place it started from.
-   */
-  if (syncScope !== null) {
-    return (
-      <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
-        <SyncSurface
-          packages={packages}
-          scope={syncScope}
-          providersWithToken={providersWithToken}
-          isProvidersLoading={isProvidersLoading}
-          onDistributeMarketplaces={
-            organization ? distributeMarketplaces : undefined
-          }
-          onCancel={onSyncClose}
-          onConfirm={onSyncClose}
-        />
-      </PMBox>
-    );
-  }
 
   return (
     <PMVStack align="stretch" gap={0} flex="1" minH={0}>
@@ -200,6 +208,19 @@ export function ContextPackageDistribution({
         </PMBox>
       ) : (
         <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
+          {syncResults.length > 0 && (
+            <PMBox paddingBottom={4}>
+              <LockFileSyncWarnings
+                report={syncResults}
+                targets={
+                  drift?.installLocations.map(({ target }) => target) ?? []
+                }
+                repoNameOf={(result) =>
+                  repoNameByTargetId.get(result.targetId) ?? ''
+                }
+              />
+            </PMBox>
+          )}
           <ContextDestinationList
             destinations={destinations}
             /*
@@ -231,28 +252,69 @@ export function ContextPackageDistribution({
               list to find the same panel is a detour through nothing.
             */
             onOpenHistory={() => setHistoryOpen(true)}
+            renderRowSync={({ landing }) =>
+              landing && (
+                <SyncRepositoryIconButton
+                  repo={landing.repo}
+                  branch={landing.branch}
+                  providersWithToken={providersWithToken}
+                  onSynced={(report) =>
+                    setSyncReports((previous) =>
+                      new Map(previous).set(landing.repo.id, {
+                        repo: landing.repo,
+                        report,
+                      }),
+                    )
+                  }
+                />
+              )
+            }
             onUpdate={(picked) => {
               const scope = buildPackageSyncScope(picked, pkg.id, marketplaces);
               if (scope) onStartSync(scope);
             }}
-            onCreateRelease={
-              releaseReadiness ? () => setReleaseOpen(true) : undefined
+            onReleaseAndUpdate={
+              releaseReadiness
+                ? (picked) => {
+                    const scope = buildPackageSyncScope(
+                      picked,
+                      pkg.id,
+                      marketplaces,
+                    );
+                    if (!scope) return;
+                    setReleaseScope(scope);
+                    setReleaseOpen(true);
+                  }
+                : undefined
             }
           />
         </PMBox>
       )}
 
+      <SyncSurfaceDrawer
+        open={syncScope !== null}
+        onClose={onSyncClose}
+        packages={packages}
+        scope={shownSyncScope}
+        providersWithToken={providersWithToken}
+        isProvidersLoading={isProvidersLoading}
+        onDistributeMarketplaces={
+          organization ? distributeMarketplaces : undefined
+        }
+      />
+
       {organization && releaseReadiness && (
-        <CreatePackageReleaseDrawer
-          packageId={pkg.id}
-          spaceId={pkg.spaceId}
+        <ReleaseAndUpdateDrawer
+          pkg={pkg}
+          packages={packages}
+          scope={releaseScope}
           organizationId={organization.id}
           readiness={releaseReadiness}
-          componentsCount={
-            pkg.recipes.length + pkg.standards.length + pkg.skills.length
-          }
+          providersWithToken={providersWithToken}
+          isProvidersLoading={isProvidersLoading}
+          onDistributeMarketplaces={distributeMarketplaces}
           open={isReleaseOpen}
-          onOpenChange={setReleaseOpen}
+          onClose={() => setReleaseOpen(false)}
         />
       )}
 

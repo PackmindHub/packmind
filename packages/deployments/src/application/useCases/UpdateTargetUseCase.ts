@@ -4,18 +4,24 @@ import {
   UpdateTargetCommand,
   IGitPort,
   TargetPathUpdateForbiddenError,
+  ISyncDistributionsFromLockFilesUseCase,
   OrganizationId,
 } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
 import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
 import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
+const origin = 'UpdateTargetUseCase';
+
 export class UpdateTargetUseCase implements IUpdateTargetUseCase {
   constructor(
     private readonly targetService: TargetService,
     private readonly gitPort: IGitPort,
+    private readonly syncDistributionsFromLockFiles: ISyncDistributionsFromLockFilesUseCase,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(command: UpdateTargetCommand): Promise<Target> {
@@ -39,6 +45,7 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
       throw new TargetNotFoundError(targetId);
     }
 
+    let syncNewPath = false;
     if (currentTarget.path !== path) {
       const repo = await this.gitPort.getRepositoryById(
         currentTarget.gitRepoId,
@@ -59,6 +66,7 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
       if (provider && !provider.hasAuth) {
         throw new TargetPathUpdateForbiddenError(targetId);
       }
+      syncNewPath = repo.isTracked;
     }
 
     const updates = {
@@ -66,6 +74,27 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
       path,
     };
 
-    return this.targetService.updateTarget(targetId, updates);
+    const updatedTarget = await this.targetService.updateTarget(
+      targetId,
+      updates,
+    );
+
+    if (syncNewPath) {
+      try {
+        await this.syncDistributionsFromLockFiles.execute({
+          userId,
+          organizationId: organizationId as OrganizationId,
+          gitRepoId: updatedTarget.gitRepoId,
+          targetPaths: [updatedTarget.path],
+        });
+      } catch (error) {
+        this.logger.warn('Could not sync distribution state from lock files', {
+          gitRepoId: updatedTarget.gitRepoId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return updatedTarget;
   }
 }

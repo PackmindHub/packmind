@@ -13,10 +13,11 @@ import {
 } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 import { RunDistribution } from '../RunDistribution/RunDistribution';
-import { Package } from '@packmind/types';
+import { Package, WILDCARD_VERSION_SPEC } from '@packmind/types';
 import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 import { PackageInstallSnippets } from '../PackageInstallSnippets';
 import { splitButtonHalf } from '../splitButton';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 export interface DeployPackageButtonProps {
   label?: string;
@@ -48,6 +49,7 @@ export interface DeployPackageButtonProps {
    * absent means the package as it stands.
    */
   packageVersions?: Record<string, string>;
+  latestRelease?: string | null;
   /**
    * The coordinates of the single package this button is about, when the
    * control should also offer the channel Packmind does not perform itself: a
@@ -97,6 +99,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
   trigger = 'standalone',
   selectedPackages,
   packageVersions,
+  latestRelease = null,
   cliInstall,
 }) => {
   const [isCodeRepoOpen, setCodeRepoOpen] = useState(false);
@@ -212,6 +215,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
         <CodeRepositoryDialogContents
           selectedPackages={selectedPackages}
           packageVersions={packageVersions}
+          latestRelease={latestRelease}
           onClose={() => setCodeRepoOpen(false)}
         />
       </PMDialog.Root>
@@ -219,54 +223,82 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
   );
 };
 
+export const versionLine = (
+  selectedPackages: Package[],
+  packageVersions: Record<string, string> | undefined,
+  latestRelease: string | null,
+): string | null => {
+  if (selectedPackages.length !== 1) return null;
+  const version = packageVersions?.[selectedPackages[0].id];
+  if (!version) return null;
+  return version === WILDCARD_VERSION_SPEC
+    ? PACKAGE_MESSAGES.release.unreleasedBasedOn(
+        latestRelease && `v${latestRelease}`,
+      )
+    : `v${version}`;
+};
+
 const CodeRepositoryDialogContents: React.FC<{
   selectedPackages: Package[];
   packageVersions?: Record<string, string>;
+  latestRelease: string | null;
   onClose: () => void;
-}> = ({ selectedPackages, packageVersions, onClose }) => (
-  <PMPortal>
-    <PMDialog.Backdrop />
-    <PMDialog.Positioner>
-      <PMDialog.Content>
-        <RunDistribution
-          selectedCommands={[]}
-          selectedStandards={[]}
-          selectedPackages={selectedPackages}
-          packageVersions={packageVersions}
-          onDistributionComplete={(deploymentResults) => {
-            onClose();
+}> = ({ selectedPackages, packageVersions, latestRelease, onClose }) => {
+  const version = versionLine(selectedPackages, packageVersions, latestRelease);
+  return (
+    <PMPortal>
+      <PMDialog.Backdrop />
+      <PMDialog.Positioner>
+        <PMDialog.Content>
+          <RunDistribution
+            selectedCommands={[]}
+            selectedStandards={[]}
+            selectedPackages={selectedPackages}
+            packageVersions={packageVersions}
+            onDistributionComplete={(deploymentResults) => {
+              onClose();
 
-            const notifications =
-              createPackagesDeploymentNotifications(deploymentResults);
+              const notifications =
+                createPackagesDeploymentNotifications(deploymentResults);
 
-            notifications.forEach((notification) => {
-              pmToaster.create({
-                type: notification.type,
-                title: notification.title,
-                description: notification.description,
+              notifications.forEach((notification) => {
+                pmToaster.create({
+                  type: notification.type,
+                  title: notification.title,
+                  description: notification.description,
+                });
               });
-            });
-          }}
-        >
-          <PMDialog.Header>
-            <PMDialog.Title asChild>
-              <PMHeading level="h2">Distribute to targets</PMHeading>
-            </PMDialog.Title>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton size="sm" />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <RunDistribution.Body />
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButton variant="tertiary" size="sm" onClick={onClose}>
-              Cancel
-            </PMButton>
-            <RunDistribution.Cta />
-          </PMDialog.Footer>
-        </RunDistribution>
-      </PMDialog.Content>
-    </PMDialog.Positioner>
-  </PMPortal>
-);
+            }}
+          >
+            <PMDialog.Header>
+              <PMVStack align="flex-start" gap={1}>
+                <PMDialog.Title asChild>
+                  <PMHeading level="h2">Distribute to targets</PMHeading>
+                </PMDialog.Title>
+                {version && (
+                  <PMDialog.Description asChild>
+                    <PMText fontSize="sm" color="secondary">
+                      {version}
+                    </PMText>
+                  </PMDialog.Description>
+                )}
+              </PMVStack>
+              <PMDialog.CloseTrigger asChild>
+                <PMCloseButton size="sm" />
+              </PMDialog.CloseTrigger>
+            </PMDialog.Header>
+            <PMDialog.Body>
+              <RunDistribution.Body />
+            </PMDialog.Body>
+            <PMDialog.Footer>
+              <PMButton variant="tertiary" size="sm" onClick={onClose}>
+                Cancel
+              </PMButton>
+              <RunDistribution.Cta />
+            </PMDialog.Footer>
+          </RunDistribution>
+        </PMDialog.Content>
+      </PMDialog.Positioner>
+    </PMPortal>
+  );
+};

@@ -1337,4 +1337,12 @@ export class GitlabRepository implements IGitRepo {
       return [];
     }
   }
+
+  async listFilesNamed(fileName: string, branch: string): Promise<string[]> {
+    const blobs = await this.walkRepositoryTree(branch);
+
+    return blobs
+      .map((item) => item.path)
+      .filter((filePath) => filePath.split('/').pop() === fileName);
+  }
 }

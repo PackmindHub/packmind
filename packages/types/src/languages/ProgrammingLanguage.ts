@@ -1,3 +1,8 @@
+import {
+  EmptyProgrammingLanguageError,
+  UnknownProgrammingLanguageError,
+} from './errors';
+
 export enum ProgrammingLanguage {
   AVRO = 'AVRO',
   JAVASCRIPT = 'JAVASCRIPT',
@@ -194,14 +199,15 @@ export const getAllLanguagesSortedByDisplayName = (): Array<{
  * then file extensions — so an input that is both (say a language whose name is
  * another language's extension) resolves to the enum value.
  *
- * @throws Error when the input is empty or matches nothing.
+ * @throws EmptyProgrammingLanguageError or UnknownProgrammingLanguageError,
+ *   both `invalid_input`: the input is always a language a user typed.
  */
 export const stringToProgrammingLanguage = (
   input: string,
 ): ProgrammingLanguage => {
   const trimmedInput = input.trim();
   if (!trimmedInput) {
-    throw new Error('Language input cannot be empty');
+    throw new EmptyProgrammingLanguageError();
   }
 
   const lowerInput = trimmedInput.toLowerCase();
@@ -228,7 +234,5 @@ export const stringToProgrammingLanguage = (
     .map((info) => info.displayName)
     .join(', ');
 
-  throw new Error(
-    `Unknown programming language: "${trimmedInput}". Available languages: ${availableLanguages}`,
-  );
+  throw new UnknownProgrammingLanguageError(trimmedInput, availableLanguages);
 };

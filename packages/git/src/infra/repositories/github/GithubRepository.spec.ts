@@ -1680,6 +1680,56 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('listFilesNamed', () => {
+    const tree = [
+      { path: 'packmind-lock.json', type: 'blob' },
+      { path: 'app/frontend/packmind-lock.json', type: 'blob' },
+      { path: 'app/frontend/not-packmind-lock.json', type: 'blob' },
+      { path: 'tools/packmind-lock.json', type: 'tree' },
+    ];
+
+    describe('when the repository is reachable', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/ref/heads/')) {
+            return Promise.resolve({ data: { object: { sha: 'ref-sha' } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: 'tree-sha' } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({ data: { tree } });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('returns every file with that exact name', async () => {
+        const files = await githubRepository.listFilesNamed(
+          'packmind-lock.json',
+          'main',
+        );
+
+        expect(files).toEqual([
+          'packmind-lock.json',
+          'app/frontend/packmind-lock.json',
+        ]);
+      });
+    });
+
+    describe('when the repository cannot be read', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue(new Error('Bad credentials'));
+      });
+
+      it('throws instead of answering none', async () => {
+        await expect(
+          githubRepository.listFilesNamed('packmind-lock.json', 'main'),
+        ).rejects.toThrow('Bad credentials');
+      });
+    });
+  });
+
   describe('listFilesInDirectories', () => {
     const refSha = 'ref-sha-123';
     const baseTreeSha = 'base-tree-sha-456';

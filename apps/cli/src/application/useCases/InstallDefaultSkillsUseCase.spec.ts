@@ -573,6 +573,7 @@ describe('InstallDefaultSkillsUseCase', () => {
             lockfileVersion: 2,
             cliVersion: '0.25.0',
             packageSlugs: [],
+            packages: {},
             agents: [],
             artifacts: {
               'default:skill:packmind-create-skill': defaultEntry,

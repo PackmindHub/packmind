@@ -4,6 +4,7 @@ import {
   Distribution,
   DistributedPackage,
   CommandDistributionHistoryEntry,
+  createDistributedPackageId,
   DistributionHistoryEntry,
   DistributionId,
   DistributionOperation,
@@ -76,8 +77,11 @@ type DatedDistributedPackage = {
 
 type LatestDistributedPackageRow = DatedDistributedPackage & {
   targetId: TargetId;
+  distributionId: DistributionId;
   packageId: PackageId;
   operation: DistributionOperation | null;
+  versionSpec: string | null;
+  latestReleaseVersion: string | null;
   renderModes: RenderMode[] | string | null;
 };
 
@@ -631,9 +635,15 @@ export class DistributionRepository implements IDistributionRepository {
       .addOrderBy('distribution.createdAt', 'DESC')
       .addOrderBy('distribution.id', 'DESC')
       .select('distribution.target_id', 'targetId')
+      .addSelect('distribution.id', 'distributionId')
       .addSelect('distributedPackage.id', 'distributedPackageId')
       .addSelect('distributedPackage.package_id', 'packageId')
       .addSelect('distributedPackage.operation', 'operation')
+      .addSelect('distributedPackage.version_spec', 'versionSpec')
+      .addSelect(
+        'distributedPackage.latest_release_version',
+        'latestReleaseVersion',
+      )
       .addSelect('distribution.render_modes', 'renderModes')
       .addSelect('distribution.createdAt', 'distributedAt')
       .getRawMany<LatestDistributedPackageRow>();
@@ -1017,6 +1027,55 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
+  async findActiveDistributedPackagesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<DistributedPackage[]> {
+    try {
+      const activePackages = await this.findActiveDistributedPackages(
+        organizationId,
+        [targetId],
+      );
+      const distributedPackageIds = activePackages.map(
+        (row) => row.distributedPackageId,
+      );
+
+      const [standardVersions, recipeVersions, skillVersions] =
+        await Promise.all([
+          this.fetchVersionsByDistributedPackage(
+            distributedPackageIds,
+            'standardVersions',
+          ),
+          this.fetchVersionsByDistributedPackage(
+            distributedPackageIds,
+            'recipeVersions',
+          ),
+          this.fetchVersionsByDistributedPackage(
+            distributedPackageIds,
+            'skillVersions',
+          ),
+        ]);
+
+      return activePackages.map((row) => ({
+        id: createDistributedPackageId(row.distributedPackageId),
+        distributionId: row.distributionId,
+        packageId: row.packageId,
+        operation: 'add',
+        versionSpec: row.versionSpec ?? null,
+        latestReleaseVersion: row.latestReleaseVersion ?? null,
+        standardVersions: standardVersions.get(row.distributedPackageId) ?? [],
+        recipeVersions: recipeVersions.get(row.distributedPackageId) ?? [],
+        skillVersions: skillVersions.get(row.distributedPackageId) ?? [],
+      }));
+    } catch (error) {
+      this.logger.error(
+        'Failed to find active distributed packages by target',
+        { organizationId, targetId, error: getErrorMessage(error) },
+      );
+      throw error;
+    }
+  }
+
   async findActiveRenderModesByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
@@ -1217,7 +1276,7 @@ export class DistributionRepository implements IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
-  ): Promise<Distribution> {
+  ): Promise<void> {
     this.logger.info('Updating distribution status', {
       distributionId: id,
       status,
@@ -1226,33 +1285,26 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distribution = await this.findById(id);
+      const result = await this.repository.update(
+        { id },
+        {
+          status,
+          ...(gitCommit && { gitCommit: { id: gitCommit.id } }),
+          ...(error && { error }),
+        },
+      );
 
-      if (!distribution) {
+      if (!result.affected) {
         this.logger.error('Distribution not found for status update', {
           distributionId: id,
         });
         throw new Error(`Distribution not found: ${id}`);
       }
 
-      distribution.status = status;
-
-      if (gitCommit) {
-        distribution.gitCommit = gitCommit;
-      }
-
-      if (error) {
-        distribution.error = error;
-      }
-
-      const updatedDistribution = await this.repository.save(distribution);
-
       this.logger.info('Distribution status updated successfully', {
         distributionId: id,
         status,
       });
-
-      return updatedDistribution;
     } catch (error) {
       this.logger.error('Failed to update distribution status', {
         distributionId: id,

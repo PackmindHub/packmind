@@ -6,17 +6,22 @@ import {
   PMMenu,
   PMPortal,
   PMText,
+  PMTooltip,
 } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 import {
   OrganizationId,
   PackageId,
+  PackageReleaseReadiness,
   PackageReleaseSummary,
   SpaceId,
 } from '@packmind/types';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
 import { PackageVersionBarDataTestId } from '@packmind/frontend';
-import { PACKAGE_MESSAGES } from '../../constants/messages';
+import {
+  PACKAGE_MESSAGES,
+  getReleaseVerdictMessage,
+} from '../../constants/messages';
 import { RelativeDate } from '../RelativeDate';
 import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 
@@ -24,32 +29,26 @@ import { CreatePackageReleaseDrawer } from './CreatePackageReleaseDrawer';
 const UNRELEASED = 'unreleased';
 
 /**
- * Which version of the package is on screen, and the one action that adds to
- * the list.
+ * Which version of the package is on screen, and the one act that adds to the
+ * list — in the header's action cluster, the menu immediately before the verb
+ * that feeds it.
  *
- * A bar of its own between the package's name and its tabs, rather than a pair
- * of controls under the name. The version used to sit inside the identity
- * block, left aligned, while every other thing that acts on the package sat in
- * the cluster on the right: two action zones on one header, and the quieter of
- * the two holding a verb.
+ * It was a bar of its own between the package's name and its tabs. The bar was
+ * right to take the version out of the identity block, where it read as one
+ * more property and put a lone verb in the one corner of the header that held
+ * none. But it answered that by making a second row, and the row carried one
+ * menu and one button across the full width of the pane for it.
  *
- * It is a bar because the version is not one more fact about the package: it is
- * the frame the pane below is read through. The menu names what is on screen,
- * and the action is what turns it into a version. When a destination installs a
- * version rather than the latest state, this same control is the axis the
- * Distribution tab will be read through too.
- *
- * It says nothing else. An earlier draft measured the distance to the last
- * release in a sentence beside the menu, and named the pinned components that
- * had moved on behind a disclosure: two readings of the gate's verdict that ask
- * the reader to hold a model of pinning before they can be understood, printed
- * on a header whose job is to say what is on screen. The action carries the
- * whole of it already, by being there or not: something to release, or nothing.
+ * So the pair moves up into the cluster every other package-wide control is
+ * already in. The menu names what is on screen and the button turns it into a
+ * version: subject and verb, read in that order, with nothing between them.
+ * The frame the pane below is read through is the same frame; it no longer
+ * needs a row to say so.
  *
  * The drawer that cuts a release is owned here for the reason it always was:
- * the readiness this bar already reads is exactly what the form needs.
+ * the readiness this control already reads is exactly what the form needs.
  */
-export function PackageVersionBar(
+export function PackageReleaseControls(
   props: Readonly<{
     packageId: PackageId;
     spaceId: SpaceId;
@@ -69,10 +68,9 @@ export function PackageVersionBar(
   );
 
   /*
-   * The row keeps its height while the answer is on its way. Empty rather than
-   * absent: the tab strip sits directly under this bar, and a bar that appears
-   * a moment later would push the strip and the list down under the reader's
-   * pointer.
+   * The cluster keeps its height while the answer is on its way. Empty rather
+   * than absent: the overflow menu beside these controls would otherwise jump
+   * sideways under the reader's pointer as they arrive.
    */
   if (isLoading || !data) {
     return <PMBox minHeight={8} />;
@@ -84,7 +82,7 @@ export function PackageVersionBar(
     : undefined;
 
   return (
-    <PMHStack minHeight={8} gap={3} align="center" wrap="wrap" width="100%">
+    <>
       <VersionRef
         releases={releases}
         readingVersion={props.readingVersion}
@@ -98,31 +96,16 @@ export function PackageVersionBar(
         Absent, never invented, when the row carries no instant.
       */}
       {readRelease?.releasedAt && (
-        <PMText fontSize="xs" color="secondary">
+        <PMText fontSize="xs" color="secondary" whiteSpace="nowrap">
           Released <RelativeDate iso={readRelease.releasedAt} />
         </PMText>
       )}
 
-      {/*
-        Absent rather than disabled when the package has nothing to cut, which
-        is the rule the header's own update control follows: a greyed control is
-        a sentence written as a button.
-
-        Absent too while a release is on screen. Cutting a version from a past
-        one is not a thing this action does, and offering it under a bar that
-        says 1.1.0 would read as cutting from there.
-      */}
-      {readiness.verdict === 'ready' && props.readingVersion === null && (
-        <PMButton
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsDrawerOpen(true)}
-        >
-          {readiness.currentVersion === null
-            ? 'Create the first release'
-            : 'Create a release'}
-        </PMButton>
-      )}
+      <ReleaseAction
+        readiness={readiness}
+        readingVersion={props.readingVersion}
+        onOpen={() => setIsDrawerOpen(true)}
+      />
 
       <CreatePackageReleaseDrawer
         packageId={props.packageId}
@@ -133,7 +116,65 @@ export function PackageVersionBar(
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
       />
-    </PMHStack>
+    </>
+  );
+}
+
+/**
+ * The header's one verb, in one word.
+ *
+ * It said `Create a release`, and `Create the first release` on a package that
+ * had none — a label that restated the package's state in the one place on the
+ * surface that cannot grow, beside a menu already saying it. What the cut will
+ * produce is the drawer's first question, and the drawer is one click away.
+ *
+ * Grey rather than gone when it cannot be pressed. The control used to leave in
+ * both dead states, on the rule that a disabled button is a sentence written as
+ * a button. That rule holds for a control whose absence says nothing; this one
+ * is the header's only verb, and a cluster that empties out is a header the
+ * reader has to re-find their way around each time the package moves. So it
+ * stays put and says why, which is the thing absence could never do.
+ */
+function ReleaseAction({
+  readiness,
+  readingVersion,
+  onOpen,
+}: Readonly<{
+  readiness: PackageReleaseReadiness;
+  readingVersion: string | null;
+  onOpen: () => void;
+}>) {
+  const isReadingRelease = readingVersion !== null;
+  const isDisabled = isReadingRelease || readiness.verdict !== 'ready';
+
+  const reason = isReadingRelease
+    ? PACKAGE_MESSAGES.release.readingRelease(readingVersion)
+    : getReleaseVerdictMessage(readiness.verdict, readiness.currentVersion);
+
+  const button = (
+    <PMButton
+      variant="primary"
+      size="sm"
+      disabled={isDisabled}
+      onClick={onOpen}
+      data-testid={PackageVersionBarDataTestId.Release}
+    >
+      Release
+    </PMButton>
+  );
+
+  if (!isDisabled) return button;
+
+  return (
+    <PMTooltip label={reason} placement="top">
+      {/*
+        A disabled button emits no pointer events, so the sentence explaining
+        why it is grey has to hang on something wrapped around it.
+      */}
+      <PMBox as="span" display="inline-flex">
+        {button}
+      </PMBox>
+    </PMTooltip>
   );
 }
 
@@ -160,6 +201,7 @@ function VersionRef({
       <PMText
         fontSize="xs"
         color="secondary"
+        whiteSpace="nowrap"
         data-testid={PackageVersionBarDataTestId.Reading}
       >
         {PACKAGE_MESSAGES.release.notReleasedYet}

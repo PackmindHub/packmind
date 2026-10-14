@@ -7,6 +7,7 @@ import {
   type InstallDriftEntry,
 } from '../redesign/selectors/installDriftEntries';
 import type { DestinationRemedy } from '../redesign/selectors/destinationStanding';
+import type { RepoRef } from '../redesign/types';
 
 /**
  * Where a package has got to, as one list.
@@ -267,10 +268,24 @@ export type PackageDestination = {
    */
   remedy: DestinationRemedy;
   /**
+   * Whether cutting a release and sending it is also on offer here.
+   *
+   * Beside `remedy` rather than folded into it, because the two are not
+   * exclusive: a landing pinned to a release that has been overtaken can take
+   * the release that exists *and* can take one cut from the work done since.
+   * Collapsing that into one verb is what made the second move invisible.
+   *
+   * Always false for a marketplace, which tracks the live package: a cut moves
+   * nothing a republish would not already send.
+   */
+  canReleaseAndUpdate: boolean;
+  /**
    * The key the redistribute flow works in, `repoId::targetId`. Null for a
    * marketplace, which is republished rather than pushed to.
    */
   installKey: string | null;
+  /** The repository and branch a landing sits on. Null for a marketplace. */
+  landing: { repo: RepoRef; branch: string } | null;
   prUrl: string | null;
   lastActivityAt: string | null;
   /**
@@ -381,7 +396,9 @@ function repositoryRow(
      */
     hasWorkToSend: entry.standing.remedy === 'update',
     remedy: entry.standing.remedy,
+    canReleaseAndUpdate: entry.standing.canReleaseAndUpdate,
     installKey: `${entry.repo.id}::${entry.target.id}`,
+    landing: { repo: entry.repo, branch: entry.branch },
     prUrl: null,
     /*
      * Gated on the state and not merely copied across: the install carries the
@@ -446,7 +463,9 @@ function marketplaceRow(publication: PackagePublication): PackageDestination {
      */
     hasWorkToSend: publication.isOutdated,
     remedy: publication.isOutdated ? 'update' : 'none',
+    canReleaseAndUpdate: false,
     installKey: null,
+    landing: null,
     prUrl: publication.prUrl,
     lastActivityAt: publication.lastActivityAt,
     /*

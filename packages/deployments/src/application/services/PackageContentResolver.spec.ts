@@ -238,6 +238,26 @@ describe('PackageContentResolver', () => {
         ]),
       ).rejects.toBeInstanceOf(PackageVersionNotAvailableError);
     });
+
+    describe('and the package was never released', () => {
+      beforeEach(() => {
+        packageReleaseService.listReleases.mockResolvedValue([]);
+      });
+
+      it('refuses with the install command that needs no version', async () => {
+        await expect(
+          resolver.resolve([
+            {
+              pkg: ops,
+              slug: '@space/ops',
+              spec: { kind: 'exact', version: '0.2.0' },
+            },
+          ]),
+        ).rejects.toThrow(
+          "Package @space/ops has no version 0.2.0. It has never been released — run 'packmind install @space/ops' to install its current state.",
+        );
+      });
+    });
   });
 
   describe('when two packages share a component', () => {

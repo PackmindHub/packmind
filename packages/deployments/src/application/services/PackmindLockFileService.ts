@@ -7,11 +7,21 @@ import {
   PackmindLockFileEntrySource,
   PackmindLockFileFile,
   CommandVersion,
+  PACKMIND_LOCK_FILE_NAME,
   SkillVersion,
   StandardVersion,
   resolveArtefactFromPath,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { parsePackageSlug } from './packageSlugHelpers';
+
+function sortBySlug(
+  versionsBySlug: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(versionsBySlug).sort(([a], [b]) => a.localeCompare(b)),
+  );
+}
 
 type VersionInfo = {
   name: string;
@@ -34,6 +44,7 @@ export class PackmindLockFileService {
     skillVersions: SkillVersion[];
     codingAgents: CodingAgent[];
     packageSlugs: string[];
+    packageVersions: Record<string, string>;
     targetId?: string;
     artifactSpaceIds: Record<string, string>;
     artifactPackageIds: Record<string, string[]>;
@@ -129,6 +140,7 @@ export class PackmindLockFileService {
     return {
       lockfileVersion: 2,
       packageSlugs: [...params.packageSlugs].sort((a, b) => a.localeCompare(b)),
+      packages: sortBySlug(params.packageVersions),
       agents: [...params.codingAgents].sort((a, b) => a.localeCompare(b)),
       targetId: params.targetId,
       artifacts,
@@ -182,13 +194,48 @@ export class PackmindLockFileService {
     return {
       ...newLockFile,
       packageSlugs: [...allPackageSlugs].sort((a, b) => a.localeCompare(b)),
+      ...((newLockFile.packages || existingLockFile.packages) && {
+        packages: sortBySlug({
+          ...existingLockFile.packages,
+          ...newLockFile.packages,
+        }),
+      }),
       artifacts: sortedArtifacts,
+    };
+  }
+
+  removePackageFromLockFile(
+    lockFile: PackmindLockFile,
+    packageSlug: string,
+    removedArtifactIds: string[],
+  ): PackmindLockFile {
+    const isRemovedSlug = (slug: string) =>
+      parsePackageSlug(slug).packageSlug === packageSlug;
+    const removedIds = new Set(removedArtifactIds);
+
+    return {
+      ...lockFile,
+      packageSlugs: lockFile.packageSlugs.filter(
+        (slug) => !isRemovedSlug(slug),
+      ),
+      ...(lockFile.packages && {
+        packages: Object.fromEntries(
+          Object.entries(lockFile.packages).filter(
+            ([slug]) => !isRemovedSlug(slug),
+          ),
+        ),
+      }),
+      artifacts: Object.fromEntries(
+        Object.entries(lockFile.artifacts).filter(
+          ([, entry]) => !removedIds.has(entry.id),
+        ),
+      ),
     };
   }
 
   createLockFileModification(lockFile: PackmindLockFile): FileModification {
     return {
-      path: 'packmind-lock.json',
+      path: PACKMIND_LOCK_FILE_NAME,
       content: JSON.stringify(lockFile, null, 2) + '\n',
     };
   }

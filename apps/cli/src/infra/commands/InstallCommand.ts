@@ -16,7 +16,11 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { CodingAgent, PackmindLockFile } from '@packmind/types';
+import {
+  CodingAgent,
+  PackmindFileConfig,
+  PackmindLockFile,
+} from '@packmind/types';
 import {
   buildInstallSummary,
   buildIncapableArtifactsWarning,
@@ -35,38 +39,21 @@ import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
 import { ParsedPackageSlug } from '../../domain/entities/PackageSlug';
 import { EXEC_NAME } from '../utils/execName';
+import { resolveInstallTargetDirectories } from './installTargetDirectories';
+import {
+  checkUpgradesHandler,
+  findCheckUpgradesConflict,
+} from './checkUpgradesHandler';
+import {
+  decideDistributionTracking,
+  DistributionTrackingDecision,
+  reportLockFileWarnings,
+  resolveTrackingLookup,
+  toRepoRelativePath,
+} from './distributionTracking';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
-
-function findSubDirectoriesWithPackmindJson(
-  dirPath: string,
-  recursive: boolean,
-): string[] {
-  const result: string[] = [];
-
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(dirPath, { withFileTypes: true });
-  } catch {
-    return result;
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const subDir = path.join(dirPath, entry.name);
-
-    if (fs.existsSync(path.join(subDir, 'packmind.json'))) {
-      result.push(subDir);
-    }
-
-    if (recursive) {
-      result.push(...findSubDirectoriesWithPackmindJson(subDir, true));
-    }
-  }
-
-  return result;
-}
 
 export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   const merged: IInstallResult = {
@@ -150,78 +137,7 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   return merged;
 }
 
-type TrackingLookup =
-  | { status: 'tracking-unsupported' }
-  | { status: 'resolved'; trackedGitRepo: { branch: string } | null }
-  | { status: 'unavailable' };
-
-export type DistributionTrackingDecision =
-  | { action: 'record' }
-  | { action: 'record-legacy' }
-  | { action: 'skip'; reason: 'repo_not_tracked' }
-  | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
-  | { action: 'skip'; reason: 'tracked_branch_gone'; trackedBranch: string }
-  | { action: 'skip'; reason: 'detached_head'; trackedBranch: string }
-  | { action: 'inform' };
-
-export function decideDistributionTracking(params: {
-  lookup: TrackingLookup;
-  currentBranch: string;
-  /**
-   * Asked only about a tracked branch we are not on, so the git call is skipped
-   * in the common cases. Answering `true` when it cannot tell keeps the plain
-   * wrong-branch message, which is never actively wrong.
-   */
-  branchExists: (branch: string) => boolean;
-  /** True when HEAD is not on a branch — a rebase, or a CI job on a merge ref. */
-  detached: boolean;
-}): DistributionTrackingDecision {
-  const { lookup, currentBranch, branchExists, detached } = params;
-
-  switch (lookup.status) {
-    case 'tracking-unsupported':
-      return { action: 'record-legacy' };
-    case 'unavailable':
-      return { action: 'inform' };
-    case 'resolved': {
-      const tracked = lookup.trackedGitRepo;
-      if (!tracked) {
-        return { action: 'skip', reason: 'repo_not_tracked' };
-      }
-      if (tracked.branch !== currentBranch) {
-        // Worst cause first: a tracked branch that is gone records nothing for
-        // anybody, and a detached HEAD is not "being on the wrong branch" —
-        // git reports the branch as `HEAD`, which names no branch at all.
-        if (!branchExists(tracked.branch)) {
-          return {
-            action: 'skip',
-            reason: 'tracked_branch_gone',
-            trackedBranch: tracked.branch,
-          };
-        }
-        return {
-          action: 'skip',
-          reason: detached ? 'detached_head' : 'wrong_branch',
-          trackedBranch: tracked.branch,
-        };
-      }
-      return { action: 'record' };
-    }
-  }
-}
-
 const NO_GIT_REPO_CACHE_KEY = '<no-git-repo>';
-
-function toRepoRelativePath(dir: string, gitRoot: string): string {
-  let relativePath = dir.startsWith(gitRoot) ? dir.slice(gitRoot.length) : '/';
-  if (!relativePath.startsWith('/')) {
-    relativePath = '/' + relativePath;
-  }
-  if (!relativePath.endsWith('/')) {
-    relativePath = relativePath + '/';
-  }
-  return relativePath;
-}
 
 function reportDistributionTrackingDecision(
   decision: DistributionTrackingDecision,
@@ -256,31 +172,6 @@ function reportDistributionTrackingDecision(
         `This folder is not tracked — distribution not recorded in Packmind.`,
       );
       break;
-  }
-}
-
-async function resolveTrackingLookup(
-  packmindCliHexa: PackmindCliHexa,
-  owner: string,
-  repo: string,
-): Promise<TrackingLookup> {
-  try {
-    const { gitRepo } = await packmindCliHexa.getTrackedRepository({
-      owner,
-      repo,
-    });
-    return { status: 'resolved', trackedGitRepo: gitRepo };
-  } catch (error) {
-    const statusCode = (error as { statusCode?: number })?.statusCode;
-    if (statusCode === 404) {
-      // Not a feature flag, whatever this branch used to claim: none gates
-      // this route. A server that has it answers `gitRepo: null` for an
-      // untracked repo and maps refusals to 409 or 403, so a 404 means the
-      // route is absent — the server predates repository tracking. Keep
-      // recording rather than dropping the distribution.
-      return { status: 'tracking-unsupported' };
-    }
-    return { status: 'unavailable' };
   }
 }
 
@@ -331,6 +222,15 @@ async function computeDistributionTrackingDecision(
   return decision;
 }
 
+function readPackageVersions(dir: string): Record<string, string> | undefined {
+  try {
+    const content = fs.readFileSync(path.join(dir, 'packmind.json'), 'utf-8');
+    return (JSON.parse(content) as PackmindFileConfig).packages;
+  } catch {
+    return undefined;
+  }
+}
+
 async function notifyArtefactsDistributionIfInGitRepo(params: {
   packmindCliHexa: PackmindCliHexa;
   dir: string;
@@ -366,12 +266,14 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
     const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
     const relativePath = toRepoRelativePath(dir, gitRoot);
 
-    await packmindCliHexa.notifyArtefactsDistribution({
+    const { warnings } = await packmindCliHexa.notifyArtefactsDistribution({
       gitRemoteUrl,
       gitBranch,
       relativePath,
       packmindLockFile,
+      packageVersions: readPackageVersions(dir),
     });
+    reportLockFileWarnings(warnings ?? [], relativePath);
   } catch {
     // Silently ignore all errors to not fail the install
   }
@@ -447,13 +349,24 @@ export async function installHandler({
   packages,
   status,
   upgrade,
+  checkUpgrades,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
   status: boolean;
   /** Optional so the many call sites that never upgrade stay as they are. */
   upgrade?: boolean;
+  checkUpgrades?: boolean;
 }): Promise<void> {
+  if (checkUpgrades) {
+    const conflict = findCheckUpgradesConflict({ packages, status, upgrade });
+    if (conflict) {
+      logErrorConsole(conflict);
+      process.exit(1);
+      return;
+    }
+  }
+
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -486,6 +399,15 @@ export async function installHandler({
     }
   }
 
+  // Before the CLI version check and the bootstrap, which both write.
+  if (checkUpgrades) {
+    await checkUpgradesHandler(
+      { cwd, installPath, cliVersion: CLI_VERSION },
+      { packmindCliHexa, exit: process.exit },
+    );
+    return;
+  }
+
   try {
     const ensureOutcome = await packmindCliHexa.ensureCliVersion({
       baseDirectory: cwd,
@@ -512,28 +434,11 @@ export async function installHandler({
     homeAgent: cwdHomeAgent,
   });
 
-  // Determine target directories
-  let targetDirs: string[];
-
-  if (installPath) {
-    // With -p: target cwd itself when it has packmind.json or explicit packages
-    // were passed, plus any direct sub-directories with packmind.json.
-    targetDirs = [];
-    if (fs.existsSync(path.join(cwd, 'packmind.json')) || packages.length > 0) {
-      targetDirs.push(cwd);
-    }
-    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, false));
-  } else if (packages.length > 0) {
-    // With explicit packages: only update the cwd's packmind.json
-    targetDirs = [cwd];
-  } else {
-    // Without -p and without explicit packages: include root if it has packmind.json, then recursively find sub-directories
-    targetDirs = [];
-    if (fs.existsSync(path.join(cwd, 'packmind.json'))) {
-      targetDirs.push(cwd);
-    }
-    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, true));
-  }
+  const targetDirs = resolveInstallTargetDirectories({
+    cwd,
+    installPath,
+    hasExplicitPackages: packages.length > 0,
+  });
 
   if (targetDirs.length === 0) {
     if (bootstrap.warned) {
@@ -665,6 +570,11 @@ export const installCommand = command({
       long: 'upgrade',
       description:
         "Move every package pinned to a version in packmind.json to that package's latest release. Packages tracking * are left tracking it.",
+    }),
+    checkUpgrades: flag({
+      long: 'check-upgrades',
+      description:
+        'Show what --upgrade would change, without installing anything. Exits 1 when upgrades are available.',
     }),
   },
   handler: installHandler,

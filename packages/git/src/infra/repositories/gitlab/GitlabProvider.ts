@@ -21,6 +21,7 @@ import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
 import { gitlabRateLimitedError } from '../http/gitlabRateLimit';
 import {
+  GitlabApiOperationFailedError,
   GitlabAvailableRepositoriesFailedError,
   GitlabBranchExistenceCheckFailedError,
 } from '../../../domain/errors';
@@ -327,6 +328,81 @@ export class GitlabProvider implements IGitProvider {
         error,
       );
     }
+  }
+  async searchBranches(
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ): Promise<string[]> {
+    const encodedPath = encodeURIComponent(`${owner}/${repo}`);
+    // Without `search`, GitLab lists the branches unfiltered.
+    const params = search ? { search, per_page: limit } : { per_page: limit };
+
+    let branches: unknown;
+    try {
+      const response = await this.client.get(
+        `/projects/${encodedPath}/repository/branches`,
+        { params },
+      );
+      branches = response.data;
+    } catch (error) {
+      throw this.branchSearchFailure(owner, repo, error);
+    }
+
+    if (!Array.isArray(branches)) {
+      this.logger.warn('GitLab answered the branch search with no list', {
+        owner,
+        repo,
+      });
+      throw new GitlabApiOperationFailedError(
+        'search branches on GitLab',
+        new Error('GitLab returned no list of branches'),
+        { owner, repo },
+      );
+    }
+
+    return branches.map((branch: { name: string }) => branch.name);
+  }
+
+  private branchSearchFailure(
+    owner: string,
+    repo: string,
+    error: unknown,
+  ): Error {
+    const throttled = gitlabRateLimitedError(error, { owner, repo });
+    if (throttled) return throttled;
+
+    const status = isAxiosError(error) ? error.response?.status : undefined;
+
+    if (status === 403) {
+      this.logger.warn('GitLab refused access to the repository', {
+        owner,
+        repo,
+      });
+      return new GitRemoteAccessForbiddenError('GitLab', owner, repo, 'read');
+    }
+
+    if (status === 401) {
+      this.logger.warn('GitLab rejected the stored credentials', {
+        owner,
+        repo,
+      });
+      return new InvalidGitProviderCredentialsError(
+        'GitLab API authentication failed. Please check your token.',
+      );
+    }
+
+    this.logger.warn('Failed to search branches on GitLab', {
+      owner,
+      repo,
+      error: isNativeError(error) ? error.message : String(error),
+    });
+    return new GitlabApiOperationFailedError(
+      'search branches on GitLab',
+      error,
+      { owner, repo },
+    );
   }
 }
 

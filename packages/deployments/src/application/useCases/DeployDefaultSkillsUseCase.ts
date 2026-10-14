@@ -186,6 +186,7 @@ export class DeployDefaultSkillsUseCase
       skillVersions,
       codingAgents,
       packageSlugs: [],
+      packageVersions: {},
       artifactSpaceIds: {},
       artifactPackageIds: {},
     });

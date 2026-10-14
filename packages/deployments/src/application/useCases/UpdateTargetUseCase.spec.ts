@@ -1,4 +1,8 @@
-import { mockInterface, createMockInstance } from '@packmind/test-utils';
+import {
+  mockInterface,
+  createMockInstance,
+  stubLogger,
+} from '@packmind/test-utils';
 import { UpdateTargetUseCase } from './UpdateTargetUseCase';
 import { TargetService } from '../services/TargetService';
 import {
@@ -9,6 +13,7 @@ import {
   createGitProviderId,
   createOrganizationId,
   createUserId,
+  ISyncDistributionsFromLockFilesUseCase,
   IGitPort,
   TargetPathUpdateForbiddenError,
   GitProviderListItem,
@@ -24,6 +29,7 @@ describe('UpdateTargetUseCase', () => {
   let useCase: UpdateTargetUseCase;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockGitPort: jest.Mocked<IGitPort>;
+  let mockSyncDistributions: jest.Mocked<ISyncDistributionsFromLockFilesUseCase>;
 
   const targetId = createTargetId('target-123');
   const gitRepoId = createGitRepoId('repo-123');
@@ -43,7 +49,18 @@ describe('UpdateTargetUseCase', () => {
 
     mockGitPort = mockInterface<IGitPort>();
 
-    useCase = new UpdateTargetUseCase(mockTargetService, mockGitPort);
+    mockSyncDistributions =
+      mockInterface<ISyncDistributionsFromLockFilesUseCase>();
+    mockSyncDistributions.execute.mockResolvedValue({
+      targets: [],
+    });
+
+    useCase = new UpdateTargetUseCase(
+      mockTargetService,
+      mockGitPort,
+      mockSyncDistributions,
+      stubLogger(),
+    );
   });
 
   afterEach(() => {
@@ -163,6 +180,30 @@ describe('UpdateTargetUseCase', () => {
         expect(mockTargetService.updateTarget).toHaveBeenCalledWith(targetId, {
           name: 'Original Name',
           path: '/new/path/',
+        });
+      });
+
+      it('does not sync an untracked repository', () => {
+        expect(mockSyncDistributions.execute).not.toHaveBeenCalled();
+      });
+
+      describe('when the repository is tracked', () => {
+        beforeEach(async () => {
+          mockGitPort.getRepositoryById.mockResolvedValue({
+            ...mockRepo,
+            isTracked: true,
+          });
+
+          await useCase.execute(command);
+        });
+
+        it('syncs the distribution state from the lock at the new path', () => {
+          expect(mockSyncDistributions.execute).toHaveBeenCalledWith({
+            userId,
+            organizationId,
+            gitRepoId,
+            targetPaths: ['/new/path/'],
+          });
         });
       });
     });

@@ -9,6 +9,7 @@ import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 import {
+  GitlabApiOperationFailedError,
   GitlabAvailableRepositoriesFailedError,
   GitlabBranchExistenceCheckFailedError,
   GitlabRateLimitedError,
@@ -649,6 +650,99 @@ describe('GitlabProvider', () => {
       const result = await gitlabProvider.checkAuth();
 
       expect(result).toEqual({ ok: false, reason: 'network' });
+    });
+  });
+
+  describe('searchBranches', () => {
+    describe('when GitLab answers', () => {
+      let result: string[];
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: [{ name: 'feature/home' }, { name: 'feature/login' }],
+        });
+
+        result = await gitlabProvider.searchBranches(
+          'owner',
+          'repo',
+          'feature',
+          20,
+        );
+      });
+
+      it('calls the branches endpoint with the search and the limit', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          '/projects/owner%2Frepo/repository/branches',
+          { params: { search: 'feature', per_page: 20 } },
+        );
+      });
+
+      it('returns the branch names', () => {
+        expect(result).toEqual(['feature/home', 'feature/login']);
+      });
+    });
+
+    describe('when the search is empty', () => {
+      it('omits the search parameter', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        await gitlabProvider.searchBranches('owner', 'repo', '', 20);
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          '/projects/owner%2Frepo/repository/branches',
+          { params: { per_page: 20 } },
+        );
+      });
+    });
+
+    describe('when GitLab answers something other than a list', () => {
+      it('throws a GitLab operation error', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: { message: 'oops' } });
+
+        await expect(
+          gitlabProvider.searchBranches('owner', 'repo', 'feature', 20),
+        ).rejects.toBeInstanceOf(GitlabApiOperationFailedError);
+      });
+    });
+
+    describe('when GitLab is throttling us (429)', () => {
+      it('throws a rate limit error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        await expect(
+          gitlabProvider.searchBranches('owner', 'repo', 'feature', 20),
+        ).rejects.toBeInstanceOf(GitlabRateLimitedError);
+      });
+    });
+
+    describe('when GitLab refuses access (403)', () => {
+      it('throws a forbidden domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+        await expect(
+          gitlabProvider.searchBranches('owner', 'repo', 'feature', 20),
+        ).rejects.toBeInstanceOf(GitRemoteAccessForbiddenError);
+      });
+    });
+
+    describe('when GitLab rejects the credentials (401)', () => {
+      it('throws an invalid credentials domain error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
+
+        await expect(
+          gitlabProvider.searchBranches('owner', 'repo', 'feature', 20),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
+    });
+
+    describe('when the call fails otherwise', () => {
+      it('throws a GitLab operation error', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(500));
+
+        await expect(
+          gitlabProvider.searchBranches('owner', 'repo', 'feature', 20),
+        ).rejects.toBeInstanceOf(GitlabApiOperationFailedError);
+      });
     });
   });
 });

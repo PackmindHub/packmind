@@ -72,6 +72,10 @@ export class LockFileRepository implements ILockFileRepository {
       Array.isArray(obj.agents) &&
       (obj.targetId === undefined || typeof obj.targetId === 'string') &&
       (obj.cliVersion === undefined || typeof obj.cliVersion === 'string') &&
+      (obj.packages === undefined ||
+        (typeof obj.packages === 'object' &&
+          obj.packages !== null &&
+          !Array.isArray(obj.packages))) &&
       typeof obj.artifacts === 'object' &&
       obj.artifacts !== null &&
       !Array.isArray(obj.artifacts)

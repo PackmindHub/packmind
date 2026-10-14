@@ -4,14 +4,24 @@ import path from 'node:path';
 import packmind from './eslint-rules/index.js';
 
 // Type-aware rules only run on packages' domain and application layers, since
-// parsing with type information is what costs the time. `nx lint` runs ESLint
-// from the project dir; the legacy `@nx/eslint:lint` executor from the root.
+// parsing with type information is what costs the time — plus all of
+// `packages/types`, which has no such layers but holds errors use cases throw.
+// `nx lint` runs ESLint from the project dir; the legacy `@nx/eslint:lint`
+// executor from the root.
 const lintedDir = path.relative(import.meta.dirname, process.cwd());
 const domainLayerFiles =
   lintedDir === ''
-    ? ['packages/*/src/domain/**/*.ts', 'packages/*/src/application/**/*.ts']
+    ? [
+        'packages/*/src/domain/**/*.ts',
+        'packages/*/src/application/**/*.ts',
+        'packages/types/src/**/*.ts',
+      ]
     : /^packages[\\/][^\\/]+$/.test(lintedDir)
-      ? ['**/src/domain/**/*.ts', '**/src/application/**/*.ts']
+      ? [
+          '**/src/domain/**/*.ts',
+          '**/src/application/**/*.ts',
+          ...(path.basename(lintedDir) === 'types' ? ['src/**/*.ts'] : []),
+        ]
       : [];
 
 export default [

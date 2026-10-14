@@ -8,6 +8,14 @@
     "@testing/cli-e2e",
     "@testing/unit-tests"
   ],
+  "packages": {
+    "@backend/backend-standards": "*",
+    "@frontend/playground": "*",
+    "@global/packmind-proprietary": "*",
+    "@global/packmind-standards": "*",
+    "@testing/cli-e2e": "*",
+    "@testing/unit-tests": "*"
+  },
   "agents": [
     "agents_md",
     "claude",
@@ -2697,5 +2705,5 @@
       ]
     }
   },
-  "cliVersion": "0.36.0"
+  "cliVersion": "0.37.0"
 }

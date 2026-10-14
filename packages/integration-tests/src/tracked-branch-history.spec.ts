@@ -83,6 +83,9 @@ describe('Tracked branch distribution history integration', () => {
     jest
       .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')
       .mockResolvedValue(commit);
+    jest
+      .spyOn(testApp.gitHexa.getAdapter(), 'listFilesNamedInRepo')
+      .mockResolvedValue([]);
   });
 
   afterEach(async () => {

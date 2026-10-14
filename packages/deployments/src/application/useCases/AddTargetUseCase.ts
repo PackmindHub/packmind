@@ -5,18 +5,24 @@ import {
   AddTargetCommand,
   IGitPort,
   GitProviderMissingTokenError,
+  ISyncDistributionsFromLockFilesUseCase,
   OrganizationId,
 } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 import { v4 as uuidv4 } from 'uuid';
 import { InvalidTargetPathError } from '../../domain/errors/InvalidTargetPathError';
 import { InvalidTargetNameError } from '../../domain/errors/InvalidTargetNameError';
 import { GitRepositoryNotFoundError } from '../../domain/errors/GitRepositoryNotFoundError';
 
+const origin = 'AddTargetUseCase';
+
 export class AddTargetUseCase implements IAddTargetUseCase {
   constructor(
     private readonly targetService: TargetService,
     private readonly gitPort: IGitPort,
+    private readonly syncDistributionsFromLockFiles: ISyncDistributionsFromLockFilesUseCase,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(command: AddTargetCommand): Promise<Target> {
@@ -70,6 +76,24 @@ export class AddTargetUseCase implements IAddTargetUseCase {
       gitRepoId,
     };
 
-    return this.targetService.addTarget(target);
+    const addedTarget = await this.targetService.addTarget(target);
+
+    if (repo.isTracked) {
+      try {
+        await this.syncDistributionsFromLockFiles.execute({
+          userId,
+          organizationId: organizationId as OrganizationId,
+          gitRepoId,
+          targetPaths: [addedTarget.path],
+        });
+      } catch (error) {
+        this.logger.warn('Could not sync distribution state from lock files', {
+          gitRepoId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return addedTarget;
   }
 }

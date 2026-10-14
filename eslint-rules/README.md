@@ -38,13 +38,15 @@ all-lowercase legacy `usecase` file suffix is handled by `use-case-filename`.
 
 ### `packmind/throw-kind-carrying-error` — type-aware
 
-Every value thrown from a package's `src/domain/` or `src/application/` must
-pass the guards `DomainExceptionFilter` uses (`isDomainError`, `isInternalError`,
+Every value thrown from a package's `src/domain/` or `src/application/`, and
+from anywhere in `packages/types/src/` (which has no such layers, yet holds
+errors and helpers that use cases throw through), must pass the guards `DomainExceptionFilter` uses (`isDomainError`, `isInternalError`,
 `isUpstreamError`): a required, known `kind`, a required string `reason`, and —
 for internal and upstream kinds — an `Error` instance. Anything else answers 500.
 The rule reads the thrown value's type, so it follows `kind` through base
 classes declared in other files — which is why it needs type information
-(`parserOptions.projectService`) and is scoped to those layers only.
+(`parserOptions.projectService`) and is scoped to those files only. Specs and
+tests are out of scope everywhere.
 
 Not flagged: rethrown values typed `any`/`unknown` (a bare `catch (error)`
 rethrow), since their type is decided where they were first thrown. Out of

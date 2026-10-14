@@ -55,6 +55,9 @@ describe('AddGitRepoUseCase', () => {
 
     mockDeploymentPort = {
       addTarget: jest.fn(),
+      syncDistributionsFromLockFiles: jest.fn().mockResolvedValue({
+        targets: [],
+      }),
     } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
 
     const adminUser: User = userFactory({
@@ -744,6 +747,34 @@ describe('AddGitRepoUseCase', () => {
         expect(
           mockGitProviderService.deleteGitProviderIfEmpty,
         ).toHaveBeenCalledWith(holdingProviderId, userId);
+      });
+
+      it('does not sync an untracked repository', () => {
+        expect(
+          mockDeploymentPort.syncDistributionsFromLockFiles,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the CLI already tracks the adopted repository', () => {
+      beforeEach(async () => {
+        mockGitRepoService.adoptGitRepo.mockResolvedValue({
+          ...adoptedRepo,
+          isTracked: true,
+        });
+        givenProviders(authenticatedProvider(), cliManagedProvider());
+
+        await addRepo();
+      });
+
+      it('syncs its distribution state from its lock files', () => {
+        expect(
+          mockDeploymentPort.syncDistributionsFromLockFiles,
+        ).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitRepoId: existingRepoId,
+        });
       });
     });
 

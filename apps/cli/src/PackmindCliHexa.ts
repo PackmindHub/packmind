@@ -16,6 +16,10 @@ import {
   IInstallResult,
 } from './domain/useCases/IInstallUseCase';
 import {
+  ICheckUpgradesCommand,
+  ICheckUpgradesResult,
+} from './domain/useCases/ICheckUpgradesUseCase';
+import {
   IUninstallCommand,
   IUninstallResult,
 } from './domain/useCases/IUninstallUseCase';
@@ -134,6 +138,12 @@ export class PackmindCliHexa {
 
   public async install(command: IInstallCommand): Promise<IInstallResult> {
     return this.hexa.useCases.install.execute(command);
+  }
+
+  public async checkUpgrades(
+    command: ICheckUpgradesCommand,
+  ): Promise<ICheckUpgradesResult> {
+    return this.hexa.useCases.checkUpgrades.execute(command);
   }
 
   public async uninstall(
@@ -268,6 +278,13 @@ export class PackmindCliHexa {
     return this.hexa.services.gitRemoteUrlService.branchExists(
       repoPath,
       branch,
+    );
+  }
+
+  public listFilesNamed(directory: string, fileName: string): string[] {
+    return this.hexa.services.gitRemoteUrlService.listFilesNamed(
+      directory,
+      fileName,
     );
   }
 

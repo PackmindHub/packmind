@@ -49,12 +49,14 @@ describe('GitProviderService', () => {
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      searchBranches: jest.fn(),
       checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
     mockGitlabProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      searchBranches: jest.fn(),
       checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
@@ -753,6 +755,66 @@ describe('GitProviderService', () => {
             branch,
           ),
         ).rejects.toThrow('GitLab API error');
+      });
+    });
+  });
+
+  describe('searchBranches', () => {
+    const owner = 'test-owner';
+    const repo = 'test-repo';
+
+    describe('when the provider exists', () => {
+      let result: string[];
+
+      beforeEach(async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(
+          mockGitlabProvider,
+        );
+        mockGitlabProviderInstance.searchBranches.mockResolvedValue([
+          'feature/home',
+        ]);
+        result = await gitProviderService.searchBranches(
+          createGitProviderId('provider-2'),
+          owner,
+          repo,
+          'feature',
+          20,
+        );
+      });
+
+      it('creates the instance of the stored provider', () => {
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          mockGitlabProvider,
+        );
+      });
+
+      it('asks the provider with the search and the limit', () => {
+        expect(mockGitlabProviderInstance.searchBranches).toHaveBeenCalledWith(
+          owner,
+          repo,
+          'feature',
+          20,
+        );
+      });
+
+      it('returns the branch names', () => {
+        expect(result).toEqual(['feature/home']);
+      });
+    });
+
+    describe('when git provider is not found', () => {
+      it('throws GitProviderNotFoundError', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(null);
+
+        await expect(
+          gitProviderService.searchBranches(
+            createGitProviderId('nonexistent-provider'),
+            owner,
+            repo,
+            'feature',
+            20,
+          ),
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
   });

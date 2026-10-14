@@ -36,7 +36,11 @@ function makeEntry(
     lastDistributedAt: null,
     lastDistributionError: null,
     versionSpec: null,
-    standing: { status: 'up-to-date' as const, remedy: 'none' as const },
+    standing: {
+      status: 'up-to-date' as const,
+      remedy: 'none' as const,
+      canReleaseAndUpdate: false,
+    },
     behindArtifacts: [],
     alignedArtifactCount: 0,
     ...overrides,

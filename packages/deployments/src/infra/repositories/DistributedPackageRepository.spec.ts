@@ -58,7 +58,10 @@ describe('DistributedPackageRepository', () => {
   const distributionId = createDistributionId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
 
-  const store = async (versionSpec: string | null) => {
+  const store = async (
+    versionSpec: string | null,
+    latestReleaseVersion: string | null = null,
+  ) => {
     const id = createDistributedPackageId(uuidv4());
     await repository.add({
       id,
@@ -69,6 +72,7 @@ describe('DistributedPackageRepository', () => {
       skillVersions: [],
       operation: 'add',
       versionSpec,
+      latestReleaseVersion,
     });
     const [found] = await repository.findByDistributionId(distributionId);
     return found;
@@ -128,11 +132,19 @@ describe('DistributedPackageRepository', () => {
     it('reads the wildcard back off the stored row', async () => {
       expect((await store('*')).versionSpec).toBe('*');
     });
+
+    it('reads the release it was built on back off the stored row', async () => {
+      expect((await store('*', '0.2.0')).latestReleaseVersion).toBe('0.2.0');
+    });
   });
 
   describe('when the write records no spec', () => {
     it('reads back as null rather than as a missing column', async () => {
       expect((await store(null)).versionSpec).toBeNull();
+    });
+
+    it('reads no base release back as null', async () => {
+      expect((await store(null)).latestReleaseVersion).toBeNull();
     });
   });
 });

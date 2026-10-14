@@ -31,7 +31,6 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponents } from './useDeleteContextComponents';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useGetPackageReleaseQuery } from '../../api/queries/DeploymentsQueries';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 /*
  * Every query the pane and the version area reach for is mocked at its module
@@ -82,16 +81,6 @@ vi.mock(
 vi.mock('../../../git/api/queries/GitProviderQueries', () => ({
   useGetGitProvidersQuery: vi.fn(),
 }));
-
-/*
- * The pane mounts no auth provider here, and the version area is behind a
- * feature flag read from the signed-in user's email. Most tests are that user.
- */
-vi.mock('../../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: vi.fn(),
-}));
-
-const STAFF_EMAIL = 'someone@packmind.com';
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
@@ -183,7 +172,6 @@ const READY_NEVER_RELEASED: PackageReleaseReadiness = {
 };
 
 function resetHooks() {
-  (useAuthContext as Mock).mockReturnValue({ user: { email: STAFF_EMAIL } });
   (useListPackageDeploymentsQuery as Mock).mockReturnValue({ data: [] });
   (useDeletePackagesBatchMutation as Mock).mockReturnValue({
     mutateAsync: vi.fn(),
@@ -376,16 +364,6 @@ describe('ContextPackagePane', () => {
     expect(screen.getByText('Not released yet')).toBeInTheDocument();
   });
 
-  it('hides the version bar from a user outside the flag audience', async () => {
-    (useAuthContext as Mock).mockReturnValue({
-      user: { email: 'someone@example.com' },
-    });
-
-    await renderPane(READY_NEVER_RELEASED);
-
-    expect(screen.queryByText('Not released yet')).not.toBeInTheDocument();
-  });
-
   it('names the reading the pane is on once the package has releases', async () => {
     await renderPane({
       currentVersion: '1.2.0',
@@ -399,7 +377,7 @@ describe('ContextPackagePane', () => {
     ).toBeInTheDocument();
   });
 
-  it('offers no release action when the package holds no components', async () => {
+  it('greys the release action when the package holds no components', async () => {
     await renderPane({
       currentVersion: null,
       verdict: 'no_components',
@@ -407,9 +385,7 @@ describe('ContextPackagePane', () => {
       outdatedComponents: [],
     });
 
-    expect(
-      screen.queryByRole('button', { name: /release/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Release' })).toBeDisabled();
   });
 
   it("asks for this package's releases, in this space and organization", async () => {
@@ -518,6 +494,10 @@ describe('ContextPackagePane', () => {
     it('sends that release when distributing from under it', async () => {
       await renderPane(released, { releases, address, groups: ONE_GROUP });
 
+      // The control lives on the tab strip now, so the tab has to be open.
+      await userEvent.click(screen.getByRole('tab', { name: /Distribution/ }));
+      await screen.findByTestId('distribution-tab');
+
       expect(distributeProps).toHaveBeenLastCalledWith({
         [packageId]: '1.1.0',
       });
@@ -533,7 +513,13 @@ describe('ContextPackagePane', () => {
         });
       });
 
-      it('drops the push that would send the working copy instead', async () => {
+      /*
+       * The corrective push left the header for the Distribution tab's own
+       * selection bar, where the rows it acts on are on screen and a subset can
+       * be picked. These two assert the header does not keep a copy of it in
+       * either reading — the one it used to drop, and the one it used to offer.
+       */
+      it('leaves the push to the tab that lists what is behind', async () => {
         await renderPane(released, { releases, address, groups: ONE_GROUP });
 
         expect(
@@ -541,23 +527,13 @@ describe('ContextPackagePane', () => {
         ).not.toBeInTheDocument();
       });
 
-      it('keeps offering it on the working copy', async () => {
+      it('leaves it to that tab on the working copy too', async () => {
         await renderPane(released, { releases, groups: ONE_GROUP });
 
         expect(
-          screen.getByRole('button', { name: /Update 1 distribution/ }),
-        ).toBeInTheDocument();
+          screen.queryByRole('button', { name: /Update/ }),
+        ).not.toBeInTheDocument();
       });
-    });
-
-    it('leaves a reader outside the flag audience on the working copy', async () => {
-      (useAuthContext as Mock).mockReturnValue({
-        user: { email: 'someone@example.com' },
-      });
-
-      await renderPane(released, { releases, address });
-
-      expect(screen.queryByText('Naming')).not.toBeInTheDocument();
     });
   });
 

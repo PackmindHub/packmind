@@ -144,6 +144,7 @@ describe('adoptArtifactIntoLockFile', () => {
       expect(result).toEqual({
         lockfileVersion: 2,
         packageSlugs: [],
+        packages: {},
         agents: [],
         artifacts: {
           'user:standard:my-standard': {

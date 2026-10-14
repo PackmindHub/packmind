@@ -25,6 +25,7 @@ The Packmind CLI provides the following commands:
 - **`whoami`** - Show current authentication status
 - **`install`** - Download packages locally
 - **`uninstall`** - Remove packages from your project
+- **`distribution record`** - Send your local `packmind-lock.json` files to Packmind as what each target runs
 - **`lint`** - Run detection programs (Enterprise only)
 - **`playbook diff`** - Show differences between local files and Packmind artefacts
 - **`playbook add`** - Stage a change between local files and Packmind artefacts
@@ -680,6 +681,64 @@ Asking for a version that was never released stops the install and lists the ver
 
 Each `packmind.json` carries its own versions, so two folders in the same repository can sit on two different releases of the same package.
 
+### Check Upgrades Before Installing
+
+See what `packmind install --upgrade` would change before running it:
+
+```bash
+packmind install --check-upgrades
+```
+
+**Example output:**
+
+```
+@my-space/ops  0.1.0 → 0.2.0
+  ~ standard  Backend conventions  v3 → v4
+  + skill     Release notes        (new)
+  - command   Old deploy           (removed)
+@my-space/frontend  * · 2 components to update
+  ~ standard  React components  v5 → v6
+  ~ skill     Storybook         v1 → v2
+
+Run packmind install --upgrade to apply these changes.
+```
+
+For each package in `packmind.json`, you see:
+
+- **Pinned packages** — the version the package would move from and to (here `0.1.0 → 0.2.0`)
+- **Packages tracking `*`** — how many of their commands, standards, and skills have changed since your last install
+- **What changes underneath** — every command, standard, and skill that would be added (`+`), updated (`~`, with its version move), or removed (`-`)
+
+A few other changes show up too:
+
+- **Coding agents changed in `packmind.json`** — a `Coding agents: claude → claude, cursor` line comes first, and the commands, standards, and skills that would be written to different files are marked `(files change)`
+- **No packages left in `packmind.json`** — every installed command, standard, and skill is listed as removed, since installing would delete their files
+
+When there is nothing to upgrade, the command prints `Already up to date`.
+
+If you don't have access to some packages, the command lists them (`Could not check 2 packages you don't have access to: …`) and exits with code `1`, so an incomplete check never passes as up to date.
+
+Nothing in your repository changes: `packmind.json`, your lock file, and your installed files stay exactly as they were, and the check is not recorded as an install in Packmind. Run `packmind install --upgrade` when you are ready to apply the changes.
+
+The command exits with code `1` when upgrades are available, and code `0` when everything is up to date — handy for flagging an outdated playbook in CI:
+
+```bash
+if ! packmind install --check-upgrades; then
+  echo "Packmind packages have new releases. Run 'packmind install --upgrade'."
+fi
+```
+
+In a monorepo, the check covers the same `packmind.json` files as `packmind install`. Use `--path` to scope it to a specific directory:
+
+```bash
+packmind install --check-upgrades --path apps/api
+```
+
+<Note>
+  `--check-upgrades` checks the packages already listed in `packmind.json`. It
+  cannot be combined with `--upgrade`, `--status`, or package names.
+</Note>
+
 ### Upgrade to the Latest Releases
 
 Move every pinned package to its latest release:
@@ -689,6 +748,8 @@ packmind install --upgrade
 ```
 
 This rewrites `packmind.json` with the version each package landed on, so you can see exactly what moved in your diff before committing it.
+
+To preview what would move first, without changing anything, run `packmind install --check-upgrades` (see [Check Upgrades Before Installing](#check-upgrades-before-installing)).
 
 Packages tracking `*` keep tracking it — their line in `packmind.json` is left alone — and their files are refreshed like any install.
 
@@ -700,7 +761,15 @@ packmind install @my-space/ops:0.2.0
 
 ### Lock File (`packmind-lock.json`)
 
-When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts.
+When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts, and under `packages` the version of each package the folder receives:
+
+```json
+{
+  "packages": { "@my-space/ops": "1.2.3" }
+}
+```
+
+Packmind treats this file as the source of truth for what each target runs. See [Keep the Distribution State in Sync with Your Repository](/governance/distribution#keep-the-distribution-state-in-sync-with-your-repository).
 
 ### Recursive Install (Monorepos)
 
@@ -791,6 +860,37 @@ packmind install <package-slug>
   right choice for project-specific standards that should be shared with
   teammates and committed to source control.
 </Tip>
+
+## Distribution Command
+
+### Distribution Record
+
+Tell Packmind what the `packmind-lock.json` files in your working copy say each target runs — useful after editing a lock by hand:
+
+```bash
+packmind distribution record
+```
+
+- **From the repository root** — every target in the repository is recorded.
+- **From a sub-folder** — only the targets at or below that folder are recorded.
+
+The lock files are found through Git: folders your `.gitignore` excludes are skipped, and lock files you have not committed yet are included. Only the targets that changed are listed in the output.
+
+Run it on the tracked branch (see [Git Track](#git-track)). Your lock edits do not need to be pushed, but a later **Sync from repository** in the app reads the locks on the remote branch and shows that state again — push your changes to keep them. See [Keep the Distribution State in Sync with Your Repository](/governance/distribution#keep-the-distribution-state-in-sync-with-your-repository).
+
+#### Troubleshooting
+
+- **Problem**: `The current directory is not managed by Packmind: no packmind-lock.json here or below records package versions.`
+- **Solution**: Run `packmind install` to create the lock files, or move to a folder that contains them.
+
+- **Problem**: `Nothing recorded: the tracked branch is 'main', and you are on 'dev'.`
+- **Solution**: Switch to the tracked branch and run the command again.
+
+- **Problem**: `Nothing recorded: the current directory is not in a Git repository.`
+- **Solution**: Run the command from inside the repository's working copy.
+
+- **Problem**: A package is reported as not a package of your organization.
+- **Solution**: That package is not recorded. Check its slug in the lock file, or remove it with `packmind uninstall`.
 
 ## Lint Command
 

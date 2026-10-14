@@ -21,6 +21,7 @@ import {
 import { providerHttpsAgent } from '../http/providerHttpAgent';
 import { detectGithubRateLimit } from '../http/githubRateLimit';
 import {
+  GithubApiOperationFailedError,
   GithubAvailableRepositoriesFailedError,
   GithubBranchExistenceCheckFailedError,
   GithubRateLimitedError,
@@ -29,6 +30,28 @@ import {
 const origin = 'GithubProvider';
 
 const REPOS_PER_PAGE = 100;
+
+const SEARCH_BRANCHES_QUERY = `query($owner: String!, $name: String!, $q: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    refs(
+      refPrefix: "refs/heads/"
+      query: $q
+      first: $first
+      orderBy: { field: ALPHABETICAL, direction: ASC }
+    ) {
+      nodes {
+        name
+      }
+    }
+  }
+}`;
+
+type GithubBranchSearchResponse = {
+  data?: {
+    repository: { refs: { nodes: { name: string }[] } | null } | null;
+  };
+  errors?: { message: string }[];
+};
 
 export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
@@ -311,6 +334,100 @@ export class GithubProvider implements IGitProvider {
         error,
       );
     }
+  }
+  async searchBranches(
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ): Promise<string[]> {
+    // REST has no substring search on branches, GraphQL's `refs(query:)` does.
+    // Relative to the REST base URL, which is api.github.com: GitHub
+    // Enterprise is not supported by this provider.
+    let body: GithubBranchSearchResponse;
+    try {
+      const response = await this.client.post<GithubBranchSearchResponse>(
+        '/graphql',
+        {
+          query: SEARCH_BRANCHES_QUERY,
+          variables: { owner, name: repo, q: search, first: limit },
+        },
+      );
+      body = response.data;
+    } catch (error) {
+      throw this.branchSearchFailure(owner, repo, error);
+    }
+
+    // GraphQL answers 200 even when it failed: an unknown repository comes
+    // back as `repository: null`, usually alongside an `errors` entry.
+    const nodes = body?.data?.repository?.refs?.nodes;
+    if (body?.errors?.length || !Array.isArray(nodes)) {
+      const message = body?.errors?.length
+        ? body.errors.map((graphqlError) => graphqlError.message).join('; ')
+        : 'GitHub returned no repository';
+      this.logger.warn('GitHub could not search the branches', {
+        owner,
+        repo,
+        error: message,
+      });
+      throw new GithubApiOperationFailedError(
+        'search branches on GitHub',
+        new Error(message),
+        { owner, repo },
+      );
+    }
+
+    return nodes.map((node) => node.name);
+  }
+
+  private branchSearchFailure(
+    owner: string,
+    repo: string,
+    error: unknown,
+  ): Error {
+    const rateLimit = detectGithubRateLimit(error);
+    if (rateLimit) {
+      this.logger.warn('GitHub is rate limiting us', {
+        owner,
+        repo,
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+      });
+      return new GithubRateLimitedError(rateLimit.retryAfterSeconds, {
+        owner,
+        repo,
+      });
+    }
+
+    const status = isAxiosError(error) ? error.response?.status : undefined;
+
+    if (status === 403) {
+      this.logger.warn('GitHub refused access to the repository', {
+        owner,
+        repo,
+      });
+      return new GitRemoteAccessForbiddenError('GitHub', owner, repo, 'read');
+    }
+
+    if (status === 401) {
+      this.logger.warn('GitHub rejected the stored credentials', {
+        owner,
+        repo,
+      });
+      return new InvalidGitProviderCredentialsError(
+        'GitHub API authentication failed. Please check your token.',
+      );
+    }
+
+    this.logger.warn('Failed to search branches on GitHub', {
+      owner,
+      repo,
+      error: isNativeError(error) ? error.message : String(error),
+    });
+    return new GithubApiOperationFailedError(
+      'search branches on GitHub',
+      error,
+      { owner, repo },
+    );
   }
 }
 

@@ -14,6 +14,8 @@ import {
   CheckProviderAuthResponse,
   CheckProviderBranchExistsCommand,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesCommand,
+  SearchProviderBranchesResponse,
   DeleteItem,
   FileModification,
   FetchFileContentInput,
@@ -69,6 +71,7 @@ import { CheckTrackedBranchExistsUseCase } from '../useCases/checkTrackedBranchE
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
 import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
 import { CheckProviderBranchExistsUseCase } from '../useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase';
+import { SearchProviderBranchesUseCase } from '../useCases/searchProviderBranches/SearchProviderBranchesUseCase';
 import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
 import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/DeleteGitProviderUseCase';
 import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/DeleteGitRepoUseCase';
@@ -109,6 +112,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _commitToGit!: CommitToGitUseCase;
   private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _checkProviderBranchExists!: CheckProviderBranchExistsUseCase;
+  private _searchProviderBranches!: SearchProviderBranchesUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
   private _listRepos!: ListReposUseCase;
   private _listProviders!: ListProvidersUseCase;
@@ -244,6 +248,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.accountsPort,
     );
 
+    this._searchProviderBranches = new SearchProviderBranchesUseCase(
+      this.gitServices.getGitProviderService(),
+      this.accountsPort,
+    );
+
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
       this.gitServices.getGitRepoService(),
     );
@@ -303,6 +312,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this._findOrCreateGitRepo,
       this.eventEmitterService,
       this.accountsPort,
+      this.deploymentsPort,
     );
 
     this._updateTrackedBranch = new UpdateTrackedBranchUseCase(
@@ -311,6 +321,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this._findOrCreateGitRepo,
       this.eventEmitterService,
       this.accountsPort,
+      this.deploymentsPort,
     );
 
     this._removeTrackedRepositoryUseCase = new RemoveTrackedRepositoryUseCase(
@@ -449,6 +460,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._checkProviderBranchExists.execute(command);
   }
 
+  public searchProviderBranches(
+    command: SearchProviderBranchesCommand,
+  ): Promise<SearchProviderBranchesResponse> {
+    return this._searchProviderBranches.execute(command);
+  }
+
   public commitToGit(
     repo: GitRepo,
     files: FileModification[],
@@ -512,6 +529,16 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this.gitServices
       .getGitProviderService()
       .compareBranches(repo, base, head);
+  }
+
+  public async listFilesNamedInRepo(
+    repo: GitRepo,
+    fileName: string,
+    branch?: string,
+  ): Promise<string[]> {
+    return this.gitServices
+      .getGitProviderService()
+      .listFilesNamed(repo, fileName, branch ?? repo.branch);
   }
 
   public async checkMarketplaceRepoExists(repo: GitRepo): Promise<{

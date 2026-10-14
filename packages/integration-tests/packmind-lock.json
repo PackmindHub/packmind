@@ -3,6 +3,9 @@
   "packageSlugs": [
     "@testing/integration-tests"
   ],
+  "packages": {
+    "@testing/integration-tests": "*"
+  },
   "agents": [
     "agents_md",
     "claude",
@@ -44,5 +47,5 @@
       ]
     }
   },
-  "cliVersion": "0.36.0"
+  "cliVersion": "0.37.0"
 }

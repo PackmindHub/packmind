@@ -12,4 +12,6 @@ export enum DeploymentsHistoryDataTestId {
   DestinationDetail = 'DeploymentsHistoryDataTestId.DestinationDetail',
   /** The badge saying how the distribution ended. */
   Status = 'DeploymentsHistoryDataTestId.Status',
+  /** The package version a distribution sent: a release, "Unreleased", or `-`. */
+  PackageVersion = 'DeploymentsHistoryDataTestId.PackageVersion',
 }

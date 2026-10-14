@@ -53,6 +53,8 @@ export interface IGitRepo {
     branch: string,
   ): Promise<{ path: string }[]>;
 
+  listFilesNamed(fileName: string, branch: string): Promise<string[]>;
+
   /** No-op when the target branch already exists. */
   createBranchFromBase(targetBranch: string): Promise<void>;
 

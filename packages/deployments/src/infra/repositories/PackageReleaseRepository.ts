@@ -1,3 +1,8 @@
+// AI_DISCLAIMER v1.0
+// This file has been created (totally or partially) with the assistance of artificial intelligence tools.
+// All content has been generated under the direct supervision of a named individual,
+// and under the AI.Backbone Orchestrator Compliance framework
+
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import {
@@ -354,12 +359,17 @@ export class PackageReleaseRepository
   private async findPinnedVersions<
     F extends 'recipeVersions' | 'standardVersions' | 'skillVersions',
   >(releaseId: PackageReleaseId, family: F): Promise<PackageRelease[F]> {
-    const found = await this.repository
+    const query = this.repository
       .createQueryBuilder('packageRelease')
       .withDeleted()
       .innerJoinAndSelect(`packageRelease.${family}`, 'pinned')
-      .where('packageRelease.id = :releaseId', { releaseId })
-      .getOne();
+      .where('packageRelease.id = :releaseId', { releaseId });
+
+    if (family === 'standardVersions') {
+      query.leftJoinAndSelect('pinned.rules', 'pinnedRule');
+    }
+
+    const found = await query.getOne();
 
     return found?.[family] ?? ([] as PackageRelease[F]);
   }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -18,6 +18,25 @@ import {
   type DistributionHistoryTarget,
 } from './PackageDetailPane';
 import type { PackageDrift, RepoInstall } from '../types';
+
+const mockSyncMutate = vi.fn();
+let mockAuthProbe: {
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  data?: { ok: true } | { ok: false; reason: 'unauthorized' };
+};
+
+vi.mock('../../../../git/api/queries/GitProviderQueries', () => ({
+  useCheckProviderAuthQuery: () => mockAuthProbe,
+}));
+
+vi.mock('../../../api/queries/DeploymentsQueries', () => ({
+  useSyncRepositoryFromLockFilesMutation: () => ({
+    mutate: mockSyncMutate,
+    isPending: false,
+  }),
+}));
 
 const providerId = createGitProviderId('provider-1');
 const packageId = createPackageId('package-1');
@@ -154,6 +173,74 @@ const renderPane = (props?: {
 };
 
 describe('PackageDetailPane', () => {
+  beforeEach(() => {
+    mockAuthProbe = {
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      data: { ok: true },
+    };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('sync from a repository', () => {
+    const syncButton = (repoName: string) =>
+      screen.getByRole('button', {
+        name: `Sync ${repoName}`,
+      });
+
+    it('offers a sync on each repository', () => {
+      renderPane({ installCount: 2 });
+
+      expect(syncButton('packmind/service-2')).toBeInTheDocument();
+    });
+
+    it('syncs the repository of the row', async () => {
+      renderPane({ installCount: 2 });
+
+      await userEvent.click(syncButton('packmind/service-2'));
+
+      expect(mockSyncMutate).toHaveBeenCalledWith(
+        { gitRepoId: createGitRepoId('repo-2') },
+        expect.anything(),
+      );
+    });
+
+    it('cannot be started without a Git connection', () => {
+      renderPane({ providersWithToken: new Set<GitProviderId>() });
+
+      expect(syncButton('packmind/service-1')).toBeDisabled();
+    });
+
+    it('shows what the sync could not record', async () => {
+      mockSyncMutate.mockImplementation((_variables, { onSuccess }) =>
+        onSuccess({
+          targets: [
+            {
+              targetId: 'target-1',
+              path: '/',
+              status: 'updated',
+              warnings: [{ type: 'unknown_package', packageSlug: 'legacy' }],
+            },
+          ],
+        }),
+      );
+      renderPane();
+
+      await userEvent.click(syncButton('packmind/service-1'));
+
+      const banner = (
+        await screen.findByText("Some lock files weren't fully recorded")
+      ).parentElement as HTMLElement;
+      expect(within(banner).getByRole('listitem')).toHaveTextContent(
+        'legacy, listed in default',
+      );
+    });
+  });
+
   const tickFirstInstall = () =>
     userEvent.click(
       screen.getByRole('checkbox', {

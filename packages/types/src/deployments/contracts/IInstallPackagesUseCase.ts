@@ -17,6 +17,11 @@ export type InstallPackagesCommand = PackmindCommand & {
   packmindLockFile: PackmindLockFile;
   relativePath?: string;
   agents?: CodingAgent[];
+  /**
+   * Computes the install without recording it: the response is the same, but
+   * no `ArtifactsPulledEvent` is emitted. Absent means a regular install.
+   */
+  preview?: boolean;
 };
 
 export type InstallPackagesResponse = {
@@ -30,6 +35,12 @@ export type InstallPackagesResponse = {
    * writes these back into `packmind.json`.
    */
   resolvedPackageVersions?: Record<string, string>;
+  /**
+   * The id of each resolved package, keyed by normalized `@space/package`
+   * slug. Lets the CLI group lock file entries, which carry `packageIds`,
+   * under the package they come from.
+   */
+  resolvedPackageIds?: Record<string, string>;
   targetId?: string;
   sourceArtifacts: {
     skillsCount: number;

@@ -1371,6 +1371,27 @@ describe('PublishPackagesUseCase', () => {
       it('records the wildcard the other destination kept', () => {
         expect(rowFor(wildcardTargetId)?.versionSpec).toBe('*');
       });
+
+      it('records the release the live package was built on', () => {
+        expect(rowFor(wildcardTargetId)?.latestReleaseVersion).toBe('0.1.0');
+      });
+
+      it('records no base release for the pinned destination', () => {
+        expect(rowFor(pinnedTargetId)?.latestReleaseVersion).toBeNull();
+      });
+
+      describe('and the package was never released', () => {
+        beforeEach(async () => {
+          mockDistributedPackageRepository.add.mockClear();
+          mockPackageReleaseService.listReleases.mockResolvedValue([]);
+
+          await useCase.execute({ ...command, targetIds: [wildcardTargetId] });
+        });
+
+        it('records no base release for the live package', () => {
+          expect(rowFor(wildcardTargetId)?.latestReleaseVersion).toBeNull();
+        });
+      });
     });
 
     describe('and the caller named a version after all', () => {

@@ -19,6 +19,8 @@ import { IInstallPackagesUseCase } from './domain/useCases/IInstallPackagesUseCa
 import { InstallPackagesUseCase } from './application/useCases/InstallPackagesUseCase';
 import { IInstallUseCase } from './domain/useCases/IInstallUseCase';
 import { InstallUseCase } from './application/useCases/InstallUseCase';
+import { ICheckUpgradesUseCase } from './domain/useCases/ICheckUpgradesUseCase';
+import { CheckUpgradesUseCase } from './application/useCases/CheckUpgradesUseCase';
 import { IUninstallUseCase } from './domain/useCases/IUninstallUseCase';
 import { UninstallUseCase } from './application/useCases/UninstallUseCase';
 import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
@@ -73,6 +75,7 @@ export class PackmindCliHexaFactory {
     lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
     install: IInstallUseCase;
+    checkUpgrades: ICheckUpgradesUseCase;
     uninstall: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     ensureCliVersion: IEnsureCliVersionUseCase;
@@ -138,6 +141,12 @@ export class PackmindCliHexaFactory {
         this.repositories.packmindGateway,
       ),
       install: installUseCase,
+      checkUpgrades: new CheckUpgradesUseCase(
+        this.repositories.packmindGateway,
+        this.repositories.lockFileRepository,
+        this.repositories.configFileRepository,
+        this.services.spaceService,
+      ),
       uninstall: new UninstallUseCase(
         this.repositories.configFileRepository,
         this.services.spaceService,

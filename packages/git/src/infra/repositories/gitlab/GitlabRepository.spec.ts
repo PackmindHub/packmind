@@ -1919,6 +1919,50 @@ describe('GitlabRepository', () => {
       });
     });
   });
+  describe('listFilesNamed', () => {
+    describe('when the repository is reachable', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [
+                { path: 'packmind-lock.json', type: 'blob' },
+                { path: 'app/frontend/packmind-lock.json', type: 'blob' },
+                { path: 'tools/packmind-lock.json', type: 'tree' },
+              ],
+              headers: {},
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('returns every file with that exact name', async () => {
+        const files = await gitlabRepository.listFilesNamed(
+          'packmind-lock.json',
+          'main',
+        );
+
+        expect(files).toEqual([
+          'packmind-lock.json',
+          'app/frontend/packmind-lock.json',
+        ]);
+      });
+    });
+
+    describe('when the repository cannot be read', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('401 Unauthorized'));
+      });
+
+      it('throws instead of answering none', async () => {
+        await expect(
+          gitlabRepository.listFilesNamed('packmind-lock.json', 'main'),
+        ).rejects.toThrow('401 Unauthorized');
+      });
+    });
+  });
+
   describe('listFilesInDirectories', () => {
     const treeCalls = () =>
       (mockAxiosInstance.get as jest.Mock).mock.calls.filter(([url]) =>

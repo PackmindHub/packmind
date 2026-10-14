@@ -6,16 +6,9 @@ type ArtifactVersions = keyof Pick<
   'standardVersions' | 'recipeVersions' | 'skillVersions'
 >;
 
-/**
- * `versionSpec` is projected out alongside the artifact versions: the history
- * answers what went out and when, and the spec a destination was left on is a
- * fact about where that destination stands now, which is what
- * `ActiveDistributedPackage` carries. Add it back here only when a history row
- * is actually meant to name the version it sent.
- */
 export type DistributedPackageHistoryEntry = Omit<
   DistributedPackage,
-  ArtifactVersions | 'versionSpec'
+  ArtifactVersions
 >;
 
 export type DistributedPackageArtifactHistoryEntry<V extends ArtifactVersions> =

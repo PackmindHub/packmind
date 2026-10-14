@@ -27,6 +27,7 @@ import {
   LuRotateCw,
   LuSearch,
   LuTriangleAlert,
+  LuUnplug,
 } from 'react-icons/lu';
 import {
   DistributionStatus,
@@ -59,7 +60,14 @@ import {
 import type { PackageDrift, RepositoryDrift, TargetDrift } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
 import {
+  LockFileSyncWarnings,
+  SyncFromRepositoryButton,
+  useRepositoryLockFileSync,
+} from './RepositoryLockFileSync';
+import {
   ADD_GIT_CONNECTION_LABEL,
+  BROKEN_GIT_CONNECTION_TITLE,
+  FIX_GIT_CONNECTION_LABEL,
   NO_GIT_CONNECTION_BODY,
   NO_GIT_CONNECTION_TITLE,
   NO_GIT_CONNECTION_TOOLTIP,
@@ -138,6 +146,10 @@ export function RepositoryDetailPane({
     repo,
     providersWithToken,
     isProvidersLoading,
+  );
+  const lockFileSync = useRepositoryLockFileSync(
+    { repo: repo.repo, branch: repo.branch },
+    providersWithToken,
   );
   const hasDrift = repositoryHasDrift(repo);
   const hasFailure = repositoryHasFailedDistribution(repo);
@@ -374,22 +386,30 @@ export function RepositoryDetailPane({
                 </PMButton>
               </PMHStack>
             ) : (
-              hasDrift && (
-                <PMTooltip label={headerLockTooltip} placement="top">
-                  <PMButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onSyncRepository(repo.id)}
-                    disabled={repoSyncDisabled}
-                    title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
-                  >
-                    <PMIcon fontSize="sm">
-                      <LuRotateCw />
-                    </PMIcon>
-                    Distribute repository
-                  </PMButton>
-                </PMTooltip>
-              )
+              <PMHStack gap={2} align="center" flexShrink={0}>
+                <SyncFromRepositoryButton
+                  branch={repo.branch}
+                  sync={lockFileSync.sync}
+                  isSyncing={lockFileSync.isSyncing}
+                  disabledReason={lockFileSync.disabledReason}
+                />
+                {hasDrift && (
+                  <PMTooltip label={headerLockTooltip} placement="top">
+                    <PMButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onSyncRepository(repo.id)}
+                      disabled={repoSyncDisabled}
+                      title={`Distribute all drift for ${repo.repo.owner}/${repo.repo.name}`}
+                    >
+                      <PMIcon fontSize="sm">
+                        <LuRotateCw />
+                      </PMIcon>
+                      Distribute repository
+                    </PMButton>
+                  </PMTooltip>
+                )}
+              </PMHStack>
             )}
           </PMHStack>
           <PMHStack gap={5} align="center" wrap="wrap">
@@ -432,6 +452,10 @@ export function RepositoryDetailPane({
             understand before it is a state to fix, and the fix belongs to an
             admin who may not be the person reading.
           */}
+          <LockFileSyncWarnings
+            report={lockFileSync.report}
+            targets={repo.targets.map((target) => target.target)}
+          />
           {lockProfile === 'all-no-app-token' && (
             <PMAlert.Root status="warning">
               <PMAlert.Indicator>
@@ -473,6 +497,30 @@ export function RepositoryDetailPane({
                     <PMButton variant="secondary" size="xs" asChild>
                       <Link to={gitSettingsHref}>
                         {ADD_GIT_CONNECTION_LABEL}
+                      </Link>
+                    </PMButton>
+                  </PMBox>
+                )}
+              </PMAlert.Content>
+            </PMAlert.Root>
+          )}
+          {lockFileSync.brokenReason && (
+            <PMAlert.Root status="warning">
+              <PMAlert.Indicator>
+                <PMIcon>
+                  <LuUnplug />
+                </PMIcon>
+              </PMAlert.Indicator>
+              <PMAlert.Content>
+                <PMAlert.Title>{BROKEN_GIT_CONNECTION_TITLE}</PMAlert.Title>
+                <PMAlert.Description>
+                  {lockFileSync.brokenReason}
+                </PMAlert.Description>
+                {gitSettingsHref && (
+                  <PMBox paddingTop={2}>
+                    <PMButton variant="secondary" size="xs" asChild>
+                      <Link to={gitSettingsHref}>
+                        {FIX_GIT_CONNECTION_LABEL}
                       </Link>
                     </PMButton>
                   </PMBox>

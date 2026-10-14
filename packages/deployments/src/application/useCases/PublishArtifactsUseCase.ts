@@ -593,14 +593,15 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
       }
 
-      const configFile =
-        this.packmindConfigService.createConfigFileModification(
-          packagesSlugs,
-          existingPackages,
-          existingPackmindJson?.agents,
-          targetOverride?.packageVersions ?? packageVersions,
-        );
-      baseFileUpdates.createOrUpdate.push(configFile);
+      const config = this.packmindConfigService.generateConfigContent(
+        packagesSlugs,
+        existingPackages,
+        existingPackmindJson?.agents,
+        targetOverride?.packageVersions ?? packageVersions,
+      );
+      baseFileUpdates.createOrUpdate.push(
+        this.packmindConfigService.toFileModification(config),
+      );
 
       // One git read serving two uses below: the renderer's `cliVersion` and the
       // merge into the freshly built lock file.
@@ -636,6 +637,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         skillVersions: installed.skillVersions,
         codingAgents: targetCodingAgents,
         packageSlugs: packagesSlugs,
+        packageVersions: config.packages,
         targetId: target.id,
         artifactSpaceIds,
         artifactPackageIds,

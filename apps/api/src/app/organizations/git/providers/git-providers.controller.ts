@@ -21,6 +21,7 @@ import {
   GitProvider,
   GitProviderId,
   GitProviderWithoutToken,
+  SearchProviderBranchesResponse,
   GitRepo,
   GitRepoId,
   ListAvailableReposResponse,
@@ -353,6 +354,32 @@ export class GitProvidersController {
       owner,
       repo,
       branch,
+    });
+  }
+
+  // Query parameters for the same reason as branch-exists: a search such as
+  // feature/x would be split by nginx if it travelled in the path.
+  @Get(':id/branches')
+  async searchProviderBranches(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') gitProviderId: GitProviderId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('search') search: string | undefined,
+  ): Promise<SearchProviderBranchesResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/branches - Searching branches',
+      { organizationId, gitProviderId, owner, repo, search },
+    );
+
+    return this.gitProvidersService.searchProviderBranches({
+      userId: req.user.userId,
+      organizationId,
+      gitProviderId,
+      owner,
+      repo,
+      search: search ?? '',
     });
   }
 

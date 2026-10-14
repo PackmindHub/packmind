@@ -8,6 +8,7 @@ import {
 import {
   createUserId,
   IAccountsPort,
+  IDeploymentPort,
   IFindOrCreateGitRepoUseCase,
   IUpdateTrackedBranchUseCase,
   NoTrackedRepositoryError,
@@ -35,6 +36,7 @@ export class UpdateTrackedBranchUseCase
     private readonly findOrCreateGitRepo: IFindOrCreateGitRepoUseCase,
     private readonly eventEmitterService: PackmindEventEmitterService,
     accountsAdapter: IAccountsPort,
+    private readonly deploymentsAdapter: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -136,6 +138,19 @@ export class UpdateTrackedBranchUseCase
       toBranch: branch,
       repositoryId: tracked.id,
     });
+
+    try {
+      await this.deploymentsAdapter.syncDistributionsFromLockFiles({
+        userId: createUserId(userId),
+        organizationId: organization.id,
+        gitRepoId: tracked.id,
+      });
+    } catch (error) {
+      this.logger.warn('Could not sync distribution state from lock files', {
+        gitRepoId: tracked.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     return tracked;
   }

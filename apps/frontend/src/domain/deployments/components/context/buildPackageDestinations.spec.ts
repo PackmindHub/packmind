@@ -68,6 +68,7 @@ function install(
     behindArtifacts: [],
     alignedArtifactCount: 4,
     versionSpec: null,
+    latestReleaseVersion: null,
     ...rest,
     /*
      * Derived from the late components unless a test states it, which is what
@@ -78,8 +79,12 @@ function install(
     standing:
       rest.standing ??
       ((rest.behindArtifacts ?? []).length > 0
-        ? { status: 'drifted', remedy: 'update' }
-        : { status: 'up-to-date', remedy: 'none' }),
+        ? { status: 'drifted', remedy: 'update', canReleaseAndUpdate: false }
+        : {
+            status: 'up-to-date',
+            remedy: 'none',
+            canReleaseAndUpdate: false,
+          }),
   } as InstallDriftEntry;
 }
 
@@ -326,6 +331,35 @@ describe('buildPackageDestinations', () => {
         expect(rows[0].state).toBe('failed');
         expect(rows[0].hasWorkToSend).toBe(true);
       });
+    });
+  });
+
+  describe('whether a release is also on offer', () => {
+    it('carries the standing of a landing that could take one', () => {
+      const rows = buildPackageDestinations({
+        installs: [
+          install({
+            repoId: 'repo-1',
+            targetId: 't1',
+            standing: {
+              status: 'behind',
+              remedy: 'update',
+              canReleaseAndUpdate: true,
+            },
+          }),
+        ],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(true);
+    });
+
+    it('is false on a published copy, which tracks the live package', () => {
+      const rows = buildPackageDestinations({
+        installs: [],
+        publications: [publication({ isOutdated: true })],
+      });
+
+      expect(rows[0].canReleaseAndUpdate).toBe(false);
     });
   });
 

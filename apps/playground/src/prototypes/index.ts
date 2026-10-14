@@ -14,6 +14,7 @@ import DeploymentsOverviewRedesignPrototype from './deployments-overview-redesig
 import GetStartedPrototype from './get-started/GetStartedPrototype';
 import SpaceNavPluginFirstPrototype from './space-nav-plugin-first/SpaceNavPluginFirstPrototype';
 import MarketplacePluginAdoptionPrototype from './marketplace-plugin-adoption/MarketplacePluginAdoptionPrototype';
+import PackageCtaAlternativesPrototype from './package-cta-alternatives/PackageCtaAlternativesPrototype';
 
 export interface Prototype {
   name: string;
@@ -22,6 +23,12 @@ export interface Prototype {
 }
 
 export const prototypes: Prototype[] = [
+  {
+    name: 'Package pane — header CTA alternatives',
+    description:
+      "Five answers to what the package header does once Distribute and Update N move down to the Distribution tab: nothing, Create release, a reach summary, or the CLI hand-off \u2014 each read against today's control, in six package states, with a gesture counter for the catch-up the move would cost.",
+    component: PackageCtaAlternativesPrototype,
+  },
   {
     name: 'Marketplace plugin — Adoption redesign',
     description:

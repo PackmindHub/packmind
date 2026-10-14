@@ -2,7 +2,9 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesResponse,
   GitProviderId,
+  GitProviderVendor,
   GitProviderWithoutToken,
   GitRepo,
   GitRepoId,
@@ -113,6 +115,16 @@ export interface IGitProviderGateway {
     params: { owner: string; repo: string; branch: string },
   ): Promise<CheckProviderBranchExistsResponse>;
 
+  /**
+   * Branch names of a provider repository containing the search text, at most
+   * 20 in alphabetical order; an empty search returns the first 20.
+   */
+  searchProviderBranches(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; search: string },
+  ): Promise<SearchProviderBranchesResponse>;
+
   // Tracking operations
   /**
    * Starts tracking a branch of a repository that has no tracked branch yet.
@@ -120,7 +132,13 @@ export interface IGitProviderGateway {
    */
   setTrackedRepository(
     organizationId: OrganizationId,
-    data: { owner: string; repo: string; branch: string },
+    data: {
+      owner: string;
+      repo: string;
+      branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
+    },
   ): Promise<GitRepo>;
   /**
    * Same use case as `packmind git track --update`: the previously tracked

@@ -5,6 +5,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import {
@@ -140,6 +141,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
       mockCodingAgentPort,
       mockRenderModeConfigurationService,
       mockPackmindConfigService,
+      new PackmindLockFileService(),
       stubLogger(),
     );
   });
@@ -410,6 +412,41 @@ describe('RemovePackageFromTargetsUseCase', () => {
             mockPackmindConfigService.createRemovalConfigFileModification,
           ).toHaveBeenCalledWith('test-package', {}, undefined);
         });
+
+        describe('when the target has a lock recording the package', () => {
+          beforeEach(() => {
+            mockGitPort.getFileFromRepo.mockImplementation(
+              async (_repo, filePath) =>
+                filePath.endsWith('packmind-lock.json')
+                  ? {
+                      sha: 'lock-sha',
+                      content: JSON.stringify({
+                        lockfileVersion: 2,
+                        packageSlugs: ['@space/test-package', '@space/other'],
+                        packages: {
+                          '@space/test-package': '1.2.3',
+                          '@space/other': '*',
+                        },
+                        agents: [],
+                        artifacts: {},
+                      }),
+                    }
+                  : null,
+            );
+          });
+
+          it('drops the package from the lock it commits', async () => {
+            await useCase.execute(command);
+
+            const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+            const lockFile = committedFiles.find((file) =>
+              file.path.endsWith('packmind-lock.json'),
+            );
+            expect(JSON.parse(lockFile?.content ?? '{}').packages).toEqual({
+              '@space/other': '*',
+            });
+          });
+        });
       });
 
       describe('when no changes are detected', () => {
@@ -572,6 +609,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -698,6 +736,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -747,6 +786,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -954,6 +994,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -985,6 +1026,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {
@@ -1068,6 +1110,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const dist2OtherPackage: DistributedPackage = {
@@ -1089,6 +1132,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution1: Distribution = {
@@ -1177,6 +1221,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const addDistribution: Distribution = {
@@ -1221,6 +1266,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               skillVersions: [],
               operation: 'remove',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const removeDistribution: Distribution = {
@@ -1284,6 +1330,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               ],
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
             };
 
             const distribution: Distribution = {

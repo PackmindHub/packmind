@@ -1,22 +1,23 @@
-import React, { useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
   PMButton,
+  PMAutocomplete,
   PMHStack,
   PMIcon,
   PMInput,
   PMSkeleton,
-  PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuCheck, LuGitBranch, LuSearch } from 'react-icons/lu';
+import { LuCheck, LuCircleAlert, LuGitBranch, LuSearch } from 'react-icons/lu';
 import { GitProviderId, GitRepoId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useCheckProviderBranchExistsMutation,
   useCheckTrackedBranchExistsQuery,
+  useSearchProviderBranchesQuery,
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
@@ -28,6 +29,7 @@ import {
   tupleKey,
 } from './types';
 import { DeletedBranchBadge } from '../../../../shared/components/DeletedBranchBadge';
+import { useDebouncedValue } from '../../../../shared/hooks';
 
 export interface ManageReposPanelProps {
   provider: GitProviderUI;
@@ -35,6 +37,11 @@ export interface ManageReposPanelProps {
   onSelectionChange: (next: RepoSelection) => void;
   progress: ApplyProgress | null;
   onRequestReauth: () => void;
+  /**
+   * Whether a branch name is being typed. The drawer closes on Escape, which
+   * would otherwise swallow the Escape meant to cancel the branch input.
+   */
+  onEditingBranchChange?: (editing: boolean) => void;
 }
 
 type TrackedGroup = {
@@ -72,8 +79,21 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   onSelectionChange,
   progress,
   onRequestReauth,
+  onEditingBranchChange,
 }) => {
   const tracked = useGetRepositoriesByProviderQuery(provider.id);
+  const [branchEditors, setBranchEditors] = useState(0);
+  const trackBranchEditing = useCallback(
+    (editing: boolean) => setBranchEditors((n) => n + (editing ? 1 : -1)),
+    [],
+  );
+  useEffect(() => {
+    onEditingBranchChange?.(branchEditors > 0);
+  }, [branchEditors, onEditingBranchChange]);
+  useEffect(
+    () => () => onEditingBranchChange?.(false),
+    [onEditingBranchChange],
+  );
   const available = useGetAvailableRepositoriesQuery(provider.id);
   const [filter, setFilter] = useState('');
 
@@ -345,6 +365,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
                 group={group}
                 providerId={provider.id}
                 canChange={!degraded || group.knownFromProvider}
+                onEditingChange={trackBranchEditing}
                 onSwitch={(branch) =>
                   switchBranch({ owner: group.owner, repo: group.repo, branch })
                 }
@@ -515,10 +536,24 @@ const TrackedRepoSection: React.FC<{
   canChange: boolean;
   onSwitch: (branch: string) => void;
   onRemove: (branch: string) => void;
-}> = ({ group, providerId, canChange, onSwitch, onRemove }) => {
+  onEditingChange: (editing: boolean) => void;
+}> = ({
+  group,
+  providerId,
+  canChange,
+  onSwitch,
+  onRemove,
+  onEditingChange,
+}) => {
   const checkBranch = useCheckProviderBranchExistsMutation();
   const errorId = useId();
   const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    if (!adding) return;
+    onEditingChange(true);
+    return () => onEditingChange(false);
+  }, [adding, onEditingChange]);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -559,6 +594,11 @@ const TrackedRepoSection: React.FC<{
     } catch {
       setError(`Couldn't verify branch ${next}. Try again.`);
     }
+  };
+
+  const pickSuggestion = (branch: string) => {
+    onSwitch(branch);
+    cancelAdd();
   };
 
   const hasTracked = group.trackedBranches.length > 0;
@@ -615,61 +655,38 @@ const TrackedRepoSection: React.FC<{
           borderColor="border.tertiary"
           bg="background.secondary"
         >
-          <PMHStack gap={2} align="center">
-            <PMInput
-              size="xs"
-              autoFocus
-              placeholder={group.defaultBranch}
-              value={draft}
-              disabled={checkBranch.isPending}
-              error={error ?? undefined}
-              aria-invalid={!!error || undefined}
-              aria-describedby={error ? errorId : undefined}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setDraft(e.target.value);
-                setError(null);
-              }}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  void commitSwitch();
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  cancelAdd();
-                }
-              }}
-              data-testid="manage-repos-branch-input"
-            />
-            {checkBranch.isPending && <PMSpinner size="xs" />}
-            <PMButton
-              variant="primary"
-              size="xs"
-              onClick={() => void commitSwitch()}
-              disabled={checkBranch.isPending || !draft.trim()}
-              data-testid="manage-repos-branch-confirm"
-            >
-              Change
-            </PMButton>
-            <PMButton
-              variant="tertiary"
-              size="xs"
-              onClick={cancelAdd}
-              disabled={checkBranch.isPending}
-              data-testid="manage-repos-branch-cancel"
-            >
-              Cancel
-            </PMButton>
-          </PMHStack>
+          <BranchNameCombobox
+            providerId={providerId}
+            owner={group.owner}
+            repo={group.repo}
+            currentBranch={currentBranch}
+            placeholder={group.defaultBranch}
+            value={draft}
+            checking={checkBranch.isPending}
+            invalid={!!error}
+            describedBy={error ? errorId : undefined}
+            onChange={(value) => {
+              setDraft(value);
+              setError(null);
+            }}
+            onConfirm={() => void commitSwitch()}
+            onPick={pickSuggestion}
+            onCancel={cancelAdd}
+          />
           {error && (
-            <PMText
-              id={errorId}
-              fontSize="xs"
-              color="error"
-              marginTop={1}
-              data-testid="manage-repos-branch-error"
-            >
-              {error}
-            </PMText>
+            <PMHStack gap={1.5} align="center" marginTop={1.5}>
+              <PMIcon fontSize="xs" color="text.error" flexShrink={0}>
+                <LuCircleAlert />
+              </PMIcon>
+              <PMText
+                id={errorId}
+                fontSize="xs"
+                color="error"
+                data-testid="manage-repos-branch-error"
+              >
+                {error}
+              </PMText>
+            </PMHStack>
           )}
         </PMBox>
       )}
@@ -691,6 +708,84 @@ const TrackedRepoSection: React.FC<{
         />
       ))}
     </PMBox>
+  );
+};
+
+const BRANCH_SEARCH_DEBOUNCE_MS = 250;
+
+/**
+ * Branch name input suggesting the repository's branches as the user types.
+ * A suggestion switches right away, since the provider has just listed it; a
+ * typed name is confirmed with Enter and checked by the caller.
+ */
+const BranchNameCombobox: React.FC<{
+  providerId: GitProviderId;
+  owner: string;
+  repo: string;
+  currentBranch?: string;
+  placeholder: string;
+  value: string;
+  checking: boolean;
+  invalid: boolean;
+  describedBy?: string;
+  onChange: (value: string) => void;
+  onConfirm: () => void;
+  onPick: (branch: string) => void;
+  onCancel: () => void;
+}> = ({
+  providerId,
+  owner,
+  repo,
+  currentBranch,
+  placeholder,
+  value,
+  checking,
+  invalid,
+  describedBy,
+  onChange,
+  onConfirm,
+  onPick,
+  onCancel,
+}) => {
+  const search = useDebouncedValue(value.trim(), BRANCH_SEARCH_DEBOUNCE_MS);
+  // Mounted only while the branch input is open, so it searches only then.
+  const branches = useSearchProviderBranchesQuery({
+    providerId,
+    owner,
+    repo,
+    search,
+  });
+
+  const items = useMemo(
+    () =>
+      (branches.data?.branches ?? []).filter(
+        (branch) => branch !== currentBranch,
+      ),
+    [branches.data, currentBranch],
+  );
+
+  return (
+    <PMAutocomplete
+      items={items}
+      onInputChange={onChange}
+      onPick={onPick}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      placeholder={placeholder}
+      icon={<LuGitBranch />}
+      loading={branches.isLoading}
+      errorText={
+        branches.isError
+          ? "Couldn't load branches — you can still type a name"
+          : undefined
+      }
+      emptyText={search ? `No branch matches “${search}”` : 'No other branch'}
+      footer="↑↓ navigate · ↵ switch · esc cancel"
+      busy={checking}
+      invalid={invalid}
+      aria-describedby={describedBy}
+      testIdPrefix="manage-repos-branch"
+    />
   );
 };
 

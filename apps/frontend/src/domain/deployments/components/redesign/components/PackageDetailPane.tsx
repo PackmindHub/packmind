@@ -31,6 +31,7 @@ import { SelectionBar } from '../../SelectionBar';
 import {
   DistributionStatus,
   type GitProviderId,
+  type LockFileTargetSyncResult,
   type PackageId,
 } from '@packmind/types';
 import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
@@ -51,8 +52,12 @@ import {
   NO_GIT_CONNECTION_ALL_TOOLTIP,
   NO_GIT_CONNECTION_TOOLTIP,
 } from '../../noGitConnection';
-import type { PackageDrift } from '../types';
+import type { PackageDrift, RepoRef } from '../types';
 import { DriftArtifactRow } from './DriftArtifactRow';
+import {
+  LockFileSyncWarnings,
+  SyncRepositoryIconButton,
+} from './RepositoryLockFileSync';
 
 const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
   [DistributionStatus.success]: 'Distributed',
@@ -157,6 +162,13 @@ export function PackageDetailPane({
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
+  const [lastSync, setLastSync] = useState<{
+    repo: RepoRef;
+    report: LockFileTargetSyncResult[];
+  } | null>(null);
+  const onRepositorySynced =
+    (repo: RepoRef) => (report: LockFileTargetSyncResult[]) =>
+      setLastSync({ repo, report });
   /*
    * Read off the whole list rather than the filtered one: whether a repository
    * has a second landing is a fact about the package, not about what the
@@ -530,6 +542,17 @@ export function PackageDetailPane({
         </PMBox>
       )}
 
+      {lastSync && (
+        <PMBox paddingX={6} paddingY={3}>
+          <LockFileSyncWarnings
+            report={lastSync.report}
+            targets={entries
+              .filter((entry) => entry.repo.id === lastSync.repo.id)
+              .map((entry) => entry.target)}
+          />
+        </PMBox>
+      )}
+
       <PMBox flex="1" overflow="auto" minH={0}>
         {filteredEntries.length === 0 ? (
           <InstallEmptyState
@@ -557,6 +580,8 @@ export function PackageDetailPane({
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
                       distributionHistory={distributionHistory}
+                      providersWithToken={providersWithToken}
+                      onRepositorySynced={onRepositorySynced(entry.repo)}
                     />
                   );
                 })}
@@ -579,6 +604,8 @@ export function PackageDetailPane({
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
                       distributionHistory={distributionHistory}
+                      providersWithToken={providersWithToken}
+                      onRepositorySynced={onRepositorySynced(entry.repo)}
                     />
                   );
                 })}
@@ -642,6 +669,8 @@ type InstallRowProps = {
   lockReason: InstallLockReason | null;
   onToggle: () => void;
   distributionHistory: DistributionHistoryTarget | null;
+  providersWithToken: Set<GitProviderId>;
+  onRepositorySynced: (report: LockFileTargetSyncResult[]) => void;
 };
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
@@ -656,6 +685,8 @@ function InstallRow({
   lockReason,
   onToggle,
   distributionHistory,
+  providersWithToken,
+  onRepositorySynced,
 }: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
@@ -781,6 +812,12 @@ function InstallRow({
             distributionHistory={distributionHistory}
           />
         </PMHStack>
+        <SyncRepositoryIconButton
+          repo={entry.repo}
+          branch={entry.branch}
+          providersWithToken={providersWithToken}
+          onSynced={onRepositorySynced}
+        />
       </PMHStack>
 
       {expanded && hasDrift && (

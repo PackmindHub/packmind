@@ -11,7 +11,7 @@ import {
 } from '@packmind/types';
 import type { Mock } from 'vitest';
 
-import { PackageVersionBar } from './PackageVersionBar';
+import { PackageReleaseControls } from './PackageReleaseControls';
 import { useListPackageReleasesQuery } from '../../api/queries/DeploymentsQueries';
 
 vi.mock('../../api/queries/DeploymentsQueries', () => ({
@@ -41,7 +41,7 @@ const onReadVersion = vi.fn();
  * passes anything else would stop compiling. Frontend specs are type-checked
  * since #500.
  */
-const renderBar = ({
+const renderControls = ({
   readiness = {
     currentVersion: null,
     verdict: 'ready',
@@ -66,7 +66,7 @@ const renderBar = ({
 
   render(
     <UIProvider>
-      <PackageVersionBar
+      <PackageReleaseControls
         packageId={packageId}
         spaceId={spaceId}
         organizationId={organizationId}
@@ -84,7 +84,7 @@ const release = (
   releasedAt: string | null = '2026-01-05T10:00:00.000Z',
 ): PackageReleaseSummary => ({ version, releasedAt });
 
-describe('PackageVersionBar', () => {
+describe('PackageReleaseControls', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -98,43 +98,37 @@ describe('PackageVersionBar', () => {
     };
 
     it('says so in place of a version', () => {
-      renderBar({ readiness: neverReleased });
+      renderControls({ readiness: neverReleased });
 
       expect(screen.getByText('Not released yet')).toBeInTheDocument();
     });
 
     it('never prints the 0.0.0 sentinel it is judged against', () => {
-      renderBar({ readiness: neverReleased });
+      renderControls({ readiness: neverReleased });
 
       expect(screen.queryByText('0.0.0')).not.toBeInTheDocument();
     });
 
-    it('offers the first release rather than another one', () => {
-      renderBar({ readiness: neverReleased });
+    it('offers the cut under the one label it always carries', () => {
+      renderControls({ readiness: neverReleased });
 
-      expect(
-        screen.getByRole('button', { name: 'Create the first release' }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeEnabled();
     });
 
     it('opens the form on the action', async () => {
-      renderBar({ readiness: neverReleased });
+      renderControls({ readiness: neverReleased });
 
-      await userEvent.click(
-        screen.getByRole('button', { name: 'Create the first release' }),
-      );
+      await userEvent.click(screen.getByRole('button', { name: 'Release' }));
 
       expect(await screen.findByLabelText(/version/i)).toBeInTheDocument();
     });
 
-    it('offers nothing while the package holds no component', () => {
-      renderBar({
+    it('greys the action while the package holds no component', () => {
+      renderControls({
         readiness: { ...neverReleased, verdict: 'no_components' },
       });
 
-      expect(
-        screen.queryByRole('button', { name: /release/i }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeDisabled();
     });
   });
 
@@ -147,7 +141,7 @@ describe('PackageVersionBar', () => {
     };
 
     it('names what is on screen', () => {
-      renderBar({ readiness: ahead, releases: [release('0.1.0')] });
+      renderControls({ readiness: ahead, releases: [release('0.1.0')] });
 
       expect(
         screen.getByRole('button', { name: /Unreleased/ }),
@@ -155,15 +149,13 @@ describe('PackageVersionBar', () => {
     });
 
     it('offers to cut a release', () => {
-      renderBar({ readiness: ahead, releases: [release('0.1.0')] });
+      renderControls({ readiness: ahead, releases: [release('0.1.0')] });
 
-      expect(
-        screen.getByRole('button', { name: 'Create a release' }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeEnabled();
     });
 
     it('measures nothing against the last release', () => {
-      renderBar({ readiness: ahead, releases: [release('0.1.0')] });
+      renderControls({ readiness: ahead, releases: [release('0.1.0')] });
 
       expect(screen.queryByText(/since 0\.1\.0/)).not.toBeInTheDocument();
     });
@@ -177,16 +169,14 @@ describe('PackageVersionBar', () => {
       outdatedComponents: [],
     };
 
-    it('drops the action rather than greying it', () => {
-      renderBar({ readiness: unchanged, releases: [release('0.1.0')] });
+    it('greys the action rather than dropping it', () => {
+      renderControls({ readiness: unchanged, releases: [release('0.1.0')] });
 
-      expect(
-        screen.queryByRole('button', { name: /Create a release/ }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeDisabled();
     });
 
     it('still names what is on screen', () => {
-      renderBar({ readiness: unchanged, releases: [release('0.1.0')] });
+      renderControls({ readiness: unchanged, releases: [release('0.1.0')] });
 
       expect(
         screen.getByRole('button', { name: /Unreleased/ }),
@@ -211,17 +201,15 @@ describe('PackageVersionBar', () => {
     };
 
     it('keeps the pinning out of the bar entirely', () => {
-      renderBar({ readiness: behind, releases: [release('0.1.0')] });
+      renderControls({ readiness: behind, releases: [release('0.1.0')] });
 
       expect(screen.queryByText(/Work with Jest/)).not.toBeInTheDocument();
     });
 
     it('offers the release the change earned', () => {
-      renderBar({ readiness: behind, releases: [release('0.1.0')] });
+      renderControls({ readiness: behind, releases: [release('0.1.0')] });
 
-      expect(
-        screen.getByRole('button', { name: 'Create a release' }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeEnabled();
     });
   });
 
@@ -234,7 +222,7 @@ describe('PackageVersionBar', () => {
     };
 
     it('lists every release behind the ref control', async () => {
-      renderBar({
+      renderControls({
         readiness: ahead,
         releases: [release('0.2.0'), release('0.1.0')],
       });
@@ -245,7 +233,7 @@ describe('PackageVersionBar', () => {
     });
 
     it('hands the picked version back', async () => {
-      renderBar({
+      renderControls({
         readiness: ahead,
         releases: [release('0.2.0'), release('0.1.0')],
       });
@@ -267,7 +255,7 @@ describe('PackageVersionBar', () => {
     const releases = [release('0.2.0'), release('0.1.0')];
 
     it('names it in place of the working copy', () => {
-      renderBar({ readiness: ahead, releases, readingVersion: '0.1.0' });
+      renderControls({ readiness: ahead, releases, readingVersion: '0.1.0' });
 
       expect(
         screen.getByRole('button', { name: /0\.1\.0/ }),
@@ -275,23 +263,21 @@ describe('PackageVersionBar', () => {
     });
 
     it('dates the cut it is showing', () => {
-      renderBar({ readiness: ahead, releases, readingVersion: '0.1.0' });
+      renderControls({ readiness: ahead, releases, readingVersion: '0.1.0' });
 
       expect(screen.getByText(/^Released/)).toBeInTheDocument();
     });
 
-    it('offers no cut from a past reading', () => {
-      renderBar({ readiness: ahead, releases, readingVersion: '0.1.0' });
+    it('greys the cut, which is taken from the working copy and not from here', () => {
+      renderControls({ readiness: ahead, releases, readingVersion: '0.1.0' });
 
-      expect(
-        screen.queryByRole('button', { name: /Create a release/ }),
-      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Release' })).toBeDisabled();
     });
   });
 
   describe('when the versions are still being read', () => {
     it('holds the row rather than offering a control', () => {
-      renderBar({ isLoading: true });
+      renderControls({ isLoading: true });
 
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });

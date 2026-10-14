@@ -55,7 +55,26 @@ export type PackmindLockFile = {
    */
   cliVersion?: string;
   packageSlugs: string[];
+  packages?: Record<string, string>;
   agents: CodingAgent[];
   targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };
+
+export const PACKMIND_LOCK_FILE_NAME = 'packmind-lock.json';
+
+export function hasRecordedPackageVersions(
+  lockFile: PackmindLockFile,
+): lockFile is PackmindLockFile & { packages: Record<string, string> } {
+  return (
+    typeof lockFile.packages === 'object' &&
+    lockFile.packages !== null &&
+    !Array.isArray(lockFile.packages)
+  );
+}
+
+export type LockFileSyncWarning =
+  | { type: 'lock_from_older_cli' }
+  | { type: 'unknown_package'; packageSlug: string };
+
+export type LockFileSyncStatus = 'updated' | 'unchanged' | 'ignored';

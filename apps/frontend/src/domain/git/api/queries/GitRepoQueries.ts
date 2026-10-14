@@ -1,11 +1,18 @@
 import {
+  keepPreviousData,
+  queryOptions,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
-import { GitProviderId, GitRepoId, OrganizationId } from '@packmind/types';
+import {
+  GitProviderId,
+  GitProviderVendor,
+  GitRepoId,
+  OrganizationId,
+} from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
 import { CheckDirectoryExistenceResult } from '@packmind/types';
 import {
@@ -14,6 +21,7 @@ import {
   GET_AVAILABLE_REPOSITORIES_KEY,
   GET_AVAILABLE_TARGETS_KEY,
   CHECK_TRACKED_BRANCH_EXISTS_KEY,
+  SEARCH_PROVIDER_BRANCHES_KEY,
   GIT_QUERY_SCOPE,
 } from '../queryKeys';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
@@ -244,6 +252,57 @@ export const useCheckProviderBranchExistsMutation = () => {
   });
 };
 
+type SearchProviderBranchesParams = {
+  providerId: GitProviderId;
+  owner: string;
+  repo: string;
+  search: string;
+};
+
+export const searchProviderBranchesOptions = (
+  organizationId: OrganizationId | undefined,
+  { providerId, owner, repo, search }: SearchProviderBranchesParams,
+) =>
+  queryOptions({
+    queryKey: [
+      ...SEARCH_PROVIDER_BRANCHES_KEY,
+      organizationId,
+      providerId,
+      owner,
+      repo,
+      search,
+    ],
+    queryFn: () => {
+      if (!organizationId) {
+        throw new Error('Organization ID is required to search branches');
+      }
+      return gitProviderGateway.searchProviderBranches(
+        organizationId,
+        providerId,
+        { owner, repo, search },
+      );
+    },
+    // Keeps the previous suggestions on screen while the next search loads, so
+    // the list does not flash empty on every keystroke.
+    placeholderData: keepPreviousData,
+    // Not cached past the open input: reopening it would replay a list that
+    // still holds branches deleted on the provider since.
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+export const useSearchProviderBranchesQuery = (
+  params: SearchProviderBranchesParams,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    ...searchProviderBranchesOptions(organization?.id, params),
+    enabled: enabled && !!organization?.id,
+  });
+};
+
 export const useSetTrackedRepositoryMutation = () => {
   const queryClient = useQueryClient();
   const { organization } = useAuthContext();
@@ -253,6 +312,8 @@ export const useSetTrackedRepositoryMutation = () => {
       owner: string;
       repo: string;
       branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
     }) => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to track a repository');

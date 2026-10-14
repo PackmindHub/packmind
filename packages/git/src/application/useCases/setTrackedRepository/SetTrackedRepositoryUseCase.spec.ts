@@ -9,6 +9,7 @@ import {
   createUserId,
   GitRepo,
   IAccountsPort,
+  IDeploymentPort,
   IFindOrCreateGitRepoUseCase,
   Organization,
   RepositoryAlreadyTrackedError,
@@ -38,6 +39,7 @@ describe('SetTrackedRepositoryUseCase', () => {
   let mockFindOrCreate: jest.Mocked<IFindOrCreateGitRepoUseCase>;
   let mockEventEmitter: jest.Mocked<PackmindEventEmitterService>;
   let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
+  let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
 
   const organizationId = createOrganizationId(uuidv4());
   const userId = createUserId(uuidv4());
@@ -78,6 +80,7 @@ describe('SetTrackedRepositoryUseCase', () => {
       mockFindOrCreate,
       mockEventEmitter,
       mockAccountsAdapter,
+      mockDeploymentPort,
       stubLogger(),
     );
 
@@ -92,6 +95,10 @@ describe('SetTrackedRepositoryUseCase', () => {
     } as jest.Mocked<IFindOrCreateGitRepoUseCase>;
 
     mockEventEmitter = mockInterface<PackmindEventEmitterService>();
+    mockDeploymentPort = mockInterface<IDeploymentPort>();
+    mockDeploymentPort.syncDistributionsFromLockFiles.mockResolvedValue({
+      targets: [],
+    });
 
     setupAccounts('admin');
     useCase = buildUseCase();
@@ -173,6 +180,28 @@ describe('SetTrackedRepositoryUseCase', () => {
 
     it('does not set a fromBranch', () => {
       expect(emittedEvent.payload.fromBranch).toBeUndefined();
+    });
+
+    it('syncs the distribution state of the newly tracked branch', () => {
+      expect(
+        mockDeploymentPort.syncDistributionsFromLockFiles,
+      ).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        gitRepoId: trackedRepo.id,
+      });
+    });
+
+    describe('when the lock files cannot be read', () => {
+      beforeEach(() => {
+        mockDeploymentPort.syncDistributionsFromLockFiles.mockRejectedValue(
+          new Error('Bad credentials'),
+        );
+      });
+
+      it('still tracks the branch', async () => {
+        await expect(useCase.execute(command)).resolves.toEqual(trackedRepo);
+      });
     });
   });
 

@@ -11,6 +11,8 @@ import {
   AddGitProviderCommand,
   CheckProviderBranchExistsCommand,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesCommand,
+  SearchProviderBranchesResponse,
   CheckProviderAuthResponse,
   ClientSource,
   GitProvider,
@@ -787,6 +789,12 @@ export class GitProvidersService {
     command: CheckProviderBranchExistsCommand,
   ): Promise<CheckProviderBranchExistsResponse> {
     return this.gitAdapter.checkProviderBranchExists(command);
+  }
+
+  async searchProviderBranches(
+    command: SearchProviderBranchesCommand,
+  ): Promise<SearchProviderBranchesResponse> {
+    return this.gitAdapter.searchProviderBranches(command);
   }
 
   async checkProviderAuth(

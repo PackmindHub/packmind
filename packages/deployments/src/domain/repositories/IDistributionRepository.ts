@@ -1,5 +1,6 @@
 import {
   Distribution,
+  DistributedPackage,
   CommandDistributionHistoryEntry,
   DistributionHistoryEntry,
   SkillDistributionHistoryEntry,
@@ -107,6 +108,11 @@ export interface IDistributionRepository {
     targetId: TargetId,
   ): Promise<PackageId[]>;
 
+  findActiveDistributedPackagesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<DistributedPackage[]>;
+
   /**
    * Render modes of the latest successful distribution of each package still
    * active on the target, aggregated.
@@ -125,7 +131,7 @@ export interface IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
-  ): Promise<Distribution>;
+  ): Promise<void>;
 
   /**
    * Count distinct artifact IDs that are currently deployed (appear in the

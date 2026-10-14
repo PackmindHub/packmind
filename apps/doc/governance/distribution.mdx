@@ -191,6 +191,63 @@ stays retained and returns whenever you track it again.
 While a repository is untracked, `packmind install` behaves exactly as it does for a repository
 that was never tracked: it completes locally and tells you the distribution was not recorded.
 
+## Keep the Distribution State in Sync with Your Repository
+
+What a target runs is whatever its `packmind-lock.json` says. Each lock lists the version of every package distributed to that folder:
+
+```json
+{
+  "packages": { "@my-space/ops": "1.2.3" }
+}
+```
+
+Both `packmind install` and distributions from the app write this file, and removing a package from a target in the app removes it from the lock too.
+
+### When Packmind Reads the Lock Files
+
+Packmind refreshes the distribution state from the lock files on the tracked branch on its own when:
+
+- **A repository is tracked** — the lock files already in the repository are read when it is connected.
+- **The tracked branch changes** — the new branch's lock files are read. Distributions of the previous branch are kept as history but no longer shown.
+- **A target is added** — the lock at the target's path is read. If there is none, the target shows no distribution.
+- **A target's path is renamed** — the lock at the new path is read. Earlier distributions stay with the target.
+
+### Sync from the App
+
+When a lock file changed outside Packmind — for example someone edited it by hand — refresh the state yourself:
+
+1. Open the **Distribution** page and select the repository.
+2. In the repository's detail pane, click **Sync from repository**.
+
+Packmind reads every `packmind-lock.json` on the tracked branch and updates the targets that changed:
+
+- A lock in a folder no target declares creates that target.
+- A package missing from a lock is kept while the `packmind.json` next to it still lists it; otherwise it is recorded as removed.
+- A lock that already matches what Packmind shows records nothing.
+
+If some lock files could not be used, a **Some lock files weren't fully recorded** banner lists them, grouped by target:
+
+- **A package unknown to your organization** — that package is not recorded.
+- **A lock written by an older CLI** — the lock records no package versions, so it is ignored. Distribute to that target again to refresh it.
+
+<Note>
+  **Needs a working Git connection** — Syncing reads the repository through your
+  Git provider. When the connection is missing or broken (for example an expired
+  token), **Sync from repository** is disabled and its tooltip asks you to fix
+  the Git connection first. See [Git Repository
+  Connection](/governance/git-repository-connection).
+</Note>
+
+### Record from Your Terminal
+
+You can also send your local lock files to Packmind with the CLI. From the tracked branch, run:
+
+```bash
+packmind distribution record
+```
+
+Run from the repository root, it records every target; run from a sub-folder, only the targets at or below it. It finds the lock files through Git, so folders your `.gitignore` excludes are skipped. It works even when your lock edits are not pushed yet — but the next **Sync from repository** reads the locks on the remote branch and shows that state again, so push your changes. See [Distribution Record](/tools/cli#distribution-record).
+
 ## Removing Packages
 
 When you no longer need a package in your repository, you can remove it using either the app or the CLI.

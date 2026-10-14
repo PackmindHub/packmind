@@ -78,6 +78,7 @@ export function adoptArtifactIntoLockFile({
   const base: PackmindLockFile = lockFile ?? {
     lockfileVersion: 2,
     packageSlugs: [],
+    packages: {},
     agents: [],
     artifacts: {},
   };

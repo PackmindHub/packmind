@@ -20,3 +20,40 @@ export async function normalizePackageSlugs(
     slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
   );
 }
+
+export type NormalizedConfigPackages = {
+  slugs: string[];
+  versions: Record<string, string>;
+  /** Whether any slug was respelled, i.e. packmind.json would need rewriting. */
+  hasChanges: boolean;
+};
+
+/**
+ * packmind.json's packages in `@space/package` form, with the version each one
+ * records. The versions travel beside the slugs rather than inside them, so
+ * normalizing a slug never loses what the repo pinned it to. Writes nothing.
+ */
+export async function normalizeConfigPackages(
+  packages: Record<string, string>,
+  spaceService: ISpaceService,
+): Promise<NormalizedConfigPackages> {
+  const originalSlugs = Object.keys(packages);
+  if (originalSlugs.length === 0) {
+    return { slugs: [], versions: {}, hasChanges: false };
+  }
+
+  const normalizedSlugs = await normalizePackageSlugs(
+    originalSlugs,
+    spaceService,
+  );
+  const versions: Record<string, string> = {};
+  for (let i = 0; i < normalizedSlugs.length; i++) {
+    versions[normalizedSlugs[i]] = packages[originalSlugs[i]];
+  }
+
+  return {
+    slugs: normalizedSlugs,
+    versions,
+    hasChanges: normalizedSlugs.some((slug, i) => slug !== originalSlugs[i]),
+  };
+}

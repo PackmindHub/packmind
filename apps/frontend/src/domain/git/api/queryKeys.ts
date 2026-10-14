@@ -12,6 +12,7 @@ export enum GitQueryKeys {
   GET_GITHUB_APP_STATUS = 'get-github-app-status',
   CHECK_PROVIDER_AUTH = 'check-provider-auth',
   CHECK_TRACKED_BRANCH_EXISTS = 'check-tracked-branch-exists',
+  SEARCH_PROVIDER_BRANCHES = 'search-provider-branches',
 }
 
 // Base query key arrays for reuse
@@ -67,4 +68,10 @@ export const CHECK_TRACKED_BRANCH_EXISTS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   GIT_QUERY_SCOPE,
   GitQueryKeys.CHECK_TRACKED_BRANCH_EXISTS,
+] as const;
+
+export const SEARCH_PROVIDER_BRANCHES_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  GIT_QUERY_SCOPE,
+  GitQueryKeys.SEARCH_PROVIDER_BRANCHES,
 ] as const;

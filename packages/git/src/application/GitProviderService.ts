@@ -190,6 +190,25 @@ export class GitProviderService {
     return providerInstance.checkBranchExists(owner, repo, branch);
   }
 
+  async searchBranches(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    search: string,
+    limit: number,
+  ): Promise<string[]> {
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitProviderId);
+    }
+
+    const providerInstance =
+      await this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.searchBranches(owner, repo, search, limit);
+  }
+
   async createBranchFromBase(
     gitProviderId: GitProviderId,
     owner: string,
@@ -330,6 +349,28 @@ export class GitProviderService {
     const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
 
     return gitRepoInstance.compareBranches(base, head);
+  }
+
+  async listFilesNamed(
+    gitRepo: GitRepo,
+    fileName: string,
+    branch: string,
+  ): Promise<string[]> {
+    const gitProvider = await this.resolvedGitRepoService.getProvider(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new GitProviderNotFoundError(gitRepo.providerId);
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new GitProviderTokenNotConfiguredError(gitRepo.providerId);
+    }
+
+    const gitRepoInstance = await this.resolvedGitRepoService.resolve(gitRepo);
+
+    return gitRepoInstance.listFilesNamed(fileName, branch);
   }
 
   async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{

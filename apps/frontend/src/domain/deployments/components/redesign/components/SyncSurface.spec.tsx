@@ -219,6 +219,131 @@ describe('SyncSurface', () => {
     });
   });
 
+  describe('when a release is cut in the same gesture', () => {
+    /*
+     * On the newest release there is, with work done since: only a cut can
+     * move it, so `Update` alone leaves it out.
+     */
+    const onNewestRelease: PackageDrift = {
+      ...STUB_PACKAGES[0],
+      latestReleaseVersion: '0.3.0',
+      hasUnreleasedChanges: true,
+      artifacts: STUB_PACKAGES[0].artifacts.map((artifact) => ({
+        ...artifact,
+        installs: artifact.installs.map((install) => ({
+          ...install,
+          driftReason: 'aligned' as const,
+        })),
+      })),
+      installLocations: STUB_PACKAGES[0].installLocations.map((location) => ({
+        ...location,
+        versionSpec: '0.3.0',
+      })),
+    };
+
+    const releaseScope = {
+      kind: 'bulk' as const,
+      packageIds: [onNewestRelease.id],
+    };
+
+    const releaseOf = (cut: () => Promise<boolean>) => ({
+      version: '0.4.0',
+      renderField: () => <input aria-label="Version" />,
+      cut: vi.fn(cut),
+    });
+
+    const confirmButton = () =>
+      screen.findByRole('button', { name: /^Release 0\.4\.0 and update \d+$/ });
+
+    it('lists the destinations only a release can move', () => {
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => true),
+      });
+
+      expect(screen.getAllByText('0.3.0 → 0.4.0').length).toBeGreaterThan(0);
+    });
+
+    it('names the cut on the confirm button', async () => {
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => true),
+      });
+
+      expect(await confirmButton()).toBeEnabled();
+    });
+
+    it('cuts the release before distributing it', async () => {
+      const calls: string[] = [];
+      mockedUseDeployPackagesMutation.mockReturnValue({
+        mutateAsync: vi.fn(async () => {
+          calls.push('deploy');
+          return {};
+        }),
+      } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => {
+          calls.push('cut');
+          return true;
+        }),
+      });
+
+      await userEvent.setup().click(await confirmButton());
+
+      expect(calls).toEqual(['cut', 'deploy']);
+    });
+
+    it('distributes nothing when the release is not cut', async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({});
+      mockedUseDeployPackagesMutation.mockReturnValue({
+        mutateAsync,
+      } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+      renderSurface({
+        packages: [onNewestRelease],
+        scope: releaseScope,
+        release: releaseOf(async () => false),
+      });
+
+      await userEvent.setup().click(await confirmButton());
+
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    describe('when the distribution fails after the cut', () => {
+      it('does not cut a second release on retry', async () => {
+        mockedUseDeployPackagesMutation.mockReturnValue({
+          mutateAsync: vi.fn().mockRejectedValue(new Error('boom')),
+        } as unknown as ReturnType<typeof useDeployPackagesMutation>);
+        const release = releaseOf(async () => true);
+        renderSurface({
+          packages: [onNewestRelease],
+          scope: releaseScope,
+          release,
+        });
+        const user = userEvent.setup();
+
+        await user.click(await confirmButton());
+        await user.click(
+          await screen.findByRole('button', { name: /^Distribute/ }),
+        );
+
+        expect(release.cut).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('without a release', () => {
+      it('leaves those destinations out', () => {
+        renderSurface({ packages: [onNewestRelease], scope: releaseScope });
+
+        expect(screen.getByText('Nothing to distribute.')).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('what the review says the distribution will do', () => {
     const pinnedAt = (versionSpec: string | null): PackageDrift => ({
       ...STUB_PACKAGES[0],
@@ -716,6 +841,111 @@ describe('SyncSurface', () => {
           name: `Collapse ${STUB_PACKAGES[0].name}`,
         }),
       ).toBeInTheDocument();
+    });
+
+    /*
+     * What a push would actually do to one repository, which the move line only
+     * summarises. The line is the control that opens it: the row itself toggles
+     * the tick, so a click landing on the text used to select the destination
+     * instead of opening it, and the list was unreachable.
+     */
+    describe('the change list behind a move line', () => {
+      /** A batch whose single destination arrives unticked. */
+      const unticked = {
+        kind: 'package' as const,
+        packageId: STUB_PACKAGES[0].id,
+        installKeys: [],
+      };
+
+      const open = async (pkg: PackageDrift) => {
+        const user = userEvent.setup();
+        await user.click(
+          screen.getByRole('button', { name: /^Show what .* changes on / }),
+        );
+        return pkg;
+      };
+
+      describe('when the destination is not selected', () => {
+        beforeEach(async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+        });
+
+        it('opens the list all the same', () => {
+          expect(screen.getByText('Updated · 2')).toBeInTheDocument();
+        });
+
+        it('leaves the destination unticked', () => {
+          expect(
+            screen.getByRole('checkbox', { name: /Select acme\/webapp/ }),
+          ).not.toBeChecked();
+        });
+      });
+
+      describe('when a component is late at the destination', () => {
+        beforeEach(async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+        });
+
+        it('groups it under Updated', () => {
+          expect(screen.getByText('Updated · 2')).toBeInTheDocument();
+        });
+
+        it('names it', () => {
+          expect(screen.getByText('Naming conventions')).toBeInTheDocument();
+        });
+
+        /*
+         * The icon alone asks the reader to have learnt three glyphs. The two
+         * rows of this group are a standard and a command, so a list drawing
+         * only the glyph leaves which is which to be guessed.
+         */
+        it('says in words that the standard is a standard', () => {
+          expect(screen.getByText('Standard')).toBeInTheDocument();
+        });
+
+        it('says in words that the command is a command', () => {
+          expect(screen.getByText('Command')).toBeInTheDocument();
+        });
+      });
+
+      describe('when a component of the package never landed there', () => {
+        it('groups it under Added', async () => {
+          renderSurface({
+            packages: [STUB_PACKAGES[2]],
+            scope: { kind: 'package' as const, packageId: STUB_PACKAGES[2].id },
+          });
+          await open(STUB_PACKAGES[2]);
+
+          expect(screen.getByText('Added · 1')).toBeInTheDocument();
+        });
+      });
+
+      describe('when a component was deleted on Packmind', () => {
+        it('groups it under Removed', async () => {
+          renderSurface({
+            packages: [STUB_PACKAGES[1]],
+            scope: { kind: 'package' as const, packageId: STUB_PACKAGES[1].id },
+          });
+          await open(STUB_PACKAGES[1]);
+
+          expect(screen.getByText('Removed · 1')).toBeInTheDocument();
+        });
+      });
+
+      describe('when the list is open', () => {
+        it('closes again on a second click', async () => {
+          renderSurface({ scope: unticked });
+          await open(STUB_PACKAGES[0]);
+          const user = userEvent.setup();
+          await user.click(
+            screen.getByRole('button', { name: /^Hide what .* changes on / }),
+          );
+
+          expect(screen.queryByText('Updated · 2')).toBeNull();
+        });
+      });
     });
   });
 });

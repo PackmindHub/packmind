@@ -22,6 +22,7 @@ import {
   CreatePackageReleaseCommand,
   ListPackageReleasesCommand,
   GetPackageReleaseCommand,
+  GitRepoId,
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -49,6 +50,7 @@ import {
   LIST_STANDARD_DISTRIBUTIONS_KEY,
   LIST_SKILL_DISTRIBUTIONS_KEY,
   REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
+  SYNC_REPOSITORY_FROM_LOCK_FILES_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
   getDashboardKpiKey,
   getDashboardNonLiveKey,
@@ -1141,6 +1143,45 @@ export const useRemovePackageFromTargetsMutation = () => {
         description: isPackmindError(error)
           ? error.message
           : 'An unexpected error occurred while removing the package.',
+      });
+    },
+  });
+};
+
+export const useSyncRepositoryFromLockFilesMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: SYNC_REPOSITORY_FROM_LOCK_FILES_MUTATION_KEY,
+    mutationFn: async ({ gitRepoId }: { gitRepoId: GitRepoId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required');
+      }
+      return deploymentsGateways.syncDistributionsFromLockFiles({
+        organizationId: organization.id,
+        gitRepoId,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
+      });
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
+      });
+    },
+    onError: (error) => {
+      pmToaster.create({
+        type: 'error',
+        title: "Couldn't sync from the repository",
+        description: !isPackmindError(error)
+          ? 'Packmind could not read the lock files. Try again in a moment.'
+          : error.serverError.data.reason === 'no_tracked_repository'
+            ? 'No branch of this repository is tracked. Track one from Manage repositories in its Git connection, then sync again.'
+            : error.message,
       });
     },
   });

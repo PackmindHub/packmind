@@ -74,10 +74,9 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         try {
           parsedMetadata = JSON.parse(changeProposal.payload.newValue);
         } catch (err) {
-          throw new ChangeProposalPayloadParseError(
-            changeProposal.id,
-            (err as Error).message,
-          );
+          throw new ChangeProposalPayloadParseError(changeProposal.id, {
+            cause: err,
+          });
         }
       }
       return {
@@ -261,10 +260,9 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         try {
           currentProps[key] = JSON.parse(newValue);
         } catch (err) {
-          throw new ChangeProposalPayloadParseError(
-            changeProposal.id,
-            (err as Error).message,
-          );
+          throw new ChangeProposalPayloadParseError(changeProposal.id, {
+            cause: err,
+          });
         }
       }
 

@@ -4,7 +4,9 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthResponse,
   CheckProviderBranchExistsResponse,
+  SearchProviderBranchesResponse,
   GitProviderId,
+  GitProviderVendor,
   GitProviderWithoutToken,
   GitRepo,
   GitRepoId,
@@ -277,9 +279,26 @@ export class GitProviderGatewayApi
     );
   }
 
+  async searchProviderBranches(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    params: { owner: string; repo: string; search: string },
+  ): Promise<SearchProviderBranchesResponse> {
+    const query = new URLSearchParams(params).toString();
+    return this._api.get<SearchProviderBranchesResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${gitProviderId}/branches?${query}`,
+    );
+  }
+
   async setTrackedRepository(
     organizationId: OrganizationId,
-    data: { owner: string; repo: string; branch: string },
+    data: {
+      owner: string;
+      repo: string;
+      branch: string;
+      providerVendor: GitProviderVendor;
+      gitRemoteUrl?: string;
+    },
   ): Promise<GitRepo> {
     return this._api.post<GitRepo>(
       `${this._endpoint}/${organizationId}/git/repositories/tracked-repository`,

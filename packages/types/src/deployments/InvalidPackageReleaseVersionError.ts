@@ -1,3 +1,5 @@
+import { PackmindInternalError } from '../errors';
+
 /**
  * A version string that had to be an `X.Y.Z` triple and was not.
  *
@@ -7,9 +9,13 @@
  * submitted is refused with a `PackageReleaseRefusal` code instead, and never
  * throws.
  */
-export class InvalidPackageReleaseVersionError extends Error {
+export class InvalidPackageReleaseVersionError extends PackmindInternalError {
   constructor(readonly version: string) {
-    super(`Not a package release version: ${version}`);
+    super(
+      'invalid_package_release_version',
+      { version },
+      `Not a package release version: ${version}`,
+    );
     this.name = 'InvalidPackageReleaseVersionError';
   }
 }

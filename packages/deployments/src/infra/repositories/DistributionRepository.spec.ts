@@ -138,6 +138,7 @@ describe('DistributionRepository', () => {
     mockTypeOrmRepository = {
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       save: jest.fn(),
+      update: jest.fn(),
     } as unknown as jest.Mocked<Repository<Distribution>>;
 
     repository = new DistributionRepository(mockTypeOrmRepository, logger);
@@ -145,6 +146,77 @@ describe('DistributionRepository', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('updateStatus', () => {
+    const distributionId = createDistributionId('dist-1');
+
+    describe('when the distribution exists', () => {
+      beforeEach(async () => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 1,
+          raw: [],
+          generatedMaps: [],
+        });
+
+        await repository.updateStatus(
+          distributionId,
+          DistributionStatus.success,
+          { id: 'commit-1', sha: 'abc' } as never,
+        );
+      });
+
+      it('updates the status and git commit columns only', () => {
+        expect(mockTypeOrmRepository.update).toHaveBeenCalledWith(
+          { id: distributionId },
+          { status: DistributionStatus.success, gitCommit: { id: 'commit-1' } },
+        );
+      });
+
+      it('does not hydrate the distribution graph', () => {
+        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when an error is given', () => {
+      beforeEach(async () => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 1,
+          raw: [],
+          generatedMaps: [],
+        });
+
+        await repository.updateStatus(
+          distributionId,
+          DistributionStatus.failure,
+          undefined,
+          'push rejected',
+        );
+      });
+
+      it('records it alongside the status', () => {
+        expect(mockTypeOrmRepository.update).toHaveBeenCalledWith(
+          { id: distributionId },
+          { status: DistributionStatus.failure, error: 'push rejected' },
+        );
+      });
+    });
+
+    describe('when the distribution does not exist', () => {
+      beforeEach(() => {
+        mockTypeOrmRepository.update.mockResolvedValue({
+          affected: 0,
+          raw: [],
+          generatedMaps: [],
+        });
+      });
+
+      it('throws', async () => {
+        await expect(
+          repository.updateStatus(distributionId, DistributionStatus.success),
+        ).rejects.toThrow('Distribution not found: dist-1');
+      });
+    });
   });
 
   describe('listByOrganizationIdWithStatus', () => {
@@ -602,6 +674,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -654,6 +727,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv2],
               recipeVersions: [],
               skillVersions: [],
@@ -700,6 +774,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [sv1],
               recipeVersions: [],
               skillVersions: [],
@@ -761,6 +836,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [svOld],
               recipeVersions: [],
               skillVersions: [],
@@ -773,6 +849,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [svNew],
               recipeVersions: [],
               skillVersions: [],
@@ -913,6 +990,7 @@ describe('DistributionRepository', () => {
                 packageId: packageId1,
                 operation: 'add',
                 versionSpec: null,
+                latestReleaseVersion: null,
                 standardVersions: [sv1],
                 recipeVersions: [cv1],
                 skillVersions: [skv1],
@@ -1232,6 +1310,62 @@ describe('DistributionRepository', () => {
     });
   });
 
+  describe('findActiveDistributedPackagesByTarget', () => {
+    let result: Awaited<
+      ReturnType<typeof repository.findActiveDistributedPackagesByTarget>
+    >;
+
+    beforeEach(async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        {
+          targetId,
+          distributionId: 'dist-1',
+          distributedPackageId: 'dp-1',
+          packageId: packageId1,
+          operation: 'add',
+          versionSpec: '1.2.3',
+          latestReleaseVersion: null,
+          renderModes: [],
+          distributedAt: '2024-01-01T00:00:00Z',
+        },
+      ]);
+      mockQueryBuilder.getMany.mockResolvedValue([
+        {
+          id: createDistributionId('dist-1'),
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              standardVersions: [{ id: createStandardVersionId('sv-1') }],
+              recipeVersions: [{ id: createCommandVersionId('rv-1') }],
+              skillVersions: [{ id: createSkillVersionId('skv-1') }],
+            },
+          ],
+        } as never,
+      ]);
+
+      result = await repository.findActiveDistributedPackagesByTarget(
+        organizationId,
+        targetId,
+      );
+    });
+
+    it('returns each active package with its spec and artifact versions', () => {
+      expect(result).toEqual([
+        {
+          id: 'dp-1',
+          distributionId: 'dist-1',
+          packageId: packageId1,
+          operation: 'add',
+          versionSpec: '1.2.3',
+          latestReleaseVersion: null,
+          standardVersions: [{ id: 'sv-1' }],
+          recipeVersions: [{ id: 'rv-1' }],
+          skillVersions: [{ id: 'skv-1' }],
+        },
+      ]);
+    });
+  });
+
   describe('findActiveRenderModesByTarget', () => {
     const activeRow = (
       distributedPackageId: string,
@@ -1365,6 +1499,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1454,6 +1589,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1483,6 +1619,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'remove',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [],
               recipeVersions: [],
               skillVersions: [],
@@ -1500,6 +1637,7 @@ describe('DistributionRepository', () => {
               packageId: packageId2,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-2'),
@@ -1586,6 +1724,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1'),
@@ -1613,6 +1752,7 @@ describe('DistributionRepository', () => {
               packageId: packageId1,
               operation: 'add',
               versionSpec: null,
+              latestReleaseVersion: null,
               standardVersions: [
                 {
                   id: createStandardVersionId('sv-1b'),

@@ -25,6 +25,7 @@ import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 import { gitCommand } from './infra/commands/git/gitCommand';
+import { distributionCommand } from './infra/commands/distribution/distributionCommand';
 import { warnOnLegacyExecName } from './infra/commands/legacyExecNameWarning';
 import { EXEC_NAME } from './infra/utils/execName';
 import { reportError } from './infra/utils/errorDiagnostics';
@@ -106,6 +107,7 @@ const app = subcommands({
   cmds: {
     commands: commandsCommand,
     config: configCommand,
+    distribution: distributionCommand,
     git: gitCommand,
     init: initCommand,
     install: installCommand,

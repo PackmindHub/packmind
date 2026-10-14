@@ -1,7 +1,10 @@
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -20,8 +23,6 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
-  LuArrowRight,
-  LuBookOpen,
   LuCheck,
   LuChevronDown,
   LuChevronRight,
@@ -32,10 +33,8 @@ import {
   LuStore,
   LuTerminal,
   LuTriangleAlert,
-  LuWandSparkles,
   LuX,
 } from 'react-icons/lu';
-import type { IconType } from 'react-icons';
 import { Link } from 'react-router';
 import {
   comparePackageReleaseVersions,
@@ -60,17 +59,15 @@ import {
 } from '../selectors/installLock';
 import { NO_GIT_CONNECTION_TOOLTIP } from '../../noGitConnection';
 import type {
-  ArtifactKind,
   MarketplaceDrift,
   MarketplacePluginDrift,
   PackageDrift,
 } from '../types';
-
-const KIND_ICON: Record<ArtifactKind, IconType> = {
-  standard: LuBookOpen,
-  command: LuTerminal,
-  skill: LuWandSparkles,
-};
+import {
+  DestinationChangeList,
+  PinnedDestinationChanges,
+} from './DestinationChangeList';
+import { liveDestinationChanges } from '../selectors/destinationChanges';
 
 /**
  * One marketplace of a batch, with the plugins that would go out to it.
@@ -95,6 +92,15 @@ export type MarketplaceSyncTarget = {
 export type MarketplaceDistributionResult = {
   accepted: number;
   failed: number;
+};
+
+/** What a confirmed distribution sent, for a caller that reports it itself. */
+export type SyncOutcome = {
+  /** Destinations that received a commit. */
+  installCount: number;
+  /** Plugins whose pull request was opened, and which land on merge. */
+  pluginsStarted: number;
+  pluginsRefused: number;
 };
 
 export type SyncScope =
@@ -171,6 +177,31 @@ const lockReasonFor = installLockReason;
 type SyncStep = 'review' | 'syncing' | 'success' | 'error';
 
 /**
+ * The release a `Release & Update` is about to cut, which pinned rows move to
+ * instead of the newest release there is. Null outside that gesture.
+ *
+ * A context because it is read four components down, by the rows and by the
+ * package headers above them, and threading it through every level would put
+ * it on props that have nothing else to do with it.
+ */
+const UpcomingReleaseContext = createContext<string | null>(null);
+
+/**
+ * A release cut ahead of the distribution, in the same gesture.
+ */
+export type SyncRelease = {
+  /** The version being typed, which the pinned rows already read as theirs. */
+  version: string;
+  /**
+   * The version field, locked once the cut is on its way or done: a retry
+   * after a failed push sends the release that exists rather than a second one.
+   */
+  renderField: (locked: boolean) => ReactNode;
+  /** Cuts it. Resolves false when nothing was released, which stops the push. */
+  cut: () => Promise<boolean>;
+};
+
+/**
  * How many destinations a grouped batch may show before it folds them away.
  *
  * The fold was written for the batch that spans a space, where every package
@@ -187,7 +218,7 @@ type SyncSurfaceProps = {
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: (outcome: SyncOutcome) => void;
   /**
    * Where to set up scheduled updates, offered once the distribution has
    * succeeded.
@@ -215,6 +246,14 @@ type SyncSurfaceProps = {
   onDistributeMarketplaces?: (
     picks: MarketplaceSyncTarget[],
   ) => Promise<MarketplaceDistributionResult>;
+  /**
+   * Cut a release first, then distribute it. Rows only a release can move are
+   * listed, which they are not otherwise: `Update` alone would commit nothing
+   * to them.
+   */
+  release?: SyncRelease;
+  /** Drop the card's own frame, for a host that already draws one. */
+  bare?: boolean;
 };
 
 export function SyncSurface({
@@ -226,10 +265,13 @@ export function SyncSurface({
   onConfirm,
   autoUpdateHref = null,
   onDistributeMarketplaces,
+  release,
+  bare = false,
 }: Readonly<SyncSurfaceProps>) {
+  const isReleasing = release !== undefined;
   const blocks = useMemo<PackageBlock[]>(
-    () => buildPackageBlocks(packages, scope),
-    [packages, scope],
+    () => buildPackageBlocks(packages, scope, isReleasing),
+    [packages, scope, isReleasing],
   );
 
   /*
@@ -344,6 +386,8 @@ export function SyncSurface({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [marketplaceOutcome, setMarketplaceOutcome] =
     useState<MarketplaceDistributionResult | null>(null);
+  const [isCutting, setCutting] = useState(false);
+  const isCut = useRef(false);
 
   const deployPackages = useDeployPackagesMutation();
 
@@ -498,6 +542,16 @@ export function SyncSurface({
     if (!hasPick) return;
     setStep('syncing');
     setErrorMessage(null);
+    if (release && !isCut.current) {
+      setCutting(true);
+      const released = await release.cut();
+      setCutting(false);
+      if (!released) {
+        setStep('review');
+        return;
+      }
+      isCut.current = true;
+    }
     try {
       await Promise.all(
         Array.from(selectionByPackage.entries()).map(([packageId, targetIds]) =>
@@ -527,19 +581,27 @@ export function SyncSurface({
       return;
     }
 
+    let outcome: MarketplaceDistributionResult | null = null;
     if (pickedMarketplaces.length > 0 && onDistributeMarketplaces) {
-      setMarketplaceOutcome(await onDistributeMarketplaces(pickedMarketplaces));
+      outcome = await onDistributeMarketplaces(pickedMarketplaces);
+      setMarketplaceOutcome(outcome);
     }
 
     setStep('success');
-    onConfirm();
+    onConfirm({
+      installCount: stats.installCount,
+      pluginsStarted: outcome?.accepted ?? 0,
+      pluginsRefused: outcome?.failed ?? 0,
+    });
   }, [
     deployPackages,
     hasPick,
     onConfirm,
     onDistributeMarketplaces,
     pickedMarketplaces,
+    release,
     selectionByPackage,
+    stats.installCount,
   ]);
 
   useEffect(() => {
@@ -577,231 +639,270 @@ export function SyncSurface({
   const isSyncing = step === 'syncing';
   const hasError = step === 'error';
 
+  const destinationCount = stats.installCount + marketplaceStats.pluginCount;
+
   return (
-    <PMBox
-      bg="background.primary"
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="md"
-      overflow="hidden"
-      animation="fade-in 120ms ease-out"
-    >
+    <UpcomingReleaseContext.Provider value={release?.version ?? null}>
       <PMBox
-        as="header"
-        paddingX={6}
-        paddingY={5}
-        borderBottomWidth="1px"
+        bg="background.primary"
+        borderWidth={bare ? 0 : '1px'}
         borderColor="border.tertiary"
+        borderRadius={bare ? 0 : 'md'}
+        overflow={bare ? undefined : 'hidden'}
+        animation="fade-in 120ms ease-out"
       >
-        <PMHStack justify="space-between" align="flex-start" gap={4}>
-          <PMVStack align="flex-start" gap={1}>
-            <PMHeading level="h3">
-              {titleForScope(scope, blocks, marketplaceTargets)}
-            </PMHeading>
-            <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Selected destinations receive a direct commit on their configured
-              branch bringing every bundled component to its Packmind version.
-              Destinations without a connected provider are listed separately
-              and must be updated via{' '}
-              <PMText as="span" fontFamily="mono" fontSize="xs">
-                packmind install
+        <PMBox
+          as="header"
+          paddingX={6}
+          paddingY={5}
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
+        >
+          <PMHStack justify="space-between" align="flex-start" gap={4}>
+            <PMVStack align="flex-start" gap={1}>
+              <PMHeading level="h3">
+                {release
+                  ? 'Release & Update'
+                  : titleForScope(scope, blocks, marketplaceTargets)}
+              </PMHeading>
+              {release && (
+                <PMText fontSize="sm" color="secondary" maxW="68ch">
+                  Cut a release of {blocks[0]?.pkg.name ?? 'this package'}, then
+                  send it to the destinations you picked.
+                </PMText>
+              )}
+              <PMText fontSize="sm" color="secondary" maxW="68ch">
+                Selected destinations receive a direct commit on their
+                configured branch bringing every bundled component to its
+                Packmind version. Destinations without a connected provider are
+                listed separately and must be updated via{' '}
+                <PMText as="span" fontFamily="mono" fontSize="xs">
+                  packmind install
+                </PMText>
+                .
               </PMText>
-              .
-            </PMText>
-            {/*
+              {/*
               Said here and not on the marketplace section alone, because it is
               the sentence above that would otherwise describe the whole screen:
               a reader who has ticked a catalog would be told their plugins land
               as a commit on a branch, which is not what happens to them.
             */}
-            {hasMarketplaces && (
-              <PMText fontSize="sm" color="secondary" maxW="68ch">
-                A marketplace is distributed to differently: each selected
-                plugin opens a pull request on the marketplace repository, and
-                it lands when someone merges it.
-              </PMText>
-            )}
-          </PMVStack>
-          <PMBox
-            as="button"
-            onClick={onCancel}
-            aria-disabled={isSyncing}
-            display="inline-flex"
-            alignItems="center"
-            gap={2}
-            bg="transparent"
-            border="1px solid"
-            borderColor="border.tertiary"
-            borderRadius="sm"
-            paddingX={3}
-            paddingY="6px"
-            color="text.secondary"
-            cursor={isSyncing ? 'not-allowed' : 'pointer'}
-            transition="background-color 150ms ease-out, color 150ms ease-out"
-            _hover={
-              isSyncing
-                ? undefined
-                : { color: 'text.primary', bg: 'background.tertiary' }
-            }
-            aria-label="Cancel"
-          >
-            <PMIcon fontSize="sm">
-              <LuX />
-            </PMIcon>
-            <PMText fontSize="xs">Cancel</PMText>
-          </PMBox>
-        </PMHStack>
-      </PMBox>
-
-      {hasError && errorMessage && (
-        <PMBox
-          paddingX={6}
-          paddingY={3}
-          bg="red.subtle"
-          borderBottomWidth="1px"
-          borderColor="border.tertiary"
-        >
-          <PMHStack gap={2} align="center">
-            <PMIcon fontSize="sm" color="warning">
-              <LuTriangleAlert />
-            </PMIcon>
-            <PMText fontSize="sm" color="error">
-              {errorMessage}
-            </PMText>
+              {hasMarketplaces && (
+                <PMText fontSize="sm" color="secondary" maxW="68ch">
+                  A marketplace is distributed to differently: each selected
+                  plugin opens a pull request on the marketplace repository, and
+                  it lands when someone merges it.
+                </PMText>
+              )}
+            </PMVStack>
+            <PMBox
+              as="button"
+              onClick={onCancel}
+              aria-disabled={isSyncing}
+              display="inline-flex"
+              alignItems="center"
+              gap={2}
+              bg="transparent"
+              border="1px solid"
+              borderColor="border.tertiary"
+              borderRadius="sm"
+              paddingX={3}
+              paddingY="6px"
+              color="text.secondary"
+              cursor={isSyncing ? 'not-allowed' : 'pointer'}
+              transition="background-color 150ms ease-out, color 150ms ease-out"
+              _hover={
+                isSyncing
+                  ? undefined
+                  : { color: 'text.primary', bg: 'background.tertiary' }
+              }
+              aria-label="Cancel"
+            >
+              <PMIcon fontSize="sm">
+                <LuX />
+              </PMIcon>
+              <PMText fontSize="xs">Cancel</PMText>
+            </PMBox>
           </PMHStack>
         </PMBox>
-      )}
 
-      <PMBox
-        opacity={isSyncing ? 0.55 : 1}
-        pointerEvents={isSyncing ? 'none' : 'auto'}
-        transition="opacity 200ms ease-out"
-        padding={6}
-      >
-        {hasNothing ? (
-          <NothingToDistribute />
-        ) : (
-          <PMVStack gap={4} align="stretch">
-            {cliOnly ? (
-              <NoActionableNote />
-            ) : actionableAllLocked ? (
-              <AllInProgressState count={lockCounts.inProgress} />
-            ) : (
-              <>
-                {/*
+        {hasError && errorMessage && (
+          <PMBox
+            paddingX={6}
+            paddingY={3}
+            bg="red.subtle"
+            borderBottomWidth="1px"
+            borderColor="border.tertiary"
+          >
+            <PMHStack gap={2} align="center">
+              <PMIcon fontSize="sm" color="warning">
+                <LuTriangleAlert />
+              </PMIcon>
+              <PMText fontSize="sm" color="error">
+                {errorMessage}
+              </PMText>
+            </PMHStack>
+          </PMBox>
+        )}
+
+        <PMBox
+          opacity={isSyncing ? 0.55 : 1}
+          pointerEvents={isSyncing ? 'none' : 'auto'}
+          transition="opacity 200ms ease-out"
+          padding={6}
+        >
+          {release && (
+            <PMVStack gap={3} align="stretch" marginBottom={6}>
+              <StepLabel>1 · Version</StepLabel>
+              {release.renderField(isCutting || isCut.current)}
+            </PMVStack>
+          )}
+          {release && <StepLabel marginBottom={3}>2 · Then updates</StepLabel>}
+          {hasNothing ? (
+            <NothingToDistribute />
+          ) : (
+            <PMVStack gap={4} align="stretch">
+              {cliOnly ? (
+                <NoActionableNote />
+              ) : actionableAllLocked ? (
+                <AllInProgressState count={lockCounts.inProgress} />
+              ) : (
+                <>
+                  {/*
                   Both belong to the repository side. A marketplace-only batch
                   reaches this branch with nothing on that side, and the
                   summary would have opened the screen with "0 ready to
                   distribute" over a list of catalogs that are ready.
                 */}
-                {actionableBlocks.length > 0 && (
-                  <LockSummary
-                    ready={lockCounts.selectable}
-                    inProgress={lockCounts.inProgress}
-                    selectedCount={stats.installCount}
-                    onToggleAll={toggleAllInstalls}
-                  />
-                )}
-                {/*
+                  {actionableBlocks.length > 0 && (
+                    <LockSummary
+                      ready={lockCounts.selectable}
+                      inProgress={lockCounts.inProgress}
+                      selectedCount={stats.installCount}
+                      onToggleAll={toggleAllInstalls}
+                    />
+                  )}
+                  {/*
                   One package is shown as its destinations, several as blocks
                   that separate them. The grouping row only earns its place when
                   there is something to tell apart, and the reader who arrived
                   from a package has already read its name twice on the way in.
                 */}
-                {actionableBlocks.length === 1 ? (
-                  <SinglePackageSyncList
-                    block={actionableBlocks[0]}
-                    selected={selected}
-                    providersWithToken={providersWithToken}
-                    isProvidersLoading={isProvidersLoading}
-                    onToggleInstall={toggleInstall}
-                  />
-                ) : (
-                  actionableBlocks.map((block) => (
-                    <PackageSyncBlock
-                      key={block.pkg.id}
-                      block={block}
+                  {actionableBlocks.length === 1 ? (
+                    <SinglePackageSyncList
+                      block={actionableBlocks[0]}
                       selected={selected}
                       providersWithToken={providersWithToken}
                       isProvidersLoading={isProvidersLoading}
-                      defaultExpanded={openBlocksByDefault}
                       onToggleInstall={toggleInstall}
-                      onTogglePackage={(on) => togglePackage(block, on)}
                     />
-                  ))
-                )}
-              </>
-            )}
-            {cliBlocks.length > 0 && (
-              <CliInstallSection cliBlocks={cliBlocks} />
-            )}
-            {marketplaceTargets.map((target) => (
-              <MarketplaceSyncBlock
-                key={target.marketplace.id}
-                target={target}
-                selectedPlugins={selectedPlugins}
-                onTogglePlugin={togglePlugin}
-                onToggleMarketplace={(on) => toggleMarketplace(target, on)}
-              />
-            ))}
-          </PMVStack>
-        )}
-      </PMBox>
-
-      <PMBox
-        paddingX={6}
-        paddingY={4}
-        borderTopWidth="1px"
-        borderColor="border.tertiary"
-        position="sticky"
-        bottom={0}
-        bg="background.primary"
-      >
-        <PMHStack justify="space-between" align="center" gap={4}>
-          {isSyncing ? (
-            <PMHStack gap={3} align="center">
-              <PMSpinner size="sm" />
-              <PMText fontSize="sm" color="secondary">
-                {syncingLine(stats.installCount, marketplaceStats.pluginCount)}
-              </PMText>
-            </PMHStack>
-          ) : (
-            <PMText fontSize="xs" color="faded">
-              Esc to cancel · ⌘↵ to confirm
-            </PMText>
+                  ) : (
+                    actionableBlocks.map((block) => (
+                      <PackageSyncBlock
+                        key={block.pkg.id}
+                        block={block}
+                        selected={selected}
+                        providersWithToken={providersWithToken}
+                        isProvidersLoading={isProvidersLoading}
+                        defaultExpanded={openBlocksByDefault}
+                        onToggleInstall={toggleInstall}
+                        onTogglePackage={(on) => togglePackage(block, on)}
+                      />
+                    ))
+                  )}
+                </>
+              )}
+              {cliBlocks.length > 0 && (
+                <CliInstallSection cliBlocks={cliBlocks} />
+              )}
+              {marketplaceTargets.map((target) => (
+                <MarketplaceSyncBlock
+                  key={target.marketplace.id}
+                  target={target}
+                  selectedPlugins={selectedPlugins}
+                  onTogglePlugin={togglePlugin}
+                  onToggleMarketplace={(on) => toggleMarketplace(target, on)}
+                />
+              ))}
+            </PMVStack>
           )}
-          <PMHStack gap={2} align="center">
-            <PMButton
-              variant="secondary"
-              size="sm"
-              onClick={onCancel}
-              disabled={isSyncing}
-            >
-              Cancel
-            </PMButton>
-            <PMButton
-              variant="primary"
-              size="sm"
-              onClick={() => void handleConfirm()}
-              disabled={!hasPick || isSyncing}
-            >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-              {isSyncing
-                ? 'Distributing…'
-                : cliOnly
-                  ? 'Nothing to distribute from the app'
-                  : actionableAllLocked
-                    ? 'Waiting on in-progress distributions'
-                    : !hasPick
-                      ? 'Select at least one destination'
-                      : confirmLabel(stats, marketplaceStats)}
-            </PMButton>
+        </PMBox>
+
+        <PMBox
+          paddingX={6}
+          paddingY={4}
+          borderTopWidth="1px"
+          borderColor="border.tertiary"
+          position="sticky"
+          bottom={0}
+          bg="background.primary"
+        >
+          <PMHStack justify="space-between" align="center" gap={4}>
+            {isSyncing ? (
+              <PMHStack gap={3} align="center">
+                <PMSpinner size="sm" />
+                <PMText fontSize="sm" color="secondary">
+                  {isCutting && release
+                    ? `Releasing ${release.version}…`
+                    : syncingLine(
+                        stats.installCount,
+                        marketplaceStats.pluginCount,
+                      )}
+                </PMText>
+              </PMHStack>
+            ) : (
+              <PMText fontSize="xs" color="faded">
+                Esc to cancel · ⌘↵ to confirm
+              </PMText>
+            )}
+            <PMHStack gap={2} align="center">
+              <PMButton
+                variant="secondary"
+                size="sm"
+                onClick={onCancel}
+                disabled={isSyncing}
+              >
+                Cancel
+              </PMButton>
+              <PMButton
+                variant="primary"
+                size="sm"
+                onClick={() => void handleConfirm()}
+                disabled={!hasPick || isSyncing}
+              >
+                <PMIcon fontSize="sm">
+                  <LuRotateCw />
+                </PMIcon>
+                {isSyncing
+                  ? isCutting
+                    ? 'Releasing…'
+                    : 'Distributing…'
+                  : cliOnly
+                    ? 'Nothing to distribute from the app'
+                    : actionableAllLocked
+                      ? 'Waiting on in-progress distributions'
+                      : !hasPick
+                        ? 'Select at least one destination'
+                        : release && !isCut.current
+                          ? `Release ${release.version} and update ${destinationCount}`
+                          : confirmLabel(stats, marketplaceStats)}
+              </PMButton>
+            </PMHStack>
           </PMHStack>
-        </PMHStack>
+        </PMBox>
       </PMBox>
-    </PMBox>
+    </UpcomingReleaseContext.Provider>
+  );
+}
+
+function StepLabel({
+  children,
+  marginBottom,
+}: Readonly<{ children: ReactNode; marginBottom?: number }>) {
+  return (
+    <PMText fontSize="sm" color="secondary" marginBottom={marginBottom}>
+      {children}
+    </PMText>
   );
 }
 
@@ -891,6 +992,7 @@ function titleForScope(
 function buildPackageBlocks(
   packages: PackageDrift[],
   scope: SyncScope,
+  isReleasing: boolean,
 ): PackageBlock[] {
   const bulkAllowed =
     scope.kind === 'bulk' ? new Set<PackageId>(scope.packageIds) : null;
@@ -909,7 +1011,10 @@ function buildPackageBlocks(
        * the count here is what made this screen say "Nothing to distribute" over
        * a repository three releases behind.
        */
-      if (e.standing.remedy !== 'update') return false;
+      const moves =
+        e.standing.remedy === 'update' ||
+        (isReleasing && e.standing.canReleaseAndUpdate);
+      if (!moves) return false;
       if (installFilter) {
         return installFilter.has(localInstallKey(e.repo.id, e.target.id));
       }
@@ -953,7 +1058,7 @@ function sortVersionsAscending(versions: string[]): string[] {
  * rows below it say which landing is which; a line that tried to be exact about
  * every landing would be the list it sits above.
  */
-function packageMoveLine(block: PackageBlock): string {
+function packageMoveLine(block: PackageBlock, upcoming: string | null): string {
   const from = new Set<string>();
   let tracksLive = false;
 
@@ -963,7 +1068,7 @@ function packageMoveLine(block: PackageBlock): string {
     else tracksLive = true;
   }
 
-  const to = block.pkg.latestReleaseVersion;
+  const to = upcoming ?? block.pkg.latestReleaseVersion;
   const leaving = sortVersionsAscending([...from]).join(', ');
   const pinned =
     from.size > 0 ? `${leaving} → ${to ?? 'no release yet'}` : null;
@@ -986,15 +1091,36 @@ function packageMoveLine(block: PackageBlock): string {
  * `destinationStanding` has already decided that this landing is one a push
  * moves; this only says what the move is.
  */
-function entryMoveLine(entry: InstallDriftEntry, pkg: PackageDrift): string {
-  const pin = parsePackageVersionSpec(entry.versionSpec);
-  if (pin?.kind === 'exact' && pkg.latestReleaseVersion) {
-    return `${pin.version} → ${pkg.latestReleaseVersion}`;
-  }
+function entryMoveLine(
+  entry: InstallDriftEntry,
+  pkg: PackageDrift,
+  upcoming: string | null = null,
+): string {
+  const move = pinnedMove(entry, pkg, upcoming);
+  if (move) return `${move.from} → ${move.to}`;
 
   return `${entry.behindArtifacts.length} component${
     entry.behindArtifacts.length === 1 ? '' : 's'
   } to update`;
+}
+
+/**
+ * The two releases a pinned destination moves between, null for one tracking
+ * the live package.
+ *
+ * Named once rather than tested twice, so the line a reader clicks and the list
+ * it opens can never disagree about which kind of move this is: the line reads
+ * `0.2.0 → 3.0.2` exactly when the list it opens is a diff of those two cuts.
+ */
+function pinnedMove(
+  entry: InstallDriftEntry,
+  pkg: PackageDrift,
+  upcoming: string | null = null,
+): { from: string; to: string } | null {
+  const pin = parsePackageVersionSpec(entry.versionSpec);
+  const to = upcoming ?? pkg.latestReleaseVersion;
+  if (pin?.kind !== 'exact' || !to) return null;
+  return { from: pin.version, to };
 }
 
 type EntryWithLock = {
@@ -1085,6 +1211,7 @@ function PackageSyncBlock({
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const upcoming = useContext(UpcomingReleaseContext);
   const multiLandingRepos = multiLandingRepoIds(block.pkg.installLocations);
   const entriesWithLock = block.driftedEntries.map((entry) => ({
     entry,
@@ -1202,7 +1329,7 @@ function PackageSyncBlock({
               effect differs per destination with nothing on screen saying so.
             */}
             <PMText fontSize="xs" color="secondary">
-              {packageMoveLine(block)}
+              {packageMoveLine(block, upcoming)}
             </PMText>
             <PMText fontSize="xs" color="faded">
               {selectedCount} of {total} selected
@@ -1490,8 +1617,10 @@ function InstallSyncRow({
   onToggle,
 }: Readonly<InstallSyncRowProps>) {
   const [expanded, setExpanded] = useState(false);
+  const upcoming = useContext(UpcomingReleaseContext);
   const locked = lockReason !== null;
-  const showArtifacts = selected && expanded;
+  const move = pinnedMove(entry, pkg, upcoming);
+  const moveLine = entryMoveLine(entry, pkg, upcoming);
   const checkbox = (
     /*
       The whole row toggles, so the click the label has already turned into a
@@ -1553,44 +1682,6 @@ function InstallSyncRow({
         ) : (
           checkbox
         )}
-        <PMBox
-          width="18px"
-          flexShrink={0}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {selected && (
-            <PMBox
-              as="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded((v) => !v);
-              }}
-              bg="transparent"
-              border="none"
-              cursor="pointer"
-              padding="2px"
-              display="inline-flex"
-              alignItems="center"
-              justifyContent="center"
-              color="text.secondary"
-              _hover={{ color: 'text.primary' }}
-              _focusVisible={{
-                outline: '2px solid',
-                outlineColor: 'branding.primary',
-                outlineOffset: '2px',
-                borderRadius: 'sm',
-              }}
-              aria-expanded={expanded}
-              aria-label={`${expanded ? 'Collapse' : 'Expand'} components to update`}
-            >
-              <PMIcon fontSize="sm">
-                {expanded ? <LuChevronDown /> : <LuChevronRight />}
-              </PMIcon>
-            </PMBox>
-          )}
-        </PMBox>
         <PMHStack gap={2} align="center" flex={1} minW={0} wrap="wrap">
           <PMText fontSize="sm" color="primary" truncate>
             {entry.repo.owner}/{entry.repo.name}
@@ -1639,9 +1730,43 @@ function InstallSyncRow({
               {LOCK_ROW_BADGE[lockReason].label}
             </PMBadge>
           )}
-          <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
-            {entryMoveLine(entry, pkg)}
-          </PMText>
+          {/*
+            The move line is the control, not a label beside one. The row
+            toggles the tick, so a click landing on this text used to select the
+            destination rather than open it — which is why the list of what a
+            push would change was unreachable until the row happened to be
+            ticked. It stops the click here and opens instead.
+          */}
+          <PMBox
+            as="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            display="inline-flex"
+            alignItems="center"
+            gap="2px"
+            color="text.faded"
+            _hover={{ color: 'text.primary' }}
+            _focusVisible={{
+              outline: '2px solid',
+              outlineColor: 'branding.primary',
+              outlineOffset: '2px',
+              borderRadius: 'sm',
+            }}
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Hide' : 'Show'} what ${moveLine} changes on ${entry.repo.owner}/${entry.repo.name}`}
+          >
+            <PMText fontSize="xs" fontVariantNumeric="tabular-nums">
+              {moveLine}
+            </PMText>
+            <PMIcon fontSize="xs">
+              {expanded ? <LuChevronDown /> : <LuChevronRight />}
+            </PMIcon>
+          </PMBox>
           {entry.mostRecentDeployedAt && (
             <PMHStack
               gap="4px"
@@ -1662,61 +1787,31 @@ function InstallSyncRow({
           )}
         </PMVStack>
       </PMHStack>
-      {showArtifacts && (
+      {expanded && (
         <PMBox
           paddingLeft="44px"
           paddingRight={4}
           paddingBottom={3}
           paddingTop={1}
         >
-          <PMVStack gap={0} align="stretch">
-            {entry.behindArtifacts.map((b) => {
-              const Icon = KIND_ICON[b.artifact.kind];
-              return (
-                <PMHStack
-                  key={b.artifact.id}
-                  gap={3}
-                  align="center"
-                  paddingY={1}
-                  paddingX={2}
-                >
-                  <PMIcon fontSize="sm" color="text.faded">
-                    <Icon />
-                  </PMIcon>
-                  <PMText
-                    fontSize="xs"
-                    color="secondary"
-                    fontFamily={
-                      b.artifact.kind === 'command' ? 'mono' : undefined
-                    }
-                    flex={1}
-                    minW={0}
-                    truncate
-                  >
-                    {b.artifact.name}
-                  </PMText>
-                  <PMText
-                    fontSize="xs"
-                    color="faded"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    v{b.deployedVersion}
-                  </PMText>
-                  <PMIcon fontSize="xs" color="text.faded">
-                    <LuArrowRight />
-                  </PMIcon>
-                  <PMText
-                    fontSize="xs"
-                    color="primary"
-                    fontWeight="medium"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    v{b.artifact.packmindVersion}
-                  </PMText>
-                </PMHStack>
-              );
-            })}
-          </PMVStack>
+          {move && upcoming ? (
+            /*
+              No diff to show: the release it would be compared against does
+              not exist until the confirm button cuts it.
+            */
+            <PMText fontSize="xs" color="secondary">
+              Moves from {move.from} to {move.to}, the release cut from the
+              package as it stands now.
+            </PMText>
+          ) : move ? (
+            <PinnedDestinationChanges
+              packageId={pkg.id}
+              fromVersion={move.from}
+              toVersion={move.to}
+            />
+          ) : (
+            <DestinationChangeList changes={liveDestinationChanges(entry)} />
+          )}
         </PMBox>
       )}
     </PMVStack>

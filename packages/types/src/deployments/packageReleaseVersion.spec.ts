@@ -153,6 +153,16 @@ describe('packageReleaseVersion', () => {
           'Not a package release version: 1.2.3.4',
         );
       });
+
+      it("reports a broken invariant, not the caller's input", () => {
+        expect(() => nextVersions('1.2.3.4')).toThrow(
+          expect.objectContaining({
+            kind: 'internal',
+            reason: 'invalid_package_release_version',
+            context: { version: '1.2.3.4' },
+          }),
+        );
+      });
     });
 
     describe('the order the three are returned in', () => {

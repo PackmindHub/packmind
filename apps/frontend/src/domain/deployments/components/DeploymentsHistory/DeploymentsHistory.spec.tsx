@@ -42,6 +42,8 @@ const distribution = (
   index: number,
   overrides: Partial<DistributionHistoryEntry> = {},
   operation: DistributionOperation = 'add',
+  versionSpec: string | null = null,
+  latestReleaseVersion: string | null = null,
 ): DistributionHistoryEntry => ({
   id: createDistributionId(`distribution-${index}`),
   createdAt: '2026-08-31T10:56:00.000Z',
@@ -72,6 +74,8 @@ const distribution = (
       distributionId: createDistributionId(`distribution-${index}`),
       packageId,
       operation,
+      versionSpec,
+      latestReleaseVersion,
     },
   ],
   ...overrides,
@@ -111,11 +115,14 @@ const artifactDistribution = <DP extends DistributedPackageHistoryEntry>(
 const distributedPackage = (
   index: number,
   operation: DistributionOperation = 'add',
+  versionSpec: string | null = null,
 ) => ({
   id: createDistributedPackageId(`distributed-${index}`),
   distributionId: createDistributionId('distribution-1'),
   packageId,
   operation,
+  versionSpec,
+  latestReleaseVersion: null,
 });
 
 const withCommandVersion = (
@@ -251,8 +258,13 @@ describe('DeploymentsHistory', () => {
   const headers = () =>
     screen.getAllByRole('columnheader').map((cell) => cell.textContent);
 
-  /** The Version column, which leads every row that is not a package history. */
+  /** The Version column, which leads every row. */
   const version = () => screen.getAllByRole('cell')[0];
+
+  const packageVersions = () =>
+    screen
+      .getAllByTestId(DeploymentsHistoryDataTestId.PackageVersion)
+      .map((cell) => cell.textContent);
 
   /*
    * Two columns printed the same value on nearly every row of the log, and
@@ -272,10 +284,37 @@ describe('DeploymentsHistory', () => {
       expect(headers()).not.toContain('Author');
     });
 
+    it('puts the version first', () => {
+      renderHistory([distribution(1)]);
+
+      expect(headers()[0]).toBe('Version');
+    });
+
     it('keeps the message, which is the one that runs out of room', () => {
       renderHistory([distribution(1)]);
 
       expect(headers()).toContain('Message');
+    });
+
+    // A narrow table cut its pixel-wide columns' neighbours down to a letter.
+    it('sizes every column as a share of the table', () => {
+      const { container } = renderHistory([distribution(1)]);
+
+      const widths = Array.from(container.querySelectorAll('col')).map((col) =>
+        col.getAttribute('width'),
+      );
+      expect(widths.every((width) => width?.endsWith('%'))).toBe(true);
+    });
+
+    it('names a header in full when its column cuts it', async () => {
+      stubLayout(400, 60);
+      renderHistory([distribution(1)]);
+
+      await userEvent.hover(screen.getByText('Distributed At'));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Distributed At',
+      );
     });
   });
 
@@ -511,6 +550,100 @@ describe('DeploymentsHistory', () => {
       expect(
         screen.getByRole('link', { name: 'Backend guidelines' }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("a package's history", () => {
+    it('shows the release a pinned destination was sent', () => {
+      renderHistory([distribution(1, {}, 'add', '1.2.0')]);
+
+      expect(version()).toHaveTextContent('1.2.0');
+    });
+
+    it('shows the live package as unreleased, based on the release it was built on', () => {
+      renderHistory([distribution(1, {}, 'add', '*', '1.1.0')]);
+
+      expect(version()).toHaveTextContent('based on 1.1.0');
+    });
+
+    it('shows the live package as unreleased alone when it had no release yet', () => {
+      renderHistory([distribution(1, {}, 'add', '*', null)]);
+
+      expect(version()?.textContent).toBe('Unreleased');
+    });
+
+    it('shows a dash when the distribution recorded no version', () => {
+      renderHistory([distribution(1)]);
+
+      expect(version()).toHaveTextContent('-');
+    });
+
+    it('reads the version off this package, not another one sent with it', () => {
+      const base = distribution(1, {}, 'add', '1.2.0');
+      renderHistory([
+        {
+          ...base,
+          distributedPackages: [
+            {
+              ...base.distributedPackages[0],
+              id: createDistributedPackageId('distributed-other'),
+              packageId: createPackageId('package-other'),
+              versionSpec: '9.9.9',
+            },
+            ...base.distributedPackages,
+          ],
+        },
+      ]);
+
+      expect(version()).toHaveTextContent('1.2.0');
+    });
+  });
+
+  describe('the package column of an artifact history', () => {
+    const withPackage = <DP extends { packageId: typeof packageId }>(
+      dp: DP,
+    ) => ({
+      ...dp,
+      package: {
+        id: dp.packageId,
+        name: 'Backend package',
+        slug: 'backend-package',
+      } as DistributedPackageHistoryEntry['package'],
+    });
+
+    it('shows the package version beside the package name', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withPackage({
+            ...withCommandVersion(1, 4),
+            versionSpec: '1.2.0',
+          }),
+        ]),
+      ]);
+
+      expect(packageVersions()).toEqual(['1.2.0']);
+    });
+
+    it('shows an unreleased package with its base release on one line', () => {
+      renderCommandHistory([
+        artifactDistribution([
+          withPackage({
+            ...withCommandVersion(1, 4),
+            versionSpec: '*',
+            latestReleaseVersion: '1.1.0',
+          }),
+        ]),
+      ]);
+
+      expect(packageVersions()).toEqual(['Unreleased, based on 1.1.0']);
+    });
+
+    it('shows a dash beside the name when no version was recorded', () => {
+      renderStandardHistory([
+        artifactDistribution([withPackage(withStandardVersion(1, 7))]),
+      ]);
+
+      expect(packageVersions()).toEqual(['-']);
     });
   });
 

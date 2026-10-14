@@ -1141,4 +1141,35 @@ export class GithubRepository implements IGitRepo {
       return [];
     }
   }
+
+  async listFilesNamed(fileName: string, branch: string): Promise<string[]> {
+    const { owner, repo } = this.options;
+
+    const refResponse = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
+    );
+    const commitResponse = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/git/commits/${refResponse.data.object.sha}`,
+    );
+    const treeResponse = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/git/trees/${commitResponse.data.tree.sha}`,
+      { params: { recursive: 1 } },
+    );
+
+    if (treeResponse.data.truncated) {
+      this.logger.warn(
+        'Tree response was truncated by GitHub API - some files may be missing',
+        { owner, repo, branch, fileName },
+      );
+    }
+
+    return treeResponse.data.tree
+      .filter(
+        (item: { type: string; path?: string }) =>
+          item.type === 'blob' &&
+          !!item.path &&
+          item.path.split('/').pop() === fileName,
+      )
+      .map((item: { path: string }) => item.path);
+  }
 }
