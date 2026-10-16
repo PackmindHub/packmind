@@ -26,6 +26,8 @@ const REMOTE_REF_NAMESPACE = 'refs/remotes';
 const LOCAL_REF_PREFIX = `${LOCAL_REF_NAMESPACE}/`;
 const REMOTE_REF_PREFIX = `${REMOTE_REF_NAMESPACE}/`;
 
+const UNQUOTED_PATHS = '-c core.quotePath=false';
+
 export type GitRunnerOptions = ExecSyncOptions & { maxBuffer?: number };
 export type GitRunnerResult = { stdout: string };
 export type GitRunner = (
@@ -281,9 +283,12 @@ export class GitService implements IGitService {
   getUntrackedFiles(repoPath: string): string[] {
     const gitRoot = this.getGitRepositoryRoot(repoPath);
 
-    const { stdout } = this.gitRunner('ls-files --others --exclude-standard', {
-      cwd: gitRoot,
-    });
+    const { stdout } = this.gitRunner(
+      `${UNQUOTED_PATHS} ls-files --others --exclude-standard`,
+      {
+        cwd: gitRoot,
+      },
+    );
 
     return stdout
       .trim()
@@ -294,7 +299,7 @@ export class GitService implements IGitService {
 
   listFilesNamed(directory: string, fileName: string): string[] {
     const stdout = this.runGit(
-      `ls-files --cached --others --exclude-standard -- "*${fileName}"`,
+      `${UNQUOTED_PATHS} ls-files --cached --others --exclude-standard -- "*${fileName}"`,
       directory,
       'Failed to list repository files',
     );
@@ -414,9 +419,12 @@ export class GitService implements IGitService {
    */
   private getTrackedModifiedFiles(gitRoot: string): string[] {
     try {
-      const { stdout } = this.gitRunner('diff --name-only HEAD', {
-        cwd: gitRoot,
-      });
+      const { stdout } = this.gitRunner(
+        `${UNQUOTED_PATHS} diff --name-only HEAD`,
+        {
+          cwd: gitRoot,
+        },
+      );
 
       return stdout
         .trim()
@@ -442,9 +450,12 @@ export class GitService implements IGitService {
    * Gets staged files when HEAD doesn't exist (first commit scenario).
    */
   private getStagedFilesWithoutHead(gitRoot: string): string[] {
-    const { stdout } = this.gitRunner('diff --cached --name-only', {
-      cwd: gitRoot,
-    });
+    const { stdout } = this.gitRunner(
+      `${UNQUOTED_PATHS} diff --cached --name-only`,
+      {
+        cwd: gitRoot,
+      },
+    );
 
     return stdout
       .trim()
@@ -458,10 +469,13 @@ export class GitService implements IGitService {
    */
   private getTrackedModifiedLines(gitRoot: string): ModifiedLine[] {
     try {
-      const { stdout } = this.gitRunner('diff HEAD --unified=0', {
-        cwd: gitRoot,
-        maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large diffs
-      });
+      const { stdout } = this.gitRunner(
+        `${UNQUOTED_PATHS} diff HEAD --unified=0`,
+        {
+          cwd: gitRoot,
+          maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large diffs
+        },
+      );
 
       return this.parseDiffOutput(stdout, gitRoot);
     } catch (error) {
@@ -483,10 +497,13 @@ export class GitService implements IGitService {
    * Gets modified lines from staged files when HEAD doesn't exist.
    */
   private getStagedModifiedLinesWithoutHead(gitRoot: string): ModifiedLine[] {
-    const { stdout } = this.gitRunner('diff --cached --unified=0', {
-      cwd: gitRoot,
-      maxBuffer: 50 * 1024 * 1024,
-    });
+    const { stdout } = this.gitRunner(
+      `${UNQUOTED_PATHS} diff --cached --unified=0`,
+      {
+        cwd: gitRoot,
+        maxBuffer: 50 * 1024 * 1024,
+      },
+    );
 
     return this.parseDiffOutput(stdout, gitRoot);
   }
