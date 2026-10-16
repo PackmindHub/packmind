@@ -587,7 +587,7 @@ describe('GitService', () => {
 
     it('asks git for tracked and untracked files, skipping ignored ones', () => {
       expect(gitRunner).toHaveBeenCalledWith(
-        'ls-files --cached --others --exclude-standard -- "*packmind-lock.json"',
+        '-c core.quotePath=false ls-files --cached --others --exclude-standard -- "*packmind-lock.json"',
         { cwd: '/repo' },
       );
     });
@@ -617,7 +617,7 @@ describe('GitService', () => {
 
       it('calls gitRunner with ls-files command', () => {
         expect(gitRunner).toHaveBeenLastCalledWith(
-          'ls-files --others --exclude-standard',
+          '-c core.quotePath=false ls-files --others --exclude-standard',
           { cwd: '/repo' },
         );
       });

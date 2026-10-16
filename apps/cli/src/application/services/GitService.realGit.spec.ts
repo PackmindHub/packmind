@@ -1,5 +1,11 @@
 import { execSync } from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import { GitService } from './GitService';
@@ -141,6 +147,49 @@ describe('GitService against real git', () => {
   describe('when the branch name is empty', () => {
     it('reports the branch is unknown', () => {
       expect(service.branchExists(repoPath, '')).toBe(false);
+    });
+  });
+
+  describe('when paths contain non-ASCII characters', () => {
+    const folder = 'démo';
+    const trackedFile = path.join(folder, 'café.ts');
+    const lockFile = path.join(folder, 'packmind-lock.json');
+    const fromGitRoot = (file: string) =>
+      path.join(realpathSync(repoPath), file);
+
+    beforeEach(() => {
+      mkdirSync(path.join(repoPath, folder));
+      writeFileSync(path.join(repoPath, trackedFile), 'line1\n');
+      git('add .');
+      git('commit -q -m "add café"');
+      writeFileSync(path.join(repoPath, trackedFile), 'line1\nline2\n');
+      writeFileSync(path.join(repoPath, lockFile), '{}\n');
+    });
+
+    it('attributes diff hunks to the non-ASCII file', () => {
+      expect(service.getModifiedLines(repoPath)).toContainEqual({
+        file: fromGitRoot(trackedFile),
+        startLine: 2,
+        lineCount: 1,
+      });
+    });
+
+    it('lists the modified non-ASCII file', () => {
+      expect(service.getModifiedFiles(repoPath)).toContain(
+        fromGitRoot(trackedFile),
+      );
+    });
+
+    it('lists the untracked non-ASCII file', () => {
+      expect(service.getUntrackedFiles(repoPath)).toContain(
+        fromGitRoot(lockFile),
+      );
+    });
+
+    it('finds files by name inside a non-ASCII folder', () => {
+      expect(service.listFilesNamed(repoPath, 'packmind-lock.json')).toEqual([
+        path.join(repoPath, lockFile),
+      ]);
     });
   });
 });
