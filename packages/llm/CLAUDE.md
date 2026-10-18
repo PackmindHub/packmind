@@ -35,5 +35,9 @@ error, so the type change is what drives the rest.
 - Provider failures are normalised for users by
   `src/infra/services/extractUserFriendlyErrorMessage.ts` — route new provider errors through it
   instead of surfacing raw SDK messages.
+- SDK failures are mapped to an `AIServiceErrorType` (from `@packmind/types`) by
+  `classifyProviderError` in `src/infra/services/classifyProviderError.ts`, which reads the HTTP
+  status and connection-error names/codes. The OpenAI, Anthropic and Gemini services already use it;
+  a new provider should too rather than classifying errors itself.
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
