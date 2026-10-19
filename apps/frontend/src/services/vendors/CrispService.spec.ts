@@ -30,7 +30,9 @@ describe('CrispService', () => {
   afterEach(() => {
     vi.mocked(getEnvVar).mockReset();
     vi.mocked(isPackmindCloud).mockReset();
-    document.head.innerHTML = '';
+    // Only remove what initCrisp added: specs share the worker's document
+    // (isolate: false), and other specs' Chakra style tags live in <head>.
+    crispScripts().forEach((script) => script.remove());
     delete (window as CrispWindow).$crisp;
     delete (window as CrispWindow).CRISP_WEBSITE_ID;
   });
