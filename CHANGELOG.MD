@@ -13,6 +13,8 @@
 
 ## Fixed
 
+- Self-hosted instances no longer load the Crisp chat or send frontend errors to Packmind's Sentry; the Help menu hides `Chat` outside Packmind Cloud
+
 ## Removed
 
 # [1.19.0] - 2026-10-08
