@@ -1,9 +1,13 @@
 import { getEnvVar } from '../../shared/utils/getEnvVar';
+import { isPackmindCloud } from '../../shared/utils/isPackmindCloud';
 
-const CRISP_WEBSITE_ID = getEnvVar('VITE_CRISP_WEBSITE_ID');
+export function isCrispEnabled(): boolean {
+  return Boolean(getEnvVar('VITE_CRISP_WEBSITE_ID')) && isPackmindCloud();
+}
 
 export function initCrisp() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (!isCrispEnabled()) return;
 
   const w = window as unknown as {
     $crisp?: Array<unknown> & { push?: (args: unknown[]) => void };
@@ -14,7 +18,7 @@ export function initCrisp() {
     push?: (args: unknown[]) => void;
   };
   if (!w.CRISP_WEBSITE_ID) {
-    w.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
+    w.CRISP_WEBSITE_ID = getEnvVar('VITE_CRISP_WEBSITE_ID');
     const s = document.createElement('script');
     s.src = 'https://client.crisp.chat/l.js';
     s.async = true;
@@ -69,6 +73,7 @@ export function hideCrispWidget() {
 
 export function openCrisp() {
   if (typeof window === 'undefined') return;
+  if (!isCrispEnabled()) return;
   const w = window as unknown as {
     $crisp?: Array<unknown> & { push?: (args: unknown[]) => void };
   };

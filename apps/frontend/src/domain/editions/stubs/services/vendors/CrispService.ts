@@ -1,5 +1,9 @@
 import { pmToaster } from '@packmind/ui';
 
+export function isCrispEnabled(): boolean {
+  return false;
+}
+
 export function initCrisp() {
   // no-op
 }

@@ -5,7 +5,10 @@ import {
   LuMessageCircleQuestion,
   LuUsersRound,
 } from 'react-icons/lu';
-import { openCrisp } from '@packmind/proprietary/frontend/services/vendors/CrispService';
+import {
+  isCrispEnabled,
+  openCrisp,
+} from '@packmind/proprietary/frontend/services/vendors/CrispService';
 
 export const SidebarHelpMenu: React.FunctionComponent = () => {
   return (
@@ -21,14 +24,16 @@ export const SidebarHelpMenu: React.FunctionComponent = () => {
       <PMPortal>
         <PMMenu.Positioner>
           <PMMenu.Content>
-            <PMMenu.Item value="chat" asChild>
-              <PMLink onClick={() => openCrisp()} cursor={'pointer'}>
-                <PMIcon size="sm">
-                  <LuMessageCircleQuestion />
-                </PMIcon>
-                Chat
-              </PMLink>
-            </PMMenu.Item>
+            {isCrispEnabled() && (
+              <PMMenu.Item value="chat" asChild>
+                <PMLink onClick={() => openCrisp()} cursor={'pointer'}>
+                  <PMIcon size="sm">
+                    <LuMessageCircleQuestion />
+                  </PMIcon>
+                  Chat
+                </PMLink>
+              </PMMenu.Item>
+            )}
             <PMMenu.Item value="documentation" asChild>
               <PMLink
                 href="https://docs.packmind.com"
