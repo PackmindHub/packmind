@@ -11,8 +11,7 @@
 
 ## Changed
 
-- The default models for Anthropic and Google Gemini move off models that are retired or about to be: `claude-sonnet-5-5` replaces `claude-sonnet-4-5-20250929` (retired on 2026-11-30), `gemini-3.1-pro-preview` replaces `gemini-3-pro-preview` (shut down), and `gemini-3.8-flash` replaces `gemini-2.5-flash` as the Gemini fast model
-- Requests no longer send a `temperature` to Claude models that reject a non-default one (Claude 5 and Opus 4.7 and later)
+- Default models move to `claude-sonnet-5-5`, `gemini-3.1-pro-preview` and `gemini-3.8-flash`; Claude 5 and Opus 4.7+ no longer receive a temperature
 
 ## Fixed
 
