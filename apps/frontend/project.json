@@ -14,7 +14,16 @@
     },
     "build": {
       "// dependsOn": "The Vite build resolves every @packmind/* import through nxViteTsPaths to packages/*/src, never to dist/packages, so the inferred ^build chain rebuilds 17 packages this target never reads. Use `nx build-deps frontend` when you actually want those dists.",
-      "dependsOn": []
+      "dependsOn": [],
+      "// inputs": "Vite inlines these cloud-only env vars into the bundle, and release builds blank them. Without hashing them, a release build gets a cache hit from the main build of the same commit and ships the cloud Crisp/Sentry keys to self-hosted images (happened in 1.19.0). The first three entries are the plugin's inferred inputs.",
+      "inputs": [
+        "default",
+        "^default",
+        { "externalDependencies": ["@react-router/dev"] },
+        { "env": "VITE_CRISP_WEBSITE_ID" },
+        { "env": "VITE_SENTRY_FRONTEND_DSN" },
+        { "env": "VITE_SENTRY_ENVIRONMENT" }
+      ]
     },
     "serve": {
       "executor": "nx:run-commands",
