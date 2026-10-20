@@ -41,13 +41,13 @@ export const DEFAULT_OPENAI_MODELS = {
 } as const;
 
 export const DEFAULT_ANTHROPIC_MODELS = {
-  model: 'claude-sonnet-4-5-20250929',
+  model: 'claude-sonnet-5-5',
   fastestModel: 'claude-haiku-4-5-20251001',
 } as const;
 
 export const DEFAULT_GEMINI_MODELS = {
-  model: 'gemini-3-pro-preview',
-  fastestModel: 'gemini-2.5-flash',
+  model: 'gemini-3.1-pro-preview',
+  fastestModel: 'gemini-3.8-flash',
 } as const;
 
 export const DEFAULT_AZURE_OPENAI_API_VERSION = '2024-12-01-preview';
@@ -125,7 +125,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage:
           'The primary Claude model to use. Defaults to the latest Sonnet model.',
         optional: false,
-        placeholder: 'claude-sonnet-4-5-20250929',
+        placeholder: 'claude-sonnet-5-5',
         secret: false,
       },
       {
@@ -169,7 +169,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage:
           'The primary Gemini model to use. Defaults to the latest Pro model.',
         optional: false,
-        placeholder: 'gemini-3-pro-preview',
+        placeholder: 'gemini-3.1-pro-preview',
         secret: false,
       },
       {
@@ -180,7 +180,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage:
           '(Optional) A faster, more economical model for less complex operations. If not set, will use default model.',
         optional: true,
-        placeholder: 'gemini-2.5-flash',
+        placeholder: 'gemini-3.8-flash',
         secret: false,
       },
     ],

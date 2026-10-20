@@ -87,6 +87,59 @@ describe('AnthropicService', () => {
       expect(result.error).toBeUndefined();
     });
 
+    describe('when a temperature is given', () => {
+      describe('with a Claude 5 model', () => {
+        it('does not send the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude5Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-sonnet-5-5',
+          });
+
+          await claude5Service.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.not.objectContaining({ temperature: expect.anything() }),
+          );
+        });
+      });
+
+      describe('with Claude Opus 4.8', () => {
+        it('does not send the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const opusService = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-opus-4-8',
+          });
+
+          await opusService.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.not.objectContaining({ temperature: expect.anything() }),
+          );
+        });
+      });
+
+      describe('with an earlier Claude model', () => {
+        it('sends the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude4Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-haiku-4-5-20251001',
+          });
+
+          await claude4Service.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.objectContaining({ temperature: 0.7 }),
+          );
+        });
+      });
+    });
+
     it('executes prompt successfully and returns parsed JSON object', async () => {
       const jsonResponse = {
         content: [
