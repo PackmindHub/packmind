@@ -1,4 +1,4 @@
-# [Unreleased]
+# [0.38.0] - 2026-10-22
 
 ## Added
 
@@ -6,11 +6,9 @@
 - It finds the locks through git, so ignored folders are skipped and uncommitted locks are included. It fails when no lock below the current directory records package versions
 - `packmind install` writes the version of each package it distributed into `packmind-lock.json`, under `packages`
 
-## Changed
-
 ## Fixed
 
-## Removed
+- Paths with non-ASCII characters are now read correctly from git (`lint --diff`, modified/untracked files, lock files in non-ASCII folders)
 
 # [0.37.0] - 2026-10-08
 
@@ -539,7 +537,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.37.0...HEAD
+[0.38.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.37.0...release-cli/0.38.0
 [0.37.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.1...release-cli/0.37.0
 [0.36.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.36.0...release-cli/0.36.1
 [0.36.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.35.1...release-cli/0.36.0
