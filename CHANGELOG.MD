@@ -1,4 +1,4 @@
-# [Unreleased]
+# [1.20.0] - 2026-10-22
 
 ## Added
 
@@ -9,13 +9,9 @@
 - A package missing from a lock stays distributed while the `packmind.json` beside it still lists it
 - Distributing from the app writes the version of each package into `packmind-lock.json`, and removing a package from a target removes it from the lock too
 
-## Changed
-
 ## Fixed
 
 - Self-hosted instances no longer load the Crisp chat or send frontend errors to Packmind's Sentry; the Help menu hides `Chat` outside Packmind Cloud
-
-## Removed
 
 # [1.19.0] - 2026-10-08
 
@@ -496,7 +492,7 @@ Hotfix release.
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.19.0...HEAD
+[1.20.0]: https://github.com/PackmindHub/packmind/compare/release/1.19.0...release/1.20.0
 [1.19.0]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...release/1.19.0
 [1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
 [1.18.0]: https://github.com/PackmindHub/packmind/compare/release/1.17.0...release/1.18.0
